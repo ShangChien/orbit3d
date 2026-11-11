@@ -69,11 +69,12 @@ def interval_arrays(intervals, mean, scale, condition_version):
     return bounds[:, 0], bounds[:, 1], active
 
 
-def trajectory_to_instance(trajectory):
+def trajectory_to_instance(trajectory, spatial_box=None):
     symbols = trajectory["atom_symbols"]
     types = np.array([ATOM_TYPES.index(s) for s in symbols], dtype=np.int64)
     coords = np.asarray(trajectory["positions_np"], dtype=np.float32)
-    inst = Mol3DInstance(coords=coords - coords.mean(0), atom_types=types)
+    coords = spatial_box.to_world(coords) if spatial_box else coords - coords.mean(0)
+    inst = Mol3DInstance(coords=coords, atom_types=types)
     molecule = mol3d_to_validated_rdkit_mol(inst)
     inst.graph = molecule
     inst.smiles = mol_to_clean_smiles(molecule)

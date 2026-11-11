@@ -511,7 +511,7 @@ class Uni3DARSampler(Uni3DAR):
         )
         return decoder_feat, decoder_phy_pos
 
-    def get_tree_predict_funcs(self, sample_uniforms=None):
+    def get_tree_predict_funcs(self, sample_uniforms=None, tree_logit_mask=None):
 
         def tree_sampling_func(logits, tree_i, batch_indices):
             tree_type, score = softmax_sampling(
@@ -533,6 +533,8 @@ class Uni3DARSampler(Uni3DAR):
 
         def tree_predict_func(y, batch_indices, tree_i):
             tree_logits = self.tree_heads[tree_i](y)
+            if tree_logit_mask is not None:
+                tree_logits = tree_logit_mask(tree_logits, batch_indices)
             tree_pred, tree_score = tree_sampling_func(tree_logits, tree_i, batch_indices)
             if self.count_head is not None:
                 y = y + self.tree_emb_for_count[tree_i](tree_pred)

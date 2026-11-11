@@ -1,0 +1,71 @@
+{
+  "float32_max_fixed_trajectory_logprob_error": 0.000701904296875,
+  "float32": [
+    {
+      "batch_size": 1,
+      "reversed_order": false,
+      "tracked_candidates": 4,
+      "token_divergent_ids": []
+    },
+    {
+      "batch_size": 8,
+      "reversed_order": false,
+      "tracked_candidates": 4,
+      "token_divergent_ids": []
+    },
+    {
+      "batch_size": 48,
+      "reversed_order": false,
+      "tracked_candidates": 4,
+      "token_divergent_ids": []
+    },
+    {
+      "batch_size": 8,
+      "reversed_order": true,
+      "tracked_candidates": 4,
+      "token_divergent_ids": []
+    }
+  ],
+  "bfloat16_max_fixed_trajectory_logprob_error": 15.336700439453125,
+  "bfloat16": [
+    {
+      "batch_size": 1,
+      "reversed_order": false,
+      "tracked_candidates": 4,
+      "token_divergent_ids": []
+    },
+    {
+      "batch_size": 8,
+      "reversed_order": false,
+      "tracked_candidates": 4,
+      "token_divergent_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "batch_size": 48,
+      "reversed_order": false,
+      "tracked_candidates": 4,
+      "token_divergent_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "batch_size": 8,
+      "reversed_order": true,
+      "tracked_candidates": 4,
+      "token_divergent_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ]
+}

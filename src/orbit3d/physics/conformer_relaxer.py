@@ -28,6 +28,7 @@ def relax_conformer_iso_property(
     property_tolerance=0.0,
     energy_tolerance=0.0,
     max_backtracks=10,
+    coordinate_bounds=None,
 ):
     if n_steps < 0 or step_size <= 0 or max_atom_disp <= 0 or property_tolerance < 0 or energy_tolerance < 0:
         raise ValueError("Invalid relaxation settings")
@@ -47,6 +48,10 @@ def relax_conformer_iso_property(
     def evaluate(coords):
         nonlocal evaluations
         evaluations += 1
+        if coordinate_bounds is not None:
+            lower, upper = [torch.as_tensor(b, dtype=coords.dtype, device=coords.device) for b in coordinate_bounds]
+            if ((coords < lower) | (coords >= upper)).any():
+                raise ValueError('Refinement candidate lies outside the spatial window')
         candidate = replace(inst, coords=coords.detach().cpu().numpy())
         mol = mol3d_to_validated_rdkit_mol(candidate)
         if getattr(oracle, "dpa_guidance", None) is dpa_guidance:

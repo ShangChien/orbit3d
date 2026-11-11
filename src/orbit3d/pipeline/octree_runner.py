@@ -18,6 +18,7 @@ from ..generator.octree_backend import (
 )
 from ..generator.octree_tokenizer import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
+from ..generator.spatial_box import BoxSpec3D
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from ..oracles.fingerprint_oracle import FingerprintOracle
 from ..oracles.applicability import MorganDomain
@@ -37,6 +38,7 @@ def run_octree_from_config(cfg, config_path=None):
     paths = cfg["mount_paths"]
     settings = cfg.get("generator_config", {})
     inference = cfg.get("inference_config", {})
+    spatial_box = BoxSpec3D(**cfg['spatial_box']) if cfg.get('spatial_box') else None
     output = Path(paths["output_dir"])
     output.mkdir(parents=True, exist_ok=True)
     freeze_run(output, config_path or __file__)
@@ -167,6 +169,8 @@ def run_octree_from_config(cfg, config_path=None):
     if mode == "train":
         return {"checkpoint": str(checkpoint), "history": history}
     model.eval()
+    if spatial_box:
+        spatial_box.validate_model(model.args)
     intervals = TargetIntervals.parse(inference["target_interval"], names)
     lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
     if int(settings.get("grpo_steps", 0)):
@@ -241,6 +245,7 @@ def run_octree_from_config(cfg, config_path=None):
                 row_seeds=[candidate_seed(inference.get("base_seed", 2026), begin + j) for j in range(count)]
                 if independent_sampling
                 else None,
+                spatial_box=spatial_box,
             )
         for j, trajectory in enumerate(trajectories):
             if j == 0:
@@ -261,7 +266,7 @@ def run_octree_from_config(cfg, config_path=None):
                 else None,
             }
             try:
-                inst = trajectory_to_instance(trajectory)
+                inst = trajectory_to_instance(trajectory, spatial_box)
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
                 score = float(np.square(intervals.violations(self_y).numpy() / scale).sum())
                 row.update(smiles=inst.smiles, self_score=score, raw_valid=True)
@@ -327,6 +332,7 @@ def run_octree_from_config(cfg, config_path=None):
                 inst, ff, oracle, dict(zip(names, intervals.bounds)),
                 n_steps=relax_steps,
                 step_size=float(relax_settings.get("step_size", 0.004)),
+                coordinate_bounds=spatial_box.world_bounds if spatial_box else None,
             )
         except (ValueError, FloatingPointError) as exc:
             records[idx].update(status="refinement_failed", reason=str(exc))

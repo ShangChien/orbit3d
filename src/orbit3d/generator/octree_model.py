@@ -351,10 +351,13 @@ class ConditionalUni3DAR(Uni3DARSampler):
         xyz_temp: Optional[float] = None,
         evaluate_self_consistency: bool = True,
         row_seeds=None,
+        spatial_box=None,
     ) -> List[Dict]:
         self.eval()
         device = y_min.device
         batch_size = y_min.shape[0]
+        if spatial_box is not None:
+            spatial_box.validate_model(self.args)
         has_cond = bool((active_mask.float().sum() > 0).item())
         use_cfg = has_cond and (cfg_scale > 1.0 + 1e-4)
 
@@ -415,7 +418,12 @@ class ConditionalUni3DAR(Uni3DARSampler):
                 atom_predict_funcs, cond_vars = self.get_atom_predict_funcs(
                     batch_size, device, None, cond_vars, sample_uniforms if streams else None
                 )
-                tree_predict_funcs = self.get_tree_predict_funcs(sample_uniforms if streams else None)
+                def mask_tree(logits, selected):
+                    return spatial_box.mask_tree_logits(logits, next_feat[selected, :3], next_feat[selected, IDX_LEVEL])
+
+                tree_predict_funcs = self.get_tree_predict_funcs(
+                    sample_uniforms if streams else None, mask_tree if spatial_box else None
+                )
 
                 cur_feat = decoder_feat[:, -1, :]
                 cur_phy_pos = decoder_phy_pos[:, -1, :]
