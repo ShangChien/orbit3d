@@ -291,12 +291,13 @@ def test_element_supervision_remains_pending_after_structural_adaptation():
     assert required_condition_elements(state) == {'B', 'Si'}
 
 
-def test_per_molecule_training_scores_match_separate_unequal_size_molecules():
+@pytest.mark.parametrize('weighted', [False, True])
+def test_per_molecule_training_scores_match_separate_unequal_size_molecules(weighted):
     args = build_default_uni3dar_args(2)
     args.emb_dim, args.num_head, args.layer = 96, 4, 2
     model = ConditionalUni3DAR(args, AtomFeatDict(args), 2).eval()
     with torch.no_grad():
-        for parameter in model.tree_heads.parameters():
+        for parameter in list(model.tree_heads.parameters()) + list(model.atom_heads.parameters()):
             if parameter.ndim > 1:
                 parameter.normal_(0, .02)
     molecules = []
@@ -305,15 +306,18 @@ def test_per_molecule_training_scores_match_separate_unequal_size_molecules():
         AllChem.EmbedMolecule(mol, randomSeed=42)
         molecules.append(mol)
     dataset = OctreeDataset(molecules, model, training=False)
+    weights = torch.ones(model.num_atom) if weighted else None
+    if weighted:
+        weights[model.dictionary['O']] = 10.
     target = torch.tensor([[0., 1.], [1., 0.]])
     _, stats = model.compute_sft_and_understanding_loss(
         dataset.collate([0, 1]), target, target-.25, target+.25, torch.ones(2, 2, dtype=torch.bool),
-        understanding_weight=0, return_per_molecule=True)
+        understanding_weight=0, return_per_molecule=True, atom_class_weights=weights)
     scores = stats['per_molecule_generation_loss']
     for i in range(2):
         y = target[i:i+1]
         separate, _ = model.compute_sft_and_understanding_loss(
-            dataset.collate([i]), y, y-.25, y+.25, torch.ones(1, 2, dtype=torch.bool), understanding_weight=0)
+            dataset.collate([i]), y, y-.25, y+.25, torch.ones(1, 2, dtype=torch.bool), understanding_weight=0, atom_class_weights=weights)
         torch.testing.assert_close(scores[i], separate, atol=1e-5, rtol=1e-5)
     scores.sum().backward()
     assert any(p.grad is not None and p.grad.abs().sum() for p in model.interval_conditioner.parameters())
@@ -344,3 +348,13 @@ def test_sampling_temperature_rejects_invalid_values(value):
     y = torch.zeros(1, 2)
     with pytest.raises(ValueError, match='temperature'):
         model.generate_conditional_trajectories(y, y, torch.ones_like(y, dtype=torch.bool), atom_temp=value)
+
+
+def test_element_loss_weights_come_only_from_the_supplied_training_atoms():
+    from orbit3d.generator.supervised_weights import inverse_sqrt_element_weights
+    dictionary = AtomFeatDict(build_default_uni3dar_args(1))
+    weights, record = inverse_sqrt_element_weights([Chem.MolFromSmiles('CCCO')], dictionary)
+    assert record['training_atom_counts'] == {'C': 3, 'O': 1}
+    assert weights[dictionary['C']].item() == 1.
+    assert weights[dictionary['O']].item() == pytest.approx(3**.5)
+    assert weights[dictionary['[NULL]']].item() == 1.

@@ -277,6 +277,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
         active_mask: torch.Tensor,
         understanding_weight: float = 1.0,
         return_per_molecule: bool = False,
+        atom_class_weights: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, Dict]:
         device = y_true_norm.device
         bd = {k: (v.to(device) if isinstance(v, torch.Tensor) else v) for k, v in batched_data.items()}
@@ -312,7 +313,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
             gts_xyz = [v.long() for v in gts_xyz]
             preds_xyz = self.atom_heads[0](dec_y_cond[is_gen_atom], gts_xyz)
             atom_logits = preds_xyz[0].float().masked_fill(~self.allowed_atom_mask(device), -torch.inf)
-            loss_atom = F.cross_entropy(atom_logits, gts_xyz[0])
+            loss_atom = F.cross_entropy(atom_logits, gts_xyz[0], weight=atom_class_weights)
             loss_xyz = (
                 F.cross_entropy(preds_xyz[1].float(), gts_xyz[1])
                 + F.cross_entropy(preds_xyz[2].float(), gts_xyz[2])
@@ -346,20 +347,23 @@ class ConditionalUni3DAR(Uni3DARSampler):
                                              torch.diff(cu_lens).long())
             per_molecule = torch.zeros(len(y_true_norm), device=device)
 
-            def average_decisions(values, selected):
+            def average_decisions(values, selected, decision_weights=None):
                 ids = owners[selected]
                 summed = torch.zeros_like(per_molecule).index_add(0, ids, values)
-                counts = torch.bincount(ids, minlength=len(per_molecule))
-                return summed / counts.clamp_min(1)
+                counts = (torch.bincount(ids, minlength=len(per_molecule)) if decision_weights is None else
+                          torch.zeros_like(per_molecule).index_add(0, ids, decision_weights))
+                return summed / counts.clamp_min(torch.finfo(summed.dtype).tiny)
 
             if is_gen_tree.any():
                 per_molecule = per_molecule + average_decisions(
                     F.cross_entropy(logits_tree, gt_tree, reduction='none'), is_gen_tree)
             if is_gen_atom.any():
-                atom_losses = F.cross_entropy(atom_logits, gts_xyz[0], reduction='none')
+                atom_losses = F.cross_entropy(atom_logits, gts_xyz[0], reduction='none', weight=atom_class_weights)
                 coordinate_losses = sum(F.cross_entropy(preds_xyz[axis].float(), gts_xyz[axis], reduction='none')
                                         for axis in range(1, 4)) / 3
-                per_molecule = per_molecule + average_decisions(atom_losses + .1 * coordinate_losses, is_gen_atom)
+                decision_weights = atom_class_weights[gts_xyz[0]] if atom_class_weights is not None else None
+                per_molecule = (per_molecule + average_decisions(atom_losses, is_gen_atom, decision_weights)
+                                + .1 * average_decisions(coordinate_losses, is_gen_atom))
             metrics['per_molecule_generation_loss'] = per_molecule
         return total_loss, metrics
 

@@ -110,6 +110,13 @@ def run_octree_from_config(cfg, config_path=None):
         scale = initial_state['scale'] if initial_state else y.std(0).clip(1e-6)
         yn = (y - mean) / scale
         dataset = OctreeDataset(training, model, seed=int(cfg.get("seed", 42)))
+        weighting = settings.get('element_loss_weighting', 'none')
+        atom_class_weights, weighting_metadata = None, {'scheme': 'none'}
+        if weighting == 'inverse_sqrt_frequency':
+            from ..generator.supervised_weights import inverse_sqrt_element_weights
+            atom_class_weights, weighting_metadata = inverse_sqrt_element_weights(training, model.dictionary, device)
+        elif weighting != 'none':
+            raise ValueError(f'Unknown element loss weighting: {weighting}')
         train_backbone = bool(settings.get("train_backbone", False))
         if initial_state:
             migration = initial_state.get('representation_migration', {})
@@ -161,6 +168,7 @@ def run_octree_from_config(cfg, config_path=None):
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
                     "train_backbone": train_backbone,
+                    "element_loss_weighting": weighting_metadata,
                     "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
                     "representation_migration": ({**initial_state.get('representation_migration', {}),
                         'requires_adaptation': steps <= 0} if initial_state and initial_state.get('representation_migration') else {}),
@@ -189,7 +197,8 @@ def run_octree_from_config(cfg, config_path=None):
                 device_type=device.split(":")[0], dtype=torch.bfloat16, enabled=device.startswith("cuda")
             ):
                 loss, metrics = model.compute_sft_and_understanding_loss(
-                    packed, target, lower, upper, mask, understanding_weight=0.5
+                    packed, target, lower, upper, mask, understanding_weight=0.5,
+                    atom_class_weights=atom_class_weights
                 )
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"Octree SFT diverged at step {step + 1}")
