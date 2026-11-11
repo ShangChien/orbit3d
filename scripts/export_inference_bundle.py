@@ -35,6 +35,7 @@ def export_bundle(run, output, wheel, requirements, asset_root):
     (output/'config.json').write_text(json.dumps(current,indent=2)+'\n')
     artifacts=output/'package';artifacts.mkdir()
     shutil.copyfile(wheel,artifacts/wheel.name);shutil.copyfile(requirements,artifacts/'requirements.lock.txt')
+    shutil.copyfile(__file__,artifacts/'export_inference_bundle.py')
     reference=output/'reference_run';reference.mkdir()
     for name in ['run_config.json','candidates.csv','raw_trajectories.npz','raw_symbols.json',
                  'generated.sdf','qualified.sdf','relaxation_traces.json','summary.json',
@@ -66,7 +67,27 @@ every bundled file by SHA-256. Verification outputs are written separately and
 are not part of that original file manifest. Dependency source-build switches
 for DeepMD remain DP_ENABLE_TENSORFLOW=0 and DP_ENABLE_PYTORCH=0, as in the repository.
 """
+    readme=readme.replace('GENERATOR_PATH',relocated['checkpoint_load_path'])
+    readme += '''
+
+The short verification entrypoint is:
+
+    python verify_bundle.py
+
+For a new compatible environment, install the exported versions and hashes with:
+
+    DP_ENABLE_TENSORFLOW=0 DP_ENABLE_PYTORCH=0 python -m pip install --require-hashes --no-binary deepmd-kit -r package/requirements.lock.txt
+
+Then install the bundled source wheel without resolving dependencies again.
+'''
     (output/'README.md').write_text(readme)
+    (output/'verify_bundle.py').write_text('''import json,sys
+from orbit3d.utils.replay_validation import main
+configuration=json.load(open('config.json'))
+sys.argv=['verify_bundle','--config','config.json','--checkpoint',configuration['mount_paths']['checkpoint_load_path'],
+          '--reference-run','reference_run','--output','verification']
+main()
+''')
     files={str(p.relative_to(output)):digest(p) for p in sorted(output.rglob('*')) if p.is_file()}
     manifest={'format':'orbit3d_inference_bundle_v1','source_run_configuration_sha256':digest(source),
               'source_wheel_sha256':digest(wheel),'source_requirement_lock_sha256':digest(requirements),
@@ -79,7 +100,10 @@ def main():
     p=argparse.ArgumentParser()
     for name in ['run','output','wheel','requirements','asset-root']:p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--archive',type=Path,help='Optional uncompressed tar destination, typically on persistent storage')
-    a=p.parse_args();manifest=export_bundle(a.run,a.output,a.wheel,a.requirements,a.asset_root)
+    a=p.parse_args()
+    if a.archive and (a.archive.exists() or a.archive.resolve().is_relative_to(a.output.resolve())):
+        raise ValueError('Use a fresh archive path outside the bundle directory')
+    manifest=export_bundle(a.run,a.output,a.wheel,a.requirements,a.asset_root)
     if a.archive:
         if a.archive.exists():raise FileExistsError(a.archive)
         a.archive.parent.mkdir(parents=True,exist_ok=True)
