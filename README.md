@@ -101,6 +101,13 @@ requirements. Structural-only adaptation cannot clear a property-label
 requirement; pseudo-labels for new elements require observed Oracle training
 coverage. See [expanded-element training](docs/wide-element-adaptation.md).
 
+For fixed-scaffold fragment growth, use
+[`configs/scaffold_graph_growth.json`](configs/scaffold_graph_growth.json) and an
+SDF with `OpenAtomIndices` properties. This explicit graph backend preserves
+float64 fixed world coordinates and uses the same configured evaluators and
+refinement. [Input and output details](docs/scaffold-generation.md) distinguish it
+from learned octree completion.
+
 Each run writes `candidates.csv`, `generated.sdf`, `qualified.sdf`,
 `relaxation_traces.json`, `run_config.json` and `summary.json`. `generated.sdf`
 contains all retained/refined candidates; `qualified.sdf` contains those passing

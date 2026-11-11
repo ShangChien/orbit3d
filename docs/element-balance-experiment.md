@@ -19,7 +19,7 @@ checkpoint and uses 1000 further SFT steps, batch 8, seed 42, the same 8188 trai
 conformers, backbone learning rate 1e-5 and conditioner/head learning rate 2e-4.
 Both use the existing v3 interval sampler and train all backbone parameters.
 One uses the original objective, the other the weighted element term. No GRPO
-is applied. Validation uses the same 512 structures and per-element probabilities;
+is applied. Validation uses the same 511 encodable structures from a 512-record pool and per-element probabilities; one spatially incompatible structure is retained in the preflight exclusion ledger. No coordinates or labels are clipped.
 free generation uses the original and central windows, three inference seeds
 and 64 proposals each, at the unchanged atom temperature 0.3. The new independent
 fingerprint model evaluates every retained candidate.

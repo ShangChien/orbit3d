@@ -109,3 +109,17 @@ not as labels on a newly substituted molecule. The derived candidate receives
 its actual charge/multiplicity and separately named predicted properties. This
 prevents a generated structure from accidentally becoming a training example
 with its source scaffold's measurements.
+
+
+The configured workflow has a real DPA/OCELOT check on benzene, naphthalene,
+pyridine and an OCELOT B-containing scaffold, each with two open sites and large
+world-coordinate translations. Both complete runs give 24/24 valid and in-domain
+proposals; 16 receive external evaluation, eight are retained, and none meets
+the joint property/force threshold after eight refinement steps. All graph and
+attachment decisions are exact across reloads, including fixed coordinates.
+Candidate 11's LUMO differs by 1.31e-6 eV between native evaluations, within the
+pre-existing 1e-5 replay tolerance; exact equality of whole JSON objects was not
+a valid floating-point contract. Near/far translation checks give zero observed
+energy, force and prediction differences on all four source structures.
+[Complete records, translation checks and replay](experiments/scaffold_cli_20261112.json)
+retain the zero-hit outcome and the comparison definitions.

@@ -1,4 +1,4 @@
-"""Reuse audited property-training conformers with atom-conserving octree checks."""
+"""Reuse audited property conformers with atom-conserving octree checks."""
 import argparse,json
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,7 +14,7 @@ p.add_argument('--source',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
 p.add_argument('--elements',nargs='+',required=True)
 p.add_argument('--merge-level',type=int,choices=[6,7,8],default=7)
-a=p.parse_args();freeze_run(a.output,__file__);record_input_hashes(a.output,{'training_structures':a.source});torch.set_num_threads(4)
+a=p.parse_args();freeze_run(a.output,__file__);record_input_hashes(a.output,{'source_structures':a.source});torch.set_num_threads(4)
 args=build_default_uni3dar_args(1);args.merge_level=a.merge_level;args.allow_atoms=','.join(a.elements)
 representation=SimpleNamespace(args=args,dictionary=AtomFeatDict(args))
 molecules=list(Chem.SDMolSupplier(str(a.source),removeHs=False));assert all(m is not None for m in molecules)
@@ -31,6 +31,6 @@ for index,mol in enumerate(molecules):
  except (ValueError,RuntimeError,AssertionError) as error:row.update(status='excluded',reason=str(error))
  records.append(row)
 write_precise_sdf(a.output/'train.sdf',accepted)
-report={'input_records':len(molecules),'accepted':len(accepted),'excluded':len(molecules)-len(accepted),'merge_level':a.merge_level,'allowed_elements':a.elements,'observed_elements':sorted({atom.GetSymbol() for mol in accepted for atom in mol.GetAtoms()}),'records':records,'geometry':'Copied from the property training set without re-embedding or changing labels'}
+report={'input_records':len(molecules),'accepted':len(accepted),'excluded':len(molecules)-len(accepted),'merge_level':a.merge_level,'allowed_elements':a.elements,'observed_elements':sorted({atom.GetSymbol() for mol in accepted for atom in mol.GetAtoms()}),'records':records,'geometry':'Copied from the audited source SDF without re-embedding, changing labels or changing split membership'}
 (a.output/'summary.json').write_text(json.dumps(report,indent=2)+'\n');print({k:v for k,v in report.items() if k!='records'})
 assert accepted and set(a.elements)<=set(report['observed_elements'])
