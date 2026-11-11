@@ -50,6 +50,8 @@ def resolve_unimol_weight_path(builtin_dir: str, remove_hs: bool = False) -> Opt
     tag = "no_h" if remove_hs else "all_h"
     env_dir = os.environ.get("ORBIT3D_PRETRAINED_DIR", builtin_dir)
     candidates = [
+        os.path.join(builtin_dir, "unimol", f"mol_pre_{tag}_220816.pt"),
+        os.path.join(env_dir, "unimol", f"mol_pre_{tag}_220816.pt"),
         os.path.join(builtin_dir, "unimol", f"mol_pre_{tag}_fp16.pt"),
         os.path.join(builtin_dir, f"mol_pre_{tag}_fp16.pt"),
         os.path.join(env_dir, "unimol", f"mol_pre_{tag}_fp16.pt"),
