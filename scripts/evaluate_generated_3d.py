@@ -27,7 +27,7 @@ def main():
     ff,oracle,domain=load_evaluators(cfg,ATOM_TYPES)
     inputs={'property_model':a.oracle,'forcefield':a.weight,'domain':a.domain}
     for run in a.runs:
-        for filename in ['generated.sdf','candidates.csv','run_config.json']:
+        for filename in ['generated.sdf','candidates.csv','run_config.json','summary.json']:
             inputs[run.name+'/'+filename]=run/filename
     record_input_hashes(a.output,inputs)
     summaries=[]
@@ -38,6 +38,8 @@ def main():
         if [units[i] for i in indices]!=source_units:raise ValueError('Independent and source target units differ')
         intervals=TargetIntervals.parse(source['inference_config']['target_interval'],names)
         table=pd.read_csv(run/'candidates.csv').set_index('candidate_id')
+        attempted=json.loads((run/'summary.json').read_text())['attempted']
+        if len(table)!=attempted or not table.index.is_unique:raise ValueError('Source attempt ledger is incomplete or duplicated')
         sdf=run/'generated.sdf'
         molecules=list(Chem.SDMolSupplier(str(sdf),removeHs=False)) if sdf.stat().st_size else []
         if any(m is None for m in molecules):raise ValueError('Unreadable source export')
