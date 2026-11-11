@@ -153,3 +153,18 @@ hashes](experiments/generated_excited_minima_20261112.json) and the optimized
 [T1](experiments/generated_candidate3_t1_20261112.sdf) geometries are archived.
 The OCELOT CSV still lacks its original omega/geometries; these results do not
 establish reproduction of its values or a paired-reference MAE.
+
+New geometry optimizations save every evaluated coordinate/gradient/energy point
+before checking convergence. A failed geometry optimization additionally saves
+the returned geometry and a diagnostic SDF; it is never exported as converged.
+The per-step and returned geometries are distinguished because an optimizer's
+last evaluated trial need not be its final retained coordinates. Input predicted
+or measured properties are stored under `QuantumSourceProperties`; new ground
+quantities have explicit `Quantum...` field names.
+
+`--max-geometry-steps` exposes the numerical iteration budget without changing
+functional, basis, integration grid or convergence thresholds. Recovery from an
+SCF checkpoint compares against the energy inside that checkpoint. A sidecar
+JSON may describe the earlier pre-optimization SCF, while the optimizer has since
+overwritten the checkpoint; both energies are retained rather than treating the
+stale sidecar as the final state's reference.

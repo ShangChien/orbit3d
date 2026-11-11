@@ -54,3 +54,23 @@ def test_quantum_graph_failure_retains_diagnostics_and_does_not_relabel_itself()
     assert result['graph_check_status'] == 'incompatible_source_graph'
     assert 'bond_geometry' in result['source_graph_error']
     assert result['source_smiles'] == 'CC'
+
+
+def test_optimizer_trace_preserves_failed_step_units_and_source_property_meaning(tmp_path):
+    import json
+    from types import SimpleNamespace
+    from rdkit import Chem
+    from orbit3d.quantum.ocelot import record_geometry_step, quantum_geometry_molecule, BOHR_ANGSTROM, HARTREE_EV
+    record = record_geometry_step(tmp_path, 0, .2, {'coords': np.array([[0., 0., 0.], [1., 0., 0.]]),
+        'gradients': np.array([[.1, 0., 0.], [-.1, 0., 0.]]), 'energy': -1.,
+        'g_scanner': SimpleNamespace(converged=False)})
+    assert not record['scf_converged']
+    assert record['coordinates_A'][1][0] == BOHR_ANGSTROM
+    assert np.isclose(record['raw_forces_eV_A'][0][0], -.1*HARTREE_EV/BOHR_ANGSTROM)
+    assert json.loads((tmp_path/'geometry_cycle_00.jsonl').read_text()) == record
+    mol = Chem.MolFromSmiles('CC');mol.AddConformer(Chem.Conformer(2))
+    mol.SetProp('CandidateID', '7');mol.SetProp('PredictedValue', '[-7.5]')
+    out = quantum_geometry_molecule(mol, record['coordinates_A'], 'geometry_not_converged')
+    assert out.GetProp('CandidateID') == '7' and not out.HasProp('PredictedValue')
+    assert json.loads(out.GetProp('QuantumSourceProperties'))['PredictedValue'] == '[-7.5]'
+    assert out.GetProp('QuantumGraphCheck') == 'geometry_not_converged'

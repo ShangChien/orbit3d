@@ -150,7 +150,7 @@ class InternalUniMolOracle(PropertyOracleBase):
         self.max_atoms = int(max_atoms)
         self.target_units = target_units or ['unspecified'] * output_dim
         self.fold_scalers: List = []
-        self.scaler_scope = 'fold_training_only' 
+        self.scaler_scope = 'fold_training_only'
         self.has_3d_unimol = True
         self.folds = nn.ModuleList()
         self.scalers: List = []

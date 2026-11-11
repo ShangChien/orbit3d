@@ -64,6 +64,35 @@ def host_array(value):
     return value.get() if hasattr(value, "get") else np.asarray(value)
 
 
+def record_geometry_step(workdir, cycle, omega, environment):
+    """Preserve every evaluated geometry, including steps from a failed optimization."""
+    coords = host_array(environment['coords']).reshape(-1, 3) * BOHR_ANGSTROM
+    gradients = host_array(environment['gradients']).reshape(-1, 3)
+    forces = -gradients * HARTREE_EV / BOHR_ANGSTROM
+    record = {'outer_cycle': cycle, 'omega': omega, 'energy_Ha': float(environment['energy']),
+              'coordinates_A': coords.tolist(), 'raw_forces_eV_A': forces.tolist(),
+              'rms_gradient_Ha_bohr': float(np.sqrt(np.mean(np.sum(gradients**2, axis=-1)))),
+              'max_gradient_Ha_bohr': float(np.linalg.norm(gradients, axis=-1).max()),
+              'scf_converged': bool(environment['g_scanner'].converged)}
+    with (Path(workdir) / f'geometry_cycle_{cycle:02d}.jsonl').open('a') as stream:
+        stream.write(json.dumps(record) + '\n')
+    return record
+
+
+def quantum_geometry_molecule(source, coordinates, status):
+    """Keep input annotations distinct from properties of a new quantum geometry."""
+    from rdkit import Chem
+    molecule = Chem.Mol(source)
+    preserved = {'SourceID', 'CandidateID', 'TotalCharge', 'SpinMultiplicity'}
+    properties = {key: molecule.GetProp(key) for key in molecule.GetPropNames() if key not in preserved}
+    for key in properties:
+        molecule.ClearProp(key)
+    molecule.SetProp('QuantumSourceProperties', json.dumps(properties))
+    molecule.SetProp('QuantumGraphCheck', status)
+    molecule.GetConformer().SetPositions(np.asarray(coordinates, dtype=float))
+    return molecule
+
+
 def inspect_optimized_graph(molecule):
     """Report geometry/graph consistency without treating bond inference as DFT truth."""
     from dataclasses import replace
@@ -213,18 +242,30 @@ class OcelotEvaluator:
             omega = self.tune(atoms, coords, bounds)
             mf = self.scf(atoms, coords, omega)
             if optimize_geometry:
+                geometry_steps = []
+                def callback(environment):
+                    geometry_steps.append(record_geometry_step(self.workdir, cycle, omega, environment))
                 geo_ok, optimized = kernel(
                     mf,
                     maxsteps=self.theory.max_geometry_steps,
+                    callback=callback,
                     convergence_energy=1e-6,
                     convergence_grms=3e-4,
                     convergence_gmax=4.5e-4,
                     convergence_drms=1.2e-3,
                     convergence_dmax=1.8e-3,
                 )
-                if not geo_ok:
-                    raise RuntimeError("Geometry optimization did not converge")
                 coords = optimized.atom_coords(unit="Angstrom")
+                if not geo_ok:
+                    failed = {'status': 'geometry_not_converged', 'theory': asdict(self.theory),
+                              'outer_cycle': cycle, 'omega': omega, 'atom_symbols': atoms,
+                              'returned_coordinates_A': coords.tolist(), 'evaluated_steps': len(geometry_steps),
+                              'last_evaluated_geometry': geometry_steps[-1] if geometry_steps else None,
+                              'elapsed_seconds': time.perf_counter() - started}
+                    (self.workdir / 'geometry_failure.json').write_text(json.dumps(failed, indent=2) + '\n')
+                    diagnostic = quantum_geometry_molecule(molecule, coords, 'geometry_not_converged')
+                    write_precise_sdf(self.workdir / 'unconverged_input_graph.sdf', [diagnostic])
+                    raise RuntimeError("Geometry optimization did not converge")
             outer.append({"cycle": cycle, "omega": omega, "omega_change": abs(omega - previous)})
             if not optimize_geometry or (
                 cycle > 0 and abs(omega - previous) <= self.theory.omega_geometry_tolerance
@@ -259,7 +300,11 @@ class OcelotEvaluator:
             out.GetConformer().SetAtomPosition(i, xyz.tolist())
         result.update(inspect_optimized_graph(out))
         # Preserve failed coordinates separately from graph-validated outputs.
-        out.SetProp('QuantumGraphCheck', result['graph_check_status'])
+        out = quantum_geometry_molecule(molecule, coords, result['graph_check_status'])
+        for name, value in {'QuantumHOMO_eV': result['homo_eV'], 'QuantumLUMO_eV': result['lumo_eV'],
+                            'QuantumEnergy_Ha': result['energy_Ha'], 'QuantumOmega': omega,
+                            'QuantumRMSForce_eV_A': result['rms_force_eV_A']}.items():
+            out.SetProp(name, str(value))
         write_precise_sdf(self.workdir / ("optimized.sdf" if result['graph_preserved'] else "diagnostic_input_graph.sdf"), [out])
         (self.workdir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
         if not result['graph_preserved']:
