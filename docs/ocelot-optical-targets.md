@@ -62,3 +62,17 @@ The first optical launch exposed this unnecessary dependency while the property
 model was still training and stopped before any generator optimizer step. The
 retry retains that failed run and reuses its exact prepared SDF and migrated
 initial checkpoint in a fresh output directory.
+
+
+## Held-out prediction result
+
+On the identical 512 held-out molecules, the four-target DPA adapter has MAEs
+0.2895/0.2326/0.2314/0.1381 eV for HOMO/LUMO/vertical S1/vertical T1. The
+independent fingerprint model has 0.3593/0.3354/0.2968/0.2616 eV. The paired
+vertical S1−T1 gap MAEs are 0.2226 and 0.2546 eV; absolute differences of means
+are only 0.0537 and 0.0274 eV and are not substituted for MAE. Training budgets
+are 8192 and 20356, respectively, so this is a shared-test comparison rather
+than a controlled architectural ablation. New ordinary/native predictions agree
+within the existing 1e-5 eV runtime tolerance; checkpoint parameters and predictions
+from identical descriptors reload exactly. See `experiments/optical_matched512_20261112.json`
+and the two source training summaries.
