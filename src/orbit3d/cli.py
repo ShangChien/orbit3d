@@ -4,7 +4,7 @@ Unified CLI Entrypoint for ORBIT-3D (`orbit3d`).
 
 Usage:
     # Via uv (recommended):
-    uv run orbit3d --config configs/internal_dpa4.json
+    uv run orbit3d --config configs/qm9s_ocelot_octree.json
 
     # Or directly inside container:
     orbit3d --config /workspace/config.json
@@ -22,7 +22,7 @@ def main() -> None:
         "--config",
         type=str,
         required=True,
-        help="Path to the runtime JSON configuration file (e.g., configs/internal_dpa4.json)",
+        help="Path to the runtime JSON configuration file (e.g., configs/qm9s_ocelot_octree.json)",
     )
     args = parser.parse_args()
     from orbit3d.pipeline import run_from_config
