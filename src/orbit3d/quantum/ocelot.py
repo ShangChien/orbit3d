@@ -111,6 +111,24 @@ def inspect_optimized_graph(molecule):
     try:
         recovered = mol3d_to_validated_rdkit_mol(replace(inst, graph=None))
         report['recovered_smiles'] = Chem.MolToSmiles(Chem.RemoveHs(recovered), isomericSmiles=True)
+        # Atom identities are retained by coordinate reconstruction. Distinguish
+        # new/removed contacts from bond-order and formal-charge reassignment.
+        def bonds(mol):
+            return {tuple(sorted((b.GetBeginAtomIdx(), b.GetEndAtomIdx()))): b.GetBondTypeAsDouble()
+                    for b in mol.GetBonds()}
+        source_bonds, inferred_bonds = bonds(molecule), bonds(recovered)
+        coords = molecule.GetConformer().GetPositions()
+        report['changed_bonds'] = [
+            {'atoms': list(pair), 'source': source_bonds.get(pair), 'inferred': inferred_bonds.get(pair),
+             'distance_A': float(np.linalg.norm(coords[pair[0]] - coords[pair[1]]))}
+            for pair in sorted(source_bonds.keys() | inferred_bonds.keys())
+            if source_bonds.get(pair) != inferred_bonds.get(pair)]
+        report['changed_atom_charges'] = [
+            {'atom_index': i, 'element': left.GetSymbol(), 'source': left.GetFormalCharge(),
+             'inferred': right.GetFormalCharge()}
+            for i, (left, right) in enumerate(zip(molecule.GetAtoms(), recovered.GetAtoms()))
+            if left.GetFormalCharge() != right.GetFormalCharge()]
+
     except ValueError as exc:
         report['reconstruction_error'] = str(exc)
     report['graph_preserved'] = report['source_graph_compatible'] and report['recovered_smiles'] == report['source_smiles']

@@ -1,0 +1,102 @@
+{
+  "source_smiles": "C=c1ccc2[b-]([nH+]1)C1=N/C(=C\\[C@H](N)[C@H]3N[C@@H]4C[CH-][C@H]34)OCC1=CC=[N+]=2",
+  "source_graph_compatible": true,
+  "recovered_smiles": "C=C1C=CC2=[B-]3C4=N/C(=C\\[C@H](N)[C@H]5N[C@@H]6C[C@H]([C@H]56)[N@@H+]31)OCC4=CC=N2",
+  "graph_preserved": false,
+  "graph_check_status": "reconstruction_disagrees",
+  "changed_bonds": [
+    {
+      "atoms": [
+        2,
+        3
+      ],
+      "source": 1.5,
+      "inferred": 2.0,
+      "distance_A": 1.3623969592596281
+    },
+    {
+      "atoms": [
+        2,
+        5
+      ],
+      "source": 1.5,
+      "inferred": 1.0,
+      "distance_A": 1.4607486948209207
+    },
+    {
+      "atoms": [
+        3,
+        6
+      ],
+      "source": 1.5,
+      "inferred": 1.0,
+      "distance_A": 1.45418622267019
+    },
+    {
+      "atoms": [
+        4,
+        5
+      ],
+      "source": 2.0,
+      "inferred": 1.0,
+      "distance_A": 1.37195730534709
+    },
+    {
+      "atoms": [
+        5,
+        21
+      ],
+      "source": 1.5,
+      "inferred": 2.0,
+      "distance_A": 1.4870118880458367
+    },
+    {
+      "atoms": [
+        6,
+        22
+      ],
+      "source": 1.5,
+      "inferred": 1.0,
+      "distance_A": 1.4749168806726531
+    },
+    {
+      "atoms": [
+        12,
+        22
+      ],
+      "source": null,
+      "inferred": 1.0,
+      "distance_A": 1.544813729705395
+    },
+    {
+      "atoms": [
+        21,
+        22
+      ],
+      "source": 1.5,
+      "inferred": 1.0,
+      "distance_A": 1.5958002470788992
+    }
+  ],
+  "changed_atom_charges": [
+    {
+      "atom_index": 4,
+      "element": "N",
+      "source": 1,
+      "inferred": 0
+    },
+    {
+      "atom_index": 12,
+      "element": "C",
+      "source": -1,
+      "inferred": 0
+    }
+  ],
+  "checkpoint": "molecule_0003/scf_0068.chk",
+  "index": 3,
+  "role": "Inspect stored final geometry only; original failed quantum status remains unchanged",
+  "source_sha256": {
+    "cohort": "83e83f6536687d46e0e0b80e810ca4e44733562a3619b09aa2f4dc96414f5c5b",
+    "saved_final_scf": "1aab3fbc22ee309b74b2d3290e4cac74764fdc31c4e6f4c7c3f4750e696e2bae"
+  }
+}

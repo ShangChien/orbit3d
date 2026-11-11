@@ -168,3 +168,14 @@ SCF checkpoint compares against the energy inside that checkpoint. A sidecar
 JSON may describe the earlier pre-optimization SCF, while the optimizer has since
 overwritten the checkpoint; both energies are retained rather than treating the
 stale sidecar as the final state's reference.
+
+The generated B cohort's molecule 3 illustrates why the known-graph geometry
+check and coordinate graph reconstruction remain separate. Its supplied graph
+passes the geometric compatibility checks, but reconstruction adds a previously
+absent C–N bond between atom indices 12 and 22 at 1.5448 Å, alongside bond-order
+and charge reassignment. This is more than a change in aromatic notation; the
+old graph's bond-length checks alone cannot establish unchanged connectivity.
+The original quantum failure stays unchanged. The stored-final-SCF geometry,
+source/checkpoint hashes and every differing edge/charge are recorded in
+`experiments/boron_graph_difference3_20261112.json`. Future graph inspections
+include these differences automatically; no geometry threshold is loosened.
