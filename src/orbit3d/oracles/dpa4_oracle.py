@@ -1,13 +1,8 @@
-"""
-DPA-4 Native Shared-Backbone Force Field & Equivariant Property Predictor (`dpa4_oracle.py`)
-============================================================================================
-- Freezes `DPA-4`'s `DescrptSeZM` and `SeZMEnergyFittingNet` (`requires_grad=False`) so
-  physical atomic forces `F_phys = -grad_X E_DPA4(X)` are 100% preserved.
-- Captures 100% of `DPA-4`'s native internal multi-layer equivariant per-atom descriptor
-  tensor `descriptor` (`(N, D_desc)`) passed into `SeZMEnergyFittingNet` via forward hook.
-- Attaches a trainable 3D Distance-Biased Attention Adapter + Multi-Head Gated Pooling Ensemble
-  on `descriptor` so a single forward pass produces `y_pred`, `y_std`, `E_phys`, `F_phys`, and
-  exact differentiable 3D coordinate gradients `d y / d X`!
+"""Frozen DPA descriptors with independent bootstrap property adapters.
+
+Property evaluation and native forces share the force-forward descriptor. Coordinate
+derivatives use the separate embedding path, since the force path detaches edge
+vectors. Equal-size frames and their property adapters support native batching.
 """
 
 from __future__ import annotations
@@ -145,6 +140,11 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         self.desc_dim = self.dpa_guidance.probe_native_descriptor_dim()
         self.adapter = _BootstrapAdapters(self.desc_dim, output_dim, n_ensemble_heads).to(self.device)
 
+    @staticmethod
+    def validate_molecule(mol):
+        if Chem.GetFormalCharge(mol) != 0 or any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
+            raise ValueError('OCELOT DPA property adapters support neutral closed-shell molecules only')
+
     def forward_shared_force_and_property(
         self,
         coords: torch.Tensor,
@@ -211,6 +211,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         self.adapter.eval()
         preds, stds = [], []
         for mol in mols:
+            self.validate_molecule(mol)
             atoms = [a.GetSymbol() for a in mol.GetAtoms()]
             pos = torch.tensor(mol.GetConformer().GetPositions(), dtype=torch.float32, device=self.device)
             with torch.enable_grad():
@@ -225,6 +226,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         self.adapter.eval()
         groups = {}
         for i, mol in enumerate(mols):
+            self.validate_molecule(mol)
             groups.setdefault(mol.GetNumAtoms(), []).append(i)
         mean = np.empty((len(mols), self.output_dim), dtype=np.float32)
         std = np.empty_like(mean)
@@ -281,6 +283,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         norm_train = transform_with_scalers(yt, self.scalers)
         norm_valid = transform_with_scalers(yv, self.scalers)
         all_mols = train + valid
+        for mol in all_mols:
+            self.validate_molecule(mol)
         cached = [None] * len(all_mols)
 
         def batches(indices, rng=None):
@@ -373,6 +377,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             "n_ensemble_heads": self.n_ensemble_heads,
             "target_cols": self.target_cols,
             "target_units": getattr(self, 'target_units', ['unspecified'] * self.output_dim),
+            "electronic_states": [{'charge': 0, 'multiplicity': 1}],
+            "training_elements": sorted({atom.GetSymbol() for mol in train for atom in mol.GetAtoms()}),
             "scaler_sha256": hashlib.sha256(open(os.path.join(save_dir, 'target_scaler.ss'), 'rb').read()).hexdigest(),
             "batch_size": batch_size,
             "train_records": len(train),

@@ -33,6 +33,8 @@ def relax_conformer_iso_property(
     if n_steps < 0 or step_size <= 0 or max_atom_disp <= 0 or property_tolerance < 0 or energy_tolerance < 0:
         raise ValueError("Invalid relaxation settings")
     initial_mol = mol3d_to_validated_rdkit_mol(inst)
+    if hasattr(oracle, 'validate_molecule'):
+        oracle.validate_molecule(initial_mol)
     inst = replace(inst, graph=initial_mol, smiles=mol_to_clean_smiles(initial_mol))
     device = torch.device(dpa_guidance.device_str)
     x = torch.tensor(inst.coords, dtype=torch.float32, device=device)

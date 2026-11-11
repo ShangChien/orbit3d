@@ -5,15 +5,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from rdkit import Chem
-from rdkit.Chem import AllChem
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
-from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.run_evidence import freeze_run
 from orbit3d.utils.reproducibility import lock_deterministic_environment
+from orbit3d.utils.conformers import ocelot_conformer
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)
@@ -46,26 +44,12 @@ for split, limit in [("train", a.train), ("valid", a.eval), ("test", a.eval)]:
     for row in frame.to_dict("records"):
         if len(rows) >= limit:
             break
-        mol = Chem.AddHs(Chem.MolFromSmiles(row["canonical_smiles"]))
-        params = AllChem.ETKDGv3()
-        params.randomSeed = 42
-        params.maxIterations = 300
-        if AllChem.EmbedMolecule(mol, params) != 0:
-            failures.append({"split": split, "id": row["identifier"], "reason": "embedding_failed"})
-            continue
         try:
-            if not AllChem.MMFFHasAllMoleculeParams(mol):
-                raise ValueError('MMFF parameters unavailable')
-            status = AllChem.MMFFOptimizeMolecule(mol, maxIters=100)
-            if status < 0:
-                raise ValueError('MMFF setup failed')
-            mol3d_to_validated_rdkit_mol(rdkit_mol_to_mol3d_instance(mol, np.zeros(len(names))))
-        except (ValueError, Chem.KekulizeException, Chem.AtomValenceException) as exc:
+            mol = ocelot_conformer(row['canonical_smiles'])
+        except ValueError as exc:
             failures.append({'split': split, 'id': row['identifier'], 'reason': 'geometry_preparation: ' + str(exc)})
             continue
         mol.SetProp("SourceID", str(row["identifier"]))
-        mol.SetProp("GeometryOrigin", "RDKit ETKDG; not original OCELOT DFT geometry")
-        mol.SetIntProp('MMFFOptimizationStatus', int(status))
         for name in names:
             mol.SetProp(name, str(row[name]))
         mols.append(mol)

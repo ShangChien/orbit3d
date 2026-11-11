@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from rdkit import Chem
+from rdkit.Contrib.SA_Score import sascorer
 from orbit3d.constraints import TargetIntervals
 from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
 
@@ -27,6 +28,7 @@ for run in a.runs:
     optimization = np.array([json.loads(m.GetProp("PredictedValue")) for m in mols]).reshape(len(mols), len(oracle.target_cols))
     rows = pd.read_csv(run / "candidates.csv").set_index("candidate_id")
     hits = [intervals.hit(v) for v in pred]
+    sa_scores = [float(sascorer.calculateScore(Chem.RemoveHs(m))) for m in mols]
     force_ok = [
         float(rows.loc[int(m.GetProp("CandidateID")), "final_force"])
         <= cfg["inference_config"]["max_rms_force_eva"]
@@ -38,12 +40,16 @@ for run in a.runs:
         "independent_interval_hits": sum(hits),
         "independent_joint_successes": sum(h and f for h, f in zip(hits, force_ok)),
         "attempted": len(rows),
+        "synthetic_accessibility": {'implementation': 'RDKit Ertl-Schuffenhauer SA score',
+                                    'mean': float(np.mean(sa_scores)) if sa_scores else None,
+                                    'maximum': max(sa_scores) if sa_scores else None,
+                                    'interpretation': '1 easier to 10 harder; heuristic, not a synthesis route or proof'},
         "mean_absolute_oracle_disagreement_eV": dict(
             zip(oracle.target_cols, np.abs(pred - optimization).mean(0).tolist())
         ) if mols else None,
     }
     result = pd.DataFrame(
-        {"candidate_id": [int(m.GetProp("CandidateID")) for m in mols], "interval_hit": hits}
+        {"candidate_id": [int(m.GetProp("CandidateID")) for m in mols], "interval_hit": hits, 'sa_score': sa_scores}
     )
     for i, name in enumerate(oracle.target_cols):
         result[name] = pred[:, i]

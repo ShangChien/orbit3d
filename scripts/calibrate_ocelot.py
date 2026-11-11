@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 from scipy.stats import spearmanr
 from rdkit import Chem
-from rdkit.Chem import AllChem, rdFingerprintGenerator
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit import DataStructs
 from orbit3d.oracles.calibration import ResidualCalibration
 from orbit3d.oracles.applicability import MorganDomain
@@ -15,6 +15,8 @@ from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
 from orbit3d.utils.dataset_io import write_precise_sdf
+from orbit3d.utils.conformers import ocelot_conformer
+from orbit3d.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)
@@ -26,6 +28,7 @@ p.add_argument("--size", type=int, default=128)
 p.add_argument("--generated", type=Path)
 a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
+freeze_run(a.output, __file__)
 torch.set_num_threads(2)
 meta = json.loads((a.trained_run / "summary.json").read_text())
 used = set(meta["training_ids"] + meta["valid_ids"] + meta["test_ids"])
@@ -39,14 +42,11 @@ failed = []
 for row in frame.to_dict("records"):
     if len(mols) == a.size:
         break
-    m = Chem.AddHs(Chem.MolFromSmiles(row["canonical_smiles"]))
-    ps = AllChem.ETKDGv3()
-    ps.randomSeed = 42
-    ps.maxIterations = 300
-    if AllChem.EmbedMolecule(m, ps):
-        failed.append(row["identifier"])
+    try:
+        m = ocelot_conformer(row['canonical_smiles'])
+    except ValueError as exc:
+        failed.append({'id': row['identifier'], 'reason': str(exc)})
         continue
-    AllChem.MMFFOptimizeMolecule(m, maxIters=100)
     m.SetProp("SourceID", row["identifier"])
     mols.append(m)
     rows.append(row)
@@ -113,7 +113,7 @@ def domain_similarity(ms):
 
 domain_cutoff = float(np.quantile(domain_similarity(mols), .05))
 MorganDomain([Chem.MolToSmiles(Chem.RemoveHs(m)) for m in training_mols], domain_cutoff).save(a.output / "applicability.json")
-report["applicability_domain"] = {"method": "maximum Morgan Tanimoto to the actual 512 training structures",
+report["applicability_domain"] = {"method": f"maximum Morgan Tanimoto to the actual {len(training_mols)} training structures",
                                   "cutoff_from_calibration_5th_percentile": domain_cutoff}
 if a.generated:
     generated = list(Chem.SDMolSupplier(str(a.generated), removeHs=False))

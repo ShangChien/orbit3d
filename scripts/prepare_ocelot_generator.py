@@ -5,9 +5,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from rdkit import Chem, RDLogger
-from rdkit.Chem import AllChem
 from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 from orbit3d.utils.dataset_io import write_precise_sdf
+from orbit3d.utils.conformers import ocelot_conformer
 
 p = argparse.ArgumentParser()
 p.add_argument("--train-csv", type=Path, required=True)
@@ -32,13 +32,8 @@ for row in f.to_dict("records"):
     elif m.GetNumAtoms() > 40:
         reason = "outside_current_adaptation_size"
     else:
-        ps = AllChem.ETKDGv3()
-        ps.randomSeed = 42
-        ps.maxIterations = 300
-        if AllChem.EmbedMolecule(m, ps):
-            reason = "embedding_failed"
-        else:
-            AllChem.MMFFOptimizeMolecule(m, maxIters=100)
+        try:
+            m = ocelot_conformer(row['canonical_smiles'])
             coords = m.GetConformer().GetPositions()
             if np.linalg.norm(coords[:, None] - coords[None, :], axis=-1).max() > 14.8:
                 reason = "outside_rotation_safe_octree_span"
@@ -47,6 +42,8 @@ for row in f.to_dict("records"):
                     mol3d_to_validated_rdkit_mol(rdkit_mol_to_mol3d_instance(m, np.zeros(2)))
                 except ValueError:
                     reason = "invalid_geometry"
+        except ValueError as exc:
+            reason = 'geometry_preparation: ' + str(exc)
     if reason:
         excluded.append({"id": row["identifier"], "reason": reason})
         continue

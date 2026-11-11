@@ -171,3 +171,17 @@ def test_vectorized_adapter_keeps_frames_and_coordinate_gradients_independent():
     gradient = torch.autograd.grad(together[:, 0].sum(), coords)[0]
     assert gradient[0].abs().sum() > 0
     assert torch.count_nonzero(gradient[1:]) == 0
+
+
+@pytest.mark.parametrize('smiles', ['[NH4+]', '[CH2]'])
+def test_ocelot_property_adapters_reject_untrained_electronic_states(smiles):
+    with pytest.raises(ValueError, match='neutral closed-shell'):
+        InternalDPA4PropertyOracle.validate_molecule(Chem.MolFromSmiles(smiles))
+
+
+def test_phosphazene_mmff_failure_is_an_explicit_preparation_rejection():
+    from orbit3d.utils.conformers import ocelot_conformer
+
+    # OCELOT csd_TAVCOI: parses as a graph, but MMFF cannot kekulize its fused system.
+    with pytest.raises(ValueError, match='MMFF aromaticity/valence unsupported'):
+        ocelot_conformer('FP1(F)=NP(F)(F)=NP2(=N1)Oc1cc3ccccc3cc1O2')
