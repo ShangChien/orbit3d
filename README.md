@@ -7,8 +7,8 @@ property oracles and constrained force-field refinement.
 
 The executable mainline is **Uni-3DAR octree → interval adaptation → candidate
 ranking → DPA4 refinement**. GRPO is available for experiments and disabled in the
-recommended configuration because its first matched-budget comparison did not
-improve final success. The dense-grid implementation remains a baseline.
+recommended configuration pending a matched FP32 benefit assessment. The initial
+BF16 comparison is retained as a numerical diagnostic. The dense-grid implementation remains a baseline.
 
 ![Five-stage architecture](paper/figures/fig0_orbit3d_system_architecture.svg)
 

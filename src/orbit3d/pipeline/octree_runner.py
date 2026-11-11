@@ -72,9 +72,16 @@ def run_octree_from_config(cfg, config_path=None):
     if mode in {"train", "train_and_predict"}:
         if not training:
             raise ValueError("Octree adaptation requires training molecules")
-        model = load_pretrained(
-            paths["generator_pretrained_path"], device, len(names), settings.get("batch_size", 16)
-        )
+        initial_state = None
+        if paths.get('checkpoint_load_path'):
+            initial_path = Path(paths['checkpoint_load_path'])
+            model, initial_state = load_octree_checkpoint(initial_path, device, settings.get('batch_size', 16))
+            if initial_state['target_cols'] != names or initial_state.get('target_units', units) != units:
+                raise ValueError('Continued adaptation requires matching target names and units')
+            train_smiles.update(initial_state.get('training_smiles', []))
+        else:
+            initial_path = Path(paths['generator_pretrained_path'])
+            model = load_pretrained(initial_path, device, len(names), settings.get('batch_size', 16))
         label_source = settings.get("label_source", "sdf")
         if label_source == "oracle":
             y, _ = oracle.predict_3d_mols(training)
@@ -89,8 +96,8 @@ def run_octree_from_config(cfg, config_path=None):
             y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32)
         else:
             raise ValueError(f"Unknown label source: {label_source}")
-        mean = y.mean(0)
-        scale = y.std(0).clip(1e-6)
+        mean = initial_state['mean'] if initial_state else y.mean(0)
+        scale = initial_state['scale'] if initial_state else y.std(0).clip(1e-6)
         yn = (y - mean) / scale
         dataset = OctreeDataset(training, model, seed=int(cfg.get("seed", 42)))
         train_backbone = bool(settings.get("train_backbone", False))
@@ -117,6 +124,28 @@ def run_octree_from_config(cfg, config_path=None):
             opt, lambda step: 0.1 + 0.9 * 0.5 * (1 + np.cos(np.pi * step / steps))
         )
         rng = np.random.default_rng(int(cfg.get("seed", 42)))
+        initial_hash = hashlib.sha256(initial_path.read_bytes()).hexdigest()
+        def save_adaptation(save_path):
+            torch.save(
+                {
+                    "model_state_dict": model.state_dict(),
+                    "backend": f"uni3dar_octree_v{model.condition_version}",
+                    "target_cols": names,
+                    "target_units": units,
+                    "contract": checkpoint_contract(model, names, units, mean, scale),
+                    "mean": mean,
+                    "scale": scale,
+                    "initial_weights_sha256": initial_hash,
+                    "initial_weights_kind": 'adapted_checkpoint' if initial_state else 'upstream_ema',
+                    "optimizer_resumed": False,
+                    "history": history,
+                    "training_smiles": sorted(train_smiles),
+                    "label_source": label_source,
+                    "train_backbone": train_backbone,
+                },
+                save_path,
+            )
+
         for step in range(steps):
             model.train()
             dataset.grid.set_epoch(step + 1)
@@ -143,25 +172,10 @@ def run_octree_from_config(cfg, config_path=None):
             history.append(metrics)
             if step % 10 == 0 or step == steps - 1:
                 print("octree SFT", step + 1, metrics, flush=True)
-        torch.save(
-            {
-                "model_state_dict": model.state_dict(),
-                "backend": f"uni3dar_octree_v{model.condition_version}",
-                "target_cols": names,
-                "target_units": units,
-                "contract": checkpoint_contract(model, names, units, mean, scale),
-                "mean": mean,
-                "scale": scale,
-                "pretrained_sha256": hashlib.sha256(
-                    Path(paths["generator_pretrained_path"]).read_bytes()
-                ).hexdigest(),
-                "history": history,
-                "training_smiles": sorted(train_smiles),
-                "label_source": label_source,
-                "train_backbone": train_backbone,
-            },
-            checkpoint,
-        )
+            every = int(settings.get("checkpoint_every", 0))
+            if every and (step + 1) % every == 0 and step + 1 < steps:
+                save_adaptation(checkpoint.parent / f"octree_step_{step + 1}.pt")
+        save_adaptation(checkpoint)
     else:
         checkpoint = Path(paths.get("checkpoint_load_path", checkpoint))
         model, state = load_octree_checkpoint(checkpoint, device, settings.get("batch_size", 16))
@@ -196,6 +210,11 @@ def run_octree_from_config(cfg, config_path=None):
             ff,
             steps=int(settings["grpo_steps"]),
             group_size=int(settings.get("group_size", 8)),
+            seed=int(cfg.get('seed', 42)),
+            kl_beta=float(settings.get('kl_beta', 0.02)),
+            physics_weight=float(settings.get('physics_weight', 0.2)),
+            uncertainty_weight=float(settings.get('uncertainty_weight', 0.0)),
+            replay_weight=float(settings.get('replay_weight', 0.1)),
         )
         checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_aligned.pt"
         torch.save(
