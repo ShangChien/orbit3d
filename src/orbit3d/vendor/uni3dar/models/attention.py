@@ -7,6 +7,7 @@ from torch import Tensor, nn
 from .layers import Linear
 from orbit3d.vendor.flash_attn.flash_attn_interface import flash_attn_varlen_func, flash_attn_func
 from functools import lru_cache
+from .kv_cache import append_kv
 
 
 @lru_cache(maxsize=16)
@@ -89,13 +90,7 @@ class Attention(nn.Module):
             k = k.transpose(1, 2)
             v = v.transpose(1, 2)
 
-            # k: [B, H, 1, D] -> [B, H, L, D]
-            if "k" in kv_cache:
-                k_cache, v_cache = kv_cache["k"], kv_cache["v"]
-                k = torch.cat([k_cache, k], dim=2)
-                del k_cache, kv_cache["k"]
-                v = torch.cat([v_cache, v], dim=2)
-                del v_cache, kv_cache["v"]
+            k, v = append_kv(kv_cache, k, v)
 
             seq_q = q.shape[1]
             if seq_q >= 128:

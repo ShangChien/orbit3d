@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from ..vendor.uni3dar.data import AtomFeatDict as AtomFeatDict, GridDataset as GridDataset
 from ..vendor.uni3dar.data.atom_data import atom_list
 from ..vendor.uni3dar.models.uni3dar import DecoderInputFeat
+from ..vendor.uni3dar.models.kv_cache import compact_kv
 from ..vendor.uni3dar.models.uni3dar_sampler import (
     Uni3DARSampler,
     IDX_CNT,
@@ -380,7 +381,10 @@ class ConditionalUni3DAR(Uni3DARSampler):
         row_seeds=None,
         spatial_box=None,
         electron_parity=None,
+        cache_mode="concat",
     ) -> List[Dict]:
+        if cache_mode not in {"concat", "buffer"}:
+            raise ValueError("KV cache mode must be concat or buffer")
         self.eval()
         device = y_min.device
         batch_size = y_min.shape[0]
@@ -413,12 +417,12 @@ class ConditionalUni3DAR(Uni3DARSampler):
 
         try:
             with torch.no_grad():
-                kv_cache = [[{"step": 1} for _ in range(self.args.layer)] for _ in range(self.args.recycle)]
+                kv_cache = [[{"step": 1, "mode": cache_mode} for _ in range(self.args.layer)] for _ in range(self.args.recycle)]
                 global_c = self.interval_conditioner(y_min, y_max, active_mask).unsqueeze(1)
 
                 if use_cfg:
                     kv_cache_uncond = [
-                        [{"step": 1} for _ in range(self.args.layer)] for _ in range(self.args.recycle)
+                        [{"step": 1, "mode": cache_mode} for _ in range(self.args.layer)] for _ in range(self.args.recycle)
                     ]
                     null_mask = torch.zeros_like(active_mask, dtype=torch.bool)
                     global_c_uncond = self.interval_conditioner(y_min, y_max, null_mask).unsqueeze(1)
@@ -595,9 +599,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
                                 continue
                             for r_i in range(len(cache_obj)):
                                 for l_i in range(len(cache_obj[r_i])):
-                                    if "k" in cache_obj[r_i][l_i]:
-                                        cache_obj[r_i][l_i]["k"] = cache_obj[r_i][l_i]["k"][~is_delete]
-                                        cache_obj[r_i][l_i]["v"] = cache_obj[r_i][l_i]["v"][~is_delete]
+                                    compact_kv(cache_obj[r_i][l_i], ~is_delete)
 
                     last_level = decoder_feat[:, -1, IDX_LEVEL]
                     is_new_level = last_level != next_feat[:, IDX_LEVEL]

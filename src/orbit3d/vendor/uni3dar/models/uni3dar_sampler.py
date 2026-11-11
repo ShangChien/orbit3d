@@ -3,6 +3,7 @@ from orbit3d.vendor.unicore.models import (
     register_model_architecture,
 )
 from functools import partial
+from .kv_cache import compact_kv
 import torch
 from torch.nn import functional as F
 from .uni3dar import Uni3DAR, DecoderInputFeat, base_architecture
@@ -279,8 +280,7 @@ class Uni3DARSampler(Uni3DAR):
             for i in range(len(kv_cache[k])):
                 if kv_cache[k][i]["step"] == 1:
                     continue
-                kv_cache[k][i]["k"] = kv_cache[k][i]["k"][~is_delete]
-                kv_cache[k][i]["v"] = kv_cache[k][i]["v"][~is_delete]
+                compact_kv(kv_cache[k][i], ~is_delete)
         return (
             next_feat,
             new_raw_feat,
