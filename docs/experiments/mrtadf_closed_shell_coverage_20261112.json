@@ -1,0 +1,61 @@
+{
+  "de_novo_gen/train": {
+    "counts": {
+      "records": 15158,
+      "accepted": 1641,
+      "atom_order_mismatch": 333,
+      "bond_geometry": 100,
+      "charged_or_radical": 12862,
+      "invalid_smiles": 222
+    },
+    "raw_element_records": {
+      "N": 6235,
+      "C": 14936,
+      "B": 6508,
+      "O": 8490,
+      "S": 3858,
+      "Se": 261
+    },
+    "accepted_unique_element_records": {
+      "N": 1326,
+      "C": 1641,
+      "B": 1282
+    },
+    "wide_examples": []
+  },
+  "de_novo_gen/valid": {
+    "counts": {
+      "records": 1371,
+      "charged_or_radical": 1357,
+      "invalid_smiles": 14
+    },
+    "raw_element_records": {
+      "O": 941,
+      "C": 1357,
+      "N": 457,
+      "S": 416,
+      "B": 492,
+      "Se": 27
+    },
+    "accepted_unique_element_records": {},
+    "wide_examples": []
+  },
+  "local_gen/train": {
+    "counts": {
+      "records": 371,
+      "charged_or_radical": 370,
+      "invalid_smiles": 1
+    },
+    "raw_element_records": {
+      "B": 370,
+      "S": 36,
+      "C": 370,
+      "N": 370,
+      "Si": 114,
+      "O": 40,
+      "F": 9
+    },
+    "accepted_unique_element_records": {},
+    "wide_examples": []
+  }
+}
