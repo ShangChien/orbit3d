@@ -40,7 +40,9 @@
     "num_molecules": 16,
     "batch_size": 16,
     "max_rms_force_eva": 0.5,
-    "oracle_candidates": 32
+    "oracle_candidates": 32,
+    "sampling_mode": "independent",
+    "precision": "float32"
   },
   "stage5_relax_config": {
     "relax_steps": 30

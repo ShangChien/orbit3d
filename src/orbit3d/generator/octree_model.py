@@ -22,6 +22,7 @@ from ..vendor.uni3dar.models.uni3dar_sampler import (
     IDX_TYPE,
     NUM_FEAT,
 )
+from .random_streams import RowRandomStreams
 
 
 class DynamicIntervalConditioner(nn.Module):
@@ -29,7 +30,14 @@ class DynamicIntervalConditioner(nn.Module):
     Zero-Perturbation Root-Prefix + 12-Layer AdaLN-Zero Interval Conditioner for Uni-3DAR.
     """
 
-    def __init__(self, emb_dim: int = 768, num_props: int = 3, num_layers: int = 12, num_freqs: int = 16):
+    def __init__(
+        self,
+        emb_dim: int = 768,
+        num_props: int = 3,
+        num_layers: int = 12,
+        num_freqs: int = 16,
+        bound_masks: bool = False,
+    ):
         super().__init__()
         self.emb_dim = emb_dim
         self.num_props = num_props
@@ -52,6 +60,9 @@ class DynamicIntervalConditioner(nn.Module):
             ]
         )
         self.prop_id_emb = nn.Embedding(num_props, emb_dim)
+        self.bound_projection = nn.Linear(2, emb_dim, bias=False) if bound_masks else None
+        if self.bound_projection is not None:
+            nn.init.zeros_(self.bound_projection.weight)
 
         self.global_mlp = nn.Sequential(
             nn.Linear(num_props * emb_dim, emb_dim),
@@ -90,7 +101,13 @@ class DynamicIntervalConditioner(nn.Module):
     ) -> torch.Tensor:
         bsz = y_min.shape[0]
         device = y_min.device
-        mask_f = active_mask.float().unsqueeze(-1)
+        bound_mask = active_mask if active_mask.ndim == 3 else active_mask.unsqueeze(-1).expand(-1, -1, 2)
+        if self.bound_projection is None and (bound_mask[..., 0] != bound_mask[..., 1]).any():
+            raise ValueError("One-sided intervals require a v2 conditioner trained with bound masks")
+        active = bound_mask.any(-1)
+        mask_f = active.float().unsqueeze(-1)
+        y_min = torch.where(bound_mask[..., 0], y_min, 0)
+        y_max = torch.where(bound_mask[..., 1], y_max, 0)
 
         c = 0.5 * (y_min + y_max)
         w = 0.5 * (y_max - y_min).clamp(min=1e-4)
@@ -101,12 +118,14 @@ class DynamicIntervalConditioner(nn.Module):
             feat_k = self._fourier_encode(raw_k)
             id_k = self.prop_id_emb(torch.full((bsz,), k, dtype=torch.long, device=device))
             emb_k = self.prop_encoders[k](feat_k) + id_k
+            if self.bound_projection is not None:
+                emb_k = emb_k + self.bound_projection(bound_mask[:, k].float())
             emb_k = emb_k * mask_f[:, k]
             per_prop_list.append(emb_k)
 
         concat_emb = torch.cat(per_prop_list, dim=-1)
         global_c = self.global_mlp(concat_emb)
-        has_any = (active_mask.float().sum(dim=-1, keepdim=True) > 0).to(global_c.dtype)
+        has_any = active.any(dim=-1, keepdim=True).to(global_c.dtype)
         return global_c * has_any
 
     def forward_root_prefix(self, global_c: torch.Tensor) -> torch.Tensor:
@@ -193,10 +212,12 @@ class ConditionalUni3DAR(Uni3DARSampler):
     def __init__(self, args, dictionary, num_props: int = 3):
         super().__init__(args, dictionary)
         self.num_props = num_props
+        self.condition_version = getattr(args, "condition_version", 1)
         self.interval_conditioner = DynamicIntervalConditioner(
             emb_dim=args.emb_dim,
             num_props=num_props,
             num_layers=args.layer,
+            bound_masks=self.condition_version == 2,
         )
         self.prop_understanding_head = Suffix3DPropertyHead(
             emb_dim=args.emb_dim,
@@ -329,6 +350,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
         atom_temp: Optional[float] = None,
         xyz_temp: Optional[float] = None,
         evaluate_self_consistency: bool = True,
+        row_seeds=None,
     ) -> List[Dict]:
         self.eval()
         device = y_min.device
@@ -367,6 +389,11 @@ class ConditionalUni3DAR(Uni3DARSampler):
                     "global_c_uncond": global_c_uncond,
                     "orig_idx": torch.arange(batch_size, dtype=torch.long, device=device),
                 }
+                streams = RowRandomStreams(row_seeds) if row_seeds is not None else None
+
+                def sample_uniforms(selected):
+                    rows = cond_vars["orig_idx"][selected].tolist()
+                    return streams.draw(rows, device)
                 count_vars = {
                     "known_atoms": torch.full(
                         (batch_size, self.num_tree), -1, dtype=torch.int32, device=device
@@ -386,9 +413,9 @@ class ConditionalUni3DAR(Uni3DARSampler):
                 finished_trajs = []
 
                 atom_predict_funcs, cond_vars = self.get_atom_predict_funcs(
-                    batch_size, device, None, cond_vars
+                    batch_size, device, None, cond_vars, sample_uniforms if streams else None
                 )
-                tree_predict_funcs = self.get_tree_predict_funcs()
+                tree_predict_funcs = self.get_tree_predict_funcs(sample_uniforms if streams else None)
 
                 cur_feat = decoder_feat[:, -1, :]
                 cur_phy_pos = decoder_phy_pos[:, -1, :]

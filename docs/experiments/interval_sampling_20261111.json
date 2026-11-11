@@ -1,0 +1,80 @@
+{
+  "octree_batch_replay": {
+    "float32": [
+      {
+        "batch_size": 1,
+        "tracked_candidates": 4,
+        "token_divergent_ids": []
+      },
+      {
+        "batch_size": 8,
+        "tracked_candidates": 4,
+        "token_divergent_ids": []
+      },
+      {
+        "batch_size": 48,
+        "tracked_candidates": 4,
+        "token_divergent_ids": []
+      }
+    ],
+    "bfloat16": [
+      {
+        "batch_size": 1,
+        "tracked_candidates": 4,
+        "token_divergent_ids": []
+      },
+      {
+        "batch_size": 8,
+        "tracked_candidates": 4,
+        "token_divergent_ids": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "batch_size": 48,
+        "tracked_candidates": 4,
+        "token_divergent_ids": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "interval_v2_reload": {
+    "passed": true,
+    "all_candidates": 32,
+    "exported_molecules": 8,
+    "prediction_atol": 1e-05,
+    "coordinate_atol_A": 1e-05,
+    "upstream_pretrained_and_training_data_required": false
+  },
+  "interval_v2": {
+    "backend": "uni3dar_octree_v2",
+    "attempted": 32,
+    "raw_valid": 19,
+    "external_ranking_calls": 16,
+    "unique_raw_valid": 19,
+    "retained": 8,
+    "qualified": 7,
+    "joint_success_rate": 0.21875,
+    "retained_novel_vs_adaptation": 8,
+    "property_hit_retained": 7,
+    "mean_final_force": 0.1661774469539523,
+    "export_prediction_recheck_passed": true,
+    "elapsed_seconds": 164.9652437083423,
+    "checkpoint_sha256": "0137aacb8d521e47adf9053fb70db3e8176c73f6e371249ad26078bab07ea9da"
+  },
+  "gpu_cpu_comparison": {
+    "converged": true,
+    "energy_delta_Ha": -1.0845724318642169e-10,
+    "homo_delta_eV": 8.28319515134653e-06,
+    "lumo_delta_eV": 1.211713276440182e-05,
+    "elapsed_seconds": 9.69390643760562,
+    "density_fitting": false
+  }
+}

@@ -3,7 +3,7 @@
 import copy
 import numpy as np
 import torch
-from .octree_backend import trajectory_to_instance, OctreeDataset
+from .octree_backend import trajectory_to_instance, OctreeDataset, interval_arrays
 
 
 def categorical_policy_loss(current, previous, reference, advantages, beta=0.02, clip=0.2):
@@ -31,10 +31,10 @@ def align_octree(
     model.interval_conditioner.requires_grad_(True)
     parameters = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(parameters, lr=lr, weight_decay=1e-4)
-    bounds = intervals.condition(mean, scale).reshape(len(mean), 4)
-    low = torch.tensor(bounds[:, 0], device=device).repeat(group_size, 1)
-    high = torch.tensor(bounds[:, 1], device=device).repeat(group_size, 1)
-    mask = torch.tensor(bounds[:, 2], device=device, dtype=torch.bool).repeat(group_size, 1)
+    lower, upper, active = interval_arrays(intervals, mean, scale, model.condition_version)
+    low = torch.tensor(lower, device=device).repeat(group_size, 1)
+    high = torch.tensor(upper, device=device).repeat(group_size, 1)
+    mask = torch.tensor(active, device=device).unsqueeze(0).expand(group_size, *active.shape)
     dataset = OctreeDataset(molecules, model)
     rng = np.random.default_rng(43)
     history = []

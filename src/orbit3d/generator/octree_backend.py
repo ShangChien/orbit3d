@@ -30,8 +30,9 @@ class OctreeDataset:
         return self.grid.collater([self.grid[int(i)] for i in indices])
 
 
-def build_octree(device="cuda:0", targets=2, batch_size=16):
+def build_octree(device="cuda:0", targets=2, batch_size=16, condition_version=2):
     args = build_default_uni3dar_args(batch_size)
+    args.condition_version = condition_version
     return ConditionalUni3DAR(args, AtomFeatDict(args), num_props=targets).to(device)
 
 
@@ -49,11 +50,23 @@ def load_pretrained(path, device="cuda:0", targets=2, batch_size=16):
 
 def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
     state = torch.load(path, map_location="cpu", weights_only=False)
-    if state["backend"] != "uni3dar_octree_v1":
-        raise ValueError("Expected a uni3dar_octree_v1 checkpoint")
-    model = build_octree(device, len(state["target_cols"]), batch_size)
+    versions = {"uni3dar_octree_v1": 1, "uni3dar_octree_v2": 2}
+    if state["backend"] not in versions:
+        raise ValueError("Unknown octree checkpoint contract")
+    model = build_octree(device, len(state["target_cols"]), batch_size, versions[state["backend"]])
     model.load_state_dict(state["model_state_dict"], strict=True)
     return model.eval(), state
+
+
+def interval_arrays(intervals, mean, scale, condition_version):
+    bounds = intervals.condition(mean, scale).reshape(len(mean), 4)
+    if condition_version == 1:
+        if np.any(bounds[:, 2] != bounds[:, 3]):
+            raise ValueError("One-sided intervals require a v2 conditioner trained with bound masks")
+        active = bounds[:, 2].astype(bool)
+    else:
+        active = bounds[:, 2:].astype(bool)
+    return bounds[:, 0], bounds[:, 1], active
 
 
 def trajectory_to_instance(trajectory):

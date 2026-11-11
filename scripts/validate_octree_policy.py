@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import torch
 from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.octree_backend import load_octree_checkpoint
+from orbit3d.generator.octree_backend import load_octree_checkpoint, interval_arrays
 from orbit3d.vendor.uni3dar.models import uni3dar_sampler as sampler
 
 p = argparse.ArgumentParser()
@@ -19,16 +19,18 @@ device = cfg.get("device", "cuda:0")
 model, state = load_octree_checkpoint(cfg["mount_paths"]["checkpoint_load_path"], device)
 model.args.rank_by = "joint"
 intervals = TargetIntervals.parse(cfg["inference_config"]["target_interval"], state["target_cols"])
-bounds = intervals.condition(state["mean"], state["scale"]).reshape(len(state["mean"]), 4)
-lo = torch.tensor(bounds[:, 0], device=device).repeat(4, 1)
-hi = torch.tensor(bounds[:, 1], device=device).repeat(4, 1)
-mask = torch.tensor(bounds[:, 2], device=device, dtype=torch.bool).repeat(4, 1)
+lower, upper, active = interval_arrays(intervals, state["mean"], state["scale"], model.condition_version)
+lo = torch.tensor(lower, device=device).repeat(4, 1)
+hi = torch.tensor(upper, device=device).repeat(4, 1)
+mask = torch.tensor(active, device=device).unsqueeze(0).expand(4, *active.shape)
 original = sampler.softmax_sampling
 
 
-def sampling_with_behavior_score(logits, top_p=1.0, temperature=1.0, top_k=None, prob_proc_func=None):
+def sampling_with_behavior_score(
+    logits, top_p=1.0, temperature=1.0, top_k=None, prob_proc_func=None, uniforms=None
+):
     assert top_p == 1.0 and top_k is None
-    token, _ = original(logits, top_p, temperature, top_k, prob_proc_func)
+    token, _ = original(logits, top_p, temperature, top_k, prob_proc_func, uniforms)
     probs = (logits.float() / temperature).softmax(-1)
     if prob_proc_func is not None:
         probs = prob_proc_func(probs)

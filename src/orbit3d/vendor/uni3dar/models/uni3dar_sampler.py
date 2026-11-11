@@ -30,6 +30,7 @@ def softmax_sampling(
     temperature=1.0,
     top_k=None,
     prob_proc_func=None,
+    uniforms=None,
 ):
     assert 0 <= top_p <= 1, "top_p should be in the range [0, 1]."
     if top_k is not None:
@@ -79,7 +80,11 @@ def softmax_sampling(
         probs = prob_proc_func(probs)
 
     # Sample from the distribution
-    predictions = torch.multinomial(probs, num_samples=1).squeeze(-1)
+    if uniforms is None:
+        predictions = torch.multinomial(probs, num_samples=1).squeeze(-1)
+    else:
+        from orbit3d.generator.random_streams import inverse_cdf
+        predictions = inverse_cdf(probs, uniforms)
 
     # Calculate log softmax scores using the original logits
     scores = log_probs.gather(-1, predictions.unsqueeze(-1)).squeeze(-1)
@@ -506,31 +511,33 @@ class Uni3DARSampler(Uni3DAR):
         )
         return decoder_feat, decoder_phy_pos
 
-    def get_tree_predict_funcs(self):
+    def get_tree_predict_funcs(self, sample_uniforms=None):
 
-        def tree_sampling_func(logits, tree_i):
+        def tree_sampling_func(logits, tree_i, batch_indices):
             tree_type, score = softmax_sampling(
                 logits,
                 1.0,
                 self.tree_temperature[tree_i],
+                uniforms=sample_uniforms(batch_indices) if sample_uniforms else None,
             )
             return tree_type, score
 
-        def count_sampling_func(logits, tree_i):
+        def count_sampling_func(logits, tree_i, batch_indices):
             count_type, score = softmax_sampling(
                 logits,
                 1.0,
                 self.count_temperature[tree_i],
+                uniforms=sample_uniforms(batch_indices) if sample_uniforms else None,
             )
             return count_type, score
 
         def tree_predict_func(y, batch_indices, tree_i):
             tree_logits = self.tree_heads[tree_i](y)
-            tree_pred, tree_score = tree_sampling_func(tree_logits, tree_i)
+            tree_pred, tree_score = tree_sampling_func(tree_logits, tree_i, batch_indices)
             if self.count_head is not None:
                 y = y + self.tree_emb_for_count[tree_i](tree_pred)
                 count_logits = self.count_head[tree_i](y)
-                count_pred, count_score = count_sampling_func(count_logits, tree_i)
+                count_pred, count_score = count_sampling_func(count_logits, tree_i, batch_indices)
             else:
                 count_pred = None
                 count_score = 0.0
@@ -547,6 +554,7 @@ class Uni3DARSampler(Uni3DAR):
         device,
         atom_constraint,
         cond_vars,
+        sample_uniforms=None,
     ):
         atom_type_mask = torch.ones(
             self.num_atom,
@@ -604,6 +612,7 @@ class Uni3DARSampler(Uni3DAR):
                 1.0,
                 self.atom_temperature[tree_i],
                 prob_proc_func=atom_prob_proc,
+                uniforms=sample_uniforms(batch_indices) if sample_uniforms else None,
             )
             return atom_type, score
 
@@ -617,12 +626,14 @@ class Uni3DARSampler(Uni3DAR):
                     tree_i=tree_i,
                     batch_indices=batch_indices,
                 ),
+                uniforms=sample_uniforms(batch_indices) if sample_uniforms else None,
             )
             cond_vars["atom_constraint"][batch_indices, atom_type, tree_i] -= 1
             return atom_type, score
 
-        def xyz_sampling_func(logits, tree_i):
-            return softmax_sampling(logits, 1.0, self.xyz_temperature[tree_i])
+        def xyz_sampling_func(logits, tree_i, batch_indices):
+            return softmax_sampling(logits, 1.0, self.xyz_temperature[tree_i],
+                                    uniforms=sample_uniforms(batch_indices) if sample_uniforms else None)
 
         score_ratio = [1.0]
         score_ratio += [0.0] * 3 if rank_by == "atom" else [1.0] * 3
@@ -636,7 +647,7 @@ class Uni3DARSampler(Uni3DAR):
             return self.atom_heads[tree_i].inference(
                 y,
                 [partial(atom_func, batch_indices=batch_indices, tree_i=tree_i)]
-                + [partial(xyz_sampling_func, tree_i=tree_i)] * 3,
+                + [partial(xyz_sampling_func, tree_i=tree_i, batch_indices=batch_indices)] * 3,
                 score_ratio=score_ratio,
                 xyz_temperature=self.xyz_temperature[tree_i],
             )

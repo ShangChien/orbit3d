@@ -55,3 +55,18 @@ weights and resampled training records. Their disagreement is not yet calibrated
 See [remote experiment report](qm9s-ocelot-experiments-2026-11-11.md) for actual
 scope and results. Broad-element generation, scaffold growth, uncertainty
 calibration and independent quantum calculations remain separate research work.
+
+## Interval and sampling update
+
+New adaptation checkpoints use `uni3dar_octree_v2`. They explicitly encode
+lower/upper presence masks and train on bounded, lower-only, upper-only and
+inactive target examples. Bounded-only v1 checkpoints retain their original
+model construction and reject one-sided conditions; no checkpoint is silently
+relabelled as a trained v2 model.
+
+The recommended configuration uses `sampling_mode: independent` and
+`precision: float32`. A counter stream keyed by run seed and candidate ID supplies
+each candidate's uniforms; batch compaction does not consume another candidate's
+stream. FP32 replay of four tracked candidates matched across batch1/8/48 in the
+real-model check. BF16 replay did not match across those batch sizes. BF16 is an
+explicit faster numerical mode, not a promise of batch-independent token replay.

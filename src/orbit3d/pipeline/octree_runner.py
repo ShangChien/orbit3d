@@ -12,8 +12,10 @@ from ..generator.octree_backend import (
     load_octree_checkpoint,
     OctreeDataset,
     trajectory_to_instance,
+    interval_arrays,
 )
 from ..generator.octree_tokenizer import ATOM_TYPES
+from ..generator.random_streams import candidate_seed
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from ..oracles.fingerprint_oracle import FingerprintOracle
 from ..physics.dpa_forcefield import DPAPotentialGuidance
@@ -82,14 +84,29 @@ def run_octree_from_config(cfg, config_path=None):
         scale = y.std(0).clip(1e-6)
         yn = (y - mean) / scale
         dataset = OctreeDataset(training, model)
-        model.requires_grad_(False)
+        train_backbone = bool(settings.get("train_backbone", False))
+        model.requires_grad_(train_backbone)
         model.interval_conditioner.requires_grad_(True)
         model.prop_understanding_head.requires_grad_(True)
         trainable = [p for p in model.parameters() if p.requires_grad]
         steps = int(settings.get("sft_steps", 100))
         batch = int(settings.get("batch_size", 16))
-        opt = torch.optim.AdamW(trainable, lr=float(settings.get("sft_lr", 2e-4)), weight_decay=1e-4)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(opt, steps, eta_min=2e-5)
+        adapter_parameters = list(model.interval_conditioner.parameters()) + list(
+            model.prop_understanding_head.parameters()
+        )
+        adapter_ids = {id(p) for p in adapter_parameters}
+        groups = [{"params": adapter_parameters, "lr": float(settings.get("sft_lr", 2e-4))}]
+        if train_backbone:
+            groups.append(
+                {
+                    "params": [p for p in trainable if id(p) not in adapter_ids],
+                    "lr": float(settings.get("backbone_lr", 1e-5)),
+                }
+            )
+        opt = torch.optim.AdamW(groups, weight_decay=1e-4)
+        scheduler = torch.optim.lr_scheduler.LambdaLR(
+            opt, lambda step: 0.1 + 0.9 * 0.5 * (1 + np.cos(np.pi * step / steps))
+        )
         rng = np.random.default_rng(42)
         for step in range(steps):
             model.train()
@@ -99,6 +116,8 @@ def run_octree_from_config(cfg, config_path=None):
             target = torch.tensor(yn[indices], device=device)
             width = torch.rand_like(target) * 0.25 + 0.15
             mask = torch.rand_like(target) > 0.2
+            if model.condition_version == 2:
+                mask = mask.unsqueeze(-1) & (torch.rand(*target.shape, 2, device=device) > 0.2)
             with torch.autocast(
                 device_type=device.split(":")[0], dtype=torch.bfloat16, enabled=device.startswith("cuda")
             ):
@@ -109,7 +128,7 @@ def run_octree_from_config(cfg, config_path=None):
                 raise FloatingPointError(f"Octree SFT diverged at step {step + 1}")
             opt.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(trainable, 1.0)
+            torch.nn.utils.clip_grad_norm_(trainable, 1.0, error_if_nonfinite=True)
             opt.step()
             scheduler.step()
             history.append(metrics)
@@ -118,7 +137,7 @@ def run_octree_from_config(cfg, config_path=None):
         torch.save(
             {
                 "model_state_dict": model.state_dict(),
-                "backend": "uni3dar_octree_v1",
+                "backend": f"uni3dar_octree_v{model.condition_version}",
                 "target_cols": names,
                 "mean": mean,
                 "scale": scale,
@@ -128,6 +147,7 @@ def run_octree_from_config(cfg, config_path=None):
                 "history": history,
                 "training_smiles": sorted(train_smiles),
                 "label_source": label_source,
+                "train_backbone": train_backbone,
             },
             checkpoint,
         )
@@ -143,9 +163,7 @@ def run_octree_from_config(cfg, config_path=None):
         return {"checkpoint": str(checkpoint), "history": history}
     model.eval()
     intervals = TargetIntervals.parse(inference["target_interval"], names)
-    bounds = intervals.condition(mean, scale).reshape(len(names), 4)
-    if np.any(bounds[:, 2] != bounds[:, 3]):
-        raise ValueError("Octree conditioner currently requires bounded intervals")
+    lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
     if int(settings.get("grpo_steps", 0)):
         from ..generator.octree_alignment import align_octree
 
@@ -168,7 +186,7 @@ def run_octree_from_config(cfg, config_path=None):
         torch.save(
             {
                 "model_state_dict": model.state_dict(),
-                "backend": "uni3dar_octree_v1",
+                "backend": f"uni3dar_octree_v{model.condition_version}",
                 "target_cols": names,
                 "mean": mean,
                 "scale": scale,
@@ -184,15 +202,21 @@ def run_octree_from_config(cfg, config_path=None):
     batch = int(inference.get("batch_size", 16))
     records = []
     candidates = []
+    independent_sampling = inference.get("sampling_mode", "legacy") == "independent"
+    precision = inference.get("precision", "bfloat16")
+    if precision not in {"float32", "bfloat16"}:
+        raise ValueError("Inference precision must be float32 or bfloat16")
     for begin in range(0, total, batch):
         count = min(batch, total - begin)
-        low = torch.tensor(bounds[:, 0], device=device).repeat(count, 1)
-        high = torch.tensor(bounds[:, 1], device=device).repeat(count, 1)
-        active = torch.tensor(bounds[:, 2], device=device, dtype=torch.bool).repeat(count, 1)
+        low = torch.tensor(lower, device=device).repeat(count, 1)
+        high = torch.tensor(upper, device=device).repeat(count, 1)
+        active = torch.tensor(active_bounds, device=device).unsqueeze(0).expand(count, *active_bounds.shape)
         with (
             torch.no_grad(),
             torch.autocast(
-                device_type=device.split(":")[0], dtype=torch.bfloat16, enabled=device.startswith("cuda")
+                device_type=device.split(":")[0],
+                dtype=torch.bfloat16,
+                enabled=device.startswith("cuda") and precision == "bfloat16",
             ),
         ):
             trajectories = model.generate_conditional_trajectories(
@@ -201,10 +225,20 @@ def run_octree_from_config(cfg, config_path=None):
                 active,
                 cfg_scale=float(inference.get("cfg_scale", 1.0)),
                 evaluate_self_consistency=True,
+                row_seeds=[candidate_seed(inference.get("base_seed", 2026), begin + j) for j in range(count)]
+                if independent_sampling
+                else None,
             )
         for j, trajectory in enumerate(trajectories):
             idx = len(records)
-            row = {"candidate_id": idx, "status": "not_selected", "joint_success": False}
+            row = {
+                "candidate_id": idx,
+                "status": "not_selected",
+                "joint_success": False,
+                "sampling_seed": candidate_seed(inference.get("base_seed", 2026), idx)
+                if independent_sampling
+                else None,
+            }
             try:
                 inst = trajectory_to_instance(trajectory)
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
@@ -292,7 +326,7 @@ def run_octree_from_config(cfg, config_path=None):
         )
     assert len(exported) == len(mols)
     summary = {
-        "backend": "uni3dar_octree_v1",
+        "backend": f"uni3dar_octree_v{model.condition_version}",
         "attempted": len(records),
         "raw_valid": len(candidates),
         "external_ranking_calls": len(shortlist) if budget > 0 else 0,

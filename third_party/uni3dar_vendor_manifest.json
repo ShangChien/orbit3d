@@ -50,6 +50,7 @@
     "Replace RoPE with ORBIT real-valued rotary implementation (no learned parameter changes)",
     "Make atom dictionary construction idempotent; preserve first-construction token IDs",
     "Use project-local PyTorch SDPA and minimal UniCore compatibility implementations",
-    "Replace automatic CLI module discovery with explicit imports for packaged runtime"
+    "Replace automatic CLI module discovery with explicit imports for packaged runtime",
+    "Accept explicit per-candidate uniforms in sampling callbacks; retain legacy multinomial path for archived runs"
   ]
 }

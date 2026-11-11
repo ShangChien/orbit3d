@@ -64,3 +64,27 @@ def test_octree_policy_loss_includes_coordinate_heads_and_kl_gradient():
     loss = categorical_policy_loss(current, old, reference, advantages)
     loss.backward()
     assert all(r.grad is not None and r.grad.abs().sum() > 0 for r in raw)
+
+
+def test_one_sided_masks_are_explicit_and_missing_bounds_are_inert():
+    from orbit3d.generator.octree_model import DynamicIntervalConditioner
+    from orbit3d.generator.octree_backend import interval_arrays
+    from orbit3d.constraints import TargetIntervals
+
+    intervals = TargetIntervals.parse({"homo": [None, -5], "lumo": [0, None]}, ["homo", "lumo"])
+    with pytest.raises(ValueError, match="v2"):
+        interval_arrays(intervals, np.zeros(2), np.ones(2), 1)
+    lo, hi, flags = interval_arrays(intervals, np.zeros(2), np.ones(2), 2)
+    np.testing.assert_array_equal(flags, [[False, True], [True, False]])
+    conditioner = DynamicIntervalConditioner(emb_dim=32, num_props=2, num_layers=1, bound_masks=True)
+    lo, hi = torch.tensor(lo)[None], torch.tensor(hi)[None]
+    mask = torch.tensor(flags)[None]
+    first = conditioner(lo, hi, mask)
+    changed_lo, changed_hi = lo.clone(), hi.clone()
+    changed_lo[0, 0] = -999
+    changed_hi[0, 1] = 999
+    torch.testing.assert_close(first, conditioner(changed_lo, changed_hi, mask))
+    first.square().sum().backward()
+    assert conditioner.bound_projection.weight.grad.abs().sum() > 0
+    null = conditioner(changed_lo, changed_hi, torch.zeros_like(mask))
+    assert torch.count_nonzero(null) == 0
