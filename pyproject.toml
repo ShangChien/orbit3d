@@ -42,6 +42,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+quantum = ["pyscf==2.12.1", "geometric==1.1"]
 octree = ["lmdb>=1.4", "numba>=0.59", "tqdm>=4.66"]
 deepmd = [
     "deepmd-kit>=3.0.0b4",
