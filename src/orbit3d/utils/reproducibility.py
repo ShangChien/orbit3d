@@ -56,3 +56,21 @@ def resolve_unimol_weight_path(builtin_dir: str, remove_hs: bool = False) -> Opt
         if os.path.exists(c):
             return c
     return None
+
+
+def resolve_hyff_weight_path(builtin_dir: str, tier: str = "vivace") -> Optional[str]:
+    """Resolves a packed or mounted HyFF checkpoint directory/safetensors path if present, else None (falls back to HYFF_HOME)."""
+    t_clean = tier.lower().replace("hyff-", "").replace("hyff_", "").strip()
+    env_dir = os.environ.get("ORBIT3D_PRETRAINED_DIR", builtin_dir)
+    hyff_home = os.environ.get("HYFF_HOME", "")
+    candidates = [
+        os.path.join(builtin_dir, "hyff", "checkpoints", t_clean, "model.safetensors"),
+        os.path.join(builtin_dir, "hyff", "checkpoints", t_clean),
+        os.path.join(env_dir, "hyff", "checkpoints", t_clean, "model.safetensors"),
+        os.path.join(hyff_home, "checkpoints", t_clean, "model.safetensors") if hyff_home else "",
+        f"/sjtu-combustion/wjw/chensq/pretrained/hyff/checkpoints/{t_clean}/model.safetensors",
+    ]
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    return None

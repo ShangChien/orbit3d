@@ -1,8 +1,11 @@
 # ORBIT-3D: Octree-Based Reinforced Bidirectional Interval-Targeted 3D Molecular Generation
 
-**ORBIT-3D** (**O**ctree-based **R**einforced **B**idirectional **I**nterval-**T**argeted **3D** Molecular Generation) is a unified, modular, and container-ready framework for inverse 3D molecular design under single- and multi-objective quantum-mechanical interval constraints.
+**Authors**: **Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao**  
+**Affiliation**: **DP Technology**, Beijing, China (`{chensq, zhaogj, chengz, wangjk, wanghs, gaozf}@dp.tech`)
 
-Built upon coarse-to-fine 3D octree autoregressive modeling (**Uni-3DAR**), **ORBIT-3D** anchors its primary open-source experimental mainline on **5-Fold 3D `Uni-Mol`** and **Native `DPA-4 (OMol25)`** (`Nano`, `Mini`, `Neo`, `Air`, `Plus`) for 100% open-science reproducibility, while providing **first-tier, full-matrix ecosystem integration with enterprise `Uni-QSAR`** through **Physics- and Uncertainty-Gated Group Relative Policy Optimization (Gated-GRPO)** and **Tangent-Projected Iso-Property Conformer Relaxation**.
+**ORBIT-3D** (**O**ctree-based **R**einforced **B**idirectional **I**nterval-**T**argeted **3D** Molecular Generation) is a unified, modular, and container-ready framework for computational quantum chemistry and inverse 3D molecular design under single- and multi-objective quantum-mechanical interval constraints, with native support for **total molecular charge ($Q \in \mathbb{Z}$)** and **spin multiplicity ($M = 2S + 1$)**.
+
+Built upon coarse-to-fine 3D octree autoregressive modeling (**Uni-3DAR**), **ORBIT-3D** anchors its primary open-source experimental mainline on **5-Fold 3D `Uni-Mol`**, **Native `DPA-4 (OMol25)`** (`Nano`, `Mini`, `Neo`, `Air`, `Plus` with analytical ZBL short-range nuclear repulsion), and **Charge/Spin-Conditioned `HyFF (OMol25)`** (`presto`, `vivace`, `moderato` built-in; `andante`, `adagio`, `largo` optional) for 100% open-science reproducibility, while providing **first-tier, full-matrix ecosystem integration with enterprise `Uni-QSAR`** through **Physics- and Uncertainty-Gated Group Relative Policy Optimization (Gated-GRPO)** and **Tangent-Projected Iso-Property Conformer Relaxation**.
 
 ---
 
@@ -14,7 +17,7 @@ The repository is organized following modern Python packaging standards (**PEP 6
 mol_gen/
 ├── .python-version                        # Pinned Python version (3.11) for uv
 ├── pyproject.toml                         # Unified uv / PEP 621 project & dependency specification
-├── Dockerfile                             # uv-accelerated multi-stage slim container (<245 MB weights)
+├── Dockerfile                             # uv-accelerated multi-stage slim container (411.82 MB built-in weights)
 ├── README.md                              # Project architecture, uv workflow & container guide
 │
 ├── src/                                   # [Core Source] Production library (High Cohesion, Low Coupling)
@@ -29,9 +32,11 @@ mol_gen/
 │       │   ├── base.py                    # Abstract PropertyOracleBase protocol & interval reward math
 │       │   ├── unimol_oracle.py           # Mode A (Open-Source Mainline): Internal 5-fold 3D Uni-Mol (FP16)
 │       │   ├── dpa4_oracle.py             # Mode B (Open-Source Unified): Internal 5-fold Native DPA-4 Oracle
-│       │   └── uniqsar_oracle.py          # Mode C (Enterprise Full-Matrix): External pre-trained Uni-QSAR bridge
+│       │   ├── hyff_oracle.py             # Mode C (Charge/Spin-Conditioned): Internal 5-fold Native HyFF Oracle
+│       │   └── uniqsar_oracle.py          # Mode D (Enterprise Full-Matrix): External pre-trained Uni-QSAR bridge
 │       ├── physics/                       # Quantum Force Field & Conformer Relaxation
-│       │   ├── dpa_forcefield.py          # Full-series DPA-4 loader, SeZM fitting_net hook & forces
+│       │   ├── dpa_forcefield.py          # Full-series DPA-4 loader, SeZM fitting_net hook & ZBL forces
+│       │   ├── hyff_forcefield.py         # Full-series HyFF loader (Q, M=2S+1 conditioning & zero-shot ΔE_T1-S0)
 │       │   └── conformer_relaxer.py       # Stage 5 Tangent-Projected Iso-Property Conformer Relaxation
 │       ├── pipeline/                      # End-to-End Orchestration
 │       │   └── runner.py                  # 5-stage workflow runner (train / predict / train_and_predict)
@@ -39,7 +44,8 @@ mol_gen/
 │       │   ├── reproducibility.py         # Deterministic RNG seeding & per-molecule SHA-256 Generator
 │       │   ├── dataset_io.py              # CSV/JSONL/SMI loader & 3D RDKit ETKDGv3 conformer builder
 │       │   └── evaluation.py              # 3D chemical stability, bond MAE & interval hit metrics
-│       └── compat/                        # Lightweight Pure-PyTorch Compatibility Shims
+│       └── compat/                        # Lightweight Pure-PyTorch Compatibility Shims & Vendored Runtimes
+│           ├── hyff/                      # Minimal self-contained HyFF (Hyra 2.0) runtime (presto/vivace/moderato)
 │           ├── dgl/                       # Pure-PyTorch DGL graph shim for baseline interoperability
 │           ├── torch_scatter/             # Pure-PyTorch scatter operations shim
 │           └── useful_rdkit_utils/        # RDKit geometry & ring analysis utilities
@@ -53,6 +59,7 @@ mol_gen/
 │   │   └── download_zenodo_ckpt.py        # Checkpoint downloader for baseline flow models
 │   ├── runners/                           # Reproducible Benchmark Execution Scripts
 │   │   ├── run_orbit3d_ablation_benchmark.py   # ORBIT-3D 5-stage progressive ablation & DPA-4 scaling
+│   │   ├── run_hyff_vs_dpa4_benchmark.py       # Head-to-head HyFF (6 tiers) vs DPA-4 (5 scales) 4-part benchmark
 │   │   ├── run_oled_frontier_benchmark.py      # PropMolFlow + MLIP QM9/OLED frontier orbital benchmark
 │   │   ├── run_dpa3_vs_dpa4_benchmark.py       # Head-to-head DPA-3.1 vs DPA-4 (OMol25 / OMat24) comparison
 │   │   ├── run_dpa4_scaling_benchmark.py       # Full DPA-4 series (Nano/Mini/Neo/Air/Plus) scaling benchmark
@@ -60,13 +67,15 @@ mol_gen/
 │   └── results/                           # Experimental JSON Summaries & Generated 3D Conformers (SDF)
 │       ├── dpa3_vs_dpa4/
 │       ├── dpa4_scaling/
+│       ├── hyff_vs_dpa4/
 │       ├── oled_3dsat/
 │       └── oled_benchmark/
 │
 ├── configs/                               # [Engineering] Ready-to-Run JSON Configurations
 │   ├── internal_unimol.json               # Mode A (Open-Source Mainline): Internal 5-fold 3D Uni-Mol + Stage 5
 │   ├── internal_dpa4.json                 # Mode B (Open-Source Unified): Internal 5-fold DPA-4 + Stage 5
-│   └── external_uniqsar.json              # Mode C (Enterprise Full-Matrix): External pre-trained Uni-QSAR ensemble
+│   ├── internal_hyff.json                 # Mode C (Charge/Spin-Conditioned): Internal 5-fold HyFF-moderato + Stage 5
+│   └── external_uniqsar.json              # Mode D (Enterprise Full-Matrix): External pre-trained Uni-QSAR ensemble
 │
 ├── scripts/                               # [Engineering] DevOps & Verification Scripts
 │   ├── pack_pretrained_weights.py         # Compresses Uni-Mol to FP16 & packs all 5 DPA-4 models
@@ -120,15 +129,28 @@ flowchart TB
     O1 & O2 & O3 -->|"Iso-Property Constraint Gate"| S5
 ```
 
-### 2.1 Open-Source `Uni-Mol` / `DPA-4` Mainline & First-Tier Enterprise `Uni-QSAR` Matrix Support
+### 2.1 Open-Source `Uni-Mol` / `DPA-4` / `HyFF` Mainline & First-Tier Enterprise `Uni-QSAR` Matrix Support
 
-To ensure **100% open-source academic reproducibility** while providing **first-tier industrial compatibility**, [`src/orbit3d/oracles/`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/base.py) implements three pluggable Oracle modes:
+To ensure **100% open-source academic reproducibility** while providing **explicit charge/spin quantum-chemical conditioning** and **first-tier industrial compatibility**, [`src/orbit3d/oracles/`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/base.py) implements four pluggable Oracle modes and two complementary foundation MLIP engines:
 
 | Oracle Mode | Config File | Open-Source / License | Supported Feature Matrix & Modalities | Role in Paper & Production |
 | :--- | :--- | :---: | :--- | :--- |
 | **`Mode A: internal_unimol`** *(Mainline)* | [`configs/internal_unimol.json`](file:///Users/dp/project/mol_gen/configs/internal_unimol.json) | **100% Open-Source** (Built-in FP16 `all_h` / `no_h`) | 3D SE(3) Gaussian Pair-Distance Attention Transformer + 5-Fold CV (`n_folds=5`) | **Primary open-source baseline** across all main paper benchmark comparisons (`Table 1–3`) |
-| **`Mode B: internal_dpa4`** *(Unified)* | [`configs/internal_dpa4.json`](file:///Users/dp/project/mol_gen/configs/internal_dpa4.json) | **100% Open-Source** (Built-in 5-Scale `OMol25`) | Native `SeZMModel.atomic_model.fitting_net` Hook ($D_{\text{desc}}=32/64$) + 3D RBF + 5-Fold CV | **Zero-extra-VRAM unified mode** sharing a single `DPA-4` instance across Oracle, Force Gate & Relaxer |
-| **`Mode C: external_uniqsar`** *(Enterprise)* | [`configs/external_uniqsar.json`](file:///Users/dp/project/mol_gen/configs/external_uniqsar.json) | **Enterprise / Proprietary** (Mount `/workspace/checkpoints/load`) | **Full Matrix**: 1D SMILES NLP + 2D Morgan FP (`GetMorganGenerator`) + 3D `Uni-Mol` Conformer + GBDT/CatBoost/MLP Ensembles | **First-tier enterprise ecosystem bridge** (enabled by gradient-free Stage 4 `Gated-GRPO` & Stage 5 trust-region gate) |
+| **`Mode B: internal_dpa4`** *(ZBL Unified)* | [`configs/internal_dpa4.json`](file:///Users/dp/project/mol_gen/configs/internal_dpa4.json) | **100% Open-Source** (Built-in 5-Scale `OMol25`) | Native `SeZMModel.atomic_model.fitting_net` Hook ($D_{\text{desc}}=32/64$) + Analytical ZBL Repulsion + 5-Fold CV | **Zero-extra-VRAM unified mode** with **93.8% steric clash recovery** at $d \le 0.65\text{ \AA}$ |
+| **`Mode C: internal_hyff`** *(Charge & Spin)* | [`configs/internal_hyff.json`](file:///Users/dp/project/mol_gen/configs/internal_hyff.json) | **100% Open-Source** (Built-in `presto/vivace/moderato`) | Explicit total charge $Q \in \mathbb{Z}$ & spin multiplicity $M=2S+1$ ($S_0/T_1/D_0$), zero-shot $\Delta E_{T_1-S_0}$ + 250-dim `HyFF` descriptor | **Fastest throughput (`97.7–113.0 atoms/ms`)**, lowest VRAM (`0.22–1.07 GB`), and spin-polarized $S_0/T_1$ excited-state design |
+| **`Mode D: external_uniqsar`** *(Enterprise)* | [`configs/external_uniqsar.json`](file:///Users/dp/project/mol_gen/configs/external_uniqsar.json) | **Enterprise / Proprietary** (Mount `/workspace/checkpoints/load`) | **Full Matrix**: 1D SMILES NLP + 2D Morgan FP (`GetMorganGenerator`) + 3D `Uni-Mol` Conformer + GBDT/CatBoost/MLP Ensembles | **First-tier enterprise ecosystem bridge** (enabled by gradient-free Stage 4 `Gated-GRPO` & Stage 5 trust-region gate) |
+
+### 2.2 Scenario-Driven Pluggable Module Selection Guide
+
+| Application Scenario & Chemical Regime | Recommended Oracle (Stage 0 / 4 / 5) | Recommended MLIP Force Gate & Relaxer | Key Physical & Computational Advantage |
+| :--- | :--- | :--- | :--- |
+| **1. Edge / Consumer GPU High-Throughput Screening** ($\le 4\text{ GB}$ VRAM) | **Mode C**: `internal_hyff` (`HyFF-presto` / `vivace`) | **`HyFF-presto`** (`217 MB`) or **`HyFF-vivace`** (`387 MB`) | **107–113 atoms/ms** throughput (`23.2x` faster than `DPA4-Plus`), single model in VRAM |
+| **2. Balanced Single-Weight Closed-Shell Organic Design** | **Mode C**: `internal_hyff` (`HyFF-moderato`) or **Mode B**: `internal_dpa4` (`DPA4-Mini`) | **`HyFF-moderato`** (`1.07 GB`, `0.62 s/mol`) or **`DPA4-Mini`** (`2.6 GB`, `1.01 s/mol`) | **100.0% interval hit rate** & **100.0% stability** with zero secondary backbone overhead |
+| **3. Open-Source Academic Benchmark Reproduction** | **Mode A**: `internal_unimol` (FP16 5-Fold CV) | **`DPA4-Mini`** or **`HyFF-moderato`** | Highest closed-shell organic orbital correlation ($r = 0.968$) |
+| **4. Open-Shell Radicals ($D_0$), Charged Ions ($Q \neq 0$) & $\text{Ir(III)}$ Phosphors ($T_1 \to S_0$)** | **Mode C**: `internal_hyff` (`HyFF-moderato` / `andante`) + zero-shot $\Delta E_{T_1-S_0}$ | **`HyFF-moderato`** (built-in) or **`HyFF-andante`** ($Q, M=2S+1$ conditioned) | Explicit $(Q, M)$ conditioning; **`0.055 eV` adiabatic $T_1-S_0$ MAE** (`DPA-4` is spin-blind) |
+| **5. Severe Steric Clash Recovery ($d_{ij} < 0.8\text{ \AA}$) & Unfiltered Flows** | **Mode A / B / C** | **`DPA4-Mini`** or **`DPA4-Air`** (**Analytical ZBL Bridge Mandatory**) | Analytical ZBL $Z_i Z_j / r_{ij} \cdot \phi(r_{ij})$ guarantees **93.8% clash recovery** (prevents `NaN`) |
+| **6. Dual-Stage Hybrid Relay (Clash-Prone + Spin-Sensitive)** | **Mode C**: `internal_hyff` (`HyFF-moderato`) | **Relay**: 5 steps **`DPA4-Mini`** (ZBL de-clashing) $\to$ 15 steps **`HyFF-moderato`** ($S_0/T_1$) | Combines `DPA-4` ZBL short-range stability with `HyFF` spin-polarized relaxation |
+| **7. Enterprise ADMET, Custom Tabular QSAR & Proprietary Pipelines** | **Mode D**: `external_uniqsar` (1D + 2D + 3D Ensemble) | **`DPA4-Mini`** or **`HyFF-moderato`** | Zero-retraining plug-and-play compatibility with non-differentiable GBDT/CatBoost ensembles |
 
 ---
 
@@ -181,28 +203,35 @@ uv run python paper/generate_orbit3d_figures.py
 
 ## 4. Containerized Deployment (`uv`-Accelerated Multi-Stage Docker Image)
 
-### 4.1 Built-In Pretrained Weights (`244.56 MB` Total)
+### 4.1 Built-In Pretrained Weights (`411.82 MB` Total)
 
-| Model Family | Variant Key | File Name | Descriptor Dim | Size (MB) | Recommended Use Case |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| **DPA-4 (OMol25)** | `dpa4_nano` | `DPA-4-Nano-7M.pt` | 32 | `1.95 MB` | Ultra-fast high-throughput GRPO screening |
-| **DPA-4 (OMol25)** | `dpa4_mini` | `DPA-4-Mini-12M.pt` | 32 | `2.62 MB` | Best speed–accuracy Pareto frontier |
-| **DPA-4 (OMol25)** | `dpa4_neo` | `DPA-4-Neo-23M.pt` | 32 | `4.42 MB` | Balanced mid-scale quantum force field |
-| **DPA-4 (OMol25)** | `dpa4_air` | `DPA-4-Air-100M.pt` | 64 | `19.86 MB` | Default high-precision force gate & relaxer |
-| **DPA-4 (OMol25)** | `dpa4_plus` | `DPA-4-Plus-172M.pt` | 64 | `34.01 MB` | Flagship accuracy for multi-objective OLED design |
-| **Uni-Mol 3D** | `all_h` | `mol_pre_all_h_fp16.pt` | 512 | `90.84 MB` | All-atom 3D molecular representation (FP16) |
-| **Uni-Mol 3D** | `no_h` | `mol_pre_no_h_fp16.pt` | 512 | `90.84 MB` | Heavy-atom 3D molecular representation (FP16) |
+The container bundles all 5 `DPA-4 (OMol25)` scales (`62.86 MB`), the 3 small/medium sweet-spot `HyFF (OMol25)` tiers (`presto`, `vivace`, `moderato` = `167.28 MB`) along with the minimal self-contained `hyff` runtime (`src/orbit3d/compat/hyff/`, `1.4 MB`), and the FP16-compressed `Uni-Mol` 3D backbones (`181.68 MB`):
+
+| Model Family | Variant Key | File Name | Active Params | Size (MB) | Peak VRAM | Recommended Use Case |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
+| **DPA-4 (OMol25)** | `dpa4_nano` | `DPA-4-Nano-7M.pt` | `0.49M` | `1.95 MB` | `4,244 MB` | Ultra-fast ZBL-protected GRPO screening |
+| **DPA-4 (OMol25)** | `dpa4_mini` | `DPA-4-Mini-12M.pt` | `0.67M` | `2.62 MB` | `4,536 MB` | Best ZBL steric clash resilience (`93.8%` recovery) |
+| **DPA-4 (OMol25)** | `dpa4_neo` | `DPA-4-Neo-23M.pt` | `1.14M` | `4.42 MB` | `7,942 MB` | Balanced mid-scale ZBL quantum force field |
+| **DPA-4 (OMol25)** | `dpa4_air` | `DPA-4-Air-100M.pt` | `5.18M` | `19.86 MB` | `16,568 MB` | High-precision ZBL force gate & relaxer |
+| **DPA-4 (OMol25)** | `dpa4_plus` | `DPA-4-Plus-172M.pt` | `8.88M` | `34.01 MB` | `21,158 MB` | Flagship ZBL accuracy & independent MLIP referee |
+| **HyFF (OMol25)** | `hyff_presto` | `hyff/checkpoints/presto/best.pt` | `2.32M` | `8.89 MB` | **`217 MB`** | Fastest throughput (`112.98 atoms/ms`), edge GPU |
+| **HyFF (OMol25)** | `hyff_vivace` | `hyff/checkpoints/vivace/best.pt` | `6.68M` | `25.50 MB` | **`387 MB`** | High-speed charge/spin-aware screening (`107.43 atoms/ms`) |
+| **HyFF (OMol25)** | `hyff_moderato` | `hyff/checkpoints/moderato/best.pt` | `34.83M` | `132.89 MB` | **`1,071 MB`** | **Default sweet-spot** ($Q, M=2S+1$, zero-shot $\Delta E_{T_1-S_0}$) |
+| **Uni-Mol 3D** | `all_h` | `mol_pre_all_h_fp16.pt` | `47.6M` | `90.84 MB` | `1,850 MB` | All-atom 3D molecular representation (FP16) |
+| **Uni-Mol 3D** | `no_h` | `mol_pre_no_h_fp16.pt` | `47.6M` | `90.84 MB` | `1,620 MB` | Heavy-atom 3D molecular representation (FP16) |
+
+*(Note: Heavy research-tier `HyFF` models `andante` `414 MB`, `adagio` `1.70 GB`, and `largo` `4.57 GB` can be mounted on demand at `/workspace/checkpoints/load/hyff` without bloating the default container).*
 
 ### 4.2 Building & Running the Container
 
 ```bash
-# 1. Pack slim pretrained weights (all 5 DPA-4 models + FP16 Uni-Mol backbones)
-uv run python scripts/pack_pretrained_weights.py --out-dir ./pretrained
+# 1. Pack slim pretrained weights (5 DPA-4 scales + 3 HyFF tiers + FP16 Uni-Mol = 411.82 MB)
+uv run python scripts/pack_pretrained_weights.py --out-dir ./pretrained --hyff-tiers presto vivace moderato
 
-# 2. Build the uv-accelerated slim Docker image (~2.35 GB total)
+# 2. Build the uv-accelerated slim Docker image (~2.52 GB total)
 docker build -t orbit3d:latest .
 
-# 3. Run training or inference with host volume mounts
+# 3. Run training or inference with host volume mounts (e.g., Mode C internal_hyff or Mode A internal_unimol)
 docker run --gpus all --rm \
   -v /host/path/to/data:/workspace/data \
   -v /host/path/to/checkpoints/save:/workspace/checkpoints/save \

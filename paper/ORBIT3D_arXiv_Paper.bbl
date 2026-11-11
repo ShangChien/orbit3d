@@ -1,9 +1,30 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
+
+\bibitem{barroso2024omat24}
+Luis Barroso-Luque, Muhammed Shuaibi, Xiang Fu, Brandon~M Wood, Misko Dzamba, Meng Gao, Ammar Rizvi, C~Lawrence Zitnick, and Zachary~W Ulissi.
+\newblock Open {Materials} 2024 ({OMat24}) inorganic materials dataset and models.
+\newblock {\em arXiv preprint arXiv:2410.12771}, 2024.
 
 \bibitem{campbell2024propmolflow}
 Andrew Campbell, Jason Yim, Regina Barzilay, Tom Rainforth, and Tommi Jaakkola.
 \newblock Generative flows on discrete and continuous state spaces for {3D} molecular design.
 \newblock In {\em International Conference on Machine Learning (ICML)}, 2024.
+
+\bibitem{eastman2024spice2}
+Peter Eastman, Pavan~Kumar Behara, David~L Dotson, Raimondas Galvelis, John~E Herr, Joshua~T Horton, Yuezhi Mao, John~D Chodera, Benjamin~P Pritchard, Yuanqing Wang, et~al.
+\newblock {SPICE} 2: Updates to the small-molecule portal for ionized and conformational energies.
+\newblock {\em Journal of Chemical Information and Modeling}, 64(7):2955--2963, 2024.
+
+\bibitem{hyra2026hyff}
+{Tencent Hunyuan Hyra Team}.
+\newblock {HyFF}: Element-sparse charge- and spin-conditioned machine-learning force fields evolved by the {Hyra} 2.0 scientific agent on {OMol25}.
+\newblock Technical report, Tencent Hunyuan, 2026.
+\newblock \url{https://github.com/Tencent-Hunyuan/Hyra-results}.
+
+\bibitem{levine2025omol25}
+Daniel~S Levine, Muhammed Shuaibi, Evan Walter~Clark Spotte-Smith, Michael~G Taylor, Muhammad~R Hasyim, Kyle Michel, Ilyes Batatia, G{\'a}bor Cs{\'a}nyi, Misko Dzamba, Peter Eastman, et~al.
+\newblock The {Open Molecules} 2025 ({OMol25}) dataset, evaluations, and models.
+\newblock {\em arXiv preprint arXiv:2505.08762}, 2025.
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Zhifeng Gao, Di~He, Linfeng Zhang, and Guolin Ke.
@@ -20,14 +41,24 @@ Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zh
 \newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open language models.
 \newblock {\em arXiv preprint arXiv:2402.03300}, 2024.
 
+\bibitem{zhang2024dpa3}
+Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, Yiming Du, Han Wang, and Linfeng Zhang.
+\newblock {DPA-3}: A graph attention model for universal interatomic potentials across the periodic table.
+\newblock {\em arXiv preprint arXiv:2408.11815}, 2024.
+
 \bibitem{zhang2025dpa4}
 Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, Yiming Du, Han Wang, and Linfeng Zhang.
 \newblock {DPA-4}: Large atomic model as a multi-task foundation potential for organic molecules and materials ({OMol25}).
-\newblock {\em DP Technology Technical Report}, 2025.
+\newblock {\em DP Technology and AISquare Technical Report}, 2025.
 
 \bibitem{zhou2023unimol}
 Gengmo Zhou, Zhifeng Gao, Qiankun Ding, Hang Zheng, Hongteng Xu, Zhewei Wei, Linfeng Zhang, and Guolin Ke.
 \newblock {Uni-Mol}: A universal {3D} molecular representation learning framework.
 \newblock In {\em International Conference on Learning Representations (ICLR)}, 2023.
+
+\bibitem{ziegler1985zbl}
+James~F Ziegler, Jochen~P Biersack, and Uffe Littmark.
+\newblock {\em The Stopping and Range of Ions in Solids}.
+\newblock Pergamon Press, New York, 1985.
 
 \end{thebibliography}

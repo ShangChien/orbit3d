@@ -19,6 +19,7 @@ def build_arxiv_tarball() -> Path:
         "figures/fig4_pluggable_oracles_relaxation.png",
         "figures/fig5_latency_and_hardware_profile.png",
         "figures/fig6_dataset_distributions.png",
+        "figures/fig7_hyff_vs_dpa4_pareto_and_spin.png",
     ]
 
     with tarfile.open(out_path, "w:gz") as tar:

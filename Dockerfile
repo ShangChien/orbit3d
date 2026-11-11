@@ -1,16 +1,19 @@
 # syntax=docker/dockerfile:1.6
 # ==============================================================================
 # Ultra-Slim Multi-Stage Dockerfile for ORBIT-3D (Powered by `uv`)
-# (Uni-3DAR + Gated-GRPO + External Uni-QSAR / Internal Uni-Mol / Internal DPA-4
-#  + Iso-Property DPA-4 Conformer Relaxation)
+# (Uni-3DAR + Gated-GRPO + External Uni-QSAR / Internal Uni-Mol / Internal DPA-4 / Internal HyFF
+#  + Iso-Property DPA-4 & Charge/Spin-Conditioned HyFF Conformer Relaxation)
 #
-# Size Breakdown (~2.35 GB total vs ~14.5 GB legacy Uni-QSAR unicore image):
+# Size Breakdown (~2.52 GB total vs ~14.5 GB legacy Uni-QSAR unicore image):
 # - Base OS (`python:3.11-slim-bookworm` + minimal runtime `.so` libs): ~150 MB
-# - Stripped `uv` Python venv (`torch 2.3.1+cu121`, `rdkit`, `scikit-learn`, `scipy`,
-#   `deepmd-kit` pt backend with debug symbols & test suites stripped): ~1.95 GB
-# - Built-in Pretrained Weights (`/opt/orbit3d/pretrained`): 244.56 MB
+# - Stripped `uv` Python venv (`torch 2.3.1+cu121`, `safetensors`, `rdkit`, `scikit-learn`,
+#   `scipy`, `deepmd-kit` pt backend with debug symbols & test suites stripped)
+#   + Vendored minimal `hyff` runtime (`src/orbit3d/compat/hyff`, 1.4 MB): ~1.96 GB
+# - Built-in Pretrained Weights (`/opt/orbit3d/pretrained`): 411.82 MB
 #   * Full DPA-4 Series (`Nano` 1.95MB, `Mini` 2.62MB, `Neo` 4.42MB,
 #     `Air` 19.86MB, `Plus` 34.01MB) = 62.86 MB
+#   * HyFF Small/Medium Sweet-Spot Series (`presto` 8.89MB, `vivace` 25.50MB,
+#     `moderato` 132.89MB) = 167.28 MB
 #   * FP16-compressed Uni-Mol 3D backbones (`all_h` 90.84MB + `no_h` 90.84MB) = 181.68 MB
 # ==============================================================================
 
@@ -45,6 +48,7 @@ RUN uv venv /opt/venv && \
         scikit-learn==1.4.2 \
         joblib==1.4.2 \
         pyyaml==6.0.1 \
+        safetensors==0.4.5 \
         rdkit-pypi==2022.9.5 \
         ase==3.23.0 && \
     uv pip install --no-deps . && \
@@ -61,15 +65,16 @@ RUN find /opt/venv -type d -name "tests" -o -name "test" -prune -exec rm -rf {} 
 # ------------------------------------------------------------------------------
 FROM python:3.11-slim-bookworm AS runtime
 
-LABEL maintainer="ORBIT-3D Team" \
-      description="ORBIT-3D: 3D Molecular Generation & DPA-4 Conformer Relaxation (uv managed)"
+LABEL maintainer="Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao (DP Technology)" \
+      description="ORBIT-3D: 3D Molecular Generation & DPA-4 / HyFF Conformer Relaxation (uv managed)"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
-    PYTHONPATH="/opt/orbit3d/src:/opt/deepmd_v32" \
-    ORBIT3D_PRETRAINED_DIR="/opt/orbit3d/pretrained"
+    PYTHONPATH="/opt/orbit3d/src/orbit3d/compat:/opt/orbit3d/src:/opt/deepmd_v32" \
+    ORBIT3D_PRETRAINED_DIR="/opt/orbit3d/pretrained" \
+    HYFF_HOME="/opt/orbit3d/pretrained/hyff"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgomp1 \

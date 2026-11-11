@@ -71,6 +71,19 @@ def main() -> None:
         default=["Nano", "Mini", "Neo", "Air", "Plus"],
         help="DPA-4 variants to bundle in image (default: full DPA-4 series: Nano, Mini, Neo, Air, Plus)",
     )
+    parser.add_argument(
+        "--hyff-src-dir",
+        type=str,
+        default="/sjtu-combustion/wjw/chensq/pretrained/hyff/checkpoints",
+        help="Directory containing HyFF checkpoint subdirectories (presto, vivace, moderato, andante, largo)",
+    )
+    parser.add_argument(
+        "--hyff-tiers",
+        type=str,
+        nargs="*",
+        default=["presto", "vivace", "moderato"],
+        help="HyFF tiers to bundle (default Pareto sweet-spot: presto vivace moderato; pass empty to skip; avoid largo 4.58GB in image)",
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir).resolve()
@@ -132,6 +145,25 @@ def main() -> None:
             break
 
     print("=" * 68)
+    if args.hyff_tiers:
+        hyff_src = Path(args.hyff_src_dir)
+        hyff_out = out_dir / "hyff" / "checkpoints"
+        for tier in args.hyff_tiers:
+            t_clean = tier.strip().lower()
+            if not t_clean:
+                continue
+            src_sub = hyff_src / t_clean
+            if src_sub.exists() and src_sub.is_dir():
+                dst_sub = hyff_out / t_clean
+                if dst_sub.exists():
+                    shutil.rmtree(dst_sub)
+                shutil.copytree(src_sub, dst_sub)
+                mb = sum(f.stat().st_size for f in dst_sub.rglob("*") if f.is_file()) / (1024 * 1024)
+                total_mb += mb
+                print(f"[HyFF]  Packed tier '{t_clean:10s}'                     -> {mb:6.2f} MB")
+            else:
+                print(f"[HyFF]  WARNING: {src_sub} not found, skipping.")
+        print("=" * 68)
     print(f"Total Built-in Pretrained Weights Footprint: {total_mb:.2f} MB")
     print("=" * 68)
 

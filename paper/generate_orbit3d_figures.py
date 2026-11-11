@@ -392,6 +392,51 @@ def build_fig6():
     save_svg_and_png("\n".join(parts), "fig6_dataset_distributions")
 
 
+def build_fig7():
+    W, H = 900, 900
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">',
+        f'<rect width="{W}" height="{H}" fill="#ffffff"/>',
+        f'<text x="{W/2}" y="30" font-family="Helvetica, Arial, sans-serif" font-size="15.2" font-weight="bold" text-anchor="middle" fill="#0f172a">Figure 7: HyFF vs. DPA-4 Quantum Force Field Benchmark (Throughput, ZBL Clash, Spin T1-S0 &amp; Cross-Referee)</text>'
+    ]
+
+    # Top-Left: Panel A — Saturated Throughput (atoms/ms) & Peak VRAM (GB)
+    scale_cats = ["DPA4\nNano/Mini", "DPA4\nAir/Plus", "HyFF\npresto", "HyFF\nvivace", "HyFF\nmoderato", "HyFF\nandante"]
+    ser_a = [
+        ("Saturated Throughput (atoms/ms, higher is faster)", [46.6, 4.2, 113.0, 107.4, 97.7, 5.0], "#10b981", "#064e3b"),
+        ("Peak GPU VRAM Footprint (GB, lower is lighter)", [1.1, 20.8, 0.2, 0.4, 1.1, 15.3], "#f43f5e", "#881337"),
+    ]
+    parts.append(draw_grouped_bar_panel(68, 75, 360, 320, "(a) Throughput (atoms/ms) & Peak VRAM (GB)", "Magnitude (atoms/ms or GB)", scale_cats, ser_a, 0.0, 145.0, [0, 20, 40, 60, 80, 100, 120], fmt="{:.1f}"))
+
+    # Top-Right: Panel B — Short-Range Steric Clash Recovery Rate (%) Across Overlap Distances
+    clash_cats = ["d=0.45 A\nPush Out%", "d=0.65 A\nPush Out%", "d=0.65 A\nRecov %", "d=0.85 A\nRecov %"]
+    ser_b = [
+        ("DPA4-Mini (Analytical ZBL Nuclear Repulsion)", [75.0, 93.8, 93.8, 100.0], "#3b82f6", "#1e3a8a"),
+        ("HyFF-moderato (Learned Element-Sparse Radial)", [62.5, 87.5, 31.2, 75.0], "#10b981", "#064e3b"),
+        ("HyFF-largo (1.2B Latent Charge Singularity)", [25.0, 50.0, 0.0, 6.2], "#ef4444", "#7f1d1d"),
+    ]
+    parts.append(draw_grouped_bar_panel(508, 75, 360, 320, "(b) Short-Range Steric Clash Resilience (%)", "Success / Recovery Rate (%)", clash_cats, ser_b, 0.0, 138.0, [0, 20, 40, 60, 80, 100], fmt="{:.1f}%"))
+
+    # Bottom-Left: Panel C — Zero-Shot Ir(III) Spin Splitting Delta E(T1 - S0) vs. DFT E_ad (2.652 eV)
+    spin_cats = ["DPA-4\n(Spin-Blind)", "HyFF\npresto", "HyFF\nvivace", "HyFF\nmoderato", "HyFF\nandante", "HyFF\nlargo"]
+    ser_c = [
+        ("Zero-Shot Spin Gap Accuracy (1 - MAE/E_ad, %)", [0.0, 75.8, 89.9, 93.5, 97.9, 98.1], "#8b5cf6", "#4c1d95"),
+        ("Zero-Shot Pearson Correlation r vs. DFT E_ad (%)", [0.0, 29.2, 31.5, 45.2, 69.8, 72.0], "#0ea5e9", "#0c4a6e"),
+    ]
+    parts.append(draw_grouped_bar_panel(68, 490, 360, 320, "(c) Zero-Shot Ir(III) T1-S0 Spin Splitting vs. DFT", "Accuracy / Correlation (%)", spin_cats, ser_c, 0.0, 130.0, [0, 20, 40, 60, 80, 100], fmt="{:.1f}%"))
+
+    # Bottom-Right: Panel D — Dual Independent Cross-MLIP Referees on De Novo QM9 OOD Generation
+    ref_cats = ["No MLIP\n(Naive)", "DPA4-Mini\nGuided", "DPA4-Plus\nGuided", "HyFF-vivace\nGuided", "HyFF-mod.\nGuided"]
+    ser_d = [
+        ("DPA4-Plus Referee Median Force (eV/A)", [0.927, 0.341, 0.331, 0.347, 0.338], "#3b82f6", "#1e3a8a"),
+        ("HyFF-andante Referee Median Force (eV/A)", [0.930, 0.341, 0.329, 0.344, 0.345], "#10b981", "#064e3b"),
+    ]
+    parts.append(draw_grouped_bar_panel(508, 490, 360, 320, "(d) Cross-MLIP Dual-Referee Force Evaluation (eV/A)", "Median Residual Force (eV/A, lower is better)", ref_cats, ser_d, 0.0, 1.25, [0.0, 0.2, 0.4, 0.6, 0.8, 1.0], fmt="{:.3f}"))
+
+    parts.append("</svg>")
+    save_svg_and_png("\n".join(parts), "fig7_hyff_vs_dpa4_pareto_and_spin")
+
+
 if __name__ == "__main__":
     build_fig1()
     build_fig2()
@@ -399,3 +444,4 @@ if __name__ == "__main__":
     build_fig4()
     build_fig5()
     build_fig6()
+    build_fig7()

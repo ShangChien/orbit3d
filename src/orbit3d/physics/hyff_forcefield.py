@@ -13,11 +13,18 @@ Pluggable MLIP backend wrapping Tencent Hunyuan's OMol25-pretrained `HyFF` serie
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+import sys
 from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
 from rdkit import Chem
+
+_COMPAT_DIR = str(Path(__file__).resolve().parents[1] / "compat")
+if os.path.isdir(_COMPAT_DIR) and _COMPAT_DIR not in sys.path:
+    sys.path.insert(0, _COMPAT_DIR)
 
 
 class HyFFPotentialGuidance(nn.Module):

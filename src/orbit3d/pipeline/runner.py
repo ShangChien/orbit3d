@@ -36,6 +36,7 @@ from ..utils import (
     load_3d_molecular_dataset,
     lock_deterministic_environment,
     resolve_dpa4_weight_path,
+    resolve_hyff_weight_path,
     resolve_unimol_weight_path,
 )
 
@@ -70,8 +71,10 @@ def run_from_config(config_path: str) -> Dict[str, Any]:
     if mlip_backend == "hyff" or oracle_mode == "internal_hyff":
         hyff_tier = str(stage5_cfg.get("hyff_tier", oracle_cfg.get("hyff_tier", "vivace")))
         dpa4_scale = f"HyFF-{hyff_tier}"
+        hyff_w = resolve_hyff_weight_path(builtin_dir, tier=hyff_tier)
         dpa_guidance = HyFFPotentialGuidance(
             tier=hyff_tier,
+            weights=hyff_w,
             atom_type_map=ATOM_TYPES,
             device=device,
             default_charge=float(stage5_cfg.get("charge", 0.0)),
