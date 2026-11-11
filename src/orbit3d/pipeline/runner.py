@@ -124,6 +124,7 @@ def run_from_config(config_path: str) -> Dict[str, Any]:
             target_cols=target_cols,
             dpa_guidance=None,
             seed=seed,
+            report_path=os.path.join(output_dir, "data_preparation.json"),
         )
         prop_mean = np.mean(targets_2d, axis=0)
         prop_std = np.std(targets_2d, axis=0) + 1e-6

@@ -5,11 +5,14 @@
 from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple, Union
+import json
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
 from rdkit import Chem
-from rdkit.Chem import AllChem, PandasTools
+from rdkit.Chem import PandasTools
+from .conformers import ocelot_conformer
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 
@@ -19,6 +22,7 @@ def load_3d_molecular_dataset(
     target_cols: Union[str, List[str]] = "TARGET",
     dpa_guidance: Optional[Any] = None,
     seed: int = 42,
+    report_path: Optional[str] = None,
 ) -> Tuple[List[Chem.Mol], np.ndarray, List[str]]:
     """
     Loads a dataset from `.sdf` or `.csv`:
@@ -47,50 +51,40 @@ def load_3d_molecular_dataset(
     mols_3d: List[Chem.Mol] = []
     valid_targets: List[np.ndarray] = []
 
-    for idx, (_, row) in enumerate(df.iterrows()):
-        y_vals = np.array([float(row[c]) for c in target_col_list], dtype=np.float32)
-        if not np.isfinite(y_vals).all():
-            continue
-
-        mol = raw_mols[idx]
-        if mol is None or not isinstance(mol, Chem.Mol) or mol.GetNumConformers() == 0:
-            smi = str(row[smiles_col])
-            base_m = Chem.MolFromSmiles(smi)
-            if base_m is None:
-                continue
-            mol = Chem.AddHs(base_m)
-            res = AllChem.EmbedMolecule(mol, randomSeed=seed)
-            if res != 0:
-                AllChem.EmbedMolecule(mol, useRandomCoords=True, randomSeed=seed)
-            try:
-                AllChem.MMFFOptimizeMolecule(mol, maxIters=200)
-            except Exception:
-                pass
-
-        if mol.GetNumConformers() == 0:
-            continue
-
-        if dpa_guidance is not None:
-            syms = [a.GetSymbol() for a in mol.GetAtoms()]
-            dpa_map = dpa_guidance.atom_type_map
-            atype_idx = torch.tensor(
-                [dpa_map.index(s) for s in syms],
-                dtype=torch.long,
-                device=dpa_guidance.device_str,
-            )
-            pos = torch.tensor(
-                mol.GetConformer().GetPositions(),
-                dtype=torch.float32,
-                device=dpa_guidance.device_str,
-            )
-            pos_rel, _, _ = dpa_guidance.relax_conformers(pos, atype_idx, n_steps=8, step_size=0.006)
-            conf = mol.GetConformer()
-            pos_np = pos_rel.detach().cpu().numpy().astype(np.float64)
-            for a_i in range(mol.GetNumAtoms()):
-                conf.SetAtomPosition(a_i, pos_np[a_i].tolist())
-
-        mols_3d.append(mol)
-        valid_targets.append(y_vals)
+    records = []
+    for idx, (source_index, row) in enumerate(df.iterrows()):
+        record = {'source_index': str(source_index), 'status': 'rejected'}
+        records.append(record)
+        try:
+            y_vals = np.array([float(row[c]) for c in target_col_list], dtype=np.float32)
+            if not np.isfinite(y_vals).all():
+                raise ValueError('Nonfinite target values')
+            mol = raw_mols[idx]
+            if mol is None or not isinstance(mol, Chem.Mol) or mol.GetNumConformers() == 0:
+                mol = ocelot_conformer(str(row[smiles_col]), seed=seed)
+            else:
+                mol = Chem.Mol(mol)
+                if not mol.HasProp('GeometryOrigin'):
+                    mol.SetProp('GeometryOrigin', 'Source SDF coordinates')
+            from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+            elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in mol.GetAtoms()))
+            inst = rdkit_mol_to_mol3d_instance(mol, y_vals, center=False, element_table=elements)
+            mol3d_to_validated_rdkit_mol(inst)
+            if dpa_guidance is not None:
+                from ..physics.conformer_relaxer import relax_conformer_energy_only
+                refined, trace = relax_conformer_energy_only(inst, dpa_guidance, n_steps=8, step_size=.006)
+                mol.GetConformer().SetPositions(refined.coords.astype(np.float64))
+                mol.SetProp('GeometryOrigin', mol.GetProp('GeometryOrigin') + '; explicit graph-preserving MLIP refinement')
+                record['refinement'] = trace
+            mol.SetProp('SourceRow', str(source_index))
+            record.update(status='accepted', geometry_origin=mol.GetProp('GeometryOrigin'))
+            mols_3d.append(mol)
+            valid_targets.append(y_vals)
+        except ValueError as exc:
+            record['reason'] = str(exc)
+    if report_path is not None:
+        Path(report_path).write_text(json.dumps({'parsed_rows': len(df), 'accepted': len(mols_3d),
+            'rejected': len(df)-len(mols_3d), 'records': records}, indent=2) + '\n')
 
     if not valid_targets:
         raise ValueError("No usable molecular records with finite targets")

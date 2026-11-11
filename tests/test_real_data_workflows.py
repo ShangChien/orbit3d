@@ -215,6 +215,22 @@ def test_phosphazene_mmff_failure_is_an_explicit_preparation_rejection():
         ocelot_conformer('FP1(F)=NP(F)(F)=NP2(=N1)Oc1cc3ccccc3cc1O2')
 
 
+def test_csv_loader_records_geometry_rejection_without_shifting_labels(tmp_path):
+    import json
+    import pandas as pd
+    from orbit3d.utils.dataset_io import load_3d_molecular_dataset
+
+    source = tmp_path / 'molecules.csv'
+    pd.DataFrame({'SMILES': ['FP1(F)=NP(F)(F)=NP2(=N1)Oc1cc3ccccc3cc1O2', 'CC'],
+                  'target': [9., 3.]}).to_csv(source, index=False)
+    report = tmp_path / 'preparation.json'
+    molecules, values, _ = load_3d_molecular_dataset(str(source), target_cols=['target'], report_path=str(report))
+    assert values.tolist() == [[3.]] and molecules[0].GetProp('SourceRow') == '1'
+    evidence = json.loads(report.read_text())
+    assert evidence['accepted'] == 1 and evidence['rejected'] == 1
+    assert 'MMFF aromaticity/valence unsupported' in evidence['records'][0]['reason']
+
+
 def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
     import json
     import sys
