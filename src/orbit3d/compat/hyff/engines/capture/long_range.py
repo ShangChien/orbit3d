@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Long-range evaluation of the largo latent-charge term: native, dense, tree or SPME.
 
 ``auto`` selects the periodic SPME sum for a system with a cell (the only route that is invariant to
@@ -122,7 +123,7 @@ def install_long_range(model, physical, policy):
     atom_batch, total_charge = metadata
     if atom_batch.numel() != policy['n_atoms'] or total_charge.numel() != 1 or bool((atom_batch != 0).any()):
         raise ValueError('Long range supports one graph with zero atom_batch only')
-    from hyff.kernels.long_range.backends import install_dense, install_tree, install_spme
+    from orbit3d.compat.hyff.kernels.long_range.backends import install_dense, install_tree, install_spme
     settings()
     installer = {'dense': install_dense, 'tree': install_tree, 'spme': install_spme}[policy['selected']]
     report = installer(model, physical, 'cuda')

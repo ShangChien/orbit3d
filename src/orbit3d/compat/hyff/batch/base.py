@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Nonperiodic multi-molecule reference inference with explicit fixed capacities.
 
 This path evaluates the plain PyTorch model with IEEE FP32 products and the
-model's own LayerNorm; the native TF32x3 route is hyff.batch.native. CUDA
+model's own LayerNorm; the native TF32x3 route is orbit3d.compat.hyff.batch.native. CUDA
 capture is cached by exact discrete input signature; preparation/capture cost
 must be included or amortized explicitly when reporting dataset throughput.
 """
@@ -147,7 +148,7 @@ class BatchedPotential:
 
     @classmethod
     def from_weights(cls, weights, *args, device='cuda', **kwargs):
-        from hyff.weights import load_model
+        from orbit3d.compat.hyff.weights import load_model
         model, _ = load_model(weights, device)
         return cls(model, *args, device=device, **kwargs)
 
@@ -172,7 +173,7 @@ class BatchedPotential:
         self._update_edges(entry)
 
     def _update_edges(self, entry):
-        from hyff.graph import cell_list_edges, dense_reference_edges
+        from orbit3d.compat.hyff.graph import cell_list_edges, dense_reference_edges
         batch, n, graphs = entry['batch'], entry['real_atoms'], entry['real_graphs']
         physical = dict(positions=batch['positions'][:n], atomic_numbers=batch['atomic_numbers'][:n],
                         batch=batch['batch'][:n], ptr=batch['ptr'][:graphs + 1])
@@ -196,7 +197,7 @@ class BatchedPotential:
         return energy.detach(), force.detach() if force is not None else None
 
     def _make_entry(self, values):
-        from hyff.models.element_model import prepare_batch
+        from orbit3d.compat.hyff.models.element_model import prepare_batch
         start = time.perf_counter()
         a = self.bucket.atom_capacity
         positions = torch.zeros((a, 3), dtype=torch.float32, device=self.device,

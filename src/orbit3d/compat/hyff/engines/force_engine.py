@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 from __future__ import annotations
 
 import time
@@ -7,8 +8,8 @@ import os
 
 import torch
 
-from hyff.data import physical
-from hyff.graph import NeighborCache, PeriodicEdges, energy_forces
+from orbit3d.compat.hyff.data import physical
+from orbit3d.compat.hyff.graph import NeighborCache, PeriodicEdges, energy_forces
 
 
 class CaptureEquivalenceError(AssertionError):

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Fused atom-local node kernels for the presto engine (frozen weights, exact adjoints).
 
 * `FusedHead`: LayerNorm -> Linear(H -> H) + SiLU -> Linear(H -> O) in one Triton launch per direction,
@@ -5,7 +6,7 @@
   LayerNorm statistics precision (`fp64`: the export policy, `fp32`: centred two-pass FP32). Products are
   IEEE FP32 / TF32x3 / FP16x3 on the FP32 weights, or fp16w2 on FP16 copies of FP16-representable weights.
   Saved-statistics backward (mean, rstd, pre-activation stored by the forward).
-* `local_features`: as `hyff.kernels.local_features_fp64` (affine LayerNorm of the scalar
+* `local_features`: as `orbit3d.compat.hyff.kernels.local_features_fp64` (affine LayerNorm of the scalar
   state, |v|, |T|, the three higher invariants and the two dot closures) with the same selectable
   statistics precision; `enable_local_features` installs the node update on every block.
 
@@ -21,11 +22,11 @@ from torch import nn
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.eight_channel_messages import _dot
-from hyff.kernels.local_features_fp64 import _load_tensor, _load_vector, _square_order2
-from hyff.kernels.fused_messages import _matvec, _q, _stv
+from orbit3d.compat.hyff.kernels.eight_channel_messages import _dot
+from orbit3d.compat.hyff.kernels.local_features_fp64 import _load_tensor, _load_vector, _square_order2
+from orbit3d.compat.hyff.kernels.fused_messages import _matvec, _q, _stv
 
-from hyff.engines.native.presto_messages import PRECISIONS, fp16_representable
+from orbit3d.compat.hyff.engines.native.presto_messages import PRECISIONS, fp16_representable
 
 STATISTICS = ('fp64', 'fp32')
 
@@ -512,8 +513,8 @@ def local_features(scalar, vu, vv, tu, tv, norm, higher, atom_tile, fp64):
 
 
 def _node_update(block, scalar, vector, tensor, projections=None):
-    """`hyff.kernels.local_features_fp64._frozen_node_update` with the flagged features."""
-    from hyff.models.l2_potential import _channel_tensor_vector, _channel_vector_tensor
+    """`orbit3d.compat.hyff.kernels.local_features_fp64._frozen_node_update` with the flagged features."""
+    from orbit3d.compat.hyff.models.l2_potential import _channel_tensor_vector, _channel_vector_tensor
     if projections is not None:
         vu, vv, tu, tv = projections
     else:

@@ -1,12 +1,13 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """EFM installation for largo: compiled without fullgraph, with graph breaks at the (grouped) element experts."""
 from __future__ import annotations
 from types import MethodType
 import torch
-from hyff.engines.capture.efm_port_dynamic import (
+from orbit3d.compat.hyff.engines.capture.efm_port_dynamic import (
     EFMState as StaticEFMState, EFMOverflow, describe_efms, sibling,
 )
-from hyff.models.element_model import ElementExpertMLP
-from hyff.kernels.grouped_experts import FrozenElementExpertMLP
+from orbit3d.compat.hyff.models.element_model import ElementExpertMLP
+from orbit3d.compat.hyff.kernels.grouped_experts import FrozenElementExpertMLP
 
 
 class EFMState(StaticEFMState):

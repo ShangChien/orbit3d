@@ -1,6 +1,7 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Exact latent-charge pair term: FP64 torch reference and fused FP32 Triton dense kernel.
 
-Convention (hyff.models.latent_charges): E = sum_{i<j} q_i q_j K(r_ij), K = erf(r/(sqrt2 sigma))/r,
+Convention (orbit3d.compat.hyff.models.latent_charges): E = sum_{i<j} q_i q_j K(r_ij), K = erf(r/(sqrt2 sigma))/r,
 isolated (no cell), positions as given, no self term; the caller multiplies by the coupling
 14.399645*scale. Every evaluator here returns the UNSCALED potential and field-like terms
 

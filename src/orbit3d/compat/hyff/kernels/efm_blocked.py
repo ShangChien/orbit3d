@@ -1,6 +1,7 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Rotated-frame EFM core with per-|m| contiguous blocks and explicit elementwise frame rotations (for torch.compile).
 
-Same function as hyff.kernels.efm_rotated.rotated_core (and hence the projector module). Differences are layout only:
+Same function as orbit3d.compat.hyff.kernels.efm_rotated.rotated_core (and hence the projector module). Differences are layout only:
   - frame rotations are written as broadcast multiply-adds over the 3 / 5 components (the einsum form lowers to
     batched 3x3 / 5x5 matmuls with batch E, which makes the compiled rotated form slower than the projector form);
   - the |m|=1 state is one tensor X1 = [xv | xw] of shape (E, 2, 2C), so every stacked layer's m1 map is one plain GEMM

@@ -1,12 +1,13 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """M26/L4A0 geometric backbones with explicitly configurable chemical species.
 
 All species have distinct scalar embeddings, node experts, element offsets and
 unordered-pair radial coefficients. Charge entries of the batch are not used:
-this is an E(Z, R) potential (hyff.models.state_model adds charge and spin
+this is an E(Z, R) potential (orbit3d.compat.hyff.models.state_model adds charge and spin
 conditioning). No fixed covalent graph or prediction correction is used.
 
 The scalar/vector/STF blocks are the L2Interaction implementation. The energy
-evaluation in ``hyff.models.element_forward`` is a copy of L2Potential.forward
+evaluation in ``orbit3d.compat.hyff.models.element_forward`` is a copy of L2Potential.forward
 with only its pair-table stride generalized. This reference supports training
 and conservative eager inference; the eight-species fused kernels are not
 dispatched here.
@@ -20,9 +21,9 @@ from typing import Mapping
 import torch
 from torch import nn
 
-from hyff.models.experts import ElementPartition, _network
-from hyff.models.l2_potential import L2Config, L2Potential
-from hyff.models.radial_capacity import expand_network
+from orbit3d.compat.hyff.models.experts import ElementPartition, _network
+from orbit3d.compat.hyff.models.l2_potential import L2Config, L2Potential
+from orbit3d.compat.hyff.models.radial_capacity import expand_network
 
 
 ARCHITECTURE = "hyff_element_complete"
@@ -178,7 +179,7 @@ class ElementPotential(L2Potential):
                                      z_partition.empty, z_partition.empty, z_partition.empty)
         for index in self.config.expert_blocks:
             self.blocks[index].update_mlp.partition = partition
-        from hyff.models.element_forward import reference_forward
+        from orbit3d.compat.hyff.models.element_forward import reference_forward
         return reference_forward(self, batch, **kwargs)
 
     def compile_radial_tables(self, intervals=200, order=5):
@@ -186,7 +187,7 @@ class ElementPotential(L2Potential):
             raise ValueError("Only the quintic radial table approximation (order=5) is supported")
         if any(p.requires_grad for p in self.parameters()):
             raise ValueError("Freeze parameters before compiling radial tables")
-        from hyff.kernels.radial_table import QuinticRadialTable
+        from orbit3d.compat.hyff.kernels.radial_table import QuinticRadialTable
         parameter = next(self.parameters())
         tables = [QuinticRadialTable.compile(self.rbf, block.radial_filter, intervals,
                   table_cutoff=block.cutoff).to(parameter) for block in self.blocks]
@@ -225,4 +226,4 @@ def build_model(model_config: dict) -> ElementPotential:
 
 
 def load_checkpoint(path, device="cpu"):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Edge-frame mixing (EFM) blocks inside the captured CUDA-graph force path.
 
 Where the EFM enters. In the EFM model's block forward the EFM exits are added
@@ -18,7 +19,7 @@ so this module
 
 Edge set. Each EFM block runs on the edges inside its EFM radius (the layer cutoff or the per-block
 efm_edge_cutoff). The CSR path refreshes a radius view of the Verlet matrix at the current coordinates on
-every energy evaluation (hyff.kernels.fused_messages._radius_select writes the kept neighbours compactly into
+every energy evaluation (orbit3d.compat.hyff.kernels.fused_messages._radius_select writes the kept neighbours compactly into
 the first count slots), so the EFM edge list is a fixed-capacity compaction of the first `slots` columns of
 that view (cumsum + scatter into an edge buffer of capacity E_cap = reserve x initial count; unused entries
 are zero-weight self edges spread over atoms). Everything is static-shaped and runs inside the captured CUDA
@@ -40,9 +41,9 @@ import math
 
 import torch
 
-from hyff.kernels.efm_blocked import blocked_core
-from hyff.kernels.efm_rotated import frame_matrices
-from hyff.models.l2_potential import smooth_switch
+from orbit3d.compat.hyff.kernels.efm_blocked import blocked_core
+from orbit3d.compat.hyff.kernels.efm_rotated import frame_matrices
+from orbit3d.compat.hyff.models.l2_potential import smooth_switch
 
 COMPILE_OPTIONS = dict(fullgraph=True, dynamic=False, options={'triton.cudagraphs': False})
 EFM_PRECISIONS = ('tf32', 'fp32')

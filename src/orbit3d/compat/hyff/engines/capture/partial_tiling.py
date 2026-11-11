@@ -1,10 +1,11 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Use the full-chain tiled EFM term (first VJP only) for selected blocks.
 
 The tiled term is the one of tiled_recompute.py. Blocks outside the selection
 keep their checked native callables/backends. Install only before preparing or
 capturing the model.
 """
-from hyff.engines.capture.tiled_recompute import make_tiled_term
+from orbit3d.compat.hyff.engines.capture.tiled_recompute import make_tiled_term
 
 
 def install_tiled_terms(state, tile_edges=32768, compile_tiles=True,

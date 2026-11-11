@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Inference execution adapter for the pair-radial models; the model classes are not modified.
 
 Only each instance's message dispatch is replaced. Parameter names and all
@@ -9,12 +10,12 @@ from types import MethodType
 
 import torch
 
-from hyff.models.experts import L2ExpertPotential, prepare_expert_batch
-from hyff.kernels.fused_messages import PreparedL2Neighbors
-from hyff.models.l2_potential import L2Interaction
+from orbit3d.compat.hyff.models.experts import L2ExpertPotential, prepare_expert_batch
+from orbit3d.compat.hyff.kernels.fused_messages import PreparedL2Neighbors
+from orbit3d.compat.hyff.models.l2_potential import L2Interaction
 
-from hyff.models.pair_radials import PairRadialConfig, PairRadialPotential, prepare_pair_radial_batch
-from hyff.models.pair_radials_io import ARCHITECTURE
+from orbit3d.compat.hyff.models.pair_radials import PairRadialConfig, PairRadialPotential, prepare_pair_radial_batch
+from orbit3d.compat.hyff.models.pair_radials_io import ARCHITECTURE
 
 
 def _message_forward(self, scalar, vector, tensor, radial, direction, quadrupole,
@@ -36,13 +37,13 @@ def _message_forward(self, scalar, vector, tensor, radial, direction, quadrupole
     if node_message is None:
         node_message = self.scalar_message(self.scalar_norm(scalar))
     if csr is not None:
-        from hyff.kernels.pair_messages import messages
+        from orbit3d.compat.hyff.kernels.pair_messages import messages
         positions, plan, table = csr
         values = messages(positions, plan.cell, plan.neighbors, plan.shifts, plan.counts,
             plan.elements, node_message, message_vector, message_tensor, table,
             self.cutoff, self.switch_width, self.input_is_scalar, plan.model.fused_message_settings)
     else:
-        from hyff.kernels.pair_messages_reference import reference_messages
+        from orbit3d.compat.hyff.kernels.pair_messages_reference import reference_messages
         displacement, valid, table, rbf, cutoff, width, chunk = reference
         values = reference_messages(displacement, source, destination, node_message,
             message_vector, message_tensor, valid, table, self.radial_filter, rbf,
@@ -119,11 +120,11 @@ class FrozenPairPotential(PairRadialPotential):
 
 
 def load_checkpoint(path, device='cpu'):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')
 
 
 def enable_family_nodes(model, precision):
-    from hyff.kernels.sparse_experts import enable_sparse_expert_nodes
+    from orbit3d.compat.hyff.kernels.sparse_experts import enable_sparse_expert_nodes
     if precision != 'fp16w2':
         raise ValueError('The pair adapter requires precision fp16w2')
     return enable_sparse_expert_nodes(model)

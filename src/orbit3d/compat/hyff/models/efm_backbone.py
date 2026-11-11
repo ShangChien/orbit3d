@@ -1,15 +1,16 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """EFM backbone constructor: stabilizer + per-block edge-frame mixing (stacked layers) + receiver
 conditioning (T7) + edge MLP (T8) + optional angular moments, with ONE block forward.
 
 `build_model(config)` takes a plain model dict plus the ingredient keys below. Every ingredient is off unless
 its keys are present; with none present the model is the base StatePotential
-(hyff.models.base_model.build_model) itself, bitwise.
+(orbit3d.compat.hyff.models.base_model.build_model) itself, bitwise.
 
 Ingredients (every one is identity at initialization except angular, whose projection starts at 0.1 xavier):
-  stab_*          stabilizer keys (hyff.models.stabilized), applied by STABILIZED.build_stab_model (asinh on |vv|, |tv| of the
+  stab_*          stabilizer keys (orbit3d.compat.hyff.models.stabilized), applied by STABILIZED.build_stab_model (asinh on |vv|, |tv| of the
                   expert-MLP input, per-column output gates at 1.0; stab_aggregate_normalization is re-implemented in
                   the unified forward with the same operation order).
-  efm_*           edge-frame mixing (hyff.models.edge_frame_mixing). efm_blocks: list (construction order) or absent;
+  efm_*           edge-frame mixing (orbit3d.compat.hyff.models.edge_frame_mixing). efm_blocks: list (construction order) or absent;
                   efm_channels / efm_mmax / efm_layers: scalar (all EFM blocks), list of length n_blocks with null
                   exactly on the non-EFM blocks, or dict {block: value}. efm_layers (1-4) = number of gated mixing
                   layers in the edge frame; layer 1 is EFM's (m=0 block W0 over [s, r0, a0, c0], gates, |m|=1 and
@@ -28,7 +29,7 @@ Ingredients (every one is identity at initialization except angular, whose proje
                   ('rbf'); edge_message = node_message[src] * radial + e, before the envelope weight.
                   edge_mlp_hidden default = the block's message width. [A B Cr] is one xavier matrix drawn from a
                   dedicated generator (seed 20_260_932) consumed in ascending block order; b = 0.
-  angular_*       angular moments (hyff.models.angular_branch) (angular_channels, angular_degrees, angular_init_scale,
+  angular_*       angular moments (orbit3d.compat.hyff.models.angular_branch) (angular_channels, angular_degrees, angular_init_scale,
                   angular_blocks, default all): scalar term added before the node update.
 
 Parameter creation order (reproducible, base tensors bitwise the plain/stab build with the same seed):
@@ -76,11 +77,11 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from hyff.models.base_model import build_model as build_plain
-from hyff.models import stabilized as STABILIZED
-from hyff.models import edge_frame_mixing as EFM
-from hyff.models import angular_branch as ANGULAR
-from hyff.models.l2_potential import _linear, _tensor_dot_direction, _vector_tensor_product
+from orbit3d.compat.hyff.models.base_model import build_model as build_plain
+from orbit3d.compat.hyff.models import stabilized as STABILIZED
+from orbit3d.compat.hyff.models import edge_frame_mixing as EFM
+from orbit3d.compat.hyff.models import angular_branch as ANGULAR
+from orbit3d.compat.hyff.models.l2_potential import _linear, _tensor_dot_direction, _vector_tensor_product
 
 VARIANT = 'efm_backbone'
 STAB_KEYS = ('stab_invariant_transform', 'stab_output_gates', 'stab_gate_init', 'stab_residual_scale',

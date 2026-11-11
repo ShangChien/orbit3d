@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Frozen-node helpers shared by the native engines (tensor checks, precision conversion, global state).
 
 This is an inference adapter, not a different potential or a training recipe.
@@ -12,18 +13,18 @@ from types import MethodType
 import torch
 from torch.nn import functional as F
 
-from hyff.engines.native import base_adapter as base
-from hyff.models.element_model import prepare_batch
-from hyff.data import collate, physical
-from hyff.engines.force_engine import ForceEngine
-from hyff.kernels.fused_linear import FastLinear, enable_fast_nodes
-from hyff.kernels.layernorm_fp64 import FrozenLayerNorm, enable_frozen_layernorm
-from hyff.kernels.local_features_fp64 import enable_frozen_local_features
-from hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
-from hyff.models.l2_potential import _RowSelectedLinear
+from orbit3d.compat.hyff.engines.native import base_adapter as base
+from orbit3d.compat.hyff.models.element_model import prepare_batch
+from orbit3d.compat.hyff.data import collate, physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.kernels.fused_linear import FastLinear, enable_fast_nodes
+from orbit3d.compat.hyff.kernels.layernorm_fp64 import FrozenLayerNorm, enable_frozen_layernorm
+from orbit3d.compat.hyff.kernels.local_features_fp64 import enable_frozen_local_features
+from orbit3d.compat.hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
+from orbit3d.compat.hyff.models.l2_potential import _RowSelectedLinear
 
-from hyff.kernels.grouped_experts import bind_partition, enable_grouped_experts
-from hyff.models.base_model import POLICY
+from orbit3d.compat.hyff.kernels.grouped_experts import bind_partition, enable_grouped_experts
+from orbit3d.compat.hyff.models.base_model import POLICY
 
 
 checkpoint_path = base.checkpoint_path
@@ -84,7 +85,7 @@ def _prepare(self, batch):
     first = self.blocks[0]
     # These small setup-only products use ordinary FP32 math on both CPU and
     # GPU. Force-time TF32x3/FP16x3 never rounds any stored checkpoint tensor.
-    from hyff.models.base_model import forward_fp64
+    from orbit3d.compat.hyff.models.base_model import forward_fp64
     normalized = forward_fp64(first.scalar_norm, initial_table)
     source = first.scalar_message
     messages = F.linear(F.silu(F.linear(normalized, source[0].weight, source[0].bias)),
@@ -103,7 +104,7 @@ def _initial_scalar(self, batch):
 
 
 def _forward(self, batch, **kwargs):
-    from hyff.engines.native.frozen_nodes_forward import reference_forward
+    from orbit3d.compat.hyff.engines.native.frozen_nodes_forward import reference_forward
     if '_engine_initial_scalar' not in batch:
         batch = _prepare(self, batch)
     # Bind the schedule belonging to this batch even after another batch was
@@ -210,7 +211,7 @@ def load(checkpoint='large', device='cuda', *, global_context=None, owned_weight
         fused_feature_normalization_precision='FP64',
         one_physical_system_per_engine=True, topology_input=False,
         dependency_radius_A=dependency_radius(checkpoint),
-        implementation='hyff.engines.native.frozen_nodes')
+        implementation='orbit3d.compat.hyff.engines.native.frozen_nodes')
     return model, saved
 
 

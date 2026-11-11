@@ -13,6 +13,14 @@
       "commit": "3c13968077f2eaf473bd34d96aaaf38441edcc07",
       "license": "MIT",
       "license_sha256": "58d14677f1c02c1410134bb207777a5152d8084714a5d67374f4888eb8fc2324"
+    },
+    {
+      "name": "Hyra-results",
+      "url": "https://github.com/Tencent-Hunyuan/Hyra-results.git",
+      "commit": "8443f9a9aae1a0b72c79e0b2908c79026b8e1555",
+      "license": "Apache-2.0",
+      "license_sha256": "ece6c7026732f576af3a909a117b321c9e8cfd96fc4d56e5229ff1a288dae087",
+      "subdirectory": "AI4Science/hyff/src/hyff"
     }
   ]
 }

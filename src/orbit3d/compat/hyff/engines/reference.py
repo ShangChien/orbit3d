@@ -1,14 +1,15 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Reference loader and single-system batches for the plain PyTorch HyFF models.
 
 Builds a model from a weight file and its architecture JSON
-(hyff.weights.read_adapter_export), checks that every loaded tensor is
+(orbit3d.compat.hyff.weights.read_adapter_export), checks that every loaded tensor is
 byte-identical to the weight file and never casts a tensor.
 The global state enters as in training: the features [Q/N, (M-1)/N] pass through
 ``state_projection`` and are added to the atomic embedding
-(hyff.models.state_model.StatePotential.initial_scalar).
+(orbit3d.compat.hyff.models.state_model.StatePotential.initial_scalar).
 
 ``bind_global_state`` fixes Q, M and N for CUDA-graph execution through the
-``prepare_energy`` hook of hyff.engines.force_engine.ForceEngine: the species
+``prepare_energy`` hook of orbit3d.compat.hyff.engines.force_engine.ForceEngine: the species
 partition and the initial scalar are prepared outside capture, because
 ``physical()`` strips ``multiplicity``/``n_atoms`` from engine batches and the
 training ``initial_scalar`` performs host synchronizations.
@@ -21,14 +22,14 @@ from types import MethodType
 import numpy as np
 import torch
 
-from hyff.weights import sha256 as digest
-from hyff.models.element_model import prepare_batch
-from hyff.models.base_model import POLICY as LAYERNORM_POLICY
-from hyff.models.base_model import install as install_fp64_layernorm
-from hyff.data import physical
-from hyff.engines.force_engine import ForceEngine
-from hyff.graph import NeighborCache, energy_forces
-from hyff.weights import read_adapter_export
+from orbit3d.compat.hyff.weights import sha256 as digest
+from orbit3d.compat.hyff.models.element_model import prepare_batch
+from orbit3d.compat.hyff.models.base_model import POLICY as LAYERNORM_POLICY
+from orbit3d.compat.hyff.models.base_model import install as install_fp64_layernorm
+from orbit3d.compat.hyff.data import physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.graph import NeighborCache, energy_forces
+from orbit3d.compat.hyff.weights import read_adapter_export
 
 FACTORIES = {
     'hyff.models.base_model:build_model': 'large',
@@ -74,7 +75,7 @@ def verify_state(model, saved):
 
 
 def build(saved):
-    from hyff.models.factory import build_model
+    from orbit3d.compat.hyff.models.factory import build_model
     model = build_model(dict(model_id=saved['model_factory'], model_config=saved['model_config']))
     policy = saved.get('numerical_execution')
     if not policy or policy.get('policy') != LAYERNORM_POLICY:

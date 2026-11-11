@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Force-time FP32 LayerNorm statistics for the vivace and moderato native engines.
 
 The default ("fp64") statistics evaluate every frozen LayerNorm and the fused
@@ -15,19 +16,19 @@ def normalization_installers(statistics, precision):
     if statistics not in STATISTICS:
         raise ValueError('statistics must be fp64 or fp32')
     if statistics == 'fp64':
-        from hyff.kernels.layernorm_fp64 import enable_frozen_layernorm
-        from hyff.kernels.local_features_fp64 import enable_frozen_local_features
+        from orbit3d.compat.hyff.kernels.layernorm_fp64 import enable_frozen_layernorm
+        from orbit3d.compat.hyff.kernels.local_features_fp64 import enable_frozen_local_features
         return enable_frozen_layernorm, enable_frozen_local_features
     if precision != 'tf32x3':
         raise ValueError('FP32 statistics require tf32x3 products')
-    from hyff.kernels.layernorm_fp32 import enable_frozen_layernorm
-    from hyff.kernels.local_features_fp32 import enable_frozen_local_features
+    from orbit3d.compat.hyff.kernels.layernorm_fp32 import enable_frozen_layernorm
+    from orbit3d.compat.hyff.kernels.local_features_fp32 import enable_frozen_local_features
     return enable_frozen_layernorm, enable_frozen_local_features
 
 
 def check_fp32_statistics(model, expected_norms=None):
     """Confirm that every frozen LayerNorm and the fused features use FP32 statistics."""
-    from hyff.kernels.layernorm_fp32 import FrozenLayerNorm32
+    from orbit3d.compat.hyff.kernels.layernorm_fp32 import FrozenLayerNorm32
     count = sum(isinstance(m, FrozenLayerNorm32) for m in model.modules())
     if count <= 0 or count != model.deployment_metadata.get('frozen_layernorm_modules'):
         raise ValueError('FP32 statistics conversion missed a frozen LayerNorm')

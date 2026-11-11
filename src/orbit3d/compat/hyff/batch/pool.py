@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Serialized native buckets sharing one transformed model, all five models.
 
 Each bucket owns input/state/routing/CSR/capture storage. EFM's operator
@@ -10,8 +11,8 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping
 
-from hyff.batch.base import BatchBucket
-from hyff.batch.native import NativeBatchedPotential as NativeEntry, normalize_expert_capacities
+from orbit3d.compat.hyff.batch.base import BatchBucket
+from orbit3d.compat.hyff.batch.native import NativeBatchedPotential as NativeEntry, normalize_expert_capacities
 
 
 class NativeBatchedPotential(NativeEntry):
@@ -105,7 +106,7 @@ class NativeBucketPool:
 
     @classmethod
     def from_weights(cls, weights, buckets, *, device='cuda', **native_options):
-        from hyff.weights import load_model
+        from orbit3d.compat.hyff.weights import load_model
         model, _ = load_model(weights, device)
         return cls(model, buckets, device=device, **native_options)
 

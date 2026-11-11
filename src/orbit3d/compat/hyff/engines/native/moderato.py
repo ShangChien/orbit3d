@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native moderato engine: frozen-node execution of the l4a0 L2 model with element experts.
 
 For models built by `hyff.models.base_model:build_model` (StatePotential, l4a0 backbone,
@@ -8,12 +9,12 @@ fused local features, grouped element experts, compiled node graphs, CSR/fused T
 with quintic radial tables and TF32x3 tensor-core products on the unchanged FP32 weights.
 
 The global state enters as the training features [Q/N, (M-1)/N]
-(`hyff.models.state_model.StatePotential.initial_scalar`), computed from the bound
+(`orbit3d.compat.hyff.models.state_model.StatePotential.initial_scalar`), computed from the bound
 whole-system context (N, Q, M) outside every CUDA graph. The pair term uses
-`hyff.kernels.pair_energy_species` (NE = n_elements); the block forward is
-`hyff.engines.native.moderato_forward`. The base loader and CSR neighbour preparation come from
-`hyff.engines.native.base_adapter`, frozen-node helpers from `hyff.engines.native.frozen_nodes`
-and weight reading, state features and batches from `hyff.engines.reference`.
+`orbit3d.compat.hyff.kernels.pair_energy_species` (NE = n_elements); the block forward is
+`orbit3d.compat.hyff.engines.native.moderato_forward`. The base loader and CSR neighbour preparation come from
+`orbit3d.compat.hyff.engines.native.base_adapter`, frozen-node helpers from `orbit3d.compat.hyff.engines.native.frozen_nodes`
+and weight reading, state features and batches from `orbit3d.compat.hyff.engines.reference`.
 
 Precision variants
   tf32x3   tensor-core TF32x3 node products, grouped experts (default)
@@ -34,24 +35,24 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from hyff.engines.native import base_adapter as base
-from hyff.engines.native import frozen_nodes
-from hyff.engines.native.centered_fp32 import check_fp32_statistics, normalization_installers
-from hyff.kernels.layernorm_fp64 import FrozenLayerNorm
-from hyff.kernels.grouped_experts import (
+from orbit3d.compat.hyff.engines.native import base_adapter as base
+from orbit3d.compat.hyff.engines.native import frozen_nodes
+from orbit3d.compat.hyff.engines.native.centered_fp32 import check_fp32_statistics, normalization_installers
+from orbit3d.compat.hyff.kernels.layernorm_fp64 import FrozenLayerNorm
+from orbit3d.compat.hyff.kernels.grouped_experts import (
     FrozenElementExpertMLP, bind_partition, enable_grouped_experts,
 )
-from hyff.engines import reference
-from hyff.models.element_model import ElementExpertMLP, prepare_batch
-from hyff.models.base_model import POLICY as LAYERNORM_POLICY
-from hyff.models.base_model import forward_fp64
-from hyff.data import collate, physical
-from hyff.engines.force_engine import ForceEngine
-from hyff.kernels.fused_linear import FastLinear, enable_fast_nodes
-from hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
+from orbit3d.compat.hyff.engines import reference
+from orbit3d.compat.hyff.models.element_model import ElementExpertMLP, prepare_batch
+from orbit3d.compat.hyff.models.base_model import POLICY as LAYERNORM_POLICY
+from orbit3d.compat.hyff.models.base_model import forward_fp64
+from orbit3d.compat.hyff.data import collate, physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.kernels.fused_linear import FastLinear, enable_fast_nodes
+from orbit3d.compat.hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
 
 PRECISIONS = ('tf32x3', 'fp16x3', 'fp32')
-IMPLEMENTATION = 'hyff.engines.native.moderato'
+IMPLEMENTATION = 'orbit3d.compat.hyff.engines.native.moderato'
 EXPECTED_BACKBONE = dict(backbone='l4a0', hidden=128, tensor_hidden=64, edge_hidden=16, interactions=4,
                          layer_cutoffs=(3.5, 3.5, 6.0, 8.0))
 
@@ -164,7 +165,7 @@ def _initial_scalar(self, batch):
 
 
 def _forward(self, batch, **kwargs):
-    from hyff.engines.native.moderato_forward import reference_forward
+    from orbit3d.compat.hyff.engines.native.moderato_forward import reference_forward
     if '_engine_initial_scalar' not in batch:
         batch = _prepare(self, batch)
     # Bind the schedule belonging to this batch even after another batch was prepared on the
@@ -273,7 +274,7 @@ def load(checkpoint, device='cuda', *, global_context=None, owned_weights=None, 
         atomic_numbers=list(model.atomic_numbers), n_elements=model.n_elements,
         condition_spin=bool(model.condition_spin),
         state_features=list(reference.STATE_FEATURES) if model.condition_spin else ['Q/N'],
-        pair_kernel='hyff.kernels.pair_energy_species.pair_energy (NE = n_elements)',
+        pair_kernel='orbit3d.compat.hyff.kernels.pair_energy_species.pair_energy (NE = n_elements)',
         pair_table_rows=int(model.radial_tables[-1].coefficients.shape[2]),
         radial_table_cutoffs_A=[float(t.cutoff) for t in model.radial_tables],
         dependency_radius_A=dependency_radius(model),
@@ -364,10 +365,10 @@ def load_torch_surrogate(checkpoint, device='cpu', *, radial_tables=False, globa
     policy), joined + folded first projections (`enable_joined_nodes(fold_first=True)`), the
     discarded embedding-only lookup, the batch-owned state-conditioned initial scalar and first
     messages (`_prepare`), the species schedule (`bind_partition`) bound to the plain element
-    experts, and `hyff.engines.native.moderato_forward` (general pair stride in its PyTorch
+    experts, and `orbit3d.compat.hyff.engines.native.moderato_forward` (general pair stride in its PyTorch
     branch). With `radial_tables` the quintic 200-interval tables of the four layer cutoffs
     replace the analytic radial filters through the memory-bounded chunked reference
-    (`hyff.models.l2_chunked_reference`), as the engine's own eager reference does. Node kernels
+    (`orbit3d.compat.hyff.models.l2_chunked_reference`), as the engine's own eager reference does. Node kernels
     (TF32x3 products, frozen FP64 LayerNorm, fused local features, grouped experts), the CSR fused
     messages and the Triton pair kernel are not exercised.
     """

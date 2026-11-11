@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Inference-only option: share expert parameter and packed-cache storage.
 
 Call immediately after bind_base has installed FrozenElementExpertMLP, before
@@ -39,7 +40,7 @@ def alias_grouped_expert_storage(model, *, dry_run=False):
     reservation need not fall, and references outside the model can delay
     actual allocation release. ``dry_run=True`` validates without mutation.
     """
-    from hyff.kernels.grouped_experts import FrozenElementExpertMLP
+    from orbit3d.compat.hyff.kernels.grouped_experts import FrozenElementExpertMLP
 
     if model.training:
         raise ValueError("EXPERT_ALIAS_REQUIRES_EVAL_MODEL")

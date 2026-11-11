@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Download model weights from the release assets into the local cache.
 
 The URL of an asset follows the ``release`` block of the checkpoint index
@@ -20,7 +21,7 @@ import urllib.request
 from contextlib import contextmanager
 from pathlib import Path
 
-from hyff.weights import sha256
+from orbit3d.compat.hyff.weights import sha256
 
 CHUNK = 1 << 20
 ATTEMPTS = 3

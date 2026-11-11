@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Construct HyFF models from explicit, data-only configurations (weights.json).
 
 This module never reads a checkpoint or resolves a user-supplied Python import.
@@ -167,7 +168,7 @@ def validate_model_config(model_id, model_config):
     values = {}
     for key, value in model_config.items():
         if key == CHARGE_BOUND_KEY:
-            from hyff.models.charge_bound import normalize_charge_bound
+            from orbit3d.compat.hyff.models.charge_bound import normalize_charge_bound
             values[key] = normalize_charge_bound(value)
         elif key == "trunk_dot_soft_cap":
             values[key] = value
@@ -220,9 +221,9 @@ def build_model(config):
     # trunk_dot_soft_cap="ABSENT" may appear in weight JSON files; it is never a constructor option.
     values.pop("trunk_dot_soft_cap", None)
     module, name = factory.split(":")
-    model = getattr(import_module(module), name)(values)
+    model = getattr(import_module('orbit3d.compat.' + module), name)(values)
     if bound is not None:
-        from hyff.models.charge_bound import install_charge_bound
+        from orbit3d.compat.hyff.models.charge_bound import install_charge_bound
         install_charge_bound(model, bound)
     _check_numerics(model, config.get("numerical_execution"))
     return model

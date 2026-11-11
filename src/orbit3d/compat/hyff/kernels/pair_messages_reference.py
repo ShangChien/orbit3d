@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Bounded-memory verification of frozen conditioned messages with PyTorch.
 
 Each backward chunk recomputes ordinary differentiable tensor operations.
@@ -6,7 +7,7 @@ backend. All edges and atom features are kept. This is inference-only.
 """
 import torch
 
-from hyff.models.l2_potential import (
+from orbit3d.compat.hyff.models.l2_potential import (
     _quadrupole, _tensor_dot_direction, _vector_tensor_product, smooth_switch,
 )
 

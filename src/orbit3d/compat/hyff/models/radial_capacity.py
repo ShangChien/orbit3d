@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Decouple learned radial capacity from transported equivariant channels.
 
 The added hidden units start with zero output columns, preserving the initial
@@ -11,7 +12,7 @@ import math
 import torch
 from torch import nn
 
-from hyff.models.pair_radials import PairRadialConfig, PairRadialPotential, SymmetricFiLMRadial
+from orbit3d.compat.hyff.models.pair_radials import PairRadialConfig, PairRadialPotential, SymmetricFiLMRadial
 
 
 @dataclass(frozen=True)

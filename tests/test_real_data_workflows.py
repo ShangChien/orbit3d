@@ -185,3 +185,23 @@ def test_phosphazene_mmff_failure_is_an_explicit_preparation_rejection():
     # OCELOT csd_TAVCOI: parses as a graph, but MMFF cannot kekulize its fused system.
     with pytest.raises(ValueError, match='MMFF aromaticity/valence unsupported'):
         ocelot_conformer('FP1(F)=NP(F)(F)=NP2(=N1)Oc1cc3ccccc3cc1O2')
+
+
+def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
+    import json
+    import sys
+    import types
+    from pathlib import Path
+    import orbit3d.compat.hyff as bundled
+    from orbit3d.compat.hyff import registry
+    from orbit3d.compat.hyff.models.factory import build_model, factory_id
+
+    monkeypatch.setitem(sys.modules, 'hyff', types.ModuleType('unrelated_hyff'))
+    before=list(sys.path)
+    assert factory_id('hyff-l2')=='hyff.models.base_model:build_model'
+    config=json.loads((Path(bundled.__file__).parent/'checkpoints/presto/weights.json').read_text())
+    spec={k:v for k,v in config.items() if k in {'format','model_id','model_config','numerical_execution'}}
+    model=build_model(spec)
+    assert type(model).__module__.startswith('orbit3d.compat.hyff.')
+    assert set(registry.manifest()['models'])=={'presto','vivace','moderato','andante','largo'}
+    assert sys.path==before

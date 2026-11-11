@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """largo model constructors: EFM model + electronic embedding + latent-charge long-range term.
 
 The latent-charge energy is added through the model forward. Prepared (captured)
@@ -12,7 +13,7 @@ import weakref
 
 import torch
 
-from hyff.models.latent_charges import LatentChargeEnergy
+from orbit3d.compat.hyff.models.latent_charges import LatentChargeEnergy
 
 
 _CONTEXT = '_latent_charge_call_context'
@@ -115,11 +116,11 @@ def install_latent_charges(model):
 
 def _build(mapping, width, capacity):
     if capacity == 1:
-        from hyff.models.electronic_embedding import build_model as base
+        from orbit3d.compat.hyff.models.electronic_embedding import build_model as base
         if 'scalar_expert_capacity' in mapping:
             raise ValueError('LATENT_CHARGE_NATIVE_CAPACITY1_MAPPING_REQUIRED')
     else:
-        from hyff.models.electronic_embedding import build_capacity_model as base
+        from orbit3d.compat.hyff.models.electronic_embedding import build_capacity_model as base
         settings = mapping.get('scalar_expert_capacity')
         if not isinstance(settings, dict) or settings.get('multiplier') != capacity:
             raise ValueError('LATENT_CHARGE_EXACT_CAPACITY_MAPPING_REQUIRED')
@@ -151,7 +152,7 @@ def build_w576c4(mapping):
 
 def install_prepared_context(model, physical, device):
     """Composite installer, called after native prepared forward replacement."""
-    from hyff.models.electronic_embedding import install_prepared_context as install_electronic
+    from orbit3d.compat.hyff.models.electronic_embedding import install_prepared_context as install_electronic
     if not hasattr(model, 'latent_charge_energy'):
         raise ValueError('LATENT_CHARGE_FACTORY_REQUIRED')
     if _ENERGY in model.__dict__:

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Weight files: the architecture JSON and single-file or sharded safetensors weights.
 
 A checkpoint is one of
@@ -74,7 +75,7 @@ def read_config(weights):
     if not isinstance(config, dict) or set(config) - allowed:
         raise ValueError('Expected a HyFF architecture JSON with only the keys format, model_id, '
                          'model_config, numerical_execution and weights_sha256')
-    from hyff.models.factory import FORMAT, LEGACY_FORMATS
+    from orbit3d.compat.hyff.models.factory import FORMAT, LEGACY_FORMATS
     if config.get('format') not in (FORMAT,) + LEGACY_FORMATS:
         raise ValueError(f'Unsupported weights format; expected {FORMAT}')
     if not isinstance(config.get('model_id'), str) or not isinstance(config.get('model_config'), dict):
@@ -172,7 +173,7 @@ def _model_spec(config):
 
 
 def load_model(weights, device='cpu'):
-    from hyff.models.factory import build_model
+    from orbit3d.compat.hyff.models.factory import build_model
     path, config = read_config(weights)
     model = build_model(_model_spec(config))
     state = read_weights(path)
@@ -191,7 +192,7 @@ def read_adapter_export(weights):
 
     Built only from the weight file and its architecture JSON.
     """
-    from hyff.models.factory import factory_id
+    from orbit3d.compat.hyff.models.factory import factory_id
     model, config = load_model(weights, 'cpu')
     factory = factory_id(config['model_id'])
     return dict(architecture=getattr(model, 'architecture', 'hyff'),

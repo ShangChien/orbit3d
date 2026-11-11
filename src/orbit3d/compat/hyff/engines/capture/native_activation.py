@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native-activation EFM term as an additional compile choice of a checked EFMState.
 
 Mix NativeActivationMixin into a checked EFMState class; nothing is installed
@@ -90,7 +91,7 @@ class NativeActivationMixin:
         require_tested_environment(efm)
 
     def _native_activation_builder(self):
-        from hyff.engines.capture.native_activation_backend import make_term
+        from orbit3d.compat.hyff.engines.capture.native_activation_backend import make_term
 
         return make_term
 

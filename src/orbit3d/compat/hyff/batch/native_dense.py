@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native fixed-capacity batching for presto, vivace and moderato.
 
 presto delegates to native_presto. vivace and moderato keep the native
@@ -9,12 +10,12 @@ import math
 from typing import Dict
 from types import MethodType
 import torch
-from hyff.batch.base import BatchedPotential, _reference_products
-from hyff.batch.native_presto import NativeBatchedPotential as PrestoNativeBatchedPotential
-from hyff.models.l2_potential import _quadrupole, smooth_switch
-from hyff.engines.native import moderato as full
-from hyff.engines.native import frozen_nodes as large
-from hyff.models.base_model import forward_fp64
+from orbit3d.compat.hyff.batch.base import BatchedPotential, _reference_products
+from orbit3d.compat.hyff.batch.native_presto import NativeBatchedPotential as PrestoNativeBatchedPotential
+from orbit3d.compat.hyff.models.l2_potential import _quadrupole, smooth_switch
+from orbit3d.compat.hyff.engines.native import moderato as full
+from orbit3d.compat.hyff.engines.native import frozen_nodes as large
+from orbit3d.compat.hyff.models.base_model import forward_fp64
 
 def full_batched_forward(self, batch: Dict[str, torch.Tensor], csr=None, stable_sum=False,
             prefix_depth: int | None = None,
@@ -112,7 +113,7 @@ def full_batched_forward(self, batch: Dict[str, torch.Tensor], csr=None, stable_
     n_graphs = batch["ptr"].numel() - 1
     elements = self.element_lut[atomic_numbers]
     if csr is not None:
-        from hyff.kernels.pair_energy_species import pair_energy
+        from orbit3d.compat.hyff.kernels.pair_energy_species import pair_energy
         atomic_pair = pair_energy(positions, csr.radius_view(self.cutoff), elements, self.radial_tables[-1])
         atomic_energy = atomic_energy + atomic_pair
         if prefix_atomic_energy is not None:
@@ -178,7 +179,7 @@ def prepare_full(model, tier, precision='tf32x3', statistics='fp64', compiled_no
     model.filter_skin_neighbors = True
     full.base.configure_neighbor_reserve(model, 1.25)
     if model.config.edge_hidden == 8:
-        from hyff.kernels.compact_pair_messages import _compact_message_forward
+        from orbit3d.compat.hyff.kernels.compact_pair_messages import _compact_message_forward
         for block in model.blocks:
             block.forward = MethodType(_compact_message_forward, block)
     full.enable_joined_nodes(model, fold_first=True)
@@ -202,7 +203,7 @@ class NativeBatchedPotential(PrestoNativeBatchedPotential):
     """Same flat-array API with each tier's native precision policy.
 
     presto defaults to TF32x3/FP32-LN; vivace and moderato here use TF32x3/FP64-LN
-    (their FP32-LN default is set up in hyff.batch.native).
+    (their FP32-LN default is set up in orbit3d.compat.hyff.batch.native).
     Each object owns one raw model and one fixed captured storage layout.
     """
     def __init__(self, model, atom_capacity, edge_capacity, graph_capacity, *, device='cuda',

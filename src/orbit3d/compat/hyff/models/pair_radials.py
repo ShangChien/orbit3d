@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Experimental symmetric FiLM radial filters over the element atom experts.
 
 This reference has no fused message backend and is not used by the HyFF named
@@ -10,8 +11,8 @@ import copy
 import torch
 from torch import nn
 
-from hyff.models.experts import ELEMENTS, L2ExpertConfig, L2ExpertPotential
-from hyff.kernels.radial_table import QuinticRadialTable
+from orbit3d.compat.hyff.models.experts import ELEMENTS, L2ExpertConfig, L2ExpertPotential
+from orbit3d.compat.hyff.kernels.radial_table import QuinticRadialTable
 
 
 PAIR_ELEMENTS = tuple((a, b) for a in range(8) for b in range(a, 8))

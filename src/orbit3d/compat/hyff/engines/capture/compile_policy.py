@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Process-wide compiler settings required by the largo engine.
 
 IEEE FP32 matrix products in PyTorch (tf32x3 products are explicit in the
@@ -13,7 +14,7 @@ import warnings
 def configure_largo_compiler():
     import torch
     from triton.backends.nvidia.compiler import CUDABackend
-    from hyff.engines.capture import dynamic_shapes
+    from orbit3d.compat.hyff.engines.capture import dynamic_shapes
 
     torch.set_float32_matmul_precision('highest')
     torch.backends.cuda.matmul.allow_tf32 = False

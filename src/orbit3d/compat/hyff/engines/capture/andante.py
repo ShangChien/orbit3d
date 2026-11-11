@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Captured force engine of the andante model (EFM architecture).
 
 The base nodes run on the fused CSR path and the edge-frame-mixing blocks on
@@ -13,13 +14,13 @@ import time
 
 import torch
 
-from hyff.engines.reference import system_batch, state_features
-from hyff.models.efm_model import build_model
-from hyff.data import physical
-from hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.engines.reference import system_batch, state_features
+from orbit3d.compat.hyff.models.efm_model import build_model
+from orbit3d.compat.hyff.data import physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
 
-from hyff.engines.capture.base_port import bind_base
-from hyff.engines.capture.efm_port import EFMOverflow, install_efm
+from orbit3d.compat.hyff.engines.capture.base_port import bind_base
+from orbit3d.compat.hyff.engines.capture.efm_port import EFMOverflow, install_efm
 
 
 class CaptureValidationError(AssertionError):
@@ -42,7 +43,7 @@ def build_proxy(seed=201):
 
 
 def load_weights_into_proxy(checkpoint, seed=201):
-    from hyff.weights import load_model
+    from orbit3d.compat.hyff.weights import load_model
     return load_model(checkpoint, 'cpu')[0]
 
 

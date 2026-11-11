@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """CSR/fused-message execution of the two-block isotropic-outer backbone.
 
 Block 0 is the `L2Interaction` scalar-source transport (8 scalar + 8 vector + 8 tensor message
@@ -6,19 +7,19 @@ only). Both class forwards refuse `csr`/fused execution, so this module binds an
 forward that runs
 
   * block 0 through the unchanged `L2Interaction.forward` CSR branch, i.e. the Triton fused
-    scalar-source message kernel (`hyff.kernels.fused_messages.messages`, `first=True`) with the
+    scalar-source message kernel (`orbit3d.compat.hyff.kernels.fused_messages.messages`, `first=True`) with the
     block's quintic radial table (3 x 8 channels) on the 3.5 A radius view;
   * block 1 through the same kernel on the 4.5 A view with the node message and the radial table
     zero-padded to the kernel's 3 x C layout (vector/tensor outputs are exactly zero and discarded;
     the scalar aggregate is `sum_j m0 * w0 * envelope`, the block's own message);
-  * the symmetric pair term through `hyff.kernels.pair_energy_species.pair_energy`
+  * the symmetric pair term through `orbit3d.compat.hyff.kernels.pair_energy_species.pair_energy`
     (NE = n_elements) on the 4.5 A view;
   * atom-local nodes (FP64-internal LayerNorm policy, element experts, readouts) as ordinary FP32
     torch operations, optionally `torch.compile`d (`compiled_nodes`).
 
-Neighbor preparation is `hyff.engines.native.base_adapter.PreparedGeneralNeighbors` (CSR matrices
+Neighbor preparation is `orbit3d.compat.hyff.engines.native.base_adapter.PreparedGeneralNeighbors` (CSR matrices
 from the checked skin graph, current-coordinate radius views), which is also what the device MD
-driver (`hyff.md.device.matrix_phases.NativeMatrixPhases`) rebuilds on device. The presto engine
+driver (`orbit3d.compat.hyff.md.device.matrix_phases.NativeMatrixPhases`) rebuilds on device. The presto engine
 reuses this module's edge-geometry helpers.
 
 With `csr=None` the bound forward is the unmodified training forward (analytic radial filters on
@@ -35,19 +36,19 @@ import numpy as np
 import torch
 from torch import nn
 
-from hyff.engines.native.base_adapter import PreparedGeneralNeighbors
-from hyff.models.isotropic_outer import IsotropicOuterInteraction
-from hyff.engines import reference
-from hyff.kernels.pair_energy_species import pair_energy
-from hyff.models.scalar_refresh import _finish_fresh
-from hyff.models.element_model import prepare_batch
-from hyff.engines.force_engine import ForceEngine
-from hyff.models.experts import ElementPartition
-from hyff.kernels.fused_messages import configure_neighbor_reserve, messages
-from hyff.models.l2_potential import L2Interaction, _RowSelectedLinear, _quadrupole, smooth_switch
-from hyff.kernels.radial_table import QuinticRadialTable
+from orbit3d.compat.hyff.engines.native.base_adapter import PreparedGeneralNeighbors
+from orbit3d.compat.hyff.models.isotropic_outer import IsotropicOuterInteraction
+from orbit3d.compat.hyff.engines import reference
+from orbit3d.compat.hyff.kernels.pair_energy_species import pair_energy
+from orbit3d.compat.hyff.models.scalar_refresh import _finish_fresh
+from orbit3d.compat.hyff.models.element_model import prepare_batch
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.models.experts import ElementPartition
+from orbit3d.compat.hyff.kernels.fused_messages import configure_neighbor_reserve, messages
+from orbit3d.compat.hyff.models.l2_potential import L2Interaction, _RowSelectedLinear, _quadrupole, smooth_switch
+from orbit3d.compat.hyff.kernels.radial_table import QuinticRadialTable
 
-IMPLEMENTATION = 'hyff.engines.native.fast_csr'
+IMPLEMENTATION = 'orbit3d.compat.hyff.engines.native.fast_csr'
 BACKEND = 'isotropic_outer_csr'
 DEFAULT_SETTINGS = (16, 8, 4, True)
 EXPECTED_BACKBONE = dict(hidden=32, edge_hidden=8, tensor_hidden=16, interactions=2, cutoff=4.5,
@@ -341,7 +342,7 @@ def create_engine(positions, atomic_numbers, cell, checkpoint, device='cuda', to
         engine.close()
         raise
     metadata = dict(model.deployment_metadata, global_context=context, skin_A=float(skin),
-                    neighbor_construction='hyff.graph.NeighborCache/radius_edges (cutoff + skin) -> PreparedGeneralNeighbors CSR')
+                    neighbor_construction='orbit3d.compat.hyff.graph.NeighborCache/radius_edges (cutoff + skin) -> PreparedGeneralNeighbors CSR')
     return dict(model=model, batch=batch, engine=engine, metadata=metadata)
 
 

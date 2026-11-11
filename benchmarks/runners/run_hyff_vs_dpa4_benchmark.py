@@ -28,12 +28,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 for _p in [
-    str(PROJECT_ROOT / "src" / "orbit3d" / "compat"),
     str(PROJECT_ROOT / "src"),
     str(PROJECT_ROOT),
     "/sjtu-combustion/wjw/chensq/PropMolFlow",
-    "/sjtu-combustion/wjw/chensq/repos/Hyra-results/AI4Science/hyff/src",
-    "/sjtu-combustion/wjw/chensq/hyff_site_packages",
     "/sjtu-combustion/wjw/chensq/deepmd_v32",
 ]:
     if os.path.exists(_p) and _p not in sys.path:
@@ -118,7 +115,7 @@ def get_dpa_catalog(pretrained_dir: Path) -> Dict[str, Dict[str, str]]:
 
 
 def _hyff_ckpt_size_mb(tier: str) -> float:
-    from hyff.registry import resolve
+    from orbit3d.compat.hyff.registry import resolve
 
     sel = resolve(tier)
     w_path = Path(sel.weights)
@@ -390,7 +387,7 @@ def run_exp1_hardware_ir_and_clash(pretrained_dir: Path, oled_dir: Path, device:
 
                 if m_kind == "hyff_native_raw":
                     # Test raw hyff.predict_batch(route="native") on largo without fallback
-                    import hyff
+                    from orbit3d.compat import hyff
 
                     pt = Chem.GetPeriodicTable()
                     z_np = np.array([pt.GetAtomicNumber(OLED_ATOM_TYPES[int(x)]) for x in a.cpu().tolist()], dtype=np.int64)

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Public Python API: models, engines, molecular dynamics and batched inference."""
 from __future__ import annotations
 
@@ -5,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from hyff.registry import resolve
+from orbit3d.compat.hyff.registry import resolve
 
 
 def _structure(positions, numbers, cell=None, charge=0, multiplicity=1):
@@ -55,13 +56,13 @@ def _multiplicity(value):
 class Model:
     """A HyFF model with its weights, evaluated eagerly (CPU or CUDA).
 
-    Use :func:`hyff.load` to create one. ``energy_forces`` is the simple
+    Use :func:`orbit3d.compat.hyff.load` to create one. ``energy_forces`` is the simple
     single-structure call; :meth:`create_engine` builds the fast engine for
     repeated evaluations of one system (CUDA only).
     """
 
     def __init__(self, selection, device='cuda', skin=1.5):
-        from hyff.engines.dispatch import Potential
+        from orbit3d.compat.hyff.engines.dispatch import Potential
         self.name = selection.name
         self.weights = selection.weights
         self.sha256 = selection.sha256
@@ -86,7 +87,7 @@ class Model:
         return float(energy.sum()), forces.cpu().numpy()
 
     def create_engine(self, positions, numbers, cell=None, **options):
-        """Fast fixed-topology engine for this model and one system; see :func:`hyff.create_engine`."""
+        """Fast fixed-topology engine for this model and one system; see :func:`orbit3d.compat.hyff.create_engine`."""
         return create_engine(self.name or self.weights, positions, numbers, cell,
                              weights=self.weights, **options)
 
@@ -169,7 +170,7 @@ def create_engine(model, positions, numbers, cell=None, *, charge=0, multiplicit
     selects the plain PyTorch model. Positions are in Angstrom; ``cell`` is a
     (3, 3) box or None.
     """
-    from hyff.engines.dispatch import create_engine as build
+    from orbit3d.compat.hyff.engines.dispatch import create_engine as build
     positions, numbers, cell, charge, multiplicity = _structure(positions, numbers, cell, charge, multiplicity)
     selection = resolve(model, weights, engine=engine, precision=precision, statistics=statistics,
                         edge_reserve=edge_reserve, long_range=long_range, conservation=conservation,
@@ -194,13 +195,13 @@ class Simulation:
     (NPT). Output (``result.json``, ``final_state.npz``, trajectory frames)
     goes to ``output``. ``gpus>1`` enables experimental multi-GPU largo MD
     with the automatic card policy. Other keyword options are those of
-    :class:`hyff.md.simulation.RunConfig`.
+    :class:`orbit3d.compat.hyff.md.simulation.RunConfig`.
     """
 
     def __init__(self, system, model=None, *, steps=10000, timestep_fs=1.0, temperature_K=300.0,
                  tau_ps=0.5, output='hyff_md', weights=None, gpus=1, **options):
         import dataclasses
-        from hyff.md.simulation import RunConfig
+        from orbit3d.compat.hyff.md.simulation import RunConfig
         if model is None and weights is None:
             model = 'presto'
         known = {f.name for f in dataclasses.fields(RunConfig)} - {'system', 'extra'}
@@ -223,7 +224,7 @@ class Simulation:
         if cfg.route != 'native':
             self.result = self._run_multigpu()
             return self.result
-        from hyff.md.simulation import MDRun
+        from orbit3d.compat.hyff.md.simulation import MDRun
         self._run = run = MDRun(cfg)
         try:
             run.setup()
@@ -244,7 +245,7 @@ class Simulation:
         # several GPUs, the run continues under torchrun in child processes.
         import json
         import subprocess
-        from hyff.multigpu.launcher import run_md
+        from orbit3d.compat.hyff.multigpu.launcher import run_md
         result = run_md(self.config)
         if result.get('status') != 'launch_required':
             return result
@@ -273,10 +274,10 @@ def predict_batch(model, positions, numbers, offsets, charge=None, multiplicity=
     ``mode`` (energy, energy_forces), capacities and ``precision``/``statistics``.
     """
     import inspect
-    from hyff.batch.collection import CollectionPotential, predict_collection
+    from orbit3d.compat.hyff.batch.collection import CollectionPotential, predict_collection
     if 'cell' in options:
         raise ValueError('predict_batch evaluates isolated (nonperiodic) molecules; for a periodic system use '
-                         'hyff.load(...).energy_forces or hyff.create_engine with cell=')
+                         'orbit3d.compat.hyff.load(...).energy_forces or orbit3d.compat.hyff.create_engine with cell=')
     allowed = set(inspect.signature(CollectionPotential.__init__).parameters) - {'self', 'model', 'tier', 'device'}
     unknown = sorted(set(options) - allowed)
     if unknown:

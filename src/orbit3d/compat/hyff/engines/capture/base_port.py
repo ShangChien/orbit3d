@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Base-node preparation of an already-built EFM model for the captured engines.
 
 No factory, configuration file, or checkpoint is loaded here. ``bind_base``
@@ -15,17 +16,17 @@ import math
 import torch
 from torch import nn
 
-from hyff.kernels.layernorm_fp64 import FrozenLayerNorm
-from hyff.kernels.local_features_fp64 import enable_frozen_local_features
-from hyff.kernels.grouped_experts import FrozenElementExpertMLP
-from hyff.engines.native import moderato as native_moderato
-from hyff.models.element_model import ElementExpertMLP
-from hyff.models.base_model import POLICY
-from hyff.models.stabilized import StabilizedUpdateMLP
-from hyff.kernels.fused_linear import FastLinear
-from hyff.kernels.fused_messages import configure_neighbor_reserve
-from hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
-from hyff.models.l2_potential import L2Interaction, L2Potential, _RowSelectedLinear
+from orbit3d.compat.hyff.kernels.layernorm_fp64 import FrozenLayerNorm
+from orbit3d.compat.hyff.kernels.local_features_fp64 import enable_frozen_local_features
+from orbit3d.compat.hyff.kernels.grouped_experts import FrozenElementExpertMLP
+from orbit3d.compat.hyff.engines.native import moderato as native_moderato
+from orbit3d.compat.hyff.models.element_model import ElementExpertMLP
+from orbit3d.compat.hyff.models.base_model import POLICY
+from orbit3d.compat.hyff.models.stabilized import StabilizedUpdateMLP
+from orbit3d.compat.hyff.kernels.fused_linear import FastLinear
+from orbit3d.compat.hyff.kernels.fused_messages import configure_neighbor_reserve
+from orbit3d.compat.hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
+from orbit3d.compat.hyff.models.l2_potential import L2Interaction, L2Potential, _RowSelectedLinear
 
 
 PRECISIONS = ('fp32', 'tf32x3', 'fp16x3')

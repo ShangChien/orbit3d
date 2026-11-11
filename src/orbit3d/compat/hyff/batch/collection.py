@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Public flat-collection prediction with bounded, shared-model native buckets.
 
 Input charges and multiplicities are explicit per molecule. Native batching
@@ -57,18 +58,18 @@ def _capacity_overflow_kind(error):
             return None
         origin = (trace.tb_frame.f_globals.get('__name__'), trace.tb_frame.f_code.co_name)
         message = error.args[0]
-        if (origin == ('hyff.batch.base', '_update_edges') and
+        if (origin == ('orbit3d.compat.hyff.batch.base', '_update_edges') and
                 re.fullmatch(r'Edge capacity exceeded: required [0-9]+, capacity [0-9]+', message)):
             return 'global_edges'
-        if (origin == ('hyff.batch.native_presto', '_update') and
+        if (origin == ('orbit3d.compat.hyff.batch.native_presto', '_update') and
                 message == 'Fixed per-atom neighbor capacity exceeded'):
             return 'neighbor_slots'
-        if ((origin == ('hyff.batch.native', '__call__') and
+        if ((origin == ('orbit3d.compat.hyff.batch.native', '__call__') and
                 message == 'andante fixed per-element expert row capacity exceeded') or
-                (origin == ('hyff.batch.native_efm', '_stage_andante_partition') and
+                (origin == ('orbit3d.compat.hyff.batch.native_efm', '_stage_andante_partition') and
                  message == 'andante per-element expert row capacity exceeded')):
             return 'expert_rows'
-    modules = ('hyff.engines.capture.efm_port', 'hyff.engines.capture.efm_port_dynamic')
+    modules = ('orbit3d.compat.hyff.engines.capture.efm_port', 'orbit3d.compat.hyff.engines.capture.efm_port_dynamic')
     for name in modules:
         expected = getattr(sys.modules.get(name), 'EFMOverflow', None)
         if (expected is not None and type(error) is expected and len(error.args) == 1 and
@@ -159,9 +160,9 @@ def geometry_capacities(values, plan, cutoff, *, edge_capacity=0, neighbor_capac
     """Dispatch capacity counting explicitly; CUDA errors propagate unchanged."""
     options = dict(edge_capacity=edge_capacity, neighbor_capacity=neighbor_capacity)
     if str(device).startswith('cuda'):
-        from hyff.batch.geometry_gpu import geometry_capacities as count
+        from orbit3d.compat.hyff.batch.geometry_gpu import geometry_capacities as count
         return count(values, plan, cutoff, device=device, **options)
-    from hyff.batch.geometry_axiswise import geometry_capacities as count
+    from orbit3d.compat.hyff.batch.geometry_axiswise import geometry_capacities as count
     return count(values, plan, cutoff, **options)
 
 
@@ -253,7 +254,7 @@ class CollectionPotential:
         return result
 
     def _load_weights(self, weights):
-        from hyff.weights import load_model
+        from orbit3d.compat.hyff.weights import load_model
         started = time.perf_counter()
         self.model, _ = load_model(weights, self.device)
         self._load_seconds, self._load_pending = time.perf_counter() - started, True
@@ -305,14 +306,14 @@ class CollectionPotential:
             for key, options in requested:
                 if key not in self._runners:
                     if selected[0] == 'reference':
-                        from hyff.batch.reference import ReferenceBatchedPotential
+                        from orbit3d.compat.hyff.batch.reference import ReferenceBatchedPotential
                         runner = ReferenceBatchedPotential(self.model, **options, device=self.device,
                             backend=selected[1], mode=self.mode, max_cached_signatures=1)
                     elif self._pool is None:
                         if self.tier == 'largo':
-                            from hyff.batch.latent_charge_pool import NativeBucketPool
+                            from orbit3d.compat.hyff.batch.latent_charge_pool import NativeBucketPool
                         else:
-                            from hyff.batch.pool import NativeBucketPool
+                            from orbit3d.compat.hyff.batch.pool import NativeBucketPool
                         self._pool = NativeBucketPool(self.model, [options], tier=self.tier,
                             device=self.device, backend=selected[1], mode=self.mode,
                             precision=self.precision or ('fp32' if self.tier == 'andante' else 'tf32x3'),

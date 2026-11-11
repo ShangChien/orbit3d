@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Edge-buffer growth and optional EFM tiling for one andante engine instance.
 
 Installed through the captured constructor's post-install, pre-preparation
@@ -10,8 +11,8 @@ from __future__ import annotations
 from copy import deepcopy
 import math
 
-from hyff.engines.capture.edge_growth import install_growth_policy
-from hyff.engines.capture.partial_tiling import install_tiled_terms
+from orbit3d.compat.hyff.engines.capture.edge_growth import install_growth_policy
+from orbit3d.compat.hyff.engines.capture.partial_tiling import install_tiled_terms
 
 
 TILE_EDGES = 131072

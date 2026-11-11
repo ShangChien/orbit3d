@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Edge-frame mixing (EFM): a bounded Cartesian analogue of an SO(2) edge-frame convolution block.
 
-`build_model` builds the base StatePotential chain (hyff.models.base_model ->
-hyff.models.state_model -> hyff.models.element_model -> hyff.models.l2_potential)
+`build_model` builds the base StatePotential chain (orbit3d.compat.hyff.models.base_model ->
+orbit3d.compat.hyff.models.state_model -> orbit3d.compat.hyff.models.element_model -> orbit3d.compat.hyff.models.l2_potential)
 from the plain model keys and then installs one EdgeFrameMixing module per
 selected block. Every EFM parameter is created AFTER the base build, so every base
 tensor is bitwise the initialization of the plain model with the same keys, and
@@ -62,8 +63,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from hyff.models.base_model import build_model as build_base
-from hyff.models.l2_potential import _linear, _tensor_dot_direction, _vector_tensor_product
+from orbit3d.compat.hyff.models.base_model import build_model as build_base
+from orbit3d.compat.hyff.models.l2_potential import _linear, _tensor_dot_direction, _vector_tensor_product
 
 VARIANT = 'edge_frame_mixing_cartesian_l2'
 SQRT2 = math.sqrt(2.)
@@ -74,7 +75,7 @@ AGGREGATIONS = ('sum', 'degree')
 
 
 # --------------------------------------------------------------------------------------------------
-# Cartesian helpers (five orthonormal l=2 coordinates as in hyff.models.l2_potential._quadrupole)
+# Cartesian helpers (five orthonormal l=2 coordinates as in orbit3d.compat.hyff.models.l2_potential._quadrupole)
 # --------------------------------------------------------------------------------------------------
 def tensor5_to_matrix(t):
     """(E, 5, C) orthonormal STF coordinates -> (E, 3, 3, C) symmetric traceless matrices."""

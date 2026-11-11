@@ -1,4 +1,5 @@
-"""EFM model constructor: hyff.models.efm_backbone.build_model plus an optional per-block EFM edge cutoff.
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
+"""EFM model constructor: orbit3d.compat.hyff.models.efm_backbone.build_model plus an optional per-block EFM edge cutoff.
 
   efm_edge_cutoff  absent (= the backbone model), or dict {block: radius} / list of length n_blocks with null on blocks that keep the
                    block cutoff. For an EFM block with edge radius r_e <= its layer cutoff, the EFM term of that block
@@ -24,8 +25,8 @@ from types import MethodType
 
 import torch
 
-from hyff.models.l2_potential import smooth_switch
-from hyff.models import efm_backbone as BACKBONE
+from orbit3d.compat.hyff.models.l2_potential import smooth_switch
+from orbit3d.compat.hyff.models import efm_backbone as BACKBONE
 
 VARIANT = 'efm_edge_cutoff'
 STASH = '_efm_edge_envelope'

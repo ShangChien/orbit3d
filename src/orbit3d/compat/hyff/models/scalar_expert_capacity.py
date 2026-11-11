@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Widen native atomwise scalar experts without widening edge or tensor states.
 
 The added hidden units have zero output columns at initialization.  The expert
@@ -22,7 +23,7 @@ DEFAULT_SETTINGS = {
 
 def _get_expander():
     # Native dependencies are loaded only when installing the capacity change.
-    from hyff.models.radial_capacity import expand_network
+    from orbit3d.compat.hyff.models.radial_capacity import expand_network
     return expand_network
 
 
@@ -149,6 +150,6 @@ def build_model(mapping):
     native_settings = dict(mapping)
     capacity = _validated_settings(
         native_settings.pop("scalar_expert_capacity", None))
-    from hyff.models.efm_model import build_model as native_build
+    from orbit3d.compat.hyff.models.efm_model import build_model as native_build
     model = native_build(native_settings)
     return install_scalar_expert_capacity(model, capacity)

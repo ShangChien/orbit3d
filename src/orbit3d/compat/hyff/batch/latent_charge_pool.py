@@ -1,12 +1,13 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Prepare-once capacity buckets for native largo batching with packed latent-charge pairs."""
 from __future__ import annotations
 
 import copy
 from collections.abc import Mapping
 
-from hyff.batch.base import BatchBucket
-from hyff.batch.latent_charge_pairs import NativeBatchedPotential
-from hyff.batch.pool import _bucket_spec, _efm_capacity
+from orbit3d.compat.hyff.batch.base import BatchBucket
+from orbit3d.compat.hyff.batch.latent_charge_pairs import NativeBatchedPotential
+from orbit3d.compat.hyff.batch.pool import _bucket_spec, _efm_capacity
 
 
 def fork_native_bucket(prepared, atom_capacity, edge_capacity, graph_capacity, *,
@@ -66,7 +67,7 @@ class NativeBucketPool:
 
     @classmethod
     def from_weights(cls, weights, buckets, *, device='cuda', **native_options):
-        from hyff.weights import load_model
+        from orbit3d.compat.hyff.weights import load_model
         model, _ = load_model(weights, device)
         return cls(model, buckets, device=device, **native_options)
 

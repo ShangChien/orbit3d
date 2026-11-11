@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Atom-attention electronic embedding of the global charge and spin.
 
 Each block receives an extra invariant electronic embedding. Charge and
@@ -140,7 +141,7 @@ def install_attention(model):
 
 def build_model(config):
     """EFM model with an electronic attention head (no scalar expert capacity)."""
-    from hyff.models.efm_model import build_model as efm_model
+    from orbit3d.compat.hyff.models.efm_model import build_model as efm_model
 
     if "scalar_expert_capacity" in config:
         raise ValueError("This constructor does not accept scalar_expert_capacity")
@@ -149,7 +150,7 @@ def build_model(config):
 
 def build_capacity_model(config):
     """EFM model with widened scalar experts and an electronic attention head."""
-    from hyff.models.scalar_expert_capacity import build_model as capacity_model
+    from orbit3d.compat.hyff.models.scalar_expert_capacity import build_model as capacity_model
 
     return install_attention(capacity_model(config))
 

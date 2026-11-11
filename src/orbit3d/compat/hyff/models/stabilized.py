@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Stabilized node-update MLP for the EFM models.
 
-build_stab_model builds the base StatePotential chain (hyff.models.base_model ->
-hyff.models.state_model -> hyff.models.element_model -> hyff.models.l2_potential)
+build_stab_model builds the base StatePotential chain (orbit3d.compat.hyff.models.base_model ->
+orbit3d.compat.hyff.models.state_model -> orbit3d.compat.hyff.models.element_model -> orbit3d.compat.hyff.models.l2_potential)
 from the plain model keys and then wraps every interaction block's node-update
 MLP (the 83 element experts) in a StabilizedUpdateMLP. All parameters created
 here are drawn without the global RNG, so every base tensor is bitwise the
@@ -35,7 +36,7 @@ Stabilizer (all optional, model-config keys with the stab_ prefix):
                              (relative change below 1 percent), so the initial
                              function is the base's up to that compression.
                              'layernorm': one FP64-internal LayerNorm (same policy as
-                             hyff.models.base_model) over the whole 5 x tensor_hidden
+                             orbit3d.compat.hyff.models.base_model) over the whole 5 x tensor_hidden
                              invariant vector instead (scale-free, bounded; not
                              identity at init). None: off.
   stab_output_gates          true (default): one learnable gate per output column of
@@ -66,7 +67,7 @@ from types import MethodType
 import torch
 from torch import nn
 
-from hyff.models.base_model import build_model as build_base, forward_fp64
+from orbit3d.compat.hyff.models.base_model import build_model as build_base, forward_fp64
 
 VARIANT = 'hyff_xl_stabilized_update_mlp'
 TRANSFORMS = ('asinh', 'layernorm', None)

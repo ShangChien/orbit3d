@@ -1,11 +1,12 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native vivace engine: the m26 L2 model (hidden 64, edge width 8, three blocks) on the C = 8 path.
 
 Accepts tensors-only weights plus their architecture JSON. The expected vivace
 architecture is an eligibility guard, never a replacement for the supplied
-architecture. The node path matches hyff.engines.native.moderato (joined/folded
+architecture. The node path matches orbit3d.compat.hyff.engines.native.moderato (joined/folded
 projections, frozen LayerNorm with FP64 or FP32 statistics, fused local
 features, grouped element experts, compiled nodes); messages use the compact
-eight-channel pair kernels (hyff.kernels.compact_pair_messages).
+eight-channel pair kernels (orbit3d.compat.hyff.kernels.compact_pair_messages).
 """
 from __future__ import annotations
 
@@ -20,25 +21,25 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from hyff.engines.native import base_adapter as base
-from hyff.engines.native import frozen_nodes
-from hyff.engines.native.centered_fp32 import check_fp32_statistics, normalization_installers
-from hyff.kernels.layernorm_fp64 import FrozenLayerNorm
-from hyff.kernels.grouped_experts import FrozenElementExpertMLP, enable_grouped_experts
-from hyff.engines.native import moderato
-from hyff.engines import reference
-from hyff.models.element_model import ElementExpertMLP
-from hyff.models.base_model import POLICY as LAYERNORM_POLICY
-from hyff.data import collate, physical
-from hyff.engines.force_engine import ForceEngine
-from hyff.kernels.fused_linear import enable_fast_nodes
-from hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
-from hyff.kernels.fused_messages import configure_neighbor_reserve
+from orbit3d.compat.hyff.engines.native import base_adapter as base
+from orbit3d.compat.hyff.engines.native import frozen_nodes
+from orbit3d.compat.hyff.engines.native.centered_fp32 import check_fp32_statistics, normalization_installers
+from orbit3d.compat.hyff.kernels.layernorm_fp64 import FrozenLayerNorm
+from orbit3d.compat.hyff.kernels.grouped_experts import FrozenElementExpertMLP, enable_grouped_experts
+from orbit3d.compat.hyff.engines.native import moderato
+from orbit3d.compat.hyff.engines import reference
+from orbit3d.compat.hyff.models.element_model import ElementExpertMLP
+from orbit3d.compat.hyff.models.base_model import POLICY as LAYERNORM_POLICY
+from orbit3d.compat.hyff.data import collate, physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.kernels.fused_linear import enable_fast_nodes
+from orbit3d.compat.hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
+from orbit3d.compat.hyff.kernels.fused_messages import configure_neighbor_reserve
 
-from hyff.weights import config_path, load_model, read_adapter_export, read_config, read_weights
+from orbit3d.compat.hyff.weights import config_path, load_model, read_adapter_export, read_config, read_weights
 
 PRECISIONS = ('tf32x3', 'fp32')
-IMPLEMENTATION = 'hyff.engines.native.vivace'
+IMPLEMENTATION = 'orbit3d.compat.hyff.engines.native.vivace'
 EXPECTED_MODEL_CONFIG_SHA256 = 'a70ca3744ac1accb9bbca98152a8719b49acddddb58f45a003b3e19ba26beb0a'
 STATE_FACTORY = 'hyff.models.base_model:build_model'
 VIVACE_BACKBONE = dict(backbone='m26', hidden=64, tensor_hidden=32, edge_hidden=8,
@@ -101,7 +102,7 @@ def expected_model_config():
 
 
 def read_export(path):
-    """Checkpoint dict from hyff.weights.read_adapter_export, after the architecture JSON passed the vivace checks."""
+    """Checkpoint dict from orbit3d.compat.hyff.weights.read_adapter_export, after the architecture JSON passed the vivace checks."""
     _, config, _ = _clean_configuration(path)
     saved = read_adapter_export(path)
     check_export(saved)
@@ -113,7 +114,7 @@ def read_export(path):
 def check_export(saved):
     """Require the architecture to match the vivace (m26) configuration."""
     if saved.get('model_factory') != STATE_FACTORY:
-        raise ValueError('Expected the hyff.models.base_model StatePotential constructor')
+        raise ValueError('Expected the orbit3d.compat.hyff.models.base_model StatePotential constructor')
     policy = saved.get('numerical_execution')
     if not isinstance(policy, dict) or policy.get('policy') != LAYERNORM_POLICY:
         raise ValueError('Expected the centered FP64 LayerNorm policy')
@@ -152,7 +153,7 @@ def _clean_configuration(checkpoint):
     path = resolve_checkpoint(checkpoint)
     _, config = read_config(path)
     # Check eligibility before constructing a model; no architecture is retagged.
-    from hyff.models.factory import factory_id
+    from orbit3d.compat.hyff.models.factory import factory_id
     factory = factory_id(config['model_id'])
     guard = dict(model_factory=factory, model_config=config['model_config'],
                  numerical_execution=config.get('numerical_execution'))
@@ -220,7 +221,7 @@ def _load_source_base(path, device, *, global_context, owned_weights, reserve):
     model.inference_backend = 'native_csr_quintic'
     configure_neighbor_reserve(model, reserve)
     if model.config.edge_hidden == 8:
-        from hyff.kernels.compact_pair_messages import _compact_message_forward
+        from orbit3d.compat.hyff.kernels.compact_pair_messages import _compact_message_forward
         for block in model.blocks:
             block.forward = MethodType(_compact_message_forward, block)
     actual = model.state_dict()
@@ -311,7 +312,7 @@ def execution_geometry(widths, *, message_channel_tile=16, layernorm_atom_tile=8
                              row_tile=64, column_tile=64, k_tile=32, stacked_weight_bytes_total=sum(b['expert']['stacked_weight_bytes'] for b in blocks)),
         radial_tables=dict(intervals=200, order=5, per_block_channels=[b['message_table_channels'] for b in blocks],
                            pair_rows=n * n, n_rbf=widths['n_rbf']),
-        pair_kernel=f'hyff.kernels.pair_energy_species.pair_energy (NE = {n})',
+        pair_kernel=f'orbit3d.compat.hyff.kernels.pair_energy_species.pair_energy (NE = {n})',
         per_block=blocks, node_macs_per_atom_forward_total=sum(b['node_macs_per_atom_forward'] for b in blocks),
         dependency_radius_A=max(widths['cutoff'], sum(widths['layer_cutoffs'])))
 

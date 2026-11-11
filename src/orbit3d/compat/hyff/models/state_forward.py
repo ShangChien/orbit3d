@@ -1,8 +1,9 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Reference energy evaluation of the state models; the global state enters only through the invariant initial scalar."""
 import math
 from typing import Dict
 import torch
-from hyff.models.l2_potential import _quadrupole, smooth_switch
+from orbit3d.compat.hyff.models.l2_potential import _quadrupole, smooth_switch
 
 
 def reference_forward(self, batch: Dict[str, torch.Tensor], csr=None, stable_sum=False,

@@ -1,10 +1,11 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Optional FP64 charge conservation of the largo latent-charge term (default: native FP32)."""
 from __future__ import annotations
 
 from types import MethodType
 
 import torch
-from hyff.models.charge_bound import raw_charges, is_native_bound_conservation
+from orbit3d.compat.hyff.models.charge_bound import raw_charges, is_native_bound_conservation
 
 
 _REPORT = '_hyff_fp64_conservation_report'
@@ -58,7 +59,7 @@ def install_fp64_conservation(model, policy):
     metadata = model.__dict__.get('_latent_charge_prepared_metadata')
     if not isinstance(metadata, tuple) or len(metadata) != 2:
         raise ValueError('Install the latent-charge prepared context before FP64 conservation')
-    from hyff.models.latent_charges import LatentChargeEnergy
+    from orbit3d.compat.hyff.models.latent_charges import LatentChargeEnergy
     if type(term) is not LatentChargeEnergy:
         raise ValueError('FP64 conservation requires the LatentChargeEnergy module')
     report = dict(policy,

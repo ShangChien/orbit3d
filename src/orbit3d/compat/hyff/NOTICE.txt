@@ -1,0 +1,6 @@
+HyFF code from Tencent-Hunyuan/Hyra-results, tag hyff-v0.2.0.
+Pinned commit: 8443f9a9aae1a0b72c79e0b2908c79026b8e1555.
+Copyright (C) 2026 Tencent; Apache-2.0 and the third-party notices in LICENSE.txt.
+ORBIT-3D relocates imports into orbit3d.compat.hyff and configures local weight discovery.
+Model constructor identifiers, numerical formulas and parameter names are preserved.
+The original-file hashes and modified-file list are in third_party/hyff_vendor_manifest.json.

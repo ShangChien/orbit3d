@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Minimal, topology-free conditioning on the total charge and spin multiplicity.
 
 Only intensive scalar state features are added to the initial atomic scalar
@@ -10,11 +11,11 @@ from dataclasses import asdict
 import torch
 from torch import nn
 
-from hyff.models.element_model import (
+from orbit3d.compat.hyff.models.element_model import (
     AtomicNumberPartition, ElementConfig, ElementPotential, build_model as build_base, prepare_batch,
 )
-from hyff.models.experts import ElementPartition
-from hyff.models.state_forward import reference_forward
+from orbit3d.compat.hyff.models.experts import ElementPartition
+from orbit3d.compat.hyff.models.state_forward import reference_forward
 
 
 ARCHITECTURE = "hyff_state_density_pilot"

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Model names, default engine options and checkpoint discovery.
 
 The package ships ``checkpoints/index.json`` (the files, sizes and sha256 of every model and the release
@@ -14,7 +15,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from hyff.weights import config_path, entry_path, is_index, read_config, sha256
+from orbit3d.compat.hyff.weights import config_path, entry_path, is_index, read_config, sha256
 
 MODELS = ('presto', 'vivace', 'moderato', 'andante', 'largo')
 # Earlier internal names, accepted silently.
@@ -136,7 +137,7 @@ def verify(name, directory):
 
 def install(name):
     """Install a model into the cache directory (downloading its release assets); return the directory."""
-    from hyff.download import install_files, locked
+    from orbit3d.compat.hyff.download import install_files, locked
     data, row, directory = manifest(), model_files(name), cache_dir()
     with locked(directory / name):
         install_files(row['files'], data['release'], directory, PACKAGE_CHECKPOINTS)
@@ -155,7 +156,7 @@ def bundled_weights(name, with_digest=False):
 
 def identify(weights):
     """Infer the model name from a checkpoint's architecture JSON, or None."""
-    from hyff.models.factory import CHARGE_FACTORIES, factory_id
+    from orbit3d.compat.hyff.models.factory import CHARGE_FACTORIES, factory_id
     _, config = read_config(weights)
     factory = factory_id(config['model_id'])
     if factory in CHARGE_FACTORIES:

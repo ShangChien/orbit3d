@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Experimental sparse invariant atom networks (experts) over the L2 message transport.
 
 Element routing is independent of coordinates. Environment routing uses a
@@ -20,7 +21,7 @@ import math
 import torch
 from torch import nn
 
-from hyff.models.l2_potential import L2Config, L2Potential, _linear
+from orbit3d.compat.hyff.models.l2_potential import L2Config, L2Potential, _linear
 
 
 ELEMENTS = (1, 6, 7, 8, 9, 15, 16, 17)
@@ -239,4 +240,4 @@ class L2ExpertPotential(L2Potential):
 
 
 def load_l2_expert_checkpoint(path, device="cpu"):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')

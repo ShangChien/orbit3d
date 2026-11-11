@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Atom-owned full-tensor reverse reductions with alternative GPU layouts.
 
 This module uses the same radial tables and complete l<=2 contractions as
-hyff.kernels.fused_messages, with no approximated forces or geometry reuse
+orbit3d.compat.hyff.kernels.fused_messages, with no approximated forces or geometry reuse
 between steps. The fused_messages backward remains the general path. Every
 coordinate's two directed contributions are kept. The default dispatch uses
 this module only for the tuned C = 16 quintic configuration.
@@ -9,7 +10,7 @@ this module only for the tuned C = 16 quintic configuration.
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_messages import (
+from orbit3d.compat.hyff.kernels.fused_messages import (
     _filters, _geometry, _load_message, _load_states, _matvec, _q, _stv, _vjp,
 )
 

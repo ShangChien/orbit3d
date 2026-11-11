@@ -6,18 +6,12 @@ failures propagate; element identity is never replaced to fit the model vocabula
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-import sys
 from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
 from rdkit import Chem
 
-_COMPAT_DIR = str(Path(__file__).resolve().parents[1] / "compat")
-if os.path.isdir(_COMPAT_DIR) and _COMPAT_DIR not in sys.path:
-    sys.path.insert(0, _COMPAT_DIR)
 
 
 class HyFFPotentialGuidance(nn.Module):
@@ -56,8 +50,8 @@ class HyFFPotentialGuidance(nn.Module):
         self.route = route
         self.min_clamped_dist = float(min_clamped_dist)
 
-        from hyff.registry import resolve
-        from hyff.weights import load_model
+        from ..compat.hyff.registry import resolve
+        from ..compat.hyff.weights import load_model
 
         self.selection = resolve(self.tier, weights=weights)
         self.model_path = str(self.selection.weights)
@@ -82,7 +76,7 @@ class HyFFPotentialGuidance(nn.Module):
         self.set_atom_type_map(atom_type_map)
 
     def _get_or_create_native_cp(self, n_graphs: int, n_atoms: int):
-        from hyff.batch.collection import CollectionPotential
+        from ..compat.hyff.batch.collection import CollectionPotential
 
         g_cap = max(64, 1 << int(max(n_graphs, 1) - 1).bit_length())
         if self.tier == "largo":
@@ -154,8 +148,8 @@ class HyFFPotentialGuidance(nn.Module):
 
     def probe_native_descriptor_dim(self) -> int:
         """Probes the channel dimension `D_desc` of HyFF's final-layer normalized scalar atom features."""
-        from hyff.engines.reference import system_batch
-        from hyff.graph import radius_edges
+        from ..compat.hyff.engines.reference import system_batch
+        from ..compat.hyff.graph import radius_edges
 
         captured: Dict[str, int] = {}
         target_mod = self._get_readout_hook_target()
@@ -196,7 +190,7 @@ class HyFFPotentialGuidance(nn.Module):
           2. `energy_ev`: scalar potential energy (eV)
           3. `forces_eva`: `(N, 3)` conservative atomic restoring forces `-grad_X E` (eV/Å)
         """
-        from hyff.graph import radius_edges
+        from ..compat.hyff.graph import radius_edges
 
         device = torch.device(self.device_str)
         z_list = self._atomic_numbers(atom_symbols)
@@ -253,7 +247,7 @@ class HyFFPotentialGuidance(nn.Module):
         charges_t: torch.Tensor,
         mults_t: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        from hyff.graph import radius_edges
+        from ..compat.hyff.graph import radius_edges
 
         device = torch.device(self.device_str)
         # Ensure contiguous molecule ordering

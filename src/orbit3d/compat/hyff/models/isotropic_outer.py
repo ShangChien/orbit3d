@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Isotropic-outer model: the inner block keeps its angular closure, the outer block uses only 0->0 transport.
 
 The scalar-refresh parent is constructed first. Selecting the kept rows
@@ -9,7 +10,7 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 
-from hyff.models.scalar_refresh import ScalarRefreshConfig, ScalarRefreshPotential
+from orbit3d.compat.hyff.models.scalar_refresh import ScalarRefreshConfig, ScalarRefreshPotential
 
 ARCHITECTURE = 'hyff_isotropic_outer'
 
@@ -70,7 +71,7 @@ class IsotropicOuterInteraction(nn.Module):
                 source, destination, edge_envelope, radial_output=None, csr=None,
                 reference=None, node_message=None):
         if csr is not None or reference is not None:
-            raise ValueError('The isotropic-outer block runs eagerly here; CSR execution is hyff.engines.native.fast_csr')
+            raise ValueError('The isotropic-outer block runs eagerly here; CSR execution is orbit3d.compat.hyff.engines.native.fast_csr')
         if node_message is None:
             node_message = self.scalar_message(self.scalar_norm(scalar))
         radial_output = self.radial_filter(radial) if radial_output is None else radial_output
@@ -90,7 +91,7 @@ class IsotropicOuterPotential(ScalarRefreshPotential):
 
     def forward(self, batch, **kwargs):
         if kwargs.get('csr') is not None or self.fused_messages or self.reference_chunk_size:
-            raise ValueError('Use the isotropic-outer native engine (hyff.engines.native.fast_csr) for CSR execution')
+            raise ValueError('Use the isotropic-outer native engine (orbit3d.compat.hyff.engines.native.fast_csr) for CSR execution')
         return super().forward(batch, **kwargs)
 
     def expert_accounting(self):
@@ -99,9 +100,9 @@ class IsotropicOuterPotential(ScalarRefreshPotential):
             order_channels_per_block=[[8,8,8],[8,0,0]] if self.config.isotropic_outer else [[8,8,8],[8,8,8]],
             requires_covalent_topology=False, topology_free=True, scalar_residual=True,
             all_layer_energy_readouts=True, outer_angular_features=False if self.config.isotropic_outer else True,
-            deployment_status='native engine: hyff.engines.native.fast_csr')
+            deployment_status='native engine: orbit3d.compat.hyff.engines.native.fast_csr')
         return result
 
 
 def load_checkpoint(path, device='cpu'):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')

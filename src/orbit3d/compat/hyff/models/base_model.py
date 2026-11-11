@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Model build that evaluates LayerNorm internally in float64; same potential and parameters.
 
 Large but finite scalar features can have variances above float32's range.
@@ -9,8 +10,8 @@ from types import MethodType
 
 import torch
 
-from hyff.models.state_model import build_model as build_original
-from hyff.models.state_model import prepare_batch
+from orbit3d.compat.hyff.models.state_model import build_model as build_original
+from orbit3d.compat.hyff.models.state_model import prepare_batch
 
 
 POLICY = 'layernorm_centered_fp64'

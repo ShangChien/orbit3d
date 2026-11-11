@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """GPU-built frozen-plan treecode for the isolated latent-charge pair energy (sub-quadratic).
 
 Plan (built eagerly on the GPU, host syncs allowed, never during capture):
@@ -21,8 +22,8 @@ import torch
 import triton
 import triton.language as tl
 
-from hyff.kernels.long_range import codegen as lq_codegen
-from hyff.kernels.long_range.dense import radial_terms
+from orbit3d.compat.hyff.kernels.long_range import codegen as lq_codegen
+from orbit3d.compat.hyff.kernels.long_range.dense import radial_terms
 
 
 @triton.jit
@@ -314,7 +315,7 @@ class TreeBackend:
 
 def plan_reference(plan, positions, charges, sigma, p):
     """FP64 torch evaluation of the SAME plan energy (validates kernels; small systems only)."""
-    from hyff.kernels.long_range.dense import radial_reference
+    from orbit3d.compat.hyff.kernels.long_range.dense import radial_reference
     dev = positions.device
     x = positions.double()
     q = charges.double()

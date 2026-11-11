@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Memory-bounded L2 reference using ordinary PyTorch autodiff.
 
 The full system is evaluated; no atoms or neighbors are subsampled. Only edge
@@ -9,7 +10,7 @@ import torch
 
 
 def edge_values(displacement, message, vector, tensor, valid, table, radial_filter, rbf, cutoff, width, first):
-    from hyff.models.l2_potential import (
+    from orbit3d.compat.hyff.models.l2_potential import (
         smooth_switch, _quadrupole, _tensor_dot_direction, _vector_tensor_product,
     )
     distance=torch.linalg.vector_norm(displacement,dim=-1).clamp_min(1e-9)

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Radius-view selection helpers for the native engines (two radius views in one launch)."""
 from contextlib import contextmanager
 from unittest.mock import patch
@@ -5,8 +6,8 @@ from unittest.mock import patch
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.layernorm import enable_frozen_layernorm
-from hyff.kernels.fused_messages import PreparedL2Neighbors, _geometry
+from orbit3d.compat.hyff.kernels.layernorm import enable_frozen_layernorm
+from orbit3d.compat.hyff.kernels.fused_messages import PreparedL2Neighbors, _geometry
 
 
 @tr.jit

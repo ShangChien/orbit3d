@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Topology-free HyFF models with one or more geometric aggregations.
 
 The single-aggregation member uses the same scalar/vector/STF algebra and
@@ -9,7 +10,7 @@ from dataclasses import asdict, dataclass
 
 import torch
 
-from hyff.models.radial_capacity import RadialCapacityConfig, RadialCapacityPotential
+from orbit3d.compat.hyff.models.radial_capacity import RadialCapacityConfig, RadialCapacityPotential
 
 
 ARCHITECTURE = 'hyff_family'
@@ -56,4 +57,4 @@ class HyFFPotential(RadialCapacityPotential):
 
 
 def load_checkpoint(path, device='cpu'):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')

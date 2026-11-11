@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native presto engine: L2Interaction blocks with edge width C = 8.
 
 One force evaluation runs inside one CUDA graph:
@@ -11,7 +12,7 @@ One force evaluation runs inside one CUDA graph:
   * blocks 1.. (full L2Interaction, seven paths at edge width 8): fused head (norm -> Linear/SiLU ->
     Linear, [N, 56]), ``edge_vector_in`` / ``edge_tensor_in`` projections fused into the previous
     block's compiled closure, ``L2Messages8`` (eight-lane launch of ``_forward_atoms`` /
-    ``_backward_tensor``, which ``hyff.kernels.fused_messages.messages`` dispatches only for C = 16);
+    ``_backward_tensor``, which ``orbit3d.compat.hyff.kernels.fused_messages.messages`` dispatches only for C = 16);
   * node updates: joined and folded projections (``enable_joined_nodes(fold_first=True)``), fused
     local features (FP64 or FP32 statistics), grouped element experts (``FrozenElementExperts``),
     all inside one ``torch.compile``d closure per block; readouts as fused heads;
@@ -35,30 +36,30 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from hyff.engines.native.base_adapter import PreparedGeneralNeighbors
-from hyff.engines.native.fast_csr import _edge_geometry, _is_affine
-from hyff.kernels.fused_element_experts import schedule
-from hyff.engines.native.moderato import _global_state
-from hyff.engines import reference
-from hyff.kernels.pair_energy_species import pair_energy
-from hyff.engines.native.radius_variants import refresh_two
-from hyff.engines.native import efm_native
-from hyff.engines.force_engine import ForceEngine
-from hyff.kernels.fused_messages import configure_neighbor_reserve
-from hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
-from hyff.models.l2_potential import L2Interaction, smooth_switch
-from hyff.kernels.radial_table import QuinticRadialTable
+from orbit3d.compat.hyff.engines.native.base_adapter import PreparedGeneralNeighbors
+from orbit3d.compat.hyff.engines.native.fast_csr import _edge_geometry, _is_affine
+from orbit3d.compat.hyff.kernels.fused_element_experts import schedule
+from orbit3d.compat.hyff.engines.native.moderato import _global_state
+from orbit3d.compat.hyff.engines import reference
+from orbit3d.compat.hyff.kernels.pair_energy_species import pair_energy
+from orbit3d.compat.hyff.engines.native.radius_variants import refresh_two
+from orbit3d.compat.hyff.engines.native import efm_native
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.kernels.fused_messages import configure_neighbor_reserve
+from orbit3d.compat.hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
+from orbit3d.compat.hyff.models.l2_potential import L2Interaction, smooth_switch
+from orbit3d.compat.hyff.kernels.radial_table import QuinticRadialTable
 
-from hyff.engines.native.presto_messages import (
+from orbit3d.compat.hyff.engines.native.presto_messages import (
     C8, PRECISIONS, FirstMessages8, FrozenElementExperts, L2Messages8, check_layout, fp16_representable,
 )
-from hyff.engines.native.presto_nodes import STATISTICS, DualHead, FusedHead, enable_local_features
+from orbit3d.compat.hyff.engines.native.presto_nodes import STATISTICS, DualHead, FusedHead, enable_local_features
 
 for _name in ('recompile_limit', 'cache_size_limit'):
     if hasattr(torch._dynamo.config, _name):
         setattr(torch._dynamo.config, _name, 256)
 
-IMPLEMENTATION = 'hyff.engines.native.presto'
+IMPLEMENTATION = 'orbit3d.compat.hyff.engines.native.presto'
 BACKEND = 'presto_csr_c8_messages_fused_nodes'
 # (atoms per program, neighbor slots per iteration, warps), measured inside the captured graph on a water box:
 # the C = 16 layout (8, 1, 4) costs 240 / 341 us forward / backward at C = 8, (1, 4, 1) costs 120 / 179 us.
@@ -466,7 +467,7 @@ def create_engine(positions, atomic_numbers, cell, checkpoint, device='cuda', to
         engine.close()
         raise
     metadata = dict(model.deployment_metadata, global_context=context, skin_A=float(skin),
-                    neighbor_construction='hyff.graph.NeighborCache/radius_edges (cutoff + skin) -> PreparedGeneralNeighbors CSR')
+                    neighbor_construction='orbit3d.compat.hyff.graph.NeighborCache/radius_edges (cutoff + skin) -> PreparedGeneralNeighbors CSR')
     return dict(model=model, batch=batch, engine=engine, metadata=metadata)
 
 

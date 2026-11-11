@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Scalar-refresh model: two scalar-source passes without interlayer angular state.
 
 Each layer creates vector/STF features (R8 messages, T16 local features) from
@@ -11,8 +12,8 @@ from types import MethodType
 import torch
 from torch import nn
 
-from hyff.models.family_reference import HyFFConfig, HyFFPotential
-from hyff.models.l2_potential import L2Interaction
+from orbit3d.compat.hyff.models.family_reference import HyFFConfig, HyFFPotential
+from orbit3d.compat.hyff.models.l2_potential import L2Interaction
 
 
 ARCHITECTURE = 'hyff_scalar_refresh'
@@ -101,4 +102,4 @@ class ScalarRefreshPotential(HyFFPotential):
 
 
 def load_checkpoint(path, device='cpu'):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')

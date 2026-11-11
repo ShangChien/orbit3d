@@ -98,14 +98,32 @@ made until the chosen backend is executed in that built image.
 
 ## Remaining research and engineering work
 
-The complete TODO is not closed. Outstanding items include migrating the real
-hierarchical octree backend; independent/bootstrap ensemble training and uncertainty
-calibration; all-fold/stacking uncertainty semantics beyond the repaired average
-path; full checkpoint parameter-coverage verification; a pool-based self-ranking
-stage; batched Oracle and refinement execution; independent per-row sampling RNG;
-BoxSpec migration; scaffold-constrained generation (only fixed-coordinate relaxation
-is implemented); wide-element/open-shell training; full dataset provenance; and
-matched-budget, multi-seed, independently evaluated paper experiments.
+This section records the initial baseline. Current evidence is maintained in
+[qm9s-ocelot-experiments-2026-11-11.md](qm9s-ocelot-experiments-2026-11-11.md)
+and the dated updates in [TODO.md](../TODO.md). The pretrained octree migration,
+bootstrap training, calibration, ranking, independent sampling streams and native
+batched evaluation have since been implemented and tested. Spatial representation
+migration, scaffold generation, broad-element/open-shell training and the complete
+paper experiment matrix remain open.
 
-The current baseline should be retrained for its new representation contract.
-Synthetic overfit success does not establish useful out-of-distribution generation.
+## Runtime and vendoring update (2026-11-12)
+
+The private `orbit3d.compat.hyff` package no longer inserts a generic `hyff`
+package into `sys.path`. All imports, including dynamically loaded factories and
+native kernels, resolve within the package; checkpoint constructor IDs retain
+the upstream values. The Apache-2.0 license and third-party notices are included
+in the wheel, with the exact upstream commit and original hashes recorded in
+`third_party/hyff_vendor_manifest.json`. An unrelated installed `hyff` module
+does not affect the bundled implementation. All five checkpoint tiers pass real
+GPU reference/native energy and force comparisons in the clean remote runtime;
+see [the results](experiments/hyff_private_namespace_20261112.json).
+
+The Dockerfile uses a multi-stage build, the locked dependencies and a source
+build of DeepMD compatible with pinned PyTorch. PyPI and Debian mirrors are
+configurable build arguments. The remote platform's mounted Docker daemon ran
+out of its system-layer quota while exporting the image after dependency
+installation. **A completed runtime image and GPU execution inside that image
+have not been verified.** The base/tool images were archived to EFS and unused
+build layers removed. Docker storage settings are left unchanged. Real GPU
+checks run in the already validated clean Python environment on the remote
+A800 host; macOS is used for CPU tests and packaging only.

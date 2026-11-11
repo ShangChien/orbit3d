@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Inference-only L2 neighbor reductions without materializing edge tensors.
 
 The forward reduces each atom's neighbors directly. The exact reverse uses
@@ -368,7 +369,7 @@ class _Messages(torch.autograd.Function):
             # Timings on real neighborhoods favor eight atom-owned rows for
             # both scalar and full tensor sources. Untuned configurations
             # keep the default layout.
-            from hyff.kernels.message_tiles import _forward_atoms
+            from orbit3d.compat.hyff.kernels.message_tiles import _forward_atoms
             kernel=_forward_atoms[(tr.cdiv(n,8),1)](
                 position,cell,neighbors,shifts,counts,message,vector,tensor,coefficients,out_s,out_v,out_t,
                 c,neighbors.shape[1],coefficients.shape[0],cutoff,width,first,bc,1,n,
@@ -422,7 +423,7 @@ class _Messages(torch.autograd.Function):
             # rows. Untuned widths/tables keep the default layout. Both
             # directed coordinate roles and all source
             # adjoints remain active; this changes execution only.
-            from hyff.kernels.tensor_vjp import _backward_tensor
+            from orbit3d.compat.hyff.kernels.tensor_vjp import _backward_tensor
             kernel=_backward_tensor[(tr.cdiv(n,8),1)](
                 position,cell,neighbors,shifts,counts,message,vector,tensor,coefficients,
                 gs,gv,gt,gm,gv_in,gt_in,gp,c,neighbors.shape[1],coefficients.shape[0],
@@ -537,7 +538,7 @@ class PreparedL2Neighbors:
     The graph's symmetry is checked when this prepared object is initialized.
     """
     def __init__(self, model, batch, edges):
-        from hyff.graph import PeriodicEdges
+        from orbit3d.compat.hyff.graph import PeriodicEdges
         self.model,self.batch,self.edges=model,batch,edges
         self.n=len(batch['positions'])
         self.periodic=isinstance(edges,PeriodicEdges)

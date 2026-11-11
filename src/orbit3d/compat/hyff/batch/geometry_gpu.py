@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Per-graph FP32 GPU capacity counts, with no geometry cache or deduplication.
 
 The cutoff+1e-3 margin is a conservative capacity choice. Whether the counts
@@ -9,7 +10,7 @@ import math
 
 import numpy as np
 
-from hyff.batch.geometry_vectorized import _batch_species
+from orbit3d.compat.hyff.batch.geometry_vectorized import _batch_species
 
 _KERNEL = None
 

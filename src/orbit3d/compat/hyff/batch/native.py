@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native batching entry point for all five models.
 
 presto uses its own bucket kernels (native_presto), vivace and moderato the
@@ -10,12 +11,12 @@ from collections.abc import Mapping
 
 import numpy as np
 
-from hyff.batch.base import BatchedPotential, _inputs, _reference_products
-from hyff.batch.native_dense import torch, MethodType, full, large, _initial_scalar, _full_forward
-from hyff.batch.native_dense import NativeBatchedPotential as DenseBatchedPotential
-from hyff.batch.native_efm import NativeBatchedPotential as EFMBatchedPotential
-from hyff.kernels.layernorm_fp32 import enable_frozen_layernorm
-from hyff.kernels.local_features_fp32 import enable_frozen_local_features
+from orbit3d.compat.hyff.batch.base import BatchedPotential, _inputs, _reference_products
+from orbit3d.compat.hyff.batch.native_dense import torch, MethodType, full, large, _initial_scalar, _full_forward
+from orbit3d.compat.hyff.batch.native_dense import NativeBatchedPotential as DenseBatchedPotential
+from orbit3d.compat.hyff.batch.native_efm import NativeBatchedPotential as EFMBatchedPotential
+from orbit3d.compat.hyff.kernels.layernorm_fp32 import enable_frozen_layernorm
+from orbit3d.compat.hyff.kernels.local_features_fp32 import enable_frozen_local_features
 
 
 def normalize_expert_capacities(capacities, species):
@@ -54,7 +55,7 @@ def prepare_full(model, tier, precision='tf32x3', statistics='fp32', compiled_no
     model.filter_skin_neighbors = True
     full.base.configure_neighbor_reserve(model, 1.25)
     if model.config.edge_hidden == 8:
-        from hyff.kernels.compact_pair_messages import _compact_message_forward
+        from orbit3d.compat.hyff.kernels.compact_pair_messages import _compact_message_forward
         for block in model.blocks:
             block.forward = MethodType(_compact_message_forward, block)
     full.enable_joined_nodes(model, fold_first=True)

@@ -1,4 +1,5 @@
-"""Frozen symmetric-bank messages on the atom-owned contractions of hyff.kernels.fused_messages.
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
+"""Frozen symmetric-bank messages on the atom-owned contractions of orbit3d.compat.hyff.kernels.fused_messages.
 
 The kernels keep all source/coordinate adjoints. Compared with fused_messages
 they add symmetric element-pair table addressing, explicit inactive count
@@ -9,10 +10,10 @@ import torch
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_messages import (
+from orbit3d.compat.hyff.kernels.fused_messages import (
     _filters, _geometry, _load_message, _load_states, _matvec, _q, _stv, _vjp, _record,
 )
-from hyff.kernels.tensor_vjp import _tensor_vjp_parts
+from orbit3d.compat.hyff.kernels.tensor_vjp import _tensor_vjp_parts
 
 
 @tr.jit

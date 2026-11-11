@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Reference energy evaluation of the element models with a generalized pair stride.
 
 The tensor algebra and reduction order are those of the training-time forward.
@@ -5,7 +6,7 @@ The tensor algebra and reduction order are those of the training-time forward.
 import math
 from typing import Dict
 import torch
-from hyff.models.l2_potential import _quadrupole, smooth_switch
+from orbit3d.compat.hyff.models.l2_potential import _quadrupole, smooth_switch
 
 
 def reference_forward(self, batch: Dict[str, torch.Tensor], csr=None, stable_sum=False,

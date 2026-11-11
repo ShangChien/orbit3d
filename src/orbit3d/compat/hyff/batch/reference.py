@@ -1,5 +1,6 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Reference batching: the plain PyTorch model with IEEE FP32 products, one evaluation per call."""
-from hyff.batch.base import BatchedPotential
+from orbit3d.compat.hyff.batch.base import BatchedPotential
 
 
 class ReferenceBatchedPotential(BatchedPotential):

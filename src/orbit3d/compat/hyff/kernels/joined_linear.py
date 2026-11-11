@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Join frozen node projections without changing the learned energy function."""
 import torch
 from torch import nn
@@ -22,7 +23,7 @@ class JoinedLinear(nn.Module):
 
     def forward(self, values):
         if self.fast and min(self.weight.shape) >= 16:
-            from hyff.kernels.fused_linear import _Linear
+            from orbit3d.compat.hyff.kernels.fused_linear import _Linear
             weight=self.quantized_weight if self.precision=='fp16w2' else self.weight
             return _Linear.apply(values, weight, None, True, self.precision)
         return F.linear(values, self.weight)

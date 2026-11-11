@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Row-tiled centered FP32 LayerNorm and matching input derivative.
 
 Automatic fast-node conversion covers the tuned 128/160-channel layouts only.
@@ -8,7 +9,7 @@ import torch
 from torch import nn
 import triton as tr
 import triton.language as tl
-from hyff.kernels.layernorm_fp64 import FrozenLayerNorm as BaselineFrozenLayerNorm
+from orbit3d.compat.hyff.kernels.layernorm_fp64 import FrozenLayerNorm as BaselineFrozenLayerNorm
 
 
 @tr.jit

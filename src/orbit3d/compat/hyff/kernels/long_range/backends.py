@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Long-range installers for the largo latent-charge term: install_dense, install_tree, install_spme.
 
 install() picks dense up to LQ_DENSE_MAX atoms (4096) and the treecode above (isolated systems; the
-engine policy in hyff.engines.capture.long_range selects SPME for periodic systems).
+engine policy in orbit3d.compat.hyff.engines.capture.long_range selects SPME for periodic systems).
 
 Call order: after install_prepared_context (latent-charge prepared metadata present), before
 prepare/capture. Only latent_charge_energy.forward is replaced; the native charge head and
@@ -17,7 +18,7 @@ is rebuilt on the GPU into the SAME static buffers (no recapture) and False is r
 other attributes are chained/delegated. Single graph only.
 
 SPME (install_spme): the PERIODIC energy, the trained pair term summed over all images in the fixed
-MD cell (hyff.kernels.long_range.spme.GaussianSPME, split = sigma, tin-foil, kernel-consistent
+MD cell (orbit3d.compat.hyff.kernels.long_range.spme.GaussianSPME, split = sigma, tin-foil, kernel-consistent
 background). The same native charges (conserved_charges) and q(R) chain. Requires physical['cell'].
 The cell is taken as the engine's FP32 batch cell, and a cell change fails closed at prepare. The mesh
 is built from sigma at install (at most h_sigma * sigma per lattice vector and at least the B-spline
@@ -29,7 +30,7 @@ Recentering (whole-molecule lattice shifts): check_recenter(model) raises
 LR_RECENTER_REQUIRES_PERIODIC_LR unless the long range is SPME or absent; an isolated sum (native,
 dense, tree) changes at every shift.
 
-Settings: hyff.engines.capture.long_range.settings() (environment LQ_*, validated before use).
+Settings: orbit3d.compat.hyff.engines.capture.long_range.settings() (environment LQ_*, validated before use).
 """
 from __future__ import annotations
 
@@ -40,7 +41,7 @@ from types import MethodType
 import numpy as np
 import torch
 
-from hyff.kernels.long_range.pair_function import DenseBackend, LatentChargePair
+from orbit3d.compat.hyff.kernels.long_range.pair_function import DenseBackend, LatentChargePair
 
 _ORIGINAL_FORWARD = "_long_range_original_forward"
 _ORIGINAL_PREPARE = "_long_range_original_prepare_energy"
@@ -119,7 +120,7 @@ class SPMEBackend:
     """Gaussian SPME for one graph; mesh from sigma at install, cell changes via set_cell, fail-closed h/sigma guard."""
 
     def __init__(self, term, cell, h_sigma, order, dtype, max_h_sigma, device):
-        from hyff.kernels.long_range.spme import GaussianSPME
+        from orbit3d.compat.hyff.kernels.long_range.spme import GaussianSPME
         if not (math.isfinite(h_sigma) and math.isfinite(max_h_sigma) and 0 < h_sigma <= max_h_sigma):
             raise ValueError("LR_SPME_H_SIGMA_OUTSIDE_GUARD")
         if not bool(torch.isfinite(cell).all()) or float(torch.linalg.det(cell).abs()) <= 0:
@@ -194,7 +195,7 @@ def _spme_forward(self, scalars, positions, atom_batch, total_charge):
 
 def spme_backend(term, cell, device):
     """An SPME backend with the configured settings for one cell (also a cheap pre-compilation check)."""
-    from hyff.engines.capture.long_range import settings
+    from orbit3d.compat.hyff.engines.capture.long_range import settings
     values = settings()
     dtypes = {"fp32": torch.float32, "fp64": torch.float64}
     return SPMEBackend(term, _engine_cell(cell), values["LQ_SPME_H_SIGMA"], values["LQ_SPME_ORDER"],
@@ -283,7 +284,7 @@ def _check(model, physical, device):
 
 
 def _install(model, physical, device, kind):
-    from hyff.engines.capture.long_range import settings
+    from orbit3d.compat.hyff.engines.capture.long_range import settings
     values = settings()
     term, n = _check(model, physical, device)
     if kind == "spme":
@@ -292,7 +293,7 @@ def _install(model, physical, device, kind):
         name = values["LQ_SPME_DTYPE"]
         backend = spme_backend(term, physical.get("cell"), device)
     elif kind == "tree":
-        from hyff.kernels.long_range.tree import TreeBackend
+        from orbit3d.compat.hyff.kernels.long_range.tree import TreeBackend
         backend = TreeBackend(order=values["LQ_ORDER"], leaf=values["LQ_LEAF"], theta=values["LQ_THETA"],
                               delta=values["LQ_DELTA"], rcut_sigma=values["LQ_RCUT_SIGMA"],
                               headroom=values["LQ_HEADROOM"])
@@ -353,7 +354,7 @@ def install_spme(model, physical, device):
 
 
 def install(model, physical, device):
-    from hyff.engines.capture.long_range import settings
+    from orbit3d.compat.hyff.engines.capture.long_range import settings
     n = len(physical["positions"])
     kind = "dense" if n <= settings()["LQ_DENSE_MAX"] else "tree"
     return _install(model, physical, device, kind)

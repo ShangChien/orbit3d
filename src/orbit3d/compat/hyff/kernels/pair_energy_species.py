@@ -1,13 +1,14 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native symmetric pair energy with the checkpoint's own element stride.
 
-`hyff.kernels.pair_energy` binds `NE=17` through kernel defaults, so its
+`orbit3d.compat.hyff.kernels.pair_energy` binds `NE=17` through kernel defaults, so its
 `pair_energy` would index an 83-element pair table with the wrong stride. The Triton
 kernels themselves take `NE` as a compile-time constant; this module reuses them
 unchanged and passes `NE = model.n_elements`. Nothing else differs.
 """
 import torch
 
-from hyff.kernels.pair_energy import _pair_backward, _pair_forward
+from orbit3d.compat.hyff.kernels.pair_energy import _pair_backward, _pair_forward
 
 
 class _GeneralPairEnergy(torch.autograd.Function):
@@ -39,7 +40,7 @@ class _GeneralPairEnergy(torch.autograd.Function):
 
 
 def pair_energy(position, plan, elements, table):
-    """Drop-in replacement for hyff.kernels.pair_energy.pair_energy with NE = n_elements."""
+    """Drop-in replacement for orbit3d.compat.hyff.kernels.pair_energy.pair_energy with NE = n_elements."""
     return _GeneralPairEnergy.apply(position, plan.cell, plan.neighbors, plan.shifts, plan.counts, elements,
                                     table.coefficients, plan.model.cutoff, plan.model.config.switch_width,
                                     plan.model.fused_message_settings[3], int(plan.model.n_elements))

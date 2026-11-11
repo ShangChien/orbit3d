@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Fixed-bucket native presto batching.
 
 Uses the single-system presto C8 CSR message kernels, TF32x3 node products, selected
@@ -12,9 +13,9 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from hyff.batch.base import BatchedPotential, _inputs, _reference_products
-from hyff.engines.native import presto as fast
-from hyff.engines.native.base_adapter import PreparedGeneralNeighbors
+from orbit3d.compat.hyff.batch.base import BatchedPotential, _inputs, _reference_products
+from orbit3d.compat.hyff.engines.native import presto as fast
+from orbit3d.compat.hyff.engines.native.base_adapter import PreparedGeneralNeighbors
 
 
 def presto_batched_forward(self, batch, csr=None, stable_sum=False,

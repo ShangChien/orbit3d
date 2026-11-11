@@ -1,6 +1,7 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Frozen grouped element experts on the model's FP32 weight tensors.
 
-Based on the element-only path of hyff.kernels.sparse_experts. Each atom
+Based on the element-only path of orbit3d.compat.hyff.kernels.sparse_experts. Each atom
 executes one expert. This implementation accepts generic species count/width
 and uses TF32x3 or a three-product residual FP16 decomposition of BOTH FP32
 operands. No checkpoint weight is rounded or replaced.
@@ -10,8 +11,8 @@ from torch import nn
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_linear import _accurate_dot
-from hyff.models.experts import ElementPartition
+from orbit3d.compat.hyff.kernels.fused_linear import _accurate_dot
+from orbit3d.compat.hyff.models.experts import ElementPartition
 
 
 @torch.no_grad()
@@ -168,7 +169,7 @@ def enable_grouped_experts(model, precision='tf32x3'):
     """Replace only the element experts, after linear/fusion conversion."""
     if any(p.requires_grad for p in model.parameters()) or getattr(model, 'compiled_nodes', False):
         raise ValueError('Freeze parameters and install grouped experts before compilation')
-    from hyff.models.element_model import ElementExpertMLP
+    from orbit3d.compat.hyff.models.element_model import ElementExpertMLP
     for index in model.config.expert_blocks:
         block = model.blocks[index]
         if not isinstance(block.update_mlp, ElementExpertMLP):

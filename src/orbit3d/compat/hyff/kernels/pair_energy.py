@@ -1,8 +1,9 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native symmetric pair energy with explicit 17-element checkpoint stride."""
 import torch
 import triton as tr
 import triton.language as tl
-from hyff.kernels.fused_messages import _geometry, _poly
+from orbit3d.compat.hyff.kernels.fused_messages import _geometry, _poly
 
 @tr.jit
 def _pair_value(Coeff, r, pair, mask, INTERVALS:tl.constexpr,

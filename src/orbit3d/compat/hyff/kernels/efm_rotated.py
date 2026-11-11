@@ -1,10 +1,11 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Rotated-frame form of the O(3) projector EFM (inference only; exact reformulation, no new parameters).
 
 Why: the projector form carries the |m|=1 channels as 3 Cartesian components and the |m|=2 channels as 5 STF
 coordinates, although both live in 2-dimensional in-plane subspaces. Every per-edge map after the rotate-in is
 channel-linear per component with rotation-invariant scalar gates, so writing the components in an orthonormal edge
 frame is the same function: |m|=1 needs 2 components instead of 3, |m|=2 2 instead of 5 (-22% per-edge GEMM FLOPs for
-the K arms, -36% per-edge state). This module is the PyTorch reference of that form; hyff.kernels.efm_blocked
+the K arms, -36% per-edge state). This module is the PyTorch reference of that form; orbit3d.compat.hyff.kernels.efm_blocked
 has the same function in a layout for torch.compile.
 
 Per edge e = (j -> i) with unit direction u and the explicit frame (e_x, e_y) of edge_frame_mixing.explicit_frame:
@@ -26,7 +27,7 @@ from __future__ import annotations
 import torch
 import torch.nn.functional as F
 
-from hyff.models.edge_frame_mixing import SQRT2, SQRT_3_2, explicit_frame, matrix_to_tensor5
+from orbit3d.compat.hyff.models.edge_frame_mixing import SQRT2, SQRT_3_2, explicit_frame, matrix_to_tensor5
 
 
 def check_module(efm):
@@ -109,7 +110,7 @@ def rotated_forward(efm, normalized_scalar, vector, tensor, radial, direction, q
                     core=None):
     """Drop-in for the module forward on a fixed edge set (all given edges; zero-envelope edges contribute zero).
 
-    `core` defaults to the PyTorch reference rotated_core; hyff.kernels.efm_blocked.blocked_core has the same signature.
+    `core` defaults to the PyTorch reference rotated_core; orbit3d.compat.hyff.kernels.efm_blocked.blocked_core has the same signature.
     """
     check_module(efm)
     S, V, T, rad, R, D, w = node_inputs(efm, normalized_scalar, vector, tensor, radial, direction, envelope)

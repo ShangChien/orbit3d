@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native batching for andante and largo (edge-frame-mixing models).
 
 Smaller models delegate to native_dense. andante keeps FP32 per-element
@@ -15,9 +16,9 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from hyff.batch.base import BatchedPotential, _inputs, _reference_products
-from hyff.batch.native_presto import fast
-from hyff.batch.native_dense import NativeBatchedPotential as DenseBatchedPotential, _full_forward, forward_fp64
+from orbit3d.compat.hyff.batch.base import BatchedPotential, _inputs, _reference_products
+from orbit3d.compat.hyff.batch.native_presto import fast
+from orbit3d.compat.hyff.batch.native_dense import NativeBatchedPotential as DenseBatchedPotential, _full_forward, forward_fp64
 
 
 def _xl_profile(numbers, real_atoms, species):
@@ -57,13 +58,13 @@ def _stage_andante_partition(batch, values, species, capacities, device):
 
 def prepare_extended(model, tier, precision, compiled_nodes, edge_capacity,
                      neighbor_capacity, device):
-    from hyff.engines.capture.base_port import bind_base
+    from orbit3d.compat.hyff.engines.capture.base_port import bind_base
     if tier == 'largo':
-        from hyff.engines.capture.compile_policy import configure_largo_compiler
+        from orbit3d.compat.hyff.engines.capture.compile_policy import configure_largo_compiler
         configure_largo_compiler()
-        from hyff.engines.capture.efm_port_grouped import install_efm
+        from orbit3d.compat.hyff.engines.capture.efm_port_grouped import install_efm
     else:
-        from hyff.engines.capture.efm_port import install_efm
+        from orbit3d.compat.hyff.engines.capture.efm_port import install_efm
     bind_base(model, global_context=None, reserve=1.5, precision=precision,
         grouped_experts=tier == 'largo', joined_projections=False, fold_first=False,
         frozen_layernorm=False, fused_features=False)
@@ -79,7 +80,7 @@ def prepare_extended(model, tier, precision, compiled_nodes, edge_capacity,
     state.stats['initial_max_count'] = neighbor_capacity
     state.stats['initial_edges'] = None
     if tier == 'largo':
-        from hyff.models.latent_charge_model import install_prepared_context
+        from orbit3d.compat.hyff.models.latent_charge_model import install_prepared_context
         install_prepared_context(model,
             {'positions': torch.empty((1, 3), device=device),
              'total_charge': 0., 'multiplicity': 1}, device)

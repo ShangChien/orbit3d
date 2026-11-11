@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Fixed-capacity within-graph latent-charge pairs for native largo batching.
 
 Uses the native charge-head products, charge conservation, screened kernel,
@@ -13,7 +14,7 @@ from types import MethodType
 import numpy as np
 import torch
 
-from hyff.batch.pool import NativeBatchedPotential as NativePool
+from orbit3d.compat.hyff.batch.pool import NativeBatchedPotential as NativePool
 
 
 def pair_arrays(values, capacity):

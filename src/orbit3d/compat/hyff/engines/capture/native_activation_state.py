@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """largo EFM state with the native-activation backend as an extra choice; the self-check decides acceptance."""
 from __future__ import annotations
 
@@ -5,10 +6,10 @@ from copy import deepcopy
 import os
 import time
 
-from hyff.engines.capture.native_activation import (
+from orbit3d.compat.hyff.engines.capture.native_activation import (
     NATIVE_BACKEND_NAME, NativeActivationMixin, NativeActivationUnavailable,
 )
-from hyff.engines.capture.efm_port_grouped import EFMState as ExistingSegmentedEFMState
+from orbit3d.compat.hyff.engines.capture.efm_port_grouped import EFMState as ExistingSegmentedEFMState
 
 
 def native_activation_enabled():

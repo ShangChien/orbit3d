@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Construct one energy/force engine for one physical system.
 
 Engines:
@@ -15,8 +16,8 @@ import math
 
 import torch
 
-from hyff.registry import CAPTURE_ENGINES, NATIVE_ENGINES, REFERENCE_ENGINES
-from hyff.weights import load_model
+from orbit3d.compat.hyff.registry import CAPTURE_ENGINES, NATIVE_ENGINES, REFERENCE_ENGINES
+from orbit3d.compat.hyff.weights import load_model
 
 
 def create_engine(kind, checkpoint, positions32, numbers, cell=None, total_charge=0.,
@@ -28,9 +29,9 @@ def create_engine(kind, checkpoint, positions32, numbers, cell=None, total_charg
         raise ValueError('capture_branch_policy must be off, first or every')
     if kind not in NATIVE_ENGINES + CAPTURE_ENGINES + REFERENCE_ENGINES:
         raise ValueError(f'Unknown engine {kind!r}')
-    from hyff.engines.capture.capacity import resolve_capacity_policy
-    from hyff.engines.capture.long_range import resolve_long_range
-    from hyff.engines.capture.fp64_conservation import resolve_conservation
+    from orbit3d.compat.hyff.engines.capture.capacity import resolve_capacity_policy
+    from orbit3d.compat.hyff.engines.capture.long_range import resolve_long_range
+    from orbit3d.compat.hyff.engines.capture.fp64_conservation import resolve_conservation
     capacity = resolve_capacity_policy(kind, capacity_policy, len(numbers))
     lr_policy = resolve_long_range(kind, long_range, len(numbers), periodic=cell is not None)
     conservation_policy = resolve_conservation(kind, conservation)
@@ -62,7 +63,7 @@ def create_engine(kind, checkpoint, positions32, numbers, cell=None, total_charg
     if kind == 'andante' and precision != 'fp32':
         raise ValueError('The andante engine requires fp32')
     if kind in NATIVE_ENGINES + CAPTURE_ENGINES:
-        from hyff.engines.compiler_budget import reserve_compiled_engine_attempt
+        from orbit3d.compat.hyff.engines.compiler_budget import reserve_compiled_engine_attempt
         reserve_compiled_engine_attempt(kind)
     if kind == 'largo':
         return _largo(checkpoint, positions32, numbers, cell, total_charge, multiplicity, skin, reserve,
@@ -71,20 +72,20 @@ def create_engine(kind, checkpoint, positions32, numbers, cell=None, total_charg
         return _andante(checkpoint, positions32, numbers, cell, total_charge, multiplicity, skin, reserve,
                         precision, edge_reserve, capacity)
     if kind == 'presto':
-        from hyff.engines.native import presto
+        from orbit3d.compat.hyff.engines.native import presto
         return presto.create_engine(positions32, numbers, cell, checkpoint, 'cuda',
                                     total_charge, multiplicity, skin=skin,
                                     reserve=reserve, precision=precision,
                                     layernorm_statistics=statistics, joined_fast=(precision != 'fp32'),
                                     capture_branch_policy=capture_branch_policy)
     if kind == 'moderato':
-        from hyff.engines.native import moderato
+        from orbit3d.compat.hyff.engines.native import moderato
         return moderato.create_full_engine(positions32, numbers, cell, checkpoint, 'cuda',
                                            total_charge, multiplicity, skin=skin,
                                            reserve=reserve, precision=precision, statistics=statistics,
                                            capture_branch_policy=capture_branch_policy)
     if kind == 'vivace':
-        from hyff.engines.native import vivace
+        from orbit3d.compat.hyff.engines.native import vivace
         return vivace.create_full_engine(positions32, numbers, cell, checkpoint, 'cuda',
                                          total_charge, multiplicity, skin=skin,
                                          reserve=reserve, precision=precision, statistics=statistics,
@@ -95,19 +96,19 @@ def create_engine(kind, checkpoint, positions32, numbers, cell=None, total_charg
 
 def _largo(checkpoint, positions32, numbers, cell, total_charge, multiplicity, skin, reserve,
            precision, edge_reserve, expert_storage_alias, capacity, lr_policy, conservation_policy):
-    from hyff.engines.capture.compile_policy import configure_largo_compiler
-    from hyff.engines.capture.largo import create_engine as captured
-    from hyff.engines.capture.native_activation_state import (
+    from orbit3d.compat.hyff.engines.capture.compile_policy import configure_largo_compiler
+    from orbit3d.compat.hyff.engines.capture.largo import create_engine as captured
+    from orbit3d.compat.hyff.engines.capture.native_activation_state import (
         NativeActivationEFMState, native_activation_enabled,
     )
-    from hyff.models.charge_bound import charge_bound_value
-    from hyff.models.latent_charge_model import install_prepared_context
+    from orbit3d.compat.hyff.models.charge_bound import charge_bound_value
+    from orbit3d.compat.hyff.models.latent_charge_model import install_prepared_context
     configure_largo_compiler()
     precise_efm_enabled = native_activation_enabled()
     model, _ = load_model(checkpoint, 'cpu')
     if lr_policy is not None and lr_policy['selected'] == 'spme':
         # Build the SPME mesh once on the CPU now: any cell or setting problem surfaces before compilation.
-        from hyff.kernels.long_range.backends import validate_spme
+        from orbit3d.compat.hyff.kernels.long_range.backends import validate_spme
         validate_spme(model.latent_charge_energy, cell)
     artifact_charge_bound = charge_bound_value(model)
     physical = dict(positions=positions32, numbers=numbers, cell=cell,
@@ -120,20 +121,20 @@ def _largo(checkpoint, positions32, numbers, cell, total_charge, multiplicity, s
         if charge_bound_value(current) != artifact_charge_bound:
             raise ValueError('The latent charge bound changed during captured node binding')
         if capacity is not None:
-            from hyff.engines.capture.capacity import install_largo_capacity
+            from orbit3d.compat.hyff.engines.capture.capacity import install_largo_capacity
             capacity_report.update(install_largo_capacity(current, capacity, effective_edge_reserve))
         install_prepared_context(current, physical, 'cuda')
         if conservation_policy is not None:
-            from hyff.engines.capture.fp64_conservation import install_fp64_conservation
+            from orbit3d.compat.hyff.engines.capture.fp64_conservation import install_fp64_conservation
             conservation_report.update(install_fp64_conservation(current, conservation_policy))
         if lr_policy is not None:
-            from hyff.engines.capture.long_range import install_long_range
+            from orbit3d.compat.hyff.engines.capture.long_range import install_long_range
             lr_report.update(install_long_range(current, physical, lr_policy))
 
     capture_options = ({} if edge_reserve is None and capacity is None else
                        {'edge_reserve': effective_edge_reserve})
     if expert_storage_alias:
-        from hyff.engines.capture.expert_storage_alias import alias_grouped_expert_storage
+        from orbit3d.compat.hyff.engines.capture.expert_storage_alias import alias_grouped_expert_storage
 
         def install_alias(current):
             alias_report.update(alias_grouped_expert_storage(current))
@@ -163,8 +164,8 @@ def _largo(checkpoint, positions32, numbers, cell, total_charge, multiplicity, s
 
 def _andante(checkpoint, positions32, numbers, cell, total_charge, multiplicity, skin, reserve,
              precision, edge_reserve, capacity):
-    from hyff.engines.capture.andante import create_engine as captured
-    from hyff.engines.capture.efm_tiling import (
+    from orbit3d.compat.hyff.engines.capture.andante import create_engine as captured
+    from orbit3d.compat.hyff.engines.capture.efm_tiling import (
         DEFAULT_EDGE_RESERVE, make_post_install, runtime_metadata, tiled_metadata,
     )
     model, _ = load_model(checkpoint, 'cpu')
@@ -196,8 +197,8 @@ def _andante(checkpoint, positions32, numbers, cell, total_charge, multiplicity,
 
 def _reference(kind, checkpoint, positions32, numbers, cell, total_charge, multiplicity, skin,
                capture_branch_policy):
-    from hyff.engines import reference
-    from hyff.engines.force_engine import ForceEngine
+    from orbit3d.compat.hyff.engines import reference
+    from orbit3d.compat.hyff.engines.force_engine import ForceEngine
     model, _ = load_model(checkpoint, 'cuda')
     batch = reference.system_batch(positions32, numbers, cell, total_charge, multiplicity, 'cuda')
     context = reference.bind_global_state(model, len(numbers), total_charge, multiplicity)
@@ -223,7 +224,7 @@ class Potential:
     """
 
     def __init__(self, weights, device='cpu', skin=1.5, long_range='auto'):
-        from hyff.graph import NeighborCache
+        from orbit3d.compat.hyff.graph import NeighborCache
         if long_range not in (None, 'auto', 'spme', 'native', 'dense', 'tree'):
             raise ValueError('long_range must be auto, spme, native, dense or tree')
         self.model, self.config = load_model(weights, device)
@@ -234,7 +235,7 @@ class Potential:
         self._periodic = None   # (cell, SPME backend) of the last periodic call
 
     def _spme(self, batch):
-        from hyff.kernels.long_range.backends import periodic_term, spme_backend
+        from orbit3d.compat.hyff.kernels.long_range.backends import periodic_term, spme_backend
         term = getattr(self.model, 'latent_charge_energy', None)
         if term is None or 'cell' not in batch or self.long_range not in ('auto', 'spme'):
             if self.long_range == 'spme' and term is not None:
@@ -247,8 +248,8 @@ class Potential:
 
     def __call__(self, positions, atomic_numbers, cell=None, total_charge=0., multiplicity=1):
         from contextlib import nullcontext
-        from hyff.engines.reference import system_batch
-        from hyff.graph import NeighborCache, energy_forces
+        from orbit3d.compat.hyff.engines.reference import system_batch
+        from orbit3d.compat.hyff.graph import NeighborCache, energy_forces
         batch = system_batch(positions, atomic_numbers, cell, total_charge, multiplicity, self.device)
         if self.cache.signature is not None and self.cache.signature[0] != tuple(batch['positions'].shape):
             # A structure with another atom count: start a new neighbour list.

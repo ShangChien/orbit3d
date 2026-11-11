@@ -1,6 +1,7 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Width-general native execution of l4a0 L2 models (any hidden/tensor/edge width and block count).
 
-The moderato engine (hyff.engines.native.moderato) fixes the moderato widths (hidden 128,
+The moderato engine (orbit3d.compat.hyff.engines.native.moderato) fixes the moderato widths (hidden 128,
 tensor 64, edge 16, four blocks at 3.5/3.5/6/8 A). This module runs the same node path
 (joined/folded projections, batch-owned state-conditioned first-message cache, FP64-internal
 frozen LayerNorm, fused local invariant features, grouped element experts, compiled node graphs,
@@ -16,19 +17,19 @@ width-specific places are guards, tuning defaults and tile sizes:
     local-feature atom tile 4 (measured at S=128, T=64; BC = next_pow2(max(S, T)))
                                             -> `feature_atom_tile`, default 4 up to 128 channels, 1 above
   width-general by construction (masked constexpr tiles), reused unchanged
-    hyff.kernels.layernorm_fp64 (H constexpr, BH = next_pow2(H), rows tiled by atom_tile)
-    hyff.kernels.local_features_fp64 (S, T constexpr, HIGHER flag)
-    hyff.kernels.fused_linear._mm/_mm_grouped/_mm_silu (N, K constexpr; BM 64, BN 32|64, BK 32 for tf32x3)
-    hyff.kernels.grouped_experts._grouped_product (K, N constexpr; BE = next_pow2(n_elements); row tiles of 64)
-    hyff.kernels.fused_messages._forward/_backward/_backward_scalar (C constexpr, channel tiles of BC)
-    hyff.kernels.joined_linear.enable_joined_nodes(fold_first=True) (folded first projections [3T, E])
+    orbit3d.compat.hyff.kernels.layernorm_fp64 (H constexpr, BH = next_pow2(H), rows tiled by atom_tile)
+    orbit3d.compat.hyff.kernels.local_features_fp64 (S, T constexpr, HIGHER flag)
+    orbit3d.compat.hyff.kernels.fused_linear._mm/_mm_grouped/_mm_silu (N, K constexpr; BM 64, BN 32|64, BK 32 for tf32x3)
+    orbit3d.compat.hyff.kernels.grouped_experts._grouped_product (K, N constexpr; BE = next_pow2(n_elements); row tiles of 64)
+    orbit3d.compat.hyff.kernels.fused_messages._forward/_backward/_backward_scalar (C constexpr, channel tiles of BC)
+    orbit3d.compat.hyff.kernels.joined_linear.enable_joined_nodes(fold_first=True) (folded first projections [3T, E])
     radial tables (one per block, 3C or 7C channels; pair table n_elements^2 rows), pair kernel (NE = n_elements)
-    hyff.engines.native.frozen_nodes_forward (loops over blocks; readout scale 1/sqrt(blocks))
+    orbit3d.compat.hyff.engines.native.frozen_nodes_forward (loops over blocks; readout scale 1/sqrt(blocks))
   tuned only for edge width 16 (other widths use the general kernels above)
-    hyff.kernels.message_tiles._forward_atoms and hyff.kernels.tensor_vjp._backward_tensor are dispatched
+    orbit3d.compat.hyff.kernels.message_tiles._forward_atoms and orbit3d.compat.hyff.kernels.tensor_vjp._backward_tensor are dispatched
     only for C == 16 with settings (16, 8, 4, True).
   not supported
-    the angular-moment branch (hyff.models.angular_branch.build_angular_model) adds l=3/l=4 edge moments
+    the angular-moment branch (orbit3d.compat.hyff.models.angular_branch.build_angular_model) adds l=3/l=4 edge moments
     whose block forward refuses csr execution; it is rejected with an explicit message.
 
 Fallback switches (`frozen_layernorm`, `fused_features`, `grouped_experts`) return the corresponding
@@ -43,23 +44,23 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from hyff.engines.native import base_adapter as base
-from hyff.engines.native import frozen_nodes
-from hyff.kernels.layernorm_fp64 import FrozenLayerNorm, enable_frozen_layernorm
-from hyff.kernels.local_features_fp64 import enable_frozen_local_features
-from hyff.kernels.grouped_experts import FrozenElementExpertMLP, enable_grouped_experts
-from hyff.engines.native import moderato
-from hyff.engines import reference
-from hyff.models.element_model import ElementExpertMLP
-from hyff.models.base_model import POLICY as LAYERNORM_POLICY
-from hyff.data import collate, physical
-from hyff.engines.force_engine import ForceEngine
-from hyff.kernels.fused_linear import enable_fast_nodes
-from hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
-from hyff.weights import read_adapter_export
+from orbit3d.compat.hyff.engines.native import base_adapter as base
+from orbit3d.compat.hyff.engines.native import frozen_nodes
+from orbit3d.compat.hyff.kernels.layernorm_fp64 import FrozenLayerNorm, enable_frozen_layernorm
+from orbit3d.compat.hyff.kernels.local_features_fp64 import enable_frozen_local_features
+from orbit3d.compat.hyff.kernels.grouped_experts import FrozenElementExpertMLP, enable_grouped_experts
+from orbit3d.compat.hyff.engines.native import moderato
+from orbit3d.compat.hyff.engines import reference
+from orbit3d.compat.hyff.models.element_model import ElementExpertMLP
+from orbit3d.compat.hyff.models.base_model import POLICY as LAYERNORM_POLICY
+from orbit3d.compat.hyff.data import collate, physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.kernels.fused_linear import enable_fast_nodes
+from orbit3d.compat.hyff.kernels.joined_linear import JoinedLinear, enable_joined_nodes
+from orbit3d.compat.hyff.weights import read_adapter_export
 
 PRECISIONS = moderato.PRECISIONS
-IMPLEMENTATION = 'hyff.engines.native.efm_native'
+IMPLEMENTATION = 'orbit3d.compat.hyff.engines.native.efm_native'
 MODERATO_BACKBONE = moderato.EXPECTED_BACKBONE
 MESSAGE_CHANNEL_TILES = (8, 16, 32, 64)
 ATOM_TILES = (1, 4, 8, 16)
@@ -96,7 +97,7 @@ def resolve_checkpoint(checkpoint):
 
 
 def read_export(path):
-    """`hyff.engines.reference.read_export` with an explicit message for constructors without a native path."""
+    """`orbit3d.compat.hyff.engines.reference.read_export` with an explicit message for constructors without a native path."""
     saved = read_adapter_export(path)
     factory = saved.get('model_factory')
     if factory in EAGER_ONLY_FACTORIES:
@@ -231,7 +232,7 @@ def execution_geometry(widths, *, message_channel_tile=16, layernorm_atom_tile=8
                              row_tile=64, column_tile=64, k_tile=32, stacked_weight_bytes_total=sum(b['expert']['stacked_weight_bytes'] for b in blocks)),
         radial_tables=dict(intervals=200, order=5, per_block_channels=[b['message_table_channels'] for b in blocks],
                            pair_rows=n * n, n_rbf=widths['n_rbf']),
-        pair_kernel=f'hyff.kernels.pair_energy_species.pair_energy (NE = {n})',
+        pair_kernel=f'orbit3d.compat.hyff.kernels.pair_energy_species.pair_energy (NE = {n})',
         per_block=blocks, node_macs_per_atom_forward_total=sum(b['node_macs_per_atom_forward'] for b in blocks),
         dependency_radius_A=max(widths['cutoff'], sum(widths['layer_cutoffs'])))
 
@@ -425,12 +426,12 @@ def create_full_engine(positions, atomic_numbers, cell, checkpoint, device='cuda
 # CPU-executable surrogate of the native path (ordinary torch operators; no Triton).
 
 def load_torch_surrogate(checkpoint, device='cpu', *, radial_tables=False, global_context=None):
-    """The native path's torch-executable subset for CPU checks (as in hyff.engines.native.moderato).
+    """The native path's torch-executable subset for CPU checks (as in orbit3d.compat.hyff.engines.native.moderato).
 
     Export build (FP64-internal LayerNorm policy), joined + folded first projections
     (`enable_joined_nodes(fold_first=True)`), the discarded embedding-only lookup, the batch-owned
     state-conditioned initial scalar and first messages (`_prepare`), the species schedule bound to
-    the plain (ungrouped) element experts, and the block forward of hyff.engines.native.moderato_forward
+    the plain (ungrouped) element experts, and the block forward of orbit3d.compat.hyff.engines.native.moderato_forward
     (general pair stride). With
     `radial_tables` the quintic 200-interval tables of every layer cutoff replace the analytic
     radial filters through the memory-bounded chunked reference. Triton components (TF32x3

@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Optional per-block angular-moment and state-FiLM components of the EFM backbone.
 
-Both constructors build the base StatePotential chain (hyff.models.base_model ->
-hyff.models.state_model -> hyff.models.element_model -> hyff.models.l2_potential)
+Both constructors build the base StatePotential chain (orbit3d.compat.hyff.models.base_model ->
+orbit3d.compat.hyff.models.state_model -> orbit3d.compat.hyff.models.element_model -> orbit3d.compat.hyff.models.l2_potential)
 from the plain model keys and then add one component whose parameters are created
 AFTER the base build, so every base tensor is bitwise the initialization of the
 plain model with the same model keys.
@@ -18,7 +19,7 @@ plain model with the same model keys.
 
 2. build_film_model: per-block FiLM of the message-input LayerNorm and the
    update-input LayerNorm by the intensive state features [Q/N, (M-1)/N]
-   (the same two features hyff.models.state_model injects into the initial scalar):
+   (the same two features orbit3d.compat.hyff.models.state_model injects into the initial scalar):
    y = LN(x) * (1 + gamma(s)) + beta(s), gamma/beta = Linear(2 -> hidden) with
    zero weights, no bias, so the initial function equals the base model and the
    modulation is exactly inert wherever Q = 0 and M = 1.
@@ -31,8 +32,8 @@ from types import MethodType
 import torch
 from torch import nn
 
-from hyff.models.base_model import build_model as build_base
-from hyff.models.l2_potential import _linear
+from orbit3d.compat.hyff.models.base_model import build_model as build_base
+from orbit3d.compat.hyff.models.l2_potential import _linear
 
 ANGULAR_VARIANT = 'all_block_l3l4_moment_powers'
 FILM_VARIANT = 'per_block_state_film'

@@ -1,7 +1,8 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Capture-safe first-order autograd Function for the latent-charge pair energy.
 
 forward(positions, charges, coupling, sigma, backend) -> coupling * E (shape [1]), where the
-backend returns unscaled (phi, g) in FP32 (see hyff.kernels.long_range.dense). backward returns exact partials of
+backend returns unscaled (phi, g) in FP32 (see orbit3d.compat.hyff.kernels.long_range.dense). backward returns exact partials of
 the evaluated energy:  dE/dx_i = c q_i g_i,  dE/dq_i = c phi_i,  dE/dc = E_unscaled.
 sigma is a constant here (MD-only contract: no sigma gradient). No host synchronisation.
 Saved state is O(N): charges, phi, g.
@@ -41,7 +42,7 @@ class DenseBackend:
         self.block_i, self.block_j, self.num_warps = block_i, block_j, num_warps
 
     def evaluate(self, positions, charges, sigma):
-        from hyff.kernels.long_range.dense import dense_triton
+        from orbit3d.compat.hyff.kernels.long_range.dense import dense_triton
         return dense_triton(positions, charges, sigma, block_i=self.block_i,
                             block_j=self.block_j, num_warps=self.num_warps)
 

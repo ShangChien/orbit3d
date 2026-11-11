@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """R8 execution layout with all eight channel lanes active (edge width 8 models).
 
 The standard pair dispatch uses BC16 for both R8 and R16. This layout runs the
@@ -9,11 +10,11 @@ from types import MethodType
 import torch
 import triton as tr
 
-from hyff.kernels.fused_messages import _record
-from hyff.models.l2_potential import L2Interaction
+from orbit3d.compat.hyff.kernels.fused_messages import _record
+from orbit3d.compat.hyff.models.l2_potential import L2Interaction
 
-from hyff.kernels.pair_messages import _forward_pair, _backward_pair_scalar, _backward_pair_tensor
-from hyff.engines.native.pair_radial_execution import FrozenPairPotential
+from orbit3d.compat.hyff.kernels.pair_messages import _forward_pair, _backward_pair_scalar, _backward_pair_tensor
+from orbit3d.compat.hyff.engines.native.pair_radial_execution import FrozenPairPotential
 
 
 class _CompactPairMessages(torch.autograd.Function):
@@ -113,7 +114,7 @@ def _compact_message_forward(self, scalar, vector, tensor, radial, direction, qu
             plan.elements, node_message, message_vector, message_tensor, table,
             self.cutoff, self.switch_width, self.input_is_scalar, plan.model.fused_message_settings)
     else:
-        from hyff.kernels.pair_messages_reference import reference_messages
+        from orbit3d.compat.hyff.kernels.pair_messages_reference import reference_messages
         displacement, valid, table, rbf, cutoff, width, chunk = reference
         values = reference_messages(displacement, source, destination, node_message,
             message_vector, message_tensor, valid, table, self.radial_filter, rbf,

@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Fused two-layer grouped element experts (one launch per direction) for any species count.
 
 Each program owns one atom tile of one expert (tile schedule from `schedule`), computes
@@ -15,9 +16,9 @@ from torch import nn
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_messages import _record
+from orbit3d.compat.hyff.kernels.fused_messages import _record
 
-from hyff.kernels.eight_channel_messages import PRECISIONS, _dot
+from orbit3d.compat.hyff.kernels.eight_channel_messages import PRECISIONS, _dot
 
 
 @torch.no_grad()

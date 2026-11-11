@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Frozen sparse expert execution with device-side grouped matrix products.
 
 Four assignments per atom are sorted by expert on the device. Exact group
@@ -20,8 +21,8 @@ from torch import nn
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_linear import _accurate_dot
-from hyff.models.experts import ElementExpertMLP, SplineExpertMLP
+from orbit3d.compat.hyff.kernels.fused_linear import _accurate_dot
+from orbit3d.compat.hyff.models.experts import ElementExpertMLP, SplineExpertMLP
 
 
 @tr.jit

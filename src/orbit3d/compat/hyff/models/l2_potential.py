@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Smooth conservative l<=2 Cartesian tensor potential (the HyFF L2 architecture) for MD.
 
 One C2 radial switch multiplies every edge message, including biased radial
@@ -478,14 +479,14 @@ class L2Interaction(nn.Module):
             node_message = self.scalar_message(self.scalar_norm(scalar))
         if csr is not None:
             positions, plan, table = csr
-            from hyff.kernels.fused_messages import messages
+            from orbit3d.compat.hyff.kernels.fused_messages import messages
             aggregate_s, aggregate_v, aggregate_t = messages(
                 positions, plan.cell, plan.neighbors, plan.shifts, plan.counts, node_message,
                 message_vector, message_tensor, table, self.cutoff, self.switch_width, self.input_is_scalar,
                 plan.model.fused_message_settings)
             return self._finish_messages(scalar, vector, tensor, aggregate_s, aggregate_v, aggregate_t)
         if reference is not None:
-            from hyff.models.l2_chunked_reference import reference_messages
+            from orbit3d.compat.hyff.models.l2_chunked_reference import reference_messages
             displacement,valid,table,rbf,cutoff,width,chunk=reference
             aggregate_s,aggregate_v,aggregate_t=reference_messages(
                 displacement,source,destination,node_message,
@@ -821,7 +822,7 @@ class L2Potential(nn.Module):
         n_graphs = batch["ptr"].numel() - 1
         elements = self.element_lut[atomic_numbers]
         if csr is not None:
-            from hyff.kernels.fused_messages import pair_energy
+            from orbit3d.compat.hyff.kernels.fused_messages import pair_energy
             atomic_pair = pair_energy(positions, csr.radius_view(self.cutoff), elements, self.radial_tables[-1])
             atomic_energy = atomic_energy + atomic_pair
             if prefix_atomic_energy is not None:
@@ -849,7 +850,7 @@ class L2Potential(nn.Module):
         return energy if prefix_atomic_energy is None else (energy, reduce_energy(prefix_atomic_energy))
 
     def energy(self, batch, edges=None, csr=None, stable_sum=True, prefix_depth=None):
-        from hyff.graph import PeriodicEdges, lattice_translation, radius_edges
+        from orbit3d.compat.hyff.graph import PeriodicEdges, lattice_translation, radius_edges
         if edges is None:
             edges = radius_edges(batch, self.cutoff)
         inputs = {**batch}
@@ -866,7 +867,7 @@ class L2Potential(nn.Module):
     def compile_radial_tables(self, intervals=200, order=5):
         if any(p.requires_grad for p in self.parameters()):
             raise ValueError('Radial compilation requires frozen model parameters')
-        from hyff.kernels.radial_table import CubicRadialTable, QuinticRadialTable
+        from orbit3d.compat.hyff.kernels.radial_table import CubicRadialTable, QuinticRadialTable
         if order not in (3, 5):
             raise ValueError('Supported C2 table orders are cubic and quintic')
         table_class = CubicRadialTable if order == 3 else QuinticRadialTable
@@ -899,7 +900,7 @@ class L2Potential(nn.Module):
     def enable_fast_nodes(self, precision='tf32x3'):
         if any(p.requires_grad for p in self.parameters()):
             raise ValueError('Freeze model parameters before selecting an inference backend')
-        from hyff.kernels.fused_linear import FastLinear, enable_fast_nodes
+        from orbit3d.compat.hyff.kernels.fused_linear import FastLinear, enable_fast_nodes
         def convert_selected(module):
             for name, child in list(module.named_children()):
                 if isinstance(child, _RowSelectedLinear):
@@ -909,7 +910,7 @@ class L2Potential(nn.Module):
                     convert_selected(child)
         convert_selected(self)
         enable_fast_nodes(self, fuse_activations=True, strided_inputs=True, precision=precision)
-        from hyff.kernels.layernorm import enable_frozen_layernorm
+        from orbit3d.compat.hyff.kernels.layernorm import enable_frozen_layernorm
         enable_frozen_layernorm(self)
         self.fast_layernorm_width_tiles = {128: 16, 160: 8}
         return self
@@ -943,10 +944,10 @@ class L2Potential(nn.Module):
 
     def prepare_energy(self, batch, edges):
         if self.fused_messages:
-            from hyff.kernels.fused_messages import PreparedL2Neighbors
+            from orbit3d.compat.hyff.kernels.fused_messages import PreparedL2Neighbors
             return PreparedL2Neighbors(self, batch, edges)
         return lambda positions: self.energy({**batch, 'positions': positions}, edges)
 
 
 def load_l2_checkpoint(path, device='cpu'):
-    raise ValueError('Checkpoint loading is not available here; use hyff.weights.load_model')
+    raise ValueError('Checkpoint loading is not available here; use orbit3d.compat.hyff.weights.load_model')

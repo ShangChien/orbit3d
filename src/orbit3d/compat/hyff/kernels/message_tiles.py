@@ -1,6 +1,7 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Atom-owned layouts for the L2 message forward.
 
-The C = 16 dispatch of hyff.kernels.fused_messages uses the eight-atom layout;
+The C = 16 dispatch of orbit3d.compat.hyff.kernels.fused_messages uses the eight-atom layout;
 the C = 8 engines select their own layouts, and others remain available for
 numerical and workload diagnostics. These kernels change only the GPU
 reduction layout.
@@ -8,7 +9,7 @@ reduction layout.
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_messages import (
+from orbit3d.compat.hyff.kernels.fused_messages import (
     _filters, _geometry, _load_message, _load_states, _matvec, _q, _stv,
 )
 

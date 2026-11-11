@@ -1,16 +1,17 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """C = 8 message path for full L2Interaction blocks and fp16w2-capable grouped experts.
 
 * `L2Messages8`: the seven-path L2 messages (scalar, vector and tensor sources, edge width 8) of a
-  non-first block through the atom-tiled kernels `hyff.kernels.message_tiles._forward_atoms`
-  (forward) and `hyff.kernels.tensor_vjp._backward_tensor` (joint coordinate / source VJP),
+  non-first block through the atom-tiled kernels `orbit3d.compat.hyff.kernels.message_tiles._forward_atoms`
+  (forward) and `orbit3d.compat.hyff.kernels.tensor_vjp._backward_tensor` (joint coordinate / source VJP),
   launched with an eight-lane channel tile and an explicit (atoms, neighbor slots, warps) layout.
-  `hyff.kernels.fused_messages.messages` dispatches these tuned kernels only for C = 16 with the
+  `orbit3d.compat.hyff.kernels.fused_messages.messages` dispatches these tuned kernels only for C = 16 with the
   settings (16, 8, 4, True); for C = 8 it falls back to one atom per program with a 16-lane tile
   and half the lanes masked. Both kernels are constexpr in C and BC, so the eight-lane launch is
   an execution-layout change only (same table, same contractions, same directed-edge treatment
   as the C = 16 dispatch).
 * `FrozenElementExperts`: species-generic grouped element experts (one expert per atom, any expert
-  count and any width) on the `hyff.kernels.eight_channel_messages._grouped_product` kernel with
+  count and any width) on the `orbit3d.compat.hyff.kernels.eight_channel_messages._grouped_product` kernel with
   IEEE FP32, TF32x3, FP16x3 or fp16w2 products. fp16w2 stores FP16 copies of the packed expert
   weights and requires every expert weight to be FP16-representable; it never rounds a model
   silently.
@@ -21,9 +22,9 @@ import torch
 from torch import nn
 import triton as tr
 
-from hyff.kernels.eight_channel_messages import FirstMessages8, _FrozenElement, _record
-from hyff.kernels.message_tiles import _forward_atoms
-from hyff.kernels.tensor_vjp import _backward_tensor
+from orbit3d.compat.hyff.kernels.eight_channel_messages import FirstMessages8, _FrozenElement, _record
+from orbit3d.compat.hyff.kernels.message_tiles import _forward_atoms
+from orbit3d.compat.hyff.kernels.tensor_vjp import _backward_tensor
 
 PRECISIONS = ('fp32', 'tf32x3', 'fp16x3', 'fp16w2')
 C8 = 8

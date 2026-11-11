@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native EFM activations with compiled FP32 rounding barriers (largo engine option).
 
 Each EFM term built here passes the ordinary capture self-check before use.
@@ -18,7 +19,7 @@ from torch._inductor.ir import IRNode
 from torch._inductor.virtualized import ops
 from torch._prims_common import ELEMENTWISE_TYPE_PROMOTION_KIND
 
-from hyff.engines.capture import efm_engine
+from orbit3d.compat.hyff.engines.capture import efm_engine
 
 
 def _handler(original, arithmetic=None):

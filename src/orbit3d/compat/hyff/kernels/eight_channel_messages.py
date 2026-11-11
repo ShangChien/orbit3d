@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Eight-channel message kernels and species-generic grouped experts for the presto engines.
 
 Three pieces, all inference-only (frozen weights; the coordinate VJP is the exact adjoint of the
@@ -5,15 +6,15 @@ forward):
 
 * `Scalar8Messages`: the scalar-eight outer operator A_i = .25 sum_j switch(r_ij) phi(r_ij) m_j,
   reading the current FP32 coordinates through the position-based `_geometry` of
-  `hyff.kernels.fused_messages`. The table holds exactly eight quintic filters (no angular padding).
+  `orbit3d.compat.hyff.kernels.fused_messages`. The table holds exactly eight quintic filters (no angular padding).
 * `FirstMessages8`: the scalar-source first block (8 s + 8 v + 8 t channels) through the
-  atom-tiled kernels `hyff.kernels.message_tiles._forward_atoms` /
-  `hyff.kernels.fused_messages._backward_scalar`, launched with a channel tile equal to the eight
+  atom-tiled kernels `orbit3d.compat.hyff.kernels.message_tiles._forward_atoms` /
+  `orbit3d.compat.hyff.kernels.fused_messages._backward_scalar`, launched with a channel tile equal to the eight
   channels (no masked lanes) and an explicit atom/neighbor/warp layout. `fused_messages.messages`
   only selects its tuned layout for C = 16 and otherwise runs one atom per program with a 16-lane
   channel tile, which is markedly slower for C = 8.
 * `FrozenElementExpertMLP32`: species-generic grouped element experts (one expert per atom, any expert
-  count) with an exact IEEE FP32 product option. A variant of `hyff.kernels.grouped_experts`
+  count) with an exact IEEE FP32 product option. A variant of `orbit3d.compat.hyff.kernels.grouped_experts`
   (TF32x3 / FP16x3 only); the FP32 expert parameters stay the module's parameters,
   packed copies are non-persistent buffers.
 """
@@ -24,9 +25,9 @@ from torch import nn
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_linear import _accurate_dot
-from hyff.kernels.fused_messages import _backward_scalar, _geometry, _poly, _record
-from hyff.kernels.message_tiles import _forward_atoms
+from orbit3d.compat.hyff.kernels.fused_linear import _accurate_dot
+from orbit3d.compat.hyff.kernels.fused_messages import _backward_scalar, _geometry, _poly, _record
+from orbit3d.compat.hyff.kernels.message_tiles import _forward_atoms
 
 PRECISIONS = ('fp32', 'tf32x3', 'fp16x3')
 

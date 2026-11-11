@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Shared native-engine adapter: CSR neighbours, quintic radial tables, species and global state.
 
 No checkpoint tensor is rounded or edited. The quintic radial interpolation
@@ -13,12 +14,12 @@ from types import MethodType
 
 import torch
 
-from hyff.models.element_model import prepare_batch
-from hyff.data import collate, physical
-from hyff.engines.force_engine import ForceEngine
-from hyff.models.experts import ElementPartition
-from hyff.kernels.fused_messages import PreparedL2Neighbors, configure_neighbor_reserve
-from hyff.weights import read_adapter_export
+from orbit3d.compat.hyff.models.element_model import prepare_batch
+from orbit3d.compat.hyff.data import collate, physical
+from orbit3d.compat.hyff.engines.force_engine import ForceEngine
+from orbit3d.compat.hyff.models.experts import ElementPartition
+from orbit3d.compat.hyff.kernels.fused_messages import PreparedL2Neighbors, configure_neighbor_reserve
+from orbit3d.compat.hyff.weights import read_adapter_export
 
 
 
@@ -78,7 +79,7 @@ def _initial_scalar(self, batch):
 
 
 def _forward(self, batch, **kwargs):
-    from hyff.engines.native.base_forward import reference_forward
+    from orbit3d.compat.hyff.engines.native.base_forward import reference_forward
     if '_engine_initial_scalar' not in batch:
         batch = _prepare(self, batch)
     return reference_forward(self, batch, **kwargs)
@@ -101,7 +102,7 @@ def load(checkpoint, device='cuda', *, global_context=None, owned_weights=None,
          reserve=1.25, node_mode='torch'):
     path = checkpoint_path(checkpoint)
     saved = read_adapter_export(path)
-    from hyff.models.factory import build_model
+    from orbit3d.compat.hyff.models.factory import build_model
     model = build_model(dict(model_id=saved['model_factory'], model_config=saved['model_config']))
     model.to(dtype=saved['model_state']['embedding.weight'].dtype)
     model.load_state_dict(saved['model_state'], strict=True)
@@ -123,12 +124,12 @@ def load(checkpoint, device='cuda', *, global_context=None, owned_weights=None,
     model.inference_backend = 'native_csr_quintic'
     configure_neighbor_reserve(model, reserve)
     if model.config.edge_hidden == 8:
-        from hyff.kernels.compact_pair_messages import _compact_message_forward
+        from orbit3d.compat.hyff.kernels.compact_pair_messages import _compact_message_forward
         for block in model.blocks:
             block.forward = MethodType(_compact_message_forward, block)
     if node_mode in ('tf32x3', 'fp16x3'):
-        from hyff.kernels.fused_linear import enable_fast_nodes, FastLinear
-        from hyff.models.l2_potential import _RowSelectedLinear
+        from orbit3d.compat.hyff.kernels.fused_linear import enable_fast_nodes, FastLinear
+        from orbit3d.compat.hyff.models.l2_potential import _RowSelectedLinear
         def convert_selected(module):
             for name, child in list(module.named_children()):
                 if isinstance(child, _RowSelectedLinear):
@@ -143,7 +144,7 @@ def load(checkpoint, device='cuda', *, global_context=None, owned_weights=None,
         # numerical policy. FP32 learned tensors stay exactly unchanged here.
         enable_fast_nodes(model, fuse_activations=True, strided_inputs=True, precision=node_mode)
     if node_mode in ('joined', 'compiled', 'tf32x3', 'fp16x3'):
-        from hyff.kernels.joined_linear import enable_joined_nodes
+        from orbit3d.compat.hyff.kernels.joined_linear import enable_joined_nodes
         enable_joined_nodes(model, fold_first=False)
         # The generic helper caches embedding-only messages. State conditioning
         # must remain visible, including nonzero charge in validation checks.

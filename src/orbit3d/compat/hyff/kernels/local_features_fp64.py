@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Fused frozen atom-local invariants (FP64 scalar LayerNorm statistics) and their input VJP.
 
 The operator has no parameters of its own. It evaluates the block's affine
@@ -11,7 +12,7 @@ import torch
 import triton as tr
 import triton.language as tl
 
-from hyff.kernels.fused_messages import _matvec, _q, _stv
+from orbit3d.compat.hyff.kernels.fused_messages import _matvec, _q, _stv
 
 
 @tr.jit
@@ -232,7 +233,7 @@ def _frozen_node_update(block, scalar, vector, tensor, projections=None):
     Projection, scalar and equivariant state update operations below are the
     L2Interaction operations; only feature construction is substituted.
     """
-    from hyff.models.l2_potential import _channel_tensor_vector, _channel_vector_tensor
+    from orbit3d.compat.hyff.models.l2_potential import _channel_tensor_vector, _channel_vector_tensor
 
     if projections is not None:
         vu, vv, tu, tv = projections

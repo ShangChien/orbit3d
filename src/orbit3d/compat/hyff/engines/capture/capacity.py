@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Construction-time opt-in EFM capacity routing; no OOM or mid-run fallback."""
 from __future__ import annotations
 
@@ -54,14 +55,14 @@ def install_largo_capacity(model, policy, edge_reserve):
         raise ValueError('Unsupported resolved largo capacity route')
     if getattr(state, '_tiled_efm_original_terms', None) is not None:
         raise ValueError('Tiled terms already installed')
-    from hyff.engines.capture.edge_growth import install_growth_policy
-    from hyff.engines.capture.tiled_recompute import install_tiled_terms
+    from orbit3d.compat.hyff.engines.capture.edge_growth import install_growth_policy
+    from orbit3d.compat.hyff.engines.capture.tiled_recompute import install_tiled_terms
     growth = install_growth_policy(state, reserve=edge_reserve)
     tiled = None
     if policy['selected'] == 'tiled':
         tiled = install_tiled_terms(state, 32768, True)
     elif policy['selected'] == 'partial':
-        from hyff.engines.capture.partial_tiling import install_tiled_terms as install_partial
+        from orbit3d.compat.hyff.engines.capture.partial_tiling import install_tiled_terms as install_partial
         tiled = install_partial(state, 32768, True, tiled_blocks=(1, 2))
     result = dict(policy, growth=growth, tiling=tiled)
     state._hyff_largo_capacity = result

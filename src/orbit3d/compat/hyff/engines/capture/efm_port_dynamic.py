@@ -1,3 +1,4 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Instance-local EFM installation; reuses the efm_engine algebra (imported as ``sibling``) and reads no files.
 
 The CPU mode is for parity testing; the GPU path is captured in a CUDA graph.
@@ -10,9 +11,9 @@ from types import MethodType
 
 import torch
 
-from hyff.engines.capture import efm_engine as sibling
+from orbit3d.compat.hyff.engines.capture import efm_engine as sibling
 
-from hyff.engines.capture.compaction import compact, gather_with_sentinel
+from orbit3d.compat.hyff.engines.capture.compaction import compact, gather_with_sentinel
 
 
 class EFMOverflow(RuntimeError):

@@ -1,9 +1,10 @@
+# ORBIT-3D modification: private package imports; see NOTICE.txt.
 """Native-engine forward whose first-block messages come from the batch's charge-aware lookup table."""
 """The global state enters only through the invariant initial scalar (``initial_scalar``)."""
 import math
 from typing import Dict
 import torch
-from hyff.models.l2_potential import _quadrupole, smooth_switch
+from orbit3d.compat.hyff.models.l2_potential import _quadrupole, smooth_switch
 
 
 def reference_forward(self, batch: Dict[str, torch.Tensor], csr=None, stable_sum=False,
@@ -102,7 +103,7 @@ def reference_forward(self, batch: Dict[str, torch.Tensor], csr=None, stable_sum
     n_graphs = batch["ptr"].numel() - 1
     elements = self.element_lut[atomic_numbers]
     if csr is not None:
-        from hyff.kernels.pair_energy_species import pair_energy
+        from orbit3d.compat.hyff.kernels.pair_energy_species import pair_energy
         atomic_pair = pair_energy(positions, csr.radius_view(self.cutoff), elements, self.radial_tables[-1])
         atomic_energy = atomic_energy + atomic_pair
         if prefix_atomic_energy is not None:
