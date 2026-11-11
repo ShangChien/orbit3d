@@ -1,0 +1,18 @@
+{
+  "scope": "Three predeclared interval regimes for the expanded 15-element generator; no test labels used",
+  "selection_data": "ocelot_wide80 train.csv",
+  "selection_data_sha256": "f316b962d5bd456b387de72274c81e3beb0e9b19737a3ff3badcb9fe69c42f65",
+  "selection_rules": {
+    "original": "Unchanged earlier H/C/N/O/F target window, retained for continuity",
+    "central": "Training marginal medians HOMO=-7.250750, LUMO=-0.627223 eV, rounded to 0.01 eV and halfwidth 0.5 eV",
+    "lower_gap": "Training HOMO 75th percentile=-6.859450 and LUMO 25th percentile=-1.058047 eV, rounded to 0.01 eV and halfwidth 0.4 eV"
+  },
+  "inference_seeds": [2026, 2027, 2028],
+  "attempts_per_seed_window": 64,
+  "oracle_shortlist_budget": 32,
+  "maximum_retained": 16,
+  "refinement_steps": 30,
+  "precision": "float32",
+  "training_seeds": [42],
+  "interpretation": "Windows differ in width and training frequency. Compare their observed results descriptively, not as equal-difficulty tasks. Independent fingerprint evaluation is separate from quantum truth."
+}

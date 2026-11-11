@@ -28,6 +28,13 @@ def main():
         current = copy.deepcopy(cfg)
         current["mount_paths"]["output_dir"] = str(path)
         summaries.append(run_octree_from_config(current))
+    report = compare_run_outputs(first_path, second_path)
+    (a.output / "reload_summary.json").write_text(json.dumps(report, indent=2) + "\n")
+
+
+def compare_run_outputs(first_path, second_path):
+    """Verify two existing runs without repeating generation or changing their files."""
+    first_path, second_path = Path(first_path), Path(second_path)
     first = pd.read_csv(first_path / "candidates.csv")
     second = pd.read_csv(second_path / "candidates.csv")
     # Columns for refinement exist only if at least one molecule reached that stage.
@@ -80,18 +87,12 @@ def main():
         for key in ["initial_forces_eva", "final_forces_eva"]:
             if key in x:
                 np.testing.assert_allclose(x[key], y[key], atol=1e-5, rtol=1e-5)
-    (a.output / "reload_summary.json").write_text(
-        json.dumps(
-            {
-                "passed": True,
-                "all_candidates": len(first),
-                "exported_molecules": len(mols[0]),
-                "prediction_atol": 1e-5,
-                "coordinate_atol_A": 1e-5,
-                "raw_tokens_compared": "token_sha256" in first,
-                "upstream_pretrained_and_training_data_required": False,
-            },
-            indent=2,
-        )
-        + "\n"
-    )
+    return {
+        "passed": True,
+        "all_candidates": len(first),
+        "exported_molecules": len(mols[0]),
+        "prediction_atol": 1e-5,
+        "coordinate_atol_A": 1e-5,
+        "raw_tokens_compared": "token_sha256" in first,
+        "upstream_pretrained_and_training_data_required": False,
+    }

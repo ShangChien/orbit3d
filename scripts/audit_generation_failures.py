@@ -5,6 +5,8 @@ from collections import Counter
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from rdkit import Chem
+from rdkit.Contrib.SA_Score import sascorer
 from orbit3d.generator.octree_backend import trajectory_to_instance
 from orbit3d.generator.spatial_box import BoxSpec3D
 from orbit3d.utils.run_evidence import freeze_run
@@ -22,8 +24,10 @@ with np.load(a.run/'raw_trajectories.npz') as arrays:
     for i, atoms in enumerate(symbols):
         record={'candidate_id':i,'atom_count':len(atoms),'element_counts':dict(Counter(atoms))}
         try:
-            inst=trajectory_to_instance({'atom_symbols':atoms,'positions_np':arrays[f'coordinates_{i}']},box)
-            record.update(valid=True,smiles=inst.smiles,category='valid')
+            inst=trajectory_to_instance({'atom_symbols':atoms,'positions_np':arrays[f'coordinates_{i}']},box,element_table=tuple(dict.fromkeys(atoms)))
+            record.update(valid=True,smiles=inst.smiles,category='valid',
+                          charged_atoms=sum(atom.GetFormalCharge()!=0 for atom in inst.graph.GetAtoms()),
+                          sa_score=float(sascorer.calculateScore(Chem.RemoveHs(inst.graph))))
         except ValueError as exc:
             record.update(valid=False,reason=str(exc),category=str(exc).split(':',1)[0])
         assert record['valid']==bool(old.iloc[i].raw_valid), f'Acceptance changed at candidate {i}'
