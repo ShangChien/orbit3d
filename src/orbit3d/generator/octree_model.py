@@ -362,7 +362,10 @@ class ConditionalUni3DAR(Uni3DARSampler):
         if spatial_box is not None:
             spatial_box.validate_model(self.args)
         has_cond = bool((active_mask.float().sum() > 0).item())
-        use_cfg = has_cond and (cfg_scale > 1.0 + 1e-4)
+        if not math.isfinite(cfg_scale) or cfg_scale < 0:
+            raise ValueError('CFG scale must be finite and nonnegative')
+        use_cfg = has_cond and cfg_scale != 1.0
+        guidance = {'hidden': None, 'scale': cfg_scale} if use_cfg else None
 
         orig_tree_t = list(self.tree_temperature)
         orig_atom_t = list(self.atom_temperature)
@@ -419,13 +422,13 @@ class ConditionalUni3DAR(Uni3DARSampler):
                 finished_trajs = []
 
                 atom_predict_funcs, cond_vars = self.get_atom_predict_funcs(
-                    batch_size, device, None, cond_vars, sample_uniforms if streams else None
+                    batch_size, device, None, cond_vars, sample_uniforms if streams else None, guidance=guidance
                 )
                 def mask_tree(logits, selected):
                     return spatial_box.mask_tree_logits(logits, next_feat[selected, :3], next_feat[selected, IDX_LEVEL])
 
                 tree_predict_funcs = self.get_tree_predict_funcs(
-                    sample_uniforms if streams else None, mask_tree if spatial_box else None
+                    sample_uniforms if streams else None, mask_tree if spatial_box else None, guidance=guidance
                 )
 
                 cur_feat = decoder_feat[:, -1, :]
@@ -470,10 +473,10 @@ class ConditionalUni3DAR(Uni3DARSampler):
                         dec_u = self.norm(dec_u)
                         dec_u_last = dec_u[:, -1, :]
 
-                        cfg_raw = dec_u_last + cfg_scale * (dec_y_last - dec_u_last)
-                        cond_norm = dec_y_last.float().norm(dim=-1, keepdim=True).clamp(min=1e-6)
-                        raw_norm = cfg_raw.float().norm(dim=-1, keepdim=True).clamp(min=1e-6)
-                        dec_y_last = (cfg_raw.float() * (cond_norm / raw_norm)).to(dec_y_last.dtype)
+                        # Guide each tree/element/XYZ categorical distribution.
+                        # Mixing normalized hidden states is not logit-space CFG
+                        # through the nonlinear autoregressive prediction heads.
+                        guidance['hidden'] = dec_u_last
 
                     step_idx += 1
                     last_level = cur_input.level[:, -1]
@@ -710,7 +713,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
         allowed[self.atom_null_id] = True
         return allowed
 
-    def trajectory_distributions(self, trajs, y_min, y_max, active_mask, temperatures=(0.85, 0.3, 0.25)):
+    def trajectory_distributions(self, trajs, y_min, y_max, active_mask, temperatures=(0.85, 0.3, 0.25), cfg_scale=1.0):
         """Categorical distributions for every sampled tree, atom and XYZ decision."""
         packed = self.pack_sampled_trajectories(trajs, y_min.device)
         decoder_input, target, _ = self.get_feat_from_dataloader(packed)
@@ -718,19 +721,32 @@ class ConditionalUni3DAR(Uni3DARSampler):
         hidden, _ = self.forward_conditional_sequence(
             decoder_input, cu, int(packed["decoder_input_max_len"]), y_min, y_max, active_mask
         )
+        uncond = None
+        if cfg_scale != 1.0:
+            uncond, _ = self.forward_conditional_sequence(
+                decoder_input, cu, int(packed['decoder_input_max_len']), y_min, y_max, torch.zeros_like(active_mask)
+            )
+        def guided(values, null_values):
+            return null_values.float() + cfg_scale * (values.float() - null_values.float())
         owner = torch.repeat_interleave(
             torch.arange(len(trajs), device=y_min.device), (cu[1:] - cu[:-1]).long()
         )
         packets = []
         tree = target.is_gen_tree
         if tree.any():
-            logits = self.tree_heads[0](hidden[tree]).float() / temperatures[0]
+            logits = self.tree_heads[0](hidden[tree]).float()
+            if uncond is not None:
+                logits = guided(logits, self.tree_heads[0](uncond[tree]))
+            logits = logits / temperatures[0]
             labels = (target.type[tree] - self.tree0_split_id - 1).long()
             packets.append((logits.log_softmax(-1), labels, owner[tree]))
         atom = target.is_gen_atom
         if atom.any():
             labels = [v.long() for v in target.to_list(atom)]
             logits = self.atom_heads[0](hidden[atom], labels)
+            if uncond is not None:
+                null_logits = self.atom_heads[0](uncond[atom], labels)
+                logits = [guided(x, u) for x, u in zip(logits, null_logits)]
             allowed = self.allowed_atom_mask(y_min.device)
             for axis, values in enumerate(logits):
                 values = values.float() / (temperatures[1] if axis == 0 else temperatures[2])

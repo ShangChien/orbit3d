@@ -511,7 +511,7 @@ class Uni3DARSampler(Uni3DAR):
         )
         return decoder_feat, decoder_phy_pos
 
-    def get_tree_predict_funcs(self, sample_uniforms=None, tree_logit_mask=None):
+    def get_tree_predict_funcs(self, sample_uniforms=None, tree_logit_mask=None, guidance=None):
 
         def tree_sampling_func(logits, tree_i, batch_indices):
             tree_type, score = softmax_sampling(
@@ -533,12 +533,19 @@ class Uni3DARSampler(Uni3DAR):
 
         def tree_predict_func(y, batch_indices, tree_i):
             tree_logits = self.tree_heads[tree_i](y)
+            uncond = guidance['hidden'][batch_indices] if guidance is not None else None
+            if uncond is not None:
+                uncond_logits = self.tree_heads[tree_i](uncond).float()
+                tree_logits = uncond_logits + guidance['scale'] * (tree_logits.float() - uncond_logits)
             if tree_logit_mask is not None:
                 tree_logits = tree_logit_mask(tree_logits, batch_indices)
             tree_pred, tree_score = tree_sampling_func(tree_logits, tree_i, batch_indices)
             if self.count_head is not None:
                 y = y + self.tree_emb_for_count[tree_i](tree_pred)
                 count_logits = self.count_head[tree_i](y)
+                if uncond is not None:
+                    uncond_logits = self.count_head[tree_i](uncond + self.tree_emb_for_count[tree_i](tree_pred)).float()
+                    count_logits = uncond_logits + guidance['scale'] * (count_logits.float() - uncond_logits)
                 count_pred, count_score = count_sampling_func(count_logits, tree_i, batch_indices)
             else:
                 count_pred = None
@@ -557,6 +564,7 @@ class Uni3DARSampler(Uni3DAR):
         atom_constraint,
         cond_vars,
         sample_uniforms=None,
+        guidance=None,
     ):
         atom_type_mask = torch.ones(
             self.num_atom,
@@ -652,6 +660,8 @@ class Uni3DARSampler(Uni3DAR):
                 + [partial(xyz_sampling_func, tree_i=tree_i, batch_indices=batch_indices)] * 3,
                 score_ratio=score_ratio,
                 xyz_temperature=self.xyz_temperature[tree_i],
+                unconditional_hidden=guidance['hidden'][batch_indices] if guidance is not None else None,
+                cfg_scale=guidance['scale'] if guidance is not None else 1.0,
             )
 
         all_predict_funcs = [

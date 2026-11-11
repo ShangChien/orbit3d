@@ -51,6 +51,8 @@ class AutoRegressivePredictionHead(nn.Module):
         """Inference autogressive prediction, with temperature scaling."""
         bsz = x.size(0)
         feat = x.view(bsz, self.emb_dim)
+        uncond = kwargs.get('unconditional_hidden')
+        cfg_scale = kwargs.get('cfg_scale', 1.0)
         bsz = feat.size(0)
         pred_xyz = torch.zeros(
             bsz, self.num_feat, device=feat.device, dtype=torch.int32
@@ -58,9 +60,14 @@ class AutoRegressivePredictionHead(nn.Module):
         score = torch.zeros(bsz, device=feat.device, dtype=torch.float32)
         for i in range(self.num_feat):
             cur_logits = self.pred_heads[i](feat)
+            if uncond is not None:
+                uncond_logits = self.pred_heads[i](uncond).float()
+                cur_logits = uncond_logits + cfg_scale * (cur_logits.float() - uncond_logits)
             pred_xyz[:, i], cur_score = sampling_func_list[i](cur_logits)
             score += cur_score * score_ratio[i]
             if i < self.num_feat - 1:
                 new_emb = self.emb_layers[i](pred_xyz[:, i])
                 feat = feat + new_emb
+                if uncond is not None:
+                    uncond = uncond + new_emb
         return pred_xyz, score

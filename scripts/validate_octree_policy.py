@@ -12,6 +12,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--config", type=Path, required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument('--precision', choices=['float32', 'bfloat16'], default='float32')
+p.add_argument('--cfg-scale', type=float, default=1.0)
 a = p.parse_args()
 cfg = json.loads(a.config.read_text())
 torch.set_num_threads(4)
@@ -42,8 +43,8 @@ def sampling_with_behavior_score(
 sampler.softmax_sampling = sampling_with_behavior_score
 try:
     with torch.no_grad(), torch.autocast(device_type=device.split(':')[0], dtype=torch.bfloat16, enabled=a.precision == 'bfloat16'):
-        trajectories = model.generate_conditional_trajectories(lo, hi, mask, evaluate_self_consistency=False)
-        packets = model.trajectory_distributions(trajectories, lo, hi, mask)
+        trajectories = model.generate_conditional_trajectories(lo, hi, mask, evaluate_self_consistency=False, cfg_scale=a.cfg_scale)
+        packets = model.trajectory_distributions(trajectories, lo, hi, mask, cfg_scale=a.cfg_scale)
         teacher = torch.zeros(4, device=device)
         count = torch.zeros_like(teacher)
         for logp, labels, owner in packets:
@@ -58,6 +59,7 @@ try:
             "teacher_log_probability": teacher.tolist(),
             "max_mean_token_logprob_error": float((error / count).max()),
             "precision": a.precision,
+            "cfg_scale": a.cfg_scale,
             "passed": float((error / count).max()) < 1e-4,
         }
         a.output.parent.mkdir(parents=True, exist_ok=True)

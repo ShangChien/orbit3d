@@ -115,3 +115,24 @@ def test_smooth_condition_features_preserve_local_property_neighborhoods():
     small = 1e-5
     assert (smooth._fourier_encode(values+small)-smooth._fourier_encode(values)).abs().max() < .001
     assert (legacy._fourier_encode(values+small)-legacy._fourier_encode(values)).abs().max() > .1
+
+
+def test_cfg_guides_each_nonlinear_head_with_the_same_sampled_prefix():
+    from orbit3d.vendor.uni3dar.models.autoregressive_prediction_head import AutoRegressivePredictionHead
+    torch.manual_seed(13)
+    head = AutoRegressivePredictionHead([5, 7, 7, 7], 16, emb_dropout=0).eval()
+    for p in head.parameters():
+        if p.ndim > 1:
+            p.data.normal_(0, .15)
+    conditional, unconditional = torch.randn(3, 16), torch.randn(3, 16)
+    for scale in [0., 2.]:
+        captured = []
+        def sample(logits):
+            captured.append(logits)
+            return logits.argmax(-1), torch.zeros(len(logits))
+        chosen, _ = head.inference(conditional, [sample]*4, [1]*4,
+                                   unconditional_hidden=unconditional, cfg_scale=scale)
+        targets = [chosen[:, i].long() for i in range(4)]
+        expected = [u+scale*(c-u) for c, u in zip(head(conditional, targets), head(unconditional, targets))]
+        for actual, reference in zip(captured, expected):
+            torch.testing.assert_close(actual, reference, atol=1e-6, rtol=1e-5)
