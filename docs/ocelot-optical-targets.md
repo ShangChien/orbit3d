@@ -54,3 +54,11 @@ are unchanged. Both the optimizing 3D model and the independent four-target
 fingerprint model evaluate the retained molecules; all proposals remain in the
 success denominator. The vertical S1−T1 gap is derived from paired predictions,
 not introduced as an independently inconsistent fifth target.
+
+Pure `mode: train` with SDF labels and zero GRPO steps now loads only the generator
+and labelled training data. It does not need an Oracle, forcefield or domain file.
+Pseudo-labelled training, alignment and generation still load their evaluators.
+The first optical launch exposed this unnecessary dependency while the property
+model was still training and stopped before any generator optimizer step. The
+retry retains that failed run and reuses its exact prepared SDF and migrated
+initial checkpoint in a fresh output directory.

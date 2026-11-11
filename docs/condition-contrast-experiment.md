@@ -32,3 +32,14 @@ inspection is exploratory model-design feedback; it is not an untouched final
 test for this intervention. Improved teacher-forcing separation alone will not
 establish improved conditional generation. No default objective change is made
 before the matched experiment.
+
+## Completed matched pilot
+
+Both control and paired objectives produce 3 optimizing-model and 4 independent-
+model joint successes out of 384 proposals. Chemical-valid counts are 216 and
+220, respectively. Correct/shuffled validation losses are 1.27542/1.28595 for
+the control and 1.27500/1.28550 for the paired model: the intervention does not
+improve the measured separation. This pilot does not support replacing the
+default SFT objective. Full training/validation records, identical-batch check
+and all twelve generation runs are in
+`experiments/condition_contrast_20261112.json`.

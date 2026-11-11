@@ -30,3 +30,22 @@ chemical validity, raw element occurrence, graph/charge diagnostics and joint
 success over every proposal. Increased rare-element frequency alone is not a
 successful molecular design result. The earlier test-set diagnosis is retained
 as exploratory feedback, not used to advertise a final generalization score.
+
+## Matched pilot result
+
+The weighted model increases Si teacher-forced top-1 accuracy from 0/28 to 4/28,
+while B stays 0/12 and C decreases from 99.62% to 98.94%. With atom temperature
+fixed at 0.3, it produces six valid Si-containing and two valid B-containing
+molecules in 384 proposals; the control produces neither. Overall chemical
+validity is 226/384 versus 221/384. Optimizing-model joint successes decrease
+from 7 to 3, and independent-model successes remain 6 for both. These are one
+matched training-seed pilot, not evidence of improved target-directed design.
+The default objective remains unweighted. Complete records and validation
+probabilities are in `experiments/element_balance_20261112.json`.
+
+A separate temperature-only experiment keeps the original 4000-step checkpoint.
+At atom temperatures 0.3/0.6/1.0, valid counts are 110/99/89 out of 192, optimizing
+joint successes 2/1/0 and independent successes 1/0/0. Temperature 1.0 generates
+valid B/Si/Se/As/Te molecules, but with lower validity and no joint successes.
+This intervention also leaves the default unchanged; all nine runs are archived
+in `experiments/element_temperature_20261112.json`.
