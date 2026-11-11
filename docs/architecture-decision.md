@@ -17,14 +17,16 @@ historical benchmark runners remain archived implementations, not alternative
 entrypoints for reproducing the new results.
 
 The pretrained model has 12 layers, width 768, 12 attention heads, 0.24 Å leaf
-cells, 0.01 Å coordinate bins, and merge level 6. The property-conditioned mainline supports neutral
-closed-shell H/C/N/O/F molecules. Explicit depth-seven migration and a separate
-structural-only boron adaptation are tested without claiming boron property accuracy. The force field's broader element vocabulary
+cells, 0.01 Å coordinate bins, and merge level 6. The initial property-conditioned mainline uses neutral closed-shell H/C/N/O/F
+molecules. Explicit depth-seven and 15-element labelled OCELOT adaptation now have
+separate fixed-budget experiments; their rare-element quality and target success
+remain weak. A structural-only MIM boron model has its own quantum cohort. The force field's broader element vocabulary
 does not expand the generator's capabilities. SFT trains the zero-initialized
 interval conditioner and condition-masked property head while freezing the
 pretrained backbone. GRPO includes tree, element, X, Y and Z decisions, but is
 opt-in: the corrected FP32 pilot has encouraging optimizing-surrogate results,
-but training-seed replication is ongoing and independent evaluators disagree.
+three full-objective training seeds are complete and independent evaluators disagree.
+The full reward-removal replication matrix is being completed separately.
 See [the reward ablation](reward-ablation.md) for both positive and negative results.
 
 QM9s supplies structures and its original 240-channel spectra are retained
@@ -58,8 +60,8 @@ weights and resampled training records. Held-out residual intervals have been ca
 property error weakly; the uncertainty reward remains disabled.
 
 See [remote experiment report](qm9s-ocelot-experiments-2026-11-11.md) for actual
-scope and results. Broad-element generation, scaffold growth, uncertainty
-calibration and independent quantum calculations remain separate research work.
+scope and results. Expanded elements, explicit scaffold growth, uncertainty calibration and quantum
+calculations have separately scoped results; none establishes general effectiveness.
 
 ## Interval and sampling update
 
