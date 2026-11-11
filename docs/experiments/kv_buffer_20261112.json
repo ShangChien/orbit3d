@@ -1,0 +1,505 @@
+{
+  "prefix_absolute_logit_threshold": 0.0002,
+  "prefix_absolute_logit_passed": false,
+  "buffer_vs_concat_fixed_prefix_bitwise_equal": true,
+  "prefix": [
+    {
+      "tokens": 324,
+      "cache_mode": "concat",
+      "chunk_size": 1,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.001953125,
+          0.001953125,
+          0.001953125,
+          0.002197265625,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.00732421875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 3.829598426818848e-06,
+      "tree_logits_max_abs_diff": 0.00020599365234375,
+      "atom_xyz_logits_max_abs_diff": [
+        4.00543212890625e-05,
+        0.0001087188720703125,
+        0.000186920166015625,
+        0.00012350082397460938
+      ],
+      "cached_hidden_sha256": "6c00fd9b4bda45c385b58242d30fc73e7da1dedf0c77ef55049ba4addde7e8cb",
+      "cached_atom_xyz_logits_sha256": [
+        "5eac520b1695bf4b80bc1c476671491f5b07c9e973b281c17aa50d9c42e13e3e",
+        "aebe34103f745a9456dc0503f183fe833bd454fc22977b63744fcce9086b042e",
+        "fab252c9ee4e2132f598ef5c26426a626de91c1153458611822d22e9d486c6a7",
+        "9c81e26de7a91b19b8c97afac76d5936e0c9288ec44e97a7c11e72f97bd8858c"
+      ],
+      "molecule": 0
+    },
+    {
+      "tokens": 324,
+      "cache_mode": "concat",
+      "chunk_size": 2,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.002197265625,
+          0.002197265625,
+          0.002197265625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.002197265625,
+          0.007080078125
+        ]
+      ],
+      "output_hidden_max_abs_diff": 3.337860107421875e-06,
+      "tree_logits_max_abs_diff": 0.00023651123046875,
+      "atom_xyz_logits_max_abs_diff": [
+        4.00543212890625e-05,
+        0.00012969970703125,
+        0.000209808349609375,
+        0.000118255615234375
+      ],
+      "cached_hidden_sha256": "796abbe76d3e00021e91f43808e80865633beece28c37a097232a3ed7132117f",
+      "cached_atom_xyz_logits_sha256": [
+        "1197681f7cc96bf2adf7d82423b32dac1bf5f2b761051ffe9089169426c3f617",
+        "fe75b8ee06c1852fa68aa66a65f1e84d040952a05c3224886f00b4c57022c566",
+        "09e7aab2bb550045df799032a05cc2b4cf3abb9a23ada7ed58a7e6794f4523fb",
+        "02d3a295e10d1e08127135436aa519fbd952c111c316e9973f1f2b0627e59657"
+      ],
+      "molecule": 0
+    },
+    {
+      "tokens": 324,
+      "cache_mode": "concat",
+      "chunk_size": 129,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.00244140625,
+          0.001953125,
+          0.001953125,
+          0.002197265625,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.00390625,
+          0.006103515625
+        ]
+      ],
+      "output_hidden_max_abs_diff": 3.874301910400391e-06,
+      "tree_logits_max_abs_diff": 0.00020599365234375,
+      "atom_xyz_logits_max_abs_diff": [
+        3.337860107421875e-05,
+        0.000118255615234375,
+        0.00020599365234375,
+        0.000133514404296875
+      ],
+      "cached_hidden_sha256": "392b4a5575242dff02b6147d007352ab974293538d9b46db6bf232ecac2970bd",
+      "cached_atom_xyz_logits_sha256": [
+        "4bfa1982b047da5b441d3aea373bfb87df4014bcac8f328c7dee8180ff45db69",
+        "e8bd74333b3399dd0804138c2f71673d162ce981b6913610bc5d79d850e2b444",
+        "551c7d2732ade516d431ee405d06d7ae3c0a572196e51b7af37ef7508856e797",
+        "1e039366c6d35a11e1e4a2340a7e2a57c6829c48663bc1d2eac46e1cf429ff36"
+      ],
+      "molecule": 0
+    },
+    {
+      "tokens": 324,
+      "cache_mode": "buffer",
+      "chunk_size": 1,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.001953125,
+          0.001953125,
+          0.001953125,
+          0.002197265625,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.00732421875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 3.829598426818848e-06,
+      "tree_logits_max_abs_diff": 0.00020599365234375,
+      "atom_xyz_logits_max_abs_diff": [
+        4.00543212890625e-05,
+        0.0001087188720703125,
+        0.000186920166015625,
+        0.00012350082397460938
+      ],
+      "cached_hidden_sha256": "6c00fd9b4bda45c385b58242d30fc73e7da1dedf0c77ef55049ba4addde7e8cb",
+      "cached_atom_xyz_logits_sha256": [
+        "5eac520b1695bf4b80bc1c476671491f5b07c9e973b281c17aa50d9c42e13e3e",
+        "aebe34103f745a9456dc0503f183fe833bd454fc22977b63744fcce9086b042e",
+        "fab252c9ee4e2132f598ef5c26426a626de91c1153458611822d22e9d486c6a7",
+        "9c81e26de7a91b19b8c97afac76d5936e0c9288ec44e97a7c11e72f97bd8858c"
+      ],
+      "molecule": 0
+    },
+    {
+      "tokens": 324,
+      "cache_mode": "buffer",
+      "chunk_size": 2,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.002197265625,
+          0.002197265625,
+          0.002197265625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.002197265625,
+          0.007080078125
+        ]
+      ],
+      "output_hidden_max_abs_diff": 3.337860107421875e-06,
+      "tree_logits_max_abs_diff": 0.00023651123046875,
+      "atom_xyz_logits_max_abs_diff": [
+        4.00543212890625e-05,
+        0.00012969970703125,
+        0.000209808349609375,
+        0.000118255615234375
+      ],
+      "cached_hidden_sha256": "796abbe76d3e00021e91f43808e80865633beece28c37a097232a3ed7132117f",
+      "cached_atom_xyz_logits_sha256": [
+        "1197681f7cc96bf2adf7d82423b32dac1bf5f2b761051ffe9089169426c3f617",
+        "fe75b8ee06c1852fa68aa66a65f1e84d040952a05c3224886f00b4c57022c566",
+        "09e7aab2bb550045df799032a05cc2b4cf3abb9a23ada7ed58a7e6794f4523fb",
+        "02d3a295e10d1e08127135436aa519fbd952c111c316e9973f1f2b0627e59657"
+      ],
+      "molecule": 0
+    },
+    {
+      "tokens": 324,
+      "cache_mode": "buffer",
+      "chunk_size": 129,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.00244140625,
+          0.001953125,
+          0.001953125,
+          0.002197265625,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.00390625,
+          0.006103515625
+        ]
+      ],
+      "output_hidden_max_abs_diff": 3.874301910400391e-06,
+      "tree_logits_max_abs_diff": 0.00020599365234375,
+      "atom_xyz_logits_max_abs_diff": [
+        3.337860107421875e-05,
+        0.000118255615234375,
+        0.00020599365234375,
+        0.000133514404296875
+      ],
+      "cached_hidden_sha256": "392b4a5575242dff02b6147d007352ab974293538d9b46db6bf232ecac2970bd",
+      "cached_atom_xyz_logits_sha256": [
+        "4bfa1982b047da5b441d3aea373bfb87df4014bcac8f328c7dee8180ff45db69",
+        "e8bd74333b3399dd0804138c2f71673d162ce981b6913610bc5d79d850e2b444",
+        "551c7d2732ade516d431ee405d06d7ae3c0a572196e51b7af37ef7508856e797",
+        "1e039366c6d35a11e1e4a2340a7e2a57c6829c48663bc1d2eac46e1cf429ff36"
+      ],
+      "molecule": 0
+    },
+    {
+      "tokens": 162,
+      "cache_mode": "concat",
+      "chunk_size": 1,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.002685546875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 2.5033950805664062e-06,
+      "tree_logits_max_abs_diff": 0.0001068115234375,
+      "atom_xyz_logits_max_abs_diff": [
+        1.9073486328125e-05,
+        3.600120544433594e-05,
+        6.4849853515625e-05,
+        5.626678466796875e-05
+      ],
+      "cached_hidden_sha256": "3a6a40a14600bff76ac05bf5d1b2c0d9e5bebd23a6479841c6c7783c95fea91b",
+      "cached_atom_xyz_logits_sha256": [
+        "9644bd748d5b8357e12fc46135565b122e8573ca59bcc7857488aafda0c9226b",
+        "013ec2dcfd01a3cfae1b09c2111181bb1530c12dd121cd7467f9646a2f3da043",
+        "e8c91412d42a2f2ab6c4b8eebe9f537212b75a4823dffc118bf92616a4f211a3",
+        "adfb4250a59ea50db9007c01827b22004d3a7e536963dce33e64011b27e59d2b"
+      ],
+      "molecule": 1
+    },
+    {
+      "tokens": 162,
+      "cache_mode": "concat",
+      "chunk_size": 2,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00341796875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 2.1457672119140625e-06,
+      "tree_logits_max_abs_diff": 0.000125885009765625,
+      "atom_xyz_logits_max_abs_diff": [
+        2.288818359375e-05,
+        2.6702880859375e-05,
+        7.62939453125e-05,
+        4.291534423828125e-05
+      ],
+      "cached_hidden_sha256": "90fb66e673eb5a3b82284cd0401529f8d6732ddbe03235622ecad216d05a199b",
+      "cached_atom_xyz_logits_sha256": [
+        "02ed98c55cbc32a252b3e940b1a3243012cee973c5cc625aedd1ace0b940a82f",
+        "07e9ec3a5da1c7e57dbad35b07392f73fd3217ec1d62f7a6f4fa61ea41afc244",
+        "5d44c5dabe7572879378fbc6717827964852b263fd9da5e807fce0017387fe8b",
+        "671ad2cddaa3a4a88746485efb521e1639d59260cf9d5ea0c649a4a33916d8ea"
+      ],
+      "molecule": 1
+    },
+    {
+      "tokens": 162,
+      "cache_mode": "concat",
+      "chunk_size": 129,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.000732421875,
+          0.0009765625,
+          0.0009765625,
+          0.0009765625,
+          0.0009765625,
+          0.0009765625,
+          0.0006103515625,
+          0.0010986328125,
+          0.000732421875,
+          0.00146484375,
+          0.00146484375,
+          0.0028076171875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 1.9073486328125e-06,
+      "tree_logits_max_abs_diff": 0.000125885009765625,
+      "atom_xyz_logits_max_abs_diff": [
+        2.09808349609375e-05,
+        3.0517578125e-05,
+        7.2479248046875e-05,
+        3.552436828613281e-05
+      ],
+      "cached_hidden_sha256": "2eb6b93b3e9a32c55d1a56e673c8fe4a885e0e18bfc38cdb9d2ee686154adfca",
+      "cached_atom_xyz_logits_sha256": [
+        "d10d86936260dcb9b4d18fc4c3d6a503af4d2a9d21c0c4554e7508c474e75836",
+        "fb0c5b9170b704974727f27f30d4888c19b89ab6c631e1fb675015a35b2e08b7",
+        "e7218b76735a9e757e3fb467e6e10cec05de17e46237ed9b7cba12ff7c7916ac",
+        "22f55085e83c05dab82db042042249d56029662c1868d949cacf05a26e2805cc"
+      ],
+      "molecule": 1
+    },
+    {
+      "tokens": 162,
+      "cache_mode": "buffer",
+      "chunk_size": 1,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.002685546875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875,
+          0.0029296875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 2.5033950805664062e-06,
+      "tree_logits_max_abs_diff": 0.0001068115234375,
+      "atom_xyz_logits_max_abs_diff": [
+        1.9073486328125e-05,
+        3.600120544433594e-05,
+        6.4849853515625e-05,
+        5.626678466796875e-05
+      ],
+      "cached_hidden_sha256": "3a6a40a14600bff76ac05bf5d1b2c0d9e5bebd23a6479841c6c7783c95fea91b",
+      "cached_atom_xyz_logits_sha256": [
+        "9644bd748d5b8357e12fc46135565b122e8573ca59bcc7857488aafda0c9226b",
+        "013ec2dcfd01a3cfae1b09c2111181bb1530c12dd121cd7467f9646a2f3da043",
+        "e8c91412d42a2f2ab6c4b8eebe9f537212b75a4823dffc118bf92616a4f211a3",
+        "adfb4250a59ea50db9007c01827b22004d3a7e536963dce33e64011b27e59d2b"
+      ],
+      "molecule": 1
+    },
+    {
+      "tokens": 162,
+      "cache_mode": "buffer",
+      "chunk_size": 2,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00244140625,
+          0.00341796875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 2.1457672119140625e-06,
+      "tree_logits_max_abs_diff": 0.000125885009765625,
+      "atom_xyz_logits_max_abs_diff": [
+        2.288818359375e-05,
+        2.6702880859375e-05,
+        7.62939453125e-05,
+        4.291534423828125e-05
+      ],
+      "cached_hidden_sha256": "90fb66e673eb5a3b82284cd0401529f8d6732ddbe03235622ecad216d05a199b",
+      "cached_atom_xyz_logits_sha256": [
+        "02ed98c55cbc32a252b3e940b1a3243012cee973c5cc625aedd1ace0b940a82f",
+        "07e9ec3a5da1c7e57dbad35b07392f73fd3217ec1d62f7a6f4fa61ea41afc244",
+        "5d44c5dabe7572879378fbc6717827964852b263fd9da5e807fce0017387fe8b",
+        "671ad2cddaa3a4a88746485efb521e1639d59260cf9d5ea0c649a4a33916d8ea"
+      ],
+      "molecule": 1
+    },
+    {
+      "tokens": 162,
+      "cache_mode": "buffer",
+      "chunk_size": 129,
+      "layer_hidden_max_abs_diff": [
+        [
+          0.000732421875,
+          0.0009765625,
+          0.0009765625,
+          0.0009765625,
+          0.0009765625,
+          0.0009765625,
+          0.0006103515625,
+          0.0010986328125,
+          0.000732421875,
+          0.00146484375,
+          0.00146484375,
+          0.0028076171875
+        ]
+      ],
+      "output_hidden_max_abs_diff": 1.9073486328125e-06,
+      "tree_logits_max_abs_diff": 0.000125885009765625,
+      "atom_xyz_logits_max_abs_diff": [
+        2.09808349609375e-05,
+        3.0517578125e-05,
+        7.2479248046875e-05,
+        3.552436828613281e-05
+      ],
+      "cached_hidden_sha256": "2eb6b93b3e9a32c55d1a56e673c8fe4a885e0e18bfc38cdb9d2ee686154adfca",
+      "cached_atom_xyz_logits_sha256": [
+        "d10d86936260dcb9b4d18fc4c3d6a503af4d2a9d21c0c4554e7508c474e75836",
+        "fb0c5b9170b704974727f27f30d4888c19b89ab6c631e1fb675015a35b2e08b7",
+        "e7218b76735a9e757e3fb467e6e10cec05de17e46237ed9b7cba12ff7c7916ac",
+        "22f55085e83c05dab82db042042249d56029662c1868d949cacf05a26e2805cc"
+      ],
+      "molecule": 1
+    }
+  ],
+  "generation": [
+    {
+      "cfg_scale": 0.0,
+      "trajectories": 8,
+      "tokens_exact": true,
+      "coordinates_exact": true,
+      "score_max_abs_diff": 0.0
+    },
+    {
+      "cfg_scale": 1.0,
+      "trajectories": 8,
+      "tokens_exact": true,
+      "coordinates_exact": true,
+      "score_max_abs_diff": 0.0
+    },
+    {
+      "cfg_scale": 1.5,
+      "trajectories": 8,
+      "tokens_exact": true,
+      "coordinates_exact": true,
+      "score_max_abs_diff": 0.0
+    }
+  ],
+  "seconds": {
+    "concat": [
+      10.113275792449713,
+      11.877156935632229,
+      12.166083920747042
+    ],
+    "buffer": [
+      11.724796649068594,
+      11.876064211130142,
+      12.079085379838943
+    ]
+  },
+  "median_seconds": {
+    "concat": 11.877156935632229,
+    "buffer": 11.876064211130142
+  },
+  "peak_allocated_bytes": {
+    "concat": [
+      639417344,
+      639417344,
+      639417344
+    ],
+    "buffer": [
+      689546240,
+      689546240,
+      689546240
+    ]
+  },
+  "scope": "FP32 on shared A800; alternated mode order after separate warmup/comparison runs; numerical equivalence is not cross-device bitwise identity",
+  "gpu": "NVIDIA A800-SXM4-80GB",
+  "default_cache_mode": "concat"
+}

@@ -36,3 +36,19 @@ buffer-versus-concat hidden states and atom/XYZ logits for each fixed chunk size
 Full-prefix numerical agreement and equivalence of two storage implementations
 are different claims. A small final hidden-state difference can be amplified by
 the readout; neither raw-logit nor trajectory equality is inferred from it.
+
+## Real-weight result
+
+On two held-out molecular trajectories, both storage modes produce bitwise equal
+cached hidden states and atom/XYZ logits at chunk sizes 1, 2 and 129. For eight
+generated molecules at each CFG scale 0/1/1.5, all 24 token sequences, coordinates
+and sampling scores are exact matches. This validates the storage change on that
+cohort; the separate full-prefix absolute threshold remains failed.
+
+Three alternating shared-A800 timings give medians 11.8772 s for concatenation
+and 11.8761 s for buffering. Peak PyTorch allocations are 639.4 and 689.5 MB,
+respectively. This run shows no meaningful speed improvement and higher peak
+allocation. The default remains `concat`; `buffer` is an explicit experimental
+option, not a recommended acceleration. The complete measurements and the original
+failed prefix comparison are archived as `experiments/kv_buffer_20261112.json`
+and `experiments/prefix_absolute_threshold_failure_20261112.json`.
