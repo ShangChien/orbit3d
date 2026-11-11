@@ -24,3 +24,19 @@ Regression tests compare actual fitted sklearn inverse transforms, ordinary and
 differentiable ensemble values, physical fold dispersion with unequal fold
 counts, and finite-difference coordinate derivatives. Nonlinear stacking remains
 a black-box predictor and is not replaced with an averaging surrogate.
+
+The saved configuration, model-selection order, target scaler and complete fold
+sets are required for reloading. A missing selected model or stacking file is an
+incomplete checkpoint, not permission to average a different subset. An explicit
+`infer_choices` subset retains native Uni-QSAR's averaging semantics, including
+when the saved method was vote. Target names are never invented to hide a shape
+mismatch.
+
+Only verified linear regression estimator types use extracted coefficients.
+Classification stacks retain their native probability predictions: even a linear
+SVC's calibrated probabilities are not the sigmoid of its decision function.
+LightGBM checkpoints require the real compatible LightGBM runtime; the former
+partial tree parser has been removed. An auxiliary head cannot supply gradients
+for another model's reported value. Use it as a separately declared Oracle if
+needed. Tests cover actual serialized ensembles, missing folds/scalers, a fitted
+probability-calibrated linear classifier and native Ridge prediction parity.

@@ -35,3 +35,22 @@ existing conditioner behavior is mathematically preserved when added targets
 are inactive, with floating-point comparisons checked separately. The migrated
 checkpoint blocks conditional inference until labelled adaptation is completed.
 It records both source checkpoint/data hashes and the new-target training status.
+
+## Predeclared generator pilot
+
+The four-target adaptation starts from the unweighted 5000-step control model,
+without selecting between the element-weighting experiment's outcomes. Its
+structural backbone remains frozen; only the expanded conditioner and readout
+are trained for 2000 steps, batch 8, learning rate 2e-4 and seed 42, using the
+same 8188 encodable training conformers. No GRPO or element reweighting is used.
+Calibration uses 512 unused validation molecules, separate from fitted and
+model-selection records.
+
+Three windows are evaluated with inference seeds 2026–2028 and 64 proposals per
+seed: orbitals only (HOMO −8.2 to −7.2, LUMO −0.6 to 0.8), vertical excitations
+only (S1 2.5–3.5, T1 1.5–2.5), and all four jointly, in eV. Unspecified targets
+remain inactive. Ranking/refinement budgets and default sampling temperatures
+are unchanged. Both the optimizing 3D model and the independent four-target
+fingerprint model evaluate the retained molecules; all proposals remain in the
+success denominator. The vertical S1−T1 gap is derived from paired predictions,
+not introduced as an independently inconsistent fifth target.

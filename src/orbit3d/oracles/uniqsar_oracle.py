@@ -1,20 +1,10 @@
-"""
-Standalone, Zero-Disk-IO & Differentiable 3D Bridge for Trained Uni-QSAR Checkpoints
-====================================================================================
-Supports:
-1. Full or Partial Model Selection (`selected_keys.txt`, `infer_choices`, single-model runs,
-   missing `UniMolModel`, missing `BERTModel`, or missing `MLModel`s, plus `MLPModel`).
-2. Single-Target & Multi-Target Tasks (`regression`, `multilabel_regression` with K targets,
-   `classification`, `multilabel_classification`, `multiclass`).
-3. All Ensembler Modes (`stacking` with single or K-list meta-models, `average`, `vote`).
-4. All TargetScaler Modes (`StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`,
-   `PowerTransformer` Yeo-Johnson/Box-Cox, `log1p`, or `list` of K scalers for multi-target)
-   in both NumPy and differentiable PyTorch!
-5. Graceful Fallback when `UniMolModel` is absent (`has_3d_unimol == False`):
-   - `predict_3d_mols` skips 3D feature extraction for maximum speed;
-   - `forward_differentiable_3d` either uses an optional `aux_3d_head` or attaches a clean
-     zero-gradient graph (`0.0 * coords.sum()`) so Stage 5 seamlessly falls back to pure
-     `DPA-4` physical conformer relaxation without crashing `.backward()`.
+"""In-memory bridge for saved Uni-QSAR ensembles.
+
+Prediction preserves selected model order, fitted scalers and estimator behavior.
+Linear regression stacks expose coordinate derivatives through trained Uni-Mol
+members. General/classification stacks use their native black-box predictions.
+A purely 1D/2D ensemble has zero coordinate derivative; no auxiliary gradient is
+substituted for the gradient of its reported prediction.
 """
 
 from __future__ import annotations
@@ -405,91 +395,18 @@ def build_standalone_mlp_from_state_dict(sd: Dict[str, torch.Tensor]) -> nn.Modu
 # ==============================================================================
 # 4. Unpickling Shim for `MLModel`, `LightGBM` & `Stacking` (`joblib.load`)
 # ==============================================================================
-def _eval_lgbm_model_str(model_str: str, x_2d: np.ndarray) -> np.ndarray:
-    """Pure-Python bit-exact evaluator for LightGBM v3 `Booster.handle` tree dump string."""
-    trees = []
-    for block in model_str.split("\nTree=")[1:]:
-        lines = block.splitlines()
-        kv = {}
-        for ln in lines[1:]:
-            if "=" in ln:
-                k, v = ln.split("=", 1)
-                kv[k.strip()] = v.strip()
-            elif ln.startswith("Tree") or ln.startswith("end of trees"):
-                break
-        if "leaf_value" not in kv:
-            continue
-        leaf_val = [float(v) for v in kv["leaf_value"].split()]
-        if "split_feature" not in kv or not kv["split_feature"]:
-            trees.append(([], [], [], [], leaf_val))
-            continue
-        sf = [int(v) for v in kv["split_feature"].split()]
-        th = [float(v) for v in kv["threshold"].split()]
-        lc = [int(v) for v in kv["left_child"].split()]
-        rc = [int(v) for v in kv["right_child"].split()]
-        trees.append((sf, th, lc, rc, leaf_val))
-
-    out = np.zeros(x_2d.shape[0], dtype=np.float64)
-    for row_idx in range(x_2d.shape[0]):
-        row = x_2d[row_idx]
-        s = 0.0
-        for sf, th, lc, rc, leaf_val in trees:
-            if not sf:
-                s += leaf_val[0]
-                continue
-            node = 0
-            while node >= 0:
-                if row[sf[node]] <= th[node]:
-                    node = lc[node]
-                else:
-                    node = rc[node]
-            s += leaf_val[~node]
-        out[row_idx] = s
-    return out
-
-
 def _register_qsar_pickle_shims():
-    """Registers lightweight `qsar.models.mlmodelzoo` and `lightgbm` shims if not installed."""
-    try:
-        import lightgbm  # noqa: F401
-    except ImportError:
-        m_lgb = types.ModuleType("lightgbm")
-        m_lgb_sk = types.ModuleType("lightgbm.sklearn")
-        m_lgb_basic = types.ModuleType("lightgbm.basic")
+    """Restore Uni-QSAR wrapper classes; estimators use their installed libraries.
 
-        class _DummyBooster:
-            def __setstate__(self, state):
-                self.__dict__.update(state)
-
-        class _DummyLGBM:
-            def __setstate__(self, state):
-                self.__dict__.update(state)
-
-            def predict(self, X):
-                model_str = getattr(self._Booster, "handle", "")
-                if isinstance(model_str, bytes):
-                    model_str = model_str.decode("utf-8")
-                return _eval_lgbm_model_str(model_str, np.asarray(X, dtype=np.float64))
-
-            def predict_proba(self, X):
-                raw = self.predict(X)
-                prob1 = 1.0 / (1.0 + np.exp(-raw))
-                return np.stack([1.0 - prob1, prob1], axis=-1)
-
-        m_lgb.LGBMRegressor = _DummyLGBM
-        m_lgb.LGBMClassifier = _DummyLGBM
-        m_lgb_sk.LGBMRegressor = _DummyLGBM
-        m_lgb_sk.LGBMClassifier = _DummyLGBM
-        m_lgb_basic.Booster = _DummyBooster
-        sys.modules["lightgbm"] = m_lgb
-        sys.modules["lightgbm.sklearn"] = m_lgb_sk
-        sys.modules["lightgbm.basic"] = m_lgb_basic
-
+    In particular, LightGBM's serialized predictor must be executed by LightGBM:
+    a partial tree parser cannot preserve categorical/missing-value/objective rules.
+    """
     try:
         import qsar.models.mlmodelzoo  # noqa: F401
         return
-    except ImportError:
-        pass
+    except ModuleNotFoundError as error:
+        if not error.name.startswith("qsar"):
+            raise
 
     m_qsar = types.ModuleType("qsar")
     m_models = types.ModuleType("qsar.models")
@@ -499,8 +416,8 @@ def _register_qsar_pickle_shims():
         """Supports all single-target & multi-target tasks (`regression`, `multilabel_regression`, etc.)."""
 
         def _predict(self, x):
-            task = getattr(self, "task", "regression")
-            num_classes = getattr(self, "num_classes", 1)
+            task = self.task
+            num_classes = self.num_classes
             if task == "classification":
                 return self.model.predict_proba(x)[:, 1:]
             elif task == "multiclass":
@@ -518,9 +435,7 @@ def _register_qsar_pickle_shims():
                     y_pred[:, i] = np.squeeze(self.model[i].predict(x))
                 return y_pred
             else:
-                if isinstance(self.model, list):
-                    return np.stack([np.squeeze(m.predict(x)) for m in self.model], axis=-1)
-                return self.model.predict(x).reshape(x.shape[0], -1)
+                raise ValueError(f"Unsupported saved Uni-QSAR task: {task}")
 
     for cls_name in ["MLModelZoo", "LR", "SVM", "ExtraTree", "GBDT"]:
         setattr(m_zoo, cls_name, type(cls_name, (_BaseShim,), {}))
@@ -550,7 +465,7 @@ class UniQSARTrainedBridge:
     - Single-target (`num_classes == 1`) & Multi-target (`num_classes == K > 1`) tasks
     - Arbitrary subsets of trained models (`infer_choices`, missing `UniMol`, missing `ML`s, etc.)
     - `stacking`, `average`, and `vote` ensemble methods
-    - Optional `aux_3d_head` fallback when no 3D `UniMolModel` was trained (`has_3d_unimol == False`)
+    - Zero coordinate derivatives for trained ensembles containing only 1D/2D members
     """
 
     def __init__(
@@ -562,36 +477,42 @@ class UniQSARTrainedBridge:
     ):
         self.model_dir = model_dir
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
-        self.aux_3d_head = aux_3d_head.to(self.device) if aux_3d_head is not None else None
+        if aux_3d_head is not None:
+            raise ValueError("An auxiliary head is not the derivative of this trained ensemble; use its own Oracle explicitly")
         _register_qsar_pickle_shims()
 
-        # 1. Parse config.yaml (with safe defaults if partially missing)
+        # The saved training contract determines prediction semantics.
         cfg_path = os.path.join(model_dir, "config.yaml")
-        if os.path.exists(cfg_path):
-            with open(cfg_path, "r") as f:
-                self.config = yaml.safe_load(f) or {}
-        else:
-            self.config = {}
+        with open(cfg_path, "r") as f:
+            self.config = yaml.safe_load(f)
+        if not isinstance(self.config, dict):
+            raise ValueError("Uni-QSAR config.yaml must contain the saved training configuration")
 
         base_cfg = self.config.get("Base", {})
         data_cfg = self.config.get("Datahub", {})
         ens_cfg = self.config.get("Ensembler", {})
         feat_cfg = self.config.get("Featurehub", {})
 
-        self.task: str = base_cfg.get("task", self.config.get("task", "regression"))
-        self.num_classes: int = int(data_cfg.get("num_classes", self.config.get("num_classes", 1)))
+        self.task: str = base_cfg.get("task", self.config.get("task"))
+        if self.task not in {"regression", "multilabel_regression", "classification", "multilabel_classification", "multiclass"}:
+            raise ValueError("Missing or unsupported Uni-QSAR task")
+        self.num_classes: int = int(data_cfg.get("num_classes", self.config.get("num_classes", 0)))
         self.multiclass_cnt: Optional[int] = data_cfg.get("multiclass_cnt", None)
-        self.n_splits: int = int(data_cfg.get("split_n", 5))
-        raw_tcols = data_cfg.get("target_cols", self.config.get("target_cols", "TARGET"))
+        self.n_splits: int = int(data_cfg.get("split_n", 0))
+        if self.num_classes < 1 or self.n_splits < 1:
+            raise ValueError("Saved num_classes and split_n must be positive")
+        raw_tcols = data_cfg.get("target_cols", self.config.get("target_cols", []))
         if isinstance(raw_tcols, str):
             self.target_cols: List[str] = [c.strip() for c in raw_tcols.split(",") if c.strip()]
         else:
             self.target_cols = list(raw_tcols)
-        if len(self.target_cols) != self.num_classes and self.num_classes > 1:
-            self.target_cols = [f"TARGET_{i}" for i in range(self.num_classes)]
+        if len(self.target_cols) != self.num_classes:
+            raise ValueError("Saved target_cols do not match num_classes")
 
         # Output dim per base model
-        if self.task == "multiclass" and self.multiclass_cnt is not None:
+        if self.task == "multiclass":
+            if self.multiclass_cnt is None or int(self.multiclass_cnt) < 2:
+                raise ValueError("Multiclass prediction requires the saved multiclass_cnt")
             self.output_dim = int(self.multiclass_cnt)
         else:
             self.output_dim = self.num_classes
@@ -605,11 +526,10 @@ class UniQSARTrainedBridge:
 
         # 2. Load TargetScaler & Classification Thresholds (`threshold.txt`)
         scaler_path = os.path.join(model_dir, "target_scaler.ss")
-        self.target_normalize = data_cfg.get("target_normalize", "auto")
+        self.target_normalize = data_cfg.get("target_normalize", "none")
         if (
             self.task in ["regression", "multilabel_regression"]
             and self.target_normalize != "none"
-            and os.path.exists(scaler_path)
         ):
             self.scaler = joblib.load(scaler_path)
         else:
@@ -636,16 +556,17 @@ class UniQSARTrainedBridge:
         if infer_choices is not None:
             # User explicitly requested a subset of models (e.g. infer_choices=["NN01", "ML02"])
             self.selected_keys = [
-                d for d in all_valid_dirs if any(d.startswith(c) or c in d for c in infer_choices)
+                d for d in all_valid_dirs if any(d.startswith(c) for c in infer_choices)
             ]
         elif os.path.exists(sel_path):
             raw_keys = np.loadtxt(sel_path, dtype=str, delimiter=",").tolist()
             raw_keys = [raw_keys] if isinstance(raw_keys, str) else list(raw_keys)
-            # Keep exact order in selected_keys.txt, filtering only to models present on disk
-            self.selected_keys = [k for k in raw_keys if k in all_valid_dirs]
+            self.selected_keys = raw_keys
+            missing = set(raw_keys) - set(all_valid_dirs)
+            if missing:
+                raise FileNotFoundError(f"Saved ensemble members are missing: {sorted(missing)}")
         else:
-            # Fallback when EnsembleModel/selected_keys.txt wasn't generated (e.g. single model fit)
-            self.selected_keys = all_valid_dirs
+            raise FileNotFoundError(sel_path)
 
         if not self.selected_keys:
             raise ValueError(f"No valid trained base models found in {model_dir} (choices={infer_choices})")
@@ -660,6 +581,9 @@ class UniQSARTrainedBridge:
                 [f for f in os.listdir(subdir) if re.match(r"^model_\d+\.pth$", f)],
                 key=lambda x: int(x.split("_")[1].split(".")[0]),
             )
+            expected_folds = [f"model_{i}.pth" for i in range(self.n_splits)]
+            if fold_files != expected_folds:
+                raise ValueError(f"Incomplete fold set for {key}: expected {expected_folds}, found {fold_files}")
             if key.startswith("ML"):
                 self.ml_folds[key] = [joblib.load(os.path.join(subdir, f)) for f in fold_files]
             elif "UniMolModel" in key:
@@ -698,9 +622,13 @@ class UniQSARTrainedBridge:
                         p.requires_grad_(False)
                     folds.append(m.to(self.device))
                 self.nn_folds[key] = folds
+            else:
+                raise ValueError(f"Unsupported saved base model: {key}")
 
         # 5. Determine Ensemble Method & Load Stacking Meta-Models (if applicable)
-        raw_method = ens_cfg.get("method", "stacking") if isinstance(ens_cfg, dict) else "stacking"
+        raw_method = ens_cfg.get("method")
+        if raw_method not in {"stacking", "average", "vote"}:
+            raise ValueError("Missing or unsupported saved ensemble method")
         ens_dir = os.path.join(model_dir, "EnsembleModel")
         stack_files = (
             sorted(
@@ -711,8 +639,8 @@ class UniQSARTrainedBridge:
             else []
         )
 
-        # Note: Just like `ensembler.py#L167`, if infer_choices is set, or len(selected_keys) == 1,
-        # or stacking files don't exist / don't match the number of selected models, use `average`.
+        # Native inference averages explicit subsets and single-member ensembles.
+        # Missing trained stacking folds do not authorize a different ensemble.
         self.stacking_models: List = []
         self.stacking_linear_weights: Optional[np.ndarray] = None  # Shape: (F, K, M * K)
         self.stacking_linear_biases: Optional[np.ndarray] = None   # Shape: (F, K)
@@ -721,8 +649,10 @@ class UniQSARTrainedBridge:
             raw_method == "stacking"
             and infer_choices is None
             and len(self.selected_keys) > 1
-            and len(stack_files) > 0
         ):
+            expected_stacks = [f"stacking_{i}.pth" for i in range(self.n_splits)]
+            if stack_files != expected_stacks:
+                raise ValueError(f"Incomplete stacking folds: expected {expected_stacks}, found {stack_files}")
             loaded_stacks = [joblib.load(os.path.join(ens_dir, f)) for f in stack_files]
             expected_meta_dim = len(self.selected_keys) * self.output_dim
             if self._try_extract_linear_stacking(loaded_stacks, expected_meta_dim):
@@ -731,7 +661,7 @@ class UniQSARTrainedBridge:
             else:
                 self.ensemble_method = "stacking_general"
                 self.stacking_models = loaded_stacks
-        elif raw_method == "vote":
+        elif raw_method == "vote" and infer_choices is None and len(self.selected_keys) > 1:
             self.ensemble_method = "vote"
         else:
             self.ensemble_method = "average"
@@ -753,9 +683,18 @@ class UniQSARTrainedBridge:
     def _try_extract_linear_stacking(self, loaded_stacks: List, expected_meta_dim: int) -> bool:
         """
         Extracts linear coefficients of shape `(F, K, M * K)` and intercepts `(F, K)`
-        for both single-target (`st.model` is a single Ridge/LogReg) and multi-target
-        (`st.model` is a list of K Ridge/LogReg estimators).
+        for verified linear regression estimators only. Classification probabilities
+        can include calibration or multiclass transforms not encoded in coef_.
         """
+        from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+
+        if self.task not in {"regression", "multilabel_regression"}:
+            return False
+        linear_types = (LinearRegression, Ridge, Lasso, ElasticNet)
+        if any(not all(type(est) in linear_types for est in
+                       (st.model if isinstance(st.model, list) else [st.model]))
+               for st in loaded_stacks):
+            return False
         weights_f = []
         biases_f = []
         for st in loaded_stacks:
@@ -992,8 +931,6 @@ class UniQSARTrainedBridge:
                 meta_vec = stacked_m_k.reshape(-1)  # (M * K,) matching np.concatenate(y_pred_list, axis=-1)
                 # (F, K, M*K) @ (M*K,) + (F, K) -> (F, K)
                 fold_preds = np.einsum("fkm,m->fk", self.stacking_linear_weights, meta_vec) + self.stacking_linear_biases
-                if self.task in ["classification", "multilabel_classification"]:
-                    fold_preds = 1.0 / (1.0 + np.exp(-fold_preds))
                 norm_mean = np.mean(fold_preds, axis=0)  # (K,)
                 uncertainty_groups = [fold_preds]
             elif self.ensemble_method == "stacking_general":
@@ -1090,14 +1027,11 @@ class UniQSARTrainedBridge:
         - Returns `(y_pred, y_std)`:
           - Scalar tensors if `output_dim == 1`
           - Shape `(K,)` tensors if `output_dim == K > 1`
-        - If `self.has_3d_unimol == False` (no UniMolModel in the trained Uni-QSAR directory):
-          - Uses `self.aux_3d_head(coords, atom_symbols)` if provided;
-          - Otherwise returns exact 1D/2D `Uni-QSAR` prediction attached with `0.0 * coords.sum()`
-            so `.backward()` produces clean zero coordinate gradients (`coords.grad = 0`) and
-            Stage 5 seamlessly performs pure `DPA-4` physical conformer relaxation!
+        Without a trained Uni-Mol member, the exact 1D/2D prediction is independent
+        of coordinates and its coordinate derivative is zero.
         """
         if self.ensemble_method == "stacking_general":
-            raise NotImplementedError("Nonlinear stacking uses true predict_3d_mols with black-box acceptance")
+            raise NotImplementedError("This stack uses its native predictor through predict_3d_mols and black-box acceptance")
         cached_1d2d = self._eval_1d_2d_single(smiles)
 
         model_tensors: List[torch.Tensor] = []
@@ -1119,8 +1053,6 @@ class UniQSARTrainedBridge:
             w_t = torch.tensor(self.stacking_linear_weights, dtype=coords.dtype, device=coords.device)  # (F, K, M*K)
             b_t = torch.tensor(self.stacking_linear_biases, dtype=coords.dtype, device=coords.device)   # (F, K)
             fold_preds = torch.einsum("fkm,m->fk", w_t, meta_vec) + b_t  # (F, K)
-            if self.task in ["classification", "multilabel_classification"]:
-                fold_preds = torch.sigmoid(fold_preds)
             norm_mean = fold_preds.mean(dim=0)  # (K,)
             uncertainty_groups = [fold_preds]
         elif self.ensemble_method == "vote":
@@ -1138,15 +1070,9 @@ class UniQSARTrainedBridge:
         # vector_norm has a defined zero subgradient for identical folds.
         y_std_real = torch.linalg.vector_norm(residuals, dim=0)
 
-        # Graceful fallback when no 3D UniMol model is present in the checkpoint
+        # The derivative of a coordinate-independent prediction is exactly zero.
         if not self.has_3d_unimol:
-            if self.aux_3d_head is not None:
-                aux_val = self.aux_3d_head(coords, atom_symbols).view(self.output_dim)
-                # Straight-through estimator: exact 1D/2D Uni-QSAR value + 3D surrogate gradient
-                y_pred_real = y_pred_real.detach() + (aux_val - aux_val.detach())
-            else:
-                # Attach zero-weight graph connection so `.backward()` never raises an error
-                y_pred_real = y_pred_real + 0.0 * coords.sum()
+            y_pred_real = y_pred_real + 0.0 * coords.sum()
 
         if self.output_dim == 1:
             return y_pred_real.squeeze(0), y_std_real.squeeze(0)
