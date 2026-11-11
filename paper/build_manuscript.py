@@ -121,6 +121,22 @@ def build():
         hit = row['joint_success_rate']['mean'] * 100
         lines.append(f"| {row['variant'].replace('_', ' ')} | {'on' if row['electron_parity'] == 0 else 'off'} | {valid:.2f} | {hit:.2f} |")
     lines += ['', 'Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.']
+    lines += ['', '| GRPO objective | Valid / 192 | Optimizing-oracle joint hits / 192 | Independent-surrogate joint hits / 192 |',
+              '| :--- | ---: | ---: | ---: |']
+    ablation = current['reward_ablation_20261112.json']
+    for variant in ['full', 'no_kl', 'no_physics', 'no_replay']:
+        runs = [row for row in ablation['runs'] if row['variant'] == variant]
+        assert len(runs) == 3 and sum(row['attempted'] for row in runs) == 192
+        lines.append(f"| {variant.replace('_', ' ')} | {sum(row['raw_valid'] for row in runs)} | "
+                     f"{sum(row['qualified'] for row in runs)} | "
+                     f"{sum(row['independent']['independent_joint_successes'] for row in runs)} |")
+    lines += ['', 'Table: Fifty GRPO updates, training seed 42, three inference seeds, and identical float64 energy reporting. The independent evaluator is a separately trained fingerprint surrogate, not DFT truth.']
+    matched = current['ocelot8192_evaluation_20261112.json']['evaluation']['matched_previous_test']
+    lines += ['', '| Matched OCELOT test (256 structures) | 4096 training records, MAE (eV) | 8192 training records, MAE (eV) |',
+              '| :--- | ---: | ---: |']
+    for key in ['homo', 'lumo']:
+        lines.append(f"| {key.upper()} | {matched['previous_model_mae_eV'][key]:.4f} | {matched['new_model_mae_eV'][key]:.4f} |")
+    lines += ['', 'Table: Exact same test structures and reconstructed geometries; no overlap with either training set. Expanding training improves HOMO and slightly worsens LUMO on this test.']
     text = re.sub(r'<!-- BEGIN CURRENT RESULTS -->.*?<!-- END CURRENT RESULTS -->',
                   lambda _: '<!-- BEGIN CURRENT RESULTS -->\n'+'\n'.join(lines)+'\n<!-- END CURRENT RESULTS -->', text, flags=re.S)
     text = re.sub(

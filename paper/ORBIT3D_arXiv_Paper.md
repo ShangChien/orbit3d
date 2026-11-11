@@ -162,6 +162,22 @@ Table: Three inference seeds and identical proposal pools, before applying the l
 | v3 smooth | on | 82.29 | 2.08 |
 
 Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.
+
+| GRPO objective | Valid / 192 | Optimizing-oracle joint hits / 192 | Independent-surrogate joint hits / 192 |
+| :--- | ---: | ---: | ---: |
+| full | 161 | 8 | 8 |
+| no kl | 159 | 2 | 3 |
+| no physics | 158 | 3 | 5 |
+| no replay | 169 | 7 | 8 |
+
+Table: Fifty GRPO updates, training seed 42, three inference seeds, and identical float64 energy reporting. The independent evaluator is a separately trained fingerprint surrogate, not DFT truth.
+
+| Matched OCELOT test (256 structures) | 4096 training records, MAE (eV) | 8192 training records, MAE (eV) |
+| :--- | ---: | ---: |
+| HOMO | 0.2995 | 0.2863 |
+| LUMO | 0.2379 | 0.2431 |
+
+Table: Exact same test structures and reconstructed geometries; no overlap with either training set. Expanding training improves HOMO and slightly worsens LUMO on this test.
 <!-- END CURRENT RESULTS -->
 
 The three ranking runs use identical proposal tokens for each seed, with a fixed
@@ -169,7 +185,10 @@ The three ranking runs use identical proposal tokens for each seed, with a fixed
 calls, so its gain is a selection result, not an equal-oracle-budget superiority
 claim. Self-ranking does not improve the measured joint success over first-valid.
 The initial BF16 policy comparison failed behavior/recomputed-probability checks;
-GRPO now uses FP32 throughout and its effectiveness remains under evaluation.
+GRPO now uses FP32 throughout. In the matched 50-update pilot, removing KL or
+physical feedback reduces joint hits; removing replay leaves the independent
+joint count unchanged. These are single-training-seed results, not evidence of
+robust gains across training runs.
 
 Larger OCELOT adaptation improves domain coverage without establishing conditional
 success: the continued 4096-record run has 32 chemically valid proposals, 5 domain-
@@ -179,7 +198,24 @@ structures. This disagreement is retained rather than choosing the favorable
 surrogate. Independent calibration on 512 unused validation structures achieves
 91.4% joint test coverage, but mean interval widths are 1.94/1.73 eV and ensemble
 standard deviation correlates weakly with errors; uncertainty-based reward is
-disabled by default.
+disabled by default. Expanding the adapter training set to 8192 records yields
+HOMO/LUMO MAEs of 0.2878/0.2429 eV on a separate 512-structure test. On the original
+256 structures, only HOMO improves. A disjoint 512-record calibration set gives
+90.82% joint test coverage with mean widths 1.72/1.78 eV; spread/error Spearman
+correlations remain only 0.173/0.105. Exact adapter/scaler replay is separated
+from repeated native-backbone floating-point variation.
+
+An explicit depth-six to depth-seven migration retains 0.24 Angstrom leaf cells
+and expands the spatial range to 30.72 Angstrom. After backbone adaptation, a
+64-proposal diagnostic produces 48 valid structures, including three above the
+old 40-atom limit. It does not demonstrate reliable generation throughout the
+expanded spatial range. A separate structural-only adaptation adds boron using
+512 closed-shell MIM-Flow structures. Of 64 attempts, 33 are valid and ten contain
+boron; all ten are novel relative to the adaptation structures. Energy-only
+refinement preserves their graphs and lowers mean RMS force from 4.29 to 0.41
+eV/Angstrom, with nine below 0.5. This model has no validated boron property
+conditioner. The original 450-channel spectra are retained separately and are
+not relabeled as orbital energies.
 
 The entire retained cohort of the earlier 1024-record/4000-step adaptation consists
 of one molecule. At an explicit IP-tuned LC-wPBE/def2-SVP diagnostic level, its
@@ -241,7 +277,7 @@ The property evaluator used to optimize and select molecules must be distinguish
 
 Each run must identify the code revision, environment, input/split versions, tokenizer specification, full target intervals, model and oracle checkpoint hashes, electronic states, seed policy, sampling budget, and filtering rules. Reload checks compare every molecule's tokens, graph, coordinates, and predictions under declared tolerances. Independent random streams do not by themselves guarantee bitwise agreement across batching strategies or attention kernels.
 
-The pilot table is generated from the accompanying JSON archive; source hashes and protocol notes are included in its provenance manifest. The archive does not contain all weights and raw sample-level records needed to rerun or independently re-score the experiment. Current package runs separately save full source snapshots, runtime versions, checkpoint hashes, raw trajectories and per-attempt states. A 32-candidate/8-export batch-path replay passes at 1e-5 prediction/coordinate tolerance. Serial-versus-batch comparison preserves all tokens and acceptance decisions, with maximum force difference 1.29e-5 eV/Å under a predeclared 1e-4 cross-path tolerance; same-path replay retains its tighter tolerance. Broader scientific effectiveness remains a separate experimental requirement. The historical dense-grid CLI and the octree pilot must not be labeled as the same trained model.
+The pilot table is generated from the accompanying JSON archive; source hashes and protocol notes are included in its provenance manifest. The archive does not contain all weights and raw sample-level records needed to rerun or independently re-score the experiment. Current package runs separately save full source snapshots, runtime versions, checkpoint hashes, raw trajectories and per-attempt states. A 32-candidate/8-export batch-path replay passes at 1e-5 prediction/coordinate tolerance. An earlier serial/batch comparison preserved all tokens and decisions. After correcting physical-energy accumulation to float64, strict zero-tolerance acceptance differs for one of eight structures; an explicit 1e-5 eV/property tolerance restores matched decisions within the declared cross-path numerical thresholds. Both outcomes are retained. Removing identity KV-cache row copies preserves all tokens, coordinates and scores in an eight-trajectory test; three shared-GPU repeats change median latency from 8.96 to 7.94 seconds. This is not a general throughput guarantee. Broader scientific effectiveness remains a separate experimental requirement. The historical dense-grid CLI and the octree pilot must not be labeled as the same trained model.
 
 ## 5. Limitations and scope
 
@@ -257,7 +293,7 @@ Finally, autoregressive decoding, candidate selection, ensemble evaluation, and 
 
 ORBIT-3D formulates interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, interval conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
 
-The archived octree/GVP results motivate this formulation but do not validate every component of the unified system. The next evidential step is a matched-budget evaluation of the corrected implementation, including independent property checks and state-specific chemical validation. This distinction keeps the architectural claim precise and makes subsequent improvements measurable.
+The archived octree/GVP results motivate this formulation but do not validate every component of the unified system. The corrected implementation now has matched-budget conditioning and reward ablations, independent surrogate checks, and a state-specific quantum diagnostic. Multiple training seeds, broader target intervals, and independent quantum cohorts remain necessary for general effectiveness claims. This distinction keeps the architectural claim precise and makes subsequent improvements measurable.
 
 ## References
 
