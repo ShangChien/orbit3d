@@ -43,9 +43,20 @@ dependencies = [
 
 [project.optional-dependencies]
 quantum = ["pyscf==2.12.1", "geometric==1.1"]
+quantum-gpu = [
+    "pyscf==2.12.1", "geometric==1.1",
+    "gpu4pyscf-cuda12x==1.9.1; sys_platform == 'linux'",
+    "gpu4pyscf-libxc-cuda12x==0.9.0; sys_platform == 'linux'",
+    "cupy-cuda12x==13.4.1; sys_platform == 'linux'",
+    "cutensor-cu12==2.2.0; sys_platform == 'linux'",
+]
 octree = ["lmdb>=1.4", "numba>=0.59", "tqdm>=4.66"]
 deepmd = [
-    "deepmd-kit>=3.0.0b4",
+    "deepmd-kit==3.2.0",
+    "e3nn==0.5.9",
+    "warp-lang==1.10.1",
+    "nvalchemi-toolkit-ops==0.3.1; sys_platform == 'linux'",
+    "vesin[torch]; sys_platform != 'linux'",
 ]
 hyff = [
     "safetensors>=0.4.0",
@@ -73,6 +84,12 @@ packages = ["src/orbit3d"]
 managed = true
 package = true
 default-groups = ["dev"]
+# PyPI's 3.2.0 C++ wheel targets Torch 2.11. Use the supported Python
+# PyTorch backend with our pinned Torch; DPA inference still runs on CUDA.
+no-binary-package = ["deepmd-kit"]
+
+[tool.uv.extra-build-variables]
+deepmd-kit = { DP_ENABLE_TENSORFLOW = "0", DP_ENABLE_PYTORCH = "0" }
 
 [dependency-groups]
 dev = [

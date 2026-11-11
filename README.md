@@ -36,11 +36,31 @@ uv build --wheel
 python scripts/check_wheel.py
 ```
 
-DPA4 experiments additionally need a compatible DeepMD runtime and mounted DPA4
-weights. Remote validation used PyTorch 2.7.1 and the available DeepMD SeZM runtime;
-this does not establish GPU compatibility of every optional package or Docker
-image. The wheel includes the pinned Uni-3DAR runtime and its license. Weights and
-raw data are obtained separately; see [data notes](data/README.md).
+For the tested Linux/CUDA DPA4 runtime, use `uv sync --frozen --extra octree
+--extra deepmd` and mount the DPA4 weights separately. The lock uses Torch2.7.1
+and official DeepMD3.2.0 source with its Python PyTorch backend: the published
+C++ wheel targets Torch2.11 and is incompatible. `pyproject.toml` fixes the build
+switches and the SeZM dependencies (e3nn and Warp/nvalchemi neighbor lists).
+CUDA still executes model inference. A fresh environment passed 64-molecule
+serial/batch checks; see [installation evidence](docs/experiments/clean_deepmd_native_20261111.json).
+Docker and other optional GPU combinations require separate execution checks.
+The wheel contains pinned Uni-3DAR source and its license; datasets/weights are
+obtained separately. See [data notes](data/README.md).
+
+If PyPI is slow, install the **same exported hashes and versions** through a mirror:
+
+```bash
+uv export --frozen --extra octree --extra deepmd --no-emit-project -o requirements.lock.txt
+DP_ENABLE_TENSORFLOW=0 DP_ENABLE_PYTORCH=0 uv pip install --python .venv/bin/python \
+  --require-hashes --no-binary deepmd-kit \
+  --index-url https://pypi.tuna.tsinghua.edu.cn/simple/ -r requirements.lock.txt
+```
+
+Build and install the project wheel after installing these dependencies. The
+source-build switches follow [DeepMD's documented Python PyTorch mode](https://docs.deepmodeling.com/projects/deepmd/en/latest/install/install-from-source.html).
+Optional same-level quantum diagnostics use `--extra quantum` (CPU) or
+`--extra quantum-gpu` (Linux/CUDA12), described in the
+[quantum protocol](docs/quantum-validation-protocol.md).
 
 ## Data and training
 

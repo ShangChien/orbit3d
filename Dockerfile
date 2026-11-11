@@ -6,6 +6,6 @@ WORKDIR /opt/orbit3d
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 ARG ORBIT3D_EXTRA=deepmd
-RUN uv sync --frozen --no-dev --extra ${ORBIT3D_EXTRA}
+RUN uv sync --frozen --no-dev --extra octree --extra ${ORBIT3D_EXTRA}
 ENV PATH="/opt/orbit3d/.venv/bin:$PATH"
 ENTRYPOINT ["orbit3d", "--config"]
