@@ -200,3 +200,15 @@ light-element calculations are unchanged. [The ECP correction and real CPU/GPU
 checks](quantum-ecp.md) include the original strict force-parity failure and a
 separate tighter-convergence check. Core CI installs the CPU quantum extra so the
 three electron-count/Hamiltonian regressions execute instead of silently skipping.
+
+## Graph identity and explicitly represented hydrogens
+
+New graph checks compare indexed bonds and formal charges, source-graph geometry
+compatibility and every specified stereochemical constraint. A coordinate-derived
+specification of previously unspecified imine stereo is permitted; loss or reversal
+of specified stereo is not. Fully explicit hydrogen graphs make the identity
+comparison insensitive to RDKit's retention of stereo-defining H atoms. This fixes
+a false rejection of unchanged imine connectivity without changing bond-length,
+collision or electronic-state criteria. See the [fixed-coordinate diagnostic](bond-perception-diagnostic.md).
+Existing experiment snapshots and previously reported cohort outcomes are not
+silently replaced by the revised check.

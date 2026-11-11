@@ -13,6 +13,12 @@ versus inversion or loss, isotopes, changed hydrogen counts and the actual quant
 graph-check rejection. The [bond-perception study](bond-perception-diagnostic.md)
 identified this defect on known validation geometries.
 
+A newly built wheel containing the identity correction passes all 24 tests in
+`test_molecular_identity.py`, `test_quantum.py` and `test_quantum_ecp.py` in the
+remote quantum runtime, with zero skips. Its import path points to a fresh
+installation outside the source checkout. The [wheel hash and result](experiments/quantum_identity_wheel_20261112.json)
+identify this artifact separately from the earlier ECP-only wheel.
+
 Three additional real-PySCF regressions skip on that macOS environment and pass
 in the remote quantum environment, including a fresh wheel installed into an
 isolated import directory. They check matching def2 ECP electron counts,
