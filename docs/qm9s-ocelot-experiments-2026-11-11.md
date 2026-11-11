@@ -160,3 +160,29 @@ on acceptance and interval decisions, with coordinate/property tolerances
 1e-5 and raw-force tolerance 1e-4 eV/A. Timings were 13.67 s serial and 2.78 s
 batched on the shared server; this is not an uncontended throughput benchmark.
 See [the per-molecule comparison](experiments/projection_scale_serial_batch_20261112.json).
+
+## Matched conditioning and parity experiment (2026-11-12)
+
+Both conditioner variants start from the same 4096-record/8000-step structural
+prior, reset conditioning, freeze the backbone, and train for 4000 steps on the
+same labels with training seed 42. V3 changes both Fourier frequencies and the
+interval-sampling distribution; the comparison does not isolate these two
+factors. Each of three inference seeds uses 64 attempts, at most 32 external
+ranking candidates, 16 requested outputs and 30 refinement steps. All runs use
+the same applicability-domain filter and FP32 sampling.
+
+| Conditioner | Terminal even-electron constraint | Valid / 64 (mean) | Optimizing joint successes / 192 | Independent surrogate joint successes / 192 |
+| --- | --- | ---: | ---: | ---: |
+| v2 reset | off | 30.33 | 6 | 6 |
+| v2 reset | on | 56.33 | 6 | 6 |
+| v3 smooth | off | 27.00 | 3 | 3 |
+| v3 smooth | on | 52.67 | 4 | 4 |
+
+The parity constraint addresses the dominant odd-electron rejection mode and
+raises chemical validity, but it does not establish a joint-hit improvement.
+V3 smooth conditioning improves local numerical continuity but has not improved
+generation success over the matched v2 control. The independent evaluator is
+the separately trained fingerprint model, not DFT. The three seeds are inference
+seeds of one trained checkpoint, not three independent training replicates.
+[Raw per-run summaries, budgets, hashes, independent predictions and SA scores](experiments/conditioning_factorial_20261112.json)
+are retained. GRPO follows as a separate matched-budget experiment.
