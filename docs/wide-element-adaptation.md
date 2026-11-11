@@ -26,11 +26,49 @@ UFF energies do not become electronic-property labels. The chosen reconstruction
 method is recorded in the property checkpoint and checked during calibration.
 This is reconstructed input geometry, not the unavailable original DFT geometry.
 The 8192-record training run prioritizes rare elements within each pre-existing
-split, then fills the remaining budget in deterministic hash order. Per-element
-held-out errors will be reported rather than inferring accuracy from vocabulary
-membership. Training is ongoing; no wide-element accuracy claim is made yet.
+split, then fills the remaining budget in deterministic hash order. The run completed with 8192 training, 512 validation and 512 test structures,
+three bootstrap adapters and 40 epochs. Test HOMO/LUMO MAEs are 0.2985/0.2382 eV;
+the corresponding train-mean baseline errors are recorded in the linked evidence.
+The 233 geometry-preparation failures remain in the exclusion ledger.
+
+| Test subgroup | Records | HOMO MAE (eV) | LUMO MAE (eV) |
+| --- | ---: | ---: | ---: |
+| B | 13 | 0.3057 | 0.1960 |
+| Si | 7 | 0.3215 | 0.2346 |
+| Se | 1 | 0.4319 | 0.5112 |
+| As | 1 | 0.2235 | 0.1663 |
+| Te | 4 | 0.4623 | 0.2634 |
+
+Subgroups overlap. The single Se/As observations are individual errors, not
+reliable generalization estimates. The one validation Te structure has much larger
+errors of 1.1884/0.8300 eV. Rare-element training counts are B 107, Si 171, Se 12,
+As 16 and Te 20; vocabulary coverage does not establish equal predictive quality.
+
+A disjoint 512-record calibration set gives 91.41% joint test coverage at the
+nominal 90% level, with mean interval widths 2.13/2.03 eV. Spread/error Spearman
+correlations remain weak (0.216/0.122); the default uncertainty reward stays zero.
+Exact parameter/scaler replay passes; repeated native forward predictions differ
+by at most 3.82e-6 eV on validation and are checked separately.
+[Training, exclusions, subgroup errors, calibration, hashes and graph audit](experiments/ocelot_wide8192_20261112.json)
+retain the complete evidence.
 
 Generator adaptation accepts its own explicit element set and the same geometry
 method. New elements still require checkpoint migration, observed training coverage
 and backbone adaptation. Explicit scaffold graph operations use molecule-local
 element identities, preserving B without altering the legacy dense-grid vocabulary.
+
+
+The generator reuses these exact labeled training conformers. Atom-conserving
+encoding and rotation-safe span checks admit 8188 of 8192 structures at depth 7;
+four exclusions retain their reasons. Full-backbone supervised adaptation is a
+separate experiment and does not inherit a generation-accuracy claim from this
+property model.
+
+Coordinate-only reconstruction was audited on all 321 rare-element training
+structures. Exact and 0.01 Å-rounded coordinates give the same classification:
+295 exact identities, 18 additions of previously unspecified stereo, seven
+changed charge/bond assignments and one invalid result. The 18 stereo additions
+preserve the source constitution and every specified stereo constraint; the
+seven graph changes remain failures. This audit does not test the full octree
+transform. Known input graphs are preserved directly in property training; the
+coordinate-only generator still faces bond-assignment ambiguity.
