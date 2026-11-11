@@ -1,4 +1,4 @@
-\begin{thebibliography}{14}
+\begin{thebibliography}{16}
 
 \bibitem{barroso2024omat24}
 Luis Barroso-Luque, Muhammed Shuaibi, Xiang Fu, Brandon~M Wood, Misko Dzamba, Meng Gao, Ammar Rizvi, C~Lawrence Zitnick, and Zachary~W Ulissi.
@@ -16,10 +16,20 @@ Andrew Campbell, Jason Yim, Regina Barzilay, Tom Rainforth, and Tommi Jaakkola.
 \newblock Technical report, Tencent Hunyuan, 2026.
 \newblock \url{https://github.com/Tencent-Hunyuan/Hyra-results}.
 
+\bibitem{lee2025genmol}
+Seul Lee, Karsten Kreis, Srimukh~Prasad Veccham, Meng Liu, Danny Reidenbach, Yuxing Peng, Saee Paliwal, Weili Nie, and Arash Vahdat.
+\newblock {GenMol}: A drug discovery generalist with discrete diffusion.
+\newblock {\em arXiv preprint arXiv:2501.06158}, 2025.
+
 \bibitem{levine2025omol25}
 Daniel~S Levine, Muhammed Shuaibi, Evan Walter~Clark Spotte-Smith, Michael~G Taylor, Muhammad~R Hasyim, Kyle Michel, Ilyes Batatia, G{\'a}bor Cs{\'a}nyi, Misko Dzamba, Peter Eastman, et~al.
 \newblock The {Open Molecules} 2025 ({OMol25}) dataset, evaluations, and models.
 \newblock {\em arXiv preprint arXiv:2505.08762}, 2025.
+
+\bibitem{loeffler2024reinvent4}
+Hannes~H Loeffler, Jiazhen He, Alessandro Tibo, Jon~Paul Janet, Alexey Voronov, Lewis~H Mervin, and Ola Engkvist.
+\newblock Reinvent 4: Modern {AI}--driven generative molecule design.
+\newblock {\em Journal of Cheminformatics}, 16(1):20, 2024.
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Zhifeng Gao, Di~He, Linfeng Zhang, and Guolin Ke.
