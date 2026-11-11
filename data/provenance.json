@@ -68,21 +68,26 @@
       "path": "dataset/raw/ocelot_chromophore_v1/ocelot_chromophore_v1.csv",
       "bytes": 5605431,
       "sha256": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985",
-      "source_url": null,
-      "license": null,
-      "status": "local_inventory_source_confirmation_pending",
-      "test_priority": "primary"
+      "source_url": "https://data.materialsdatafacility.org/mdf_open/ocelot_chromophore_v1_v1.1/ocelot_chromophore_v1.zip",
+      "license": "OCELOT Terms of Use (noncommercial research; attribution; not an unrestricted redistribution license)",
+      "status": "official_zip_byte_verified_2026-11-11",
+      "test_priority": "primary",
+      "terms_url": "https://oscar.as.uky.edu/terms/",
+      "archive_sha256": "777bd8b8f0f02a6d95d50a17823649920c732023d225c92c8901573367550e16"
     },
     {
       "path": "dataset/raw/ocelot_chromophore_v1/readme.txt",
       "bytes": 713,
       "sha256": "ed993de3fe20eefc265a529c257e8f8c1b4963024f918e2445ec20606baabef2",
-      "source_url": null,
-      "license": null,
-      "status": "local_inventory_source_confirmation_pending",
-      "test_priority": "primary"
+      "source_url": "https://data.materialsdatafacility.org/mdf_open/ocelot_chromophore_v1_v1.1/ocelot_chromophore_v1.zip",
+      "license": "OCELOT Terms of Use (noncommercial research; attribution; not an unrestricted redistribution license)",
+      "status": "official_zip_byte_verified_2026-11-11",
+      "test_priority": "primary",
+      "terms_url": "https://oscar.as.uky.edu/terms/",
+      "archive_sha256": "777bd8b8f0f02a6d95d50a17823649920c732023d225c92c8901573367550e16"
     }
   ],
   "user_reported_origin": "User reports the three local datasets were downloaded from official figshare / zindo sources; exact release URLs are not yet confirmed.",
-  "remote_mim_flow": "Downloaded archive verified for gzip integrity on 2026-11-11; exact publisher checksum and dataset license remain unconfirmed. See mim_flow_archive.json."
+  "remote_mim_flow": "Downloaded archive verified for gzip integrity on 2026-11-11; exact publisher checksum and dataset license remain unconfirmed. See mim_flow_archive.json.",
+  "ocelot_verified_contents": "Official ZIP contains only the CSV and readme.txt, both byte-identical to local files. No omega, coordinates or raw Gaussian outputs."
 }

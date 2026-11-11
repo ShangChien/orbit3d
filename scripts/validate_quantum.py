@@ -1,4 +1,4 @@
-"""Independent same-level OCELOT quantum validation of a fixed SDF sample set."""
+"""Fixed-cohort LC-wHPBE diagnostic; dataset protocol fidelity is checked separately."""
 
 import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -9,12 +9,15 @@ from pathlib import Path
 import time
 from rdkit import Chem
 from orbit3d.quantum.ocelot import OcelotEvaluator, OcelotTheory
+from orbit3d.utils.run_evidence import freeze_run
 
 
 def evaluate_one(task):
-    index, block, properties, output, settings, optimize = task
+    index, block, coordinates, properties, output, settings, optimize = task
     workdir = Path(output) / f"molecule_{index:04d}"
     mol = Chem.MolFromMolBlock(block, removeHs=False)
+    for i, xyz in enumerate(coordinates):
+        mol.GetConformer().SetAtomPosition(i, xyz)
     for k, v in properties.items():
         mol.SetProp(k, v)
     try:
@@ -35,18 +38,26 @@ def main():
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--threads", type=int, default=4)
     p.add_argument("--limit", type=int)
+    p.add_argument("--engine", choices=["cpu", "gpu"], default="cpu")
+    p.add_argument("--offset", type=int, default=0)
+    p.add_argument("--stride", type=int, default=1)
     p.add_argument("--fixed-geometry", action="store_true")
     a = p.parse_args()
+    if a.stride <= 0 or not 0 <= a.offset < a.stride:
+        p.error("Require stride > 0 and 0 <= offset < stride")
     a.output.mkdir(parents=True, exist_ok=True)
+    freeze_run(a.output, __file__)
     molecules = list(Chem.SDMolSupplier(str(a.sdf), removeHs=False))
     if a.limit:
         molecules = molecules[: a.limit]
     assert molecules and all(m is not None for m in molecules)
-    settings = asdict(OcelotTheory(threads=a.threads))
+    settings = asdict(OcelotTheory(threads=a.threads, engine=a.engine))
     manifest = {
         "source_sha256": hashlib.sha256(a.sdf.read_bytes()).hexdigest(),
         "theory": settings,
         "sample_count": len(molecules),
+        "selected_indices": [i for i in range(len(molecules)) if i % a.stride == a.offset],
+        "protocol_status": "Jh diagnostic; OCELOT production tuning objective unconfirmed",
         "optimize_geometry": not a.fixed_geometry,
     }
     (a.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -54,12 +65,14 @@ def main():
         (
             i,
             Chem.MolToMolBlock(m, forceV3000=True),
+            m.GetConformer().GetPositions().tolist(),
             {k: m.GetProp(k) for k in m.GetPropNames()},
             str(a.output),
             settings,
             not a.fixed_geometry,
         )
         for i, m in enumerate(molecules)
+        if i % a.stride == a.offset
     ]
     start = time.perf_counter()
     records = []

@@ -1,4 +1,7 @@
-"""IP-tuned LC-wHPBE/def2-SVP evaluation following OCELOT's Jh protocol.
+"""LC-wHPBE/def2-SVP diagnostic using the public OCELOT API's default Jh.
+
+The production dataset's tuning objective remains unconfirmed. The Jh reference
+cross-check disagrees with its CSV and must not be labelled reference validation.
 
 The H in Gaussian LC-wHPBE denotes the Henderson exchange hole, not 25%
 short-range HF exchange. Libxc 486 has the required zero/100% SR/LR HF limits;
@@ -18,6 +21,7 @@ BOHR_ANGSTROM = 0.529177210903
 
 @dataclass(frozen=True)
 class OcelotTheory:
+    engine: str = "cpu"
     xc: str = "HYB_GGA_XC_LC_WPBE_WHS"
     basis: str = "def2-svp"
     omega_bounds: tuple = (0.05, 0.5)
@@ -39,8 +43,12 @@ def ip_objective(neutral_energy, cation_energy, neutral_homo):
 
 
 def frontier_orbitals(energies, occupations):
-    energies, occupations = np.asarray(energies), np.asarray(occupations)
+    energies, occupations = host_array(energies), host_array(occupations)
     return float(energies[occupations > 0].max()), float(energies[occupations == 0].min())
+
+
+def host_array(value):
+    return value.get() if hasattr(value, "get") else np.asarray(value)
 
 
 class OcelotEvaluator:
@@ -53,6 +61,7 @@ class OcelotEvaluator:
         lib.num_threads(theory.threads)
         self.trace = []
         self.counter = 0
+        self.density_guesses = {}
 
     def scf(self, atoms, coords, omega, charge=0, spin=0):
         from pyscf import gto, dft
@@ -69,16 +78,32 @@ class OcelotEvaluator:
             max_memory=s.memory_mb,
         )
         # OCELOT's source uses uLC-wHPBE for neutral and charged species.
-        mf = dft.UKS(mol)
+        if s.engine == "gpu":
+            from gpu4pyscf.dft.uks import UKS
+            from .gpu_numint import OcelotNumInt
+
+            mf = UKS(mol)
+            mf._numint = OcelotNumInt()
+        elif s.engine == "cpu":
+            mf = dft.UKS(mol)
+        else:
+            raise ValueError(f"Unknown quantum engine: {s.engine}")
         mf.xc = s.xc
         mf.omega = round(float(omega), 4)  # Gaussian IOp precision in original workflow.
         mf.grids.atom_grid = (s.radial_grid, s.angular_grid)
         mf.conv_tol = s.scf_tolerance
         mf.max_cycle = s.max_scf_cycles
         mf.chkfile = str(self.workdir / f"scf_{self.counter:04d}.chk")
-        mf.kernel()
+        geometry_key = (np.asarray(coords, dtype=np.float64).tobytes(), charge, spin)
+        dm0 = self.density_guesses.get(geometry_key)
+        if dm0 is not None and s.engine == "gpu":
+            import cupy
+
+            dm0 = cupy.asarray(dm0)
+        mf.kernel(dm0=dm0)
         if not mf.converged:
             raise RuntimeError(f"SCF did not converge at omega={mf.omega}, charge={charge}")
+        self.density_guesses[geometry_key] = host_array(mf.make_rdm1())
         return mf
 
     def tune(self, atoms, coords, bounds):
@@ -161,7 +186,7 @@ class OcelotEvaluator:
             raise RuntimeError("Geometry/omega outer loop did not converge")
         final = self.scf(atoms, coords, omega)
         homo, lumo = frontier_orbitals(final.mo_energy, final.mo_occ)
-        forces = -final.nuc_grad_method().kernel() * HARTREE_EV / BOHR_ANGSTROM
+        forces = -host_array(final.nuc_grad_method().kernel()) * HARTREE_EV / BOHR_ANGSTROM
         result = {
             "theory": asdict(self.theory),
             "pyscf_version": pyscf.__version__,

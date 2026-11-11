@@ -5,11 +5,29 @@ geometry optimization at that level, rather than a fixed-ω generic PBE hybrid.
 [OCELOT paper](https://pubs.rsc.org/en/content/articlehtml/2023/sc/d2sc04676h),
 [official methodology](https://oscar-docs.as.uky.edu/IP%20and%20EA/).
 
-The original [OCELOT tuning implementation](https://github.com/caer200/ocelot_api/blob/c0bc4083e5deb61ff1eb71d119a7a5dcfb2abab0/ocelot/task/wtuning.py)
-uses the Jh objective `abs(epsilon_HOMO + E_cation - E_neutral)` and alternates
+The public [OCELOT tuning implementation](https://github.com/caer200/ocelot_api/blob/c0bc4083e5deb61ff1eb71d119a7a5dcfb2abab0/ocelot/task/wtuning.py)
+defaults to the Jh objective `abs(epsilon_HOMO + E_cation - E_neutral)` and alternates
 range-parameter tuning with geometry optimization. We implement this in PySCF
-2.12.1 with geomeTRIC 1.1. Original Gaussian output is not available, so this is a
-same-theory independent calculation, not a claim of bitwise cross-program reproduction.
+2.12.1 with geomeTRIC 1.1. The default is not evidence of the dataset production
+configuration. The naphthalene reference cross-check below fails: this remains a
+diagnostic at the nominal functional/basis, not validated reproduction of OCELOT.
+Original Gaussian output, per-molecule omega and original geometries are absent
+from the available CSV. Do not substitute a tuning objective merely to fit labels.
+
+## Reference and GPU checks (2026-11-11)
+
+For `csd_CAKRUB11` (naphthalene), GPU Jh tuning/optimization converged at omega
+0.2723. HOMO/LUMO were -8.197418/+0.534015 eV; CSV values are
+-7.387079/-0.096873 eV. The discrepancy is unresolved, so generated-molecule
+cohort calculations using this protocol were stopped with partial logs preserved.
+
+GPU4PySCF 1.5.0's numerical integrator does not forward custom omega to its
+cached Libxc objects. `quantum/gpu_numint.py` explicitly sets Libxc 486's `_omega`
+parameter. Without it, a fixed-geometry CPU/GPU comparison differed by 5.30 Ha.
+With it, energy differs by -1.08e-10 Ha and HOMO/LUMO by 8.28e-6/1.21e-5 eV.
+This checks engine parity, not dataset protocol fidelity. The measured stack is
+PySCF 2.12.1, GPU4PySCF CUDA12x 1.5.0, GPU Libxc 0.5, CuPy 13.4.1,
+cuTENSOR 2.2.0 and NumPy 2.2.6; no density fitting. GPU jobs use `--engine gpu`.
 
 ## Exact implementation choices
 
