@@ -15,6 +15,7 @@ from ..generator.octree_backend import (
     OctreeDataset,
     trajectory_to_instance,
     interval_arrays,
+    checkpoint_contract,
 )
 from ..generator.octree_tokenizer import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
@@ -44,6 +45,7 @@ def run_octree_from_config(cfg, config_path=None):
     freeze_run(output, config_path or __file__)
     (output / "run_config.json").write_text(json.dumps(cfg, indent=2) + "\n")
     names = cfg["oracle_config"]["target_cols"]
+    units = cfg['oracle_config'].get('target_units', ['eV' if n in {'homo', 'lumo'} else 'unspecified' for n in names])
     mode = cfg.get("mode", "train_and_predict")
     if mode not in {"train", "predict", "train_and_predict"}:
         raise ValueError(f"Unknown mode: {mode}")
@@ -146,6 +148,8 @@ def run_octree_from_config(cfg, config_path=None):
                 "model_state_dict": model.state_dict(),
                 "backend": f"uni3dar_octree_v{model.condition_version}",
                 "target_cols": names,
+                "target_units": units,
+                "contract": checkpoint_contract(model, names, units, mean, scale),
                 "mean": mean,
                 "scale": scale,
                 "pretrained_sha256": hashlib.sha256(
@@ -163,6 +167,8 @@ def run_octree_from_config(cfg, config_path=None):
         model, state = load_octree_checkpoint(checkpoint, device, settings.get("batch_size", 16))
         if state["target_cols"] != names:
             raise ValueError("Octree checkpoint semantics differ")
+        if 'target_units' in state and state['target_units'] != units:
+            raise ValueError('Octree target units differ from the requested Oracle units')
         mean = state["mean"]
         scale = state["scale"]
         train_smiles = set(state.get("training_smiles", train_smiles))
@@ -197,6 +203,8 @@ def run_octree_from_config(cfg, config_path=None):
                 "model_state_dict": model.state_dict(),
                 "backend": f"uni3dar_octree_v{model.condition_version}",
                 "target_cols": names,
+                "target_units": units,
+                "contract": checkpoint_contract(model, names, units, mean, scale),
                 "mean": mean,
                 "scale": scale,
                 "grpo_history": history,

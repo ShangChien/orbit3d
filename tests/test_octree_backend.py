@@ -88,3 +88,18 @@ def test_one_sided_masks_are_explicit_and_missing_bounds_are_inert():
     assert conditioner.bound_projection.weight.grad.abs().sum() > 0
     null = conditioner(changed_lo, changed_hi, torch.zeros_like(mask))
     assert torch.count_nonzero(null) == 0
+
+
+def test_checkpoint_semantics_include_grid_units_and_scaler():
+    from types import SimpleNamespace
+    from orbit3d.generator.octree_backend import checkpoint_contract
+
+    args = build_default_uni3dar_args(1)
+    model = SimpleNamespace(args=args, dictionary=AtomFeatDict(args), condition_version=2)
+    contract = checkpoint_contract(model, ['homo'], ['eV'], [-7.0], [0.5])
+    assert checkpoint_contract(model, ['homo'], ['Ha'], [-7.0], [0.5]) != contract
+    assert checkpoint_contract(model, ['homo'], ['eV'], [-6.0], [0.5]) != contract
+    model.args.grid_len = 0.48
+    assert checkpoint_contract(model, ['homo'], ['eV'], [-7.0], [0.5]) != contract
+    with pytest.raises(ValueError, match='scaler'):
+        checkpoint_contract(model, ['homo'], ['eV'], [-7.0], [0.0])

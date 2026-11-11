@@ -1,6 +1,8 @@
 """Pretrained Uni-3DAR backend and direct SDF-to-octree training data."""
 
 from pathlib import Path
+import hashlib
+import json
 import numpy as np
 import torch
 from rdkit import Chem
@@ -36,6 +38,21 @@ def build_octree(device="cuda:0", targets=2, batch_size=16, condition_version=2)
     return ConditionalUni3DAR(args, AtomFeatDict(args), num_props=targets).to(device)
 
 
+def checkpoint_contract(model, names, units, mean, scale):
+    if len(names) != len(units) or len(set(names)) != len(names):
+        raise ValueError('Checkpoint targets and units must have a unique, matching order')
+    mean, scale = np.asarray(mean), np.asarray(scale)
+    if mean.shape != (len(names),) or scale.shape != mean.shape or not np.isfinite(mean).all() or not np.isfinite(scale).all() or (scale <= 0).any():
+        raise ValueError('Invalid target scaler in octree checkpoint')
+    semantics = {'target_cols': list(names), 'target_units': list(units), 'mean': mean.tolist(), 'scale': scale.tolist(),
+                 'condition_version': model.condition_version,
+                 'token_dictionary': model.dictionary.atom_type,
+                 'grid_len_A': model.args.grid_len, 'xyz_resolution_A': model.args.xyz_resolution,
+                 'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')}
+    digest = hashlib.sha256(json.dumps(semantics, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    return {'schema_version': 1, 'semantics': semantics, 'sha256': digest}
+
+
 def load_pretrained(path, device="cuda:0", targets=2, batch_size=16):
     model = build_octree(device, targets, batch_size)
     data = torch.load(path, map_location="cpu", weights_only=False)
@@ -54,6 +71,10 @@ def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
     if state["backend"] not in versions:
         raise ValueError("Unknown octree checkpoint contract")
     model = build_octree(device, len(state["target_cols"]), batch_size, versions[state["backend"]])
+    units = state.get('target_units', ['unspecified'] * len(state['target_cols']))
+    contract = checkpoint_contract(model, state['target_cols'], units, state['mean'], state['scale'])
+    if 'contract' in state and state['contract'] != contract:
+        raise ValueError('Octree checkpoint tokenizer, grid, target units or scaler contract mismatch')
     model.load_state_dict(state["model_state_dict"], strict=True)
     return model.eval(), state
 
