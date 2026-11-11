@@ -39,6 +39,8 @@ def main():
     p.add_argument("--threads", type=int, default=4)
     p.add_argument("--limit", type=int)
     p.add_argument("--engine", choices=["cpu", "gpu"], default="cpu")
+    p.add_argument('--xc', choices=['HYB_GGA_XC_LC_WPBE', 'HYB_GGA_XC_LC_WPBE_WHS'], default='HYB_GGA_XC_LC_WPBE_WHS')
+    p.add_argument('--tuning-objective', choices=['Jh', 'J2', 'Jn2'], default='Jh')
     p.add_argument("--offset", type=int, default=0)
     p.add_argument("--stride", type=int, default=1)
     p.add_argument("--fixed-geometry", action="store_true")
@@ -51,13 +53,13 @@ def main():
     if a.limit:
         molecules = molecules[: a.limit]
     assert molecules and all(m is not None for m in molecules)
-    settings = asdict(OcelotTheory(threads=a.threads, engine=a.engine))
+    settings = asdict(OcelotTheory(threads=a.threads, engine=a.engine, xc=a.xc, tuning_objective=a.tuning_objective))
     manifest = {
         "source_sha256": hashlib.sha256(a.sdf.read_bytes()).hexdigest(),
         "theory": settings,
         "sample_count": len(molecules),
         "selected_indices": [i for i in range(len(molecules)) if i % a.stride == a.offset],
-        "protocol_status": "Jh diagnostic; OCELOT production tuning objective unconfirmed",
+        "protocol_status": "Protocol diagnostic; OCELOT production objective and functional mapping unconfirmed",
         "optimize_geometry": not a.fixed_geometry,
     }
     (a.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

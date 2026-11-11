@@ -3,9 +3,9 @@
 The production dataset's tuning objective remains unconfirmed. The Jh reference
 cross-check disagrees with its CSV and must not be labelled reference validation.
 
-The H in Gaussian LC-wHPBE denotes the Henderson exchange hole, not 25%
-short-range HF exchange. Libxc 486 has the required zero/100% SR/LR HF limits;
-487 (LC-wPBEh) is a different short-range hybrid and must not be substituted.
+The Gaussian name alone does not establish a Libxc mapping. Both 478 and 486
+have zero/100% SR/LR HF limits but differ in their exchange holes. Public Gaussian
+reference checks are required; the initial 486 mapping has not passed them.
 """
 
 from dataclasses import asdict, dataclass
@@ -24,6 +24,7 @@ class OcelotTheory:
     engine: str = "cpu"
     xc: str = "HYB_GGA_XC_LC_WPBE_WHS"
     basis: str = "def2-svp"
+    tuning_objective: str = 'Jh'
     omega_bounds: tuple = (0.05, 0.5)
     omega_tolerance: float = 0.001
     omega_geometry_tolerance: float = 0.01
@@ -40,6 +41,18 @@ class OcelotTheory:
 def ip_objective(neutral_energy, cation_energy, neutral_homo):
     """Jh in Hartree: abs(epsilon_HOMO + E(N-1) - E(N))."""
     return abs(neutral_homo + cation_energy - neutral_energy)
+
+
+def tuning_objective(scheme, en, ec, homo, lumo, ea=None, anion_homo=None):
+    h = homo + ec - en
+    if scheme == 'Jh':
+        return abs(h)
+    if scheme not in {'J2', 'Jn2'} or ea is None:
+        raise ValueError('Supported OCELOT API objectives are Jh, J2 and Jn2; the latter require anion energy')
+    second = anion_homo if scheme == 'J2' else lumo
+    if second is None:
+        raise ValueError('J2 requires the anion HOMO')
+    return h**2 + (second + en - ea)**2
 
 
 def frontier_orbitals(energies, occupations):
@@ -115,14 +128,21 @@ class OcelotEvaluator:
                 n = self.scf(atoms, coords, omega)
                 c = self.scf(atoms, coords, omega, charge=1, spin=1)
                 homo, lumo = frontier_orbitals(n.mo_energy, n.mo_occ)
-                j = ip_objective(n.e_tot, c.e_tot, homo)
+                anion = self.scf(atoms, coords, omega, charge=-1, spin=1) if self.theory.tuning_objective != 'Jh' else None
+                anion_homo = frontier_orbitals(anion.mo_energy, anion.mo_occ)[0] if anion is not None else None
+                j = tuning_objective(self.theory.tuning_objective, n.e_tot, c.e_tot, homo, lumo,
+                                     anion.e_tot if anion is not None else None, anion_homo)
                 row = {
                     "omega": omega,
                     "neutral_E_Ha": float(n.e_tot),
                     "cation_E_Ha": float(c.e_tot),
                     "homo_eV": homo * HARTREE_EV,
                     "lumo_eV": lumo * HARTREE_EV,
-                    "Jh_eV": j * HARTREE_EV,
+                    "Jh_eV": ip_objective(n.e_tot, c.e_tot, homo) * HARTREE_EV,
+                    "objective": self.theory.tuning_objective,
+                    "objective_atomic_units": float(j),
+                    "anion_E_Ha": float(anion.e_tot) if anion is not None else None,
+                    "anion_homo_eV": anion_homo * HARTREE_EV if anion_homo is not None else None,
                     "cation_S2": float(c.spin_square()[0]),
                 }
                 cache[omega] = j

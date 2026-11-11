@@ -1,4 +1,4 @@
-# OCELOT reference-level quantum validation
+# OCELOT quantum protocol diagnostics
 
 The OCELOT reference is molecule-specific IP-tuned LC-ωHPBE/def2-SVP, with
 geometry optimization at that level, rather than a fixed-ω generic PBE hybrid.
@@ -13,6 +13,11 @@ configuration. The naphthalene reference cross-check below fails: this remains a
 diagnostic at the nominal functional/basis, not validated reproduction of OCELOT.
 Original Gaussian output, per-molecule omega and original geometries are absent
 from the available CSV. Do not substitute a tuning objective merely to fit labels.
+The official 2022 supplementary PDF and 2021 OCELOT methods paper were retrieved
+and checked; both name IP tuning without specifying the objective in their
+methods paragraphs. The public API also implements J2 (neutral and anion HOMOs)
+and Jn2 (neutral HOMO and LUMO). These are explicit diagnostic choices recorded in
+the run manifest; none is silently selected based on CSV agreement.
 
 ## Reference and GPU checks (2026-11-11)
 
@@ -20,6 +25,16 @@ For `csd_CAKRUB11` (naphthalene), GPU Jh tuning/optimization converged at omega
 0.2723. HOMO/LUMO were -8.197418/+0.534015 eV; CSV values are
 -7.387079/-0.096873 eV. The discrepancy is unresolved, so generated-molecule
 cohort calculations using this protocol were stopped with partial logs preserved.
+
+The API repository's public `tests/wtuning_test/1b` includes Gaussian16 A.03
+benzene logs, allowing an independent same-geometry/6-31G/omega cross-check.
+Libxc486 at omega0.2837 differs by +0.024704 Ha and -0.0160/-0.0127 eV in frontier
+orbitals. Libxc478 at omega0.2219 and0.2837 gives neutral frontier differences
+below0.00033 eV and energies differing by about-0.00068 Ha. The cation case still
+has up to0.02684 eV orbital discrepancy. Thus the initial claim that486 exactly
+maps Gaussian LC-wHPBE is withdrawn; neither name matching nor CPU/GPU parity
+establishes cross-program equivalence. The reusable checker is
+`scripts/validate_gaussian_reference.py`, with explicit functional and source hashes.
 
 GPU4PySCF 1.5.0's numerical integrator does not forward custom omega to its
 cached Libxc objects. `quantum/gpu_numint.py` explicitly sets Libxc 486's `_omega`
@@ -31,8 +46,10 @@ cuTENSOR 2.2.0 and NumPy 2.2.6; no density fitting. GPU jobs use `--engine gpu`.
 
 ## Exact implementation choices
 
-- Libxc `HYB_GGA_XC_LC_WPBE_WHS` (486), Henderson/Janesko/Scuseria short-range
-  exchange and long-range HF, with PBE correlation. Zero SR and 100% LR HF.
+- The initial diagnostic used Libxc `HYB_GGA_XC_LC_WPBE_WHS` (486). The alternative
+  `HYB_GGA_XC_LC_WPBE` (478) is being cross-checked with public Gaussian logs.
+  Both have zero SR and 100% LR HF. Their identity with the reference implementation
+  is not assumed.
 - Gaussian's LC-w**H**PBE naming must not be confused with Libxc LC-wPBE**h**
   (487), which has 25% short-range HF. The original Vydrov LC-wPBE (478) is also
   a distinct exchange-hole implementation. [Libxc functional entries in CP2K](https://manual.cp2k.org/cp2k-2026_2-branch/CP2K_INPUT/FORCE_EVAL/PROPERTIES/TDDFPT/XC/XC_FUNCTIONAL.html).

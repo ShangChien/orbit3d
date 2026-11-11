@@ -1,4 +1,4 @@
-"""Pass molecule-specific range separation to GPU Libxc 486."""
+"""Pass molecule-specific range separation to the supported GPU Libxc candidates."""
 
 import ctypes
 from functools import lru_cache
@@ -13,7 +13,7 @@ class OcelotNumInt(numint.NumInt):
         setter.argtypes = (libxc._xc_func_p, ctypes.c_char_p, ctypes.c_double)
         setter.restype = None
         for functional, weight in functions:
-            if functional.func_id != 486:
-                raise ValueError("This adapter is specifically for IP-tuned LC-wHPBE (Libxc 486)")
+            if functional.func_id not in {478, 486}:
+                raise ValueError("This adapter supports only the LC-wPBE candidates Libxc 478 and 486")
             setter(functional.xc_func, b"_omega", float(self.omega))
         return functions

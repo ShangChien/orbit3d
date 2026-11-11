@@ -14,6 +14,7 @@ from orbit3d.utils.run_evidence import freeze_run
 p = argparse.ArgumentParser()
 p.add_argument('--input-checkpoint', required=True)
 p.add_argument('--omega', type=float, required=True)
+p.add_argument('--xc', default='HYB_GGA_XC_LC_WPBE_WHS')
 p.add_argument('--output', type=Path, required=True)
 a = p.parse_args()
 freeze_run(a.output, __file__)
@@ -24,7 +25,7 @@ gpu = UKS(mol)
 gpu._numint = OcelotNumInt()
 initial = cpu.make_rdm1(data['mo_coeff'], data['mo_occ'])
 for mf in [cpu, gpu]:
-    mf.xc = 'HYB_GGA_XC_LC_WPBE_WHS'
+    mf.xc = a.xc
     mf.omega = a.omega
     mf.grids.atom_grid = (99, 590)
     mf.conv_tol = 1e-9
