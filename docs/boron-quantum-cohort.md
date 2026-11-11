@@ -71,3 +71,11 @@ DPA forces at these quantum geometries are also retained as cross-potential
 diagnostics; they do not compare identical-theory training forces. [Every paired
 value, domain decision and input hash](experiments/boron_quantum_oracles_20261112.json)
 is available in the public record.
+
+The [original ten generated input geometries](experiments/boron_quantum_input_20261112.sdf)
+are included with the exact manifest checksum. The original worker version saved
+precise optimized SDFs but omitted full coordinate/force arrays from its JSON.
+Those arrays have now been recovered from the saved final SCF states without
+repeating geometry optimization. Coordinates agree with the optimized SDFs within
+5.1e-13 Å. Each recovery retains its own scalar values and differences from the
+original result; it does not overwrite the original SCF/TDDFT measurements.
