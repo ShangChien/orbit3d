@@ -130,11 +130,12 @@ def inspect_optimized_graph(molecule):
     from rdkit import Chem
 
     from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
+    from ..utils.molecular_identity import compare_molecular_identity
 
     elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in molecule.GetAtoms()))
     inst = rdkit_mol_to_mol3d_instance(molecule, np.empty(0), center=False, element_table=elements)
     report = {'source_smiles': Chem.MolToSmiles(Chem.RemoveHs(molecule), isomericSmiles=True),
-              'source_graph_compatible': False, 'recovered_smiles': None}
+              'source_graph_compatible': False, 'recovered_smiles': None, 'graph_preserved': False}
     try:
         mol3d_to_validated_rdkit_mol(inst)
         report['source_graph_compatible'] = True
@@ -160,10 +161,15 @@ def inspect_optimized_graph(molecule):
              'inferred': right.GetFormalCharge()}
             for i, (left, right) in enumerate(zip(molecule.GetAtoms(), recovered.GetAtoms()))
             if left.GetFormalCharge() != right.GetFormalCharge()]
+        report['recovered_identity'] = compare_molecular_identity(molecule, recovered)
+        report['graph_preserved'] = (
+            report['source_graph_compatible'] and not report['changed_bonds']
+            and not report['changed_atom_charges']
+            and report['recovered_identity']['source_specified_stereo_preserved']
+        )
 
     except ValueError as exc:
         report['reconstruction_error'] = str(exc)
-    report['graph_preserved'] = report['source_graph_compatible'] and report['recovered_smiles'] == report['source_smiles']
     report['graph_check_status'] = ('consistent' if report['graph_preserved'] else
         'incompatible_source_graph' if not report['source_graph_compatible'] else 'reconstruction_disagrees')
     return report

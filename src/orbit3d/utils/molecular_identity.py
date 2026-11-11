@@ -3,8 +3,12 @@ from rdkit import Chem
 
 
 def compare_molecular_identity(source, recovered):
-    source = Chem.RemoveHs(Chem.Mol(source))
-    recovered = Chem.RemoveHs(Chem.Mol(recovered))
+    # RemoveHs retains hydrogens defining double-bond stereo. Removing stereo
+    # afterwards therefore leaves different H graphs for an unspecified imine
+    # and its specified conformer. Compare fully explicit H graphs instead;
+    # this preserves both stereo-defining and isotopically labelled hydrogens.
+    source = Chem.AddHs(Chem.Mol(source))
+    recovered = Chem.AddHs(Chem.Mol(recovered))
     exact = Chem.MolToSmiles(source) == Chem.MolToSmiles(recovered)
     plain_source, plain_recovered = Chem.Mol(source), Chem.Mol(recovered)
     Chem.RemoveStereochemistry(plain_source)

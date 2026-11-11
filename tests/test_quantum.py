@@ -1,6 +1,6 @@
 import numpy as np
-from orbit3d.quantum.ocelot import ip_objective, frontier_orbitals, OcelotTheory
-from orbit3d.quantum.ocelot import tuning_objective
+
+from orbit3d.quantum.ocelot import OcelotTheory, frontier_orbitals, ip_objective, tuning_objective
 
 
 def test_ip_tuning_uses_positive_vertical_ionization_energy():
@@ -24,6 +24,7 @@ def test_ocelot_joint_tuning_distinguishes_neutral_lumo_and_anion_homo():
 
 def test_excited_scanner_checks_the_requested_one_based_root():
     from types import SimpleNamespace
+
     from orbit3d.quantum.excited_states import ResponseStateConvergence
     scanner = ResponseStateConvergence()
     scanner.state = 1
@@ -40,6 +41,7 @@ def test_excited_scanner_checks_the_requested_one_based_root():
 def test_quantum_graph_failure_retains_diagnostics_and_does_not_relabel_itself():
     from rdkit import Chem
     from rdkit.Chem import AllChem
+
     from orbit3d.quantum.ocelot import inspect_optimized_graph
 
     mol = Chem.AddHs(Chem.MolFromSmiles('CC'))
@@ -56,11 +58,40 @@ def test_quantum_graph_failure_retains_diagnostics_and_does_not_relabel_itself()
     assert result['source_smiles'] == 'CC'
 
 
+def test_quantum_graph_check_accepts_imine_stereo_addition_but_rejects_a_specified_flip():
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+
+    from orbit3d.quantum.ocelot import inspect_optimized_graph
+
+    mol = Chem.AddHs(Chem.MolFromSmiles('N=C(C)c1ccccc1'))
+    assert AllChem.EmbedMolecule(mol, randomSeed=42) == 0
+    AllChem.MMFFOptimizeMolecule(mol)
+    result = inspect_optimized_graph(mol)
+    assert result['graph_preserved']
+    assert not result['changed_bonds'] and not result['changed_atom_charges']
+    assert result['recovered_identity']['identity_status'] == 'stereo_specification_added'
+    Chem.AssignStereochemistryFrom3D(mol, replaceExistingTags=True)
+    bond = next(b for b in mol.GetBonds() if b.GetBondType() == Chem.BondType.DOUBLE)
+    bond.SetStereo(Chem.BondStereo.STEREOZ if bond.GetStereo() == Chem.BondStereo.STEREOE
+                   else Chem.BondStereo.STEREOE)
+    result = inspect_optimized_graph(mol)
+    assert not result['graph_preserved']
+    assert 'stereo_geometry' in result['source_graph_error']
+
+
 def test_optimizer_trace_preserves_failed_step_units_and_source_property_meaning(tmp_path):
     import json
     from types import SimpleNamespace
+
     from rdkit import Chem
-    from orbit3d.quantum.ocelot import record_geometry_step, quantum_geometry_molecule, BOHR_ANGSTROM, HARTREE_EV
+
+    from orbit3d.quantum.ocelot import (
+        BOHR_ANGSTROM,
+        HARTREE_EV,
+        quantum_geometry_molecule,
+        record_geometry_step,
+    )
     record = record_geometry_step(tmp_path, 0, .2, {'coords': np.array([[0., 0., 0.], [1., 0., 0.]]),
         'gradients': np.array([[.1, 0., 0.], [-.1, 0., 0.]]), 'energy': -1.,
         'g_scanner': SimpleNamespace(converged=False)})
