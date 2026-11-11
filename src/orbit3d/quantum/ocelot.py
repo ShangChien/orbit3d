@@ -30,7 +30,7 @@ class OcelotTheory:
     omega_geometry_tolerance: float = 0.01
     max_outer_cycles: int = 5
     scf_tolerance: float = 1e-9
-    max_scf_cycles: int = 100
+    max_scf_cycles: int = 200
     radial_grid: int = 99
     angular_grid: int = 590
     threads: int = 4
@@ -115,6 +115,7 @@ class OcelotEvaluator:
         (self.workdir / f'scf_{self.counter:04d}.json').write_text(json.dumps({
             'omega': mf.omega, 'charge': charge, 'spin_2S': spin, 'xc': s.xc, 'basis': s.basis,
             'converged': bool(mf.converged), 'energy_Ha': float(mf.e_tot),
+            'max_scf_cycles': s.max_scf_cycles, 'convergence_tolerance': s.scf_tolerance,
         }, indent=2) + '\n')
         if not mf.converged:
             raise RuntimeError(f"SCF did not converge at omega={mf.omega}, charge={charge}")

@@ -37,6 +37,7 @@ def main():
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--threads", type=int, default=4)
+    p.add_argument("--max-scf-cycles", type=int, default=200)
     p.add_argument("--limit", type=int)
     p.add_argument("--engine", choices=["cpu", "gpu"], default="cpu")
     p.add_argument('--xc', choices=['HYB_GGA_XC_LC_WPBE', 'HYB_GGA_XC_LC_WPBE_WHS'], default='HYB_GGA_XC_LC_WPBE')
@@ -54,7 +55,8 @@ def main():
     if a.limit:
         molecules = molecules[: a.limit]
     assert molecules and all(m is not None for m in molecules)
-    settings = asdict(OcelotTheory(threads=a.threads, engine=a.engine, xc=a.xc, tuning_objective=a.tuning_objective))
+    settings = asdict(OcelotTheory(threads=a.threads, engine=a.engine, xc=a.xc, tuning_objective=a.tuning_objective,
+                                  max_scf_cycles=a.max_scf_cycles))
     manifest = {
         "source_sha256": hashlib.sha256(a.sdf.read_bytes()).hexdigest(),
         "theory": settings,
