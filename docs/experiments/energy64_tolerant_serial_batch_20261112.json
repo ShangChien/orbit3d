@@ -1,0 +1,88 @@
+{
+  "acceptance_tolerances": {
+    "property_eV": 1e-05,
+    "energy_eV": 1e-05
+  },
+  "records": [
+    {
+      "index": 0,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 1.430511474609375e-06,
+      "force_max_abs_eV_A": 1.4249235391616821e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 1,
+      "coordinate_max_abs_A": 1.1920928955078125e-07,
+      "prediction_max_abs_eV": 9.5367431640625e-07,
+      "force_max_abs_eV_A": 8.016824722290039e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 2,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 1.7508864402770996e-06,
+      "force_max_abs_eV_A": 3.698468208312988e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 3,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 3.725290298461914e-06,
+      "force_max_abs_eV_A": 7.3015689849853516e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 4,
+      "coordinate_max_abs_A": 1.1920928955078125e-07,
+      "prediction_max_abs_eV": 1.9073486328125e-06,
+      "force_max_abs_eV_A": 1.1708616511896253e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 5,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 1.7695128917694092e-06,
+      "force_max_abs_eV_A": 7.539987564086914e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 6,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 3.5762786865234375e-07,
+      "force_max_abs_eV_A": 1.2516975402832031e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 7,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 1.8477439880371094e-06,
+      "force_max_abs_eV_A": 2.728402614593506e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    }
+  ],
+  "gradient_serial_batch_max_abs": 4.32133674621582e-06,
+  "atom_counts": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "autograd": 1.179612636566162,
+  "finite_difference": 1.1794565916061401,
+  "serial_seconds": 15.240829549729824,
+  "batch_seconds": 4.096958599984646,
+  "timing_scope": "Shared server, contention included"
+}

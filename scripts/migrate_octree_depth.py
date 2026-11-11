@@ -16,7 +16,7 @@ if a.output.exists():
 old, state = load_octree_checkpoint(a.checkpoint, device="cpu")
 if a.merge_level <= old.args.merge_level:
     raise ValueError("Depth migration must add at least one level")
-config = {"merge_level": a.merge_level}
+config = {"merge_level": a.merge_level, "allowed_elements": old.args.allow_atoms.split(",")}
 new = build_octree(
     "cpu", len(state["target_cols"]), condition_version=old.condition_version, representation_config=config
 )

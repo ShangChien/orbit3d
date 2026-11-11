@@ -22,6 +22,8 @@ p.add_argument('--weight', required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--device', default='cuda:0')
 p.add_argument('--homogeneous', action='store_true')
+p.add_argument('--property-tolerance',type=float,default=0.)
+p.add_argument('--energy-tolerance',type=float,default=0.)
 a = p.parse_args()
 freeze_run(a.output, __file__)
 lock_deterministic_environment(42)
@@ -55,7 +57,7 @@ fd = float((vp[0].sum() - vm[0].sum()) / (2*h))
 autograd = float(bg[0].reshape(-1)[coordinate])
 assert abs(fd - autograd) <= max(.01, abs(autograd)*.1)
 intervals = {'homo': [None, -7.2], 'lumo': [-.6, None]}
-settings = dict(n_steps=8, step_size=.004)
+settings = dict(n_steps=8, step_size=.004,property_tolerance=a.property_tolerance,energy_tolerance=a.energy_tolerance)
 start = time.perf_counter()
 serial = [relax_conformer_iso_property(inst, ff, oracle, intervals, **settings) for inst in instances]
 serial_seconds = time.perf_counter()-start
@@ -71,7 +73,7 @@ for i, ((x, rx), (y, ry)) in enumerate(zip(serial, batched)):
            'acceptance_identical': [(s['accepted'], s['backtracks']) for s in rx['history']] == [(s['accepted'], s['backtracks']) for s in ry['history']],
            'hit_identical': rx['interval_hit'] == ry['interval_hit']}
     rows.append(row)
-report = {'records': rows, 'gradient_serial_batch_max_abs': float((sg-bg[0]).abs().max()),
+report = {'acceptance_tolerances':{'property_eV':a.property_tolerance,'energy_eV':a.energy_tolerance}, 'records': rows, 'gradient_serial_batch_max_abs': float((sg-bg[0]).abs().max()),
           'atom_counts': [m.GetNumAtoms() for m in mols],
           'autograd': autograd, 'finite_difference': fd,
           'serial_seconds': serial_seconds, 'batch_seconds': batch_seconds, 'timing_scope': 'Shared server, contention included'}

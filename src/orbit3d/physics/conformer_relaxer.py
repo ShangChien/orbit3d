@@ -4,7 +4,7 @@ from dataclasses import replace
 import numpy as np
 import torch
 from ..constraints import TargetIntervals
-from ..generator.octree_tokenizer import ATOM_TYPES, mol3d_to_validated_rdkit_mol, mol_to_clean_smiles
+from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, mol_to_clean_smiles
 
 
 def project_force(force, gradient):
@@ -44,8 +44,7 @@ def relax_conformer_iso_property(
     inst = replace(inst, graph=initial_mol, smiles=mol_to_clean_smiles(initial_mol))
     device = torch.device(dpa_guidance.device_str)
     x = torch.tensor(inst.coords, dtype=torch.float32, device=device)
-    types = torch.tensor(inst.atom_types, dtype=torch.long, device=device)
-    symbols = [ATOM_TYPES[int(a)] for a in inst.atom_types]
+    symbols = inst.symbols
     targets = TargetIntervals.parse(target_interval, oracle.target_cols)
     movable = torch.ones_like(x)
     if len(frozen_indices):
@@ -66,7 +65,9 @@ def relax_conformer_iso_property(
             yp, ys, energy, force = oracle.forward_shared_force_and_property(coords.detach(), symbols)
         else:
             energy, force = dpa_guidance.compute_energy_and_forces(
-                coords.detach(), types, clip_forces=False, zero_com_forces=False
+                coords.detach(), torch.tensor([dpa_guidance.atom_type_map.index(s) for s in symbols],
+                                               dtype=torch.long, device=device),
+                clip_forces=False, zero_com_forces=False
             )
             try:
                 yp, ys = oracle.predict_3d_mols([mol])

@@ -1,0 +1,111 @@
+{
+  "passed": true,
+  "force_repeat_tolerance_eV_A": 1e-05,
+  "records": [
+    {
+      "smiles": "B(O)O",
+      "atomic_numbers": [
+        5,
+        8,
+        8,
+        1,
+        1,
+        1
+      ],
+      "energy_eV": -4821.151943682862,
+      "analytic_force_eV_A": -3.839914321899414,
+      "finite_difference_force_eV_A": -3.8399863988161087,
+      "type_order_energy_error_eV": 0.0,
+      "type_order_force_error_eV_A": 0.0
+    },
+    {
+      "smiles": "C[Si](C)(C)C",
+      "atomic_numbers": [
+        6,
+        14,
+        6,
+        6,
+        6,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "energy_eV": -12220.992272366764,
+      "analytic_force_eV_A": -1.0086383819580078,
+      "finite_difference_force_eV_A": -1.008284161798656,
+      "type_order_energy_error_eV": 0.0,
+      "type_order_force_error_eV_A": 0.0
+    },
+    {
+      "smiles": "C[Se]C",
+      "atomic_numbers": [
+        6,
+        34,
+        6,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "energy_eV": -67516.7523104443,
+      "analytic_force_eV_A": -1.3908051252365112,
+      "finite_difference_force_eV_A": -1.390797842759639,
+      "type_order_energy_error_eV": 0.0,
+      "type_order_force_error_eV_A": 0.0
+    },
+    {
+      "smiles": "C[As](C)C",
+      "atomic_numbers": [
+        6,
+        33,
+        6,
+        6,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "energy_eV": -64094.30163503708,
+      "analytic_force_eV_A": -3.278064012527466,
+      "finite_difference_force_eV_A": -3.2779518514871597,
+      "type_order_energy_error_eV": 0.0,
+      "type_order_force_error_eV_A": 0.0
+    },
+    {
+      "smiles": "C[Te]C",
+      "atomic_numbers": [
+        6,
+        52,
+        6,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "energy_eV": -9463.311235606521,
+      "analytic_force_eV_A": -1.192974328994751,
+      "finite_difference_force_eV_A": -1.1929375177714974,
+      "type_order_energy_error_eV": 0.0,
+      "type_order_force_error_eV_A": 0.0
+    }
+  ],
+  "scope": "Element identity and finite DPA force execution; not broad-element generator training or property accuracy."
+}

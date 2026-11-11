@@ -1,0 +1,86 @@
+{
+  "records": [
+    {
+      "index": 0,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 1.430511474609375e-06,
+      "force_max_abs_eV_A": 1.3161450624465942e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 1,
+      "coordinate_max_abs_A": 1.1920928955078125e-07,
+      "prediction_max_abs_eV": 1.9073486328125e-06,
+      "force_max_abs_eV_A": 4.880130290985107e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 2,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 9.5367431640625e-07,
+      "force_max_abs_eV_A": 3.6597251892089844e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 3,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 2.592802047729492e-06,
+      "force_max_abs_eV_A": 9.462237358093262e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 4,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 2.2798776626586914e-06,
+      "force_max_abs_eV_A": 9.350478649139404e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 5,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 1.6801059246063232e-06,
+      "force_max_abs_eV_A": 7.115304470062256e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 6,
+      "coordinate_max_abs_A": 2.9802322387695312e-06,
+      "prediction_max_abs_eV": 1.71661376953125e-05,
+      "force_max_abs_eV_A": 0.00021693110466003418,
+      "acceptance_identical": false,
+      "hit_identical": true
+    },
+    {
+      "index": 7,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 1.430511474609375e-06,
+      "force_max_abs_eV_A": 2.9653310775756836e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    }
+  ],
+  "gradient_serial_batch_max_abs": 4.32133674621582e-06,
+  "atom_counts": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "autograd": 1.179612636566162,
+  "finite_difference": 1.1794565916061401,
+  "serial_seconds": 14.564479481428862,
+  "batch_seconds": 3.215642958879471,
+  "timing_scope": "Shared server, contention included",
+  "passed": false,
+  "note": "Strict zero-tolerance acceptance diverges on one of eight frames after correcting energy precision; interval-hit decisions remain identical. Failed original 1e-5 property/coordinate and 1e-4 force comparison, retained as negative evidence."
+}

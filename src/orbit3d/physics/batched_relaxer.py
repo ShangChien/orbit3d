@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from .conformer_relaxer import cap_molecular_displacement
 from ..constraints import TargetIntervals
-from ..generator.octree_tokenizer import ATOM_TYPES, mol3d_to_validated_rdkit_mol
+from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol
 
 
 def relax_conformers_iso_property(instances, forcefield, oracle, target_interval, n_steps=35,
@@ -14,7 +14,7 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
                                  frozen_indices=None, coordinate_bounds=None):
     if getattr(oracle, 'dpa_guidance', None) is not forcefield:
         raise ValueError('Native batched refinement requires the shared DPA property Oracle')
-    if n_steps < 0 or step_size <= 0 or max_atom_disp <= 0:
+    if n_steps < 0 or step_size <= 0 or max_atom_disp <= 0 or property_tolerance < 0 or energy_tolerance < 0:
         raise ValueError('Invalid batched refinement settings')
     targets = TargetIntervals.parse(target_interval, oracle.target_cols)
     device = torch.device(forcefield.device_str)
@@ -38,7 +38,7 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
 
     for original_ids in groups.values():
         items = [checked[i] for i in original_ids]
-        symbols = [[ATOM_TYPES[int(t)] for t in inst.atom_types] for inst in items]
+        symbols = [inst.symbols for inst in items]
         x = torch.tensor(np.stack([m.coords for m in items]), dtype=torch.float32, device=device)
         b, n, _ = x.shape
         k = len(targets.names)
@@ -55,7 +55,7 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
             size = len(ids)
             y = torch.full((size, k), torch.nan, device=device)
             std = torch.full_like(y, torch.nan)
-            energy = torch.full((size,), torch.nan, device=device)
+            energy = torch.full((size,), torch.nan, dtype=torch.float64, device=device)
             force = torch.full_like(values, torch.nan)
             usable = []
             coordinates = values.detach().cpu().numpy()
@@ -73,7 +73,8 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
             if usable:
                 with torch.no_grad():
                     yp, sp, ep, fp = oracle.forward_shared_batch(values[usable], [symbols[ids[j]] for j in usable])
-                y[usable], std[usable], energy[usable], force[usable] = yp, sp, ep, fp
+                y[usable], std[usable], force[usable] = yp, sp, fp
+                energy[usable] = ep.double()
             finite = torch.isfinite(y).all(-1) & torch.isfinite(std).all(-1) & torch.isfinite(energy) & torch.isfinite(force).all((-1, -2))
             return energy, force, y, std, finite
 

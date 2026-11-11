@@ -189,3 +189,19 @@ def test_larger_octree_retains_all_atoms_at_fixed_resolution():
     assert len(coords) == 16
     np.testing.assert_allclose(np.sort(distance.ravel()), np.sort(expected.ravel()), atol=.018)
     assert packed['decoder_level'].max() == 7
+
+
+def test_expanding_allowed_elements_retains_dictionary_ids_and_changes_support():
+    from orbit3d.generator.octree_backend import checkpoint_contract
+    args = build_default_uni3dar_args(1)
+    args.emb_dim=96;args.num_head=4;args.layer=2
+    old=ConditionalUni3DAR(args,AtomFeatDict(args),2)
+    import copy
+    new_args=copy.copy(args)
+    new_args.allow_atoms='H,C,N,O,F,B,Si,Se,As,Te'
+    new=ConditionalUni3DAR(new_args,AtomFeatDict(new_args),2)
+    assert old.dictionary.atom_type==new.dictionary.atom_type
+    new.load_state_dict(old.state_dict(),strict=True)
+    assert not old.allowed_atom_mask(torch.device('cpu'))[old.dictionary['B']]
+    assert new.allowed_atom_mask(torch.device('cpu'))[new.dictionary['B']]
+    assert checkpoint_contract(old,['homo','lumo'],['eV','eV'],[0,0],[1,1]) != checkpoint_contract(new,['homo','lumo'],['eV','eV'],[0,0],[1,1])

@@ -57,10 +57,11 @@ class DPAPotentialGuidance(nn.Module):
             if isinstance(head_param, dict) and "use_compile" in head_param:
                 head_param["use_compile"] = False
 
-        desc_cfg = head_param.get("descriptor", {}) if isinstance(head_param, dict) else {}
-        fit_cfg = head_param.get("fitting_net", {}) if isinstance(head_param, dict) else {}
-        prec_str = desc_cfg.get("precision", fit_cfg.get("precision", "float64"))
-        self.coord_dtype = torch.float32 if prec_str in ("float32", "single", "fp32") else torch.float64
+        # DeePMD preserves reduced energy in float64 but casts atom energies
+        # to the input dtype. Keep coordinate I/O in float64 so aggregation does
+        # not quantize large atomic reference energies; network layers retain
+        # the precision declared by their checkpoint.
+        self.coord_dtype = torch.float64
 
         model = get_model(head_param).to(device)
         self.wrapper = ModelWrapper(model)
@@ -125,7 +126,8 @@ class DPAPotentialGuidance(nn.Module):
         """
         Single forward/backward pass through frozen DPA-4 that extracts:
           1. `native_descriptor`: `(N, D_desc)` — 100% of DPA-4's internal multi-layer equivariant
-             per-atom representation (`inp[0]` passed into `SeZMEnergyFittingNet`), differentiable w.r.t. `coords`!
+             per-atom representation (`inp[0]` passed into `SeZMEnergyFittingNet`).
+             Use `extract_differentiable_descriptor` for coordinate gradients; the native force trace may detach edges.
           2. `energy_ev`: scalar physical potential energy (eV)
           3. `forces_eva`: `(N, 3)` physical atomic restoring forces `F_phys` (eV/Å)
         """
@@ -154,7 +156,7 @@ class DPAPotentialGuidance(nn.Module):
 
         native_desc = captured["descriptor"].float()
         forces = pred_dict["force"].squeeze(0).detach().to(coords.dtype)
-        energy = pred_dict["energy"].squeeze().detach().to(coords.dtype)
+        energy = pred_dict["energy"].squeeze().detach().double()
         if not all(torch.isfinite(v).all() for v in (native_desc, energy, forces)):
             raise FloatingPointError("Nonfinite DPA descriptor/energy/forces")
         return native_desc, energy, forces
@@ -218,7 +220,7 @@ class DPAPotentialGuidance(nn.Module):
         finally:
             hook.remove()
         descriptor = captured['descriptor'].detach()
-        energy = prediction['energy'].reshape(batch).detach().to(coords.dtype)
+        energy = prediction['energy'].reshape(batch).detach().double()
         forces = prediction['force'].reshape(batch, atoms, 3).detach().to(coords.dtype)
         if check_finite and not all(torch.isfinite(v).all() for v in [descriptor, energy, forces]):
             raise FloatingPointError('Nonfinite native DPA batch')
@@ -301,8 +303,9 @@ class DPAPotentialGuidance(nn.Module):
                     device=device,
                 )
 
-        mol_energies = torch.zeros(batch_size, dtype=coords.dtype, device=device)
-        mol_energies.index_add_(0, node_batch_idx, atom_energies.to(coords.dtype))
+        # Preserve small energy differences on top of large atomic reference offsets.
+        mol_energies = torch.zeros(batch_size, dtype=torch.float64, device=device)
+        mol_energies.index_add_(0, node_batch_idx, atom_energies.double())
         forces = forces.to(coords.dtype)
 
         if not torch.isfinite(mol_energies).all() or not torch.isfinite(forces).all():

@@ -72,7 +72,7 @@ def align_octree(
                    'token_sha256': hashlib.sha256(tokens.tobytes()).hexdigest(),
                    'atom_symbols': trajectory['atom_symbols'], 'coordinates_A': trajectory['positions_np'].tolist()}
             try:
-                inst = trajectory_to_instance(trajectory)
+                inst = trajectory_to_instance(trajectory, element_table=tuple(model.args.allow_atoms.split(',')))
                 row.update(valid=True, smiles=inst.smiles)
                 similarity = domain.score(inst.graph) if domain else None
                 row['oracle_domain_similarity'] = similarity
@@ -102,7 +102,7 @@ def align_octree(
                     prediction = np.asarray(prediction).reshape(-1)
                     std = np.asarray(std).reshape(-1)
                     energy, force = forcefield.compute_energy_and_forces(
-                        torch.tensor(inst.coords, device=device), torch.tensor(inst.atom_types, device=device),
+                        torch.tensor(inst.coords, device=device), torch.tensor([forcefield.atom_type_map.index(s) for s in inst.symbols], device=device),
                         clip_forces=False, zero_com_forces=False,
                     )
                 if (

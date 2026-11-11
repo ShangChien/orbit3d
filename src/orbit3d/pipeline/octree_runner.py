@@ -154,7 +154,7 @@ def run_octree_from_config(cfg, config_path=None):
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
                     "train_backbone": train_backbone,
-                    "representation_config": {'merge_level': model.args.merge_level},
+                    "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
                     "representation_migration": ({**initial_state.get('representation_migration', {}),
                         'requires_adaptation': steps <= 0} if initial_state and initial_state.get('representation_migration') else {}),
                 },
@@ -215,6 +215,7 @@ def run_octree_from_config(cfg, config_path=None):
     if mode == "train":
         return {"checkpoint": str(checkpoint), "history": history}
     model.eval()
+    ff.set_atom_type_map(model.args.allow_atoms.split(','))
     if spatial_box:
         spatial_box.validate_model(model.args)
     intervals = TargetIntervals.parse(inference["target_interval"], names)
@@ -258,7 +259,7 @@ def run_octree_from_config(cfg, config_path=None):
                 "scale": scale,
                 "grpo_history": history,
                 "alignment_reference_sha256": reference_hash,
-                "representation_config": {'merge_level': model.args.merge_level},
+                "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
                 "training_smiles": sorted(train_smiles),
             },
             checkpoint,
@@ -332,7 +333,7 @@ def run_octree_from_config(cfg, config_path=None):
                 else None,
             }
             try:
-                inst = trajectory_to_instance(trajectory, spatial_box)
+                inst = trajectory_to_instance(trajectory, spatial_box, tuple(model.args.allow_atoms.split(',')))
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
                 score = float(np.square(intervals.violations(self_y).numpy() / scale).sum())
                 row.update(smiles=inst.smiles, self_score=score, raw_valid=True)
@@ -398,12 +399,15 @@ def run_octree_from_config(cfg, config_path=None):
     relax_settings = cfg.get("stage5_relax_config", {})
     relax_steps = int(relax_settings.get("relax_steps", 8)) if relax_settings.get("enabled", True) else 0
     use_batch_refinement = bool(relax_settings.get('batch_refinement', False))
+    acceptance_tolerances = {key: float(relax_settings.get(key, 0.))
+                             for key in ['property_tolerance', 'energy_tolerance']}
     batch_results = None
     if use_batch_refinement:
         batch_start = time.perf_counter()
         batch_results = relax_conformers_iso_property(
             [inst for _, inst in selected], ff, oracle, dict(zip(names, intervals.bounds)),
             n_steps=relax_steps, step_size=float(relax_settings.get('step_size', .004)),
+            **acceptance_tolerances,
             coordinate_bounds=spatial_box.world_bounds if spatial_box else None,
         )
         stage_seconds['refinement'] = time.perf_counter() - batch_start
@@ -421,6 +425,7 @@ def run_octree_from_config(cfg, config_path=None):
                     inst, ff, oracle, dict(zip(names, intervals.bounds)),
                     n_steps=relax_steps,
                     step_size=float(relax_settings.get("step_size", 0.004)),
+                    **acceptance_tolerances,
                     coordinate_bounds=spatial_box.world_bounds if spatial_box else None,
                 )
             except (ValueError, FloatingPointError) as exc:
@@ -488,6 +493,7 @@ def run_octree_from_config(cfg, config_path=None):
         "export_recheck_calls": len(exported),
         "stage_seconds": stage_seconds,
         "batch_refinement": use_batch_refinement,
+        "acceptance_tolerances": acceptance_tolerances,
         "retained_morgan_diversity": float(1 - np.mean(similarities)) if similarities else None,
         "refinement_failed": sum(r["status"] == "refinement_failed" for r in records),
         "oracle_failed": sum(r['status'] == 'oracle_failed' for r in records),

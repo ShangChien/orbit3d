@@ -56,6 +56,16 @@ class Mol3DInstance:
     charge: int = 0
     multiplicity: int = 1
     token_ids: List[int] = field(default_factory=list)
+    element_table: tuple[str, ...] = tuple(ATOM_TYPES)
+
+    @property
+    def symbols(self):
+        return [self.element_table[int(t)] for t in self.atom_types]
+
+    @property
+    def atomic_numbers(self):
+        table = Chem.GetPeriodicTable()
+        return np.array([table.GetAtomicNumber(s) for s in self.symbols], dtype=np.int64)
 
 
 def _coord_to_bin(val: float) -> int:
@@ -77,6 +87,8 @@ def _bin_to_coord(tok: int) -> float:
 
 def encode_mol_to_octree_tokens(inst: Mol3DInstance, max_atoms: int = 40) -> List[int]:
     """Orders atoms radially from center of mass and encodes `[atom_tok, x_bin, y_bin, z_bin]`."""
+    if tuple(inst.element_table) != tuple(ATOM_TYPES):
+        raise ValueError('dense_grid_v2 requires its original element table; token offsets are unchanged')
     coords = np.asarray(inst.coords, dtype=np.float32)
     if len(coords) == 0 or len(coords) > max_atoms:
         raise ValueError("Empty or oversized molecule; no truncation allowed")
@@ -142,9 +154,9 @@ def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
     n = len(types)
     if n == 0 or coords.shape != (n, 3) or not np.isfinite(coords).all():
         raise ValueError('coordinates: empty, malformed or nonfinite')
-    if np.any((types < 0) | (types >= NUM_ATOM_TYPES)) or not np.equal(types, types.astype(int)).all():
+    if np.any((types < 0) | (types >= len(inst.element_table))) or not np.equal(types, types.astype(int)).all():
         raise ValueError('elements: atom indices outside the representation')
-    syms = [ATOM_TYPES[int(a)] for a in types]
+    syms = inst.symbols
     distances = np.linalg.norm(coords[:, None] - coords[None, :], axis=-1)
     np.fill_diagonal(distances, np.inf)
     if n > 1 and distances.min() < 0.45:
@@ -186,7 +198,9 @@ def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
         raise ValueError('radicals: closed-shell generation contains radical centers')
     for bond in mol.GetBonds():
         i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
-        radius = _COVALENT_RADII[syms[i]] + _COVALENT_RADII[syms[j]]
+        table = Chem.GetPeriodicTable()
+        radii = [_COVALENT_RADII[s] if s in _COVALENT_RADII else table.GetRcovalent(table.GetAtomicNumber(s)) for s in (syms[i], syms[j])]
+        radius = sum(radii)
         if not 0.6 * radius <= distances[i, j] <= 1.4 * radius:
             raise ValueError(f'bond_geometry: {i}-{j} ({syms[i]}-{syms[j]}) length {distances[i,j]:.6f} A')
     mol.SetIntProp('TotalCharge', int(inst.charge))
@@ -212,7 +226,7 @@ def mol3d_to_validated_rdkit_mol(inst: Mol3DInstance) -> Chem.Mol:
     return _validated_molecule(inst)
 
 
-def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True) -> Optional[Mol3DInstance]:
+def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True, element_table=tuple(ATOM_TYPES)) -> Optional[Mol3DInstance]:
     """Converts an RDKit 3D Mol to a `Mol3DInstance`."""
     if mol is None or mol.GetNumConformers() == 0:
         return None
@@ -223,9 +237,9 @@ def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True) -
     atypes = []
     for a in mol.GetAtoms():
         sym = a.GetSymbol()
-        if sym not in ATOM_TYPES:
+        if sym not in element_table:
             raise ValueError(f"Unsupported generator element: {sym}")
-        atypes.append(ATOM_TYPES.index(sym))
+        atypes.append(element_table.index(sym))
     props = np.asarray(y_vec, dtype=np.float32).copy()
     smi = mol_to_clean_smiles(mol)
     return Mol3DInstance(
@@ -236,6 +250,7 @@ def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True) -
         graph=Chem.Mol(mol),
         charge=Chem.GetFormalCharge(mol),
         multiplicity=mol.GetIntProp("SpinMultiplicity") if mol.HasProp("SpinMultiplicity") else 1,
+        element_table=tuple(element_table),
     )
 
 

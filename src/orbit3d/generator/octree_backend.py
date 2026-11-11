@@ -53,12 +53,17 @@ def build_octree(device="cuda:0", targets=2, batch_size=16, condition_version=2,
     args = build_default_uni3dar_args(batch_size)
     args.condition_version = condition_version
     if representation_config is not None:
-        if set(representation_config) != {'merge_level'}:
+        if 'merge_level' not in representation_config or set(representation_config) - {'merge_level', 'allowed_elements'}:
             raise ValueError('Grid migration currently changes tree depth only, at fixed physical resolution')
         depth = representation_config['merge_level']
         if not isinstance(depth, int) or not 6 <= depth <= 8:
             raise ValueError('Supported migrated octree depths are 6 through 8')
         args.merge_level = depth
+        elements = representation_config.get('allowed_elements', args.allow_atoms.split(','))
+        table = Chem.GetPeriodicTable()
+        if not elements or len(set(elements)) != len(elements) or any(table.GetAtomicNumber(s) <= 0 for s in elements):
+            raise ValueError('Allowed generator elements must be unique atomic symbols')
+        args.allow_atoms = ','.join(elements)
     return ConditionalUni3DAR(args, AtomFeatDict(args), num_props=targets).to(device)
 
 
@@ -116,12 +121,12 @@ def interval_arrays(intervals, mean, scale, condition_version):
     return bounds[:, 0], bounds[:, 1], active
 
 
-def trajectory_to_instance(trajectory, spatial_box=None):
+def trajectory_to_instance(trajectory, spatial_box=None, element_table=tuple(ATOM_TYPES)):
     symbols = trajectory["atom_symbols"]
-    types = np.array([ATOM_TYPES.index(s) for s in symbols], dtype=np.int64)
+    types = np.array([element_table.index(s) for s in symbols], dtype=np.int64)
     coords = np.asarray(trajectory["positions_np"], dtype=np.float32)
     coords = spatial_box.to_world(coords) if spatial_box else coords - coords.mean(0)
-    inst = Mol3DInstance(coords=coords, atom_types=types)
+    inst = Mol3DInstance(coords=coords, atom_types=types, element_table=tuple(element_table))
     molecule = mol3d_to_validated_rdkit_mol(inst)
     inst.graph = molecule
     inst.smiles = mol_to_clean_smiles(molecule)

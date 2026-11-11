@@ -126,6 +126,7 @@ class BondOracle(PropertyOracleBase):
 
 class BondForce:
     device_str = "cpu"
+    atom_type_map = ATOM_TYPES
 
     def __init__(self, target):
         self.target = target
@@ -295,6 +296,7 @@ def test_raw_nan_force_rejected():
 
     class BadForce:
         device_str = "cpu"
+        atom_type_map = ATOM_TYPES
 
         def compute_energy_and_forces(self, x, *a, **kw):
             return torch.tensor([0.0]), torch.full_like(x, float("nan"))
@@ -364,3 +366,56 @@ def test_displacement_cap_preserves_molecular_tangent_and_batch_independence():
     torch.testing.assert_close(result[0], capped)
     torch.testing.assert_close(result[1], batch[1])
     torch.testing.assert_close(result[2], batch[2])
+
+
+@pytest.mark.parametrize('smiles', ['B(O)O', 'C[Si](C)(C)C', 'C[Se]C', 'C[As](C)C', 'C[Te]C'])
+def test_explicit_element_table_preserves_wide_elements_without_changing_dense_vocabulary(smiles):
+    mol = embedded(smiles)
+    table = tuple(sorted({a.GetSymbol() for a in mol.GetAtoms()}))
+    inst = rdkit_mol_to_mol3d_instance(mol, np.zeros(1), element_table=table)
+    out = mol3d_to_validated_rdkit_mol(inst)
+    assert [a.GetAtomicNum() for a in out.GetAtoms()] == inst.atomic_numbers.tolist()
+    assert Chem.MolToSmiles(out) == Chem.MolToSmiles(mol)
+    assert COORD_OFFSET == 13 and VOCAB_SIZE == 269
+    with pytest.raises(ValueError, match='original element table'):
+        encode_mol_to_octree_tokens(inst)
+
+
+def test_forcefield_indices_follow_its_own_element_table():
+    from orbit3d.oracles.base import PropertyOracleBase
+    mol = embedded('C')
+    inst = rdkit_mol_to_mol3d_instance(mol, np.zeros(1), element_table=('H','C'))
+    class FixedOracle(PropertyOracleBase):
+        target_cols = ['x']
+        def predict_3d_mols(self, molecules):
+            return np.zeros((len(molecules),1)), np.zeros((len(molecules),1))
+    class FixedField:
+        device_str = 'cpu'
+        atom_type_map = ['C','H']
+        def compute_energy_and_forces(self, coords, types, **kwargs):
+            assert types.tolist() == [0,1,1,1,1]
+            return torch.tensor(0.), torch.zeros_like(coords)
+    out,_ = relax_conformer_iso_property(inst,FixedField(),FixedOracle(),[-1,1],n_steps=0)
+    assert out.symbols == inst.symbols
+
+
+def test_large_atomic_energy_offsets_do_not_erase_small_physical_energy_changes():
+    from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+    class AnalyticNative(torch.nn.Module):
+        def forward(self, coords, atom_types):
+            # The large atomic reference energy is common in heavy-element MLIPs.
+            atom_energy = 1e8 + coords.double().square().sum(-1)
+            return [{'atom_energy':atom_energy,'energy':atom_energy.sum(-1),'force':-2*coords}]
+    ff=DPAPotentialGuidance.__new__(DPAPotentialGuidance)
+    torch.nn.Module.__init__(ff)
+    ff.wrapper=AnalyticNative();ff.coord_dtype=torch.float64
+    ff.device_str='cpu';ff.batch_separation=100.;ff.atom_type_map=['C']
+    ff.register_buffer('dataset_to_dpa_idx',torch.zeros(1,dtype=torch.long))
+    x=torch.tensor([[-1.,0,0],[1.,0,0]],dtype=torch.float32)
+    moved=x.clone();moved[:,0]*=1.001
+    types=torch.zeros(2,dtype=torch.long)
+    e,_=ff.compute_energy_and_forces(x,types,clip_forces=False,zero_com_forces=False)
+    after,_=ff.compute_energy_and_forces(moved,types,clip_forces=False,zero_com_forces=False)
+    expected=(moved.double().square()-x.double().square()).sum()
+    assert e.dtype==torch.float64
+    torch.testing.assert_close(after-e,expected.reshape(1),atol=1e-7,rtol=0)
