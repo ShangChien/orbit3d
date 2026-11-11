@@ -1,0 +1,42 @@
+{
+  "tier": "presto",
+  "weights_sha256": "353d6b3cdf3934cb71c9f0f18b65c184a39121644a1d93327b6f60dea93cc257",
+  "charges": [
+    0,
+    0,
+    1,
+    0
+  ],
+  "multiplicities": [
+    1,
+    1,
+    1,
+    2
+  ],
+  "atom_counts": [
+    8,
+    6,
+    5,
+    4
+  ],
+  "reference_energy_eV": [
+    -0.9623419642448425,
+    -0.4794679880142212,
+    4.5801615715026855,
+    1.500844955444336
+  ],
+  "native_energy_eV": [
+    -0.9623405337333679,
+    -0.47946789860725403,
+    4.580158233642578,
+    1.5008437633514404
+  ],
+  "max_energy_error_eV": 3.337860107421875e-06,
+  "max_raw_force_error_eV_A": 7.3909759521484375e-06,
+  "finite_difference_force_eV_A": 1.8873213529586792,
+  "analytic_force_eV_A": 1.8869518041610718,
+  "force_difference_tolerance_eV_A": 0.001,
+  "energy_difference_tolerance_eV": 0.001,
+  "scope": "Checkpoint execution only; not broad-element generation or property accuracy",
+  "passed": true
+}

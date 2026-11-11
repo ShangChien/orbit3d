@@ -1,14 +1,7 @@
-"""
-HyFF (Hunyuan Force Field) Interatomic Potential & Native Descriptor Extractor (`hyff_forcefield.py`)
-====================================================================================================
-Pluggable MLIP backend wrapping Tencent Hunyuan's OMol25-pretrained `HyFF` series
-(`presto`, `vivace`, `moderato`, `andante`, `largo`) with full API parity to `DPAPotentialGuidance`:
-  1. Supports fused Triton + CUDA Graph batched evaluation (`route="native"`) and pure-GPU PyTorch
-     autograd evaluation (`route="reference"` / `"auto"`), with automatic capacity/singularity fallback.
-  2. Natively accepts total molecular `charge` and spin `multiplicity` ($2S + 1$), covering all 83
-     OMol25 elements (`H` to `Bi`, including heavy organometallic emitters such as `Ir`, $Z=77$).
-  3. Exposes 100% differentiable final-layer per-atom invariant representations from `readout_norms[-1]`
-     for shared-backbone property prediction & tangent-projected relaxation (Mode C).
+"""HyFF energy, force and descriptor adapter with explicit execution routes.
+
+Native and reference engines use the same requested checkpoint. Selected-route
+failures propagate; element identity is never replaced to fit the model vocabulary.
 """
 
 from __future__ import annotations
@@ -58,6 +51,8 @@ class HyFFPotentialGuidance(nn.Module):
         self.max_force_norm = max_force_norm
         self.default_charge = float(default_charge)
         self.default_multiplicity = int(default_multiplicity)
+        if route not in {'auto', 'reference', 'native'}:
+            raise ValueError(f'Unknown HyFF execution route: {route}')
         self.route = route
         self.min_clamped_dist = float(min_clamped_dist)
 
@@ -65,7 +60,10 @@ class HyFFPotentialGuidance(nn.Module):
         from hyff.weights import load_model
 
         self.selection = resolve(self.tier, weights=weights)
+        self.model_path = str(self.selection.weights)
         self.hyff_device = "cuda" if self.device_str.startswith("cuda") else "cpu"
+        if route == 'native' and self.hyff_device != 'cuda':
+            raise ValueError('Native HyFF execution requires CUDA')
 
         # Load clean PyTorch reference model for differentiable autograd & small-batch/fallback calls
         self.ref_model, self.model_config = load_model(self.selection.weights, self.device_str)
@@ -121,18 +119,22 @@ class HyFFPotentialGuidance(nn.Module):
                 pass
             self._native_cp = None
 
+    def _atomic_numbers(self, symbols):
+        numbers = []
+        for symbol in symbols:
+            try:
+                z = int(self._pt.GetAtomicNumber(str(symbol).strip()))
+            except RuntimeError as exc:
+                raise ValueError(f'Unknown element: {symbol}') from exc
+            if not 1 <= z <= 83:
+                raise ValueError(f'Element outside HyFF vocabulary: {symbol}')
+            numbers.append(z)
+        return numbers
+
     def set_atom_type_map(self, atom_type_map: List[str]) -> None:
         """Maps dataset atom symbols (e.g. `['C', 'H', 'N', 'O', 'Ir']`) to integer atomic numbers $Z \\in [1, 83]$."""
         self.atom_type_map = list(atom_type_map)
-        z_list = []
-        for sym in self.atom_type_map:
-            try:
-                z = int(self._pt.GetAtomicNumber(str(sym).strip()))
-                if not (1 <= z <= 83):
-                    z = 6
-            except Exception:
-                z = 6
-            z_list.append(z)
+        z_list = self._atomic_numbers(self.atom_type_map)
         self.register_buffer(
             "dataset_to_atomic_num",
             torch.tensor(z_list, dtype=torch.long, device=self.device_str),
@@ -197,15 +199,7 @@ class HyFFPotentialGuidance(nn.Module):
         from hyff.graph import radius_edges
 
         device = torch.device(self.device_str)
-        z_list = []
-        for sym in atom_symbols:
-            try:
-                z = int(self._pt.GetAtomicNumber(str(sym).strip()))
-                if not (1 <= z <= 83):
-                    z = 6
-            except Exception:
-                z = 6
-            z_list.append(z)
+        z_list = self._atomic_numbers(atom_symbols)
 
         need_outer_grad = bool(coords.requires_grad)
         coords_in = coords.to(device=device, dtype=torch.float32)
@@ -350,41 +344,36 @@ class HyFFPotentialGuidance(nn.Module):
         forces: Optional[torch.Tensor] = None
 
         if use_native:
-            try:
-                is_sorted = bool(n_total <= 1 or (node_batch_idx[1:] >= node_batch_idx[:-1]).all())
-                if not is_sorted:
-                    perm = torch.argsort(node_batch_idx, stable=True)
-                    inv_perm = torch.argsort(perm)
-                    coords_s = coords[perm]
-                    z_s = atomic_nums[perm]
-                    b_s = node_batch_idx[perm]
-                else:
-                    inv_perm = None
-                    coords_s = coords
-                    z_s = atomic_nums
-                    b_s = node_batch_idx
+            is_sorted = bool(n_total <= 1 or (node_batch_idx[1:] >= node_batch_idx[:-1]).all())
+            if not is_sorted:
+                perm = torch.argsort(node_batch_idx, stable=True)
+                inv_perm = torch.argsort(perm)
+                coords_s = coords[perm]
+                z_s = atomic_nums[perm]
+                b_s = node_batch_idx[perm]
+            else:
+                inv_perm = None
+                coords_s = coords
+                z_s = atomic_nums
+                b_s = node_batch_idx
 
-                counts = torch.bincount(b_s, minlength=batch_size)
-                if bool((counts > 0).all()):
-                    offsets_np = np.zeros(batch_size + 1, dtype=np.int64)
-                    offsets_np[1:] = np.cumsum(counts.detach().cpu().numpy(), dtype=np.int64)
-                    pos_np = coords_s.detach().cpu().numpy().astype(np.float32, copy=False)
-                    z_np = z_s.detach().cpu().numpy().astype(np.int64, copy=False)
-                    chg_np = charges_t.detach().cpu().numpy().astype(np.float32, copy=False)
-                    mult_np = mults_t.detach().cpu().numpy().astype(np.int64, copy=False)
+            counts = torch.bincount(b_s, minlength=batch_size)
+            if not bool((counts > 0).all()):
+                raise ValueError('Native HyFF batches require nonempty molecule frames')
+            offsets_np = np.zeros(batch_size + 1, dtype=np.int64)
+            offsets_np[1:] = np.cumsum(counts.detach().cpu().numpy(), dtype=np.int64)
+            pos_np = coords_s.detach().cpu().numpy().astype(np.float32, copy=False)
+            z_np = z_s.detach().cpu().numpy().astype(np.int64, copy=False)
+            chg_np = charges_t.detach().cpu().numpy().astype(np.float32, copy=False)
+            mult_np = mults_t.detach().cpu().numpy().astype(np.int64, copy=False)
 
-                    cp = self._get_or_create_native_cp(batch_size, n_total)
-                    out = cp.predict(pos_np, z_np, offsets_np, chg_np, mult_np)
-                    mol_energies = torch.as_tensor(out["energies"], dtype=coords.dtype, device=device)
-                    f_t = torch.as_tensor(out["forces"], dtype=coords.dtype, device=device)
-                    forces = f_t[inv_perm] if inv_perm is not None else f_t
-            except Exception:
-                # Fallback seamlessly to pure-GPU PyTorch reference when extreme noisy overlaps
-                # overflow fixed neighbor/expert capacities during early generative steps
-                mol_energies = None
-                forces = None
+            cp = self._get_or_create_native_cp(batch_size, n_total)
+            out = cp.predict(pos_np, z_np, offsets_np, chg_np, mult_np)
+            mol_energies = torch.as_tensor(out["energies"], dtype=coords.dtype, device=device)
+            f_t = torch.as_tensor(out["forces"], dtype=coords.dtype, device=device)
+            forces = f_t[inv_perm] if inv_perm is not None else f_t
 
-        if mol_energies is None or forces is None:
+        else:
             mol_energies, forces = self._compute_pytorch_gpu(
                 coords=coords,
                 atomic_nums=atomic_nums,

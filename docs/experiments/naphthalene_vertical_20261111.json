@@ -12,5 +12,16 @@
     2.6072349529360044
   ],
   "S1_minus_T1_eV": 1.9946925455989375,
-  "ground_result_sha256": "998726b7595f7d9e14e0f94f0f5d55bfad823f547ad88ef51e0e4902193d1b5e"
+  "ground_result_sha256": "998726b7595f7d9e14e0f94f0f5d55bfad823f547ad88ef51e0e4902193d1b5e",
+  "cpu_cross_check": {
+    "singlet_eV": [
+      4.60192612818158
+    ],
+    "triplet_eV": [
+      2.607236451089074
+    ],
+    "S1_minus_T1_eV": 1.994689677092506,
+    "ground_energy_Ha": -385.28738389221184
+  },
+  "cpu_gpu_max_excitation_difference_eV": 1.4981530696012157e-06
 }

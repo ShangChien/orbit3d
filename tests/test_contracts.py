@@ -316,3 +316,36 @@ def test_refinement_freezes_inferred_graph():
     result, _ = relax_conformer_iso_property(inst, BondForce(d), BondOracle(), (0, 10), n_steps=0)
     assert result.graph is not None
     assert Chem.MolToSmiles(Chem.RemoveHs(result.graph)) == "CC"
+
+
+def test_hyff_never_substitutes_unknown_elements_with_carbon():
+    from orbit3d.physics.hyff_forcefield import HyFFPotentialGuidance
+    ff = HyFFPotentialGuidance.__new__(HyFFPotentialGuidance)
+    torch.nn.Module.__init__(ff)
+    ff._pt = Chem.GetPeriodicTable()
+    ff.device_str = 'cpu'
+    ff.set_atom_type_map(['C', 'Si', 'Ir'])
+    assert ff.dataset_to_atomic_num.tolist() == [6, 14, 77]
+    with pytest.raises(ValueError, match='Unknown element'):
+        ff.set_atom_type_map(['not_an_element'])
+    with pytest.raises(ValueError, match='outside HyFF'):
+        ff.set_atom_type_map(['U'])
+
+
+def test_hyff_native_failure_is_not_silently_replaced_by_reference():
+    from orbit3d.physics.hyff_forcefield import HyFFPotentialGuidance
+    ff = HyFFPotentialGuidance.__new__(HyFFPotentialGuidance)
+    torch.nn.Module.__init__(ff)
+    ff._pt = Chem.GetPeriodicTable()
+    ff.device_str = 'cpu'
+    ff.hyff_device = 'cuda'  # Exercise route dispatch without requiring a GPU kernel.
+    ff.route = 'native'
+    ff.tier = 'presto'
+    ff.default_charge, ff.default_multiplicity = 0., 1
+    ff.set_atom_type_map(['C'])
+    def unavailable(*args):
+        raise RuntimeError('Native capacity exceeded')
+    ff._get_or_create_native_cp = unavailable
+    ff._compute_pytorch_gpu = lambda **kwargs: pytest.fail('Silent engine replacement')
+    with pytest.raises(RuntimeError, match='Native capacity'):
+        ff.compute_energy_and_forces(torch.zeros(2, 3), torch.zeros(2, dtype=torch.long))
