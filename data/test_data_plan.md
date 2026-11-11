@@ -1,5 +1,16 @@
 # MIM-Flow 与 OCELOT 测试数据方案
 
+
+**Current status (2026-11-12):** The earlier size/range discussion below refers to
+the initial dense-grid compatibility audit. The primary implementation is now
+pretrained octree, with explicit depth-seven/15-element adaptation and matched
+four-target DPA/HyFF evaluation. QM9s adaptation and the strict closed-shell
+MR-TADF boron cohort are complete. Only 1641 unique MR-TADF training structures
+pass the complete explicit-H closed-shell audit; original spectra remain separate
+from OCELOT orbital/excitation labels. See [the wide-element report](../docs/wide-element-adaptation.md)
+and [the boron quantum cohort](../docs/boron-quantum-cohort.md) for current results.
+DB_chromophore and the other figshare data remain deferred as requested.
+
 2026-11-11 根据用户决定，优先使用 MIM-Flow 与 OCELOT。DB_chromophore 和其他
 figshare 表暂缓进入测试，保留原文件，待独立清洗。两套优先数据按任务分别使用，
 不直接拼接标签或混合统计测试成绩。

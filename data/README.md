@@ -31,9 +31,21 @@ labels, records duplicate aliases and groups splits by Bemis-Murcko scaffold.
 Raw files are unchanged. Larger molecules are retained in `deferred_size.csv`;
 unsupported elements are recorded separately, never mapped to carbon.
 
+The current expanded experiment uses the 80-atom, 15-element split:
+
 ```bash
-uv run --frozen python scripts/prepare_ocelot.py --output dataset/processed/ocelot_v1_dense40_seed42
+uv run --frozen python scripts/prepare_ocelot.py \
+  --source dataset/raw/ocelot_chromophore_v1/ocelot_chromophore_v1.csv \
+  --output dataset/processed/ocelot_wide80 \
+  --max-atoms 80 --seed 42 --elements H C N O F B Si Se As Te S P Cl Br I
 ```
+
+Its expected split counts are 20356/2282/2322 under the recorded RDKit version;
+`ocelot_wide80_split_manifest.json` supplies source/output hashes. The default
+40-atom command reproduces the earlier restricted preparation and is retained
+for historical experiments, not the expanded optical comparison. A data split
+alone does not enable new generator elements: use an explicitly migrated and
+adapted checkpoint.
 
 The command refuses to overwrite an existing output directory. The already
 prepared split is described by `ocelot_split_manifest.json`. OCELOT's accompanying
