@@ -70,7 +70,7 @@ states so an excited-state failure does not erase an already completed ground ru
 - Initial ω bounds [0.05, 0.5] bohr^-1, bounded minimization tolerance 0.001,
   four-decimal ω precision. Later geometry/tuning cycles search ±0.2 around
   the current ω, restricted to positive values. Outer-loop tolerance 0.01.
-- SCF energy tolerance 1e-9 Hartree, at most100 cycles; integration grid
+- SCF energy tolerance 1e-9 Hartree, at most 200 cycles for new runs; integration grid
   99 radial/590 angular points with PySCF's pruning. Geometry gradient RMS
   threshold3e-4 Hartree/bohr and maximum4.5e-4; max80 steps.
 - Every molecule records tuning points, charge-state energies, spin-square,

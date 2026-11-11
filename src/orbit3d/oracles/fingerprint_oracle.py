@@ -20,6 +20,7 @@ class FingerprintOracle(PropertyOracleBase):
         self.output_dim = len(self.target_cols)
         self.n_bits = n_bits
         self.models = []
+        self.training_elements = None
         self.fp = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=n_bits, includeChirality=True)
 
     def features(self, mols):
@@ -56,6 +57,8 @@ class FingerprintOracle(PropertyOracleBase):
         y = np.asarray(targets, dtype=np.float64).reshape(len(mols), self.output_dim)
         if not np.isfinite(y).all():
             raise ValueError("Nonfinite targets")
+        self.training_elements = sorted({atom.GetSymbol() for mol in mols
+                                         for atom in Chem.AddHs(mol).GetAtoms()})
         self.training_mean = y.mean(0)
         self.training_std = y.std(0).clip(1e-6)
         self.models = []
@@ -101,6 +104,7 @@ class FingerprintOracle(PropertyOracleBase):
             "target_cols": self.target_cols,
             "units": ["eV"] * self.output_dim,
             "n_bits": self.n_bits,
+            "training_elements": self.training_elements,
             "training_mean": self.training_mean.tolist(),
             "training_std": self.training_std.tolist(),
             "uncertainty": "bootstrap disagreement; not calibrated probability",
@@ -118,6 +122,7 @@ class FingerprintOracle(PropertyOracleBase):
         oracle = cls(metadata["target_cols"], metadata["n_bits"])
         # Load only artifacts produced by this trusted training workflow.
         oracle.models = joblib.load(path)
+        oracle.training_elements = metadata.get("training_elements")
         oracle.training_mean = np.array(metadata["training_mean"])
         oracle.training_std = np.array(metadata["training_std"])
         return oracle

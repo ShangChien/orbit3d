@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
+from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)
@@ -16,6 +17,9 @@ p.add_argument("--jobs", type=int, default=4)
 p.add_argument("--reuse-oracle", action="store_true")
 a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
+freeze_run(a.output, __file__)
+record_input_hashes(a.output, {s: a.data / f"{s}.csv" for s in ["train", "valid", "test"]})
+(a.output / "run_config.json").write_text(json.dumps({k: str(v) if isinstance(v, Path) else v for k, v in vars(a).items()}, indent=2) + "\n")
 start = time.perf_counter()
 names = ["homo", "lumo"]
 frames = {s: pd.read_csv(a.data / f"{s}.csv") for s in ["train", "valid", "test"]}
@@ -52,6 +56,12 @@ for split in ["valid", "test"]:
         "gap_from_homo_lumo_mae_eV": float(np.abs((pred[:, 1] - pred[:, 0]) - frame.hl.to_numpy()).mean()),
         "reload_max_abs_diff": float(np.abs(pred - again).max()),
     }
+    metrics[split]['element_subgroups'] = {}
+    for element in oracle.training_elements or []:
+        indices = [i for i, mol in enumerate(mols) if any(atom.GetSymbol() == element for atom in Chem.AddHs(mol).GetAtoms())]
+        if indices:
+            metrics[split]['element_subgroups'][element] = {
+                'n': len(indices), 'mae_eV': dict(zip(names, np.abs(err[indices]).mean(0).tolist()))}
     out = frame[["identifier", "canonical_smiles"]].copy()
     for i, name in enumerate(names):
         out[f"{name}_true"] = y[:, i]
@@ -63,6 +73,8 @@ report = {
     "targets": names,
     "units": "eV",
     "split": "fixed scaffold holdouts",
+    "training_records": len(frames["train"]),
+    "training_elements": oracle.training_elements,
     "elapsed_seconds": time.perf_counter() - start,
     "reused_trained_oracle": a.reuse_oracle,
     "metrics": metrics,

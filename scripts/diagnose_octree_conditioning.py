@@ -17,18 +17,24 @@ p.add_argument('--sdf', required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--limit', type=int, default=64)
 p.add_argument('--device', default='cuda:0')
+p.add_argument('--max-atoms', type=int, default=80)
+p.add_argument('--batch-size', type=int, default=8)
 a = p.parse_args()
 freeze_run(a.output, __file__)
 lock_deterministic_environment(42)
 torch.set_num_threads(2)
 model, state = load_octree_checkpoint(a.checkpoint, a.device)
 allowed = set(model.args.allow_atoms.split(','))
+span = model.args.grid_len * 2**model.args.merge_level - .56
+excluded = []
 mols = []
-for m in Chem.SDMolSupplier(a.sdf, removeHs=False):
-    if m is None or m.GetNumAtoms() > 40 or any(x.GetSymbol() not in allowed for x in m.GetAtoms()):
+for source_index, m in enumerate(Chem.SDMolSupplier(a.sdf, removeHs=False)):
+    if m is None or m.GetNumAtoms() > a.max_atoms or any(x.GetSymbol() not in allowed for x in m.GetAtoms()):
+        excluded.append({'source_index': source_index, 'reason': 'unreadable or outside requested atom/element coverage'})
         continue
     xyz = m.GetConformer().GetPositions()
-    if np.linalg.norm(xyz[:, None] - xyz[None, :], axis=-1).max() > 14.8:
+    if np.linalg.norm(xyz[:, None] - xyz[None, :], axis=-1).max() > span:
+        excluded.append({'source_index': source_index, 'reason': 'outside rotation-safe spatial span'})
         continue
     identity = Chem.MolToSmiles(Chem.RemoveHs(m), isomericSmiles=True)
     if identity in state['training_smiles']:
@@ -44,8 +50,8 @@ dataset = OctreeDataset(mols, model, training=False)
 permutation = np.random.default_rng(43).permutation(len(mols))
 records = []
 with torch.no_grad():
-    for begin in range(0, len(mols), 8):
-        ids = np.arange(begin, min(begin+8, len(mols)))
+    for begin in range(0, len(mols), a.batch_size):
+        ids = np.arange(begin, min(begin+a.batch_size, len(mols)))
         packed = dataset.collate(ids)
         target = y[ids]
         mask = torch.ones((*target.shape, 2), device=a.device, dtype=torch.bool)
@@ -60,7 +66,7 @@ with torch.no_grad():
             row[f'condition_relative_change_{delta}'] = float(((base-changed).norm(dim=-1)/base.norm(dim=-1)).mean())
         records.append(row)
 report = {'scope': 'Held-out conditional teacher-forcing diagnostic, not generation success',
-          'records': len(mols), 'source_sdf_sha256': hashlib.sha256(Path(a.sdf).read_bytes()).hexdigest(),
+          'records': len(mols), 'max_atoms': a.max_atoms, 'merge_level': model.args.merge_level, 'excluded': excluded, 'source_sdf_sha256': hashlib.sha256(Path(a.sdf).read_bytes()).hexdigest(),
           'checkpoint_sha256': hashlib.sha256(Path(a.checkpoint).read_bytes()).hexdigest(),
           'condition_version': model.condition_version, 'batch_metrics': records,
           'mean': {key: float(np.average([r[key] for r in records], weights=[r['records'] for r in records]))

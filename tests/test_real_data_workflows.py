@@ -41,6 +41,7 @@ def test_fingerprint_reload_and_checksum(tmp_path):
     ms = [mol("CC"), mol("CO"), mol("CN")]
     o.fit(ms, np.array([[-6.0, -1.0], [-5.0, -2.0], [-7.0, -3.0]]), tmp_path, n_models=2, n_trees=4, n_jobs=1)
     reloaded = FingerprintOracle.load_from_dir(tmp_path)
+    assert reloaded.training_elements == ["C", "H", "N", "O"]
     np.testing.assert_array_equal(o.predict_3d_mols(ms)[0], reloaded.predict_3d_mols(ms)[0])
     path = tmp_path / "ensemble.joblib"
     path.write_bytes(path.read_bytes() + b"bad")
