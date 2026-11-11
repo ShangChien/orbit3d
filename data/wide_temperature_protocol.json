@@ -1,0 +1,19 @@
+{
+  "question": "Does the inherited low atom temperature suppress newly enabled rare elements?",
+  "checkpoint_sha256": "163c2efca8771c49da2c0d59f608a12966241a311ee2bc57e12c3858c4f1923c",
+  "atom_temperatures": [0.3, 0.6, 1.0],
+  "baseline": "wide_target_campaign original window, atom temperature 0.3",
+  "tree_temperature": 0.85,
+  "xyz_temperature": 0.25,
+  "cfg_scale": 1.0,
+  "electron_parity": 0,
+  "target_interval": {"homo": [-8.2, -7.2], "lumo": [-0.6, 0.8]},
+  "inference_seeds": [2026, 2027, 2028],
+  "attempts_per_seed_temperature": 64,
+  "oracle_candidates": 32,
+  "maximum_retained": 16,
+  "refinement_steps": 30,
+  "training": "None; all treatments use the same frozen checkpoint",
+  "outcomes": ["per-element raw and valid occurrence", "chemical rejection causes", "formal-charge distribution", "independent joint success", "optimizing joint success"],
+  "limitations": "Changes in rare-element occurrence must be considered together with chemical validity and full-denominator success. This is an exploratory sampling intervention, not a default-temperature recommendation."
+}

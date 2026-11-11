@@ -32,6 +32,19 @@ def main():
     (a.output / "reload_summary.json").write_text(json.dumps(report, indent=2) + "\n")
 
 
+def compare_scaffold_records(first, second):
+    """Exact graph/placement decisions; model and force values use replay tolerances."""
+    assert len(first) == len(second), 'Scaffold proposal count differs'
+    numerical = {'property_score', 'proposal_prediction', 'y_pred', 'initial_force', 'final_force'}
+    for left, right in zip(first, second):
+        assert set(left) == set(right), 'Scaffold proposal fields differ'
+        for key in left:
+            if key in numerical:
+                np.testing.assert_allclose(left[key], right[key], atol=1e-5, rtol=1e-5)
+            else:
+                assert left[key] == right[key], f'Scaffold proposal {left["candidate_id"]}: {key} differs'
+
+
 def compare_run_outputs(first_path, second_path):
     """Verify two existing runs without repeating generation or changing their files."""
     first_path, second_path = Path(first_path), Path(second_path)
@@ -87,7 +100,13 @@ def compare_run_outputs(first_path, second_path):
         for key in ["initial_forces_eva", "final_forces_eva"]:
             if key in x:
                 np.testing.assert_allclose(x[key], y[key], atol=1e-5, rtol=1e-5)
+    scaffold_records = first_path/'proposal_records.json'
+    compare_scaffold = scaffold_records.exists() or (second_path/'proposal_records.json').exists()
+    if compare_scaffold:
+        compare_scaffold_records(json.loads(scaffold_records.read_text()),
+                                 json.loads((second_path/'proposal_records.json').read_text()))
     return {
+        "scaffold_proposals_compared": compare_scaffold,
         "passed": True,
         "all_candidates": len(first),
         "exported_molecules": len(mols[0]),

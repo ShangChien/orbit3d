@@ -46,3 +46,20 @@ def test_replay_fails_when_a_later_relaxation_trace_is_missing(tmp_path, monkeyp
                         '--reference-run', str(reference), '--output', str(tmp_path / 'replay')])
     with pytest.raises(AssertionError, match='trace count differs'):
         replay_validation.main()
+
+
+def test_scaffold_replay_uses_numeric_tolerance_but_exact_placement_decisions():
+    import copy
+    first = [{'candidate_id': 0, 'property_score': 1.,
+              'growth': [{'anchor_position_A': [1., 2., 3.]}]},
+             {'candidate_id': 1, 'property_score': 2., 'growth': [{'port_map': 3}]}]
+    second = copy.deepcopy(first)
+    second[0]['property_score'] += 1e-6
+    replay_validation.compare_scaffold_records(first, second)
+    second[0]['growth'][0]['anchor_position_A'][0] += 1e-10
+    with pytest.raises(AssertionError, match='growth differs'):
+        replay_validation.compare_scaffold_records(first, second)
+    second = copy.deepcopy(first)
+    second[1]['growth'][0]['port_map'] = 4
+    with pytest.raises(AssertionError, match='proposal 1'):
+        replay_validation.compare_scaffold_records(first, second)

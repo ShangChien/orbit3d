@@ -88,3 +88,37 @@ in-domain retained and zero joint hits. A separate reload reproduces all 64 raw
 proposals and all three exports, including acceptance trajectories. This initial
 run is followed by three predeclared target windows and three inference seeds;
 its zero-hit result is retained in that assessment.
+
+
+## Free generation and rare-element diagnosis
+
+The completed fixed-budget campaign uses three inference seeds per target window.
+The [windows were specified from training-label quantiles](../data/wide_target_windows_protocol.json)
+before this evaluation; their widths and difficulty differ.
+
+| Window | Attempts | Valid | In domain | Optimizing joint hits | Independent joint hits |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Original | 192 | 110 | 9 | 2 | 1 |
+| Central | 192 | 95 | 9 | 0 | 0 |
+| Lower orbital gap | 192 | 89 | 12 | 0 | 0 |
+
+All 576 attempts remain in the denominator. None of the 294 valid structures
+contains B/Si/Se/As/Te, although S/Cl/Br occur. Only 94 valid structures have no
+formal atomic charges; net neutrality does not imply absence of internal charge
+separation. [Per-candidate results and independent scores](experiments/wide_target_campaign_20261112.json)
+retain these deficiencies. Expanded training coverage has not established useful
+wide-element generation.
+
+A teacher-forced inspection of the full 512-structure test set gives zero top-1
+accuracy for B (16 atom decisions), Si (13), Se (one), As (one) and Te (four),
+versus C 99.64%. At the inherited atom temperature 0.3, mean true-label
+probabilities are B 0.000356 and Si 0.001911; at temperature 1 they are 0.02699
+and 0.05825. Thus raising temperature alone does not repair the learned ranking.
+[Full class probabilities](experiments/wide_element_likelihood_20261112.json)
+include all classes and their counts. These diagnostic test inspections guide
+model development and are not untouched final tests for later interventions.
+
+Two follow-up interventions are kept separate: a fixed-checkpoint temperature
+comparison, and a matched training comparison with inverse-square-root atom
+frequency weighting. No default recipe or broad-element capability claim is
+changed before observing their full chemical-validity and independent results.
