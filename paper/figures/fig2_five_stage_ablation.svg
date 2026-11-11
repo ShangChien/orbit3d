@@ -29,11 +29,11 @@
 <text x="534.6" y="412.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 4</text>
 <text x="534.6" y="425.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Online</text>
 <text x="534.6" y="438.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Gated-GRPO</text>
-<text x="673.8" y="412.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5</text>
-<text x="673.8" y="425.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">DPA-3.1</text>
+<text x="673.8" y="412.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5 (Fast)</text>
+<text x="673.8" y="425.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">HyFF-moderato</text>
 <text x="673.8" y="438.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Relaxation</text>
-<text x="813.0" y="412.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5*</text>
-<text x="813.0" y="425.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Online DPA-4</text>
+<text x="813.0" y="412.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5 (ZBL)</text>
+<text x="813.0" y="425.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">DPA-4 (OMol25)</text>
 <text x="813.0" y="438.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">GRPO+Relax</text>
 <polyline fill="none" stroke="#10b981" stroke-width="2.8"  points="117.0,361.7 256.2,322.7 395.4,300.6 534.6,250.5 673.8,128.3 813.0,128.3"/>
 <circle cx="117.0" cy="361.7" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.2"/>
@@ -42,26 +42,26 @@
 <circle cx="534.6" cy="250.5" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="673.8" cy="128.3" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="128.3" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.2"/>
-<polyline fill="none" stroke="#2563eb" stroke-width="2.8"  points="117.0,378.2 256.2,350.5 395.4,317.1 534.6,306.2 673.8,206.2 813.0,128.3"/>
+<polyline fill="none" stroke="#2563eb" stroke-width="2.8"  points="117.0,378.2 256.2,350.5 395.4,317.1 534.6,306.2 673.8,133.9 813.0,128.3"/>
 <circle cx="117.0" cy="378.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="256.2" cy="350.5" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="395.4" cy="317.1" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="534.6" cy="306.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
-<circle cx="673.8" cy="206.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="673.8" cy="133.9" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="128.3" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
-<polyline fill="none" stroke="#f59e0b" stroke-width="2.8"  points="117.0,389.4 256.2,356.1 395.4,350.5 534.6,322.7 673.8,222.7 813.0,144.9"/>
+<polyline fill="none" stroke="#f59e0b" stroke-width="2.8"  points="117.0,389.4 256.2,356.1 395.4,350.5 534.6,322.7 673.8,144.9 813.0,144.9"/>
 <circle cx="117.0" cy="389.4" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="256.2" cy="356.1" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="395.4" cy="350.5" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="534.6" cy="322.7" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
-<circle cx="673.8" cy="222.7" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="673.8" cy="144.9" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="144.9" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.2"/>
-<polyline fill="none" stroke="#8b5cf6" stroke-width="2.8"  points="117.0,395.0 256.2,378.2 395.4,378.2 534.6,339.5 673.8,178.2 813.0,150.5"/>
+<polyline fill="none" stroke="#8b5cf6" stroke-width="2.8"  points="117.0,395.0 256.2,378.2 395.4,378.2 534.6,339.5 673.8,150.5 813.0,150.5"/>
 <circle cx="117.0" cy="395.0" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="256.2" cy="378.2" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="395.4" cy="378.2" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="534.6" cy="339.5" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
-<circle cx="673.8" cy="178.2" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="673.8" cy="150.5" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="150.5" r="4.5" fill="#8b5cf6" stroke="#ffffff" stroke-width="1.2"/>
 <rect x="87" y="83" width="395" height="80" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
 <line x1="95" y1="92" x2="115" y2="92" stroke="#10b981" stroke-width="2.6" />
@@ -102,11 +102,11 @@
 <text x="534.6" y="827.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 4</text>
 <text x="534.6" y="840.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Online</text>
 <text x="534.6" y="853.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Gated-GRPO</text>
-<text x="673.8" y="827.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5</text>
-<text x="673.8" y="840.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">DPA-3.1</text>
+<text x="673.8" y="827.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5 (Fast)</text>
+<text x="673.8" y="840.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">HyFF-moderato</text>
 <text x="673.8" y="853.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Relaxation</text>
-<text x="813.0" y="827.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5*</text>
-<text x="813.0" y="840.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Online DPA-4</text>
+<text x="813.0" y="827.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Stage 5 (ZBL)</text>
+<text x="813.0" y="840.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">DPA-4 (OMol25)</text>
 <text x="813.0" y="853.0" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#1e293b">GRPO+Relax</text>
 <polyline fill="none" stroke="#059669" stroke-width="2.8"  points="117.0,537.6 256.2,592.4 395.4,728.4 534.6,790.5 673.8,810.0 813.0,810.0"/>
 <circle cx="117.0" cy="537.6" r="4.5" fill="#059669" stroke="#ffffff" stroke-width="1.2"/>
@@ -115,26 +115,26 @@
 <circle cx="534.6" cy="790.5" r="4.5" fill="#059669" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="673.8" cy="810.0" r="4.5" fill="#059669" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="810.0" r="4.5" fill="#059669" stroke="#ffffff" stroke-width="1.2"/>
-<polyline fill="none" stroke="#2563eb" stroke-width="2.8"  points="117.0,587.6 256.2,670.6 395.4,722.8 534.6,787.3 673.8,806.4 813.0,810.0"/>
+<polyline fill="none" stroke="#2563eb" stroke-width="2.8"  points="117.0,587.6 256.2,670.6 395.4,722.8 534.6,787.3 673.8,809.3 813.0,810.0"/>
 <circle cx="117.0" cy="587.6" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="256.2" cy="670.6" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="395.4" cy="722.8" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="534.6" cy="787.3" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
-<circle cx="673.8" cy="806.4" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="673.8" cy="809.3" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="810.0" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.2"/>
-<polyline fill="none" stroke="#dc2626" stroke-width="2.8" stroke-dasharray="6,4" points="117.0,678.2 256.2,666.3 395.4,652.6 534.6,615.4 673.8,766.4 813.0,775.8"/>
+<polyline fill="none" stroke="#dc2626" stroke-width="2.8" stroke-dasharray="6,4" points="117.0,678.2 256.2,666.3 395.4,652.6 534.6,615.4 673.8,773.0 813.0,775.8"/>
 <circle cx="117.0" cy="678.2" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="256.2" cy="666.3" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="395.4" cy="652.6" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="534.6" cy="615.4" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
-<circle cx="673.8" cy="766.4" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="673.8" cy="773.0" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="775.8" r="4.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.2"/>
-<polyline fill="none" stroke="#ea580c" stroke-width="2.8" stroke-dasharray="6,4" points="117.0,678.2 256.2,690.3 395.4,703.3 534.6,659.2 673.8,702.9 813.0,745.0"/>
+<polyline fill="none" stroke="#ea580c" stroke-width="2.8" stroke-dasharray="6,4" points="117.0,678.2 256.2,690.3 395.4,703.3 534.6,659.2 673.8,743.9 813.0,745.0"/>
 <circle cx="117.0" cy="678.2" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="256.2" cy="690.3" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="395.4" cy="703.3" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="534.6" cy="659.2" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
-<circle cx="673.8" cy="702.9" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="673.8" cy="743.9" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
 <circle cx="813.0" cy="745.0" r="4.5" fill="#ea580c" stroke="#ffffff" stroke-width="1.2"/>
 <rect x="87" y="498" width="395" height="80" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
 <line x1="95" y1="507" x2="115" y2="507" stroke="#059669" stroke-width="2.6" />
@@ -145,8 +145,8 @@
 <text x="123" y="529" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Joint OLED Mean Interval Error (eV)</text>
 <line x1="95" y1="543" x2="115" y2="543" stroke="#dc2626" stroke-width="2.6" stroke-dasharray="6,4"/>
 <circle cx="105" cy="543" r="3.5" fill="#dc2626"/>
-<text x="123" y="547" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">LUMO Residual DPA-4 Force (eV/A)</text>
+<text x="123" y="547" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">LUMO Residual Quantum Force (eV/A)</text>
 <line x1="95" y1="561" x2="115" y2="561" stroke="#ea580c" stroke-width="2.6" stroke-dasharray="6,4"/>
 <circle cx="105" cy="561" r="3.5" fill="#ea580c"/>
-<text x="123" y="565" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Joint OLED Residual DPA-4 Force (eV/A)</text>
+<text x="123" y="565" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Joint OLED Residual Quantum Force (eV/A)</text>
 </svg>

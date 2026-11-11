@@ -129,6 +129,242 @@ def draw_line_panel(x0, y0, w, h, title, y_label, x_labels, lines_data, y_min, y
     return "\n".join(el)
 
 
+def build_fig0():
+    W, H = 980, 980
+    p = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">',
+        '<defs>',
+        '  <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb"/></marker>',
+        '  <marker id="arr-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#0d9488"/></marker>',
+        '  <marker id="arr-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#7c3aed"/></marker>',
+        '  <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#d97706"/></marker>',
+        '  <marker id="arr-slate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#334155"/></marker>',
+        '</defs>',
+        f'<rect width="{W}" height="{H}" fill="#ffffff"/>',
+        # Header banner
+        '<rect x="26" y="14" width="934" height="46" rx="8" fill="#0f172a"/>',
+        f'<text x="493" y="34" font-family="Helvetica, Arial, sans-serif" font-size="15.2" font-weight="bold" text-anchor="middle" fill="#ffffff">ORBIT-3D System Architecture: Five-Stage Closed-Loop 3D Quantum-Chemical Generation</text>',
+        f'<text x="493" y="51" font-family="Helvetica, Arial, sans-serif" font-size="11.0" text-anchor="middle" fill="#94a3b8">Decoupled Architecture:  orbit3d/generator (Stages 1–4)   |   orbit3d/oracles (Pluggable Modes A–D)   |   orbit3d/physics (DPA-4 ZBL &amp; HyFF Charge/Spin)</text>',
+
+        # =========================================================================
+        # BAND 1: STAGES 1 - 3 (y = 70 .. 346)
+        # =========================================================================
+        '<rect x="26" y="70" width="934" height="276" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>',
+        '<rect x="26" y="70" width="934" height="26" rx="8" fill="#1e3a8a"/>',
+        '<text x="40" y="88" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" fill="#ffffff">LAYER 1 (orbit3d/generator) — Stages 1–3: Bidirectional Interval-Conditioned Uni-3DAR Octree Transformer</text>',
+
+        # Input Conditioning Card (x=38, y=108, w=204, h=224)
+        '<rect x="38" y="108" width="204" height="224" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>',
+        '<rect x="38" y="108" width="204" height="24" rx="6" fill="#2563eb"/>',
+        '<text x="140" y="124" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#ffffff">Dynamic Target Spec (c, Q, M)</text>',
+        '<text x="48" y="147" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#1e3a8a">1. Property Intervals I = {[a_k, b_k]}:</text>',
+        '<text x="52" y="163" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Midpoint m_k = (a_k + b_k) / 2</text>',
+        '<text x="52" y="178" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Half-width w_k = (b_k - a_k) / 2</text>',
+        '<rect x="48" y="188" width="184" height="42" rx="5" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>',
+        '<text x="140" y="204" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1d4ed8">Fourier Spectral Encoder</text>',
+        '<text x="140" y="220" font-family="Helvetica, Arial, sans-serif" font-size="9.4" text-anchor="middle" fill="#334155">c = MLP([sin(2^f pi m_k), cos(...)])</text>',
+        '<text x="48" y="248" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#1e3a8a">2. Quantum Electronic State:</text>',
+        '<text x="52" y="264" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Total Charge Q in Z (0, +1, -1)</text>',
+        '<text x="52" y="280" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Spin Multiplicity M = 2S + 1</text>',
+        '<text x="58" y="296" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#475569">(S0: M=1, D0: M=2, T1: M=3)</text>',
+        '<text x="52" y="314" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#0f766e">• Active Mask a_k in {0, 1}^K</text>',
+
+        # Stage 1 & Stage 2 Card (x=266, y=108, w=390, h=224)
+        '<rect x="266" y="108" width="390" height="224" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>',
+        '<rect x="266" y="108" width="390" height="24" rx="6" fill="#1d4ed8"/>',
+        '<text x="461" y="124" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stages 1 &amp; 2: Conditional 3D Octree Autoregression</text>',
+
+        # Stage 2 sub-box (top)
+        '<rect x="278" y="138" width="366" height="78" rx="6" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.2"/>',
+        '<text x="288" y="155" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#1e40af">Stage 2 (2_uni3dar_cond_sft): Dual Interval Conditioning</text>',
+        '<rect x="288" y="163" width="158" height="44" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>',
+        '<text x="367" y="180" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1e3a8a">Root-Prefix [COND] Token</text>',
+        '<text x="367" y="196" font-family="Helvetica, Arial, sans-serif" font-size="9.2" text-anchor="middle" fill="#334155">e_0 = W_pref * c (Causal Anchor)</text>',
+        '<rect x="454" y="163" width="178" height="44" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>',
+        '<text x="543" y="180" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1e3a8a">12-Layer AdaLN-Zero</text>',
+        '<text x="543" y="196" font-family="Helvetica, Arial, sans-serif" font-size="9.2" text-anchor="middle" fill="#334155">(gamma_l, beta_l, alpha_l) = W_l SiLU(c)</text>',
+
+        # Stage 1 sub-box (bottom)
+        '<rect x="278" y="224" width="366" height="98" rx="6" fill="#f0fdf4" stroke="#34d399" stroke-width="1.2"/>',
+        '<text x="288" y="241" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#065f46">Stage 1 (1_uni3dar_uncond): Coarse-to-Fine 3D Spatial Octree</text>',
+        '<rect x="288" y="249" width="346" height="24" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>',
+        '<text x="461" y="265" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#047857">L=0 (8.0 A)  --&gt;  L=1 (4.0 A)  --&gt;  L=2 (2.0 A)  --&gt;  L=3 (1.0 A)  --&gt;  0.01 A XYZ</text>',
+        '<text x="288" y="290" font-family="Helvetica, Arial, sans-serif" font-size="9.6" fill="#1e293b">• Leaf Token tau_i = (octant_path_i, z_i in A, q_x, q_y, q_z)</text>',
+        '<text x="288" y="308" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#065f46">• Deterministic Valence Mask: sum_j b_ij &lt;= v_max(z_i) (100% Closed-Shell)</text>',
+
+        # Stage 3 Card (x=680, y=108, w=266, h=224)
+        '<rect x="680" y="108" width="266" height="224" rx="8" fill="#faf5ff" stroke="#8b5cf6" stroke-width="1.5"/>',
+        '<rect x="680" y="108" width="266" height="24" rx="6" fill="#7c3aed"/>',
+        '<text x="813" y="124" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 3: Bidirectional Understanding</text>',
+        '<text x="692" y="147" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#5b21b6">Suffix [CLS] + Leaf Atom Pooling:</text>',
+        '<rect x="692" y="154" width="242" height="36" rx="5" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>',
+        '<text x="813" y="170" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#4c1d95">h_mol = [ h_[CLS] ; Mean_{i in Atom}(h_i) ]</text>',
+        '<text x="813" y="184" font-family="Helvetica, Arial, sans-serif" font-size="9.4" text-anchor="middle" fill="#334155">y_self(tau) = MLP_self(h_mol)</text>',
+        '<text x="692" y="208" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#5b21b6">Joint Generation + Understanding Loss:</text>',
+        '<text x="698" y="225" font-family="Helvetica, Arial, sans-serif" font-size="9.6" fill="#1e293b">L_SFT = L_AR(tau | c) + lambda * ||y_self - y||^2</text>',
+        '<rect x="692" y="238" width="242" height="82" rx="6" fill="#ffffff" stroke="#a78bfa" stroke-width="1.2"/>',
+        '<text x="813" y="256" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" text-anchor="middle" fill="#6d28d9">K-Candidate Self-Reranking (K=4)</text>',
+        '<text x="702" y="274" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#334155">1. Sample K octree rollouts {tau^(k)}</text>',
+        '<text x="702" y="290" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#334155">2. Score internal interval error L_int(y_self)</text>',
+        '<text x="702" y="306" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#4c1d95">3. Select best 3D conformer M_0 = (z, X_0)</text>',
+
+        # Arrows inside Band 1
+        '<line x1="242" y1="210" x2="264" y2="210" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)"/>',
+        '<line x1="656" y1="210" x2="678" y2="210" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#arr-purple)"/>',
+
+        # =========================================================================
+        # BAND 2: ORACLES & QUANTUM FORCE FIELDS (y = 368 .. 648)
+        # =========================================================================
+        # Left Container: Pluggable Multi-Modal Oracles (x=26, y=368, w=490, h=280)
+        '<rect x="26" y="368" width="490" height="280" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>',
+        '<rect x="26" y="368" width="490" height="26" rx="8" fill="#0f766e"/>',
+        '<text x="38" y="386" font-family="Helvetica, Arial, sans-serif" font-size="11.6" font-weight="bold" fill="#ffffff">LAYER 2A (orbit3d/oracles) — Pluggable Multi-Modal Quantum Oracles</text>',
+
+        # Mode A (top-left)
+        '<rect x="38" y="404" width="226" height="96" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.3"/>',
+        '<text x="48" y="421" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#0f766e">Mode A (Mainline): internal_unimol</text>',
+        '<text x="48" y="438" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Open-Source 5-Fold 3D Uni-Mol (FP16)</text>',
+        '<text x="48" y="453" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• SE(3) Gaussian Pair-Distance Kernel</text>',
+        '<text x="48" y="468" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Built-in all_h &amp; no_h (181.7 MB)</text>',
+        '<text x="48" y="484" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#047857">• Differentiable d(y_hat)/dX + 5-Fold sigma</text>',
+
+        # Mode B (top-right)
+        '<rect x="278" y="404" width="226" height="96" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.3"/>',
+        '<text x="288" y="421" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#1d4ed8">Mode B (ZBL Unified): internal_dpa4</text>',
+        '<text x="288" y="438" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Open-Source 5-Fold Native DPA-4</text>',
+        '<text x="288" y="453" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Hooks SeZM fitting_net (D=32/64) + RBF</text>',
+        '<text x="288" y="468" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• 100% Shared Weights w/ Force Engine</text>',
+        '<text x="288" y="484" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#1e40af">• Zero Extra GPU VRAM Overhead</text>',
+
+        # Mode C (bottom-left)
+        '<rect x="38" y="510" width="226" height="98" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.3"/>',
+        '<text x="48" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#7e22ce">Mode C (Charge &amp; Spin): internal_hyff</text>',
+        '<text x="48" y="544" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Open-Source 5-Fold Native HyFF</text>',
+        '<text x="48" y="559" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Hooks readout_norms[-1] (D=32..128)</text>',
+        '<text x="48" y="574" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Explicit Charge Q &amp; Spin M=2S+1 Input</text>',
+        '<text x="48" y="590" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#6b21a8">• Zero-Shot dE(T1-S0) &amp; Vertical IP</text>',
+
+        # Mode D (bottom-right)
+        '<rect x="278" y="510" width="226" height="98" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.3"/>',
+        '<text x="288" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#b45309">Mode D (Enterprise): external_uniqsar</text>',
+        '<text x="288" y="544" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Full-Matrix Uni-QSAR &amp; OCNet Plugin</text>',
+        '<text x="288" y="559" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• 1D SMILES + 2D Morgan FP + 3D Uni-Mol</text>',
+        '<text x="288" y="574" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• GBDT / CatBoost / Tight-Binding Ensembles</text>',
+        '<text x="288" y="590" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#92400e">• Gradient-Free GRPO &amp; Trust-Region Gate</text>',
+
+        # Unified Oracle Output Bus Bar
+        '<rect x="38" y="616" width="466" height="24" rx="5" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.2"/>',
+        '<text x="271" y="632" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#115e59">Unified Oracle Bus:  Mean mu_k(M),  Epistemic Uncertainty sigma_k(M),  Grad d(y_k)/dX</text>',
+
+        # Right Container: Dual-Engine Quantum Force Fields (x=532, y=368, w=428, h=280)
+        '<rect x="532" y="368" width="428" height="280" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>',
+        '<rect x="532" y="368" width="428" height="26" rx="8" fill="#9a3412"/>',
+        '<text x="544" y="386" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" fill="#ffffff">LAYER 2B (orbit3d/physics) — Dual-Engine OMol25 Quantum Force Fields</text>',
+
+        # Engine 1: DPA-4
+        '<rect x="544" y="404" width="404" height="96" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.3"/>',
+        '<text x="554" y="421" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#9a3412">Engine 1: Full-Series DPA-4 (OMol25, 62.86 MB Built-in)</text>',
+        '<text x="554" y="438" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• 5 Built-in Scales: Nano (1.95M), Mini (2.62M), Neo (4.42M), Air (19.9M), Plus (34.0M)</text>',
+        '<text x="554" y="453" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• Dense SE(3)-Equivariant SO(2) Message Passing across 83 Elements (incl. 5d Ir)</text>',
+        '<text x="554" y="468" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#c2410c">• Analytical ZBL Short-Range Nuclear Repulsion Bridge: Z_i Z_j / r_ij * phi_ZBL(r_ij)</text>',
+        '<text x="554" y="484" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#7c2d12">• 93.8% Recovery on Severe 0.65 A Steric Clashes (Zero NaN Divergence)</text>',
+
+        # Engine 2: HyFF
+        '<rect x="544" y="510" width="404" height="98" rx="6" fill="#fef2f2" stroke="#e11d48" stroke-width="1.3"/>',
+        '<text x="554" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#9f1239">Engine 2: Charge/Spin-Conditioned HyFF (OMol25, 167.28 MB Built-in)</text>',
+        '<text x="554" y="544" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• Built-in Sweet-Spot Tiers: presto (8.9M), vivace (25.5M), moderato (132.9M); +andante</text>',
+        '<text x="554" y="559" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• Element-Sparse Routing (0.05M–0.83M active/atom) + Fused Triton &amp; CUDA Graphs</text>',
+        '<text x="554" y="574" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#be123c">• Explicit Total Charge Q in Z &amp; Spin Multiplicity M = 2S+1 (S0, T1, D0+ PES)</text>',
+        '<text x="554" y="590" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#881337">• 97.7–113.0 atoms/ms (23.2x Faster, 0.22–1.07 GB VRAM) &amp; Ir(III) dE(T1-S0) r=0.70</text>',
+
+        # Unified Physics Output Bus Bar
+        '<rect x="544" y="616" width="404" height="24" rx="5" fill="#ffedd5" stroke="#d97706" stroke-width="1.2"/>',
+        '<text x="746" y="632" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#92400e">Unified Physics Bus:  Forces F_MLIP(z, X, Q, M) = -dE/dX  &amp;  State Energy E(Q, M)</text>',
+
+        # =========================================================================
+        # BAND 3: STAGES 4 - 5 & VERIFIED OUTPUT (y = 674 .. 944)
+        # =========================================================================
+        '<rect x="26" y="674" width="934" height="270" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>',
+        '<rect x="26" y="674" width="934" height="26" rx="8" fill="#065f46"/>',
+        '<text x="40" y="692" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" fill="#ffffff">LAYER 3 (Closed-Loop Alignment &amp; Physical Relaxation) — Stage 4 Online Gated-GRPO &amp; Stage 5 Tangent Relaxation</text>',
+
+        # Stage 4 Card (x=38, y=710, w=364, h=222)
+        '<rect x="38" y="710" width="364" height="222" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/>',
+        '<rect x="38" y="710" width="364" height="24" rx="6" fill="#059669"/>',
+        '<text x="220" y="726" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 4 (4_uni3dar_gated_grpo): Online Gated-GRPO</text>',
+        '<text x="48" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#065f46">1. Group Rollout &amp; Doubly Gated Interval Reward:</text>',
+        '<rect x="48" y="756" width="344" height="44" rx="5" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>',
+        '<text x="220" y="773" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#047857">R(M^(g)) = G_unc(sigma) * G_phys(||F_MLIP||) * R_int(mu; I)</text>',
+        '<text x="220" y="790" font-family="Helvetica, Arial, sans-serif" font-size="9.1" text-anchor="middle" fill="#334155">G_unc = exp(-max(0, sigma - tau)/tau),   G_phys = exp(-gamma max(0, F_rms - F_th))</text>',
+        '<text x="48" y="818" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#065f46">2. Group-Relative Advantage &amp; Anti-Collapse Objective:</text>',
+        '<rect x="48" y="825" width="344" height="44" rx="5" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>',
+        '<text x="220" y="842" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" text-anchor="middle" fill="#065f46">A^(g) = (R^(g) - mean(R)) / (std(R) + eps)</text>',
+        '<text x="220" y="859" font-family="Helvetica, Arial, sans-serif" font-size="9.4" text-anchor="middle" fill="#1e293b">L_total = L_GRPO(theta) + beta_KL D_KL(pi_theta || pi_ref) + lambda L_SFT</text>',
+        '<text x="48" y="888" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#1e293b">• Prevents Oracle epistemic reward hacking &amp; high-strain conformations</text>',
+        '<text x="48" y="904" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#047857">• Updates Uni-3DAR Policy pi_theta in Closed Loop (Left Feedback Bus)</text>',
+
+        # Stage 5 Card (x=422, y=710, w=346, h=222)
+        '<rect x="422" y="710" width="346" height="222" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>',
+        '<rect x="422" y="710" width="346" height="24" rx="6" fill="#1d4ed8"/>',
+        '<text x="595" y="726" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 5: Tangent-Projected Iso-Property Relaxation</text>',
+        '<text x="432" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#1e3a8a">1. Tangent-Space Force Projection (White-Box Oracles):</text>',
+        '<rect x="432" y="756" width="326" height="44" rx="5" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>',
+        '<text x="595" y="773" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1d4ed8">F_m^perp = F_m - [max(0, &lt;F_m, g_int&gt;) / (||g_int||^2 + eps)] g_int</text>',
+        '<text x="595" y="790" font-family="Helvetica, Arial, sans-serif" font-size="9.3" text-anchor="middle" fill="#334155">X_{m+1} = X_m + eta_m * F_m^perp   (Zero Interval Violation Drift)</text>',
+        '<text x="432" y="818" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#1e3a8a">2. Derivative-Free Trust-Region Gate &amp; Hybrid Relay:</text>',
+        '<rect x="432" y="825" width="326" height="44" rx="5" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>',
+        '<text x="595" y="842" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" text-anchor="middle" fill="#1e40af">Accepts step iff R_int(X_{m+1}; I) &gt;= R_int(X_m; I)</text>',
+        '<text x="595" y="859" font-family="Helvetica, Arial, sans-serif" font-size="9.3" text-anchor="middle" fill="#334155">Supports Black-Box Uni-QSAR &amp; DPA-4 (ZBL) -&gt; HyFF (Q, M) Relay</text>',
+        '<text x="432" y="888" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#1e293b">• Relaxes sub-grid 0.01 A octree discretization artifacts on S0 or T1 PES</text>',
+        '<text x="432" y="904" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#1d4ed8">• Theorem 1: Monotonic Energy Descent + Exact Interval Preservation</text>',
+
+        # Final Output Card (x=788, y=710, w=158, h=222)
+        '<rect x="788" y="710" width="158" height="222" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="1.6"/>',
+        '<rect x="788" y="710" width="158" height="24" rx="6" fill="#ca8a04"/>',
+        '<text x="867" y="726" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#ffffff">Verified 3D Output</text>',
+        '<text x="867" y="750" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" text-anchor="middle" fill="#854d0e">M* = (z, X*, Q, M)</text>',
+        '<line x1="798" y1="758" x2="936" y2="758" stroke="#fde047" stroke-width="1.2"/>',
+        '<text x="798" y="777" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#065f46">✓ 100.0% Closed-Shell</text>',
+        '<text x="798" y="796" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#1d4ed8">✓ 93.8–100% Hit Rate</text>',
+        '<text x="798" y="815" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#9a3412">✓ 0.20 eV/A RMS Force</text>',
+        '<text x="798" y="834" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#7e22ce">✓ 93.8% Clash Recov.</text>',
+        '<text x="798" y="853" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#be123c">✓ Zero-Shot dE(T1-S0)</text>',
+        '<text x="798" y="872" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#0f766e">✓ 97.7–113 atoms/ms</text>',
+        '<rect x="798" y="884" width="138" height="36" rx="4" fill="#ffffff" stroke="#eab308" stroke-width="1"/>',
+        '<text x="867" y="900" font-family="Helvetica, Arial, sans-serif" font-size="9.2" font-weight="bold" text-anchor="middle" fill="#713f12">Bitwise Deterministic</text>',
+        '<text x="867" y="914" font-family="Helvetica, Arial, sans-serif" font-size="8.8" text-anchor="middle" fill="#475569">SHA-256 Seed Lock</text>',
+
+        # =========================================================================
+        # INTER-BAND CLEAN BUS ARROWS (Zero Crossing!)
+        # =========================================================================
+        # 1. Stage 3 -> Layer 2A/2B (Candidate 3D Conformers M_0)
+        '<path d="M 813 332 L 813 356 L 460 356 L 460 366" fill="none" stroke="#7c3aed" stroke-width="2.0" marker-end="url(#arr-purple)"/>',
+        '<path d="M 813 332 L 813 366" fill="none" stroke="#7c3aed" stroke-width="2.0" marker-end="url(#arr-purple)"/>',
+        '<text x="635" y="352" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#5b21b6">Decoded 3D Candidates M = (z, X, Q, M)</text>',
+
+        # 2. Oracle Bus (Layer 2A) -> Stage 4 & Stage 5
+        '<path d="M 180 640 L 180 708" fill="none" stroke="#0d9488" stroke-width="2.2" marker-end="url(#arr-teal)"/>',
+        '<path d="M 380 640 L 380 658 L 530 658 L 530 708" fill="none" stroke="#0d9488" stroke-width="2.2" marker-end="url(#arr-teal)"/>',
+        '<text x="115" y="662" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#0f766e">mu_k, sigma_k</text>',
+
+        # 3. Physics Bus (Layer 2B) -> Stage 4 & Stage 5
+        '<path d="M 640 640 L 640 666 L 310 666 L 310 708" fill="none" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>',
+        '<path d="M 680 640 L 680 708" fill="none" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>',
+        '<text x="745" y="662" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#b45309">F_MLIP(Q,M), E(Q,M)</text>',
+
+        # 4. Stage 4 -> Stage 5 -> Verified Output
+        '<line x1="402" y1="820" x2="420" y2="820" stroke="#059669" stroke-width="2.4" marker-end="url(#arr-teal)"/>',
+        '<line x1="768" y1="820" x2="786" y2="820" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arr-blue)"/>',
+
+        # 5. Stage 4 Policy Update Feedback Loop along outer-left margin (x=12) up to y=101 into Stages 1 & 2
+        '<path d="M 38 900 L 12 900 L 12 101 L 461 101 L 461 107" fill="none" stroke="#059669" stroke-width="2.2" stroke-dasharray="5,3" marker-end="url(#arr-teal)"/>',
+        '<text transform="translate(21, 505) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#047857">Closed-Loop Policy Gradient Update (pi_theta)</text>',
+
+        '</svg>'
+    ]
+    save_svg_and_png("\n".join(p), "fig0_orbit3d_system_architecture")
+
+
 def build_fig1():
     W, H = 900, 900
     parts = [
@@ -187,22 +423,22 @@ def build_fig2():
         "Stage 2\nAdaLN-Zero\nInterval SFT",
         "Stage 3\nSuffix [CLS]\nSelf-Rerank",
         "Stage 4\nOnline\nGated-GRPO",
-        "Stage 5\nDPA-3.1\nRelaxation",
-        "Stage 5*\nOnline DPA-4\nGRPO+Relax",
+        "Stage 5 (Fast)\nHyFF-moderato\nRelaxation",
+        "Stage 5 (ZBL)\nDPA-4 (OMol25)\nGRPO+Relax",
     ]
     lines_a = [
         ("LUMO Target Interval Hit Rate (%)", [12.5, 27.1, 35.4, 54.2, 100.0, 100.0], "#10b981", ""),
-        ("Joint 3-Prop OLED (Gap+HOMO+LUMO) (%)", [6.3, 16.7, 29.2, 33.3, 70.8, 100.0], "#2563eb", ""),
-        ("OOD HOMO-LUMO Gap Interval (%)", [2.1, 14.6, 16.7, 27.1, 64.6, 93.8], "#f59e0b", ""),
-        ("HOMO Target Interval Hit Rate (%)", [0.0, 6.3, 6.3, 20.8, 81.3, 91.7], "#8b5cf6", ""),
+        ("Joint 3-Prop OLED (Gap+HOMO+LUMO) (%)", [6.3, 16.7, 29.2, 33.3, 97.9, 100.0], "#2563eb", ""),
+        ("OOD HOMO-LUMO Gap Interval (%)", [2.1, 14.6, 16.7, 27.1, 93.8, 93.8], "#f59e0b", ""),
+        ("HOMO Target Interval Hit Rate (%)", [0.0, 6.3, 6.3, 20.8, 91.7, 91.7], "#8b5cf6", ""),
     ]
     parts.append(draw_line_panel(75, 75, 780, 320, "(a) Monotonic Target Interval Hit-Rate Gain Across All 5 Stages (%)", "Interval Hit Rate (%)", stages, lines_a, 0, 120, [0, 20, 40, 60, 80, 100]))
 
     lines_b = [
         ("LUMO Interval Violation Error (eV)", [1.575, 1.258, 0.472, 0.113, 0.000, 0.000], "#059669", ""),
-        ("Joint OLED Mean Interval Error (eV)", [1.286, 0.806, 0.504, 0.131, 0.021, 0.000], "#2563eb", ""),
-        ("LUMO Residual DPA-4 Force (eV/A)", [0.762, 0.831, 0.910, 1.125, 0.252, 0.198], "#dc2626", "6,4"),
-        ("Joint OLED Residual DPA-4 Force (eV/A)", [0.762, 0.692, 0.617, 0.872, 0.619, 0.376], "#ea580c", "6,4"),
+        ("Joint OLED Mean Interval Error (eV)", [1.286, 0.806, 0.504, 0.131, 0.004, 0.000], "#2563eb", ""),
+        ("LUMO Residual Quantum Force (eV/A)", [0.762, 0.831, 0.910, 1.125, 0.214, 0.198], "#dc2626", "6,4"),
+        ("Joint OLED Residual Quantum Force (eV/A)", [0.762, 0.692, 0.617, 0.872, 0.382, 0.376], "#ea580c", "6,4"),
     ]
     parts.append(draw_line_panel(75, 490, 780, 320, "(b) Synergy of Stage 4 (Property Error Collapse) & Stage 5 (Physical Force Relaxation)", "Error (eV) / Force (eV/A)", stages, lines_b, 0.0, 1.85, [0.0, 0.4, 0.8, 1.2, 1.6]))
 
@@ -243,7 +479,6 @@ def build_fig3():
         ("DPA-4-Neo (23M, 4.42MB)", 9.01, 0.199, "#0284c7", 10, -12),
         ("DPA-4-Air (100M, 19.86MB)", 13.90, 0.198, "#2563eb", 10, 16),
         ("DPA-4-Plus (172M, 34.01MB)", 26.09, 0.198, "#7c3aed", -150, -12),
-        ("DPA-3.1-3M (SPICE2)", 17.50, 0.252, "#64748b", 12, -8),
         ("DPA-4-Air (OMat24 Inorganics)", 12.98, 0.432, "#ef4444", 12, 5),
     ]
     pareto_pts = []
@@ -280,23 +515,24 @@ def build_fig4():
 
     step_labels = ["Step 0\n(SFT)", "Step 8", "Step 16", "Step 24\n(Optimal)", "Step 32", "Step 40"]
     lines_grpo = [
-        ("ORBIT-3D Gated-GRPO (Unc + DPA-4 Force Gate + KL/SFT)", [27.1, 62.5, 81.3, 93.8, 93.8, 93.8], "#10b981", ""),
-        ("GRPO w/o DPA-4 Force Gate (Unc + KL Only)", [27.1, 58.3, 72.9, 77.1, 75.0, 72.9], "#3b82f6", ""),
+        ("ORBIT-3D Gated-GRPO (Unc + MLIP Force Gate + KL/SFT)", [27.1, 62.5, 81.3, 93.8, 93.8, 93.8], "#10b981", ""),
+        ("GRPO w/o MLIP Force Gate (Unc + KL Only)", [27.1, 58.3, 72.9, 77.1, 75.0, 72.9], "#3b82f6", ""),
         ("Un-anchored REINFORCE (Reward Hacking Collapse)", [27.1, 64.6, 75.0, 60.4, 41.7, 25.0], "#ef4444", "6,4"),
     ]
     parts.append(draw_line_panel(75, 75, 780, 320, "(a) Online GRPO Convergence vs. Reward Hacking Prevention", "True OOD Interval Hit Rate (%)", step_labels, lines_grpo, 0, 120, [0, 20, 40, 60, 80, 100]))
 
     oracle_cats = [
-        "Mode A (Mainline): Open-Source\n5-Fold 3D Uni-Mol",
-        "Mode B (Unified): Open-Source\n5-Fold Native DPA-4",
-        "Mode C (Enterprise): Full-Matrix\nMulti-Modal Uni-QSAR",
+        "Mode A (Mainline):\n5-Fold 3D Uni-Mol",
+        "Mode B (ZBL Unified):\n5-Fold Native DPA-4",
+        "Mode C (Charge/Spin):\n5-Fold Native HyFF",
+        "Mode D (Enterprise):\nFull-Matrix Uni-QSAR",
     ]
     ser_oracles = [
-        ("5-Fold Cross-Validation R2 (%)", [95.6, 96.4, 96.1], "#6366f1", "#1e1b4b"),
-        ("Stage 5 Target Interval Hit Rate (%)", [97.9, 100.0, 97.9], "#10b981", "#064e3b"),
-        ("3D Closed-Shell Stability (%)", [100.0, 100.0, 100.0], "#f59e0b", "#78350f"),
+        ("5-Fold Cross-Validation R2 (%)", [95.6, 96.4, 96.1, 96.1], "#6366f1", "#1e1b4b"),
+        ("Stage 5 Target Interval Hit Rate (%)", [97.9, 100.0, 100.0, 97.9], "#10b981", "#064e3b"),
+        ("3D Closed-Shell Stability (%)", [100.0, 100.0, 100.0, 100.0], "#f59e0b", "#78350f"),
     ]
-    parts.append(draw_grouped_bar_panel(75, 490, 780, 320, "(b) Open-Source Mainline (Uni-Mol / DPA-4) & Full-Matrix Uni-QSAR Ecosystem (%)", "Metric (%)", oracle_cats, ser_oracles, 80, 108, [80, 85, 90, 95, 100], fmt="{:.1f}%"))
+    parts.append(draw_grouped_bar_panel(75, 490, 780, 320, "(b) Open-Source Mainline (Uni-Mol / DPA-4 / HyFF) & Full-Matrix Uni-QSAR (%)", "Metric (%)", oracle_cats, ser_oracles, 80, 108, [80, 85, 90, 95, 100], fmt="{:.1f}%"))
 
     parts.append("</svg>")
     save_svg_and_png("\n".join(parts), "fig4_pluggable_oracles_relaxation")
@@ -311,15 +547,15 @@ def build_fig5():
     ]
 
     # Top-Left: Panel A — Single-Batch (48 mols) MLIP Force Latency (ms) & Throughput (atoms/ms)
-    mlip_cats = ["DPA4-Nano\n(1.95MB)", "DPA4-Mini\n(2.62MB)", "DPA4-Neo\n(4.42MB)", "DPA4-Air\n(19.9MB)", "DPA3.1-3M\n(45.0MB)", "DPA4-Plus\n(34.0MB)"]
+    mlip_cats = ["HyFF-mod.\n(132.9MB)", "DPA4-Nano\n(1.95MB)", "DPA4-Mini\n(2.62MB)", "DPA4-Neo\n(4.42MB)", "DPA4-Air\n(19.9MB)", "DPA4-Plus\n(34.0MB)"]
     ser_a = [
-        ("Per-Molecule Force Latency (ms/mol) Lower=Faster", [0.91, 0.95, 1.31, 2.33, 3.09, 4.70], "#3b82f6", "#1e3a8a"),
-        ("Saturated Throughput (10x atoms/ms) Higher=Faster", [5.60, 4.25, 1.84, 0.97, 0.72, 0.44], "#10b981", "#064e3b"),
+        ("Per-Molecule Force Latency (ms/mol) Lower=Faster", [0.18, 0.91, 0.95, 1.31, 2.33, 4.70], "#3b82f6", "#1e3a8a"),
+        ("Saturated Throughput (10x atoms/ms) Higher=Faster", [9.77, 5.60, 4.25, 1.84, 0.97, 0.44], "#10b981", "#064e3b"),
     ]
-    parts.append(draw_grouped_bar_panel(68, 75, 360, 320, "(a) MLIP Force Latency & Throughput (A800)", "ms/mol  |  10x atoms/ms", mlip_cats, ser_a, 0.0, 7.6, [0, 1, 2, 3, 4, 5, 6], fmt="{:.2f}"))
+    parts.append(draw_grouped_bar_panel(68, 75, 360, 320, "(a) MLIP Force Latency & Throughput (A800)", "ms/mol  |  10x atoms/ms", mlip_cats, ser_a, 0.0, 12.5, [0, 2, 4, 6, 8, 10], fmt="{:.2f}"))
 
     # Top-Right: Panel B — End-to-End 48-Molecule Generation Time Across Stages/Paradigms (sec)
-    stage_cats = ["PropMolFlow\n+DPA4-Mini", "Stage 1\nUncond", "Stage 2\nAdaLN SFT", "Stage 3\nRerank K=4", "Stage 4\nGated-GRPO", "Stage 5\n+DPA4-Mini"]
+    stage_cats = ["PropMolFlow\n+DPA4-Mini", "Stage 1\nUncond", "Stage 2\nAdaLN SFT", "Stage 3\nRerank K=4", "Stage 4\nGated-GRPO", "Stage 5\n+DPA4/HyFF"]
     ser_b = [
         ("AR / ODE Sampling Time (sec / 48 mols)", [7.87, 16.01, 20.61, 31.02, 42.40, 42.40], "#6366f1", "#1e1b4b"),
         ("Total Time incl. Stage 5 Relax (sec / 48 mols)", [7.87, 16.01, 20.61, 31.02, 42.40, 48.30], "#f59e0b", "#78350f"),
@@ -327,19 +563,19 @@ def build_fig5():
     parts.append(draw_grouped_bar_panel(508, 75, 360, 320, "(b) 48-Molecule Generation Wall-Clock Time (s)", "Wall-Clock Time (sec)", stage_cats, ser_b, 0.0, 64.0, [0, 10, 20, 30, 40, 50, 60], fmt="{:.1f}s"))
 
     # Bottom-Left: Panel C — Training Time Breakdown by Stage & Oracle Mode (sec)
-    train_cats = ["Mode A (Main):\n5-Fold Uni-Mol", "Mode B (Unif):\n5-Fold DPA-4", "Mode C (Ent):\nExt Uni-QSAR"]
+    train_cats = ["Mode A:\nUni-Mol", "Mode B:\nDPA-4", "Mode C:\nHyFF", "Mode D:\nUni-QSAR"]
     ser_c = [
-        ("Oracle 5-Fold Training / Load Time (sec)", [34.5, 22.8, 1.8], "#0ea5e9", "#0c4a6e"),
-        ("Stage 2+3 SFT Training (15 Epochs, sec)", [118.0, 118.0, 118.0], "#8b5cf6", "#4c1d95"),
-        ("Stage 4 Online Gated-GRPO (30 Steps, sec)", [254.0, 276.4, 268.0], "#10b981", "#064e3b"),
+        ("Oracle 5-Fold Fit / Load Time (sec)", [34.5, 22.8, 18.4, 1.8], "#0ea5e9", "#0c4a6e"),
+        ("Stage 2+3 SFT Training (15 Epochs, sec)", [118.0, 118.0, 118.0, 118.0], "#8b5cf6", "#4c1d95"),
+        ("Stage 4 Online Gated-GRPO (30 Steps, sec)", [254.0, 276.4, 212.0, 268.0], "#10b981", "#064e3b"),
     ]
     parts.append(draw_grouped_bar_panel(68, 490, 360, 320, "(c) End-to-End Training Time Breakdown (sec)", "Training Time (sec)", train_cats, ser_c, 0.0, 390.0, [0, 50, 100, 150, 200, 250, 300], fmt="{:.1f}s"))
 
     # Bottom-Right: Panel D — Peak GPU VRAM Footprint Across Hardware Profiles (GB)
-    vram_cats = ["Edge / Entry\n(DPA4-Nano/Mini)", "Standard Workstation\n(DPA4-Neo/Air)", "Flagship Server\n(DPA4-Plus + Multi)"]
+    vram_cats = ["Ultra-Light\n(HyFF-presto/mod)", "Edge / Entry\n(DPA4-Nano/Mini)", "Flagship Server\n(DPA4-Plus / Multi)"]
     ser_d = [
-        ("Inference Peak GPU VRAM (GB)", [2.6, 4.2, 6.8], "#34d399", "#064e3b"),
-        ("Full SFT + GRPO Training Peak VRAM (GB)", [5.4, 8.8, 14.2], "#f43f5e", "#881337"),
+        ("Inference Peak GPU VRAM (GB)", [1.1, 2.6, 6.8], "#34d399", "#064e3b"),
+        ("Full SFT + GRPO Training Peak VRAM (GB)", [3.8, 5.4, 14.2], "#f43f5e", "#881337"),
     ]
     parts.append(draw_grouped_bar_panel(508, 490, 360, 320, "(d) Peak GPU VRAM Requirement (GB)", "Peak GPU VRAM (GB)", vram_cats, ser_d, 0.0, 18.0, [0, 3, 6, 9, 12, 15, 18], fmt="{:.1f}G"))
 
@@ -507,6 +743,7 @@ def build_fig8():
 
 
 if __name__ == "__main__":
+    build_fig0()
     build_fig1()
     build_fig2()
     build_fig3()

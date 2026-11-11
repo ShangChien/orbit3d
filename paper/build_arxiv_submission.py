@@ -13,6 +13,7 @@ def build_arxiv_tarball() -> Path:
         "ORBIT3D_arXiv_Paper.tex",
         "ORBIT3D_arXiv_Paper.bbl",
         "references.bib",
+        "figures/fig0_orbit3d_system_architecture.png",
         "figures/fig1_orbit3d_vs_propmolflow.png",
         "figures/fig2_five_stage_ablation.png",
         "figures/fig3_dpa4_scaling_pareto.png",

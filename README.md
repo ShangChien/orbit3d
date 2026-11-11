@@ -61,8 +61,8 @@ mol_gen/
 │   │   ├── run_orbit3d_ablation_benchmark.py   # ORBIT-3D 5-stage progressive ablation & DPA-4 scaling
 │   │   ├── run_hyff_vs_dpa4_benchmark.py       # Head-to-head HyFF (6 tiers) vs DPA-4 (5 scales) 4-part benchmark
 │   │   ├── run_oled_frontier_benchmark.py      # PropMolFlow + MLIP QM9/OLED frontier orbital benchmark
-│   │   ├── run_dpa3_vs_dpa4_benchmark.py       # Head-to-head DPA-3.1 vs DPA-4 (OMol25 / OMat24) comparison
-│   │   ├── run_dpa4_scaling_benchmark.py       # Full DPA-4 series (Nano/Mini/Neo/Air/Plus) scaling benchmark
+│   │   ├── run_optoelectronic_paradigm_benchmark.py # Optoelectronic (OCNet/OSCFF/MIM-Flow/O2-GEN) benchmark
+│   │   ├── run_dpa4_scaling_benchmark.py       # Full DPA-4 series (Nano/Mini/Neo/Air/Plus & OMat24) scaling benchmark
 │   │   └── run_3d_sat_oled_benchmark.py        # Organometallic Ir(III) 3D-SAT-OLED emitter benchmark
 │   └── results/                           # Experimental JSON Summaries & Generated 3D Conformers (SDF)
 │       ├── dpa3_vs_dpa4/
@@ -82,7 +82,7 @@ mol_gen/
 │   └── verify_e2e.py                      # End-to-end automated verification across all Oracles & stages
 │
 ├── paper/                                 # [Manuscript] arXiv Paper, LaTeX Source & Publication Figures
-│   ├── ORBIT3D_arXiv_Paper.md             # Full Markdown manuscript with embedded figures & Mermaid diagrams
+│   ├── ORBIT3D_arXiv_Paper.md             # Full Markdown manuscript with embedded SVG/PNG figures
 │   ├── ORBIT3D_arXiv_Paper.tex            # Compilable arXiv LaTeX source
 │   ├── references.bib                     # BibTeX bibliography
 │   ├── generate_orbit3d_figures.py        # Reproducible vector SVG & high-DPI PNG figure generator
@@ -97,37 +97,9 @@ mol_gen/
 
 ## 2. System Architecture & 5-Stage Closed-Loop Pipeline
 
-```mermaid
-flowchart TB
-    subgraph S123["Stages 1-3: Bidirectional Uni-3DAR Backbone (src/orbit3d/generator)"]
-        S1["Stage 1: Unconditional 3D Octree Pretraining<br/>Coarse-to-Fine L=0..3 Spatial Hierarchy + Valence Mask"]
-        S2["Stage 2: Dynamic Interval SFT<br/>Root-Prefix [COND] + 12-Layer AdaLN-Zero Fourier Injection"]
-        S3["Stage 3: 3D Self-Consistent Understanding Head<br/>Suffix [CLS] + Leaf Atom Pooling Auxiliary Loss & Reranking"]
-        S1 --> S2 --> S3
-    end
+![ORBIT-3D System Architecture (Vector SVG & High-DPI PNG)](paper/figures/fig0_orbit3d_system_architecture.svg)
 
-    subgraph Oracles["Pluggable Multi-Modal Oracle Ecosystem (src/orbit3d/oracles)"]
-        O1["Mode A (Mainline): Open-Source Uni-Mol<br/>5-Fold 3D Distance-Attention (Built-in FP16)"]
-        O2["Mode B (Unified): Open-Source DPA-4<br/>Native SeZM Equivariant Descriptor 5-Fold Ridge"]
-        O3["Mode C (Enterprise): Full-Matrix Uni-QSAR<br/>1D SMILES + 2D Morgan FP + 3D Multi-Modal Ensemble"]
-    end
-
-    subgraph DPA4["Built-In DPA-4 Full-Series MLIP Engine (src/orbit3d/physics)"]
-        DPA["DPA-4 OMol25 Series<br/>Nano (1.95MB) | Mini (2.62MB) | Neo (4.42MB) | Air (19.86MB) | Plus (34.01MB)"]
-    end
-
-    subgraph S45["Stages 4-5: Online RL Alignment & Physical Relaxation"]
-        S4["Stage 4: Physics- & Uncertainty-Gated GRPO<br/>R(x) = G_unc(x) * G_phys(x) * R_int(x) - beta * KL + lambda * L_SFT"]
-        S5["Stage 5: Tangent-Projected Iso-Property Conformer Relaxation<br/>DPA-4 L-BFGS / GD Projected Orthogonal to Property Violation"]
-        S4 --> S5
-    end
-
-    S3 --> S4
-    O1 & O2 & O3 -->|"Property Mean mu(x) & Uncertainty sigma(x)"| S4
-    DPA -->|"Physical Force Gate G_phys(x) & Native Descriptors"| S4
-    DPA -->|"Analytical Forces F_DPA4(x)"| S5
-    O1 & O2 & O3 -->|"Iso-Property Constraint Gate"| S5
-```
+*(Both vector SVG [`paper/figures/fig0_orbit3d_system_architecture.svg`](file:///Users/dp/project/mol_gen/paper/figures/fig0_orbit3d_system_architecture.svg) and high-resolution PNG [`paper/figures/fig0_orbit3d_system_architecture.png`](file:///Users/dp/project/mol_gen/paper/figures/fig0_orbit3d_system_architecture.png) are provided for consistent cross-engine rendering.)*
 
 ### 2.1 Open-Source `Uni-Mol` / `DPA-4` / `HyFF` Mainline & First-Tier Enterprise `Uni-QSAR` Matrix Support
 
@@ -257,9 +229,11 @@ All timing benchmarks below were measured on an **NVIDIA A800-SXM4-80GB GPU** (w
 | **`DPA-4-Air (OMol25)`** | 5.18 M | 19.86 MB | FP32 | 111.74 ms | 2.328 ms | 10.24 ms | 9.67 atoms/ms |
 | **`DPA-4-Plus (OMol25)`** | 8.88 M | 34.01 MB | FP32 | 225.52 ms | 4.698 ms | 20.45 ms | 4.42 atoms/ms |
 | `DPA-4-Air (OMat24)` | 5.15 M | 19.75 MB | FP32 | 110.76 ms | 2.307 ms | 10.22 ms | 9.76 atoms/ms |
-| `DPA-3.1-3M (SPICE2)` | 3.27 M | 44.99 MB | FP64/32 | 148.53 ms | 3.094 ms | 13.07 ms | 7.24 atoms/ms |
+| **`HyFF-presto (OMol25)`** | **0.05 M** | **8.89 MB** | TF32x3 | **21.34 ms** | **0.445 ms** | **1.92 ms** | **112.98 atoms/ms** |
+| **`HyFF-vivace (OMol25)`** | **0.16 M** | **25.50 MB** | TF32x3 | **22.91 ms** | **0.477 ms** | **2.05 ms** | **107.43 atoms/ms** |
+| **`HyFF-moderato (OMol25)`** | **0.83 M** | **132.89 MB** | TF32x3 | **23.74 ms** | **0.495 ms** | **2.14 ms** | **97.69 atoms/ms** |
 
-> **Key Takeaway**: `DPA-4-Nano` and `DPA-4-Mini` achieve **3.3x–3.4x lower per-molecule force latency** (`0.91–0.95 ms/mol` vs. `3.09 ms/mol`) and **5.9x–7.7x higher saturated atomic throughput** (`42.5–56.0 atoms/ms` vs. `7.24 atoms/ms`) than `DPA-3.1-3M`, while simultaneously delivering lower residual physical strain (`0.204` vs. `0.252 eV/Å`).
+> **Key Takeaway**: `DPA-4-Nano` and `DPA-4-Mini` achieve **5.0x–5.1x lower per-molecule force latency** (`0.91–0.95 ms/mol` vs. `4.70 ms/mol`) than `DPA-4-Plus` while retaining analytical ZBL short-range clash protection, whereas element-sparse `HyFF-presto/vivace/moderato` push throughput further to **`97.7–113.0 atoms/ms`** with explicit charge ($Q$) and spin ($M=2S+1$) conditioning.
 
 ---
 
@@ -270,7 +244,6 @@ All timing benchmarks below were measured on an **NVIDIA A800-SXM4-80GB GPU** (w
 | `PropMolFlow` (Naive GVP, No MLIP, 100 ODE steps) | $K=1$ | 5.54 s | 0.00 s | **5.54 s** | **0.12 s/mol** | 62.5%–77.1% | 100.0% / 100.0% *(broken valence)* |
 | `PropMolFlow + DPA-4-Mini` (Orthogonal Proj.) | $K=1$ | 7.87 s | — *(in-ODE)* | **7.87 s** | **0.16 s/mol** | 91.7%–95.8% | 100.0% / 100.0% |
 | `PropMolFlow + DPA-4-Air` (Orthogonal Proj.) | $K=1$ | 10.47 s | — *(in-ODE)* | 10.47 s | 0.22 s/mol | 91.7%–95.8% | 100.0% / 100.0% |
-| `PropMolFlow + DPA-3.1-3M` (Orthogonal Proj.) | $K=1$ | 12.30 s | — *(in-ODE)* | 12.30 s | 0.26 s/mol | 91.7%–95.8% | 100.0% / 100.0% |
 | `PropMolFlow + DPA-4-Plus` (Orthogonal Proj.) | $K=1$ | 15.82 s | — *(in-ODE)* | 15.82 s | 0.33 s/mol | 91.7%–95.8% | 100.0% / 100.0% |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **`ORBIT-3D` Stage 1** (`1_uni3dar_uncond`) | $K=1$ | 15.98 s | 0.00 s | 15.98 s | 0.33 s/mol | **100.0%** | 12.5% / 6.3% |
@@ -313,7 +286,7 @@ Depending on deployment scale (from personal laptop/workstation screening to clu
 
 ## 6. Datasets: Sources, Quantum Theory Levels & Statistical Distributions
 
-**ORBIT-3D** and the comparative baselines in [`benchmarks/`](file:///Users/dp/project/mol_gen/benchmarks) are trained, calibrated, and evaluated across two primary 3D quantum-chemical benchmark datasets (**`QM9 / rQM9`** and **`3D-SAT-OLED`**) and three large-scale foundation MLIP pretraining corpora (**`OMol25`**, **`SPICE2`**, and **`OMat24`**).
+**ORBIT-3D** and the comparative baselines in [`benchmarks/`](file:///Users/dp/project/mol_gen/benchmarks) are trained, calibrated, and evaluated across two primary 3D quantum-chemical benchmark datasets (**`QM9 / rQM9`** and **`3D-SAT-OLED`**) and two large-scale foundation MLIP pretraining corpora (**`OMol25`** and **`OMat24`**).
 
 ### 6.1 Summary of Primary Benchmark Datasets & Foundation Pretraining Corpora
 
@@ -321,8 +294,7 @@ Depending on deployment scale (from personal laptop/workstation screening to clu
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **`QM9` / `rQM9`** | Small neutral organic molecules ($\le 9$ heavy atoms) | GDB-17 / Ramakrishnan et al. (*Sci. Data* 2014); [`external/PropMolFlow/data/qm9`](file:///Users/dp/project/mol_gen/external/PropMolFlow/data/qm9) | **DFT B3LYP/6-31G(2df,p)** | **133,885** raw (`gdb9.sdf.csv`); **100,000** train / **18,000** val / **13,000** test (`rQM9` after filtering 3,054 unrelaxed structures) | **5 elements**: $\text{H}$ (51.13%), $\text{C}$ (35.16%), $\text{O}$ (7.80%), $\text{N}$ (5.78%), $\text{F}$ (0.14%) | $N \in [3, 29]$, Mean $\bar{N} = 17.98 \pm 2.91$, Median $P_{50}=18$, Mode $N=19$ (13.85%) |
 | **`3D-SAT-OLED`** | Octahedral phosphorescent heavy-metal $\text{Ir(III)}$ OLED complexes | 3D-SAT-OLED; [`external/3D-SAT-OLED/SAT_OLED_Model/oled`](file:///Users/dp/project/mol_gen/external/3D-SAT-OLED/SAT_OLED_Model/oled) | **DFT/TD-DFT B3LYP/6-31G\*** (light atoms) + **LANL2DZ** ECP ($\text{Ir}$) | **1,000** 3D organometallic complexes (**800** `train.npz` / **200** `test.npz`; 62,357 total atoms) | **10 elements**: $\text{C}$ (45.36%), $\text{H}$ (37.61%), $\text{N}$ (11.98%), $\text{F}$ (1.82%), $\text{Ir}$ (1.60%, 1/mol), $\text{O}$ (1.37%), $\text{S}$ (0.20%), $\text{Cl, Si, P}$ (0.06%) | $N \in [42, 98]$, Mean $\bar{N} = 62.36 \pm 7.89$, $P_{10}=53$, $P_{50}=62$, $P_{90}=73$ |
-| **`OMol25`** *(DPA-4 Family)* | Diverse organic, bio-organic, charged ions & transition metal complexes | Meta / DeepModeling Open Molecules 2025 (`DPA-4 Nano/Mini/Neo/Air/Plus`) | **$\omega$B97M-V / def2-TZVPD** | **~100,000,000** DFT single-point evaluations (energies, forces, virials) | **83 elements** across the periodic table (including $\text{H, C, N, O, F}$ and 5d metal $\text{Ir}$) | $N \in [2, 350]$ (monomers, conformers, reaction transition states, coordination complexes) |
-| **`SPICE2`** *(DPA-3.1-3M)* | Drug-like small organic molecules, dimers & peptides | Eastman et al. (*Sci. Data* 2023 / 2024) | **$\omega$B97M-D3(BJ) / def2-TZVPPD** | **~2,000,000** off-equilibrium conformations | **17 main-group/halogen elements** (lacks 5d transition metal $\text{Ir}$) | $N \in [3, 110]$ |
+| **`OMol25`** *(DPA-4 & HyFF)* | Diverse organic, bio-organic, charged ions & transition metal complexes | Meta / DeepModeling Open Molecules 2025 (`DPA-4` & `HyFF`) | **$\omega$B97M-V / def2-TZVPD** | **~100,000,000** DFT single-point evaluations (energies, forces, virials) | **83 elements** across the periodic table (including $\text{H, C, N, O, F}$ and 5d metal $\text{Ir}$) | $N \in [2, 350]$ (monomers, conformers, reaction transition states, coordination complexes) |
 | **`OMat24`** *(DPA-4-OMat24)* | Inorganic bulk crystal structures (out-of-domain baseline) | Barroso-Luque et al. (2024) | **Periodic Plane-Wave PBE / PBE+$U$** | **~110,000,000** inorganic crystal configurations | **89 inorganic/metallic elements** | Periodic unit cells ($4\text{--}64$ atoms/cell) |
 
 ---

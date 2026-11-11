@@ -49,14 +49,14 @@
 <rect x="87" y="83" width="395" height="62" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
 <line x1="95" y1="92" x2="115" y2="92" stroke="#10b981" stroke-width="2.6" />
 <circle cx="105" cy="92" r="3.5" fill="#10b981"/>
-<text x="123" y="96" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">ORBIT-3D Gated-GRPO (Unc + DPA-4 Force Gate + KL/SFT)</text>
+<text x="123" y="96" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">ORBIT-3D Gated-GRPO (Unc + MLIP Force Gate + KL/SFT)</text>
 <line x1="95" y1="110" x2="115" y2="110" stroke="#3b82f6" stroke-width="2.6" />
 <circle cx="105" cy="110" r="3.5" fill="#3b82f6"/>
-<text x="123" y="114" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">GRPO w/o DPA-4 Force Gate (Unc + KL Only)</text>
+<text x="123" y="114" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">GRPO w/o MLIP Force Gate (Unc + KL Only)</text>
 <line x1="95" y1="128" x2="115" y2="128" stroke="#ef4444" stroke-width="2.6" stroke-dasharray="6,4"/>
 <circle cx="105" cy="128" r="3.5" fill="#ef4444"/>
 <text x="123" y="132" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Un-anchored REINFORCE (Reward Hacking Collapse)</text>
-<text x="465.0" y="476.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(b) Open-Source Mainline (Uni-Mol / DPA-4) &amp; Full-Matrix Uni-QSAR Ecosystem (%)</text>
+<text x="465.0" y="476.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(b) Open-Source Mainline (Uni-Mol / DPA-4 / HyFF) &amp; Full-Matrix Uni-QSAR (%)</text>
 <text transform="translate(33.0,650.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Metric (%)</text>
 <line x1="75" y1="810.0" x2="855" y2="810.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
 <text x="67" y="814.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">80</text>
@@ -70,30 +70,38 @@
 <text x="67" y="585.4" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">100</text>
 <line x1="75" y1="490" x2="75" y2="810" stroke="#334155" stroke-width="1.5"/>
 <line x1="75" y1="810" x2="855" y2="810" stroke="#334155" stroke-width="1.5"/>
-<text x="205.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode A (Mainline): Open-Source</text>
-<text x="205.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">5-Fold 3D Uni-Mol</text>
-<rect x="145.0" y="631.7" width="37.0" height="178.3" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
-<text x="163.5" y="626.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.6%</text>
-<rect x="185.0" y="605.4" width="37.0" height="204.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
-<text x="203.5" y="600.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.9%</text>
-<rect x="225.0" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
-<text x="243.5" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
-<text x="465.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode B (Unified): Open-Source</text>
-<text x="465.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">5-Fold Native DPA-4</text>
-<rect x="405.0" y="622.6" width="37.0" height="187.4" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
-<text x="423.5" y="617.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.4%</text>
-<rect x="445.0" y="581.4" width="37.0" height="228.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
-<text x="463.5" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
-<rect x="485.0" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
-<text x="503.5" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
-<text x="725.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode C (Enterprise): Full-Matrix</text>
-<text x="725.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Multi-Modal Uni-QSAR</text>
-<rect x="665.0" y="626.0" width="37.0" height="184.0" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
-<text x="683.5" y="621.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.1%</text>
-<rect x="705.0" y="605.4" width="37.0" height="204.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
-<text x="723.5" y="600.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.9%</text>
-<rect x="745.0" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
-<text x="763.5" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<text x="172.5" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode A (Mainline):</text>
+<text x="172.5" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">5-Fold 3D Uni-Mol</text>
+<rect x="112.5" y="631.7" width="37.0" height="178.3" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
+<text x="131.0" y="626.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.6%</text>
+<rect x="152.5" y="605.4" width="37.0" height="204.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="171.0" y="600.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.9%</text>
+<rect x="192.5" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="211.0" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<text x="367.5" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode B (ZBL Unified):</text>
+<text x="367.5" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">5-Fold Native DPA-4</text>
+<rect x="307.5" y="622.6" width="37.0" height="187.4" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
+<text x="326.0" y="617.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.4%</text>
+<rect x="347.5" y="581.4" width="37.0" height="228.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="366.0" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<rect x="387.5" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="406.0" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<text x="562.5" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode C (Charge/Spin):</text>
+<text x="562.5" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">5-Fold Native HyFF</text>
+<rect x="502.5" y="626.0" width="37.0" height="184.0" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
+<text x="521.0" y="621.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.1%</text>
+<rect x="542.5" y="581.4" width="37.0" height="228.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="561.0" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<rect x="582.5" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="601.0" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<text x="757.5" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Mode D (Enterprise):</text>
+<text x="757.5" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Full-Matrix Uni-QSAR</text>
+<rect x="697.5" y="626.0" width="37.0" height="184.0" fill="#6366f1" stroke="#1e1b4b" stroke-width="1.2" rx="2"/>
+<text x="716.0" y="621.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.1%</text>
+<rect x="737.5" y="605.4" width="37.0" height="204.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="756.0" y="600.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.9%</text>
+<rect x="777.5" y="581.4" width="37.0" height="228.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="796.0" y="576.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
 <rect x="85" y="498" width="360.0" height="59" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
 <rect x="93" y="502" width="11" height="9" fill="#6366f1" stroke="#1e1b4b" stroke-width="1"/>
 <text x="109" y="510" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">5-Fold Cross-Validation R2 (%)</text>
