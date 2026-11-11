@@ -61,7 +61,7 @@ class _AdaLNZeroTransformerBlock(nn.Module):
 
 class ConditionalUni3DAR(nn.Module):
     """
-    Pure-PyTorch `Uni-3DAR` with Dynamic Interval Conditioning (`[low, high, mask]`)
+    Dense-grid research baseline (not upstream Uni-3DAR) with Dynamic Interval Conditioning (`[low, high, mask]`)
     and Suffix 3D Property Understanding Head.
     """
 
@@ -73,8 +73,15 @@ class ConditionalUni3DAR(nn.Module):
         vocab_size: int = VOCAB_SIZE,
         max_seq_len: int = 256,
         cond_dim: int = 7,
+        output_dim: int = 3,
+        max_atoms: int = 40,
     ) -> None:
         super().__init__()
+        self.backend_id = "dense_grid_v2"
+        self.max_atoms = max_atoms
+        self.cond_dim = cond_dim
+        if 4 * max_atoms + 2 > max_seq_len:
+            raise ValueError("Sequence capacity too small for max_atoms")
         self.d_model = d_model
         self.vocab_size = vocab_size
         self.max_seq_len = max_seq_len
@@ -87,32 +94,28 @@ class ConditionalUni3DAR(nn.Module):
             nn.Linear(d_model, d_model),
         )
 
-        self.blocks = nn.ModuleList(
-            [_AdaLNZeroTransformerBlock(d_model, n_heads) for _ in range(n_layers)]
-        )
+        self.blocks = nn.ModuleList([_AdaLNZeroTransformerBlock(d_model, n_heads) for _ in range(n_layers)])
         self.final_norm = nn.LayerNorm(d_model)
         self.lm_head = nn.Linear(d_model, vocab_size)
 
         self.suffix_prop_head = nn.Sequential(
             nn.Linear(d_model, d_model),
             nn.SiLU(),
-            nn.Linear(d_model, 3),
+            nn.Linear(d_model, output_dim),
         )
 
-    def forward(
-        self, tokens: torch.Tensor, cond_vec: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, tokens: torch.Tensor, cond_vec: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         B, L = tokens.shape
         device = tokens.device
-        pos = torch.arange(L, device=device).unsqueeze(0).clamp(max=self.max_seq_len - 1)
+        if L > self.max_seq_len:
+            raise ValueError("Sequence too long")
+        pos = torch.arange(L, device=device).unsqueeze(0)
         c_emb = self.cond_proj(cond_vec)
 
         x = self.tok_emb(tokens) + self.pos_emb(pos)
         x[:, 0, :] = x[:, 0, :] + c_emb
 
-        causal_mask = torch.triu(
-            torch.full((L, L), float("-inf"), device=device), diagonal=1
-        )
+        causal_mask = torch.triu(torch.full((L, L), float("-inf"), device=device), diagonal=1)
         for blk in self.blocks:
             x = blk(x, c_emb, causal_mask)
 
@@ -125,49 +128,103 @@ class ConditionalUni3DAR(nn.Module):
         return logits, pred_props
 
     @torch.no_grad()
-    def sample_autoregressive(
-        self,
-        cond_vec: torch.Tensor,
-        max_atoms: int = 12,
-        temperature: float = 0.85,
-        top_p: float = 0.92,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        B = cond_vec.size(0)
+    def forward_step(self, token, cond_vec, cache=None):
+        """Inference-only KV cache; positions and conditional modulation match forward."""
+        if self.training:
+            raise ValueError("Incremental decoding requires eval mode")
+        B = token.shape[0]
+        if cache is None:
+            c = self.cond_proj(cond_vec)
+            cache = {"position": 0, "condition": c, "blocks": []}
+            for block in self.blocks:
+                heads = block.attn.num_heads
+                shape = (B, heads, self.max_seq_len, self.d_model // heads)
+                cache["blocks"].append(
+                    {
+                        "mod": block.ada_mod(c).unsqueeze(1).chunk(6, dim=-1),
+                        "k": torch.empty(shape, device=token.device, dtype=c.dtype),
+                        "v": torch.empty(shape, device=token.device, dtype=c.dtype),
+                    }
+                )
+        position = cache["position"]
+        if position >= self.max_seq_len:
+            raise ValueError("KV cache capacity exceeded")
+        x = self.tok_emb(token.reshape(B, 1)) + self.pos_emb.weight[position][None, None]
+        if position == 0:
+            x = x + cache["condition"][:, None]
+        for block, state in zip(self.blocks, cache["blocks"]):
+            g1, b1, a1, g2, b2, a2 = state["mod"]
+            h = block.norm1(x) * (1 + g1) + b1
+            q, k, v = F.linear(h, block.attn.in_proj_weight, block.attn.in_proj_bias).chunk(3, -1)
+            heads = block.attn.num_heads
+            dim = self.d_model // heads
+            q = q.view(B, 1, heads, dim).transpose(1, 2)
+            state["k"][:, :, position : position + 1] = k.view(B, 1, heads, dim).transpose(1, 2)
+            state["v"][:, :, position : position + 1] = v.view(B, 1, heads, dim).transpose(1, 2)
+            attn = F.scaled_dot_product_attention(
+                q,
+                state["k"][:, :, : position + 1],
+                state["v"][:, :, : position + 1],
+                dropout_p=0.0,
+                is_causal=False,
+            )
+            attn = block.attn.out_proj(attn.transpose(1, 2).reshape(B, 1, self.d_model))
+            x = x + (1 + torch.tanh(a1)) * attn
+            x = x + (1 + torch.tanh(a2)) * block.mlp(block.norm2(x) * (1 + g2) + b2)
+        cache["position"] += 1
+        return self.lm_head(self.final_norm(x)), cache
+
+    def constrained_logits(self, logits, temperature=1.0, start_step=0):
+        if temperature <= 0:
+            raise ValueError("Temperature must be positive")
+        out = torch.full_like(logits, -torch.inf)
+        for index in range(logits.shape[1]):
+            step = index + start_step
+            if step == self.max_atoms * 4:
+                out[:, index, EOS_TOKEN] = logits[:, index, EOS_TOKEN]
+            elif step % 4 == 0:
+                out[:, index, ATOM_OFFSET:COORD_OFFSET] = logits[:, index, ATOM_OFFSET:COORD_OFFSET]
+                if step >= 4:
+                    out[:, index, EOS_TOKEN] = logits[:, index, EOS_TOKEN]
+            else:
+                out[:, index, COORD_OFFSET:] = logits[:, index, COORD_OFFSET:]
+        return out / temperature
+
+    @torch.no_grad()
+    def sample_autoregressive(self, cond_vec, max_atoms=None, temperature=0.85, top_p=0.92, use_cache=True):
+        if max_atoms is not None and max_atoms != self.max_atoms:
+            raise ValueError("Sampling length must match saved model specification")
+        if not 0 < top_p <= 1:
+            raise ValueError("top_p must be in (0,1]")
+        B = cond_vec.shape[0]
         device = cond_vec.device
         seq = torch.full((B, 1), BOS_TOKEN, dtype=torch.long, device=device)
-        total_steps = max_atoms * 4
-
-        for step in range(total_steps):
-            logits, _ = self.forward(seq, cond_vec)
-            next_logits = logits[:, -1, :] / max(temperature, 1e-4)
-
-            mask = torch.full_like(next_logits, float("-inf"))
-            if step % 4 == 0:
-                mask[:, ATOM_OFFSET : ATOM_OFFSET + NUM_ATOM_TYPES] = 0.0
+        ended = torch.zeros(B, dtype=torch.bool, device=device)
+        cache = None
+        use_cache = use_cache and not self.training
+        for step in range(self.max_atoms * 4 + 1):
+            if use_cache:
+                logits, cache = self.forward_step(seq[:, -1], cond_vec, cache)
+                probs = self.constrained_logits(logits, temperature, start_step=step)[:, -1].softmax(-1)
             else:
-                mask[:, COORD_OFFSET : COORD_OFFSET + NUM_COORD_BINS] = 0.0
-
-            masked_logits = next_logits + mask
-            probs = F.softmax(masked_logits, dim=-1)
-
-            sorted_probs, sorted_idx = torch.sort(probs, descending=True, dim=-1)
-            cum_probs = torch.cumsum(sorted_probs, dim=-1)
-            remove = cum_probs > top_p
-            remove[:, 1:] = remove[:, :-1].clone()
-            remove[:, 0] = False
-            sorted_probs = sorted_probs.masked_fill(remove, 0.0)
-            sorted_probs = sorted_probs / sorted_probs.sum(dim=-1, keepdim=True).clamp(min=1e-8)
-
-            sampled_in_sorted = torch.multinomial(sorted_probs, num_samples=1)
-            next_tok = sorted_idx.gather(-1, sampled_in_sorted)
-            seq = torch.cat([seq, next_tok], dim=1)
-
-        eos_col = torch.full((B, 1), EOS_TOKEN, dtype=torch.long, device=device)
-        seq = torch.cat([seq, eos_col], dim=1)
-        logits_full, pred_props = self.forward(seq[:, :-1], cond_vec)
-        logp = F.log_softmax(logits_full, dim=-1)
-        tok_logp = logp.gather(-1, seq[:, 1:].unsqueeze(-1)).squeeze(-1)
-        return seq, tok_logp, pred_props
+                logits, _ = self(seq, cond_vec)
+                probs = self.constrained_logits(logits, temperature)[:, -1].softmax(-1)
+            sorted_probs, idx = probs.sort(descending=True, stable=True)
+            remove = sorted_probs.cumsum(-1) - sorted_probs >= top_p
+            sorted_probs = sorted_probs.masked_fill(remove, 0)
+            sampled = torch.multinomial(sorted_probs, 1)
+            token = idx.gather(-1, sampled).squeeze(-1)
+            token = torch.where(ended, torch.full_like(token, PAD_TOKEN), token)
+            seq = torch.cat([seq, token[:, None]], 1)
+            ended |= token == EOS_TOKEN
+            if ended.all():
+                break
+        logits, _ = self(seq[:, :-1], cond_vec)
+        logp = self.constrained_logits(logits, temperature).log_softmax(-1)
+        selected = logp.gather(-1, seq[:, 1:, None]).squeeze(-1)
+        selected = selected.masked_fill(seq[:, 1:] == PAD_TOKEN, 0)
+        _, props = self(seq, torch.zeros_like(cond_vec))
+        return seq, selected, props
 
 
 @torch.no_grad()
@@ -182,10 +239,10 @@ def sample_molecule_deterministic_by_id(
 ) -> Tuple[Mol3DInstance, torch.Tensor]:
     """
     Generates molecule `#mol_id` using an isolated RNG stream seeded strictly by
-    `base_seed * 100000 + mol_id`, guaranteeing 100% reproducibility regardless of batch size!
+    `base_seed * 100000 + mol_id`, isolating RNG state. Numerical reproducibility depends on backend and batching.
     """
     cpu_state = torch.get_rng_state()
-    cuda_state = torch.cuda.get_rng_state(device) if torch.cuda.is_available() else None
+    cuda_states = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
     mol_seed = int(base_seed) * 100000 + int(mol_id)
     torch.manual_seed(mol_seed)
     if torch.cuda.is_available():
@@ -193,9 +250,7 @@ def sample_molecule_deterministic_by_id(
 
     try:
         cond_1 = cond_raw.unsqueeze(0).to(device)
-        seqs, _, pred_props = model.sample_autoregressive(
-            cond_1, temperature=temperature, top_p=top_p
-        )
+        seqs, _, pred_props = model.sample_autoregressive(cond_1, temperature=temperature, top_p=top_p)
         inst = decode_tokens_to_mol3d(seqs[0].cpu().tolist())
         inst.props = pred_props[0].cpu().numpy()
         mol_rd = mol3d_to_rdkit_mol(inst)
@@ -203,7 +258,7 @@ def sample_molecule_deterministic_by_id(
             inst.smiles = mol_to_clean_smiles(mol_rd)
     finally:
         torch.set_rng_state(cpu_state)
-        if cuda_state is not None:
-            torch.cuda.set_rng_state(cuda_state, device)
+        if cuda_states is not None:
+            torch.cuda.set_rng_state_all(cuda_states)
 
     return inst, pred_props[0]

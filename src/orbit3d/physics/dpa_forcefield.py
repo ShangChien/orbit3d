@@ -48,7 +48,9 @@ class DPAPotentialGuidance(nn.Module):
             state_dict_head = {"_extra_state": state_dict["_extra_state"]}
             for item in state_dict:
                 if f"model.{head}." in item:
-                    state_dict_head[item.replace(f"model.{head}.", "model.Default.")] = state_dict[item].clone()
+                    state_dict_head[item.replace(f"model.{head}.", "model.Default.")] = state_dict[
+                        item
+                    ].clone()
         else:
             head_param = copy.deepcopy(self.model_params)
             state_dict_head = state_dict
@@ -62,7 +64,9 @@ class DPAPotentialGuidance(nn.Module):
 
         model = get_model(head_param).to(device)
         self.wrapper = ModelWrapper(model)
-        self.wrapper.load_state_dict(state_dict_head, strict=False)
+        incompatible = self.wrapper.load_state_dict(state_dict_head, strict=False)
+        if incompatible.missing_keys:
+            raise ValueError(f"Missing forcefield parameters: {incompatible.missing_keys}")
         self.wrapper.to(device)
         self.wrapper.eval()
         self.dpa_type_map: List[str] = list(model.get_type_map())
@@ -126,7 +130,7 @@ class DPAPotentialGuidance(nn.Module):
           3. `forces_eva`: `(N, 3)` physical atomic restoring forces `F_phys` (eV/Å)
         """
         atypes = torch.tensor(
-            [[self.dpa_type_map.index(s) if s in self.dpa_type_map else self.dpa_type_map.index("C") for s in atom_symbols]],
+            [[self.dpa_type_map.index(s) for s in atom_symbols]],
             dtype=torch.long,
             device=coords.device,
         )
@@ -151,7 +155,51 @@ class DPAPotentialGuidance(nn.Module):
         native_desc = captured["descriptor"].float()
         forces = pred_dict["force"].squeeze(0).detach().to(coords.dtype)
         energy = pred_dict["energy"].squeeze().detach().to(coords.dtype)
+        if not all(torch.isfinite(v).all() for v in (native_desc, energy, forces)):
+            raise FloatingPointError("Nonfinite DPA descriptor/energy/forces")
         return native_desc, energy, forces
+
+    def extract_differentiable_descriptor(self, coords, atom_symbols):
+        """SeZM embedding path retains coordinate AD; force evaluation detaches edge leaves.
+
+        This is deliberately eager: the inference/force trace may sever upstream
+        coordinate gradients. Unsupported backends must use black-box acceptance.
+        """
+        import inspect
+
+        model = self.dpa_model
+        if (
+            not hasattr(model, "build_neighbor_list")
+            or "embedding_only" not in inspect.signature(model.forward_common_lower).parameters
+        ):
+            raise NotImplementedError("No verified coordinate-gradient descriptor path")
+        atypes = torch.tensor(
+            [[self.dpa_type_map.index(s) for s in atom_symbols]], device=coords.device, dtype=torch.long
+        )
+        coord = coords.to(self.coord_dtype).unsqueeze(0)
+        with torch.enable_grad():
+            edges = model.build_neighbor_list(coord, atypes, None)
+            result = model.forward_common_lower(
+                edges.coord,
+                edges.atype,
+                edges.edge_index,
+                edges.edge_vec,
+                edges.edge_scatter_index,
+                edges.edge_mask,
+                embedding_only=True,
+                use_compile=False,
+            )
+            descriptor = result["descriptor"].reshape(len(atom_symbols), -1).float()
+        if not torch.isfinite(descriptor).all():
+            raise FloatingPointError("Nonfinite differentiable descriptor")
+        if coords.requires_grad:
+            if (
+                not descriptor.requires_grad
+                or torch.autograd.grad(descriptor.sum(), coords, retain_graph=True, allow_unused=True)[0]
+                is None
+            ):
+                raise NotImplementedError("Descriptor computation is disconnected from input coordinates")
+        return descriptor
 
     def set_atom_type_map(self, atom_type_map: List[str]) -> None:
         self.atom_type_map = list(atom_type_map)
@@ -160,7 +208,7 @@ class DPAPotentialGuidance(nn.Module):
             if sym in self.dpa_type_map:
                 idx_list.append(self.dpa_type_map.index(sym))
             else:
-                idx_list.append(self.dpa_type_map.index("C"))
+                raise ValueError(f"Unsupported forcefield element: {sym}")
         self.register_buffer(
             "dataset_to_dpa_idx",
             torch.tensor(idx_list, dtype=torch.long, device=self.device_str),
@@ -168,7 +216,9 @@ class DPAPotentialGuidance(nn.Module):
         )
 
     def map_atom_types(self, dataset_atom_indices: torch.Tensor) -> torch.Tensor:
-        clamped = dataset_atom_indices.long().clamp(0, len(self.atom_type_map) - 1)
+        if ((dataset_atom_indices < 0) | (dataset_atom_indices >= len(self.atom_type_map))).any():
+            raise ValueError("Forcefield atom indices out of range")
+        clamped = dataset_atom_indices.long()
         return self.dataset_to_dpa_idx.to(dataset_atom_indices.device)[clamped]
 
     def compute_energy_and_forces(
@@ -192,10 +242,14 @@ class DPAPotentialGuidance(nn.Module):
             mol_coms = mol_sums / mol_counts.unsqueeze(-1)
 
             grid_offsets = torch.zeros((batch_size, 3), dtype=coords.dtype, device=device)
-            grid_offsets[:, 0] = torch.arange(batch_size, dtype=coords.dtype, device=device) * self.batch_separation
+            grid_offsets[:, 0] = (
+                torch.arange(batch_size, dtype=coords.dtype, device=device) * self.batch_separation
+            )
 
             atom_shifts = (grid_offsets - mol_coms)[node_batch_idx].detach()
-            coords_packed = (coords.detach() + atom_shifts).to(self.coord_dtype).unsqueeze(0).requires_grad_(True)
+            coords_packed = (
+                (coords.detach() + atom_shifts).to(self.coord_dtype).unsqueeze(0).requires_grad_(True)
+            )
             dpa_atypes = self.map_atom_types(dataset_atom_indices).unsqueeze(0)
 
             pred_dict = self.wrapper(coords_packed, dpa_atypes)[0]
@@ -203,6 +257,8 @@ class DPAPotentialGuidance(nn.Module):
             if "atom_energy" in pred_dict:
                 atom_energies = pred_dict["atom_energy"].squeeze(0).reshape(-1).detach()
             else:
+                if batch_size > 1:
+                    raise ValueError("Batched energies require atom-resolved energy output")
                 atom_energies = torch.full(
                     (n_total,),
                     float(pred_dict["energy"].item()) / max(n_total, 1),
@@ -212,7 +268,10 @@ class DPAPotentialGuidance(nn.Module):
 
         mol_energies = torch.zeros(batch_size, dtype=coords.dtype, device=device)
         mol_energies.index_add_(0, node_batch_idx, atom_energies.to(coords.dtype))
-        forces = torch.nan_to_num(forces.to(coords.dtype), nan=0.0, posinf=0.0, neginf=0.0)
+        forces = forces.to(coords.dtype)
+
+        if not torch.isfinite(mol_energies).all() or not torch.isfinite(forces).all():
+            raise FloatingPointError("Nonfinite MLIP energy/forces")
 
         if clip_forces and self.max_force_norm is not None and self.max_force_norm > 0:
             f_norm = torch.norm(forces, dim=-1, keepdim=True) + 1e-8

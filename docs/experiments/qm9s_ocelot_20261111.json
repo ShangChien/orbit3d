@@ -1,0 +1,440 @@
+{
+  "date": "2026-11-11",
+  "scope": "Engineering integration and small scientific pilots; no DFT validation",
+  "ocelot_fingerprint": {
+    "training_records": 15283,
+    "metrics": {
+      "valid": {
+        "n": 1622,
+        "mae_eV": {
+          "homo": 0.3799421389088762,
+          "lumo": 0.3523130410828686
+        },
+        "rmse_eV": {
+          "homo": 0.5093244703222992,
+          "lumo": 0.4534875280477925
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.5090773564005366,
+          "lumo": 0.5590441455365612
+        },
+        "gap_from_homo_lumo_mae_eV": 0.6214790881425022,
+        "reload_max_abs_diff": 0.0
+      },
+      "test": {
+        "n": 1734,
+        "mae_eV": {
+          "homo": 0.3703574027148706,
+          "lumo": 0.349454083708632
+        },
+        "rmse_eV": {
+          "homo": 0.49950469329391567,
+          "lumo": 0.4538916209063114
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.506552787596622,
+          "lumo": 0.5131582979478555
+        },
+        "gap_from_homo_lumo_mae_eV": 0.595418507486242,
+        "reload_max_abs_diff": 0.0
+      }
+    },
+    "data_sha256": {
+      "train": "4920402ae2ccf089dde20ba1ec33c11b1e957da5d304c95cd84314ae8c71fc1f",
+      "valid": "cfd93f6b60e9d9eb4cf143c152fc68e90513de1ae8f5a7bf8e1122926e47b4bd",
+      "test": "2495dbbc48cd9cc2632b81dea4f7b04699ca67034e8f971a3828205fd0045a31"
+    }
+  },
+  "ocelot_3d": {
+    "training_records": 512,
+    "metrics": {
+      "valid": {
+        "n": 64,
+        "mae_eV": {
+          "homo": 0.22516880325301747,
+          "lumo": 0.2333541781323976
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.44023437996411124,
+          "lumo": 0.534852755909668
+        },
+        "reload_max_abs_diff": 0.0,
+        "mean_std_eV": [
+          0.11821511387825012,
+          0.11243575811386108
+        ]
+      },
+      "test": {
+        "n": 64,
+        "mae_eV": {
+          "homo": 0.2946245569953384,
+          "lumo": 0.26215597019647946
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.49614490479711915,
+          "lumo": 0.5077246642485351
+        },
+        "reload_max_abs_diff": 0.0,
+        "mean_std_eV": [
+          0.14732415974140167,
+          0.126986563205719
+        ]
+      }
+    },
+    "geometry_origin": "ETKDG+MMFF; original DFT coordinates unavailable"
+  },
+  "matched_budget": {
+    "attempts": 64,
+    "oracle_shortlist": 32,
+    "retained": 16,
+    "relax_steps": 30,
+    "seed": 2026,
+    "target_eV": {
+      "homo": [
+        -8.2,
+        -7.2
+      ],
+      "lumo": [
+        -0.6,
+        0.8
+      ]
+    },
+    "max_rms_force_eV_per_A": 0.5
+  },
+  "comparison_sft": {
+    "backend": "uni3dar_octree_v1",
+    "attempted": 64,
+    "raw_valid": 35,
+    "external_ranking_calls": 32,
+    "unique_raw_valid": 35,
+    "retained": 16,
+    "qualified": 16,
+    "joint_success_rate": 0.25,
+    "retained_novel_vs_adaptation": 16,
+    "property_hit_retained": 16,
+    "mean_final_force": 0.10051781311631203,
+    "export_prediction_recheck_passed": true,
+    "checkpoint_sha256": "51d25e884d12f01a113ac78fe667e1e3c111cc189c2562990d5efa2171e51799"
+  },
+  "comparison_grpo": {
+    "backend": "uni3dar_octree_v1",
+    "attempted": 64,
+    "raw_valid": 41,
+    "external_ranking_calls": 32,
+    "unique_raw_valid": 41,
+    "retained": 16,
+    "qualified": 9,
+    "joint_success_rate": 0.140625,
+    "retained_novel_vs_adaptation": 16,
+    "property_hit_retained": 11,
+    "mean_final_force": 0.5312345512211323,
+    "export_prediction_recheck_passed": true,
+    "checkpoint_sha256": "7d29e27c019753f923472163ff57c0b085c01a38a86b9ea3aa66be0b357cf075"
+  },
+  "independent_sft": {
+    "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+    "exported": 16,
+    "independent_interval_hits": 10,
+    "independent_joint_successes": 10,
+    "attempted": 64,
+    "mean_absolute_oracle_disagreement_eV": {
+      "homo": 0.5407952726996841,
+      "lumo": 0.21555998482605665
+    }
+  },
+  "independent_grpo": {
+    "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+    "exported": 16,
+    "independent_interval_hits": 10,
+    "independent_joint_successes": 8,
+    "attempted": 64,
+    "mean_absolute_oracle_disagreement_eV": {
+      "homo": 0.538581942486763,
+      "lumo": 0.41416291897301527
+    }
+  },
+  "policy_probability_check": {
+    "trajectories": 4,
+    "decision_counts": [
+      144.0,
+      127.0,
+      150.0,
+      113.0
+    ],
+    "rollout_log_probability": [
+      -149.18789672851562,
+      -135.76614379882812,
+      -133.8012237548828,
+      -106.87169647216797
+    ],
+    "teacher_log_probability": [
+      -149.18780517578125,
+      -135.76611328125,
+      -133.80113220214844,
+      -106.8716812133789
+    ],
+    "max_mean_token_logprob_error": 6.35782896551973e-07,
+    "precision": "float32"
+  },
+  "deterministic_reload": {
+    "passed": true,
+    "all_candidates": 64,
+    "exported_molecules": 16,
+    "prediction_atol": 1e-05,
+    "coordinate_atol_A": 1e-05
+  },
+  "coordinate_gradient_checks": [
+    {
+      "id": "csd_KILZIR",
+      "prediction_path_max_difference": 0.0,
+      "gradient": 1.225799560546875,
+      "finite_difference": 1.2258291244506836
+    },
+    {
+      "id": "csd_NULXAV",
+      "prediction_path_max_difference": 0.0,
+      "gradient": 1.0465461015701294,
+      "finite_difference": 1.0466575622558594
+    },
+    {
+      "id": "csd_PAWPAH",
+      "prediction_path_max_difference": 0.0,
+      "gradient": -1.2540967464447021,
+      "finite_difference": -1.2540817260742188
+    },
+    {
+      "id": "csd_JEHJAH",
+      "prediction_path_max_difference": 0.0,
+      "gradient": 1.6304134130477905,
+      "finite_difference": 1.6299484968185425
+    }
+  ],
+  "failure_notes": [
+    "Dense-grid 256-record experiment: 8 unique valid outputs, zero novel vs training; unsuitable as primary generator",
+    "Dense-grid 2048-record scratch run: nonfinite epoch 46; invalid checkpoint not reused",
+    "CUDA seeded replay before deterministic kernels: one force mismatch of 9.04e-5 eV/A; original tolerance preserved and deterministic replay passed"
+  ],
+  "mainline_final": {
+    "backend": "uni3dar_octree_v1",
+    "attempted": 64,
+    "raw_valid": 35,
+    "external_ranking_calls": 32,
+    "unique_raw_valid": 35,
+    "retained": 16,
+    "qualified": 14,
+    "joint_success_rate": 0.21875,
+    "retained_novel_vs_adaptation": 16,
+    "property_hit_retained": 15,
+    "mean_final_force": 0.17597547906916589,
+    "export_prediction_recheck_passed": true,
+    "elapsed_seconds": 270.07328706234694,
+    "checkpoint_sha256": "533557774d12922cd1cc2a854a8383efb033e9f00c0d75ac4f3616d080a70dd7"
+  },
+  "mainline_independent": {
+    "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+    "exported": 16,
+    "independent_interval_hits": 10,
+    "independent_joint_successes": 9,
+    "attempted": 64,
+    "mean_absolute_oracle_disagreement_eV": {
+      "homo": 0.5112927159683935,
+      "lumo": 0.2923427426359449
+    }
+  },
+  "mainline_checkpoint_reload": {
+    "passed": true,
+    "all_candidates": 64,
+    "exported_molecules": 16,
+    "prediction_atol": 1e-05,
+    "coordinate_atol_A": 1e-05,
+    "upstream_pretrained_and_training_data_required": false
+  },
+  "qm9s_adaptation": {
+    "task": "QM9s structural adapter integration subset",
+    "seed": 42,
+    "backend": "uni3dar_octree",
+    "max_atoms": 40,
+    "property_labels": "240-channel spectrum, preserved separately; not HOMO/LUMO",
+    "splits": {
+      "test": {
+        "selected": 256,
+        "scanned_in_hash_order": 340,
+        "rejections": {
+          "Molecule failed graph, charge, connectivity or geometry validation": 18,
+          "atom_order_mismatch": 13,
+          "source_graph_or_stereo_mismatch": 38,
+          "radical_representation": 11,
+          "invalid_smiles": 4
+        },
+        "source_split": "valid"
+      },
+      "train": {
+        "selected": 2048,
+        "scanned_in_hash_order": 3058,
+        "rejections": {
+          "radical_representation": 107,
+          "Molecule failed graph, charge, connectivity or geometry validation": 138,
+          "source_graph_or_stereo_mismatch": 330,
+          "atom_order_mismatch": 86,
+          "invalid_smiles": 27,
+          "overlap_with_official_valid": 1
+        },
+        "source_split": "train"
+      },
+      "dev": {
+        "selected": 256,
+        "scanned_in_hash_order": 3272,
+        "rejections": {
+          "source_graph_or_stereo_mismatch": 45,
+          "Molecule failed graph, charge, connectivity or geometry validation": 17,
+          "invalid_smiles": 30,
+          "radical_representation": 17,
+          "overlap_with_official_valid": 1,
+          "atom_order_mismatch": 8
+        },
+        "source_split": "train"
+      }
+    },
+    "selected_structure_overlap": 0,
+    "official_valid_excluded_from_all_training": true,
+    "elapsed_seconds": 11.723701890558004,
+    "output_sha256": {
+      "dev.sdf": "78f68653fc5d0095dcbc016b0683a21cd44b0a1b30f0273068f12a1fe4e0ce98",
+      "dev_arrays.npz": "a9f099bbcfd1e9d404f10baf6c222a601ccb091678ea9c44cb72ecb5adcd6893",
+      "dev_index.json": "7b74dd4473fab563b1fc556e02c97c5f5e5d53f70d5d9a55ec22cfcc1f668a92",
+      "rejections.jsonl": "72db63856d9b8969cd989a031335a6da520a1952f5fedbeb3cb47ebb9ec4c7a3",
+      "test.sdf": "e236cb222e6cf25d6bcc6e21874e30f5f7085197bed1945ee839a06daacfa03c",
+      "test_arrays.npz": "0d90390e964accea48c83df45aeed091ab9e40e34ece654546912802373aab8c",
+      "test_index.json": "49f923d587c8af58e3a5c8c2ed13505d907cfde95b6d18621948791c94183113",
+      "train.sdf": "01c4f1127fc3e21968d4cf402b6d4f2c95cf1eb375ddaef5caa496e55116eb8b",
+      "train_arrays.npz": "98a4f0d0e288f9b339e52b2b0a84f051ca6d08706fbea6df56e9eee5e561063f",
+      "train_index.json": "18b041c54741099b8d0a278c461bb9d9d30a718db0d2020c3d6ca69846a907b0"
+    }
+  },
+  "cross_dataset_overlap": {
+    "qm9s_train__ocelot_train": [],
+    "qm9s_train__ocelot_valid": [],
+    "qm9s_train__ocelot_test": [],
+    "qm9s_dev__ocelot_train": [],
+    "qm9s_dev__ocelot_valid": [],
+    "qm9s_dev__ocelot_test": [],
+    "qm9s_test__ocelot_train": [],
+    "qm9s_test__ocelot_valid": [],
+    "qm9s_test__ocelot_test": []
+  },
+  "mainline_full_qm9s_reference": {
+    "reference": "All parseable supplied QM9s train/valid SMILES; not a verified copy of the pretrained model corpus",
+    "source_counts": {
+      "train": {
+        "records": 123323,
+        "unparseable_source_smiles": 1096
+      },
+      "valid": {
+        "records": 6490,
+        "unparseable_source_smiles": 63
+      }
+    },
+    "unique_reference_structures": 128559,
+    "exported": 16,
+    "not_found_in_reference": 14,
+    "records": [
+      {
+        "candidate_id": 41,
+        "smiles": "C[C@H]1O[C@H]1CC=O",
+        "present_in_supplied_qm9s": true
+      },
+      {
+        "candidate_id": 35,
+        "smiles": "O=C1CN2C[C@@H]2C[C@@H]1O",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 53,
+        "smiles": "C[C@H]1C(=O)O[C@H]2C(=O)O[C@@H]12",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 25,
+        "smiles": "Oc1ccc(F)cn1",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 50,
+        "smiles": "[H]/N=C\\[C@@H](N)[C@H](C)C=O",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 39,
+        "smiles": "C[C@H]1[C@H]2CC(=O)[C@]1(C)O2",
+        "present_in_supplied_qm9s": true
+      },
+      {
+        "candidate_id": 49,
+        "smiles": "CC(=O)[C@H]1N[C@@]1(C)O",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 24,
+        "smiles": "O=C[C@@H]([C@H]1CO1)N1CO1",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 36,
+        "smiles": "O=C[C@@]12C=C[C@@H](O)[C@@H]1N2",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 26,
+        "smiles": "C1=N[C@H]2N=CO[C@H]2C1",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 46,
+        "smiles": "NC(=O)[C@@H]1OC[C@@H]1O",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 27,
+        "smiles": "O/N=C1/[C@H]2N[C@H]3O[C@@H]1C[C@@H]23",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 14,
+        "smiles": "C#C[C@@H]1O[C@]2(CO)C[C@H]12",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 54,
+        "smiles": "O=CNc1cc(O)[nH]n1",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 6,
+        "smiles": "NCO/N=[N+]1\\[CH-]C1",
+        "present_in_supplied_qm9s": false
+      },
+      {
+        "candidate_id": 40,
+        "smiles": "O=C1C=C[C@]2(C[C@H]2O)N1",
+        "present_in_supplied_qm9s": false
+      }
+    ],
+    "joint_success_not_found_in_reference": 12
+  },
+  "disabled_refinement": {
+    "backend": "uni3dar_octree_v1",
+    "attempted": 8,
+    "raw_valid": 5,
+    "external_ranking_calls": 5,
+    "unique_raw_valid": 5,
+    "retained": 4,
+    "qualified": 0,
+    "joint_success_rate": 0.0,
+    "retained_novel_vs_adaptation": 4,
+    "property_hit_retained": 0,
+    "mean_final_force": 1.5455892980098724,
+    "export_prediction_recheck_passed": true,
+    "checkpoint_sha256": "533557774d12922cd1cc2a854a8383efb033e9f00c0d75ac4f3616d080a70dd7",
+    "unchanged_raw_forces_and_empty_step_traces": true
+  }
+}

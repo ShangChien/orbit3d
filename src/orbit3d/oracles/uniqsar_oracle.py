@@ -911,7 +911,7 @@ class UniQSARTrainedBridge:
 
         mol_2d = Chem.MolFromSmiles(smi)
         if mol_2d is None:
-            mol_2d = Chem.MolFromSmiles("C")
+            raise ValueError("Invalid input SMILES")
 
         fp_arr = None
         if self.needs_fp:
@@ -928,12 +928,15 @@ class UniQSARTrainedBridge:
             desc = np.array(self.desc_calc.CalcDescriptors(mol_2d), dtype=np.float32)
             desc_arr = np.nan_to_num(desc, nan=0.0, posinf=99999.0, neginf=-99999.0).reshape(1, -1)
 
+        if not hasattr(self,"_fold_predictions"):
+            self._fold_predictions = {}
         out: Dict[str, np.ndarray] = {}
         for key, folds in self.ml_folds.items():
             feat = fp_arr if "fringerprint" in key else desc_arr
             fold_preds = [
                 np.asarray(m._predict(feat), dtype=np.float64).reshape(self.output_dim) for m in folds
             ]
+            self._fold_predictions[(smi,key)] = np.stack(fold_preds,axis=0)
             out[key] = np.mean(np.stack(fold_preds, axis=0), axis=0)  # (K,)
 
         for key, folds in self.nn_folds.items():
@@ -948,6 +951,7 @@ class UniQSARTrainedBridge:
                         self._apply_nn_activation_torch(m(tok_ids)).view(self.output_dim).cpu().numpy()
                         for m in folds
                     ]
+                self._fold_predictions[(smi,key)] = np.stack(fold_preds,axis=0)
                 out[key] = np.mean(np.stack(fold_preds, axis=0), axis=0)  # (K,)
             elif "MLPModel" in key:
                 feat = fp_arr if "fringerprint" in key else desc_arr
@@ -957,6 +961,7 @@ class UniQSARTrainedBridge:
                         self._apply_nn_activation_torch(m(feat_t)).view(self.output_dim).cpu().numpy()
                         for m in folds
                     ]
+                self._fold_predictions[(smi,key)] = np.stack(fold_preds,axis=0)
                 out[key] = np.mean(np.stack(fold_preds, axis=0), axis=0)  # (K,)
 
         self._1d2d_cache[smi] = out
@@ -1005,7 +1010,8 @@ class UniQSARTrainedBridge:
             logits = m(src_tokens, src_distance, src_coord, src_edge_type)
             pred = self._apply_nn_activation_torch(logits).view(self.output_dim)
             fold_preds.append(pred)
-        return torch.stack(fold_preds, dim=0).mean(dim=0)  # (K,)
+        self._last_3d_folds = torch.stack(fold_preds,dim=0)
+        return self._last_3d_folds.mean(dim=0)  # (K,)
 
     # --------------------------------------------------------------------------
     # Interface 1: Stage 4 Gated-GRPO Evaluation on 3D RDKit Mols (Single & Multi-Target)
@@ -1025,7 +1031,7 @@ class UniQSARTrainedBridge:
             for idx in sorted([a.GetIdx() for a in rw.GetAtoms() if a.GetAtomicNum() == 1 and a.GetDegree() == 0], reverse=True):
                 if rw.GetNumAtoms() > 1:
                     rw.RemoveAtom(idx)
-            smi = Chem.MolToSmiles(Chem.RemoveHs(rw.GetMol(), sanitize=False), isomericSmiles=False) or "C"
+            smi = Chem.MolToSmiles(Chem.RemoveHs(rw.GetMol(), sanitize=False), isomericSmiles=True) or "C"
             cached_1d2d = self._eval_1d_2d_single(smi)
 
             if self.has_3d_unimol:
@@ -1036,13 +1042,16 @@ class UniQSARTrainedBridge:
             else:
                 atoms, pos = [], None
 
+            component_folds = []
             model_outputs: List[np.ndarray] = []  # List of M arrays, each of shape (K,)
             for key in self.selected_keys:
                 if key in cached_1d2d:
                     model_outputs.append(cached_1d2d[key])
+                    component_folds.append(getattr(self,"_fold_predictions",{}).get((smi,key),np.asarray(cached_1d2d[key])[None]))
                 else:
                     val_3d = self._forward_unimol_folds(key, pos, atoms).cpu().numpy()
                     model_outputs.append(val_3d)
+                    component_folds.append(self._last_3d_folds.detach().cpu().numpy())
 
             stacked_m_k = np.stack(model_outputs, axis=0)  # (M, K)
 
@@ -1071,6 +1080,12 @@ class UniQSARTrainedBridge:
 
             real_mean = self._inverse_scale_numpy(norm_mean, is_std=False)
             real_std = self._inverse_scale_numpy(norm_std, is_std=True)
+            if self.ensemble_method not in {"stacking_linear", "stacking_general", "vote"}:
+                # Equal model weights, equal fold weights within each model.
+                # Transform individual folds before measuring physical-unit disagreement.
+                real_groups=[np.stack([self._inverse_scale_numpy(f,is_std=False) for f in fs]) for fs in component_folds]
+                center=np.mean([g.mean(0) for g in real_groups],axis=0)
+                real_std=np.sqrt(np.mean([np.square(g-center).mean(0) for g in real_groups],axis=0))
             y_preds_all.append(real_mean)
             y_stds_all.append(real_std)
 
@@ -1149,6 +1164,8 @@ class UniQSARTrainedBridge:
             so `.backward()` produces clean zero coordinate gradients (`coords.grad = 0`) and
             Stage 5 seamlessly performs pure `DPA-4` physical conformer relaxation!
         """
+        if self.ensemble_method == "stacking_general":
+            raise NotImplementedError("Nonlinear stacking uses true predict_3d_mols with black-box acceptance")
         cached_1d2d = self._eval_1d_2d_single(smiles)
 
         model_tensors: List[torch.Tensor] = []  # M tensors, each of shape (K,)
@@ -1213,26 +1230,12 @@ class UniQSARTrainedBridge:
             `{"lambda_pl": (455.0, 465.0), "delta_est": (0.0, 0.10)}`
           - A list of `(low, high)` tuples (or `None` for unconstrained targets)
         """
-        y_vec = y_pred.view(self.output_dim)
-        if (
-            isinstance(target_intervals, tuple)
-            and len(target_intervals) == 2
-            and isinstance(target_intervals[0], (int, float))
-        ):
-            low, high = float(target_intervals[0]), float(target_intervals[1])
-            return F.relu(low - y_vec[0]) + F.relu(y_vec[0] - high)
-
-        total_loss = 0.0 * y_vec.sum()
-        if isinstance(target_intervals, dict):
-            for key, (low, high) in target_intervals.items():
-                idx = self.target_cols.index(key) if isinstance(key, str) else int(key)
-                w = float(weights.get(key, 1.0)) if weights else 1.0
-                total_loss = total_loss + w * (F.relu(float(low) - y_vec[idx]) + F.relu(y_vec[idx] - float(high)))
-        else:
-            for idx, interval in enumerate(target_intervals):
-                if interval is None:
-                    continue
-                low, high = float(interval[0]), float(interval[1])
-                w = float(weights.get(idx, 1.0)) if weights else 1.0
-                total_loss = total_loss + w * (F.relu(low - y_vec[idx]) + F.relu(y_vec[idx] - high))
-        return total_loss
+        from ..constraints import TargetIntervals
+        intervals=TargetIntervals.parse(target_intervals,self.target_cols)
+        violations=intervals.violations(y_pred)
+        if weights:
+            w=torch.tensor([weights.get(name,weights.get(i,1.)) for i,name in enumerate(self.target_cols)],
+                           device=y_pred.device,dtype=y_pred.dtype)
+            if not torch.isfinite(w).all() or (w<0).any(): raise ValueError("Invalid target weights")
+            violations=violations*w
+        return violations.sum()

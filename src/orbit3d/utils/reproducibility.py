@@ -12,12 +12,17 @@ import torch
 
 
 def lock_deterministic_environment(seed: int = 42) -> None:
-    """Locks Python, NumPy, and PyTorch/CUDA RNG streams for 100% deterministic execution."""
+    """Seed RNGs and select deterministic PyTorch kernels in the current runtime.
+
+    Third-party kernels and cross-device/version equivalence require run-level
+    checks; setting a seed alone does not make CUDA reductions deterministic.
+    """
     os.environ["PYTHONHASHSEED"] = str(seed)
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(True)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
@@ -33,8 +38,6 @@ def resolve_dpa4_weight_path(builtin_dir: str, scale: str = "Mini") -> str:
         os.path.join(builtin_dir, f"DPA4-{clean_scale}-OMol25-100M-v20260820.pt"),
         os.path.join(builtin_dir, f"DPA4-{clean_scale}-OMol25-100M.pt"),
         os.path.join(env_dir, "dpa4", f"DPA4-{clean_scale}-OMol25-100M-v20260820.pt"),
-        f"/sjtu-combustion/wjw/chensq/pretrained/DPA4-{clean_scale}-OMol25-100M-v20260820.pt",
-        os.path.join(builtin_dir, "DPA-3.1-3M.pt"),
     ]
     for c in candidates:
         if os.path.exists(c):
@@ -68,7 +71,6 @@ def resolve_hyff_weight_path(builtin_dir: str, tier: str = "vivace") -> Optional
         os.path.join(builtin_dir, "hyff", "checkpoints", t_clean),
         os.path.join(env_dir, "hyff", "checkpoints", t_clean, "model.safetensors"),
         os.path.join(hyff_home, "checkpoints", t_clean, "model.safetensors") if hyff_home else "",
-        f"/sjtu-combustion/wjw/chensq/pretrained/hyff/checkpoints/{t_clean}/model.safetensors",
     ]
     for c in candidates:
         if c and os.path.exists(c):

@@ -395,4 +395,5 @@ def run_benchmark(out_dir: Path) -> Dict[str, object]:
 
 
 if __name__ == "__main__":
+    raise RuntimeError("Historical runner contains illustrative constants; it cannot produce validated benchmark results.")
     run_benchmark(REPO_ROOT / "benchmarks" / "results" / "optoelectronic_paradigms")

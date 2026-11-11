@@ -94,7 +94,7 @@ def load_pretrained_unimol_backbone(model: StandaloneUniMolModel, weight_path: O
     `mol_pre_all_h_fp16.pt` / `mol_pre_no_h_fp16.pt` checkpoints).
     """
     if not weight_path or not os.path.exists(weight_path):
-        return 0
+        raise FileNotFoundError(f"Uni-Mol pretrained weights missing: {weight_path}")
     ckpt = torch.load(weight_path, map_location="cpu", weights_only=False)
     sd = ckpt.get("model", ckpt.get("model_state_dict", ckpt))
     model_sd = model.state_dict()
@@ -104,6 +104,8 @@ def load_pretrained_unimol_backbone(model: StandaloneUniMolModel, weight_path: O
         if clean_k in model_sd and model_sd[clean_k].shape == v.shape:
             model_sd[clean_k] = v.to(model_sd[clean_k].dtype)
             loaded += 1
+    if loaded == 0:
+        raise ValueError("No matching Uni-Mol pretrained parameters")
     model.load_state_dict(model_sd, strict=False)
     return loaded
 

@@ -1,10 +1,4 @@
-"""
-3D Spatial Octree & Fine-Grid Coordinate Tokenizer (`octree_tokenizer.py`)
-==========================================================================
-Handles encoding/decoding between 3D atomic coordinates (`Mol3DInstance`),
-octree token sequences, and RDKit 3D `Mol` objects, plus chemical valency
-stability and 3D geometry plausibility checks.
-"""
+"""Versioned dense-grid spatial representation (not hierarchical octree)."""
 
 from __future__ import annotations
 
@@ -12,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 import numpy as np
 from rdkit import Chem
+from rdkit.Chem import rdDetermineBonds
 
 ATOM_TYPES: List[str] = ["C", "H", "N", "O", "F", "S", "Cl", "Br", "P", "I"]
 
@@ -47,7 +42,7 @@ ATOM_OFFSET = 3
 NUM_ATOM_TYPES = len(ATOM_TYPES)
 COORD_OFFSET = ATOM_OFFSET + NUM_ATOM_TYPES  # 13
 NUM_COORD_BINS = 256
-VOCAB_SIZE = COORD_OFFSET + NUM_COORD_BINS   # 269
+VOCAB_SIZE = COORD_OFFSET + NUM_COORD_BINS  # 269
 BOX_HALF_SIZE = 6.4  # Å
 
 
@@ -56,18 +51,26 @@ class Mol3DInstance:
     coords: np.ndarray
     atom_types: np.ndarray
     props: np.ndarray = field(default_factory=lambda: np.zeros(3, dtype=np.float32))
-    smiles: str = "C"
+    smiles: str = ""
+    graph: Optional[Chem.Mol] = field(default=None, repr=False)
+    charge: int = 0
+    multiplicity: int = 1
+    token_ids: List[int] = field(default_factory=list)
 
 
 def _coord_to_bin(val: float) -> int:
-    clipped = max(-BOX_HALF_SIZE, min(BOX_HALF_SIZE, float(val)))
+    if not np.isfinite(val) or abs(val) > BOX_HALF_SIZE:
+        raise ValueError("Coordinate outside dense_grid_v2 bounds")
+    clipped = float(val)
     norm = (clipped + BOX_HALF_SIZE) / (2.0 * BOX_HALF_SIZE)
     b = int(round(norm * (NUM_COORD_BINS - 1)))
     return COORD_OFFSET + max(0, min(NUM_COORD_BINS - 1, b))
 
 
 def _bin_to_coord(tok: int) -> float:
-    b = max(0, min(NUM_COORD_BINS - 1, int(tok) - COORD_OFFSET))
+    if not COORD_OFFSET <= tok < VOCAB_SIZE:
+        raise ValueError("Invalid coordinate token")
+    b = int(tok) - COORD_OFFSET
     norm = b / float(NUM_COORD_BINS - 1)
     return float(norm * (2.0 * BOX_HALF_SIZE) - BOX_HALF_SIZE)
 
@@ -75,15 +78,24 @@ def _bin_to_coord(tok: int) -> float:
 def encode_mol_to_octree_tokens(inst: Mol3DInstance, max_atoms: int = 40) -> List[int]:
     """Orders atoms radially from center of mass and encodes `[atom_tok, x_bin, y_bin, z_bin]`."""
     coords = np.asarray(inst.coords, dtype=np.float32)
+    if len(coords) == 0 or len(coords) > max_atoms:
+        raise ValueError("Empty or oversized molecule; no truncation allowed")
+    if inst.charge != 0 or inst.multiplicity != 1:
+        raise ValueError("dense_grid_v2 generation currently supports neutral singlets only")
     coords = coords - coords.mean(axis=0, keepdims=True)
     atypes = np.asarray(inst.atom_types, dtype=np.int64)
 
+    if mol3d_to_rdkit_mol(inst) is None:
+        raise ValueError("Training molecule failed chemical validation")
+
     radii = np.linalg.norm(coords, axis=-1)
-    order = np.argsort(radii)[:max_atoms]
+    if coords.shape != (len(atypes), 3) or np.any((atypes < 0) | (atypes >= NUM_ATOM_TYPES)):
+        raise ValueError("Invalid coordinates or atom indices")
+    order = np.argsort(radii, kind="stable")
 
     seq = [BOS_TOKEN]
     for idx in order:
-        a_tok = ATOM_OFFSET + (int(atypes[idx]) % NUM_ATOM_TYPES)
+        a_tok = ATOM_OFFSET + int(atypes[idx])
         x_tok = _coord_to_bin(coords[idx, 0])
         y_tok = _coord_to_bin(coords[idx, 1])
         z_tok = _coord_to_bin(coords[idx, 2])
@@ -97,28 +109,21 @@ def decode_tokens_to_mol3d(tokens: List[int]) -> Mol3DInstance:
     atoms: List[int] = []
     coords: List[List[float]] = []
 
-    clean = [int(t) for t in tokens if int(t) not in (PAD_TOKEN, BOS_TOKEN)]
-    if EOS_TOKEN in clean:
-        clean = clean[: clean.index(EOS_TOKEN)]
-
-    i = 0
-    while i + 3 < len(clean):
-        t_a, t_x, t_y, t_z = clean[i], clean[i + 1], clean[i + 2], clean[i + 3]
-        a_idx = max(0, min(NUM_ATOM_TYPES - 1, (t_a - ATOM_OFFSET) % NUM_ATOM_TYPES))
-        atoms.append(a_idx)
+    seq = [int(t) for t in tokens]
+    if not seq or seq[0] != BOS_TOKEN or EOS_TOKEN not in seq:
+        raise ValueError("Missing BOS/EOS")
+    end = seq.index(EOS_TOKEN)
+    if any(t != PAD_TOKEN for t in seq[end + 1 :]):
+        raise ValueError("Unexpected tokens after EOS")
+    clean = seq[1:end]
+    if not clean or len(clean) % 4:
+        raise ValueError("Incomplete or empty atom sequence")
+    for i in range(0, len(clean), 4):
+        t_a, t_x, t_y, t_z = clean[i : i + 4]
+        if not ATOM_OFFSET <= t_a < COORD_OFFSET:
+            raise ValueError("Invalid element token")
+        atoms.append(t_a - ATOM_OFFSET)
         coords.append([_bin_to_coord(t_x), _bin_to_coord(t_y), _bin_to_coord(t_z)])
-        i += 4
-
-    if len(atoms) < 3:
-        atoms = [0, 0, 0, 0, 0, 0]
-        coords = [
-            [1.39, 0.00, 0.00],
-            [0.69, 1.20, 0.00],
-            [-0.69, 1.20, 0.00],
-            [-1.39, 0.00, 0.00],
-            [-0.69, -1.20, 0.00],
-            [0.69, -1.20, 0.00],
-        ]
 
     coords_arr = np.asarray(coords, dtype=np.float32)
     coords_arr = coords_arr - coords_arr.mean(axis=0, keepdims=True)
@@ -126,106 +131,74 @@ def decode_tokens_to_mol3d(tokens: List[int]) -> Mol3DInstance:
         coords=coords_arr,
         atom_types=np.asarray(atoms, dtype=np.int64),
         props=np.zeros(3, dtype=np.float32),
-        smiles="c1ccccc1",
+        smiles="",
+        token_ids=list(tokens),
     )
 
 
 def mol3d_to_rdkit_mol(inst: Mol3DInstance) -> Optional[Chem.Mol]:
-    """Reconstructs an RDKit `Mol` with 3D conformer and distance-inferred covalent bonds."""
-    n = len(inst.atom_types)
-    if n == 0:
-        return None
-    rw = Chem.RWMol()
-    syms = []
-    for a_idx in inst.atom_types:
-        sym = ATOM_TYPES[int(a_idx) % NUM_ATOM_TYPES]
-        syms.append(sym)
-        rw.AddAtom(Chem.Atom(sym))
+    """Preserve a supplied graph, or infer bonds for explicit-H neutral structures.
 
-    coords = np.asarray(inst.coords, dtype=np.float32)
-    dist_mat = np.linalg.norm(coords[:, None, :] - coords[None, :, :], axis=-1)
-
-    valences = [0] * n
-    pairs = []
-    for i in range(n):
-        for j in range(i + 1, n):
-            r_cov = _COVALENT_RADII.get(syms[i], 0.76) + _COVALENT_RADII.get(syms[j], 0.76)
-            d = float(dist_mat[i, j])
-            if 0.45 <= d <= r_cov + 0.42:
-                pairs.append((d, i, j))
-    pairs.sort(key=lambda x: x[0])
-
-    for _, i, j in pairs:
-        if valences[i] < _MAX_VALENCE.get(syms[i], 4) and valences[j] < _MAX_VALENCE.get(syms[j], 4):
-            rw.AddBond(int(i), int(j), Chem.BondType.SINGLE)
-            valences[i] += 1
-            valences[j] += 1
-
-    # Second pass: attach any unbonded H atom to its nearest unsaturated heavy atom within 2.2 Å
-    heavy_indices = [idx for idx, s in enumerate(syms) if s != "H"]
-    for i, s in enumerate(syms):
-        if s == "H" and valences[i] == 0 and heavy_indices:
-            cand = [
-                (float(dist_mat[i, j]), j)
-                for j in heavy_indices
-                if valences[j] < _MAX_VALENCE.get(syms[j], 4) and float(dist_mat[i, j]) <= 2.2
-            ]
-            if cand:
-                cand.sort(key=lambda x: x[0])
-                best_j = cand[0][1]
-                rw.AddBond(int(i), int(best_j), Chem.BondType.SINGLE)
-                valences[i] += 1
-                valences[best_j] += 1
-
-    mol = rw.GetMol()
-    conf = Chem.Conformer(n)
-    for i in range(n):
-        conf.SetAtomPosition(i, [float(coords[i, 0]), float(coords[i, 1]), float(coords[i, 2])])
-    mol.AddConformer(conf, assignId=True)
+    Failed/ambiguous chemistry is rejected, never replaced with a fallback molecule.
+    """
     try:
+        coords = np.asarray(inst.coords, dtype=float)
+        n = len(inst.atom_types)
+        if n == 0 or coords.shape != (n, 3) or not np.isfinite(coords).all():
+            return None
+        if np.any((inst.atom_types < 0) | (inst.atom_types >= NUM_ATOM_TYPES)):
+            return None
+        syms = [ATOM_TYPES[int(a)] for a in inst.atom_types]
+        if inst.graph is not None:
+            mol = Chem.Mol(inst.graph)
+            if [a.GetSymbol() for a in mol.GetAtoms()] != syms:
+                return None
+        else:
+            rw = Chem.RWMol()
+            for sym in syms:
+                atom = Chem.Atom(sym)
+                atom.SetNoImplicit(True)
+                rw.AddAtom(atom)
+            mol = rw.GetMol()
+        mol.RemoveAllConformers()
+        conf = Chem.Conformer(n)
+        for i, xyz in enumerate(coords):
+            conf.SetAtomPosition(i, xyz.tolist())
+        mol.AddConformer(conf)
+        if inst.graph is None:
+            rdDetermineBonds.DetermineBonds(mol, charge=int(inst.charge), allowChargedFragments=True)
         Chem.SanitizeMol(mol)
-    except Exception:
-        pass
-    return mol
+        if len(Chem.GetMolFrags(mol)) != 1 or Chem.GetFormalCharge(mol) != inst.charge:
+            return None
+        if inst.multiplicity == 1 and any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
+            return None
+        distances = np.linalg.norm(coords[:, None] - coords[None, :], axis=-1)
+        np.fill_diagonal(distances, np.inf)
+        if n > 1 and distances.min() < 0.45:
+            return None
+        for bond in mol.GetBonds():
+            i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+            radius = _COVALENT_RADII[syms[i]] + _COVALENT_RADII[syms[j]]
+            if not 0.6 * radius <= distances[i, j] <= 1.4 * radius:
+                return None
+        mol.SetIntProp("TotalCharge", int(inst.charge))
+        mol.SetIntProp("SpinMultiplicity", int(inst.multiplicity))
+        return mol
+    except (ValueError, RuntimeError):
+        return None
 
 
 def mol_to_clean_smiles(mol: Optional[Chem.Mol]) -> str:
-    """
-    Canonicalizes an RDKit Mol to SMILES after stripping any unbonded stray H atoms
-    so `Chem.RemoveHs` never triggers `WARNING: not removing hydrogen atom without neighbors`.
-    """
     if mol is None:
-        return "C"
-    rw = Chem.RWMol(mol)
-    unbonded_hs = [
-        a.GetIdx() for a in rw.GetAtoms() if a.GetAtomicNum() == 1 and a.GetDegree() == 0
-    ]
-    for idx in sorted(unbonded_hs, reverse=True):
-        if rw.GetNumAtoms() > 1:
-            rw.RemoveAtom(idx)
-    clean_mol = rw.GetMol()
-    try:
-        no_h = Chem.RemoveHs(clean_mol, sanitize=False)
-        return Chem.MolToSmiles(no_h, isomericSmiles=False) or "C"
-    except Exception:
-        return "C"
+        raise ValueError("Cannot serialize invalid molecule")
+    return Chem.MolToSmiles(Chem.RemoveHs(Chem.Mol(mol)), isomericSmiles=True)
 
 
 def mol3d_to_validated_rdkit_mol(inst: Mol3DInstance) -> Chem.Mol:
-    """Converts a `Mol3DInstance` into a guaranteed non-null RDKit `Mol` with 3D Conformer."""
     mol = mol3d_to_rdkit_mol(inst)
-    if mol is not None and mol.GetNumConformers() > 0:
-        return mol
-    rw = Chem.RWMol()
-    for a_idx in inst.atom_types:
-        sym = ATOM_TYPES[int(a_idx) % len(ATOM_TYPES)]
-        rw.AddAtom(Chem.Atom(sym))
-    m = rw.GetMol()
-    conf = Chem.Conformer(len(inst.atom_types))
-    for i, pos in enumerate(inst.coords):
-        conf.SetAtomPosition(i, [float(pos[0]), float(pos[1]), float(pos[2])])
-    m.AddConformer(conf, assignId=True)
-    return m
+    if mol is None:
+        raise ValueError("Molecule failed graph, charge, connectivity or geometry validation")
+    return mol
 
 
 def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray) -> Optional[Mol3DInstance]:
@@ -238,31 +211,25 @@ def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray) -> Optional[Mo
     atypes = []
     for a in mol.GetAtoms():
         sym = a.GetSymbol()
-        atypes.append(ATOM_TYPES.index(sym) if sym in ATOM_TYPES else 0)
-    props = np.zeros(3, dtype=np.float32)
-    for k in range(min(len(y_vec), 3)):
-        props[k] = float(y_vec[k])
+        if sym not in ATOM_TYPES:
+            raise ValueError(f"Unsupported generator element: {sym}")
+        atypes.append(ATOM_TYPES.index(sym))
+    props = np.asarray(y_vec, dtype=np.float32).copy()
     smi = mol_to_clean_smiles(mol)
     return Mol3DInstance(
         coords=coords,
         atom_types=np.array(atypes, dtype=np.int64),
         props=props,
         smiles=smi,
+        graph=Chem.Mol(mol),
+        charge=Chem.GetFormalCharge(mol),
+        multiplicity=mol.GetIntProp("SpinMultiplicity") if mol.HasProp("SpinMultiplicity") else 1,
     )
 
 
 def compute_mol_stability(inst: Mol3DInstance) -> Dict[str, float]:
-    coords = np.asarray(inst.coords, dtype=np.float32)
-    n = len(coords)
-    if n < 2:
-        return {"atom_stable": 0.0, "mol_stable": 0.0}
-    dist_mat = np.linalg.norm(coords[:, None, :] - coords[None, :, :], axis=-1)
-    np.fill_diagonal(dist_mat, 99.0)
-    has_no_clash = float(dist_mat.min()) >= 0.45
-    return {
-        "atom_stable": 1.0 if has_no_clash else 0.3,
-        "mol_stable": 1.0 if has_no_clash else 0.0,
-    }
+    valid = mol3d_to_rdkit_mol(inst) is not None
+    return {"atom_stable": float(valid), "mol_stable": float(valid)}
 
 
 def compute_3d_geom_score(inst: Mol3DInstance) -> float:

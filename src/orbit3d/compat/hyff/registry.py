@@ -89,7 +89,6 @@ def checkpoint_dirs():
         Path(orbit_dir) / 'hyff' / 'checkpoints',
         Path('/opt/orbit3d/pretrained/hyff/checkpoints'),
         Path(__file__).resolve().parents[4] / 'pretrained' / 'hyff' / 'checkpoints',
-        Path('/sjtu-combustion/wjw/chensq/pretrained/hyff/checkpoints'),
     ):
         if extra not in dirs:
             dirs.append(extra)

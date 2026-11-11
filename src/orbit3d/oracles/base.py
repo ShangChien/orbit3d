@@ -39,22 +39,12 @@ class PropertyOracleBase(nn.Module):
         target_intervals: Union[Tuple[float, float], Dict[str, Tuple[float, float]], List[Tuple[float, float]]],
         weights: Optional[Dict[Union[str, int], float]] = None,
     ) -> torch.Tensor:
-        y_vec = y_pred.view(self.output_dim)
-        if (
-            isinstance(target_intervals, (tuple, list))
-            and len(target_intervals) == 2
-            and isinstance(target_intervals[0], (int, float))
-        ):
-            return F.relu(float(target_intervals[0]) - y_vec[0]) + F.relu(y_vec[0] - float(target_intervals[1]))
-        total = 0.0 * y_vec.sum()
-        if isinstance(target_intervals, dict):
-            for k, (lo, hi) in target_intervals.items():
-                idx = self.target_cols.index(k) if isinstance(k, str) else int(k)
-                w = float(weights.get(k, 1.0)) if weights else 1.0
-                total = total + w * (F.relu(float(lo) - y_vec[idx]) + F.relu(y_vec[idx] - float(hi)))
-        else:
-            for idx, iv in enumerate(target_intervals):
-                if iv is not None:
-                    w = float(weights.get(idx, 1.0)) if weights else 1.0
-                    total = total + w * (F.relu(float(iv[0]) - y_vec[idx]) + F.relu(y_vec[idx] - float(iv[1])))
-        return total
+        from ..constraints import TargetIntervals
+        intervals=TargetIntervals.parse(target_intervals,self.target_cols)
+        violations=intervals.violations(y_pred)
+        if weights:
+            w=torch.tensor([weights.get(name,weights.get(i,1.)) for i,name in enumerate(self.target_cols)],
+                           device=y_pred.device,dtype=y_pred.dtype)
+            if not torch.isfinite(w).all() or (w<0).any(): raise ValueError("Invalid target weights")
+            violations=violations*w
+        return violations.sum()

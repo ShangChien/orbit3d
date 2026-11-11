@@ -12,6 +12,7 @@ DPA-4 Native Shared-Backbone Force Field & Equivariant Property Predictor (`dpa4
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from typing import Dict, List, Optional, Tuple
@@ -97,6 +98,23 @@ class _DPA4EquivariantPropertyAdapter(nn.Module):
         return stacked.mean(dim=0), stacked.std(dim=0, unbiased=False)
 
 
+class _BootstrapAdapters(nn.Module):
+    """Independent complete adapters sharing only a frozen descriptor provider."""
+
+    def __init__(self, desc_dim, output_dim, members, hidden_dim=128):
+        super().__init__()
+        self.members = nn.ModuleList(
+            [_DPA4EquivariantPropertyAdapter(desc_dim, hidden_dim, output_dim, 1) for _ in range(members)]
+        )
+
+    def forward_members(self, features, coords):
+        return torch.stack([member(features, coords)[0] for member in self.members])
+
+    def forward(self, features, coords):
+        values = self.forward_members(features, coords)
+        return values.mean(0), values.std(0, unbiased=False)
+
+
 class InternalDPA4PropertyOracle(PropertyOracleBase):
     """
     Shared-Backbone `DPA-4` Force Field + Differentiable Property Predictor.
@@ -120,12 +138,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         self.scalers: List = []
 
         self.desc_dim = self.dpa_guidance.probe_native_descriptor_dim()
-        self.adapter = _DPA4EquivariantPropertyAdapter(
-            desc_dim=self.desc_dim,
-            hidden_dim=256,
-            output_dim=output_dim,
-            n_ensemble_heads=n_ensemble_heads,
-        ).to(self.device)
+        self.adapter = _BootstrapAdapters(self.desc_dim, output_dim, n_ensemble_heads).to(self.device)
 
     def forward_shared_force_and_property(
         self,
@@ -142,21 +155,30 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         native_desc, energy, forces = self.dpa_guidance.extract_native_descriptor_and_forces(
             coords, atom_symbols
         )
-        norm_mean, norm_std = self.adapter(native_desc, coords.float())
-
-        real_cols = []
-        std_cols = []
-        for k in range(self.output_dim):
-            sc = self.scalers[k] if k < len(self.scalers) else None
-            real_cols.append(inverse_single_scaler_torch(norm_mean[k], sc))
-            scale_val = float(np.squeeze(getattr(sc, "scale_", getattr(getattr(sc, "_scaler", None), "scale_", 1.0))))
-            std_cols.append(norm_std[k] * scale_val)
-
-        y_pred_real = torch.stack(real_cols, dim=0)
-        y_std_real = torch.stack(std_cols, dim=0)
+        if coords.requires_grad and hasattr(self.dpa_guidance, "extract_differentiable_descriptor"):
+            native_desc = self.dpa_guidance.extract_differentiable_descriptor(coords, atom_symbols)
+        y_pred_real, y_std_real = self._properties_from_descriptor(native_desc, coords)
         if self.output_dim == 1:
             return y_pred_real.squeeze(0), y_std_real.squeeze(0), energy, forces
         return y_pred_real, y_std_real, energy, forces
+
+    def _properties_from_descriptor(self, native_desc, coords):
+        normalized = self.adapter.forward_members(native_desc, coords.float())
+        physical = torch.stack(
+            [
+                torch.stack(
+                    [
+                        inverse_single_scaler_torch(row[k], self.scalers[k] if self.scalers else None)
+                        for k in range(self.output_dim)
+                    ]
+                )
+                for row in normalized
+            ]
+        )
+        y_pred_real = physical.mean(0)
+        y_std_real = physical.std(0, unbiased=False)
+
+        return y_pred_real, y_std_real
 
     def forward_differentiable_3d(
         self,
@@ -164,7 +186,19 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         atom_symbols: List[str],
         smiles: str = "C",
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        yp, ys, _, _ = self.forward_shared_force_and_property(coords, atom_symbols)
+        if hasattr(self.dpa_guidance, "extract_differentiable_descriptor"):
+            descriptor = self.dpa_guidance.extract_differentiable_descriptor(coords, atom_symbols)
+        else:
+            descriptor, _, _ = self.dpa_guidance.extract_native_descriptor_and_forces(coords, atom_symbols)
+            if coords.requires_grad and (
+                not descriptor.requires_grad
+                or torch.autograd.grad(descriptor.sum(), coords, retain_graph=True, allow_unused=True)[0]
+                is None
+            ):
+                raise NotImplementedError("Descriptor gradients are unavailable; use true-oracle acceptance")
+        yp, ys = self._properties_from_descriptor(descriptor, coords)
+        if self.output_dim == 1:
+            return yp.squeeze(0), ys.squeeze(0)
         return yp, ys
 
     @torch.no_grad()
@@ -182,101 +216,149 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
 
     def fit_from_dataset(
         self,
-        mols: List[Chem.Mol],
-        targets_2d: np.ndarray,
-        save_dir: str,
-        epochs: int = 35,
-        lr: float = 2e-4,
-        scaler_mode: str = "standard",
-        seed: int = 42,
-    ) -> Dict[str, float]:
+        mols,
+        targets_2d,
+        save_dir,
+        epochs=35,
+        lr=2e-4,
+        scaler_mode="standard",
+        seed=42,
+        validation_mols=None,
+        validation_targets=None,
+    ):
+        from sklearn.model_selection import GroupShuffleSplit
+
         os.makedirs(save_dir, exist_ok=True)
-        self.scalers = fit_target_scalers(targets_2d, mode=scaler_mode)
-        y_norm = transform_with_scalers(targets_2d, self.scalers)
-        joblib.dump(self.scalers, os.path.join(save_dir, "target_scaler.ss"))
-
-        rng = np.random.default_rng(seed)
-        perm = rng.permutation(len(mols))
-        n_val = max(1, int(0.15 * len(mols)))
-        va_idx, tr_idx = perm[:n_val], perm[n_val:]
-
-        # Pre-extract frozen native DPA-4 descriptors once for fast, high-throughput training
-        cached_features = []
-        for mol in mols:
+        if len(mols) < 2 or epochs < 1:
+            raise ValueError("Need training records and positive epochs")
+        y = np.asarray(targets_2d, dtype=np.float32)
+        if validation_mols is None:
+            groups = [Chem.MolToSmiles(Chem.RemoveHs(m), isomericSmiles=True) for m in mols]
+            tr, va = next(
+                GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=seed).split(y, groups=groups)
+            )
+            train = [mols[i] for i in tr]
+            valid = [mols[i] for i in va]
+            yt = y[tr]
+            yv = y[va]
+        else:
+            train = list(mols)
+            valid = list(validation_mols)
+            yt = y
+            yv = np.asarray(validation_targets, dtype=np.float32)
+            identities = lambda ms: {Chem.MolToSmiles(Chem.RemoveHs(m), isomericSmiles=True) for m in ms}
+            if identities(train) & identities(valid):
+                raise ValueError("Train/validation molecular overlap")
+        if not valid or not np.isfinite(yt).all() or not np.isfinite(yv).all():
+            raise ValueError("Invalid training/validation labels")
+        self.scalers = fit_target_scalers(yt, mode=scaler_mode)
+        norm_train = transform_with_scalers(yt, self.scalers)
+        norm_valid = transform_with_scalers(yv, self.scalers)
+        cached = []
+        for index, mol in enumerate(train + valid):
             atoms = [a.GetSymbol() for a in mol.GetAtoms()]
             pos = torch.tensor(mol.GetConformer().GetPositions(), dtype=torch.float32, device=self.device)
-            native_desc, _, _ = self.dpa_guidance.extract_native_descriptor_and_forces(pos, atoms)
-            cached_features.append((native_desc.detach(), pos.detach(), atoms))
-
-        opt = torch.optim.AdamW(self.adapter.parameters(), lr=lr, weight_decay=1e-4)
-        sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(epochs, 1))
-        best_val = float("inf")
-        best_sd = None
-
-        for _ in range(epochs):
-            self.adapter.train()
-            rng.shuffle(tr_idx)
-            for i in tr_idx:
-                native_desc_i, pos_i, _ = cached_features[i]
-                y_t = torch.tensor(y_norm[i], dtype=torch.float32, device=self.device).view(self.output_dim)
-                norm_mean, norm_std = self.adapter(native_desc_i, pos_i)
-                loss = F.smooth_l1_loss(norm_mean, y_t, beta=0.1) + 0.05 * norm_std.mean()
-                opt.zero_grad()
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.adapter.parameters(), 5.0)
-                opt.step()
-            sched.step()
-
-            self.adapter.eval()
-            val_errs = []
-            for i in va_idx:
-                _, pos_i, atoms_i = cached_features[i]
-                yp_real, _, _, _ = self.forward_shared_force_and_property(pos_i, atoms_i)
-                y_true_real = torch.tensor(targets_2d[i], dtype=torch.float32, device=self.device).view(self.output_dim)
-                val_errs.append(float(F.l1_loss(yp_real.view(self.output_dim), y_true_real).item()))
-            mean_val = float(np.mean(val_errs)) if val_errs else 0.0
-            if mean_val <= best_val:
-                best_val = mean_val
-                best_sd = {k: v.detach().cpu().clone() for k, v in self.adapter.state_dict().items()}
-
-        if best_sd is not None:
-            self.adapter.load_state_dict(best_sd)
+            desc, energy, force = self.dpa_guidance.extract_native_descriptor_and_forces(pos, atoms)
+            if not all(torch.isfinite(v).all() for v in (desc, energy, force)):
+                raise FloatingPointError("Nonfinite descriptor cache")
+            cached.append((desc.detach(), pos.detach()))
+            if index % 100 == 0:
+                print(f"DPA descriptors {index + 1}/{len(train) + len(valid)}", flush=True)
+        training_history = []
+        for index in range(self.n_ensemble_heads):
+            torch.manual_seed(seed + index)
+            member = _DPA4EquivariantPropertyAdapter(self.desc_dim, 128, self.output_dim, 1).to(self.device)
+            self.adapter.members[index] = member
+            rng = np.random.default_rng(seed + index)
+            bootstrap = rng.integers(0, len(train), size=len(train))
+            opt = torch.optim.AdamW(member.parameters(), lr=lr, weight_decay=1e-4)
+            best = float("inf")
+            best_state = None
+            history = []
+            for epoch in range(epochs):
+                member.train()
+                order = rng.permutation(bootstrap)
+                for i in order:
+                    desc, pos = cached[i]
+                    target = torch.tensor(norm_train[i], device=self.device)
+                    pred, _ = member(desc, pos)
+                    loss = F.smooth_l1_loss(pred, target, beta=0.1)
+                    opt.zero_grad()
+                    loss.backward()
+                    torch.nn.utils.clip_grad_norm_(member.parameters(), 5.0)
+                    opt.step()
+                member.eval()
+                with torch.no_grad():
+                    errors = [
+                        float(
+                            torch.abs(
+                                member(*cached[len(train) + i])[0]
+                                - torch.tensor(norm_valid[i], device=self.device)
+                            ).mean()
+                        )
+                        for i in range(len(valid))
+                    ]
+                score = float(np.mean(errors))
+                history.append(score)
+                if score < best:
+                    best = score
+                    best_state = {k: v.detach().cpu().clone() for k, v in member.state_dict().items()}
+                print(
+                    f"Bootstrap {index + 1}/{self.n_ensemble_heads} epoch {epoch + 1}/{epochs} validation normalized MAE {score:.4f}",
+                    flush=True,
+                )
+            member.load_state_dict(best_state)
+            member.eval()
+            member.requires_grad_(False)
+            training_history.append(
+                {
+                    "seed": seed + index,
+                    "bootstrap_indices_sha256": hashlib.sha256(bootstrap.tobytes()).hexdigest(),
+                    "validation_mae_normalized": history,
+                    "best": best,
+                }
+            )
         self.adapter.eval()
-        for p in self.adapter.parameters():
-            p.requires_grad_(False)
-        torch.save({"adapter_state_dict": self.adapter.state_dict()}, os.path.join(save_dir, "dpa4_prop_adapter.pt"))
+        joblib.dump(self.scalers, os.path.join(save_dir, "target_scaler.ss"))
+        checkpoint = os.path.join(save_dir, "dpa4_prop_adapter.pt")
+        torch.save({"adapter_state_dict": self.adapter.state_dict()}, checkpoint)
+        weight = getattr(self.dpa_guidance, "model_path", None)
         meta = {
             "oracle_type": "internal_dpa4",
+            "ensemble_kind": "bootstrap_adapters_v2",
             "desc_dim": self.desc_dim,
             "output_dim": self.output_dim,
             "n_ensemble_heads": self.n_ensemble_heads,
             "target_cols": self.target_cols,
-            "val_mae_physical": best_val,
+            "train_records": len(train),
+            "validation_records": len(valid),
+            "history": training_history,
+            "checkpoint_sha256": hashlib.sha256(open(checkpoint, "rb").read()).hexdigest(),
+            "forcefield_sha256": hashlib.sha256(open(weight, "rb").read()).hexdigest() if weight else None,
+            "uncertainty": "Independent bootstrap adapter disagreement; calibration not implied",
         }
         with open(os.path.join(save_dir, "oracle_meta.json"), "w") as f:
             json.dump(meta, f, indent=2)
         return meta
 
     @classmethod
-    def load_from_dir(
-        cls,
-        load_dir: str,
-        dpa_guidance: DPAPotentialGuidance,
-    ) -> "InternalDPA4PropertyOracle":
-        with open(os.path.join(load_dir, "oracle_meta.json"), "r") as f:
+    def load_from_dir(cls, load_dir, dpa_guidance):
+        with open(os.path.join(load_dir, "oracle_meta.json")) as f:
             meta = json.load(f)
-        obj = cls(
-            dpa_guidance=dpa_guidance,
-            output_dim=int(meta["output_dim"]),
-            target_cols=meta.get("target_cols"),
-            n_ensemble_heads=int(meta.get("n_ensemble_heads", 5)),
-        )
+        if meta.get("ensemble_kind") != "bootstrap_adapters_v2":
+            raise ValueError("Legacy shared-head oracle requires retraining")
+        checkpoint = os.path.join(load_dir, "dpa4_prop_adapter.pt")
+        if hashlib.sha256(open(checkpoint, "rb").read()).hexdigest() != meta["checkpoint_sha256"]:
+            raise ValueError("Oracle checkpoint checksum mismatch")
+        weight = getattr(dpa_guidance, "model_path", None)
+        if meta["forcefield_sha256"] and (
+            not weight or hashlib.sha256(open(weight, "rb").read()).hexdigest() != meta["forcefield_sha256"]
+        ):
+            raise ValueError("Forcefield mismatch for property adapter")
+        obj = cls(dpa_guidance, int(meta["output_dim"]), meta["target_cols"], int(meta["n_ensemble_heads"]))
         obj.scalers = joblib.load(os.path.join(load_dir, "target_scaler.ss"))
-        sd = torch.load(os.path.join(load_dir, "dpa4_prop_adapter.pt"), map_location="cpu", weights_only=False)[
-            "adapter_state_dict"
-        ]
-        obj.adapter.load_state_dict(sd, strict=True)
+        state = torch.load(checkpoint, map_location="cpu", weights_only=True)["adapter_state_dict"]
+        obj.adapter.load_state_dict(state, strict=True)
         obj.adapter.eval()
-        for p in obj.adapter.parameters():
-            p.requires_grad_(False)
+        obj.adapter.requires_grad_(False)
         return obj

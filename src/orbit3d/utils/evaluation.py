@@ -5,7 +5,6 @@ import math
 import torch
 from rdkit import Chem, RDLogger
 
-import dgl
 
 if TYPE_CHECKING:
     from propmolflow.analysis.molecule_builder import SampledMolecule
@@ -15,7 +14,18 @@ RDLogger.DisableLog("rdApp.*")
 HARTREE_TO_EV = 27.211386245988
 
 VALENCE_ELECTRONS = {
-    "H": 1, "C": 4, "N": 5, "O": 6, "F": 7, "Si": 4, "P": 5, "S": 6, "Cl": 7, "Se": 6, "Br": 7, "I": 7,
+    "H": 1,
+    "C": 4,
+    "N": 5,
+    "O": 6,
+    "F": 7,
+    "Si": 4,
+    "P": 5,
+    "S": 6,
+    "Cl": 7,
+    "Se": 6,
+    "Br": 7,
+    "I": 7,
 }
 EXPECTED_VALENCES = {
     "H": [1],
@@ -61,16 +71,20 @@ def compute_chemical_validity_metrics(molecules: List[SampledMolecule]) -> Dict[
         n_atoms_stable += sum(atom_ok_list)
         if all(atom_ok_list):
             n_mols_stable += 1
-        if total_valence_e % 2 == 0:
-            n_closed_shell += 1
 
         rdmol = smol.rdkit_mol
         if rdmol is not None:
             try:
                 frags = Chem.rdmolops.GetMolFrags(rdmol, asMols=True, sanitizeFrags=False)
                 largest = max(frags, default=rdmol, key=lambda m: m.GetNumAtoms())
-                Chem.SanitizeMol(largest)
-                smi = Chem.MolToSmiles(largest)
+                Chem.SanitizeMol(rdmol)
+                if (
+                    not any(a.GetNumRadicalElectrons() for a in rdmol.GetAtoms())
+                    and (rdmol.GetIntProp("SpinMultiplicity") if rdmol.HasProp("SpinMultiplicity") else 1)
+                    == 1
+                ):
+                    n_closed_shell += 1
+                smi = Chem.MolToSmiles(rdmol)
                 n_rdkit_valid += 1
                 valid_smiles.append(smi)
                 if len(frags) == 1:
@@ -86,6 +100,7 @@ def compute_chemical_validity_metrics(molecules: List[SampledMolecule]) -> Dict[
         "close_shell_ratio": n_closed_shell / n_total,
         "valid_and_unique": len(set(valid_smiles)) / n_total,
     }
+
 
 # Covalent radii in Angstroms (Cordero et al.)
 COVALENT_RADII = {
@@ -129,7 +144,9 @@ def compute_3d_geometry_strain_metrics(molecules: List[SampledMolecule]) -> Dict
         # 1. Check bonded distances against covalent radii sum
         mol_bond_ok = True
         bonded_pairs = set()
-        for src, dst, btype in zip(mol.bond_src_idxs.tolist(), mol.bond_dst_idxs.tolist(), mol.bond_types.tolist()):
+        for src, dst, btype in zip(
+            mol.bond_src_idxs.tolist(), mol.bond_dst_idxs.tolist(), mol.bond_types.tolist()
+        ):
             if btype == 0:
                 continue
             bonded_pairs.add((min(src, dst), max(src, dst)))
@@ -157,7 +174,9 @@ def compute_3d_geometry_strain_metrics(molecules: List[SampledMolecule]) -> Dict
             for j in range(i + 1, n_atoms):
                 d = float(dist_mat[i, j].item())
                 if (i, j) not in bonded_pairs:
-                    min_nonbond = 0.75 * (COVALENT_RADII.get(atoms[i], 0.7) + COVALENT_RADII.get(atoms[j], 0.7))
+                    min_nonbond = 0.75 * (
+                        COVALENT_RADII.get(atoms[i], 0.7) + COVALENT_RADII.get(atoms[j], 0.7)
+                    )
                     if d < min_nonbond:
                         mol_clash_ok = False
                         break
@@ -208,6 +227,8 @@ def evaluate_generated_molecules(
         g_i = mol.g.to(device)
         graphs.append(g_i)
         valid_indices.append(idx)
+
+    import dgl
 
     batched_g = dgl.batch(graphs)
     node_batch_idx = torch.repeat_interleave(
@@ -294,5 +315,17 @@ def evaluate_generated_molecules(
     out.update(geom_metrics)
     out.update(prop_metrics)
     out.update(dpa_metrics)
-    out["valid_and_in_interval_frac"] = out.get("frac_valid_mols", 0.0) * out["joint_interval_hit_rate"]
+    valid = []
+    for mol in molecules:
+        try:
+            if mol.rdkit_mol is None:
+                valid.append(False)
+                continue
+            rd = Chem.Mol(mol.rdkit_mol)
+            Chem.SanitizeMol(rd)
+            valid.append(len(Chem.GetMolFrags(rd)) == 1)
+        except (ValueError, RuntimeError):
+            valid.append(False)
+    valid_t = torch.tensor(valid, device=joint_hits.device)
+    out["valid_and_in_interval_frac"] = float((valid_t & joint_hits).float().mean())
     return out

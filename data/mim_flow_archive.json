@@ -1,0 +1,259 @@
+{
+  "archive_bytes": 3248316986,
+  "archive_sha256": "ded9b275805df1976b3c8e666495f723a4d34c8440890b9f535ee52fc22ca43d",
+  "gzip_crc_verified": true,
+  "publisher_checksum_verified": false,
+  "members": [
+    {
+      "name": "._data",
+      "bytes": 212
+    },
+    {
+      "name": "data",
+      "bytes": 0
+    },
+    {
+      "name": "data/spectra_model",
+      "bytes": 0
+    },
+    {
+      "name": "data/weights",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data/._local_gen",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/local_gen",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data/qm9s",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data/._de_novo_gen",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/._mrtadf_norm_350",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350/._pretrain_dict.txt",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350/pretrain_dict.txt",
+      "bytes": 101
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350/._valid.lmdb",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350/valid.lmdb",
+      "bytes": 33542144
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350/._train.lmdb",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/de_novo_gen/mrtadf_norm_350/train.lmdb",
+      "bytes": 370712576
+    },
+    {
+      "name": "data/downstream_data/qm9s/._pretrain_dict.txt",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/qm9s/pretrain_dict.txt",
+      "bytes": 101
+    },
+    {
+      "name": "data/downstream_data/qm9s/._valid.lmdb",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/qm9s/valid.lmdb",
+      "bytes": 80080896
+    },
+    {
+      "name": "data/downstream_data/qm9s/._train.lmdb",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/qm9s/train.lmdb",
+      "bytes": 1521102848
+    },
+    {
+      "name": "data/downstream_data/local_gen/._mrtadf_norm_350",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350",
+      "bytes": 0
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350/._pretrain_dict.txt",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350/pretrain_dict.txt",
+      "bytes": 101
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350/._valid.lmdb",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350/valid.lmdb",
+      "bytes": 1019904
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350/._train.lmdb",
+      "bytes": 212
+    },
+    {
+      "name": "data/downstream_data/local_gen/mrtadf_norm_350/train.lmdb",
+      "bytes": 9142272
+    },
+    {
+      "name": "data/weights/._local_gen",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/local_gen",
+      "bytes": 0
+    },
+    {
+      "name": "data/weights/._qm9s",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/qm9s",
+      "bytes": 0
+    },
+    {
+      "name": "data/weights/._de_novo_gen",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/de_novo_gen",
+      "bytes": 0
+    },
+    {
+      "name": "data/weights/de_novo_gen/._de_novo_gen_w_pretrain.pt",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/de_novo_gen/de_novo_gen_w_pretrain.pt",
+      "bytes": 573986048
+    },
+    {
+      "name": "data/weights/de_novo_gen/._de_novo_gen_w_o_pretrain.pt",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/de_novo_gen/de_novo_gen_w_o_pretrain.pt",
+      "bytes": 573985920
+    },
+    {
+      "name": "data/weights/qm9s/._qm9s_w_pretrain.pt",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/qm9s/qm9s_w_pretrain.pt",
+      "bytes": 572693502
+    },
+    {
+      "name": "data/weights/qm9s/._qm9s_w_o_pretrain.pt",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/qm9s/qm9s_w_o_pretrain.pt",
+      "bytes": 573309302
+    },
+    {
+      "name": "data/weights/local_gen/._local_gen_w_pretrain.pt",
+      "bytes": 212
+    },
+    {
+      "name": "data/weights/local_gen/local_gen_w_pretrain.pt",
+      "bytes": 573986048
+    },
+    {
+      "name": "data/spectra_model/checkpoint_best.pt",
+      "bytes": 570579212
+    }
+  ],
+  "extracted_files": [
+    {
+      "path": "de_novo_gen/mrtadf_norm_350/pretrain_dict.txt",
+      "bytes": 101,
+      "sha256": "d71f10215662d103c1c356af19a476eac32f3f6a4014f1ce337a73c5917941a2"
+    },
+    {
+      "path": "de_novo_gen/mrtadf_norm_350/valid.lmdb",
+      "bytes": 33542144,
+      "sha256": "e71828d7e189e82ba697219f2e0b5c2fc4a62c910628f4075441b43a9d88d67a"
+    },
+    {
+      "path": "de_novo_gen/mrtadf_norm_350/train.lmdb",
+      "bytes": 370712576,
+      "sha256": "2a6921ce9fdc6fe00e2e60fda509f8adf11e65d61746c7a2c2cde358cd91b72a"
+    },
+    {
+      "path": "qm9s/pretrain_dict.txt",
+      "bytes": 101,
+      "sha256": "d71f10215662d103c1c356af19a476eac32f3f6a4014f1ce337a73c5917941a2"
+    },
+    {
+      "path": "qm9s/valid.lmdb",
+      "bytes": 80080896,
+      "sha256": "2f675b7f8937aada441c780cfe1dc25abf0c5a992ec343bf7868680693878c73"
+    },
+    {
+      "path": "qm9s/train.lmdb",
+      "bytes": 1521102848,
+      "sha256": "54791cfc258e1771e046540c496e63e1df292db5edef16aed1a6b0db8ba6ee15"
+    },
+    {
+      "path": "local_gen/mrtadf_norm_350/pretrain_dict.txt",
+      "bytes": 101,
+      "sha256": "d71f10215662d103c1c356af19a476eac32f3f6a4014f1ce337a73c5917941a2"
+    },
+    {
+      "path": "local_gen/mrtadf_norm_350/valid.lmdb",
+      "bytes": 1019904,
+      "sha256": "9209dea3ee677a86998bdbb2ba3003cce6eebb6c2358057f6cdb73c5e6efba5e"
+    },
+    {
+      "path": "local_gen/mrtadf_norm_350/train.lmdb",
+      "bytes": 9142272,
+      "sha256": "1049cbed44e31c25430ef37ff65a18df0d15f4dcc55f849d874c084dbcacaf1a"
+    }
+  ],
+  "related_release_check": {
+    "record_url": "https://zenodo.org/records/21429926",
+    "file_url": "https://zenodo.org/records/21429926/files/data.tar.gz?download=1",
+    "published_md5": "b870a41afb2b7cabdcd3e352746ae021",
+    "local_md5": "df6cc75c2e575f3f25348ad83d3ca551",
+    "status": "different_artifact_or_release; not asserted as exact origin",
+    "checked_on": "2026-11-11"
+  }
+}

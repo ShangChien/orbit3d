@@ -1,0 +1,48 @@
+{
+  "mode": "train_and_predict",
+  "device": "cuda:0",
+  "seed": 42,
+  "mount_paths": {
+    "generator_pretrained_path": "/workspace/pretrained/qm9.pt",
+    "train_data_path": "/workspace/dataset/processed/qm9s_octree/train.sdf",
+    "forcefield_path": "/workspace/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+    "property_checkpoint_dir": "/workspace/checkpoints/ocelot_3d/oracle",
+    "checkpoint_save_dir": "/workspace/checkpoints/qm9s_ocelot_octree",
+    "output_dir": "/workspace/outputs/qm9s_ocelot_octree"
+  },
+  "generator_config": {
+    "backend": "uni3dar_octree",
+    "sft_steps": 100,
+    "batch_size": 16,
+    "sft_lr": 0.0002,
+    "grpo_steps": 0,
+    "label_source": "oracle"
+  },
+  "oracle_config": {
+    "oracle_mode": "internal_dpa4",
+    "target_cols": [
+      "homo",
+      "lumo"
+    ]
+  },
+  "inference_config": {
+    "target_interval": {
+      "homo": [
+        -8.2,
+        -7.2
+      ],
+      "lumo": [
+        -0.6,
+        0.8
+      ]
+    },
+    "num_candidates": 64,
+    "num_molecules": 16,
+    "batch_size": 16,
+    "max_rms_force_eva": 0.5,
+    "oracle_candidates": 32
+  },
+  "stage5_relax_config": {
+    "relax_steps": 30
+  }
+}

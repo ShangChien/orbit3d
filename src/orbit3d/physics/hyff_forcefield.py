@@ -140,7 +140,9 @@ class HyFFPotentialGuidance(nn.Module):
         )
 
     def map_atomic_numbers(self, dataset_atom_indices: torch.Tensor) -> torch.Tensor:
-        clamped = dataset_atom_indices.long().clamp(0, len(self.atom_type_map) - 1)
+        if ((dataset_atom_indices < 0) | (dataset_atom_indices >= len(self.atom_type_map))).any():
+            raise ValueError("Forcefield atom indices out of range")
+        clamped = dataset_atom_indices.long()
         return self.dataset_to_atomic_num.to(dataset_atom_indices.device)[clamped]
 
     def _get_readout_hook_target(self) -> nn.Module:
@@ -242,8 +244,10 @@ class HyFFPotentialGuidance(nn.Module):
             h.remove()
 
         native_desc = captured["descriptor"].float()
-        forces = torch.nan_to_num(forces_raw.detach().to(coords.dtype), nan=0.0, posinf=0.0, neginf=0.0)
-        energy = torch.nan_to_num(e_vec.sum().detach().to(coords.dtype), nan=0.0, posinf=0.0, neginf=0.0)
+        forces = forces_raw.detach().to(coords.dtype)
+        energy = e_vec.sum().detach().to(coords.dtype)
+        if not all(torch.isfinite(v).all() for v in (native_desc, energy, forces)):
+            raise FloatingPointError("Nonfinite HyFF descriptor/energy/forces")
         return native_desc, energy, forces
 
     def _compute_pytorch_gpu(
@@ -337,9 +341,9 @@ class HyFFPotentialGuidance(nn.Module):
         else:
             mults_t = torch.as_tensor(multiplicities, dtype=torch.long, device=device).reshape(batch_size)
 
-        use_native = (
-            self.hyff_device == "cuda"
-            and (self.route == "native" or (self.route == "auto" and batch_size >= 8 and self.tier in ("presto", "vivace", "moderato")))
+        use_native = self.hyff_device == "cuda" and (
+            self.route == "native"
+            or (self.route == "auto" and batch_size >= 8 and self.tier in ("presto", "vivace", "moderato"))
         )
 
         mol_energies: Optional[torch.Tensor] = None
@@ -390,8 +394,8 @@ class HyFFPotentialGuidance(nn.Module):
                 mults_t=mults_t,
             )
 
-        mol_energies = torch.nan_to_num(mol_energies, nan=0.0, posinf=1e4, neginf=-1e4)
-        forces = torch.nan_to_num(forces, nan=0.0, posinf=0.0, neginf=0.0)
+        if not torch.isfinite(mol_energies).all() or not torch.isfinite(forces).all():
+            raise FloatingPointError("Nonfinite MLIP energy/forces")
 
         if clip_forces and self.max_force_norm is not None and self.max_force_norm > 0:
             f_norm = torch.norm(forces, dim=-1, keepdim=True) + 1e-8

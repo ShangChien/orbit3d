@@ -23,6 +23,9 @@ wheels/
 venv/
 ENV/
 
+# Local development and private remote environment notes
+local_dev/
+
 # macOS / IDE metadata
 .DS_Store
 .idea/
@@ -33,9 +36,12 @@ ENV/
 # Third-party external reference repositories (cloned separately)
 external/
 
+# Local raw/processed datasets (obtained separately; not redistributed)
+/dataset/
+
 # Model checkpoints, packed weights & runtime outputs
 pretrained/
-checkpoints/
+/checkpoints/
 outputs/
 *.pt
 *.pth

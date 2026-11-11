@@ -1,225 +1,149 @@
-"""
-Online Gated-GRPO Trainer with Multi-Window Curriculum & Early Stopping (`grpo_trainer.py`).
-"""
+"""Masked GRPO with differentiable reference KL and nonnegative gated utility."""
 
-from __future__ import annotations
-
-from typing import Any, Dict, List, Tuple
 import numpy as np
 import torch
 import torch.nn.functional as F
-from rdkit import Chem
-
+from ..constraints import TargetIntervals
 from .octree_tokenizer import (
-    Mol3DInstance,
-    compute_3d_geom_score,
-    compute_mol_stability,
-    decode_tokens_to_mol3d,
     encode_mol_to_octree_tokens,
+    decode_tokens_to_mol3d,
     mol3d_to_validated_rdkit_mol,
     mol_to_clean_smiles,
 )
-from .uni3dar_model import ConditionalUni3DAR
+
+
+def gated_reward(violation, uncertainty, force_rms, uncertainty_weight=0.35):
+    if not np.isfinite([violation, uncertainty, force_rms]).all():
+        return -1.0
+    return float(
+        np.exp(
+            -max(0.0, violation)
+            - uncertainty_weight * max(0.0, uncertainty)
+            - 0.08 * max(0.0, force_rms - 2.5)
+        )
+    )
+
+
+def policy_objective(model, ref_model, seq, cond, old_logp, advantages, beta, temperature=1.0, clip=0.2):
+    logits, _ = model(seq[:, :-1], cond)
+    logp = model.constrained_logits(logits, temperature).log_softmax(-1)
+    with torch.no_grad():
+        ref, _ = ref_model(seq[:, :-1], cond)
+        logref = ref_model.constrained_logits(ref, temperature).log_softmax(-1)
+    valid = seq[:, 1:] != 0
+    current = logp.gather(-1, seq[:, 1:, None]).squeeze(-1).masked_fill(~valid, 0)
+    ratio = (current - old_logp.detach()).clamp(-20, 20).exp()
+    adv = advantages.detach()[:, None]
+    surrogate = torch.minimum(ratio * adv, ratio.clamp(1 - clip, 1 + clip) * adv)
+    # Outside the shared grammar support both distributions have logp=-inf.
+    delta = torch.where(torch.isfinite(logp), logp - logref, torch.zeros_like(logp))
+    kl = (logp.exp() * delta).sum(-1)
+    denom = valid.sum(1).clamp_min(1)
+    return (-(surrogate * valid).sum(1) / denom + beta * (kl * valid).sum(1) / denom).mean(), kl
 
 
 def train_gated_grpo_with_oracle(
-    model: ConditionalUni3DAR,
-    ref_model: ConditionalUni3DAR,
-    sft_mols: List[Mol3DInstance],
-    oracle: Any,
-    prop_mean: float,
-    prop_std: float,
-    grpo_cfg: Dict[str, Any],
-    target_interval_physical: Any = (620.0, 640.0),
-    dpa_guidance: Any = None,
-    device: str = "cuda:0",
-) -> Dict[str, Any]:
-    """
-    Stage 4 Online `Gated-GRPO` Trainer aligned with:
-      1. `oracle.predict_3d_mols(mols)` -> `(y_pred, y_std)` across all active models/targets
-      2. `dpa_guidance.compute_energy_and_forces(...)` -> physical force gate `G_phys(X)`
-      3. Multi-target interval hinge reward & epistemic uncertainty penalty (`-lambda_unc * y_std`)
-      4. Early Stopping on `hit_rate >= early_stop_hit_rate`, `uniqueness < min_uniqueness`,
-         and `std_ratio > max_std_ratio`.
-    """
+    model,
+    ref_model,
+    sft_mols,
+    oracle,
+    prop_mean,
+    prop_std,
+    grpo_cfg,
+    target_interval_physical=(620.0, 640.0),
+    dpa_guidance=None,
+    device="cuda:0",
+):
+    if not sft_mols:
+        raise ValueError("GRPO requires SFT replay examples")
+    names = oracle.target_cols
+    K = len(names)
+    means = np.broadcast_to(np.asarray(prop_mean), (K,))
+    scales = np.broadcast_to(np.asarray(prop_std), (K,))
     steps = int(grpo_cfg.get("grpo_steps", 30))
-    group_size = int(grpo_cfg.get("group_size", 8))
-    lr = float(grpo_cfg.get("lr", 2e-5))
-    temp = float(grpo_cfg.get("temperature", 0.90))
-    kl_beta = float(grpo_cfg.get("kl_beta", 0.04))
-    sft_anchor_w = float(grpo_cfg.get("sft_anchor_weight", 0.15))
-    std_penalty_w = float(grpo_cfg.get("uncertainty_weight", 0.35))
-    grpo_mode = str(grpo_cfg.get("grpo_mode", "multi_window_general"))
-
-    early_stop_hit = float(grpo_cfg.get("early_stop_hit_rate", 0.85))
-    min_uniqueness = float(grpo_cfg.get("min_uniqueness", 0.80))
-    max_std_ratio = float(grpo_cfg.get("max_std_ratio", 1.60))
-
-    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-2)
-    sft_seqs = [encode_mol_to_octree_tokens(m) for m in sft_mols]
+    group = int(grpo_cfg.get("group_size", 8))
+    if group < 2:
+        raise ValueError("GRPO group_size must be >=2")
+    temperature = float(grpo_cfg.get("temperature", 0.9))
+    opt = torch.optim.AdamW(model.parameters(), lr=float(grpo_cfg.get("lr", 2e-5)))
+    ref_model.eval()
+    ref_model.requires_grad_(False)
     rng = np.random.default_rng(int(grpo_cfg.get("seed", 42)))
-
-    best_sd = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
-    init_mean_std = None
-    consecutive_hits = 0
     history = []
-
-    for step in range(1, steps + 1):
-        if grpo_mode == "single_window_specialist":
-            if isinstance(target_interval_physical, dict):
-                first_iv = list(target_interval_physical.values())[0]
-                lo_phys, hi_phys = float(first_iv[0]), float(first_iv[1])
-                active_interval_arg = target_interval_physical
-            elif (
-                isinstance(target_interval_physical, (list, tuple))
-                and len(target_interval_physical) > 0
-                and isinstance(target_interval_physical[0], (list, tuple))
-            ):
-                lo_phys, hi_phys = float(target_interval_physical[0][0]), float(target_interval_physical[0][1])
-                active_interval_arg = target_interval_physical
-            else:
-                lo_phys, hi_phys = float(target_interval_physical[0]), float(target_interval_physical[1])
-                active_interval_arg = (lo_phys, hi_phys)
+    for step in range(steps):
+        if grpo_cfg.get("grpo_mode") == "single_window_specialist":
+            intervals = TargetIntervals.parse(target_interval_physical, names)
         else:
-            center = float(rng.uniform(prop_mean - 1.0 * prop_std, prop_mean + 1.4 * prop_std))
-            half_w = float(rng.uniform(0.08 * prop_std, 0.15 * prop_std))
-            lo_phys, hi_phys = center - half_w, center + half_w
-            active_interval_arg = (lo_phys, hi_phys)
-
-        lo_norm = (lo_phys - prop_mean) / max(prop_std, 1e-6)
-        hi_norm = (hi_phys - prop_mean) / max(prop_std, 1e-6)
-
-        cond_group = torch.zeros((group_size, 7), dtype=torch.float32, device=device)
-        cond_group[:, 0] = lo_norm
-        cond_group[:, 1] = hi_norm
-        cond_group[:, 6] = 1.0
-
+            center = means + rng.uniform(-1, 1.4, K) * scales
+            width = rng.uniform(0.08, 0.15, K) * scales
+            intervals = TargetIntervals.parse(dict(zip(names, zip(center - width, center + width))), names)
+        cond = torch.tensor(intervals.condition(means, scales), device=device).repeat(group, 1)
         model.eval()
-        with torch.no_grad():
-            seqs, _, _ = model.sample_autoregressive(cond_group, temperature=temp, top_p=0.95)
-
+        seq, old, _ = model.sample_autoregressive(cond, temperature=temperature, top_p=1.0)
         rewards = []
         hits = []
-        stds_batch = []
-        smiles_batch = []
-
-        for g in range(group_size):
-            inst = decode_tokens_to_mol3d(seqs[g].cpu().tolist())
-            stab_info = compute_mol_stability(inst)
-            g_geom = compute_3d_geom_score(inst)
-            rd_mol = mol3d_to_validated_rdkit_mol(inst)
-
-            if rd_mol is None or stab_info["mol_stable"] < 0.5:
-                rewards.append(-1.0)
-                hits.append(0.0)
-                continue
-
-            # DPA-4 physical force gate G_phys(X)
-            if dpa_guidance is not None:
-                c_t = torch.tensor(inst.coords, dtype=torch.float32, device=device)
-                a_t = torch.tensor(inst.atom_types, dtype=torch.long, device=device)
-                _, f_phys_t = dpa_guidance.compute_energy_and_forces(
-                    c_t, a_t, clip_forces=True, zero_com_forces=True
+        smiles = []
+        for row in seq:
+            try:
+                inst = decode_tokens_to_mol3d(row.tolist())
+                mol = mol3d_to_validated_rdkit_mol(inst)
+                yp, ys = oracle.predict_3d_mols([mol])
+                yp = np.asarray(yp).reshape(-1)
+                ys = np.asarray(ys).reshape(-1)
+                if not np.isfinite(yp).all() or not np.isfinite(ys).all():
+                    raise FloatingPointError("Oracle failed")
+                force = 0.0
+                if dpa_guidance is not None:
+                    e, f = dpa_guidance.compute_energy_and_forces(
+                        torch.tensor(inst.coords, device=device),
+                        torch.tensor(inst.atom_types, device=device),
+                        clip_forces=False,
+                        zero_com_forces=False,
+                    )
+                    if not torch.isfinite(e).all() or not torch.isfinite(f).all():
+                        raise FloatingPointError("MLIP failed")
+                    force = float(f.square().sum(-1).mean().sqrt())
+                d = intervals.violations(yp).numpy() / scales
+                rewards.append(
+                    gated_reward(
+                        float(np.square(d).sum()),
+                        float(np.mean(ys / scales)),
+                        force,
+                        float(grpo_cfg.get("uncertainty_weight", 0.35)),
+                    )
                 )
-                mean_f = float(torch.norm(f_phys_t, dim=-1).mean().item())
-                g_phys = float(np.exp(-0.08 * max(0.0, mean_f - 2.5)))
-            else:
-                g_phys = 1.0
-            g_gate = float(g_geom) * g_phys
-
-            smi = mol_to_clean_smiles(rd_mol)
-            smiles_batch.append(smi)
-
-            yp_arr, ys_arr = oracle.predict_3d_mols([rd_mol])
-            yp_vec = torch.tensor(np.asarray(yp_arr).reshape(-1), dtype=torch.float32, device=device)
-            y_unc = float(np.mean(np.asarray(ys_arr)))
-            stds_batch.append(y_unc)
-
-            width = max(hi_phys - lo_phys, 1e-4)
-            dist = float(oracle.compute_multi_target_interval_loss(yp_vec, active_interval_arg).item())
-            is_hit = 1.0 if dist <= 1e-5 else 0.0
-            hits.append(is_hit)
-
-            r_prop = 1.0 - min(dist / (width * 2.0), 1.5) + (0.4 if is_hit > 0.5 else 0.0)
-            r_unc_pen = std_penalty_w * (y_unc / max(prop_std, 1e-6))
-            r_total = g_gate * (r_prop - r_unc_pen)
-            rewards.append(r_total)
-
-        r_t = torch.tensor(rewards, dtype=torch.float32, device=device)
-        adv = (r_t - r_t.mean()) / (r_t.std() + 1e-6)
-
-        model.train()
-        logits_cur, _ = model(seqs[:, :-1], cond_group)
-        logp_cur = F.log_softmax(logits_cur, dim=-1)
-        tok_logp = logp_cur.gather(-1, seqs[:, 1:].unsqueeze(-1)).squeeze(-1).mean(dim=-1)
-
-        with torch.no_grad():
-            logits_ref, _ = ref_model(seqs[:, :-1], cond_group)
-            logp_ref = F.log_softmax(logits_ref, dim=-1)
-            probs_cur = F.softmax(logits_cur, dim=-1)
-            kl_div = (probs_cur * (logp_cur - logp_ref)).sum(dim=-1).mean()
-
-        loss_rl = -(adv.detach() * tok_logp).mean() + kl_beta * kl_div
-
-        anc_idx = rng.choice(len(sft_seqs), size=min(4, len(sft_seqs)), replace=False)
-        max_l = max(len(sft_seqs[i]) for i in anc_idx)
-        anc_tok = torch.zeros((len(anc_idx), max_l), dtype=torch.long, device=device)
-        anc_cond = torch.zeros((len(anc_idx), 7), dtype=torch.float32, device=device)
-        for bi, idx_s in enumerate(anc_idx):
-            s_seq = sft_seqs[idx_s]
-            anc_tok[bi, : len(s_seq)] = torch.tensor(s_seq, dtype=torch.long, device=device)
-            y0_norm = (float(sft_mols[idx_s].props[0]) - prop_mean) / max(prop_std, 1e-6)
-            anc_cond[bi, 0] = y0_norm - 0.15
-            anc_cond[bi, 1] = y0_norm + 0.15
-            anc_cond[bi, 6] = 1.0
-
-        logits_anc, _ = model(anc_tok[:, :-1], anc_cond)
-        loss_sft = F.cross_entropy(
-            logits_anc.reshape(-1, logits_anc.size(-1)),
-            anc_tok[:, 1:].reshape(-1),
-            ignore_index=0,
+                hits.append(intervals.hit(yp))
+                smiles.append(mol_to_clean_smiles(mol))
+            except (ValueError, FloatingPointError):
+                rewards.append(-1.0)
+                hits.append(False)
+        reward = torch.tensor(rewards, device=device)
+        advantages = (reward - reward.mean()) / reward.std(unbiased=False).clamp_min(1e-6)
+        loss, kl = policy_objective(
+            model, ref_model, seq, cond, old, advantages, float(grpo_cfg.get("kl_beta", 0.04)), temperature
         )
-
-        total_loss = loss_rl + sft_anchor_w * loss_sft
+        replay = sft_mols[int(rng.integers(len(sft_mols)))]
+        tokens = torch.tensor([encode_mol_to_octree_tokens(replay, model.max_atoms)], device=device)
+        y = (replay.props - means) / scales
+        iv = TargetIntervals.parse(
+            dict(zip(names, zip(replay.props - 0.15 * scales, replay.props + 0.15 * scales))), names
+        )
+        c = torch.tensor(iv.condition(means, scales), device=device)[None]
+        logits, _ = model(tokens[:, :-1], c)
+        anchor = F.cross_entropy(model.constrained_logits(logits).flatten(0, 1), tokens[:, 1:].flatten())
+        total = loss + float(grpo_cfg.get("sft_anchor_weight", 0.15)) * anchor
         opt.zero_grad()
-        total_loss.backward()
+        total.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
-
-        hit_rate = float(np.mean(hits))
-        uniqueness = len(set(smiles_batch)) / max(len(smiles_batch), 1)
-        mean_std = float(np.mean(stds_batch)) if stds_batch else 0.0
-        if init_mean_std is None and mean_std > 0:
-            init_mean_std = mean_std
-
         history.append(
             {
-                "step": step,
-                "hit_rate": hit_rate,
-                "uniqueness": uniqueness,
-                "mean_uncertainty": mean_std,
-                "reward_mean": float(r_t.mean().item()),
+                "step": step + 1,
+                "hit_rate": float(np.mean(hits)),
+                "valid_fraction": len(smiles) / group,
+                "reward_mean": float(reward.mean()),
+                "loss": float(total.detach()),
             }
         )
-
-        if uniqueness >= min_uniqueness:
-            best_sd = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
-
-        if uniqueness < min_uniqueness and step >= 5:
-            print(f"[GRPO EarlyStop @ step {step}] Uniqueness {uniqueness:.2f} < {min_uniqueness:.2f} (anti-collapse)")
-            break
-        if init_mean_std and mean_std > init_mean_std * max_std_ratio and step >= 5:
-            print(f"[GRPO EarlyStop @ step {step}] Uncertainty {mean_std:.4f} > {max_std_ratio}x initial (anti-hacking)")
-            break
-        if grpo_mode == "single_window_specialist":
-            if hit_rate >= early_stop_hit:
-                consecutive_hits += 1
-                if consecutive_hits >= 2:
-                    print(f"[GRPO EarlyStop @ step {step}] Target HitRate {hit_rate:.2f} >= {early_stop_hit:.2f}")
-                    break
-            else:
-                consecutive_hits = 0
-
-    model.load_state_dict(best_sd)
     model.eval()
     return {"steps_run": len(history), "history": history}

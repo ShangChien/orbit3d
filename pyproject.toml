@@ -7,7 +7,7 @@ name = "orbit3d"
 version = "1.0.0"
 description = "ORBIT-3D: Octree-Based Reinforced Bidirectional Interval-Targeted 3D Molecular Generation with Pluggable Quantum-Mechanical Oracles"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.13"
 license = { text = "MIT" }
 authors = [
     { name = "Shangqian Chen", email = "chensq@dp.tech" },
@@ -36,20 +36,21 @@ dependencies = [
     "joblib>=1.3.0",
     "pyyaml>=6.0",
     "safetensors>=0.4.0",
-    "torch>=2.2.0",
+    "torch==2.7.1",
     "rdkit>=2022.9.5",
     "ase>=3.22.0",
 ]
 
 [project.optional-dependencies]
+octree = ["lmdb>=1.4", "numba>=0.59", "tqdm>=4.66"]
 deepmd = [
     "deepmd-kit>=3.0.0b4",
 ]
 hyff = [
     "safetensors>=0.4.0",
-    "triton>=3.3.0",
+    "triton>=3.3.0; sys_platform == 'linux'",
     "warp-lang==1.10.1",
-    "nvalchemi-toolkit-ops==0.3.1",
+    "nvalchemi-toolkit-ops==0.3.1; sys_platform == 'linux'",
 ]
 baselines = [
     "lightning>=2.1.0",

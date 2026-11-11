@@ -40,14 +40,16 @@ def load_3d_molecular_dataset(
 
     missing_cols = [c for c in target_col_list if c not in df.columns]
     if missing_cols:
-        raise ValueError(f"Target columns {missing_cols} not found in {data_path}. Available: {list(df.columns)}")
+        raise ValueError(
+            f"Target columns {missing_cols} not found in {data_path}. Available: {list(df.columns)}"
+        )
 
     mols_3d: List[Chem.Mol] = []
     valid_targets: List[np.ndarray] = []
 
-    for idx, row in df.iterrows():
+    for idx, (_, row) in enumerate(df.iterrows()):
         y_vals = np.array([float(row[c]) for c in target_col_list], dtype=np.float32)
-        if np.isnan(y_vals).any():
+        if not np.isfinite(y_vals).all():
             continue
 
         mol = raw_mols[idx]
@@ -72,7 +74,7 @@ def load_3d_molecular_dataset(
             syms = [a.GetSymbol() for a in mol.GetAtoms()]
             dpa_map = dpa_guidance.atom_type_map
             atype_idx = torch.tensor(
-                [dpa_map.index(s) if s in dpa_map else 0 for s in syms],
+                [dpa_map.index(s) for s in syms],
                 dtype=torch.long,
                 device=dpa_guidance.device_str,
             )
@@ -90,6 +92,8 @@ def load_3d_molecular_dataset(
         mols_3d.append(mol)
         valid_targets.append(y_vals)
 
+    if not valid_targets:
+        raise ValueError("No usable molecular records with finite targets")
     targets_2d = np.stack(valid_targets, axis=0)
     return mols_3d, targets_2d, target_col_list
 
@@ -140,9 +144,7 @@ def inverse_single_scaler_torch(y_col: torch.Tensor, scaler_obj: Any) -> torch.T
         if abs(2.0 - lmbda) < 1e-6:
             neg_val = 1.0 - torch.exp(torch.clamp(-x, max=15.0))
         else:
-            neg_val = 1.0 - torch.pow(
-                torch.clamp(-(2.0 - lmbda) * x + 1.0, min=1e-6), 1.0 / (2.0 - lmbda)
-            )
+            neg_val = 1.0 - torch.pow(torch.clamp(-(2.0 - lmbda) * x + 1.0, min=1e-6), 1.0 / (2.0 - lmbda))
         return torch.where(pos_mask, pos_val, neg_val)
     return y_col
 
@@ -152,3 +154,19 @@ def inverse_transform_with_scalers(y_norm: np.ndarray, scalers: List[Any]) -> np
     for k, sc in enumerate(scalers):
         out[:, k : k + 1] = sc.inverse_transform(y_norm[:, k : k + 1])
     return out
+
+
+def write_precise_sdf(path, molecules, precision=12):
+    """Write V3000 coordinates precisely enough to round-trip float32 model inputs."""
+    params = Chem.MolWriterParams()
+    params.forceV3000 = True
+    params.precision = precision
+    with open(path, "w", encoding="utf-8") as output:
+        for mol in molecules:
+            output.write(Chem.MolToMolBlock(mol, params))
+            for name in mol.GetPropNames(includePrivate=False, includeComputed=False):
+                value = mol.GetProp(name)
+                if any(c in name for c in "\n\r<>") or "\n\n" in value or "$$$$" in value:
+                    raise ValueError("Unsupported SDF property formatting")
+                output.write(f">  <{name}>\n{value}\n\n")
+            output.write("$$$$\n")

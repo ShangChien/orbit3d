@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "dataset/raw/DB_chromophore_Sci_Data_rev03.csv",
+      "bytes": 3213377,
+      "sha256": "f92a55144c46ca0a0ef063c5ea82996161d65ea5c21643796cdeb897e173994c",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/figshare_std_value_exp_flag/master_database.bson",
+      "bytes": 27349341,
+      "sha256": "5e0167ffcc249cc9519c24368248a92d34c172423571b52351abdbca5733e4e7",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/figshare_std_value_exp_flag/master_database.csv",
+      "bytes": 9184604,
+      "sha256": "884ea19a9415420ff5bd4573928bd6e83083abb2bbba134b97916ab735c99eb6",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/figshare_std_value_exp_flag/master_database.json",
+      "bytes": 24839466,
+      "sha256": "2ba819728d04449edd89e5e8aa9071b1ff877061a9fd3f058ac0b97e401044b9",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/figshare_std_value_exp_flag/subsidiary_database.bson",
+      "bytes": 6790350,
+      "sha256": "83dd75c38fc9e906a342c4cc1f9a2b4284db483d9cbda3db4fa544240444d471",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/figshare_std_value_exp_flag/subsidiary_database.csv",
+      "bytes": 2907604,
+      "sha256": "0ce80b5e8c36a48570179e84855b3872eaa76e37f1252f23e8584b233bdb1842",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/figshare_std_value_exp_flag/subsidiary_database.json",
+      "bytes": 6239429,
+      "sha256": "5cad996bda7e86bbfa43bf35093cdf226a568468d6bd89600b8b94392c7d4f62",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "deferred_pending_deep_cleaning"
+    },
+    {
+      "path": "dataset/raw/ocelot_chromophore_v1/ocelot_chromophore_v1.csv",
+      "bytes": 5605431,
+      "sha256": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "primary"
+    },
+    {
+      "path": "dataset/raw/ocelot_chromophore_v1/readme.txt",
+      "bytes": 713,
+      "sha256": "ed993de3fe20eefc265a529c257e8f8c1b4963024f918e2445ec20606baabef2",
+      "source_url": null,
+      "license": null,
+      "status": "local_inventory_source_confirmation_pending",
+      "test_priority": "primary"
+    }
+  ],
+  "user_reported_origin": "User reports the three local datasets were downloaded from official figshare / zindo sources; exact release URLs are not yet confirmed.",
+  "remote_mim_flow": "Downloaded archive verified for gzip integrity on 2026-11-11; exact publisher checksum and dataset license remain unconfirmed. See mim_flow_archive.json."
+}
