@@ -1,0 +1,588 @@
+{
+  "backend": "explicit_scaffold_graph_growth",
+  "attempted": 18,
+  "chemically_valid": 18,
+  "refined": 18,
+  "joint_successes": 3,
+  "domain_cutoff": 0.3142857142857143,
+  "records": [
+    {
+      "candidate_id": 0,
+      "scaffold": "benzene",
+      "fragment": "C",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C",
+          "fragment_atom": 0,
+          "new_anchor_map": 13,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            14
+          ],
+          "seed": 2026,
+          "torsion": -2.0173120613613755
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 8.104301194578056e-07,
+      "domain_similarity": 0.4117647058823529,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.630513668060303,
+        0.5323764681816101
+      ],
+      "final_rms_force_eV_A": 0.229348286986351,
+      "joint_success": true
+    },
+    {
+      "candidate_id": 1,
+      "scaffold": "benzene",
+      "fragment": "N",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "N",
+          "fragment_atom": 0,
+          "new_anchor_map": 13,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            14
+          ],
+          "seed": 2026,
+          "torsion": 0.8791003471024421
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 8.104301194578056e-07,
+      "domain_similarity": 0.4666666666666667,
+      "domain_eligible": true,
+      "y_pred": [
+        -6.752226829528809,
+        1.132144808769226
+      ],
+      "final_rms_force_eV_A": 0.3397221565246582,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 2,
+      "scaffold": "benzene",
+      "fragment": "O",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "O",
+          "fragment_atom": 0,
+          "new_anchor_map": 13,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            14
+          ],
+          "seed": 2026,
+          "torsion": -0.20565870101575046
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 8.104301194578056e-07,
+      "domain_similarity": 1.0,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.4992289543151855,
+        0.9772853851318359
+      ],
+      "final_rms_force_eV_A": 0.2507765591144562,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 3,
+      "scaffold": "benzene",
+      "fragment": "CC",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "CC",
+          "fragment_atom": 0,
+          "new_anchor_map": 13,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            15
+          ],
+          "seed": 2026,
+          "torsion": -0.8136691853622136
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 8.104301194578056e-07,
+      "domain_similarity": 0.47619047619047616,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.618144989013672,
+        0.5941078662872314
+      ],
+      "final_rms_force_eV_A": 0.21167203783988953,
+      "joint_success": true
+    },
+    {
+      "candidate_id": 4,
+      "scaffold": "benzene",
+      "fragment": "C#N",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C#N",
+          "fragment_atom": 0,
+          "new_anchor_map": 13,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            15
+          ],
+          "seed": 2026,
+          "torsion": -0.9115812733920472
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 8.104301194578056e-07,
+      "domain_similarity": 0.5909090909090909,
+      "domain_eligible": true,
+      "y_pred": [
+        -8.291905403137207,
+        -0.566876232624054
+      ],
+      "final_rms_force_eV_A": 0.2930608093738556,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 5,
+      "scaffold": "benzene",
+      "fragment": "C=O",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C=O",
+          "fragment_atom": 0,
+          "new_anchor_map": 13,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            15
+          ],
+          "seed": 2026,
+          "torsion": 1.8253799738128214
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 8.104301194578056e-07,
+      "domain_similarity": 0.5384615384615384,
+      "domain_eligible": true,
+      "y_pred": [
+        -8.120479583740234,
+        -0.7812166213989258
+      ],
+      "final_rms_force_eV_A": 0.37066903710365295,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 6,
+      "scaffold": "naphthalene",
+      "fragment": "C",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C",
+          "fragment_atom": 0,
+          "new_anchor_map": 19,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            11,
+            20
+          ],
+          "seed": 2026,
+          "torsion": 2.545593801904385
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.40383021230673e-07,
+      "domain_similarity": 0.5238095238095238,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.487314224243164,
+        0.18117260932922363
+      ],
+      "final_rms_force_eV_A": 0.9863386750221252,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 7,
+      "scaffold": "naphthalene",
+      "fragment": "N",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "N",
+          "fragment_atom": 0,
+          "new_anchor_map": 19,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            11,
+            20
+          ],
+          "seed": 2026,
+          "torsion": -2.027249684545811
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.40383021230673e-07,
+      "domain_similarity": 0.5238095238095238,
+      "domain_eligible": true,
+      "y_pred": [
+        -6.688903331756592,
+        0.4270350933074951
+      ],
+      "final_rms_force_eV_A": 1.0209217071533203,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 8,
+      "scaffold": "naphthalene",
+      "fragment": "O",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "O",
+          "fragment_atom": 0,
+          "new_anchor_map": 19,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            11,
+            20
+          ],
+          "seed": 2026,
+          "torsion": 0.9599752273915536
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.40383021230673e-07,
+      "domain_similarity": 1.0,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.180259704589844,
+        0.1678437888622284
+      ],
+      "final_rms_force_eV_A": 1.0322251319885254,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 9,
+      "scaffold": "naphthalene",
+      "fragment": "CC",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "CC",
+          "fragment_atom": 0,
+          "new_anchor_map": 19,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            11,
+            21
+          ],
+          "seed": 2026,
+          "torsion": -1.26730108865027
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.40383021230673e-07,
+      "domain_similarity": 0.7619047619047619,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.509549140930176,
+        0.25302135944366455
+      ],
+      "final_rms_force_eV_A": 0.9242998957633972,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 10,
+      "scaffold": "naphthalene",
+      "fragment": "C#N",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C#N",
+          "fragment_atom": 0,
+          "new_anchor_map": 19,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            11,
+            21
+          ],
+          "seed": 2026,
+          "torsion": 2.934010035068585
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.40383021230673e-07,
+      "domain_similarity": 0.5151515151515151,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.85390043258667,
+        -0.7338475584983826
+      ],
+      "final_rms_force_eV_A": 1.0325393676757812,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 11,
+      "scaffold": "naphthalene",
+      "fragment": "C=O",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C=O",
+          "fragment_atom": 0,
+          "new_anchor_map": 19,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            11,
+            21
+          ],
+          "seed": 2026,
+          "torsion": 2.6379963599048173
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.40383021230673e-07,
+      "domain_similarity": 0.6521739130434783,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.7741312980651855,
+        -0.750323474407196
+      ],
+      "final_rms_force_eV_A": 1.0579878091812134,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 12,
+      "scaffold": "pyridine",
+      "fragment": "C",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C",
+          "fragment_atom": 0,
+          "new_anchor_map": 12,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            13
+          ],
+          "seed": 2026,
+          "torsion": 0.8537014402763488
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.317740534697805e-07,
+      "domain_similarity": 0.42105263157894735,
+      "domain_eligible": true,
+      "y_pred": [
+        -8.263286590576172,
+        0.48446035385131836
+      ],
+      "final_rms_force_eV_A": 0.4805886447429657,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 13,
+      "scaffold": "pyridine",
+      "fragment": "N",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "N",
+          "fragment_atom": 0,
+          "new_anchor_map": 12,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            13
+          ],
+          "seed": 2026,
+          "torsion": 1.5879625990200017
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.317740534697805e-07,
+      "domain_similarity": 0.6666666666666666,
+      "domain_eligible": true,
+      "y_pred": [
+        -7.38538122177124,
+        1.045271635055542
+      ],
+      "final_rms_force_eV_A": 0.5993073582649231,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 14,
+      "scaffold": "pyridine",
+      "fragment": "O",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "O",
+          "fragment_atom": 0,
+          "new_anchor_map": 12,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            13
+          ],
+          "seed": 2026,
+          "torsion": 0.09521348208206204
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.317740534697805e-07,
+      "domain_similarity": 0.6666666666666666,
+      "domain_eligible": true,
+      "y_pred": [
+        -8.323413848876953,
+        0.8852658271789551
+      ],
+      "final_rms_force_eV_A": 0.5230270028114319,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 15,
+      "scaffold": "pyridine",
+      "fragment": "CC",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "CC",
+          "fragment_atom": 0,
+          "new_anchor_map": 12,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            14
+          ],
+          "seed": 2026,
+          "torsion": 2.0476602991048765
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.317740534697805e-07,
+      "domain_similarity": 0.43478260869565216,
+      "domain_eligible": true,
+      "y_pred": [
+        -8.148110389709473,
+        0.5161237716674805
+      ],
+      "final_rms_force_eV_A": 0.4416915476322174,
+      "joint_success": true
+    },
+    {
+      "candidate_id": 16,
+      "scaffold": "pyridine",
+      "fragment": "C#N",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C#N",
+          "fragment_atom": 0,
+          "new_anchor_map": 12,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            14
+          ],
+          "seed": 2026,
+          "torsion": -0.32433459870669523
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.317740534697805e-07,
+      "domain_similarity": 0.5,
+      "domain_eligible": true,
+      "y_pred": [
+        -9.201143264770508,
+        -0.6470394134521484
+      ],
+      "final_rms_force_eV_A": 0.8377249836921692,
+      "joint_success": false
+    },
+    {
+      "candidate_id": 17,
+      "scaffold": "pyridine",
+      "fragment": "C=O",
+      "status": "refined",
+      "actions": [
+        {
+          "type": "attach",
+          "port_map": 1,
+          "fragment": "C=O",
+          "fragment_atom": 0,
+          "new_anchor_map": 12,
+          "bond_order": 1,
+          "removed_hydrogen_maps": [
+            7,
+            14
+          ],
+          "seed": 2026,
+          "torsion": -1.012771225039295
+        }
+      ],
+      "frozen_coordinate_shift_A": 0.0,
+      "world_frame_error_A": 9.317740534697805e-07,
+      "domain_similarity": 0.45454545454545453,
+      "domain_eligible": true,
+      "y_pred": [
+        -8.731168746948242,
+        -0.929846465587616
+      ],
+      "final_rms_force_eV_A": 0.8543612957000732,
+      "joint_success": false
+    }
+  ],
+  "scope": "Finite fragment menu with explicit graph actions; not learned octree scaffold completion or a synthesis route.",
+  "coordinate_precision": "Exact graph-growth scaffold coordinates; MLIP float32 conversion <2e-6 A; fixed coordinates bitwise unchanged during refinement."
+}
