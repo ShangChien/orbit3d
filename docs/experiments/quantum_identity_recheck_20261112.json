@@ -1,0 +1,316 @@
+{
+  "scope": "Read-only graph audit on five completed and two recovered failed quantum geometries. No quantum recomputation, coordinate change or retrospective replacement of cohort outcomes. Original SCF, specified-stereo and geometry-limit failures remain in their original records.",
+  "records": [
+    {
+      "cohort_index": 0,
+      "original_status": "completed",
+      "revised_check": {
+        "source_smiles": "C1=CB2OC3=C(CNCC3)c3cc4ccccc4c(c32)N1",
+        "source_graph_compatible": true,
+        "recovered_smiles": "C1=CB2OC3=C(CNCC3)c3cc4ccccc4c(c32)N1",
+        "graph_preserved": true,
+        "changed_bonds": [],
+        "changed_atom_charges": [],
+        "recovered_identity": {
+          "identity_match": true,
+          "constitution_match": true,
+          "source_specified_stereo_preserved": true,
+          "identity_status": "exact"
+        },
+        "graph_check_status": "consistent"
+      }
+    },
+    {
+      "cohort_index": 2,
+      "original_status": "completed",
+      "revised_check": {
+        "source_smiles": "C=C(/C=[O+]/[O-])c1cn(B2C=CNC=C2)nn1",
+        "source_graph_compatible": true,
+        "recovered_smiles": "C=C(/C=[O+]/[O-])c1cn(B2C=CNC=C2)nn1",
+        "graph_preserved": true,
+        "changed_bonds": [],
+        "changed_atom_charges": [],
+        "recovered_identity": {
+          "identity_match": true,
+          "constitution_match": true,
+          "source_specified_stereo_preserved": true,
+          "identity_status": "exact"
+        },
+        "graph_check_status": "consistent"
+      }
+    },
+    {
+      "cohort_index": 5,
+      "original_status": "completed",
+      "revised_check": {
+        "source_smiles": "[H]\\N=C1/C(O)=C2BC3=CCC4=C(N=CNC=C4)B3C2=C(C#N)/C1=C/C=[O+]/[O-]",
+        "source_graph_compatible": true,
+        "recovered_smiles": "[H]\\N=C1/C(O)=C2BC3=CCC4=C(N=CNC=C4)B3C2=C(C#N)/C1=C/C=[O+]/[O-]",
+        "graph_preserved": true,
+        "changed_bonds": [],
+        "changed_atom_charges": [],
+        "recovered_identity": {
+          "identity_match": true,
+          "constitution_match": true,
+          "source_specified_stereo_preserved": true,
+          "identity_status": "exact"
+        },
+        "graph_check_status": "consistent"
+      }
+    },
+    {
+      "cohort_index": 7,
+      "original_status": "completed",
+      "revised_check": {
+        "source_smiles": "O=c1oc2c(c3c(O)cccc13)BC1=CCCCB1C2",
+        "source_graph_compatible": true,
+        "recovered_smiles": "O=c1oc2c(c3c(O)cccc13)BC1=CCCCB1C2",
+        "graph_preserved": true,
+        "changed_bonds": [],
+        "changed_atom_charges": [],
+        "recovered_identity": {
+          "identity_match": true,
+          "constitution_match": true,
+          "source_specified_stereo_preserved": true,
+          "identity_status": "exact"
+        },
+        "graph_check_status": "consistent"
+      }
+    },
+    {
+      "cohort_index": 9,
+      "original_status": "completed",
+      "revised_check": {
+        "source_smiles": "OC1=C2C=CC=CB2c2cc3cccn3c3c2C1=CNN3",
+        "source_graph_compatible": true,
+        "recovered_smiles": "OC1=C2C=CC=CB2c2cc3cccn3c3c2C1=CNN3",
+        "graph_preserved": true,
+        "changed_bonds": [],
+        "changed_atom_charges": [],
+        "recovered_identity": {
+          "identity_match": true,
+          "constitution_match": true,
+          "source_specified_stereo_preserved": true,
+          "identity_status": "exact"
+        },
+        "graph_check_status": "consistent"
+      }
+    },
+    {
+      "cohort_index": 3,
+      "original_status": "failed",
+      "revised_check": {
+        "source_smiles": "C=c1ccc2[b-]([nH+]1)C1=N/C(=C\\[C@H](N)[C@H]3N[C@@H]4C[CH-][C@H]34)OCC1=CC=[N+]=2",
+        "source_graph_compatible": true,
+        "recovered_smiles": "C=C1C=CC2=[B-]3C4=N/C(=C\\[C@H](N)[C@H]5N[C@@H]6C[C@H]([C@H]56)[N@@H+]31)OCC4=CC=N2",
+        "graph_preserved": false,
+        "changed_bonds": [
+          {
+            "atoms": [
+              2,
+              3
+            ],
+            "source": 1.5,
+            "inferred": 2.0,
+            "distance_A": 1.3623969592596281
+          },
+          {
+            "atoms": [
+              2,
+              5
+            ],
+            "source": 1.5,
+            "inferred": 1.0,
+            "distance_A": 1.4607486948209207
+          },
+          {
+            "atoms": [
+              3,
+              6
+            ],
+            "source": 1.5,
+            "inferred": 1.0,
+            "distance_A": 1.45418622267019
+          },
+          {
+            "atoms": [
+              4,
+              5
+            ],
+            "source": 2.0,
+            "inferred": 1.0,
+            "distance_A": 1.37195730534709
+          },
+          {
+            "atoms": [
+              5,
+              21
+            ],
+            "source": 1.5,
+            "inferred": 2.0,
+            "distance_A": 1.4870118880458367
+          },
+          {
+            "atoms": [
+              6,
+              22
+            ],
+            "source": 1.5,
+            "inferred": 1.0,
+            "distance_A": 1.4749168806726531
+          },
+          {
+            "atoms": [
+              12,
+              22
+            ],
+            "source": null,
+            "inferred": 1.0,
+            "distance_A": 1.544813729705395
+          },
+          {
+            "atoms": [
+              21,
+              22
+            ],
+            "source": 1.5,
+            "inferred": 1.0,
+            "distance_A": 1.5958002470788992
+          }
+        ],
+        "changed_atom_charges": [
+          {
+            "atom_index": 4,
+            "element": "N",
+            "source": 1,
+            "inferred": 0
+          },
+          {
+            "atom_index": 12,
+            "element": "C",
+            "source": -1,
+            "inferred": 0
+          }
+        ],
+        "recovered_identity": {
+          "identity_match": false,
+          "constitution_match": false,
+          "source_specified_stereo_preserved": false,
+          "identity_status": "constitution_changed"
+        },
+        "graph_check_status": "reconstruction_disagrees"
+      }
+    },
+    {
+      "cohort_index": 8,
+      "original_status": "failed",
+      "revised_check": {
+        "source_smiles": "[H]/N=C/c1[bH-][o+]c2ccc[n+]3cc4c(c1[c-]c[n+]1c([C@H]([O-])O)ccc41)c23",
+        "source_graph_compatible": false,
+        "recovered_smiles": "OC(O)c1ccc2c3cn4cccc5[o+][bH-]c6c[nH+]c([c-]n12)c6c3c54",
+        "graph_preserved": false,
+        "source_graph_error": "bond_geometry: 35-7 (H-C) length 1.816837 A",
+        "changed_bonds": [
+          {
+            "atoms": [
+              6,
+              33
+            ],
+            "source": null,
+            "inferred": 1.5,
+            "distance_A": 1.407535388910648
+          },
+          {
+            "atoms": [
+              7,
+              35
+            ],
+            "source": 1.0,
+            "inferred": null,
+            "distance_A": 1.816836674933629
+          },
+          {
+            "atoms": [
+              30,
+              32
+            ],
+            "source": 1.0,
+            "inferred": 1.5,
+            "distance_A": 1.4091581548479786
+          },
+          {
+            "atoms": [
+              32,
+              33
+            ],
+            "source": 2.0,
+            "inferred": 1.5,
+            "distance_A": 1.3378288300939516
+          },
+          {
+            "atoms": [
+              35,
+              36
+            ],
+            "source": null,
+            "inferred": 1.0,
+            "distance_A": 1.0127275052054934
+          }
+        ],
+        "changed_atom_charges": [
+          {
+            "atom_index": 6,
+            "element": "C",
+            "source": -1,
+            "inferred": 0
+          },
+          {
+            "atom_index": 7,
+            "element": "C",
+            "source": 0,
+            "inferred": -1
+          },
+          {
+            "atom_index": 8,
+            "element": "N",
+            "source": 1,
+            "inferred": 0
+          },
+          {
+            "atom_index": 20,
+            "element": "N",
+            "source": 1,
+            "inferred": 0
+          },
+          {
+            "atom_index": 33,
+            "element": "N",
+            "source": 0,
+            "inferred": 1
+          },
+          {
+            "atom_index": 36,
+            "element": "O",
+            "source": -1,
+            "inferred": 0
+          }
+        ],
+        "recovered_identity": {
+          "identity_match": false,
+          "constitution_match": false,
+          "source_specified_stereo_preserved": false,
+          "identity_status": "constitution_changed"
+        },
+        "graph_check_status": "incompatible_source_graph"
+      }
+    }
+  ],
+  "source_sha256": {
+    "boron_quantum_input_20261112.sdf": "83e83f6536687d46e0e0b80e810ca4e44733562a3619b09aa2f4dc96414f5c5b",
+    "boron_quantum_cohort_20261112.json": "13c4873c3055014b6f949e4849caea9b55096545adf381da1a944ada03bb27b0",
+    "boron_failed_final_state3_20261112.json": "615348bfb2a106f95ed5484fcf387de4d2bf463b42e7f6d0908cec3501f1b523",
+    "boron_failed_final_state8_20261112.json": "3d71f7c300d45ce5b57f18fc36ddb9e610d51ed28f86d42c27830c462f6c2db5"
+  },
+  "code_revision": "ce02739",
+  "unchanged_graph_decisions": 7
+}

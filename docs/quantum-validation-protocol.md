@@ -212,3 +212,9 @@ a false rejection of unchanged imine connectivity without changing bond-length,
 collision or electronic-state criteria. See the [fixed-coordinate diagnostic](bond-perception-diagnostic.md).
 Existing experiment snapshots and previously reported cohort outcomes are not
 silently replaced by the revised check.
+
+A read-only recheck of the five completed B-cohort geometries and recovered
+failed geometries 3 and 8 leaves all seven graph decisions unchanged. New C-N
+bonding and hydrogen transfer still fail. The original SCF, specified-stereo and
+geometry-limit failures are not rerun or relabeled. [The recheck](experiments/quantum_identity_recheck_20261112.json)
+records the unchanged coordinates' source hashes and detailed graph decisions.
