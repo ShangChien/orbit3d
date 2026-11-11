@@ -41,3 +41,22 @@ or upstream pretraining. Inference seeds remain 2026–2028 for each trained mod
 The portable `scripts/run_sft_duration_campaign.py` runs the continuation,
 validation diagnostics and the same six evaluations per milestone. Isolated
 source snapshots keep ongoing jobs independent of later repository edits.
+
+## First completed continuation (seed 42; other seeds pending)
+
+| Total SFT steps | Window | Attempts | Valid | In domain | DPA joint | Fingerprint joint |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 5000 control | Original | 192 | 113 | 9 | 4 | 4 |
+| 10000 | Original | 192 | 122 | 9 | 3 | 2 |
+| 20000 | Original | 192 | 126 | 15 | 3 | 3 |
+| 5000 control | Central | 192 | 108 | 13 | 3 | 2 |
+| 10000 | Central | 192 | 112 | 9 | 2 | 2 |
+| 20000 | Central | 192 | 119 | 18 | 5 | 5 |
+
+At 10000 steps, valid B/Si-containing outputs total 6/26; at 20000, 23/27.
+The 10000-step teacher-forced Si accuracy is 25/28 versus 0/28 for the 5000-step
+control. These are improved element observations, while end-to-end gains remain
+small and target-dependent. This is one stochastic continuation, not a
+three-seed conclusion. The public `experiments/sft_duration_seed42_20261112.json`
+explicitly marks the three-seed matrix incomplete and leaves the training-seed
+standard deviation undefined. Seeds 43 and 44 remain in progress.

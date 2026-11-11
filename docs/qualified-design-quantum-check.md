@@ -26,3 +26,12 @@ original target-window membership and graph-preservation status. The original
 OCELOT per-molecule omega/geometries remain unavailable; these calculations use
 the same internally defined level as the earlier quantum diagnostics and do not
 claim exact reproduction of the released CSV protocol.
+
+The fixed selection contains five structures from eight surrogate-qualified
+outputs in the 384-attempt seed-42 evaluation. Original/seed-2028 has no qualified
+candidate and contributes no replacement. The source candidates are original
+2026/ID58, original 2027/ID5, central 2026/ID15, central 2027/ID5 and central
+2028/ID44. All contain only C/H/N/O/F. The new def2 ECP construction therefore
+leaves their Hamiltonians unchanged. The exact selection and input geometries
+are retained in `experiments/qualified20k_selection_20261112.json` and
+`experiments/qualified20k_quantum_input_20261112.sdf`; quantum results are pending.

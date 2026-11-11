@@ -1,0 +1,92 @@
+{
+  "original_seed2026/run_config.json": {
+    "run_config.json": "a9ab9347241414d50f96f7f843e6dda032aec9c212dad513dccfa99908edcdde"
+  },
+  "original_seed2026/summary.json": {
+    "summary.json": "27f1cd4b8bda7c60f7799f6fb1901454a062bfd24fc1371086da0555166e4dae"
+  },
+  "original_seed2026/candidates.csv": {
+    "candidates.csv": "094405c4455939dee8b0d6747dcd9b382216e8a74894a57206da0de35fcbac87"
+  },
+  "original_seed2026/generated.sdf": {
+    "generated.sdf": "961e7b9b7e4cedc47175e20a27344ecf0516420c6852df65a6f99acb1786e858"
+  },
+  "original_seed2026/input_manifest.json": {
+    "input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4"
+  },
+  "original_seed2027/run_config.json": {
+    "run_config.json": "4f3cca5eba00fea7f237493874882f3f1d51c155ea5a258a4199d0432b5f1a1a"
+  },
+  "original_seed2027/summary.json": {
+    "summary.json": "90063b741fa38bab45607bb7405cd059e27cfe9a11987a91934976c25ec457fe"
+  },
+  "original_seed2027/candidates.csv": {
+    "candidates.csv": "6e4260a90702e5489bec93eaba14597b9bb08b9d237c4527be287e62750447ec"
+  },
+  "original_seed2027/generated.sdf": {
+    "generated.sdf": "5c3951934a5a2db40b2df0c56add1523733f5802a24d3b4f16cbdc9025955465"
+  },
+  "original_seed2027/input_manifest.json": {
+    "input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4"
+  },
+  "original_seed2028/run_config.json": {
+    "run_config.json": "3d9d648a3205b129ce423ea4d91872d981eff7c680985045a883d4e8b151c557"
+  },
+  "original_seed2028/summary.json": {
+    "summary.json": "b5bf0868495361cf9ba5aa17d27feddef2735798b73cc335771f0f5dbf5bebc9"
+  },
+  "original_seed2028/candidates.csv": {
+    "candidates.csv": "1ae24be042cba6705669fde3cd588116ee135e2701d04fcd144fcf80bef15730"
+  },
+  "original_seed2028/generated.sdf": {
+    "generated.sdf": "483924d31397e051ea5a74a7031ba7778961e8f44700c9387a37f54a154a151e"
+  },
+  "original_seed2028/input_manifest.json": {
+    "input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4"
+  },
+  "central_seed2026/run_config.json": {
+    "run_config.json": "2f7ccb568368e165370f37c189683f2015ce0b870f61d8f4138974307043f115"
+  },
+  "central_seed2026/summary.json": {
+    "summary.json": "3b0cf0cfe72ece9e0229f1a7371db2fd83d766484f214c98d2dd1216955fe885"
+  },
+  "central_seed2026/candidates.csv": {
+    "candidates.csv": "c40925bc9ca9211a7936fe675ea7776a20ba365791e049775bafa8bdadc7b626"
+  },
+  "central_seed2026/generated.sdf": {
+    "generated.sdf": "bb13c7305da5857a5867e6f001597f028190331d1d7eefb85ca04dfc6eae5290"
+  },
+  "central_seed2026/input_manifest.json": {
+    "input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4"
+  },
+  "central_seed2027/run_config.json": {
+    "run_config.json": "0716069765b45c0b0053a2333a1148cefad0851524b0c64ba112338ced0fa943"
+  },
+  "central_seed2027/summary.json": {
+    "summary.json": "5da70cb4f04692cde6d0b00c82602e5ed174ec5aa94b655d2ade5ac471e16113"
+  },
+  "central_seed2027/candidates.csv": {
+    "candidates.csv": "ea700073a1ba786fab2d60d877106f6adcefd75b63b84c122550551b1bff71b1"
+  },
+  "central_seed2027/generated.sdf": {
+    "generated.sdf": "61e2dec01dbff17b53acdcf9e975b5b82d14a3ce3708c654d5cf96509480b47b"
+  },
+  "central_seed2027/input_manifest.json": {
+    "input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4"
+  },
+  "central_seed2028/run_config.json": {
+    "run_config.json": "57813b5bf26aba89786a9797d8eb0798e2bc8e10315ef2501003c8f015d061d7"
+  },
+  "central_seed2028/summary.json": {
+    "summary.json": "53be7ebfd6795f22076ff0d64efa1ddd7c9d8d53168003b06b35b2cd383a6741"
+  },
+  "central_seed2028/candidates.csv": {
+    "candidates.csv": "cca6cedfccecd1f0d253cd074ffdee9979db9800d8b07e1a1b3b0bcb2bbb030c"
+  },
+  "central_seed2028/generated.sdf": {
+    "generated.sdf": "7a75125f93453563592d0651db03c4e39370ee4e5b515f5f3acf17586ef043d5"
+  },
+  "central_seed2028/input_manifest.json": {
+    "input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4"
+  }
+}

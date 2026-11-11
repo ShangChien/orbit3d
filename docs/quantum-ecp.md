@@ -37,3 +37,16 @@ checks separately, with unchanged thresholds and explicit SCF/grid-response
 settings. A tighter 1e-11 SCF and full-grid-response diagnostic is separate from
 the initial failed run. The standard cohort protocol is not changed midway through
 an experiment, and no GPU-to-CPU fallback is hidden in the evaluator.
+
+The separate tighter check **passes all unchanged gates** on HI and TeH2. At
+SCF tolerance 1e-11 with full grid response, CPU/GPU energy differences are
+6.44e-9/1.20e-8 Ha, force differences 3.02e-7/7.45e-7 eV/Angstrom, and the
+0.001 Angstrom finite-difference force errors 3.16e-5/5.17e-5 eV/Angstrom.
+This is a numerical-convergence diagnostic at the same functional, basis/ECP,
+grid and omega, not evidence that the initial settings passed. It does not change
+an already-running cohort's SCF tolerance or grid-response convention.
+
+[The initial failure](experiments/ecp_initial_failure_20261112.json),
+[grid-response probe](experiments/ecp_grid_probe_20261112.json) and
+[tighter complete check](experiments/ecp_tight_grid_20261112.json) preserve the
+separate outcomes and raw force arrays.

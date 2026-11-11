@@ -1,0 +1,185 @@
+{
+  "passed": true,
+  "completed_cases": 2,
+  "expected_cases": 2,
+  "theory": {
+    "engine": "cpu",
+    "xc": "HYB_GGA_XC_LC_WPBE",
+    "basis": "def2-svp",
+    "ecp_policy": "matching_def2",
+    "tuning_objective": "Jh",
+    "omega_bounds": [
+      0.05,
+      0.5
+    ],
+    "omega_tolerance": 0.001,
+    "omega_geometry_tolerance": 0.01,
+    "max_outer_cycles": 5,
+    "scf_tolerance": 1e-11,
+    "max_scf_cycles": 100,
+    "radial_grid": 99,
+    "angular_grid": 590,
+    "threads": 2,
+    "memory_mb": 4000,
+    "max_geometry_steps": 80
+  },
+  "omega": 0.3,
+  "grid_response": true,
+  "thresholds": {
+    "cpu_gpu_energy_Ha": 1e-07,
+    "cpu_gpu_force_eV_A": 1e-05,
+    "force_finite_difference_eV_A": 0.0002
+  },
+  "scope": "Fixed-omega same-level CPU/GPU Hamiltonian and force check, not tuned OCELOT label accuracy.",
+  "records": [
+    {
+      "molecule": "HI",
+      "coordinates_A": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.61
+        ]
+      ],
+      "engines": {
+        "cpu": {
+          "energy_Ha": -298.3168388256649,
+          "forces_eV_A": [
+            [
+              6.277360165310848e-14,
+              2.435447390236901e-14,
+              -0.10164120206496367
+            ],
+            [
+              -6.277360165310747e-14,
+              -2.4354473902369e-14,
+              0.10164120206514635
+            ]
+          ],
+          "explicit_electrons": 26,
+          "ecp_core_electrons": {
+            "I": 28
+          }
+        },
+        "gpu": {
+          "energy_Ha": -298.31683883210667,
+          "forces_eV_A": [
+            [
+              -2.8640504899317422e-15,
+              3.660095333273837e-15,
+              -0.10164090000055209
+            ],
+            [
+              2.9078860682959965e-15,
+              -3.6550890273231995e-15,
+              0.10164089999927327
+            ]
+          ],
+          "explicit_electrons": 26,
+          "ecp_core_electrons": {
+            "I": 28
+          }
+        }
+      },
+      "cpu_gpu_energy_difference_Ha": 6.441780442401068e-09,
+      "cpu_gpu_force_max_difference_eV_A": 3.020658730784609e-07,
+      "finite_difference_coordinate": 2,
+      "finite_difference_step_A": 0.001,
+      "analytic_force_eV_A": -0.10164090000055209,
+      "finite_difference_force_eV_A": -0.10160925948826864,
+      "finite_difference_error_eV_A": 3.1640512283451216e-05,
+      "checks": {
+        "cpu_gpu_energy": true,
+        "cpu_gpu_force": true,
+        "force_finite_difference": true
+      }
+    },
+    {
+      "molecule": "TeH2",
+      "coordinates_A": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.7,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.7,
+          0.0
+        ]
+      ],
+      "engines": {
+        "cpu": {
+          "energy_Ha": -269.21940172754216,
+          "forces_eV_A": [
+            [
+              0.6585066419781817,
+              0.6585066419779533,
+              -3.535664434650201e-14
+            ],
+            [
+              -0.6507642123329068,
+              -0.007742429644864117,
+              2.882519948991319e-14
+            ],
+            [
+              -0.007742429644859834,
+              -0.6507642123331124,
+              6.241783633430669e-15
+            ]
+          ],
+          "explicit_electrons": 26,
+          "ecp_core_electrons": {
+            "Te": 28
+          }
+        },
+        "gpu": {
+          "energy_Ha": -269.21940173954056,
+          "forces_eV_A": [
+            [
+              0.6585058968862921,
+              0.6585058968906311,
+              4.9922312111298565e-14
+            ],
+            [
+              -0.650763511496723,
+              -0.007742385391454548,
+              -3.531554674953675e-14
+            ],
+            [
+              -0.007742385391250809,
+              -0.6507635114973624,
+              -1.4411370704320204e-14
+            ]
+          ],
+          "explicit_electrons": 26,
+          "ecp_core_electrons": {
+            "Te": 28
+          }
+        }
+      },
+      "cpu_gpu_energy_difference_Ha": 1.1998395166301634e-08,
+      "cpu_gpu_force_max_difference_eV_A": 7.450918895202108e-07,
+      "finite_difference_coordinate": 1,
+      "finite_difference_step_A": 0.001,
+      "analytic_force_eV_A": 0.6585058968906311,
+      "finite_difference_force_eV_A": 0.6584541825452398,
+      "finite_difference_error_eV_A": 5.171434539130715e-05,
+      "checks": {
+        "cpu_gpu_energy": true,
+        "cpu_gpu_force": true,
+        "force_finite_difference": true
+      }
+    }
+  ]
+}

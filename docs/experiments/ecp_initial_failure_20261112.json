@@ -1,0 +1,8 @@
+{
+  "status": "failed",
+  "stage": "HI CPU/GPU force comparison",
+  "atol_eV_A": 1e-05,
+  "reported_max_abs_difference_eV_A": 1.95430375e-05,
+  "full_log_sha256": "4e4fb2873ba6b86c6295b6a69716c2dfde810067d9e06e23a3b698059788c278",
+  "original_failure_log": "Traceback (most recent call last):\n  File \"${ASSET_ROOT}/orbit3d_clean_20261111/workspaces/ecp-fix/scripts/validate_quantum_ecp.py\", line 72, in <module>\n    main()\n  File \"${ASSET_ROOT}/orbit3d_clean_20261111/workspaces/ecp-fix/scripts/validate_quantum_ecp.py\", line 47, in main\n    np.testing.assert_allclose(values['cpu']['forces_eV_A'], values['gpu']['forces_eV_A'], rtol=0, atol=1e-5)\n  File \"${ASSET_ROOT}/orbit3d_quantum_20261111/gpu_venv_19/lib/python3.12/site-packages/numpy/testing/_private/utils.py\", line 1715, in assert_allclose\n    assert_array_compare(compare, actual, desired, err_msg=str(err_msg),\n  File \"${ASSET_ROOT}/orbit3d_quantum_20261111/gpu_venv_19/lib/python3.12/site-packages/numpy/testing/_private/utils.py\", line 921, in assert_array_compare\n    raise AssertionError(msg)\nAssertionError: \nNot equal to tolerance rtol=0, atol=1e-05\n\nMismatched elements: 2 / 6 (33.3%)\nMax absolute difference among violations: 1.95430375e-05\nMax relative difference among violations: 0.00019496\n ACTUAL: array([[ 2.071642e-14,  5.919584e-15, -1.011647e-01],\n       [ 1.419760e-13, -6.805761e-14,  1.002585e-01]])\n DESIRED: array([[-4.485085e-15, -1.960913e-15, -1.011452e-01],\n       [ 6.818376e-14,  5.439007e-14,  1.002389e-01]])\n"
+}
