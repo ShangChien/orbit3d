@@ -1,0 +1,249 @@
+{
+  "scope": "Same five graph-validated quantum geometries, four paired targets; nominal internally consistent LC-wPBE/def2-SVP diagnostic, not reproduction of OCELOT reference protocol",
+  "attempted_quantum_cohort": 10,
+  "graph_validated_and_TDDFT_completed": 5,
+  "failed_indices": [
+    1,
+    3,
+    4,
+    6,
+    8
+  ],
+  "target_names": [
+    "homo",
+    "lumo",
+    "s0s1",
+    "s0t1"
+  ],
+  "records": [
+    {
+      "quantum_index": 0,
+      "candidate_id": 6,
+      "smiles": "C1=CB2OC3=C(CNCC3)c3cc4ccccc4c(c32)N1",
+      "omega": 0.2085,
+      "nominal_level_reference_eV": [
+        -6.716013908462565,
+        0.1891145738734256,
+        3.626013982588375,
+        2.3548630353835507
+      ],
+      "dpa_adapter_prediction_eV": [
+        -6.43068790435791,
+        -0.012874345295131207,
+        3.3738555908203125,
+        2.348863124847412
+      ],
+      "fingerprint_prediction_eV": [
+        -6.533784127421412,
+        0.032288714171076205,
+        3.5702189653689076,
+        2.4598511514516166
+      ],
+      "domain": {
+        "similarity": 0.26666666666666666,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "dpa_rms_force_at_quantum_geometry_eV_A": 0.5217219591140747,
+      "quantum_rms_force_eV_A": 0.0008070121930529831
+    },
+    {
+      "quantum_index": 2,
+      "candidate_id": 8,
+      "smiles": "C=C(/C=[O+]/[O-])c1cn(B2C=CNC=C2)nn1",
+      "omega": 0.2788,
+      "nominal_level_reference_eV": [
+        -8.034102129329499,
+        -0.6488010662112063,
+        2.2769422410619504,
+        1.78252700938626
+      ],
+      "dpa_adapter_prediction_eV": [
+        -7.338357925415039,
+        -0.976881742477417,
+        3.5425233840942383,
+        2.1156492233276367
+      ],
+      "fingerprint_prediction_eV": [
+        -7.477713102813413,
+        -0.31921540532920895,
+        4.065907946643953,
+        2.7085514267993034
+      ],
+      "domain": {
+        "similarity": 0.2,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "dpa_rms_force_at_quantum_geometry_eV_A": 0.630387008190155,
+      "quantum_rms_force_eV_A": 0.0014029969455096971
+    },
+    {
+      "quantum_index": 5,
+      "candidate_id": 34,
+      "smiles": "[H]\\N=C1/C(O)=C2BC3=CCC4=C(N=CNC=C4)B3C2=C(C#N)/C1=C/C=[O+]/[O-]",
+      "omega": 0.2235,
+      "nominal_level_reference_eV": [
+        -7.319177432458909,
+        -2.4474590850624995,
+        1.7556654822845852,
+        1.1976548277395325
+      ],
+      "dpa_adapter_prediction_eV": [
+        -6.729592800140381,
+        -2.031519651412964,
+        2.0765233039855957,
+        0.9447767734527588
+      ],
+      "fingerprint_prediction_eV": [
+        -7.228868233009231,
+        -1.2452621325224154,
+        3.137200184244674,
+        1.9800451885173123
+      ],
+      "domain": {
+        "similarity": 0.14814814814814814,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "dpa_rms_force_at_quantum_geometry_eV_A": 0.8292360305786133,
+      "quantum_rms_force_eV_A": 0.0017027493243863836
+    },
+    {
+      "quantum_index": 7,
+      "candidate_id": 51,
+      "smiles": "O=c1oc2c(c3c(O)cccc13)BC1=CCCCB1C2",
+      "omega": 0.2215,
+      "nominal_level_reference_eV": [
+        -7.650617960442113,
+        -0.40320297699993113,
+        3.8086370325851338,
+        2.740354168335964
+      ],
+      "dpa_adapter_prediction_eV": [
+        -7.300511360168457,
+        -0.9718613624572754,
+        3.1621360778808594,
+        2.3269872665405273
+      ],
+      "fingerprint_prediction_eV": [
+        -7.344617841817352,
+        -0.5465397615679813,
+        3.635462580465184,
+        2.5452483900087706
+      ],
+      "domain": {
+        "similarity": 0.3157894736842105,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "dpa_rms_force_at_quantum_geometry_eV_A": 0.4828040301799774,
+      "quantum_rms_force_eV_A": 0.000595963992293782
+    },
+    {
+      "quantum_index": 9,
+      "candidate_id": 62,
+      "smiles": "OC1=C2C=CC=CB2c2cc3cccn3c3c2C1=CNN3",
+      "omega": 0.2143,
+      "nominal_level_reference_eV": [
+        -6.390490770879686,
+        -0.7194583322498436,
+        2.615867353181284,
+        1.5986192243687072
+      ],
+      "dpa_adapter_prediction_eV": [
+        -6.133977890014648,
+        -0.5828166007995605,
+        2.7369258403778076,
+        1.6530499458312988
+      ],
+      "fingerprint_prediction_eV": [
+        -6.6998576389837945,
+        0.17005567086277362,
+        3.7353207133962987,
+        2.637329032742062
+      ],
+      "domain": {
+        "similarity": 0.208955223880597,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "dpa_rms_force_at_quantum_geometry_eV_A": 0.5092108845710754,
+      "quantum_rms_force_eV_A": 0.001893640234656868
+    }
+  ],
+  "aggregate": {
+    "dpa_adapter": {
+      "paired_molecules": 5,
+      "mean_absolute_disagreement_eV": {
+        "homo": 0.43545486429526736,
+        "lumo": 0.3302618291983861,
+        "s0s1": 0.5212313596804318,
+        "s0t1": 0.21195956040446343
+      },
+      "paired_vertical_gap_disagreement": {
+        "n": 5,
+        "difference": "s0s1 - s0t1",
+        "unit": "eV",
+        "mae_eV": 0.41042302099067784,
+        "rmse_eV": 0.5134271620223541,
+        "mean_signed_error_eV": 0.2187060073343731,
+        "absolute_difference_of_means_eV": 0.2187060073343731
+      }
+    },
+    "fingerprint": {
+      "paired_molecules": 5,
+      "mean_absolute_disagreement_eV": {
+        "homo": 0.28885899874715726,
+        "lumo": 0.5442918521610196,
+        "s0s1": 0.9037846474193045,
+        "s0t1": 0.6094436961918875
+      },
+      "paired_vertical_gap_disagreement": {
+        "n": 5,
+        "difference": "s0s1 - s0t1",
+        "unit": "eV",
+        "mae_eV": 0.3451087281375409,
+        "rmse_eV": 0.4767584983155429,
+        "mean_signed_error_eV": 0.28079547482252754,
+        "absolute_difference_of_means_eV": 0.28079547482252754
+      }
+    }
+  },
+  "limitations": "All failures remain in the original 10-molecule denominator. Differences are conditional on the five completed cases; these are newly generated OOD structures, not a held-out OCELOT accuracy benchmark. All five are outside the declared OCELOT applicability domain. MLIP force values at quantum geometries are cross-potential diagnostics, not errors against the same-theory training forces.",
+  "input_sha256": {
+    "quantum_results": {
+      "summary.json": "0c9c514178ddd315baea73eee073f16da96ec41284d58acc08bc60df08f50e91"
+    },
+    "source_structures": {
+      "boron_cohort_20261112.sdf": "83e83f6536687d46e0e0b80e810ca4e44733562a3619b09aa2f4dc96414f5c5b"
+    },
+    "quantum_geometry_0": {
+      "optimized.sdf": "18fa1581a27e3e9eb74afe6daaadbb78a6f4d2c1a8e072246e255a9483fc5385"
+    },
+    "quantum_geometry_2": {
+      "optimized.sdf": "c64be7a008acfa5d16d7549b2455b1f7a68a695d9da94e53fdc6ccfe5cae91f8"
+    },
+    "quantum_geometry_5": {
+      "optimized.sdf": "c8bbae6a12b3b7357fdb2528a607d25655f67c75c540186828aaaf54b65171c7"
+    },
+    "quantum_geometry_7": {
+      "optimized.sdf": "cf7cc2697fc5641e274f43d8f3a3fde5738704aa17453a5645c7d5cd0372382a"
+    },
+    "quantum_geometry_9": {
+      "optimized.sdf": "c160d0907e104d1c7d94e99b46ff0ae014d4b8273d594800664e8158262a2896"
+    },
+    "property_model": {
+      "dpa4_prop_adapter.pt": "dc11faab05341c71092043482209440f71081b630e11f86f7396c92e3c30c8e0",
+      "oracle_meta.json": "978e1e71a606a5b9060a1cf1e0dc6261ff680aa87d551781eb7ee4467447927a",
+      "target_scaler.ss": "c95ba9c14fdac2c0d16100947d9ef570a68a4fb38c502668b24669216928cb5d"
+    },
+    "forcefield": {
+      "DPA4-Mini-OMol25-100M-v20260820.pt": "ae8c2574df58b527f84b5eac4631bd2f5722d99dc62c2b826bea365b02df033c"
+    },
+    "fingerprint_model": {
+      "ensemble.joblib": "82759105141d976c062be67c79a4075c7e1ee6b09c29ff5e186af4f58ce6413d",
+      "metadata.json": "9eaf28e936f2db63482325c365fd3fc15376a172acad2ad3bfb6e857c8f86447"
+    }
+  }
+}

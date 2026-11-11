@@ -50,3 +50,24 @@ and its naphthalene labels have not been reproduced by this implementation. Thes
 are internally consistent protocol diagnostics, not a reproduced OCELOT accuracy
 benchmark. [Full paired records and original manifest](experiments/boron_quantum_cohort_20261112.json)
 preserve the exact source hash, settings, coordinates, forces and all failures.
+
+## Paired surrogate diagnostic at the quantum geometries
+
+All five completed structures are outside the declared wide-OCELOT applicability
+domain; the generation workflow would exclude them from qualified designs. For
+transparency, the frozen four-target models were nevertheless evaluated on the
+same saved optimized geometries as an extrapolation diagnostic:
+
+| Model | HOMO | LUMO | Vertical S1 | Vertical T1 | Paired S1–T1 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| DPA property adapter | 0.4355 | 0.3303 | 0.5212 | 0.2120 | 0.4104 |
+| Fingerprint ensemble | 0.2889 | 0.5443 | 0.9038 | 0.6094 | 0.3451 |
+
+Values are mean absolute disagreements in eV on the five completed cases, against
+the internally defined quantum protocol. The five failures remain in the original
+cohort; they do not receive fabricated property values. These results are neither
+OCELOT holdout MAEs nor evidence of accuracy in the model's applicability domain.
+DPA forces at these quantum geometries are also retained as cross-potential
+diagnostics; they do not compare identical-theory training forces. [Every paired
+value, domain decision and input hash](experiments/boron_quantum_oracles_20261112.json)
+is available in the public record.
