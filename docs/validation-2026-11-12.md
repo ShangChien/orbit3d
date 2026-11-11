@@ -1,12 +1,21 @@
 # Current source and installed-wheel validation
 
-154 CPU regression tests passed on macOS with the frozen dependency set, including
+162 CPU regression tests passed on macOS with the frozen dependency set, including
 complete octree decisions and KL gradients, electronic-state and graph checks,
 paired target errors, target/element migration, fixed-scaffold world coordinates,
 full replay comparison and real serialized Uni-QSAR loading. Two sklearn warnings
 identify the legacy calibrated SVC API used intentionally in its checkpoint test;
 they are not suppressed. CUDA computation is performed only on the remote Linux
 runtime.
+
+Three additional real-PySCF regressions skip on that macOS environment and pass
+in the remote quantum environment, including a fresh wheel installed into an
+isolated import directory. They check matching def2 ECP electron counts,
+unchanged light-element integrals and preservation of legacy Hamiltonian records.
+The [installed-wheel evidence](experiments/quantum_ecp_wheel_20261112.json) and
+[numerical ECP diagnostics](quantum-ecp.md) distinguish these three passing
+regressions from the initial failed CPU/GPU force gate. CI now includes the CPU
+quantum extra; the hosted workflow has not run for these local commits.
 
 A fresh Python 3.11 environment was populated offline from the locked dependency
 cache with `uv sync --frozen --extra octree --no-install-project --offline`, then
