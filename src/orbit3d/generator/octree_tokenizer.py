@@ -170,6 +170,9 @@ def mol3d_to_rdkit_mol(inst: Mol3DInstance) -> Optional[Chem.Mol]:
         Chem.SanitizeMol(mol)
         if len(Chem.GetMolFrags(mol)) != 1 or Chem.GetFormalCharge(mol) != inst.charge:
             return None
+        electrons = sum(a.GetAtomicNum() + a.GetTotalNumHs() for a in mol.GetAtoms()) - inst.charge
+        if inst.multiplicity < 1 or inst.multiplicity > electrons + 1 or (electrons - inst.multiplicity + 1) % 2:
+            return None
         if inst.multiplicity == 1 and any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
             return None
         distances = np.linalg.norm(coords[:, None] - coords[None, :], axis=-1)
@@ -201,13 +204,14 @@ def mol3d_to_validated_rdkit_mol(inst: Mol3DInstance) -> Chem.Mol:
     return mol
 
 
-def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray) -> Optional[Mol3DInstance]:
+def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True) -> Optional[Mol3DInstance]:
     """Converts an RDKit 3D Mol to a `Mol3DInstance`."""
     if mol is None or mol.GetNumConformers() == 0:
         return None
     conf = mol.GetConformer()
     coords = conf.GetPositions().astype(np.float32)
-    coords = coords - coords.mean(axis=0, keepdims=True)
+    if center:
+        coords = coords - coords.mean(axis=0, keepdims=True)
     atypes = []
     for a in mol.GetAtoms():
         sym = a.GetSymbol()

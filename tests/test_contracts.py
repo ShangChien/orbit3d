@@ -42,6 +42,22 @@ def test_disconnected_invalid():
     assert compute_mol_stability(inst)["mol_stable"] == 0
 
 
+def test_charge_spin_and_fixed_coordinate_frame_are_preserved():
+    from dataclasses import replace
+    charged = embedded('[NH4+]')
+    charged.GetConformer().SetPositions(charged.GetConformer().GetPositions() + [10, 20, 30])
+    inst = rdkit_mol_to_mol3d_instance(charged, np.zeros(1), center=False)
+    result = mol3d_to_validated_rdkit_mol(inst)
+    assert Chem.GetFormalCharge(result) == 1
+    np.testing.assert_allclose(result.GetConformer().GetPositions(), charged.GetConformer().GetPositions(), atol=2e-6)
+    radical = embedded('[CH3]')
+    radical.SetIntProp('SpinMultiplicity', 2)
+    inst = rdkit_mol_to_mol3d_instance(radical, np.zeros(1))
+    assert mol3d_to_validated_rdkit_mol(inst).GetIntProp('SpinMultiplicity') == 2
+    assert mol3d_to_rdkit_mol(replace(inst, multiplicity=3)) is None
+    assert mol3d_to_rdkit_mol(replace(inst, multiplicity=1)) is None
+
+
 def test_eos_and_length():
     model = ConditionalUni3DAR(d_model=16, n_heads=2, n_layers=1)
     with torch.no_grad():
