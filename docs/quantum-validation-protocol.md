@@ -179,3 +179,13 @@ The original quantum failure stays unchanged. The stored-final-SCF geometry,
 source/checkpoint hashes and every differing edge/charge are recorded in
 `experiments/boron_graph_difference3_20261112.json`. Future graph inspections
 include these differences automatically; no geometry threshold is loosened.
+
+Saved-state recovery for failed cohort molecules 3 and 8 reproduces their final
+SCF energies within 2.4e-10 Hartree, without retuning or reoptimizing. Their DFT RMS
+forces are 0.000840 and 0.002232 eV/Å, yet both retain their failed graph status.
+Molecule 8's original C–H distance is 1.8168 Å, while the same H lies 1.0127 Å
+from an O that was not its original bonded partner. These records show why low
+residual force alone is insufficient to certify preserved molecular identity.
+The full geometries, raw forces and inferred edge/charge differences are in
+`experiments/boron_failed_final_state3_20261112.json` and
+`experiments/boron_failed_final_state8_20261112.json`.
