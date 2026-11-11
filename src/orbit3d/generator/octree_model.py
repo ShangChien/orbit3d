@@ -393,6 +393,10 @@ class ConditionalUni3DAR(Uni3DARSampler):
             return mask_terminal_element_logits(logits, electron_state['accumulated'][selected],
                                                 electron_state['terminal'][selected], electron_parity, parities)
 
+        for name, value in [('tree', tree_temp), ('atom', atom_temp), ('xyz', xyz_temp)]:
+            if value is not None and (not math.isfinite(value) or value <= 0):
+                raise ValueError(f'{name} sampling temperature must be finite and positive')
+
         orig_tree_t = list(self.tree_temperature)
         orig_atom_t = list(self.atom_temperature)
         orig_xyz_t = list(self.xyz_temperature)

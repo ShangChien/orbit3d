@@ -310,6 +310,9 @@ def run_octree_from_config(cfg, config_path=None):
                 high,
                 active,
                 cfg_scale=float(inference.get("cfg_scale", 1.0)),
+                tree_temp=inference.get('tree_temperature'),
+                atom_temp=inference.get('atom_temperature'),
+                xyz_temp=inference.get('xyz_temperature'),
                 electron_parity=inference.get('electron_parity'),
                 evaluate_self_consistency=True,
                 row_seeds=[candidate_seed(inference.get("base_seed", 2026), begin + j) for j in range(count)]
@@ -492,6 +495,10 @@ def run_octree_from_config(cfg, config_path=None):
     similarities = [s for i, fp in enumerate(fps) for s in DataStructs.BulkTanimotoSimilarity(fp, fps[:i])]
     summary = {
         "backend": f"uni3dar_octree_v{model.condition_version}",
+        "sampling_temperatures": {
+            name: inference.get(name + '_temperature', list(getattr(model, name + '_temperature')))
+            for name in ['tree', 'atom', 'xyz']
+        },
         "attempted": len(records),
         "raw_valid": sum(bool(r.get("raw_valid", False)) for r in records),
         "domain_eligible": len(candidates),

@@ -334,3 +334,13 @@ def test_incompatible_intervals_and_margin_use_only_valid_negative_pairs():
     torch.testing.assert_close(negative.grad, torch.tensor([-.5, 0.]))
     _, eligible = incompatible_condition_indices(torch.zeros(2, 2))
     assert not eligible.any()
+
+
+@pytest.mark.parametrize('value', [0., -1., float('nan'), float('inf')])
+def test_sampling_temperature_rejects_invalid_values(value):
+    args = build_default_uni3dar_args(1)
+    args.emb_dim, args.num_head, args.layer = 96, 4, 2
+    model = ConditionalUni3DAR(args, AtomFeatDict(args), 2)
+    y = torch.zeros(1, 2)
+    with pytest.raises(ValueError, match='temperature'):
+        model.generate_conditional_trajectories(y, y, torch.ones_like(y, dtype=torch.bool), atom_temp=value)
