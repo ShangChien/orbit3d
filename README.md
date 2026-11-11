@@ -7,7 +7,8 @@ property oracles and constrained force-field refinement.
 
 The executable mainline is **Uni-3DAR octree → interval adaptation → candidate
 ranking → DPA4 or HyFF refinement**. GRPO is available for experiments and disabled
-in the recommended configuration pending multiple-training-seed benefit assessment. The initial
+in the recommended configuration: the completed three-training-seed ablation does
+not show a consistent component advantage. The initial
 BF16 comparison is retained as a numerical diagnostic. The dense-grid implementation remains a baseline.
 
 ![Five-stage architecture](paper/figures/fig0_orbit3d_system_architecture.svg)
@@ -16,8 +17,8 @@ BF16 comparison is retained as a numerical diagnostic. The dense-grid implementa
 
 - MIM-Flow QM9s: explicit-H structure adaptation, fixed train/dev/test selection,
   molecular identity checks and original spectrum preservation.
-- OCELOT: full compatible-subset fingerprint training and a separate small 3D
-  bootstrap-DPA property pilot for HOMO/LUMO, with scaffold-separated evaluation.
+- OCELOT: scaffold-separated HOMO/LUMO/vertical-S1/T1 training; DPA and HyFF
+  use the same 8192/512/512 conformers, with an independent fingerprint reference.
 - Real pretrained octree generation, multi-target conditioning, chemical checks,
   candidate ranking, real DPA4 forces and finite-step property/energy acceptance.
 - HyFF-presto property adapters, calibration and the same octree end-to-end path;
@@ -82,7 +83,8 @@ python scripts/train_ocelot_3d.py --help
 QM9s spectral vectors are not HOMO/LUMO labels. In the main configuration,
 `label_source: oracle` explicitly predicts adaptation labels with the OCELOT
 model. Original OCELOT DFT geometries are unavailable in the supplied CSV;
-the 3D property pilot uses ETKDG/MMFF input conformers.
+the initial 3D property pilot uses ETKDG/MMFF conformers; the expanded, matched
+DPA/HyFF experiments use ETKDG/UFF conformers.
 
 Edit the mounted paths in [`configs/qm9s_ocelot_octree.json`](configs/qm9s_ocelot_octree.json), then run:
 
@@ -103,6 +105,9 @@ forcefield, property-model and applicability-domain paths are not loaded.
 [Four-target OCELOT training](docs/ocelot-optical-targets.md) adds vertical S1/T1
 labels, with explicit checkpoint target expansion and unchanged training/test
 geometries. Its paired S1–T1 error is distinct from an adiabatic energy gap.
+The [matched HyFF comparison](docs/hyff-optical-comparison.md) and
+[BRICS generation baseline](docs/brics-baseline.md) retain evaluator disagreements
+and the stronger fragment baseline on the central target window.
 
 Consecutive element/depth migrations retain pending element-supervision
 requirements. Structural-only adaptation cannot clear a property-label
@@ -121,6 +126,10 @@ Each run writes `candidates.csv`, `generated.sdf`, `qualified.sdf`,
 contains all retained/refined candidates; `qualified.sdf` contains those passing
 both property intervals and the configured raw RMS-force threshold. Failed and
 filtered proposals remain in the original candidate denominator.
+
+[Inference bundles](docs/inference-bundles.md) collect the model, scaler, domain,
+wheel and whole-cohort replay artifacts for relocation to persistent storage.
+The verified bundle replays 64 candidates and six exports without training data.
 
 ## Code map
 

@@ -1,0 +1,18 @@
+{
+  "bundled_files_verified": 23,
+  "archive_bytes": 460984320,
+  "archive_sha256": "67d162c567dcd56fd62f391da583311013a3b31eddad027f028bf91d85b34c1e",
+  "package_import_path": "${BUNDLE_ROOT}/runtime/package/orbit3d/__init__.py",
+  "python_version": "3.12.13 | packaged by Anaconda, Inc. | (main, Mar 19 2026, 20:20:58) [GCC 14.3.0]",
+  "runtime": "Existing validated remote dependencies, freshly installed bundled wheel into isolated --target directory; no clean OS/image claim",
+  "replay": {
+    "scaffold_proposals_compared": false,
+    "passed": true,
+    "all_candidates": 64,
+    "exported_molecules": 6,
+    "prediction_atol": 1e-05,
+    "coordinate_atol_A": 1e-05,
+    "raw_tokens_compared": true,
+    "upstream_pretrained_and_training_data_required": false
+  }
+}
