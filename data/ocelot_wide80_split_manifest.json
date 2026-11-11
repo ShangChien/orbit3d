@@ -1,0 +1,54 @@
+{
+  "source_sha256": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985",
+  "rdkit_version": "2026.09.1",
+  "rows": 25251,
+  "target_units": {
+    "homo": "eV",
+    "lumo": "eV",
+    "hl": "eV",
+    "s0s1": "eV",
+    "s0t1": "eV"
+  },
+  "source_geometry": "SMILES only; no original DFT coordinates",
+  "seed": 42,
+  "split_method": "SHA256(seed:Bemis-Murcko scaffold), 80/10/10 thresholds; acyclic structures kept in one group",
+  "max_explicit_atoms": 80,
+  "allowed_elements": [
+    "As",
+    "B",
+    "Br",
+    "C",
+    "Cl",
+    "F",
+    "H",
+    "I",
+    "N",
+    "O",
+    "P",
+    "S",
+    "Se",
+    "Si",
+    "Te"
+  ],
+  "split_counts": {
+    "train": 20356,
+    "valid": 2282,
+    "test": 2322
+  },
+  "excluded_counts": {
+    "conflicting_duplicate_targets": 104,
+    "radical": 1
+  },
+  "duplicate_aliases": 6,
+  "deferred_size": 180,
+  "cross_split_smiles_overlap": 0,
+  "cross_split_scaffold_overlap": 0,
+  "files": {
+    "deferred_size.csv": "6d6ec49e67d95b35c85d04f9f50c0bde1131c58d256b11152fa09aee138333a4",
+    "duplicate_aliases.csv": "c54b4ae40f512b698e90e515d57f5c9496e49c83501459552976b11f38459e09",
+    "excluded.csv": "33190686e4fe790d316ea1176f8f9e9d73a57fe2331de78f5fb1cee982fe9bee",
+    "test.csv": "b2fc45cfd75ef5e6f7b557551bdb0fae0a82f32f5251ddeb8a8d0902e78e734b",
+    "train.csv": "f316b962d5bd456b387de72274c81e3beb0e9b19737a3ff3badcb9fe69c42f65",
+    "valid.csv": "3f3e0d397a5feb50b90562f062201447d615724349632a853e551173e91073d3"
+  }
+}

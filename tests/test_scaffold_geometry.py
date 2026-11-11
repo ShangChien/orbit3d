@@ -53,3 +53,10 @@ def test_empty_attachment_region_and_fragment_dead_end_are_bounded(monkeypatch):
     assert result is None and trace['status'] == 'failed'
     assert len(trace['attempts']) == 3
     assert all(row['status'] == 'rejected' for row in trace['attempts'])
+
+
+def test_explicit_graph_attachment_preserves_boron_element_identity():
+    source = scaffold()
+    result, trace = propose_attachment(source, 'B', next(iter(source.ports)), seed=2026)
+    assert result is not None and trace['status'] == 'completed'
+    assert sum(atom.GetSymbol() == 'B' for atom in result.molecule.GetAtoms()) == 1

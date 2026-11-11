@@ -231,6 +231,19 @@ def test_csv_loader_records_geometry_rejection_without_shifting_labels(tmp_path)
     assert 'MMFF aromaticity/valence unsupported' in evidence['records'][0]['reason']
 
 
+def test_wide_element_geometry_uses_the_explicitly_selected_forcefield():
+    from orbit3d.utils.conformers import ocelot_conformer
+
+    smiles = 'B1Nc2ccccc2C1=Cc1ccccc1'
+    with pytest.raises(ValueError, match='MMFF parameters unavailable'):
+        ocelot_conformer(smiles)
+    molecule = ocelot_conformer(smiles, method='uff')
+    assert any(atom.GetSymbol() == 'B' for atom in molecule.GetAtoms())
+    assert molecule.GetProp('GeometryMethod') == 'etkdgv3_uff'
+    assert not molecule.HasProp('MMFFOptimizationStatus')
+    assert Chem.MolToSmiles(Chem.RemoveHs(molecule)) == Chem.MolToSmiles(Chem.MolFromSmiles(smiles))
+
+
 def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
     import json
     import sys

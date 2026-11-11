@@ -22,7 +22,8 @@ def split_for(scaffold, seed):
     return "train" if fraction < 0.8 else "valid" if fraction < 0.9 else "test"
 
 
-def prepare(source, output, max_atoms=40, seed=42):
+def prepare(source, output, max_atoms=40, seed=42, elements=None):
+    elements = set(ELEMENTS if elements is None else elements)
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite {output}")
     frame = pd.read_csv(source)
@@ -44,7 +45,7 @@ def prepare(source, output, max_atoms=40, seed=42):
             reason = "radical"
         elif len(Chem.GetMolFrags(mol)) != 1:
             reason = "disconnected"
-        elif any(a.GetSymbol() not in ELEMENTS for a in mol.GetAtoms()):
+        elif any(a.GetSymbol() not in elements for a in mol.GetAtoms()):
             reason = "unsupported_element"
         row["canonical_smiles"] = Chem.MolToSmiles(mol, isomericSmiles=True) if mol else ""
         row["explicit_atoms"] = Chem.AddHs(mol).GetNumAtoms() if mol else 0
@@ -90,6 +91,7 @@ def prepare(source, output, max_atoms=40, seed=42):
         "seed": seed,
         "split_method": "SHA256(seed:Bemis-Murcko scaffold), 80/10/10 thresholds; acyclic structures kept in one group",
         "max_explicit_atoms": max_atoms,
+        "allowed_elements": sorted(elements),
         "split_counts": counts,
         "excluded_counts": excluded.exclusion_reason.value_counts().to_dict(),
         "duplicate_aliases": len(aliases),
@@ -111,7 +113,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-atoms", type=int, default=40)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument('--elements', nargs='+', default=sorted(ELEMENTS))
     args = parser.parse_args()
     if args.max_atoms < 1:
         parser.error("--max-atoms must be positive")
-    prepare(args.source, args.output, args.max_atoms, args.seed)
+    prepare(args.source, args.output, args.max_atoms, args.seed, args.elements)

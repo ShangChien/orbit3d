@@ -79,6 +79,21 @@ def test_conflicting_duplicates_quarantined_and_scaffolds_stay_together(tmp_path
     assert frame.groupby("scaffold").partition.nunique().max() == 1
 
 
+def test_ocelot_element_contract_can_expand_without_changing_labels(tmp_path):
+    source = tmp_path / 'source.csv'
+    pd.DataFrame([{'identifier': name, 'smiles': smiles,
+                   **dict.fromkeys(['homo', 'lumo', 'hl', 's0s1', 's0t1'], value)}
+                  for name, smiles, value in [('common', 'CC', 1.), ('boron', 'B(C)(C)C', 9.)]]).to_csv(source, index=False)
+    old = prepare(source, tmp_path / 'old')
+    assert old['excluded_counts'] == {'unsupported_element': 1}
+    wide = prepare(source, tmp_path / 'wide', elements=['H', 'C', 'B'])
+    assert wide['excluded_counts'] == {} and sum(wide['split_counts'].values()) == 2
+    parts = [pd.read_csv(tmp_path / 'wide' / f'{split}.csv') for split in ['train', 'valid', 'test']]
+    rows = pd.concat([part for part in parts if not part.empty])
+    assert rows.set_index('identifier').loc['boron', 'homo'] == 9.
+    assert 'B' in rows.set_index('identifier').loc['boron', 'canonical_smiles']
+
+
 def test_dataset_acquisition_extracts_verified_zip_members_once(tmp_path, monkeypatch):
     import hashlib
     import shutil

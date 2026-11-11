@@ -6,7 +6,9 @@ from rdkit.Chem import AllChem
 from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 
 
-def ocelot_conformer(smiles, seed=42):
+def ocelot_conformer(smiles, seed=42, method='mmff94'):
+    if method not in {'mmff94', 'uff'}:
+        raise ValueError(f'Unknown reconstruction forcefield: {method}')
     molecule = Chem.MolFromSmiles(smiles)
     if molecule is None:
         raise ValueError('Unparseable source SMILES')
@@ -18,16 +20,23 @@ def ocelot_conformer(smiles, seed=42):
     if AllChem.EmbedMolecule(molecule, parameters):
         raise ValueError('ETKDG embedding failed')
     try:
-        if not AllChem.MMFFHasAllMoleculeParams(molecule):
-            raise ValueError('MMFF parameters unavailable')
-        status = AllChem.MMFFOptimizeMolecule(molecule, maxIters=100)
+        if method == 'mmff94':
+            if not AllChem.MMFFHasAllMoleculeParams(molecule):
+                raise ValueError('MMFF parameters unavailable')
+            status = AllChem.MMFFOptimizeMolecule(molecule, maxIters=100)
+        else:
+            if not AllChem.UFFHasAllMoleculeParams(molecule):
+                raise ValueError('UFF parameters unavailable')
+            status = AllChem.UFFOptimizeMolecule(molecule, maxIters=100)
         if status < 0:
-            raise ValueError('MMFF setup failed')
-        checked = mol3d_to_validated_rdkit_mol(rdkit_mol_to_mol3d_instance(molecule, np.empty(0)))
+            raise ValueError(f'{method} setup failed')
+        elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in molecule.GetAtoms()))
+        checked = mol3d_to_validated_rdkit_mol(rdkit_mol_to_mol3d_instance(molecule, np.empty(0), element_table=elements))
     except (Chem.KekulizeException, Chem.AtomValenceException) as exc:
-        raise ValueError('MMFF aromaticity/valence unsupported: ' + str(exc)) from exc
+        raise ValueError(f'{"MMFF" if method == "mmff94" else "UFF"} aromaticity/valence unsupported: ' + str(exc)) from exc
     if Chem.MolToSmiles(Chem.RemoveHs(checked), isomericSmiles=True) != identity:
         raise ValueError('Conformer preparation changed the source chemical identity')
-    molecule.SetIntProp('MMFFOptimizationStatus', int(status))
-    molecule.SetProp('GeometryOrigin', 'ETKDGv3 + MMFF94 (100-step limit); reconstructed, not original DFT')
+    molecule.SetIntProp('MMFFOptimizationStatus' if method == 'mmff94' else 'UFFOptimizationStatus', int(status))
+    molecule.SetProp('GeometryMethod', 'etkdgv3_' + method)
+    molecule.SetProp('GeometryOrigin', f'ETKDGv3 + {method.upper()} (100-step limit); reconstructed, not original DFT')
     return molecule

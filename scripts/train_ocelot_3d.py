@@ -21,6 +21,8 @@ p.add_argument("--weight", required=True)
 p.add_argument("--device", default="cpu")
 p.add_argument("--backend", choices=['dpa4', 'hyff'], default='dpa4')
 p.add_argument("--hyff-tier", default='vivace')
+p.add_argument('--geometry-method', choices=['mmff94', 'uff'], default='mmff94')
+p.add_argument('--prioritize-elements', nargs='*', default=[], help='Include rare-element structures before the deterministic hash sample in each split')
 p.add_argument("--train", type=int, default=512)
 p.add_argument("--eval", type=int, default=64)
 p.add_argument("--epochs", type=int, default=15)
@@ -43,14 +45,20 @@ for split, limit in [("train", a.train), ("valid", a.eval), ("test", a.eval)]:
     frame["rank"] = frame.identifier.astype(str).map(
         lambda s: hashlib.sha256(("42:" + s).encode()).hexdigest()
     )
-    frame = frame.sort_values("rank")
+    if a.prioritize_elements:
+        from rdkit import Chem
+        wanted = set(a.prioritize_elements)
+        frame['priority'] = frame.canonical_smiles.map(lambda s: bool(wanted & {atom.GetSymbol() for atom in Chem.MolFromSmiles(s).GetAtoms()}))
+        frame = frame.sort_values(['priority', 'rank'], ascending=[False, True])
+    else:
+        frame = frame.sort_values("rank")
     rows = []
     mols = []
     for row in frame.to_dict("records"):
         if len(rows) >= limit:
             break
         try:
-            mol = ocelot_conformer(row['canonical_smiles'])
+            mol = ocelot_conformer(row['canonical_smiles'], method=a.geometry_method)
         except ValueError as exc:
             failures.append({'split': split, 'id': row['identifier'], 'reason': 'geometry_preparation: ' + str(exc)})
             continue
@@ -66,6 +74,7 @@ for split, limit in [("train", a.train), ("valid", a.eval), ("test", a.eval)]:
 ff = build_forcefield(a.backend, a.weight, ATOM_TYPES, a.device, tier=a.hyff_tier)
 oracle = InternalDPA4PropertyOracle(ff, 2, names, n_ensemble_heads=3)
 oracle.target_units = ['eV', 'eV']
+oracle.geometry_method = a.geometry_method
 oracle.fit_from_dataset(
     molecules["train"],
     frames["train"][names].to_numpy(),
@@ -89,6 +98,11 @@ for split in ["valid", "test"]:
         ),
         "reload": reload_report,
         "mean_std_eV": std.mean(0).tolist(),
+        "element_subgroups": {
+            element: {'n': int(mask.sum()), 'mae_eV': dict(zip(names, np.abs(pred[mask]-true[mask]).mean(0).tolist()))}
+            for element in sorted({atom.GetSymbol() for m in molecules[split] for atom in m.GetAtoms()})
+            if (mask := np.array([any(atom.GetSymbol() == element for atom in m.GetAtoms()) for m in molecules[split]])).any()
+        },
     }
     result = frames[split][["identifier"]].copy()
     for i, name in enumerate(names):
@@ -101,7 +115,7 @@ report = {
     "forcefield_backend": a.backend,
     "seed": a.seed,
     "batch_size": a.batch_size,
-    "geometry_origin": "ETKDG+MMFF; original DFT coordinates unavailable",
+    "geometry_origin": f"ETKDGv3+{a.geometry_method.upper()}; original DFT coordinates unavailable",
     "metrics": metrics,
     "embedding_failures": failures,
     "elapsed_seconds": time.perf_counter() - started,

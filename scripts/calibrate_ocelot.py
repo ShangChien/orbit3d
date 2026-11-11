@@ -27,6 +27,7 @@ p.add_argument("--output", type=Path, required=True)
 p.add_argument("--device", default="cpu")
 p.add_argument("--backend", choices=['dpa4', 'hyff'], default='dpa4')
 p.add_argument("--hyff-tier", default='vivace')
+p.add_argument('--geometry-method', choices=['mmff94', 'uff'], default='mmff94')
 p.add_argument("--size", type=int, default=128)
 p.add_argument("--generated", type=Path)
 a = p.parse_args()
@@ -38,6 +39,9 @@ record_input_hashes(a.output, {'oracle':a.trained_run/'oracle', 'forcefield':a.w
     'validation_pool':a.data/'valid.csv', 'evaluation_summary':evaluation_run/'summary.json',
     'test_predictions':evaluation_run/'test_predictions.csv','training_structures':a.trained_run/'train.sdf'})
 meta = json.loads((evaluation_run / "summary.json").read_text())
+oracle_meta = json.loads((a.trained_run/'oracle/oracle_meta.json').read_text())
+if oracle_meta.get('input_geometry_method') not in {None, a.geometry_method}:
+    raise ValueError('Calibration reconstruction method differs from the trained property model')
 used = set(meta["training_ids"] + meta["valid_ids"] + meta["test_ids"])
 frame = pd.read_csv(a.data / "valid.csv")
 frame = frame[~frame.identifier.isin(used)].copy()
@@ -50,7 +54,7 @@ for row in frame.to_dict("records"):
     if len(mols) == a.size:
         break
     try:
-        m = ocelot_conformer(row['canonical_smiles'])
+        m = ocelot_conformer(row['canonical_smiles'], method=a.geometry_method)
     except ValueError as exc:
         failed.append({'id': row['identifier'], 'reason': str(exc)})
         continue
