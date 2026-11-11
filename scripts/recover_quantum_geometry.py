@@ -1,13 +1,27 @@
 """Recover numerical evidence from a completed SCF whose graph validation failed."""
-import argparse,json,time
+import argparse
+import json
+import time
 from dataclasses import asdict
 from pathlib import Path
+
 import numpy as np
-from rdkit import Chem
 from pyscf.scf import chkfile
-from orbit3d.quantum.ocelot import OcelotEvaluator,OcelotTheory,host_array,frontier_orbitals,inspect_optimized_graph,quantum_geometry_molecule,HARTREE_EV,BOHR_ANGSTROM
+from rdkit import Chem
+
+from orbit3d.quantum.ocelot import (
+ BOHR_ANGSTROM,
+ HARTREE_EV,
+ OcelotEvaluator,
+ OcelotTheory,
+ frontier_orbitals,
+ host_array,
+ inspect_optimized_graph,
+ quantum_geometry_molecule,
+)
 from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+
 p=argparse.ArgumentParser()
 p.add_argument('--sdf',type=Path,required=True)
 p.add_argument('--index',type=int,required=True)
@@ -21,7 +35,7 @@ molecule=list(Chem.SDMolSupplier(str(a.sdf),removeHs=False))[a.index]
 qm,saved=chkfile.load_scf(str(a.checkpoint));atoms=[qm.atom_symbol(i) for i in range(qm.natm)]
 assert atoms==[atom.GetSymbol() for atom in molecule.GetAtoms()]
 coords=qm.atom_coords(unit='Angstrom');molecule.GetConformer().SetPositions(coords)
-theory=OcelotTheory(engine=a.engine,xc=source['xc'],basis=source['basis'],threads=2,max_scf_cycles=200)
+theory=OcelotTheory(engine=a.engine,xc=source['xc'],basis=source['basis'],ecp_policy=source.get('ecp_policy','none'),threads=2,max_scf_cycles=200)
 evaluator=OcelotEvaluator(theory,a.output)
 coeff=np.asarray(saved['mo_coeff']);occ=np.asarray(saved['mo_occ'])
 density=np.array([(c*o)@c.conj().T for c,o in zip(coeff,occ)])

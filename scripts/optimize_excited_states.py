@@ -5,13 +5,21 @@ import json
 import time
 from dataclasses import replace
 from pathlib import Path
+
 import numpy as np
-from rdkit import Chem
-from pyscf import gto, lib
+from pyscf import lib
 from pyscf.geomopt.geometric_solver import kernel
-from orbit3d.quantum.ocelot import OcelotTheory, HARTREE_EV, BOHR_ANGSTROM, host_array
-from orbit3d.quantum.excited_states import restricted_reference, response, response_gradient_scanner
-from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+from rdkit import Chem
+
+from orbit3d.generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
+from orbit3d.quantum.excited_states import response, response_gradient_scanner, restricted_reference
+from orbit3d.quantum.ocelot import (
+    BOHR_ANGSTROM,
+    HARTREE_EV,
+    host_array,
+    make_quantum_molecule,
+    theory_from_record,
+)
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.run_evidence import freeze_run
 
@@ -23,12 +31,11 @@ p.add_argument('--engine', choices=['cpu','gpu'], default='gpu')
 a=p.parse_args()
 freeze_run(a.output, __file__)
 r=json.loads((a.ground_run/'result.json').read_text())
-theory=replace(OcelotTheory(**r['theory']), engine=a.engine)
+theory=replace(theory_from_record(r['theory']), engine=a.engine)
 lib.num_threads(theory.threads)
 m=next(iter(Chem.SDMolSupplier(str(a.ground_run/'optimized.sdf'), removeHs=False)))
 symbols=[atom.GetSymbol() for atom in m.GetAtoms()]
-mol=gto.M(atom=list(zip(symbols,m.GetConformer().GetPositions().tolist())), unit='Angstrom',
-          basis=theory.basis, charge=0, spin=0, verbose=0, max_memory=theory.memory_mb)
+mol=make_quantum_molecule(symbols, m.GetConformer().GetPositions(), theory)
 started=time.perf_counter()
 mf=restricted_reference(mol,r['omega'],theory)
 td,_=response(mf,a.state=='S1')

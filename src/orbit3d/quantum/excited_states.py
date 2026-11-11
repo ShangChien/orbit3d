@@ -1,7 +1,7 @@
 """Spin-adapted vertical TDDFT on the same neutral geometry and tuned functional."""
 
 import numpy as np
-from .ocelot import HARTREE_EV, host_array
+from .ocelot import HARTREE_EV, ecp_core_electrons, host_array
 
 
 class ResponseStateConvergence:
@@ -69,6 +69,8 @@ def vertical_excitations(molecule, omega, theory, density=None, unrestricted_ene
     singlet, se = response(mf, True)
     triplet, te = response(mf, False)
     return {'method': 'full linear-response TDDFT; spin-adapted restricted reference',
+            'functional': theory.xc, 'basis': theory.basis, 'ecp_policy': theory.ecp_policy,
+            'ecp_core_electrons': ecp_core_electrons(molecule),
             'response_residual_tolerance': singlet.conv_tol,
             'trial_gram_eigenvalue_threshold': singlet.lindep,
             'third_order_xc_engine': 'CPU Libxc (GPU SCF/response)' if theory.engine == 'gpu' else 'CPU Libxc',

@@ -4,11 +4,13 @@ import argparse
 import json
 from dataclasses import replace
 from pathlib import Path
+
 import numpy as np
+from pyscf import lib
 from rdkit import Chem
-from pyscf import gto, lib
-from orbit3d.quantum.ocelot import OcelotTheory, host_array, BOHR_ANGSTROM
-from orbit3d.quantum.excited_states import restricted_reference, response
+
+from orbit3d.quantum.excited_states import response, restricted_reference
+from orbit3d.quantum.ocelot import BOHR_ANGSTROM, host_array, make_quantum_molecule, theory_from_record
 from orbit3d.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
@@ -20,7 +22,7 @@ p.add_argument('--compare-cpu-gradient', action='store_true')
 a = p.parse_args()
 freeze_run(a.output, __file__)
 r = json.loads((a.ground_run/'result.json').read_text())
-theory = replace(OcelotTheory(**r['theory']), engine=a.engine)
+theory = replace(theory_from_record(r['theory']), engine=a.engine)
 lib.num_threads(theory.threads)
 m = next(iter(Chem.SDMolSupplier(str(a.ground_run/'optimized.sdf'), removeHs=False)))
 symbols = [x.GetSymbol() for x in m.GetAtoms()]
@@ -28,8 +30,7 @@ coords = m.GetConformer().GetPositions()
 
 
 def state(xyz):
-    mol = gto.M(atom=list(zip(symbols, xyz.tolist())), unit='Angstrom', basis=theory.basis,
-                charge=0, spin=0, verbose=0, max_memory=theory.memory_mb)
+    mol = make_quantum_molecule(symbols, xyz, theory)
     mf = restricted_reference(mol, r['omega'], theory)
     td, energies = response(mf, not a.triplet)
     return td, float(mf.e_tot + energies[0])

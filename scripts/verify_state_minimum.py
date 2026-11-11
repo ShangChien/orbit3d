@@ -6,12 +6,14 @@ import json
 import time
 from dataclasses import replace
 from pathlib import Path
+
 import numpy as np
-from rdkit import Chem
-from pyscf import gto, lib
+from pyscf import lib
 from pyscf.hessian.thermo import harmonic_analysis
-from orbit3d.quantum.ocelot import OcelotTheory, host_array
-from orbit3d.quantum.excited_states import restricted_reference, response, response_gradient_scanner
+from rdkit import Chem
+
+from orbit3d.quantum.excited_states import response, response_gradient_scanner, restricted_reference
+from orbit3d.quantum.ocelot import host_array, make_quantum_molecule, theory_from_record
 from orbit3d.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
@@ -28,18 +30,10 @@ assert (
     state["ground_result_sha256"] == hashlib.sha256((a.ground_run / "result.json").read_bytes()).hexdigest()
 )
 assert state["stationary_geometry"] and state["graph_preserved"]
-theory = replace(OcelotTheory(**ground["theory"]), engine=a.engine)
+theory = replace(theory_from_record(ground["theory"]), engine=a.engine)
 lib.num_threads(theory.threads)
 m = next(iter(Chem.SDMolSupplier(str(a.state_run / "optimized.sdf"), removeHs=False)))
-mol = gto.M(
-    atom=list(zip([x.GetSymbol() for x in m.GetAtoms()], m.GetConformer().GetPositions().tolist())),
-    unit="Angstrom",
-    basis=theory.basis,
-    charge=0,
-    spin=0,
-    verbose=0,
-    max_memory=theory.memory_mb,
-)
+mol = make_quantum_molecule([x.GetSymbol() for x in m.GetAtoms()], m.GetConformer().GetPositions(), theory)
 base = mol.atom_coords()
 mf = restricted_reference(mol, state["omega"], theory)
 td, _ = response(mf, state["state"] == "S1")

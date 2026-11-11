@@ -8,10 +8,11 @@ have zero/100% SR/LR HF limits but differ in their exchange holes. Public Gaussi
 reference checks are required; the initial 486 mapping has not passed them.
 """
 
-from dataclasses import asdict, dataclass
-from pathlib import Path
 import json
 import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
 import numpy as np
 from scipy.optimize import minimize_scalar
 
@@ -36,6 +37,35 @@ class OcelotTheory:
     threads: int = 4
     memory_mb: int = 4000
     max_geometry_steps: int = 80
+    ecp_policy: str = "matching_def2"
+
+
+def theory_from_record(settings):
+    """Older saved calculations omitted ECPs; never relabel their Hamiltonian."""
+    return OcelotTheory(**{'ecp_policy': 'none', **settings})
+
+
+def make_quantum_molecule(atoms, coords, theory, charge=0, spin=0):
+    """Build the declared basis and its scalar def2 ECP as one Hamiltonian."""
+    from pyscf import gto
+
+    ecp = {}
+    if theory.ecp_policy == 'matching_def2':
+        if theory.basis.lower().replace('-', '').startswith('def2'):
+            for symbol in sorted(set(atoms)):
+                parameters = gto.basis.load_ecp('def2-svp', symbol)
+                if parameters:
+                    ecp[symbol] = parameters
+    elif theory.ecp_policy != 'none':
+        raise ValueError(f'Unknown ECP policy: {theory.ecp_policy}')
+    return gto.M(atom=list(zip(atoms, np.asarray(coords).tolist())), unit='Angstrom',
+                 charge=charge, spin=spin, basis=theory.basis, ecp=ecp,
+                 verbose=0, max_memory=theory.memory_mb)
+
+
+def ecp_core_electrons(molecule):
+    return {molecule.atom_symbol(i): int(molecule.atom_nelec_core(i))
+            for i in range(molecule.natm) if molecule.atom_nelec_core(i)}
 
 
 def ip_objective(neutral_energy, cation_energy, neutral_homo):
@@ -96,8 +126,10 @@ def quantum_geometry_molecule(source, coordinates, status):
 def inspect_optimized_graph(molecule):
     """Report geometry/graph consistency without treating bond inference as DFT truth."""
     from dataclasses import replace
+
     from rdkit import Chem
-    from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+
+    from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
 
     elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in molecule.GetAtoms()))
     inst = rdkit_mol_to_mol3d_instance(molecule, np.empty(0), center=False, element_table=elements)
@@ -150,19 +182,11 @@ class OcelotEvaluator:
         self.density_guesses = {}
 
     def scf(self, atoms, coords, omega, charge=0, spin=0):
-        from pyscf import gto, dft
+        from pyscf import dft
 
         s = self.theory
         self.counter += 1
-        mol = gto.M(
-            atom=list(zip(atoms, np.asarray(coords).tolist())),
-            unit="Angstrom",
-            charge=charge,
-            spin=spin,
-            basis=s.basis,
-            verbose=0,
-            max_memory=s.memory_mb,
-        )
+        mol = make_quantum_molecule(atoms, coords, s, charge=charge, spin=spin)
         # OCELOT's source uses uLC-wHPBE for neutral and charged species.
         if s.engine == "gpu":
             from .gpu_engine import gpu_scf
@@ -187,6 +211,7 @@ class OcelotEvaluator:
         mf.kernel(dm0=dm0)
         (self.workdir / f'scf_{self.counter:04d}.json').write_text(json.dumps({
             'omega': mf.omega, 'charge': charge, 'spin_2S': spin, 'xc': s.xc, 'basis': s.basis,
+            'ecp_policy': s.ecp_policy, 'ecp_core_electrons': ecp_core_electrons(mol),
             'converged': bool(mf.converged), 'energy_Ha': float(mf.e_tot),
             'max_scf_cycles': s.max_scf_cycles, 'convergence_tolerance': s.scf_tolerance,
         }, indent=2) + '\n')
@@ -243,6 +268,7 @@ class OcelotEvaluator:
         import pyscf
         from pyscf.geomopt.geometric_solver import kernel
         from rdkit import Chem
+
         from ..utils.dataset_io import write_precise_sdf
 
         started = time.perf_counter()
@@ -301,6 +327,7 @@ class OcelotEvaluator:
             "omega": omega,
             "omega_geometry_cycles": outer,
             "geometry_optimized": optimize_geometry,
+            "ecp_core_electrons": ecp_core_electrons(final.mol),
             "energy_Ha": float(final.e_tot),
             "homo_eV": homo * HARTREE_EV,
             "lumo_eV": lumo * HARTREE_EV,

@@ -5,11 +5,17 @@ import time
 from pathlib import Path
 
 import numpy as np
-from pyscf import gto, lib
+from pyscf import lib
 from rdkit import Chem
 
 from orbit3d.quantum.excited_states import response, restricted_reference
-from orbit3d.quantum.ocelot import BOHR_ANGSTROM, HARTREE_EV, OcelotTheory, host_array
+from orbit3d.quantum.ocelot import (
+    BOHR_ANGSTROM,
+    HARTREE_EV,
+    host_array,
+    make_quantum_molecule,
+    theory_from_record,
+)
 from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
 
 
@@ -35,7 +41,7 @@ def main():
         inputs[backend + '_gradients'] = path / 'gradients.npz'
         inputs[backend + '_metadata'] = path / 'summary.json'
     manifest = json.loads((args.quantum_run / 'manifest.json').read_text())
-    theory = OcelotTheory(**manifest['theory'])
+    theory = theory_from_record(manifest['theory'])
     lib.num_threads(theory.threads)
     records, arrays = [], {}
     for result in completed:
@@ -56,8 +62,7 @@ def main():
                 entry = next(r for r in metadata['records'] if r['quantum_index'] == index)
                 if entry['atom_symbols'] != symbols:
                     raise ValueError('Surrogate and quantum atom orders differ')
-            mol = gto.M(atom=list(zip(symbols, xyz.tolist())), unit='Angstrom', basis=theory.basis,
-                        charge=0, spin=0, verbose=0, max_memory=theory.memory_mb)
+            mol = make_quantum_molecule(symbols, xyz, theory)
             mf = restricted_reference(mol, result['omega'], theory)
             reference_energy = result['vertical_excitations']['ground_energy_Ha']
             if abs(float(mf.e_tot) - reference_energy) > 1e-6:

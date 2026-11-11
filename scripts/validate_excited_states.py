@@ -5,10 +5,12 @@ import hashlib
 import json
 from dataclasses import replace
 from pathlib import Path
+
+from pyscf import lib
 from rdkit import Chem
-from pyscf import gto, lib
-from orbit3d.quantum.ocelot import OcelotTheory
+
 from orbit3d.quantum.excited_states import vertical_excitations
+from orbit3d.quantum.ocelot import make_quantum_molecule, theory_from_record
 from orbit3d.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
@@ -19,11 +21,10 @@ p.add_argument('--threads', type=int, default=4)
 a = p.parse_args()
 freeze_run(a.output, __file__)
 record = json.loads((a.ground_run / 'result.json').read_text())
-theory = replace(OcelotTheory(**record['theory']), engine=a.engine, threads=a.threads)
+theory = replace(theory_from_record(record['theory']), engine=a.engine, threads=a.threads)
 lib.num_threads(theory.threads)
 m = next(iter(Chem.SDMolSupplier(str(a.ground_run / 'optimized.sdf'), removeHs=False)))
-mol = gto.M(atom=list(zip([x.GetSymbol() for x in m.GetAtoms()], m.GetConformer().GetPositions().tolist())),
-            unit='Angstrom', basis=theory.basis, charge=0, spin=0, verbose=0, max_memory=theory.memory_mb)
+mol = make_quantum_molecule([x.GetSymbol() for x in m.GetAtoms()], m.GetConformer().GetPositions(), theory)
 result = vertical_excitations(mol, record['omega'], theory, unrestricted_energy=record['energy_Ha'])
 result['ground_result_sha256'] = hashlib.sha256((a.ground_run / 'result.json').read_bytes()).hexdigest()
 (a.output / 'excitations.json').write_text(json.dumps(result, indent=2) + '\n')
