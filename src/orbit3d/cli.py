@@ -11,7 +11,6 @@ Usage:
 """
 
 import argparse
-from orbit3d.pipeline import run_from_config
 
 
 def main() -> None:
@@ -26,6 +25,8 @@ def main() -> None:
         help="Path to the runtime JSON configuration file (e.g., configs/internal_dpa4.json)",
     )
     args = parser.parse_args()
+    from orbit3d.pipeline import run_from_config
+
     run_from_config(args.config)
 
 

@@ -26,9 +26,11 @@ BF16 comparison is retained as a numerical diagnostic. The dense-grid implementa
 
 See the [experiment report](docs/qm9s-ocelot-experiments-2026-11-11.md) for metrics,
 failed experiments and evidence. Oracle interval success is not independent
-quantum-chemical accuracy. Current generation covers neutral closed-shell
-H/C/N/O/F molecules. A [structural-only boron adaptation](docs/boron-structural-adaptation.md)
-is tested separately; boron property conditioning and open-shell generation are not established.
+quantum-chemical accuracy. The initial generator covers neutral closed-shell
+H/C/N/O/F molecules. The [expanded 15-element adaptation](docs/wide-element-adaptation.md)
+uses official OCELOT labels, but rare-element generation and target success remain
+weak. [Element weighting and temperature experiments](docs/element-balance-experiment.md)
+report their quality tradeoffs. Open-shell generation is not established.
 
 ## Setup
 
@@ -94,7 +96,13 @@ be omitted. New checkpoints retain target scaling and training identities.
 For GRPO-only updates, set `mode: align`, load an adapted checkpoint and set
 positive `grpo_steps`; supply training data only when replay is enabled. This
 mode saves the updated checkpoint without repeating SFT or generating a final
-inference batch. Supervised modes require positive `sft_steps`.
+inference batch. Supervised modes require positive `sft_steps`. Pure `train` with
+SDF labels and zero GRPO steps needs only the generator and labelled structures;
+forcefield, property-model and applicability-domain paths are not loaded.
+
+[Four-target OCELOT training](docs/ocelot-optical-targets.md) adds vertical S1/T1
+labels, with explicit checkpoint target expansion and unchanged training/test
+geometries. Its paired S1–T1 error is distinct from an adiabatic energy gap.
 
 Consecutive element/depth migrations retain pending element-supervision
 requirements. Structural-only adaptation cannot clear a property-label
