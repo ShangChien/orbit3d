@@ -212,3 +212,20 @@ def test_octree_pipeline_does_not_ignore_unsupported_electronic_state(state):
     from orbit3d.pipeline.octree_runner import run_octree_from_config
     with pytest.raises(ValueError,match='neutral closed-shell'):
         run_octree_from_config({'stage5_relax_config':state})
+
+
+def test_zero_kl_objective_needs_no_reference_model_and_keeps_policy_gradients():
+    torch.manual_seed(21)
+    logits=torch.randn(5,4,requires_grad=True)
+    labels=torch.tensor([0,1,2,3,0]);owner=torch.tensor([0,0,1,1,1])
+    packet=(logits.log_softmax(-1),labels,owner)
+    old=[(packet[0].detach(),labels,owner)]
+    advantage=torch.tensor([1.,-.5])
+    loss=categorical_policy_loss([packet],old,None,advantage,beta=0.)
+    legacy_ref=[(torch.randn(5,4).log_softmax(-1),labels,owner)]
+    reference_loss=categorical_policy_loss([packet],old,legacy_ref,advantage,beta=0.)
+    torch.testing.assert_close(loss,reference_loss,atol=0,rtol=0)
+    loss.backward()
+    assert logits.grad.abs().sum()>0
+    with pytest.raises(ValueError,match='reference policy'):
+        categorical_policy_loss([packet],old,None,advantage,beta=.1)

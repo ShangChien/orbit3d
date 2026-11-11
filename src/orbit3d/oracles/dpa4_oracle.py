@@ -243,7 +243,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
                 errors[i] = str(exc)
         mean = np.full((len(mols), self.output_dim), np.nan, dtype=np.float32)
         std = np.full_like(mean, np.nan)
-        energies = np.full(len(mols), np.nan, dtype=np.float32)
+        energies = np.full(len(mols), np.nan, dtype=np.float64)
         forces = [None] * len(mols)
         for ids in groups.values():
             for begin in range(0, len(ids), batch_size):

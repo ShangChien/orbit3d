@@ -89,6 +89,7 @@ def test_native_oracle_reports_per_frame_failures_without_erasing_raw_forces():
         m.GetConformer().SetPositions(m.GetConformer().GetPositions()+shift)
         mols.append(m)
     result = oracle.evaluate_3d_mols_batched(mols, batch_size=2)
+    assert result['energy_eV'].dtype == np.float64
     assert result['errors'][:2] == ['', '']
     assert 'Nonfinite' in result['errors'][2]
     assert 'neutral closed-shell' in result['errors'][3]

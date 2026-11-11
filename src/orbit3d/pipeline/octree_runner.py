@@ -68,7 +68,7 @@ def run_octree_from_config(cfg, config_path=None):
     domain = MorganDomain.load(domain_path) if domain_path else None
     if domain:
         domain.save(output / 'oracle_domain.json')
-    needs_training = mode != 'predict' or int(settings.get('grpo_steps', 0)) > 0
+    needs_training = mode != 'predict' or (int(settings.get('grpo_steps', 0)) > 0 and float(settings.get('replay_weight', .1)) > 0)
     generator_source = paths.get('checkpoint_load_path') or (
         checkpoint if mode == 'predict' else paths.get('generator_pretrained_path'))
     record_input_hashes(output, {'generator': generator_source, 'forcefield': paths['forcefield_path'],
@@ -222,7 +222,7 @@ def run_octree_from_config(cfg, config_path=None):
         mean = state["mean"]
         scale = state["scale"]
         train_smiles = set(state.get("training_smiles", train_smiles))
-    if mode == "train":
+    if mode == "train" and not int(settings.get("grpo_steps", 0)):
         return {"checkpoint": str(checkpoint), "history": history}
     model.eval()
     ff.set_atom_type_map(model.args.allow_atoms.split(','))
@@ -233,9 +233,9 @@ def run_octree_from_config(cfg, config_path=None):
     if int(settings.get("grpo_steps", 0)):
         from ..generator.octree_alignment import align_octree
 
-        if not training:
+        if not training and float(settings.get("replay_weight", .1)) > 0:
             raise ValueError("GRPO replay requires training molecules")
-        y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32)
+        y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32) if training else None
         reference_hash = hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
         history = align_octree(
             model,
@@ -274,6 +274,8 @@ def run_octree_from_config(cfg, config_path=None):
             },
             checkpoint,
         )
+    if mode == "train":
+        return {"checkpoint": str(checkpoint), "history": history}
     lock_deterministic_environment(int(inference.get("base_seed", 2026)))
     model.eval()
     total = int(inference.get("num_candidates", 64))
@@ -347,9 +349,10 @@ def run_octree_from_config(cfg, config_path=None):
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
                 score = float(np.square(intervals.violations(self_y).numpy() / scale).sum())
                 row.update(smiles=inst.smiles, self_score=score, raw_valid=True)
-                similarity = domain.score(inst.graph) if domain else None
-                row["oracle_domain_similarity"] = similarity
-                if domain and similarity < domain.cutoff:
+                assessment = domain.assess(inst.graph) if domain else None
+                row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
+                row['unseen_oracle_training_elements'] = assessment['unseen_training_elements'] if assessment else []
+                if assessment and not assessment['in_domain']:
                     row["status"] = "out_of_oracle_domain"
                 else:
                     candidates.append((score, idx, inst))

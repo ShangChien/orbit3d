@@ -57,6 +57,34 @@ class DescriptorForce:
     def extract_native_descriptor_and_forces(self, x, atoms):
         return torch.cat([x, x.square().sum(-1, keepdim=True)], -1), x.square().sum(), -2 * x
 
+    def extract_native_batch(self, x, atoms):
+        return torch.cat([x, x.square().sum(-1, keepdim=True)], -1), x.square().sum((-1, -2)), -2 * x
+
+
+def test_reload_check_separates_native_noise_from_changed_scalers():
+    import copy
+    from sklearn.preprocessing import StandardScaler
+    from orbit3d.oracles.validation import compare_oracle_reload
+
+    class NoisyDescriptor(DescriptorForce):
+        calls = 0
+
+        def extract_native_batch(self, x, atoms):
+            desc, energy, force = super().extract_native_batch(x, atoms)
+            self.calls += 1
+            return desc + (self.calls % 2) * 1e-6, energy, force
+
+    original = InternalDPA4PropertyOracle(NoisyDescriptor(), 2, ['homo', 'lumo'], 2)
+    original.scalers = [StandardScaler().fit(np.array([[0.], [1.]])) for _ in range(2)]
+    restored = copy.deepcopy(original)
+    restored.dpa_guidance = original.dpa_guidance
+    _, _, report = compare_oracle_reload(original, restored, [mol('CC')])
+    assert report['same_descriptor_prediction_max_abs_diff'] == 0
+    assert 0 < report['repeated_descriptor_max_abs_diff'] < 1e-5
+    restored.scalers[0].mean_ += .1
+    with pytest.raises(ValueError, match='Adapter/scaler reload differs'):
+        compare_oracle_reload(original, restored, [mol('CC')])
+
 
 def test_bootstrap_dpa_uses_train_only_scalers_and_reloads(tmp_path):
     ff = DescriptorForce()
@@ -219,3 +247,15 @@ def test_mim_wide_element_adapter_requires_declared_spectrum_and_explicit_atoms(
     row['smi']='[C]'
     with pytest.raises(ValueError,match='radical'):
         adapt_record(row,element_table=('H','C','B','O'),spectrum_size=450)
+
+
+def test_fingerprint_similarity_does_not_certify_an_unseen_element(tmp_path):
+    from orbit3d.oracles.applicability import MorganDomain
+    domain=MorganDomain(['Nc1ccccc1','Oc1ccccc1'],.25)
+    molecule=Chem.MolFromSmiles('OB(O)c1ccccc1')
+    assessment=domain.assess(molecule)
+    assert assessment['similarity']>=domain.cutoff
+    assert assessment['unseen_training_elements']==['B'] and not assessment['in_domain']
+    assert domain.assess(Chem.AddHs(Chem.MolFromSmiles('Oc1ccccc1')))['in_domain']
+    domain.save(tmp_path/'domain.json')
+    assert MorganDomain.load(tmp_path/'domain.json').assess(molecule)==assessment

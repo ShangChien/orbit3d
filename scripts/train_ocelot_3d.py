@@ -8,6 +8,7 @@ import torch
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from orbit3d.oracles.validation import compare_oracle_reload
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
 from orbit3d.utils.reproducibility import lock_deterministic_environment
@@ -76,9 +77,7 @@ oracle.fit_from_dataset(
 restored = InternalDPA4PropertyOracle.load_from_dir(str(a.output / "oracle"), ff)
 metrics = {}
 for split in ["valid", "test"]:
-    pred, std = oracle.predict_3d_mols_batched(molecules[split])
-    again, _ = restored.predict_3d_mols_batched(molecules[split])
-    np.testing.assert_allclose(pred, again, atol=1e-6, rtol=1e-6)
+    pred, std, reload_report = compare_oracle_reload(oracle, restored, molecules[split])
     true = frames[split][names].to_numpy()
     metrics[split] = {
         "n": len(true),
@@ -86,7 +85,7 @@ for split in ["valid", "test"]:
         "train_mean_baseline_mae_eV": dict(
             zip(names, np.abs(true - frames["train"][names].mean().to_numpy()).mean(0).tolist())
         ),
-        "reload_max_abs_diff": float(np.abs(pred - again).max()),
+        "reload": reload_report,
         "mean_std_eV": std.mean(0).tolist(),
     }
     result = frames[split][["identifier"]].copy()

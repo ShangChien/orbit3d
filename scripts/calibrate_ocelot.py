@@ -16,11 +16,12 @@ from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.conformers import ocelot_conformer
-from orbit3d.utils.run_evidence import freeze_run
+from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)
 p.add_argument("--trained-run", type=Path, required=True)
+p.add_argument("--evaluation-run",type=Path,help="Separate completed evaluation of the saved checkpoint")
 p.add_argument("--weight", required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--device", default="cpu")
@@ -30,7 +31,11 @@ a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
 freeze_run(a.output, __file__)
 torch.set_num_threads(2)
-meta = json.loads((a.trained_run / "summary.json").read_text())
+evaluation_run = a.evaluation_run or a.trained_run
+record_input_hashes(a.output, {'oracle':a.trained_run/'oracle', 'forcefield':a.weight,
+    'validation_pool':a.data/'valid.csv', 'evaluation_summary':evaluation_run/'summary.json',
+    'test_predictions':evaluation_run/'test_predictions.csv','training_structures':a.trained_run/'train.sdf'})
+meta = json.loads((evaluation_run / "summary.json").read_text())
 used = set(meta["training_ids"] + meta["valid_ids"] + meta["test_ids"])
 frame = pd.read_csv(a.data / "valid.csv")
 frame = frame[~frame.identifier.isin(used)].copy()
@@ -65,7 +70,7 @@ for i, n in enumerate(names):
     result[n + "_pred"] = pred[:, i]
     result[n + "_std"] = std[:, i]
 result.to_csv(a.output / "calibration_predictions.csv", index=False)
-test = pd.read_csv(a.trained_run / "test_predictions.csv")
+test = pd.read_csv(evaluation_run / "test_predictions.csv")
 ytest = test[[n + "_true" for n in names]].to_numpy()
 ptest = test[[n + "_pred" for n in names]].to_numpy()
 stest = test[[n + "_std" for n in names]].to_numpy()
@@ -112,24 +117,29 @@ def domain_similarity(ms):
 
 
 domain_cutoff = float(np.quantile(domain_similarity(mols), .05))
-MorganDomain([Chem.MolToSmiles(Chem.RemoveHs(m)) for m in training_mols], domain_cutoff).save(a.output / "applicability.json")
-report["applicability_domain"] = {"method": f"maximum Morgan Tanimoto to the actual {len(training_mols)} training structures",
+domain = MorganDomain([Chem.MolToSmiles(Chem.RemoveHs(m)) for m in training_mols], domain_cutoff)
+domain.save(a.output / "applicability.json")
+report["applicability_domain"] = {"method": f"training-element coverage and maximum Morgan Tanimoto to the actual {len(training_mols)} training structures",
+                                  "training_elements": sorted(domain.training_elements),
                                   "cutoff_from_calibration_5th_percentile": domain_cutoff}
 if a.generated:
     generated = list(Chem.SDMolSupplier(str(a.generated), removeHs=False))
     gp, gs = o.predict_3d_mols(generated)
     gl, gh = cal.intervals(gp, gs)
-    similarity = domain_similarity(generated)
+    assessments = [domain.assess(m) for m in generated]
+    similarity = np.array([row['similarity'] for row in assessments])
+    outside = np.array([not row['in_domain'] for row in assessments])
     output = pd.DataFrame({"candidate_id": [int(m.GetProp("CandidateID")) for m in generated],
                            "nearest_training_similarity": similarity,
-                           "outside_domain": similarity < domain_cutoff})
+                           "unseen_training_elements": [','.join(row['unseen_training_elements']) for row in assessments],
+                           "outside_domain": outside})
     for i, name in enumerate(names):
         output[name + "_pred"] = gp[:, i]
         output[name + "_std"] = gs[:, i]
         output[name + "_lower90"] = gl[:, i]
         output[name + "_upper90"] = gh[:, i]
     output.to_csv(a.output / "generated_predictions.csv", index=False)
-    report["applicability_domain"]["generated_outside"] = int((similarity < domain_cutoff).sum())
+    report["applicability_domain"]["generated_outside"] = int(outside.sum())
     report["applicability_domain"]["generated_count"] = len(generated)
 (a.output / "summary.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(metrics), flush=True)

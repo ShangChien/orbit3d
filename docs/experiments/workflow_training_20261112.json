@@ -1,0 +1,53 @@
+{
+  "no_kl_no_replay": {
+    "checkpoint": "no_kl_no_replay/checkpoints/octree_aligned.pt",
+    "grpo_steps": 2,
+    "training_data_supplied": false,
+    "summary": {
+      "backend": "uni3dar_octree_v3",
+      "attempted": 8,
+      "raw_valid": 7,
+      "domain_eligible": 0,
+      "out_of_oracle_domain": 7,
+      "ranking": "external",
+      "external_ranking_calls": 0,
+      "refinement_evaluation_calls": 0,
+      "refinement_gradient_calls": 0,
+      "export_recheck_calls": 0,
+      "stage_seconds": {
+        "generation": 12.116836912930012,
+        "validation": 0.02473244071006775,
+        "ranking": 5.748122930526733e-06,
+        "refinement": 5.9995800256729126e-05
+      },
+      "batch_refinement": true,
+      "acceptance_tolerances": {
+        "property_tolerance": 0.0,
+        "energy_tolerance": 0.0
+      },
+      "retained_morgan_diversity": null,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 7,
+      "retained": 0,
+      "qualified": 0,
+      "joint_success_rate": 0.0,
+      "retained_novel_vs_adaptation": 0,
+      "property_hit_retained": 0,
+      "mean_final_force": null,
+      "maximum_retained_atom_force_eva": null,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 39.315587509423494,
+      "checkpoint": "no_kl_no_replay/checkpoints/octree_aligned.pt",
+      "checkpoint_sha256": "008ac84ff507b48f89a76bcd787c793a0d698f990b31c06ed6f8f2f4d26b38c4"
+    }
+  },
+  "train_with_grpo": {
+    "checkpoint": "train_with_grpo/checkpoints/octree_aligned.pt",
+    "grpo_steps": 2,
+    "training_data_supplied": true,
+    "summary": {
+      "history_entries": 2
+    }
+  }
+}

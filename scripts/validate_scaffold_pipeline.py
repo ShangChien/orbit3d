@@ -83,17 +83,19 @@ for index, instance, state, indices, (refined, info) in zip(owners, instances, s
     )
     total_delta = float(abs(refined.coords[indices] - reference).max())
     assert total_delta < 2e-6, total_delta
-    similarity = domain.score(refined.graph)
+    assessment = domain.assess(refined.graph)
+    similarity = assessment['similarity']
     row.update(
         status="refined",
         frozen_coordinate_shift_A=delta,
         world_frame_error_A=total_delta,
         domain_similarity=similarity,
-        domain_eligible=similarity >= domain.cutoff,
+        domain_eligible=assessment['in_domain'],
+        unseen_oracle_training_elements=assessment['unseen_training_elements'],
         y_pred=info["y_pred"],
         final_rms_force_eV_A=info["final_force_eva"],
         joint_success=bool(
-            similarity >= domain.cutoff and info["interval_hit"] and info["final_force_eva"] <= 0.5
+            assessment['in_domain'] and info["interval_hit"] and info["final_force_eva"] <= 0.5
         ),
     )
     out = Chem.Mol(refined.graph)

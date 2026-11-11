@@ -10,17 +10,22 @@ from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 
 
 def categorical_policy_loss(current, previous, reference, advantages, beta=0.02, clip=0.2):
+    if beta and reference is None:
+        raise ValueError('A nonzero KL weight requires a reference policy')
     total = torch.zeros_like(advantages)
     counts = torch.zeros_like(advantages)
-    for (logp, labels, owner), (old, _, _), (ref, _, _) in zip(current, previous, reference):
+    for decision, ((logp, labels, owner), (old, _, _)) in enumerate(zip(current, previous)):
         selected = logp.gather(1, labels[:, None]).squeeze(1)
         old_selected = old.gather(1, labels[:, None]).squeeze(1)
         ratio = (selected - old_selected).clamp(-20, 20).exp()
         adv = advantages[owner]
         surrogate = torch.minimum(ratio * adv, ratio.clamp(1 - clip, 1 + clip) * adv)
-        delta = torch.where(torch.isfinite(logp), logp - ref, torch.zeros_like(logp))
-        kl = (logp.exp() * delta).sum(-1)
-        total.index_add_(0, owner, -surrogate + beta * kl)
+        objective = -surrogate
+        if beta:
+            ref = reference[decision][0]
+            delta = torch.where(torch.isfinite(logp), logp - ref, torch.zeros_like(logp))
+            objective = objective + beta * (logp.exp() * delta).sum(-1)
+        total.index_add_(0, owner, objective)
         counts.index_add_(0, owner, torch.ones_like(selected))
     return (total / counts.clamp_min(1)).mean()
 
@@ -30,7 +35,7 @@ def align_octree(
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
 ):
     device = next(model.parameters()).device
-    reference = copy.deepcopy(model).eval().requires_grad_(False)
+    reference = copy.deepcopy(model).eval().requires_grad_(False) if kl_beta else None
     model.requires_grad_(False)
     model.interval_conditioner.requires_grad_(True)
     parameters = [p for p in model.parameters() if p.requires_grad]
@@ -39,7 +44,7 @@ def align_octree(
     low = torch.tensor(lower, device=device).repeat(group_size, 1)
     high = torch.tensor(upper, device=device).repeat(group_size, 1)
     mask = torch.tensor(active, device=device).unsqueeze(0).expand(group_size, *active.shape)
-    dataset = OctreeDataset(molecules, model, seed=seed)
+    dataset = OctreeDataset(molecules, model, seed=seed) if replay_weight else None
     rng = np.random.default_rng(seed + 1)
     history = []
     for step in range(steps):
@@ -61,7 +66,7 @@ def align_octree(
                 electron_parity=electron_parity,
             )
             old = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
-            ref = reference.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
+            ref = reference.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity) if reference is not None else None
         rewards = [-1.0] * len(trajectories)
         hits = [False] * len(trajectories)
         instances = []
@@ -74,9 +79,10 @@ def align_octree(
             try:
                 inst = trajectory_to_instance(trajectory, element_table=tuple(model.args.allow_atoms.split(',')))
                 row.update(valid=True, smiles=inst.smiles)
-                similarity = domain.score(inst.graph) if domain else None
-                row['oracle_domain_similarity'] = similarity
-                if domain and similarity < domain.cutoff:
+                assessment = domain.assess(inst.graph) if domain else None
+                row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
+                row['unseen_oracle_training_elements'] = assessment['unseen_training_elements'] if assessment else []
+                if assessment and not assessment['in_domain']:
                     row.update(reason='out_of_oracle_domain', evaluation_status='not_evaluated')
                 else:
                     instances.append((i, inst))
@@ -134,18 +140,19 @@ def align_octree(
             with torch.autocast(device_type=device.type, enabled=False):
                 current = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
                 loss = categorical_policy_loss(current, old, ref, adv, beta=kl_beta)
-                indices = rng.integers(0, len(molecules), size=4)
-                packed = dataset.collate(indices)
-                y = torch.tensor((labels[indices] - mean) / scale, device=device)
-                replay, _ = model.compute_sft_and_understanding_loss(
-                    packed,
-                    y,
-                    y - 0.2,
-                    y + 0.2,
-                    torch.ones_like(y, dtype=torch.bool),
-                    understanding_weight=0.0,
-                )
-                loss = loss + replay_weight * replay
+                if replay_weight:
+                    indices = rng.integers(0, len(molecules), size=4)
+                    packed = dataset.collate(indices)
+                    y = torch.tensor((labels[indices] - mean) / scale, device=device)
+                    replay, _ = model.compute_sft_and_understanding_loss(
+                        packed,
+                        y,
+                        y - 0.2,
+                        y + 0.2,
+                        torch.ones_like(y, dtype=torch.bool),
+                        understanding_weight=0.0,
+                    )
+                    loss = loss + replay_weight * replay
             if not torch.isfinite(loss):
                 raise FloatingPointError("Nonfinite octree policy loss")
             optimizer.zero_grad()

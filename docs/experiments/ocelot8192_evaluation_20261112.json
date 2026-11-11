@@ -1,0 +1,155 @@
+{
+  "evaluation": {
+    "task": "Saved OCELOT property model evaluation",
+    "training_records": 8192,
+    "target_names": [
+      "homo",
+      "lumo"
+    ],
+    "metrics": {
+      "valid": {
+        "n": 512,
+        "mae_eV": {
+          "homo": 0.2821465532839894,
+          "lumo": 0.23419787432223002
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.5051281545864915,
+          "lumo": 0.5466716832465596
+        },
+        "reload": {
+          "parameters_bitwise_equal": true,
+          "same_descriptor_prediction_max_abs_diff": 0.0,
+          "repeated_native_prediction_max_abs_diff_eV": 2.0265579223632812e-06,
+          "repeated_descriptor_max_abs_diff": 6.556510925292969e-06,
+          "runtime_atol_eV": 1e-05
+        },
+        "mean_std_eV": [
+          0.0690525695681572,
+          0.07820281386375427
+        ]
+      },
+      "test": {
+        "n": 512,
+        "mae_eV": {
+          "homo": 0.2877827737779333,
+          "lumo": 0.2429033802911709
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.49580353326667476,
+          "lumo": 0.5051522654870565
+        },
+        "reload": {
+          "parameters_bitwise_equal": true,
+          "same_descriptor_prediction_max_abs_diff": 0.0,
+          "repeated_native_prediction_max_abs_diff_eV": 2.384185791015625e-06,
+          "repeated_descriptor_max_abs_diff": 6.67572021484375e-06,
+          "runtime_atol_eV": 1e-05
+        },
+        "mean_std_eV": [
+          0.06878189742565155,
+          0.07297943532466888
+        ]
+      }
+    },
+    "matched_previous_test": {
+      "n": 256,
+      "same_structures": true,
+      "training_overlap": 0,
+      "previous_model_mae_eV": {
+        "homo": 0.2995317500009853,
+        "lumo": 0.23791524223600669
+      },
+      "new_model_mae_eV": {
+        "homo": 0.2862619026691857,
+        "lumo": 0.24310159752413518
+      }
+    },
+    "geometry_origin": "ETKDGv3/MMFF94 reconstructed geometries; not original DFT geometries",
+    "training_ids_sha256": "1aa7a02b8913ae9988bdf3b75e0e26697412372a84c20d640fbc8d8c13a3d139",
+    "valid_ids_sha256": "42846382a4d38276b2f924b9850c6d9e1e6bb4ee63aee34319c0c13716385138",
+    "test_ids_sha256": "eb1cdda8f232eb9fc462cfa1a9f1178cfda4c03ed51c070cba06f2ad5e6a1bda"
+  },
+  "calibration": {
+    "method": "Held-out normalized-residual intervals; not a Gaussian standard deviation",
+    "calibration_disjoint_from_train_selection_test": true,
+    "failed_embeddings": [
+      {
+        "id": "csd_CEFBAR",
+        "reason": "ETKDG embedding failed"
+      },
+      {
+        "id": "csd_MPCYLP10",
+        "reason": "ETKDG embedding failed"
+      },
+      {
+        "id": "csd_DOSBOF",
+        "reason": "ETKDG embedding failed"
+      },
+      {
+        "id": "csd_YAPGUT",
+        "reason": "ETKDG embedding failed"
+      }
+    ],
+    "test": {
+      "n": 512,
+      "joint_coverage": 0.908203125,
+      "marginal_coverage": {
+        "homo": 0.921875,
+        "lumo": 0.9609375
+      },
+      "mean_interval_width_eV": {
+        "homo": 1.7216664469733864,
+        "lumo": 1.7825385155764435
+      },
+      "std_absolute_error_spearman": {
+        "homo": 0.172621193394445,
+        "lumo": 0.1045772250260354
+      }
+    },
+    "coverage_curve": [
+      {
+        "nominal_joint_coverage": 0.5,
+        "test_joint_coverage": 0.47265625
+      },
+      {
+        "nominal_joint_coverage": 0.7,
+        "test_joint_coverage": 0.697265625
+      },
+      {
+        "nominal_joint_coverage": 0.8,
+        "test_joint_coverage": 0.810546875
+      },
+      {
+        "nominal_joint_coverage": 0.9,
+        "test_joint_coverage": 0.908203125
+      },
+      {
+        "nominal_joint_coverage": 0.95,
+        "test_joint_coverage": 0.955078125
+      }
+    ],
+    "limitations": "Scaffold shift and QM9s OOD are not covered by exchangeability assumptions",
+    "applicability_domain": {
+      "method": "maximum Morgan Tanimoto to the actual 8192 training structures",
+      "cutoff_from_calibration_5th_percentile": 0.3362903225806451,
+      "generated_outside": 1,
+      "generated_count": 12
+    },
+    "calibration_ids_sha256": "30d17c286bfe614ff4d676125e522e35eec3ed60c5260ceba65671b7f124a150"
+  },
+  "original_failure": {
+    "scope": "Post-training replay assertion; all three bootstrap models had already completed and were saved",
+    "tolerance": {
+      "atol": 1e-06,
+      "rtol": 1e-06
+    },
+    "max_absolute_prediction_difference_eV": 2.861023e-06,
+    "action": "Re-evaluate saved checkpoints with separate exact adapter/scaler and repeated-backbone checks; no retraining or changed weights"
+  },
+  "interpretation": [
+    "Matched 256-structure old test: HOMO improves, LUMO worsens slightly.",
+    "Held-out interval coverage does not demonstrate useful per-molecule uncertainty ranking; uncertainty reward stays disabled.",
+    "ETKDG/MMFF input geometries are not original OCELOT DFT geometries."
+  ]
+}

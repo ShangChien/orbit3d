@@ -11,7 +11,9 @@ class MorganDomain:
         self.reference_smiles = list(reference_smiles)
         self.cutoff = float(cutoff)
         self.generator = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048, includeChirality=True)
-        self.references = [self.generator.GetFingerprint(Chem.MolFromSmiles(s)) for s in self.reference_smiles]
+        molecules = [Chem.MolFromSmiles(s) for s in self.reference_smiles]
+        self.references = [self.generator.GetFingerprint(m) for m in molecules]
+        self.training_elements = {a.GetSymbol() for m in molecules for a in Chem.AddHs(m).GetAtoms()}
         if not self.references or not 0 <= self.cutoff <= 1:
             raise ValueError('Applicability domain requires reference structures and a similarity cutoff')
 
@@ -19,9 +21,17 @@ class MorganDomain:
         fp = self.generator.GetFingerprint(Chem.RemoveHs(molecule))
         return max(DataStructs.BulkTanimotoSimilarity(fp, self.references))
 
+    def assess(self, molecule):
+        similarity = self.score(molecule)
+        unseen = sorted({a.GetSymbol() for a in molecule.GetAtoms()} - self.training_elements)
+        return {'similarity': similarity, 'unseen_training_elements': unseen,
+                'in_domain': not unseen and similarity >= self.cutoff}
+
     def save(self, path):
         Path(path).write_text(json.dumps({'reference_smiles': self.reference_smiles, 'cutoff': self.cutoff,
-                                         'fingerprint': 'Morgan radius2 2048 bits chiral'}, indent=2)+'\n')
+                                         'fingerprint': 'Morgan radius2 2048 bits chiral',
+                                         'criterion': 'training-element coverage and Morgan cutoff',
+                                         'training_elements': sorted(self.training_elements)}, indent=2)+'\n')
 
     @classmethod
     def load(cls, path):
