@@ -108,3 +108,10 @@ The property model must have the same ordered targets and units, and its
 applicability domain must be built from its own training structures. Supply the
 original source CSV labels when preparing the generator SDF; QM9s spectra are
 not substitutes for these four OCELOT quantities.
+
+The separate 512-record calibration gives 89.06% joint coverage on the 512-test
+set. Mean calibrated widths are 2.056/1.936/2.061/1.585 eV, and spread/error
+Spearman correlations are 0.200/0.066/0.086/0.091. The intervals are broad and the
+ensemble spread remains a weak error-ranking signal. These measurements do not
+justify enabling an uncertainty reward by default. Complete calibration IDs,
+exclusions and coverage curves are in `experiments/optical_calibration_20261112.json`.

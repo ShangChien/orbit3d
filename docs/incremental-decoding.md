@@ -27,3 +27,12 @@ then compares all generated tokens, coordinates and scores with CFG scales 0, 1
 and 1.5, and alternates cache-mode timing order after warmup. It preserves numerical
 comparison thresholds separately from exact token/coordinate equality. Shared-GPU
 measurements are not dedicated-hardware throughput guarantees.
+
+The first real-weight comparison exceeded its predeclared 2e-4 absolute logit
+threshold: the maximum was 2.3651e-4 for the existing concatenation path and the
+buffer path alike. The original failed run is retained. The revised diagnostic
+keeps this threshold and its pass/fail field, while separately checking bitwise
+buffer-versus-concat hidden states and atom/XYZ logits for each fixed chunk size.
+Full-prefix numerical agreement and equivalence of two storage implementations
+are different claims. A small final hidden-state difference can be amplified by
+the readout; neither raw-logit nor trajectory equality is inferred from it.
