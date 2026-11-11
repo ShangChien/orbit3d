@@ -6,7 +6,7 @@ Edit the Markdown and `references.bib`; do not edit the generated TeX or BBL.
 
 The manuscript separates current unified-package measurements from the archived
 octree/GVP pilot. Current tables include property training, stage/reward controls,
-three GRPO training seeds and matched refinement. Independent-surrogate and
+five GRPO objectives across three training seeds, four-target generation and matched refinement. Independent-surrogate and
 quantum disagreements remain explicit. These experiments establish the stated
 implementation behavior and limited empirical scope, not general superiority.
 
@@ -24,6 +24,16 @@ The compatibility entrypoint `generate_orbit3d_figures.py` now generates Figure 
 by default. Its `--legacy-figures` option reproduces the historical illustrative
 plots; those plots are not used by the revised manuscript and their fixed arrays
 must not be treated as experiment outputs.
+
+## Training-seed figure
+
+`draw_grpo_seeds.py` reads the complete 45-run public matrix and draws the two
+property-evaluator panels. Points represent training-seed aggregates, with means
+shown separately; no uncertainty bars are implied.
+
+```bash
+uv run --no-project --with matplotlib python paper/draw_grpo_seeds.py
+```
 
 ## Build the manuscript
 
@@ -56,6 +66,7 @@ python paper/build_arxiv_submission.py
 ```
 
 This rebuilds the local source archive; it does not submit or publish the paper.
-The archive includes the main TeX, bibliography, vector Figure 0, and pilot data
+The archive includes the main TeX, bibliography, vector Figures 0 and 1, the
+original ten-molecule quantum input SDF, and pilot data
 with provenance, plus the checksum-verified current evidence archive. Superseded
 figures are excluded.

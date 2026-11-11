@@ -41,7 +41,7 @@ not adiabatic or emission energies.
 
 Longer-budget retries preserve the original failures. Raising molecule 1’s SCF
 budget to 200 resolves the SCF iteration-limit issue but subsequently fails graph
-preservation. Molecule 6’s 160-step geometry retry is separate and still running.
+preservation. Molecule 6’s separate 160-step retry completes geometry/omega convergence but fails the specified double-bond stereo check; its RMS force is 0.00557 eV/Å. The original numerical failure is retained alongside this later chemical failure.
 Recovered final SCF states for molecules 3, 4 and 8 have small residual forces
 despite graph/stereo failures, including new bonding and hydrogen transfer.
 

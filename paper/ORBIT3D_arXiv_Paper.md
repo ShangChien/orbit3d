@@ -7,7 +7,7 @@ November 2026
 
 ## Abstract
 
-Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. An octree autoregressive prior is adapted to property intervals, paired with a self-ranking head, and aligned through group-relative policy optimization using property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box; the force-field backend is selected according to its supported elements and electronic states. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out OCELOT training, three GRPO training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation; these are reported alongside the archived octree/GVP pilot. The resulting formulation makes proposal quality, oracle reliability, and relaxation acceptance separately testable, while identifying the matched-budget experiments and independent quantum-chemical validation required to establish the effectiveness of the unified implementation.
+Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. An octree autoregressive prior is adapted to property intervals, paired with a self-ranking head, and aligned through group-relative policy optimization using property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box; the force-field backend is selected according to its supported elements and electronic states. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out four-property OCELOT training, a five-objective GRPO matrix with three training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation; these are reported alongside the archived octree/GVP pilot. The resulting formulation makes proposal quality, oracle reliability, and relaxation acceptance separately testable, while identifying the matched-budget experiments and independent quantum-chemical validation required to establish the effectiveness of the unified implementation.
 
 ## 1. Introduction
 
@@ -163,14 +163,15 @@ Table: Three inference seeds and identical proposal pools, before applying the l
 
 Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.
 
-| GRPO objective | Valid / 192 | Optimizing-oracle joint hits / 192 | Independent-surrogate joint hits / 192 |
+| GRPO objective | Valid / 576 | Optimizing joint / 576 | Independent joint / 576 |
 | :--- | ---: | ---: | ---: |
-| full | 161 | 8 | 8 |
-| no kl | 159 | 2 | 3 |
-| no physics | 158 | 3 | 5 |
-| no replay | 169 | 7 | 8 |
+| full | 482 | 20 | 20 |
+| no kl | 483 | 14 | 17 |
+| no physics | 482 | 14 | 17 |
+| no replay | 484 | 16 | 19 |
+| uncertainty on | 489 | 17 | 20 |
 
-Table: Fifty rollout iterations (two optimizer passes per group), training seed 42, three inference seeds, and identical float64 energy reporting. The independent evaluator is a separately trained fingerprint surrogate, not DFT truth.
+Table: Five objectives, three GRPO training seeds and three inference seeds. Each policy uses fifty rollout iterations with two optimizer passes per group and a common SFT initialization. The independent fingerprint evaluator is not DFT truth.
 
 | Policy stage | Attempts | Optimizing joint hits | Independent joint hits |
 | :--- | ---: | ---: | ---: |
@@ -205,6 +206,14 @@ Table: Exact same test structures and reconstructed geometries; no overlap with 
 | Paired vertical S1–T1 | 0.2226 | 0.2546 |
 
 Table: Official OCELOT labels on the same 512 scaffold-held-out molecules. Training budgets are 8192 for the DPA adapter and 20356 for the fingerprint model; this is not a matched architecture ablation. The last row averages per-molecule absolute gap errors.
+
+| Active targets | Valid / 192 | In domain / 192 | Optimizing joint / 192 | Independent joint / 192 |
+| :--- | ---: | ---: | ---: | ---: |
+| HOMO/LUMO | 111 | 9 | 1 | 1 |
+| Vertical S1/T1 | 94 | 5 | 1 | 1 |
+| All four | 111 | 11 | 0 | 0 |
+
+Table: One four-target generator, three inference seeds per window and unchanged ranking/refinement limits. Inactive targets are masked. This pilot trains and reloads the expanded interface but does not establish useful joint four-property generation.
 <!-- END CURRENT RESULTS -->
 
 The three ranking runs use identical proposal tokens for each seed, with a fixed
@@ -212,14 +221,22 @@ The three ranking runs use identical proposal tokens for each seed, with a fixed
 calls, so its gain is a selection result, not an equal-oracle-budget superiority
 claim. Self-ranking does not improve the measured joint success over first-valid.
 The initial BF16 policy comparison failed behavior/recomputed-probability checks;
-GRPO now uses FP32 throughout. In the matched 50-rollout-iteration pilot, removing KL or physical feedback
-reduces joint hits; removing replay leaves the independent joint count unchanged.
-Each group receives two optimizer passes, updating the interval conditioner only.
-For the full objective, three GRPO training seeds give optimizing joint counts
-8/7/5 and independent counts 8/5/7, each out of 192 attempts. Both total 3.47%,
-with an across-training-seed standard deviation of 0.80 percentage points. The
-SFT initialization is shared, and the reward-removal table still contains only
-one training seed.
+GRPO now uses FP32 throughout. The completed five-objective matrix contains
+45 evaluation runs: three training seeds and three inference seeds per objective.
+Full GRPO gives 20/576 joint hits under each evaluator; no-KL and no-physics give
+14 optimizing and 17 independent hits each. Yet no-KL training seed 44 outperforms
+Full under both evaluators. Nonzero uncertainty weighting gives 17 optimizing
+and 20 independent hits. Aggregate differences therefore do not establish a
+uniform or statistically reliable component ranking. Each group receives two
+optimizer passes, updating the interval conditioner only.
+
+![GRPO training-seed variation. Each point aggregates three inference runs and 192 attempted proposals at one training seed; horizontal bars show the three-seed mean. All policies start from one SFT checkpoint. The independent fingerprint model is not quantum reference truth.](figures/fig1_grpo_training_seeds.png){#fig:grposeeds width=100%}
+
+For Full, training-seed optimizing counts are 8/7/5 and independent counts are
+8/5/7, each out of 192. Both aggregate to 3.47%, with an across-training-seed
+standard deviation of 0.80 percentage points. Source records include all seed
+counts and descriptive cluster-bootstrap intervals; only three training clusters
+are available, so these intervals do not justify significance claims.
 
 Matched refinement exposes evaluator dependence. Full acceptance preserves all
 six initially property-feasible molecules and reaches eight optimizing joint
@@ -279,7 +296,12 @@ The four-target property extension adds the official vertical S1 and T1 labels
 while reusing the exact UFF conformers and splits. Its paired vertical S1–T1
 MAE is 0.2226 eV; the absolute difference of means is 0.0537 eV and would hide
 substantial molecule-level errors. These supervised CSV errors neither reproduce
-the unavailable original DFT geometries nor establish an adiabatic gap error.
+the unavailable original DFT geometries nor establish an adiabatic gap error. The
+four-target generation pilot obtains one joint hit per 192 attempts for each
+two-property window and none for the all-four window under either surrogate.
+Its 512-record calibration has 89.06% joint test coverage, but mean widths are
+1.58–2.06 eV and spread/error correlations remain weak. All 64 proposals and
+six exports of a joint-window run replay under the installed package.
 
 An explicit fragment-attachment CLI separately tests fixed-scaffold refinement.
 It preserves two designated attachment sites and world-frame scaffold positions
@@ -308,6 +330,25 @@ refinement preserves their graphs and lowers mean RMS force from 4.29 to 0.41
 eV/Angstrom, with nine below 0.5. This model has no validated boron property
 conditioner. The original 450-channel spectra are retained separately and are
 not relabeled as orbital energies.
+
+All ten generated B-containing structures were selected for the same nominal
+quantum protocol before inspecting their quantum results. Five complete S0
+optimization, graph-preservation checks and full TDDFT; the other five fail SCF,
+geometry convergence, graph or specified-stereo checks. The successful cases
+have vertical S1–T1 separations of 0.4944–1.2712 eV. Longer-budget retries resolve
+the SCF/geometry iteration limits for two cases but both then fail graph/stereo
+checks. These failures remain part of the original cohort. Recovered final
+geometries include new bonding and hydrogen transfer despite low DFT residual
+forces, illustrating why force alone is insufficient to certify identity.
+No vibrational-minimum claim is made for this ten-molecule cohort.
+
+All five completed structures lie outside the wide-OCELOT applicability domain.
+At their same quantum geometries, mean absolute disagreements of the four-target
+DPA adapter are 0.4355/0.3303/0.5212/0.2120 eV for HOMO/LUMO/S1/T1; its paired
+vertical-gap disagreement is 0.4104 eV. The fingerprint counterpart is 0.3451 eV
+for that gap. These are five-case extrapolation diagnostics against an internally
+defined protocol, not OCELOT test MAEs or evidence of B-conditioned design.
+
 
 The entire retained cohort of the earlier 1024-record/4000-step adaptation consists
 of one molecule. At an explicit IP-tuned LC-wPBE/def2-SVP diagnostic level, its
@@ -385,7 +426,7 @@ Finally, autoregressive decoding, candidate selection, ensemble evaluation, and 
 
 ORBIT-3D formulates interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, interval conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
 
-The archived octree/GVP results motivate this formulation but do not validate every component of the unified system. The corrected implementation now has matched-budget conditioning and reward ablations, independent surrogate checks, and a state-specific quantum diagnostic. Replicating SFT and successful training interventions, improving performance across target regimes, and completing independent quantum cohorts remain necessary for general effectiveness claims. This distinction keeps the architectural claim precise and makes subsequent improvements measurable.
+The archived octree/GVP results motivate this formulation but do not validate every component of the unified system. The corrected implementation now has matched-budget conditioning and reward ablations, independent surrogate checks, and a state-specific quantum diagnostic. Replicating SFT and successful training interventions, improving performance across target regimes, and expanding independent quantum validation remain necessary for general effectiveness claims. This distinction keeps the architectural claim precise and makes subsequent improvements measurable.
 
 ## References
 

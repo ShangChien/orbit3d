@@ -115,16 +115,15 @@ def build():
         hit = row['joint_success_rate']['mean'] * 100
         lines.append(f"| {row['variant'].replace('_', ' ')} | {'on' if row['electron_parity'] == 0 else 'off'} | {valid:.2f} | {hit:.2f} |")
     lines += ['', 'Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.']
-    lines += ['', '| GRPO objective | Valid / 192 | Optimizing-oracle joint hits / 192 | Independent-surrogate joint hits / 192 |',
+    lines += ['', '| GRPO objective | Valid / 576 | Optimizing joint / 576 | Independent joint / 576 |',
               '| :--- | ---: | ---: | ---: |']
-    ablation = current['reward_ablation_20261112.json']
-    for variant in ['full', 'no_kl', 'no_physics', 'no_replay']:
-        runs = [row for row in ablation['runs'] if row['variant'] == variant]
-        assert len(runs) == 3 and sum(row['attempted'] for row in runs) == 192
-        lines.append(f"| {variant.replace('_', ' ')} | {sum(row['raw_valid'] for row in runs)} | "
-                     f"{sum(row['qualified'] for row in runs)} | "
-                     f"{sum(row['independent']['independent_joint_successes'] for row in runs)} |")
-    lines += ['', 'Table: Fifty rollout iterations (two optimizer passes per group), training seed 42, three inference seeds, and identical float64 energy reporting. The independent evaluator is a separately trained fingerprint surrogate, not DFT truth.']
+    ablation = current['grpo_factorial_20261112.json']['aggregate']
+    for variant in ['full', 'no_kl', 'no_physics', 'no_replay', 'uncertainty_on']:
+        row = ablation[variant]
+        assert row['attempted'] == 576 and len(row['per_training_seed']) == 3
+        lines.append(f"| {variant.replace('_', ' ')} | {row['raw_valid']} | "
+                     f"{row['optimizing_joint']['total']} | {row['independent_joint']['total']} |")
+    lines += ['', 'Table: Five objectives, three GRPO training seeds and three inference seeds. Each policy uses fifty rollout iterations with two optimizer passes per group and a common SFT initialization. The independent fingerprint evaluator is not DFT truth.']
     stages = current['stage_and_training_seeds_20261112.json']
     lines += ['', '| Policy stage | Attempts | Optimizing joint hits | Independent joint hits |',
               '| :--- | ---: | ---: | ---: |']
@@ -162,6 +161,14 @@ def build():
     lines.append(f"| Paired vertical S1–T1 | {optical['dpa4']['vertical_singlet_triplet_gap']['mae_eV']:.4f} | "
                  f"{optical['fingerprint']['vertical_singlet_triplet_gap']['mae_eV']:.4f} |")
     lines += ['', 'Table: Official OCELOT labels on the same 512 scaffold-held-out molecules. Training budgets are 8192 for the DPA adapter and 20356 for the fingerprint model; this is not a matched architecture ablation. The last row averages per-molecule absolute gap errors.']
+    generated = current['optical_generation_20261112.json']['aggregate']
+    lines += ['', '| Active targets | Valid / 192 | In domain / 192 | Optimizing joint / 192 | Independent joint / 192 |',
+              '| :--- | ---: | ---: | ---: | ---: |']
+    for key, label in [('orbitals','HOMO/LUMO'),('vertical','Vertical S1/T1'),('joint','All four')]:
+        row=generated[key]
+        assert row['attempted']==192
+        lines.append(f"| {label} | {row['raw_valid']} | {row['domain_eligible']} | {row['qualified']} | {row['independent_joint_successes']} |")
+    lines += ['', 'Table: One four-target generator, three inference seeds per window and unchanged ranking/refinement limits. Inactive targets are masked. This pilot trains and reloads the expanded interface but does not establish useful joint four-property generation.']
     text = re.sub(r'<!-- BEGIN CURRENT RESULTS -->.*?<!-- END CURRENT RESULTS -->',
                   lambda _: '<!-- BEGIN CURRENT RESULTS -->\n'+'\n'.join(lines)+'\n<!-- END CURRENT RESULTS -->', text, flags=re.S)
     text = re.sub(
@@ -175,6 +182,7 @@ def build():
     body = text[text.index("## 1. Introduction"):].split("\n## References", 1)[0]
     body = re.sub(r"^(#{2,3}) \d+(?:\.\d+)?\. ", lambda m: "#"*(len(m[1])-1)+" ", body, flags=re.M)
     body = body.replace("figures/fig0_orbit3d_system_architecture.png", "figures/fig0_orbit3d_system_architecture.pdf")
+    body = body.replace("figures/fig1_grpo_training_seeds.png", "figures/fig1_grpo_training_seeds.pdf")
     latex = pypandoc.convert_text(body, "latex", format="markdown+tex_math_dollars+citations", extra_args=[
         "--standalone", "--natbib", f"--template={PAPER / 'manuscript_template.tex'}",
         "--metadata", f"title={title}", "--metadata", f"abstract={abstract}",
@@ -182,10 +190,6 @@ def build():
     # The accessibility alt key emitted by recent Pandoc requires a recent
     # graphicx; keep arXiv's older TeX installations compatible.
     latex = re.sub(r",alt=\{[^}]*\}(?=\])", "", latex)
-    # Give the short task label less width than the model and force columns.
-    pilot_widths = ["0.1000", "0.2700", "0.1900", "0.2500", "0.1900"]
-    for width in pilot_widths:
-        latex = latex.replace(r"\real{0.2000}", r"\real{"+width+"}", 1)
     (PAPER / "ORBIT3D_arXiv_Paper.tex").write_text(latex)
     write_bibliography(latex)
     print(f"Updated {SOURCE.name} table and ORBIT3D_arXiv_Paper.tex (Pandoc {pypandoc.get_pandoc_version()})")

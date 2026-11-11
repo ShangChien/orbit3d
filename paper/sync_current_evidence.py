@@ -1,6 +1,7 @@
 """Copy selected public run summaries into the self-contained manuscript archive."""
 import hashlib
 import json
+import shutil
 from pathlib import Path
 paper = Path(__file__).resolve().parent
 names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
@@ -18,10 +19,19 @@ names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
          'element_balance_20261112.json', 'element_temperature_20261112.json',
          'condition_contrast_20261112.json', 'optical_matched512_20261112.json',
          'ocelot_optical8192_20261112.json', 'fingerprint_optical20356_20261112.json',
-         'latest_mainline_reload_20261112.json', 'boron_unconverged6_20261112.json']
+         'latest_mainline_reload_20261112.json', 'boron_unconverged6_20261112.json',
+         'grpo_factorial_20261112.json', 'optical_generation_20261112.json',
+         'optical_calibration_20261112.json', 'optical_wheel_reload_20261112.json',
+         'boron_quantum_cohort_20261112.json', 'boron_quantum_oracles_20261112.json',
+         'boron_geometry160_20261112.json', 'kv_buffer_20261112.json']
 records = {}
 for name in names:
     path = paper.parent/'docs/experiments'/name
     raw = path.read_text()
     records[name] = {'source': 'docs/experiments/'+name, 'sha256': hashlib.sha256(raw.encode()).hexdigest(), 'json': raw}
 (paper/'data/unified_evidence.json').write_text(json.dumps(records, indent=2)+'\n')
+
+quantum_input = paper.parent/'docs/experiments/boron_quantum_input_20261112.sdf'
+cohort = json.loads(records['boron_quantum_cohort_20261112.json']['json'])
+assert hashlib.sha256(quantum_input.read_bytes()).hexdigest() == cohort['manifest']['source_sha256']
+shutil.copyfile(quantum_input, paper/'data/boron_quantum_input_20261112.sdf')

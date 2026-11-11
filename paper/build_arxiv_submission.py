@@ -14,6 +14,8 @@ def build_arxiv_tarball() -> Path:
         "ORBIT3D_arXiv_Paper.bbl",
         "references.bib",
         "figures/fig0_orbit3d_system_architecture.pdf",
+        "figures/fig1_grpo_training_seeds.pdf",
+        "data/boron_quantum_input_20261112.sdf",
         "data/route_b_dpa4_scaling_summary.json",
         "data/provenance.json",
         "data/unified_evidence.json",
