@@ -43,9 +43,8 @@ outputs/
 *.pb
 *.onnx
 
-# LaTeX build intermediates
+# LaTeX build intermediates (note: .bbl is tracked for arXiv AutoTeX submission)
 paper/*.aux
-paper/*.bbl
 paper/*.blg
 paper/*.fdb_latexmk
 paper/*.fls

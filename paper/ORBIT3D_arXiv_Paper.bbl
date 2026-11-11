@@ -1,0 +1,33 @@
+\begin{thebibliography}{1}
+
+\bibitem{campbell2024propmolflow}
+Andrew Campbell, Jason Yim, Regina Barzilay, Tom Rainforth, and Tommi Jaakkola.
+\newblock Generative flows on discrete and continuous state spaces for {3D} molecular design.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2024.
+
+\bibitem{lu2025uni3dar}
+Shuqi Lu, Zhifeng Gao, Di~He, Linfeng Zhang, and Guolin Ke.
+\newblock {Uni-3DAR}: Unified {3D} generation and understanding via autoregressive modeling on randomized {3D} octrees.
+\newblock {\em arXiv preprint}, 2025.
+
+\bibitem{ramakrishnan2014quantum}
+Raghunathan Ramakrishnan, Pavlo~O Dral, Matthias Rupp, and O~Anatole Von~Lilienfeld.
+\newblock Quantum chemistry structures and properties of 134 kilo molecules.
+\newblock {\em Scientific Data}, 1(1):1--7, 2014.
+
+\bibitem{shao2024grpo}
+Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK~Li, Y~Wu, et~al.
+\newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open language models.
+\newblock {\em arXiv preprint arXiv:2402.03300}, 2024.
+
+\bibitem{zhang2025dpa4}
+Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, Yiming Du, Han Wang, and Linfeng Zhang.
+\newblock {DPA-4}: Large atomic model as a multi-task foundation potential for organic molecules and materials ({OMol25}).
+\newblock {\em DP Technology Technical Report}, 2025.
+
+\bibitem{zhou2023unimol}
+Gengmo Zhou, Zhifeng Gao, Qiankun Ding, Hang Zheng, Hongteng Xu, Zhewei Wei, Linfeng Zhang, and Guolin Ke.
+\newblock {Uni-Mol}: A universal {3D} molecular representation learning framework.
+\newblock In {\em International Conference on Learning Representations (ICLR)}, 2023.
+
+\end{thebibliography}
