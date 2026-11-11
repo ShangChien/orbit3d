@@ -289,3 +289,48 @@ def test_element_supervision_remains_pending_after_structural_adaptation():
     state['representation_migration'] = {'old_elements': ['H', 'C', 'B'],
                                         'new_elements': ['H', 'C', 'B', 'Si'], 'requires_adaptation': True}
     assert required_condition_elements(state) == {'B', 'Si'}
+
+
+def test_per_molecule_training_scores_match_separate_unequal_size_molecules():
+    args = build_default_uni3dar_args(2)
+    args.emb_dim, args.num_head, args.layer = 96, 4, 2
+    model = ConditionalUni3DAR(args, AtomFeatDict(args), 2).eval()
+    with torch.no_grad():
+        for parameter in model.tree_heads.parameters():
+            if parameter.ndim > 1:
+                parameter.normal_(0, .02)
+    molecules = []
+    for smi in ['CO', 'c1ccccc1']:
+        mol = Chem.AddHs(Chem.MolFromSmiles(smi))
+        AllChem.EmbedMolecule(mol, randomSeed=42)
+        molecules.append(mol)
+    dataset = OctreeDataset(molecules, model, training=False)
+    target = torch.tensor([[0., 1.], [1., 0.]])
+    _, stats = model.compute_sft_and_understanding_loss(
+        dataset.collate([0, 1]), target, target-.25, target+.25, torch.ones(2, 2, dtype=torch.bool),
+        understanding_weight=0, return_per_molecule=True)
+    scores = stats['per_molecule_generation_loss']
+    for i in range(2):
+        y = target[i:i+1]
+        separate, _ = model.compute_sft_and_understanding_loss(
+            dataset.collate([i]), y, y-.25, y+.25, torch.ones(1, 2, dtype=torch.bool), understanding_weight=0)
+        torch.testing.assert_close(scores[i], separate, atol=1e-5, rtol=1e-5)
+    scores.sum().backward()
+    assert any(p.grad is not None and p.grad.abs().sum() for p in model.interval_conditioner.parameters())
+
+
+def test_incompatible_intervals_and_margin_use_only_valid_negative_pairs():
+    from orbit3d.generator.condition_contrast import incompatible_condition_indices, condition_margin_loss
+    targets = torch.tensor([[0., 0.], [.1, .1], [.6, -.1]])
+    indices, eligible = incompatible_condition_indices(targets, halfwidth=.25)
+    assert eligible.all()
+    assert ((targets-targets[indices]).abs() > .25).any(-1).all()
+    positive = torch.tensor([1., 1.], requires_grad=True)
+    negative = torch.tensor([.99, 1.1], requires_grad=True)
+    loss = condition_margin_loss(positive, negative, torch.ones(2, dtype=torch.bool), margin=.02)
+    assert loss.item() == pytest.approx(.015)
+    loss.backward()
+    torch.testing.assert_close(positive.grad, torch.tensor([.5, 0.]))
+    torch.testing.assert_close(negative.grad, torch.tensor([-.5, 0.]))
+    _, eligible = incompatible_condition_indices(torch.zeros(2, 2))
+    assert not eligible.any()

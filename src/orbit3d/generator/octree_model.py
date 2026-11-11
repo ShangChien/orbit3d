@@ -276,7 +276,8 @@ class ConditionalUni3DAR(Uni3DARSampler):
         y_max_norm: torch.Tensor,
         active_mask: torch.Tensor,
         understanding_weight: float = 1.0,
-    ) -> Tuple[torch.Tensor, Dict[str, float]]:
+        return_per_molecule: bool = False,
+    ) -> Tuple[torch.Tensor, Dict]:
         device = y_true_norm.device
         bd = {k: (v.to(device) if isinstance(v, torch.Tensor) else v) for k, v in batched_data.items()}
         bd["decoder_phy_pos"] = bd["decoder_phy_pos"].float()
@@ -340,6 +341,26 @@ class ConditionalUni3DAR(Uni3DARSampler):
             "loss_und": float(und_loss.item()),
             "root_gate": float(torch.tanh(self.interval_conditioner.root_gate).item()),
         }
+        if return_per_molecule:
+            owners = torch.repeat_interleave(torch.arange(len(y_true_norm), device=device),
+                                             torch.diff(cu_lens).long())
+            per_molecule = torch.zeros(len(y_true_norm), device=device)
+
+            def average_decisions(values, selected):
+                ids = owners[selected]
+                summed = torch.zeros_like(per_molecule).index_add(0, ids, values)
+                counts = torch.bincount(ids, minlength=len(per_molecule))
+                return summed / counts.clamp_min(1)
+
+            if is_gen_tree.any():
+                per_molecule = per_molecule + average_decisions(
+                    F.cross_entropy(logits_tree, gt_tree, reduction='none'), is_gen_tree)
+            if is_gen_atom.any():
+                atom_losses = F.cross_entropy(atom_logits, gts_xyz[0], reduction='none')
+                coordinate_losses = sum(F.cross_entropy(preds_xyz[axis].float(), gts_xyz[axis], reduction='none')
+                                        for axis in range(1, 4)) / 3
+                per_molecule = per_molecule + average_decisions(atom_losses + .1 * coordinate_losses, is_gen_atom)
+            metrics['per_molecule_generation_loss'] = per_molecule
         return total_loss, metrics
 
     def generate_conditional_trajectories(
