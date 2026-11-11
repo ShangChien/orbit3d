@@ -136,7 +136,11 @@ def align_octree(
             row['reward'] = value
         reward = torch.tensor(rewards, device=device)
         adv = (reward - reward.mean()) / reward.std(unbiased=False).clamp_min(1e-6)
-        for _ in range(2):
+        # With no ranking signal or auxiliary objective, Adam's momentum and
+        # weight decay must not silently move the policy on an all-failed group.
+        updates = 2 if bool(adv.any()) or kl_beta or replay_weight else 0
+        loss = torch.zeros((), device=device)
+        for _ in range(updates):
             with torch.autocast(device_type=device.type, enabled=False):
                 current = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
                 loss = categorical_policy_loss(current, old, ref, adv, beta=kl_beta)
@@ -170,6 +174,7 @@ def align_octree(
             "reward_mean": float(reward.mean()),
             "loss": float(loss.detach()),
             "precision": "float32",
+            "optimizer_updates": updates,
             "weights": {'kl': kl_beta, 'physics': physics_weight, 'uncertainty': uncertainty_weight, 'replay': replay_weight},
             "rollout_records": rollout_records,
         }

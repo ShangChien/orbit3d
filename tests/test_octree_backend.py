@@ -229,3 +229,48 @@ def test_zero_kl_objective_needs_no_reference_model_and_keeps_policy_gradients()
     assert logits.grad.abs().sum()>0
     with pytest.raises(ValueError,match='reference policy'):
         categorical_policy_loss([packet],old,None,advantage,beta=.1)
+
+
+def test_failed_groups_without_auxiliary_objectives_leave_policy_unchanged(monkeypatch):
+    import copy
+    from types import SimpleNamespace
+    from orbit3d.constraints import TargetIntervals
+    from orbit3d.generator.octree_alignment import align_octree
+
+    class FailedPolicy(torch.nn.Module):
+        condition_version = 3
+        args = SimpleNamespace(allow_atoms='H,C,N,O,F')
+
+        def __init__(self):
+            super().__init__()
+            self.interval_conditioner = torch.nn.Linear(2, 2)
+
+        def generate_conditional_trajectories(self, *args, **kwargs):
+            return [{'decoder_feat': torch.zeros(1, 6), 'atom_symbols': ['C'],
+                     'positions_np': np.zeros((1, 3))} for _ in range(4)]
+
+        def trajectory_distributions(self, *args, **kwargs):
+            logits = self.interval_conditioner(torch.ones(4, 2))
+            return [(logits.log_softmax(-1), torch.zeros(4, dtype=torch.long), torch.arange(4))]
+
+    def invalid(*args, **kwargs):
+        raise ValueError('invalid generated graph')
+
+    monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance', invalid)
+    adam = torch.optim.AdamW
+    def optimizer_with_existing_momentum(parameters, **kwargs):
+        optimizer = adam(parameters, **kwargs)
+        for group in optimizer.param_groups:
+            for parameter in group['params']:
+                optimizer.state[parameter] = {'step': torch.tensor(1.),
+                    'exp_avg': torch.ones_like(parameter) * .1,
+                    'exp_avg_sq': torch.ones_like(parameter) * .01}
+        return optimizer
+    monkeypatch.setattr(torch.optim, 'AdamW', optimizer_with_existing_momentum)
+    model = FailedPolicy()
+    original = copy.deepcopy(model.state_dict())
+    history = align_octree(model, [], None, np.zeros(1), np.ones(1),
+                           TargetIntervals.parse((0, 1), ['target']), None, None,
+                           steps=2, group_size=4, kl_beta=0, replay_weight=0)
+    assert all(row['optimizer_updates'] == 0 and row['valid'] == 0 for row in history)
+    assert all(torch.equal(value, model.state_dict()[key]) for key, value in original.items())
