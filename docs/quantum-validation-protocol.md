@@ -124,3 +124,32 @@ absolute error at the largest analytic component). This explicit workload split
 replaces use of an incorrect derivative; it is not an exception-triggered fallback.
 The density-level and molecular checks are reproducible with
 `scripts/validate_xc_derivatives.py` and `scripts/validate_excited_gradient.py`.
+
+## Same-molecule excited minima (2026-11-12)
+
+The entire retained cohort of the 1024/4000 OCELOT run contains one molecule,
+candidate 3. Its S1 and T1 geometries now converge independently at the same
+LC-wPBE (Libxc 478)/def2-SVP level, fixed S0-tuned omega 0.2762 bohr⁻¹,
+99/590 integration grid and full spin-adapted LR-TDDFT. The third-order XC
+evaluation and scanner indexing corrections described above are used.
+
+The adiabatic excitation energies relative to the same S0 geometry are
+3.63105269 eV (S1) and 2.51208216 eV (T1), giving 1.11897054 eV for their
+adiabatic difference. This differs from the 0.95189751 eV vertical difference.
+No zero-point correction is included. Graph identity is preserved in both
+optimizations. Central differences of all 51 excited-state gradient coordinates
+(step 0.005 bohr), after projection of translations and rotations, yield 45
+positive modes in each state; the lowest are 47.46 and 23.90 cm⁻¹. Maximum
+Hessian antisymmetries are 0.000734 and 0.000743 Ha/bohr², below the declared
+0.001 tolerance. These are numerical harmonic minimum checks on this molecule,
+not state-tracking guarantees or a dataset-wide accuracy claim.
+
+The frequency report links to the immutable optimization result by SHA-256; the
+optimization's original `minimum_verified: false` records that frequencies had
+not yet been computed at that stage. The separate frequency report establishes
+the final minimum status. [Paired energies, gradients, frequencies and source
+hashes](experiments/generated_excited_minima_20261112.json) and the optimized
+[S1](experiments/generated_candidate3_s1_20261112.sdf) /
+[T1](experiments/generated_candidate3_t1_20261112.sdf) geometries are archived.
+The OCELOT CSV still lacks its original omega/geometries; these results do not
+establish reproduction of its values or a paired-reference MAE.
