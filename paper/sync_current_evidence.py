@@ -26,7 +26,11 @@ names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
          'boron_geometry160_20261112.json', 'kv_buffer_20261112.json',
          'brics_comparison_20261112.json', 'hyff_optical8192_20261112.json',
          'hyff_optical_calibration_20261112.json', 'optical_hyff_independent_20261112.json',
-         'relocated_artifact_verification_20261112.json']
+         'relocated_artifact_verification_20261112.json', 'boron_quantum_hyff_20261112.json',
+         'excitation_gradient_comparison_20261112.json', 'ecp_initial_failure_20261112.json',
+         'ecp_tight_grid_20261112.json', 'quantum_ecp_wheel_20261112.json',
+         'boron_excitation_gradients_20261112.json', 'boron_quantum_dpa_gradients_20261112.json',
+         'boron_quantum_hyff_gradients_20261112.json']
 records = {}
 for name in names:
     path = paper.parent/'docs/experiments'/name
@@ -38,3 +42,11 @@ quantum_input = paper.parent/'docs/experiments/boron_quantum_input_20261112.sdf'
 cohort = json.loads(records['boron_quantum_cohort_20261112.json']['json'])
 assert hashlib.sha256(quantum_input.read_bytes()).hexdigest() == cohort['manifest']['source_sha256']
 shutil.copyfile(quantum_input, paper/'data/boron_quantum_input_20261112.sdf')
+
+gradient_inputs = json.loads(records['excitation_gradient_comparison_20261112.json']['json'])['source_sha256']
+for name, key in [('boron_excitation_gradients_20261112.npz', 'quantum_gradients'),
+                  ('boron_quantum_dpa_gradients_20261112.npz', 'dpa_gradients'),
+                  ('boron_quantum_hyff_gradients_20261112.npz', 'hyff_gradients')]:
+    source = paper.parent / 'docs/experiments' / name
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == gradient_inputs[key]
+    shutil.copyfile(source, paper / 'data' / name)

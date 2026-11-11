@@ -29,7 +29,7 @@ Domain-specific components can serve complementary roles. OCNet predicts molecul
 
 ## 2. Five-stage architecture
 
-![ORBIT-3D five-stage architecture. Stages 1-4 learn and align a proposal policy; the dashed edge updates the interval conditioner during GRPO. At deployment, the learned policy generates and ranks candidates before Stage 5 refinement. Shared property and force evaluators support alignment and acceptance. An output is released only after explicit validation.](figures/fig0_orbit3d_system_architecture.png){#fig:arch width=100%}
+![ORBIT-3D five-stage architecture. Stages 1-3 learn a proposal policy; optional Stage 4 aligns it. The dashed edge updates the interval conditioner during GRPO. At deployment, the learned policy generates and ranks candidates before Stage 5 refinement. Shared property and force evaluators support alignment and acceptance. An output is released only after explicit validation.](figures/fig0_orbit3d_system_architecture.png){#fig:arch width=100%}
 
 ### 2.1. Molecular state and interval constraints
 
@@ -330,6 +330,14 @@ not establish superior physical or independent property quality.
 
 ### 4.5. Same-level quantum diagnostics
 
+Quantum calculations use PySCF 2.12.1 [@sun2020pyscf] and GPU4PySCF 1.9.1
+[@li2024gpu4pyscf]. The internally specified level is IP-tuned LC-wPBE
+(Libxc 478)/def2-SVP, with $J_h=|\epsilon_H+E(N-1)-E(N)|$, a 99/590
+integration grid and 1e-9 Hartree SCF tolerance. No density fitting or TDA is
+substituted. S1/T1 refer to full linear-response TDDFT at the same S0 geometry
+and S0-tuned omega. These settings define an internal diagnostic; they have not
+reproduced the released OCELOT reference protocol.
+
 An explicit depth-six to depth-seven migration retains 0.24 Angstrom leaf cells
 and expands the spatial range to 30.72 Angstrom. After backbone adaptation, a
 64-proposal diagnostic produces 48 valid structures, including three above the
@@ -357,8 +365,28 @@ All five completed structures lie outside the wide-OCELOT applicability domain.
 At their same quantum geometries, mean absolute disagreements of the four-target
 DPA adapter are 0.4355/0.3303/0.5212/0.2120 eV for HOMO/LUMO/S1/T1; its paired
 vertical-gap disagreement is 0.4104 eV. The fingerprint counterpart is 0.3451 eV
-for that gap. These are five-case extrapolation diagnostics against an internally
-defined protocol, not OCELOT test MAEs or evidence of B-conditioned design.
+for that gap. The matched HyFF adapter gives 0.4171/0.2614/0.4009/0.1879 eV
+for the four targets and 0.2693 eV for the paired gap. The same five geometries
+and quantum reference scalars are used throughout. These are five-case
+extrapolation diagnostics, not OCELOT test MAEs or evidence of B-conditioned design.
+
+Fixed-omega excitation gradients provide a separate check of the local geometric
+response. All five completed cases reproduce their stored ground and excitation
+energies within predeclared thresholds. DPA's mean S1/T1 gradient cosines against
+TDDFT are 0.630/0.658; HyFF's are 0.422/0.573. Every individual-property cosine
+is positive, but DPA gradient norms are only 0.31–0.73 times their quantum
+counterparts. This supports directional information on this cohort, not calibrated
+magnitudes or accuracy beyond it.
+
+A post-hoc interval-loss check uses the previously defined S1 [2.5, 3.5] and T1
+[1.5, 2.5] eV window. For cohort case 2, DPA predicts S1 = 3.5425 eV while TDDFT
+gives 2.2770 eV. Their property-gradient cosine is +0.819, but their interval-loss
+gradient cosine is -0.819 because the predictions violate opposite bounds. DPA
+also assigns zero interval loss to two quantum-infeasible cases. Scalar prediction
+bias can therefore reverse the desired interval correction despite a correctly
+computed, positively aligned property derivative. These cases are already excluded
+by the applicability-domain filter; the diagnostic is not an observed in-domain
+failure rate.
 
 
 The entire retained cohort of the earlier 1024-record/4000-step adaptation consists
@@ -483,6 +511,15 @@ retains graphs, placements and coordinates exactly, with ordinary property/force
 comparisons using the existing numerical tolerances. This graph-action workflow
 is not learned octree scaffold completion.
 
+
+An additional Hamiltonian audit corrects omitted scalar def2 core potentials for
+Te and I. HI has 26 explicitly treated electrons with I's 28-electron ECP, versus
+54 under the previous basis-only input. Light-element Hamiltonians and existing
+saved records retain their original semantics. An initial 1e-9 SCF calculation
+fails the 1e-5 eV/Angstrom CPU/GPU force-parity gate. A separate 1e-11 SCF,
+full-grid-response check on HI and TeH2 passes the same energy, force-parity and
+finite-difference thresholds. The initial failure is retained; this numerical
+convergence check does not modify completed cohort calculations.
 
 ## Appendix B. Archived octree/GVP pilot
 

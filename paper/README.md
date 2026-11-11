@@ -69,6 +69,9 @@ python paper/build_arxiv_submission.py
 
 This rebuilds the local source archive; it does not submit or publish the paper.
 The archive includes the main TeX, bibliography, vector Figures 0 and 1, the
-original ten-molecule quantum input SDF, and pilot data
-with provenance, plus the checksum-verified current evidence archive. Superseded
+original ten-molecule quantum input SDF, all three raw gradient arrays, and pilot
+data with provenance, plus the checksum-verified current evidence archive.
+Research data is packaged in the root `anc/` directory, following the
+[arXiv ancillary-file format](https://info.arxiv.org/help/ancillary_files.html).
+The manuscript itself does not depend on those files for typesetting. Superseded
 figures are excluded.

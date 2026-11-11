@@ -37,7 +37,7 @@ class Figure:
         self.svg = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">',
             '<title id="title">ORBIT-3D five-stage architecture</title>',
-            '<desc id="desc">Stages 1 to 4 learn and align a 3D molecular policy. Stage 5 refines sampled candidates. A dashed arrow shows training feedback. Shared property and force evaluators support alignment and refinement. Outputs must pass explicit validation.</desc>',
+            '<desc id="desc">Stages 1 to 3 learn a 3D molecular policy; optional Stage 4 aligns it. Stage 5 refines sampled candidates. A dashed arrow shows training feedback. Shared property and force evaluators support alignment and refinement. Outputs must pass explicit validation.</desc>',
         ]
         self.rect(0, 0, WIDTH, HEIGHT, fill="#FFFFFF", stroke=None, radius=0)
 
@@ -176,10 +176,10 @@ def draw(output_dir: Path, render_png=True):
     f.text(580, 125, "conditioner update", size=19, color=BLUE, anchor="middle")
 
     stages = [
-        (24, BLUE, "#F7FAFD", "01", "3D prior", "Octree generation", octree_icon),
+        (24, BLUE, "#F7FAFD", "01", "3D prior", "Pretrained octree", octree_icon),
         (254, BLUE, "#F7FAFD", "02", "Interval SFT", "Target conditioning", interval_icon),
         (484, BLUE, "#F7FAFD", "03", "Self-ranking", "Select candidates", rank_icon),
-        (714, TEAL, "#F2F8F6", "04", "Gated GRPO", "Reward + KL anchor", reward_icon),
+        (714, TEAL, "#F2F8F6", "04", "Gated GRPO", "Optional alignment", reward_icon),
         (944, AMBER, "#FCF7F2", "05", "Relaxation", "Accept or backtrack", None),
     ]
     for x, color, fill, number, title, subtitle, icon in stages:
@@ -207,7 +207,7 @@ def draw(output_dir: Path, render_png=True):
     f.line([(465, 438), (465, 515)], RULE, 1.3)
     f.text(46, 452, "Property oracle", size=22, bold=True)
     f.text(46, 481, "Predictions + uncertainty", size=20, color=MUTED)
-    f.text(46, 511, "Uni-Mol / learned heads / Uni-QSAR", size=18, color=MUTED, max_width=399)
+    f.text(46, 511, "3D adapters / fingerprint models", size=18, color=MUTED, max_width=399)
     f.text(488, 452, "Force field", size=22, bold=True)
     f.text(488, 481, "Energy + interatomic forces", size=20, color=MUTED)
     f.text(488, 511, "DPA-4 / HyFF", size=18, color=MUTED)

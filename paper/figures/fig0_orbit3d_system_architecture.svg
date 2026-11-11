@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="550" viewBox="0 0 1200 550" role="img" aria-labelledby="title desc">
 <title id="title">ORBIT-3D five-stage architecture</title>
-<desc id="desc">Stages 1 to 4 learn and align a 3D molecular policy. Stage 5 refines sampled candidates. A dashed arrow shows training feedback. Shared property and force evaluators support alignment and refinement. Outputs must pass explicit validation.</desc>
+<desc id="desc">Stages 1 to 3 learn a 3D molecular policy; optional Stage 4 aligns it. Stage 5 refines sampled candidates. A dashed arrow shows training feedback. Shared property and force evaluators support alignment and refinement. Outputs must pass explicit validation.</desc>
 <rect x="0" y="0" width="1200" height="550" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
 <rect x="24" y="18" width="1112" height="44" rx="9" fill="#F3F6F8" stroke="none" stroke-width="1.5"/>
 <text x="43" y="47" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#526575" text-anchor="start">INPUTS</text>
@@ -26,7 +26,7 @@
 <circle cx="104" cy="251" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
 <circle cx="126" cy="273" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
 <circle cx="129" cy="235" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<text x="120" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Octree generation</text>
+<text x="120" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Pretrained octree</text>
 <rect x="254" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="270" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">02</text>
 <text x="350" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Interval SFT</text>
@@ -58,7 +58,7 @@
 <rect x="764" y="264" width="23" height="22" rx="3" fill="#BED9D4" stroke="none" stroke-width="1.5"/>
 <rect x="800" y="245" width="23" height="41" rx="3" fill="#76AFA6" stroke="none" stroke-width="1.5"/>
 <rect x="836" y="224" width="23" height="62" rx="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
-<text x="810" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Reward + KL anchor</text>
+<text x="810" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Optional alignment</text>
 <rect x="944" y="150" width="192" height="185" rx="12" fill="#FCF7F2" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="960" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#B46B35" text-anchor="start">05</text>
 <text x="1040" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Relaxation</text>
@@ -93,7 +93,7 @@
 <polyline points="465,438 465,515" fill="none" stroke="#D7E0E7" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="46" y="452" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="start">Property oracle</text>
 <text x="46" y="481" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#526575" text-anchor="start">Predictions + uncertainty</text>
-<text x="46" y="511" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">Uni-Mol / learned heads / Uni-QSAR</text>
+<text x="46" y="511" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">3D adapters / fingerprint models</text>
 <text x="488" y="452" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="start">Force field</text>
 <text x="488" y="481" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#526575" text-anchor="start">Energy + interatomic forces</text>
 <text x="488" y="511" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">DPA-4 / HyFF</text>

@@ -1,4 +1,4 @@
-\begin{thebibliography}{16}
+\begin{thebibliography}{18}
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Haowei Lin, Lin Yao, et al.
@@ -92,6 +92,18 @@ Jörg Degen, Christof Wegscheid-Gerlach, Andrea Zaliani, Matthias Rarey.
 \newblock On the art of compiling and using drug-like chemical fragment spaces.
 \newblock ChemMedChem, 2008, 3:1503-1507.
 \newblock \url{https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cmdc.200800178}.
+
+\bibitem{sun2020pyscf}
+Qiming Sun, et al.
+\newblock Recent developments in the PySCF program package.
+\newblock The Journal of Chemical Physics, 2020, 153:024109.
+\newblock \url{https://doi.org/10.1063/5.0006074}.
+
+\bibitem{li2024gpu4pyscf}
+Rui Li, Qiming Sun, Xing Zhang, Garnet Kin-Lic Chan.
+\newblock Introducing GPU-acceleration into the python-based simulations of chemistry framework.
+\newblock arXiv preprint arXiv:2407.09700, 2024.
+\newblock \url{https://arxiv.org/abs/2407.09700}.
 
 \bibitem{ramakrishnan2014quantum}
 Raghunathan Ramakrishnan, Pavlo O. Dral, Matthias Rupp, O. Anatole von Lilienfeld.
