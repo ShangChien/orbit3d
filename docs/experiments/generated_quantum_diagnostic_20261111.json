@@ -1,0 +1,76 @@
+{
+  "attempted": 1,
+  "completed": 1,
+  "elapsed_seconds": 501.6857619583607,
+  "records": [
+    {
+      "theory": {
+        "engine": "gpu",
+        "xc": "HYB_GGA_XC_LC_WPBE",
+        "basis": "def2-svp",
+        "tuning_objective": "Jh",
+        "omega_bounds": [
+          0.05,
+          0.5
+        ],
+        "omega_tolerance": 0.001,
+        "omega_geometry_tolerance": 0.01,
+        "max_outer_cycles": 5,
+        "scf_tolerance": 1e-09,
+        "max_scf_cycles": 100,
+        "radial_grid": 99,
+        "angular_grid": 590,
+        "threads": 2,
+        "memory_mb": 4000,
+        "max_geometry_steps": 80
+      },
+      "pyscf_version": "2.12.1",
+      "omega": 0.2762,
+      "omega_geometry_cycles": [
+        {
+          "cycle": 0,
+          "omega": 0.2789,
+          "omega_change": 0.021100000000000008
+        },
+        {
+          "cycle": 1,
+          "omega": 0.2762,
+          "omega_change": 0.00269999999999998
+        }
+      ],
+      "geometry_optimized": true,
+      "energy_Ha": -488.5973049402851,
+      "homo_eV": -8.815657317952356,
+      "lumo_eV": -0.0017867032127486034,
+      "S2": 1.4210854715202004e-14,
+      "rms_force_eV_A": 0.002549891390368378,
+      "max_force_eV_A": 0.004929671727297469,
+      "elapsed_seconds": 451.56903570890427,
+      "graph_preserved": true,
+      "vertical_excitations": {
+        "method": "full linear-response TDDFT; spin-adapted restricted reference",
+        "response_residual_tolerance": 1e-07,
+        "trial_gram_eigenvalue_threshold": 1e-16,
+        "geometry": "same optimized S0 geometry for S1 and T1",
+        "omega": 0.2762,
+        "ground_energy_Ha": -488.5973049404131,
+        "singlet_eV": [
+          4.035019817632582
+        ],
+        "triplet_eV": [
+          3.083122303534396
+        ],
+        "S1_minus_T1_eV": 0.9518975140981862
+      },
+      "index": 0,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "3",
+        "PredictedValue": "[-7.742918014526367, -0.2683935761451721]",
+        "JointSuccess": "True"
+      },
+      "status": "completed"
+    }
+  ]
+}

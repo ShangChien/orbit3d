@@ -120,3 +120,28 @@ HyFF manifest，并在源码树之外验证了导入。另一次关闭Stage 5的
 已找到[MIM-Flow官方关联发布](https://zenodo.org/records/21429926)，但网页当前
 `data.tar.gz`的MD5与本地已完整校验的3.25GB文件不同，尚不能把该URL登记为精确
 来源。该版本差异已记录于 `data/mim_flow_archive.json`，没有替换现有实验输入。
+
+## Continued implementation and negative results
+
+The 4096-reference-record generator continuation ran8000 additional steps with
+the inherited target scaler. Its64 attempts yielded32 valid structures,5 domain-
+eligible/retained structures and0 optimizing-oracle joint successes. An independent
+fingerprint model found3 interval hits and1 joint success, illustrating evaluator
+disagreement. Mean SA score was3.17 (maximum4.14); this is a heuristic, not a
+synthetic route. `experiments/ocelot_generator_continued_20261111.json` preserves
+the counts, checkpoint hash and independent results.
+
+The sole retained molecule from the earlier1024-record/4000-step model completed
+an explicit GPU4PySCF1.9.1 IP-tuned LC-wPBE/def2-SVP optimization and full S1/T1
+TDDFT. Its graph survived; HOMO=-8.81566 eV missed the original target despite the
+optimizing surrogate's hit. This is a fixed-cohort negative diagnostic, not a
+validated reproduction of OCELOT's undocumented per-molecule protocol. The report
+is `experiments/generated_quantum_diagnostic_20261111.json`.
+
+The official DeepMD3.2 Python backend now installs from locked sources with
+Torch2.7.1, e3nn and Warp/nvalchemi neighbor lists. Its32 fixed-geometry property
+and force outputs differ from the previous experimental runtime by at most
+2.86e-6 eV and2.80e-6 eV/Å. Native coordinate gradients pass finite differences,
+and a32-candidate Stage5-off replay passes with all tokens and the sole exported
+molecule checked. Source snapshots separate this clean installation from the
+original experimental environment. Docker execution remains untested.

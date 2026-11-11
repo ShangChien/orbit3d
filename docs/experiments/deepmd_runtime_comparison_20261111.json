@@ -1,0 +1,8 @@
+{
+  "records": 32,
+  "comparison": "official DeepMD 3.2 Python backend versus previous experimental source runtime",
+  "property_max_abs_eV": 2.86102294921875e-06,
+  "std_max_abs_eV": 1.080334186553955e-06,
+  "energy_max_abs_eV": 0.0,
+  "force_max_abs_eV_A": 2.8014183044433594e-06
+}

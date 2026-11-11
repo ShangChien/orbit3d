@@ -7,7 +7,7 @@ November 2026
 
 ## Abstract
 
-Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. An octree autoregressive prior is adapted to property intervals, paired with a self-ranking head, and aligned through group-relative policy optimization using property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box; the force-field backend is selected according to its supported elements and electronic states. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Archived octree/GVP experiments provide pilot evidence under their original target intervals and sampling budgets. The resulting formulation makes proposal quality, oracle reliability, and relaxation acceptance separately testable, while identifying the matched-budget experiments and independent quantum-chemical validation required to establish the effectiveness of the unified implementation.
+Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. An octree autoregressive prior is adapted to property intervals, paired with a self-ranking head, and aligned through group-relative policy optimization using property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box; the force-field backend is selected according to its supported elements and electronic states. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out OCELOT training, candidate-pool ranking ablations, and full-pipeline replay establish implementation behavior. Independent model and quantum checks expose remaining failures in conditional generation; these are reported alongside the archived octree/GVP pilot. The resulting formulation makes proposal quality, oracle reliability, and relaxation acceptance separately testable, while identifying the matched-budget experiments and independent quantum-chemical validation required to establish the effectiveness of the unified implementation.
 
 ## 1. Introduction
 
@@ -128,7 +128,60 @@ The five stages describe a learning-and-refinement workflow. They are not five m
 
 ## 4. Experimental protocol and pilot evidence
 
-### 4.1. What the archived experiments establish
+### 4.1. Current implementation: OCELOT and QM9s
+
+The executable package uses a vendored pretrained Uni-3 DAR octree, an explicit
+multi-target conditioner, independent bootstrap property adapters, and DPA4-Mini
+physical evaluation. QM9s supplies structures and its original 240-channel spectra;
+HOMO/LUMO predictions on QM9s are clearly marked pseudo-labels. OCELOT supplies
+reference HOMO/LUMO labels in eV. Its available official archive has no original
+DFT geometries or per-molecule range parameters, so the 3D property model uses
+ETKDG/MMFF reconstructions and fixed scaffold-separated splits.
+
+<!-- BEGIN CURRENT RESULTS -->
+| Held-out OCELOT property | Bootstrap DPA MAE (eV) | Train-mean MAE (eV) |
+| :--- | ---: | ---: |
+| HOMO | 0.2995 | 0.4701 |
+| LUMO | 0.2379 | 0.4848 |
+
+Table: 4096 training records, three independent bootstrap adapters, 256 held-out test records.
+
+| Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |
+| :--- | ---: | ---: |
+| first valid | 11.46 | 1.80 |
+| self | 11.46 | 1.80 |
+| external | 20.83 | 1.80 |
+
+Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.
+<!-- END CURRENT RESULTS -->
+
+The three ranking runs use identical proposal tokens for each seed, with a fixed
+32-proposal/8-retained budget. External ranking consumes additional property-model
+calls, so its gain is a selection result, not an equal-oracle-budget superiority
+claim. Self-ranking does not improve the measured joint success over first-valid.
+The initial BF16 policy comparison failed behavior/recomputed-probability checks;
+GRPO now uses FP32 throughout and its effectiveness remains under evaluation.
+
+Larger OCELOT adaptation improves domain coverage without establishing conditional
+success: the continued 4096-record run has 32 chemically valid proposals, 5 domain-
+eligible retained molecules and 0 joint successes from 64 attempts. Independent
+fingerprint evaluation gives 3 property hits and 1 joint success among the same 5
+structures. This disagreement is retained rather than choosing the favorable
+surrogate. Independent calibration on 512 unused validation structures achieves
+91.4% joint test coverage, but mean interval widths are 1.94/1.73 eV and ensemble
+standard deviation correlates weakly with errors; uncertainty-based reward is
+disabled by default.
+
+The entire retained cohort of the earlier 1024-record/4000-step adaptation consists
+of one molecule. At an explicit IP-tuned LC-wPBE/def2-SVP diagnostic level, its
+optimized graph is preserved and the DFT RMS force is 0.00255 eV/Å. Its HOMO/LUMO
+are $-8.81566/-0.00179$ eV, versus the optimizing surrogate's $-7.74292/-0.26839$ eV;
+the HOMO misses the original $[-8.2,-7.2]$ eV interval. Full spin-adapted TDDFT gives
+vertical S1/T1 energies 4.03502/3.08312 eV. These are not adiabatic gaps. Because
+reference naphthalene calculations do not reproduce the published OCELOT CSV,
+these numbers are protocol diagnostics, not same-protocol dataset MAEs.
+
+### 4.2. What the archived experiments establish
 
 We report a limited pilot from the original octree implementation on QM9-derived molecules [@ramakrishnan2014quantum]. The property oracle is the GVP regressor used by the archived pipeline, not a five-fold Uni-Mol ensemble. The policy was aligned with DPA4-Air feedback; a shared candidate pool was then refined with different force-field scales. DPA4-Plus supplies the reported force evaluation.
 
@@ -153,7 +206,7 @@ Table: Archived octree/GVP pilot, 48 retained candidates per task. Forces are ev
 
 The archived LUMO run combines a 100% retained-pool surrogate hit rate with a mean molecular RMS force of approximately 0.198 eV/Å for the Plus backend. This observation supports further investigation of terminal refinement. It does not prove a local minimum, chemical novelty, independent property accuracy, or a universal benefit of any one stage. The weaker HOMO result also shows why each target regime must be reported separately. No cross-generator superiority claim is made from this table.
 
-### 4.2. Evaluation of the unified method
+### 4.3. Evaluation of the unified method
 
 The primary success metric is a per-sample conjunction over all generated proposals:
 
@@ -170,11 +223,11 @@ Matched-budget ablations should compare the prior, interval SFT, self-ranking, g
 
 The property evaluator used to optimize and select molecules must be distinguished from the independent evaluator used to assess them. For a representative, predeclared subset, quantum-chemical calculations should verify structures and target properties at a compatible level of theory. For spin-sensitive tasks, vertical excitation-like differences, adiabatic differences, and emission energies require separate definitions and per-molecule comparisons. A difference of ensemble means is not an MAE.
 
-### 4.3. Reproducibility
+### 4.4. Reproducibility
 
 Each run must identify the code revision, environment, input/split versions, tokenizer specification, full target intervals, model and oracle checkpoint hashes, electronic states, seed policy, sampling budget, and filtering rules. Reload checks compare every molecule's tokens, graph, coordinates, and predictions under declared tolerances. Independent random streams do not by themselves guarantee bitwise agreement across batching strategies or attention kernels.
 
-The pilot table is generated from the accompanying JSON archive; source hashes and protocol notes are included in its provenance manifest. The archive does not contain all weights and raw sample-level records needed to rerun or independently re-score the experiment. Full validation of the unified implementation therefore remains a separate experimental requirement. The historical dense-grid CLI and the octree pilot must not be labeled as the same trained model.
+The pilot table is generated from the accompanying JSON archive; source hashes and protocol notes are included in its provenance manifest. The archive does not contain all weights and raw sample-level records needed to rerun or independently re-score the experiment. Current package runs separately save full source snapshots, runtime versions, checkpoint hashes, raw trajectories and per-attempt states. A 32-candidate/8-export batch-path replay passes at 1e-5 prediction/coordinate tolerance. Serial-versus-batch comparison preserves all tokens and acceptance decisions, with maximum force difference 1.29e-5 eV/Å under a predeclared 1e-4 cross-path tolerance; same-path replay retains its tighter tolerance. Broader scientific effectiveness remains a separate experimental requirement. The historical dense-grid CLI and the octree pilot must not be labeled as the same trained model.
 
 ## 5. Limitations and scope
 

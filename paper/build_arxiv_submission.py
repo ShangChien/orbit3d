@@ -16,6 +16,7 @@ def build_arxiv_tarball() -> Path:
         "figures/fig0_orbit3d_system_architecture.pdf",
         "data/route_b_dpa4_scaling_summary.json",
         "data/provenance.json",
+        "data/unified_evidence.json",
     ]
 
     with tarfile.open(out_path, "w:gz") as tar:

@@ -96,6 +96,25 @@ def pilot_table():
 
 def build():
     text = SOURCE.read_text()
+    evidence = json.loads((PAPER / 'data/unified_evidence.json').read_text())
+    current = {}
+    for name, source in evidence.items():
+        if hashlib.sha256(source['json'].encode()).hexdigest() != source['sha256']:
+            raise ValueError(f'Current experiment checksum mismatch: {name}')
+        current[name] = json.loads(source['json'])
+    test = current['ocelot_4096_20261111.json']['metrics']['test']
+    lines = ['| Held-out OCELOT property | Bootstrap DPA MAE (eV) | Train-mean MAE (eV) |',
+             '| :--- | ---: | ---: |']
+    for key in ['homo', 'lumo']:
+        lines.append(f"| {key.upper()} | {test['mae_eV'][key]:.4f} | {test['train_mean_baseline_mae_eV'][key]:.4f} |")
+    lines += ['', 'Table: 4096 training records, three independent bootstrap adapters, 256 held-out test records.', '',
+              '| Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |',
+              '| :--- | ---: | ---: |']
+    for name, row in current['ranking_ablation_20261111.json']['aggregate'].items():
+        lines.append(f"| {name.replace('_', ' ')} | {100*row['mean_joint_success_rate']:.2f} | {100*row['seed_std']:.2f} |")
+    lines += ['', 'Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.']
+    text = re.sub(r'<!-- BEGIN CURRENT RESULTS -->.*?<!-- END CURRENT RESULTS -->',
+                  lambda _: '<!-- BEGIN CURRENT RESULTS -->\n'+'\n'.join(lines)+'\n<!-- END CURRENT RESULTS -->', text, flags=re.S)
     text = re.sub(
         r"<!-- BEGIN GENERATED PILOT TABLE -->.*?<!-- END GENERATED PILOT TABLE -->",
         lambda _: "<!-- BEGIN GENERATED PILOT TABLE -->\n"+pilot_table()+"\n<!-- END GENERATED PILOT TABLE -->",

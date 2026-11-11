@@ -1,0 +1,49 @@
+{
+  "backend": "uni3dar_octree_v2",
+  "attempted": 64,
+  "raw_valid": 32,
+  "domain_eligible": 5,
+  "out_of_oracle_domain": 27,
+  "ranking": "external",
+  "external_ranking_calls": 5,
+  "refinement_evaluation_calls": 169,
+  "refinement_gradient_calls": 108,
+  "export_recheck_calls": 5,
+  "stage_seconds": {
+    "generation": 40.018082577735186,
+    "validation": 0.31906547024846077,
+    "ranking": 0.3475042060017586,
+    "refinement": 29.051273070275784
+  },
+  "retained_morgan_diversity": 0.9001419038434473,
+  "refinement_failed": 0,
+  "unique_raw_valid": 32,
+  "retained": 5,
+  "qualified": 0,
+  "joint_success_rate": 0.0,
+  "retained_novel_vs_adaptation": 5,
+  "property_hit_retained": 0,
+  "mean_final_force": 0.9267471432685852,
+  "maximum_retained_atom_force_eva": 3.889944314956665,
+  "export_prediction_recheck_passed": true,
+  "elapsed_seconds": 2864.964755896479,
+  "checkpoint_sha256": "d7f5dcb25cefdd56999b08631b89808bf758e652ac6e967a10e8c2faad055ced",
+  "independent_evaluation": {
+    "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+    "exported": 5,
+    "independent_interval_hits": 3,
+    "independent_joint_successes": 1,
+    "attempted": 64,
+    "synthetic_accessibility": {
+      "implementation": "RDKit Ertl-Schuffenhauer SA score",
+      "mean": 3.1740946757070665,
+      "maximum": 4.139431552271409,
+      "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+    },
+    "mean_absolute_oracle_disagreement_eV": {
+      "homo": 0.5648984316714667,
+      "lumo": 0.20354692210615416
+    }
+  },
+  "training_scope": "4096 OCELOT train records, 8000 additional steps from a 1024-record 4000-step checkpoint; fixed inherited scaler"
+}
