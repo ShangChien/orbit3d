@@ -111,6 +111,8 @@ def run_octree_from_config(cfg, config_path=None):
         yn = (y - mean) / scale
         dataset = OctreeDataset(training, model, seed=int(cfg.get("seed", 42)))
         train_backbone = bool(settings.get("train_backbone", False))
+        if initial_state and initial_state.get('representation_migration', {}).get('requires_adaptation') and not train_backbone:
+            raise ValueError('Tree-depth migration requires backbone adaptation, including the new level embedding')
         model.requires_grad_(train_backbone)
         model.interval_conditioner.requires_grad_(True)
         model.prop_understanding_head.requires_grad_(True)
@@ -152,6 +154,9 @@ def run_octree_from_config(cfg, config_path=None):
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
                     "train_backbone": train_backbone,
+                    "representation_config": {'merge_level': model.args.merge_level},
+                    "representation_migration": ({**initial_state.get('representation_migration', {}),
+                        'requires_adaptation': steps <= 0} if initial_state and initial_state.get('representation_migration') else {}),
                 },
                 save_path,
             )
@@ -196,6 +201,8 @@ def run_octree_from_config(cfg, config_path=None):
     else:
         checkpoint = Path(paths.get("checkpoint_load_path", checkpoint))
         model, state = load_octree_checkpoint(checkpoint, device, settings.get("batch_size", 16))
+        if state.get('representation_migration', {}).get('requires_adaptation'):
+            raise ValueError('Migrated octree depth requires backbone adaptation before inference')
         if state.get('condition_migration', {}).get('requires_condition_adaptation'):
             raise ValueError('Migrated conditioner requires adaptation before conditional inference')
         if state["target_cols"] != names:
@@ -251,6 +258,7 @@ def run_octree_from_config(cfg, config_path=None):
                 "scale": scale,
                 "grpo_history": history,
                 "alignment_reference_sha256": reference_hash,
+                "representation_config": {'merge_level': model.args.merge_level},
                 "training_smiles": sorted(train_smiles),
             },
             checkpoint,

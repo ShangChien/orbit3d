@@ -186,3 +186,27 @@ the separately trained fingerprint model, not DFT. The three seeds are inference
 seeds of one trained checkpoint, not three independent training replicates.
 [Raw per-run summaries, budgets, hashes, independent predictions and SA scores](experiments/conditioning_factorial_20261112.json)
 are retained. GRPO follows as a separate matched-budget experiment.
+
+## Explicit tree-depth migration (2026-11-12)
+
+Depth 7 doubles the octree box side from 15.36 to 30.72 A while retaining
+0.24 A leaf cells and 0.01 A within-cell resolution. Existing level embeddings
+and all other weights remain bitwise identical; the added root row copies the
+former root embedding. Checkpoints store the depth explicitly and require
+backbone adaptation before conditional inference. Changing physical bin size
+is not part of this migration.
+
+The 80-atom OCELOT preparation uses the same scaffold hash split as the original
+40-atom preparation (19,902 train / 2,236 valid / 2,275 test). All original
+training identities stay in train; 4,619 additional training molecules exceed
+40 explicit atoms. The adaptation subset contains 512 molecules, including
+146 with more than 40 atoms and maximum diameter 27.1145 A. Every molecule
+retains its atom count after encoding; the maximum pair-distance error is
+0.013293 A, below sqrt(3) times the 0.01 A resolution. A separate regression
+checks rejection of atom loss from duplicate leaf-cell occupancy.
+
+[Representation evidence](experiments/octree_depth7_representation_20261112.json)
+validates the mapping and weight migration, not sampled molecular quality.
+The migrated model is undergoing 1000 backbone-adaptation steps on these 512
+true-label structures. Generalization beyond the original property-model
+training domain still requires separate measurement.

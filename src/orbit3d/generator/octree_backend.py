@@ -1,6 +1,7 @@
 """Pretrained Uni-3DAR backend and direct SDF-to-octree training data."""
 
 from pathlib import Path
+from copy import copy
 import hashlib
 import json
 import numpy as np
@@ -13,7 +14,11 @@ from .octree_tokenizer import ATOM_TYPES, Mol3DInstance, mol3d_to_validated_rdki
 class OctreeDataset:
     def __init__(self, molecules, model, training=True, seed=42):
         self.molecules = molecules
-        self.grid = GridDataset(self, seed, model.dictionary, "atom_type", "atom_pos", training, model.args)
+        self.allowed_elements = set(model.args.allow_atoms.split(','))
+        args = copy(model.args)
+        if not training:
+            args.random_rotation_prob = 0.0
+        self.grid = GridDataset(self, seed, model.dictionary, "atom_type", "atom_pos", training, args)
         self.grid.set_epoch(1)
 
     def __len__(self):
@@ -21,6 +26,8 @@ class OctreeDataset:
 
     def __getitem__(self, index):
         mol = self.molecules[index]
+        if any(a.GetSymbol() not in self.allowed_elements for a in mol.GetAtoms()):
+            raise ValueError(f'Record {index} has elements outside the generator contract')
         return {
             "uid": index,
             "data_type": "molecule",
@@ -29,12 +36,29 @@ class OctreeDataset:
         }
 
     def collate(self, indices):
-        return self.grid.collater([self.grid[int(i)] for i in indices])
+        items = []
+        for index in indices:
+            item = self.grid[int(index)]
+            # A property label belongs to the complete molecule. Upstream can
+            # sample one atom per occupied cell; reject any such atom loss.
+            expected = self.molecules[int(index)].GetNumAtoms()
+            decoded = ((item['decoder_level'] == 0) & item['decoder_is_second_atom']).sum().item()
+            if item['cutoff_atom_count'] or decoded != expected:
+                raise ValueError(f'Record {index} lost atoms during octree encoding: {expected} -> {decoded}')
+            items.append(item)
+        return self.grid.collater(items)
 
 
-def build_octree(device="cuda:0", targets=2, batch_size=16, condition_version=2):
+def build_octree(device="cuda:0", targets=2, batch_size=16, condition_version=2, representation_config=None):
     args = build_default_uni3dar_args(batch_size)
     args.condition_version = condition_version
+    if representation_config is not None:
+        if set(representation_config) != {'merge_level'}:
+            raise ValueError('Grid migration currently changes tree depth only, at fixed physical resolution')
+        depth = representation_config['merge_level']
+        if not isinstance(depth, int) or not 6 <= depth <= 8:
+            raise ValueError('Supported migrated octree depths are 6 through 8')
+        args.merge_level = depth
     return ConditionalUni3DAR(args, AtomFeatDict(args), num_props=targets).to(device)
 
 
@@ -70,7 +94,7 @@ def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
     versions = {"uni3dar_octree_v1": 1, "uni3dar_octree_v2": 2, "uni3dar_octree_v3": 3}
     if state["backend"] not in versions:
         raise ValueError("Unknown octree checkpoint contract")
-    model = build_octree(device, len(state["target_cols"]), batch_size, versions[state["backend"]])
+    model = build_octree(device, len(state["target_cols"]), batch_size, versions[state["backend"]], state.get('representation_config'))
     units = state.get('target_units', ['unspecified'] * len(state['target_cols']))
     contract = checkpoint_contract(model, state['target_cols'], units, state['mean'], state['scale'])
     if 'contract' in state and state['contract'] != contract:

@@ -149,3 +149,43 @@ def test_terminal_parity_mask_is_a_conditional_categorical_distribution():
     torch.testing.assert_close(p[0],torch.tensor([0.,.5,0.,1/3,0.,1/6]))
     torch.testing.assert_close(p[1],torch.tensor([.5,0.,.25,0.,.25,0.]))
     torch.testing.assert_close(p[2],probabilities[2])
+
+
+def test_octree_encoding_rejects_lost_atoms_and_disallowed_elements():
+    from types import SimpleNamespace
+    args = build_default_uni3dar_args(1)
+    args.random_rotation_prob = 0
+    model = SimpleNamespace(args=args, dictionary=AtomFeatDict(args))
+    mol = Chem.MolFromSmiles('CC')
+    mol.AddConformer(Chem.Conformer(2))  # Both atoms occupy the same leaf cell.
+    dataset = OctreeDataset([mol], model, training=False)
+    with pytest.raises(ValueError, match='lost atoms'):
+        dataset.collate([0])
+    other = Chem.MolFromSmiles('B')
+    other.AddConformer(Chem.Conformer(1))
+    with pytest.raises(ValueError, match='outside the generator contract'):
+        OctreeDataset([other], model, training=False).collate([0])
+
+
+def test_larger_octree_retains_all_atoms_at_fixed_resolution():
+    from types import SimpleNamespace
+    # A long linear carbon skeleton, deliberately longer than the old box.
+    mol = Chem.MolFromSmiles('C' * 16)
+    conf = Chem.Conformer(16)
+    for i in range(16):
+        conf.SetAtomPosition(i, [i * 1.5, 0., 0.])
+    mol.AddConformer(conf)
+    args = build_default_uni3dar_args(1)
+    args.random_rotation_prob = 0
+    model = SimpleNamespace(args=args, dictionary=AtomFeatDict(args))
+    with pytest.raises(AssertionError, match='exceed'):
+        OctreeDataset([mol], model, training=False).collate([0])
+    args.merge_level = 7
+    packed = OctreeDataset([mol], model, training=False).collate([0])
+    atoms = (packed['decoder_level'] == 0) & packed['decoder_is_second_atom']
+    coords = packed['decoder_phy_pos'][atoms].numpy()
+    distance = np.linalg.norm(coords[:, None] - coords[None, :], axis=-1)
+    expected = np.linalg.norm(conf.GetPositions()[:, None] - conf.GetPositions()[None, :], axis=-1)
+    assert len(coords) == 16
+    np.testing.assert_allclose(np.sort(distance.ravel()), np.sort(expected.ravel()), atol=.018)
+    assert packed['decoder_level'].max() == 7

@@ -13,6 +13,8 @@ p = argparse.ArgumentParser()
 p.add_argument("--train-csv", type=Path, required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--limit", type=int, default=1024)
+p.add_argument("--max-atoms", type=int, default=40)
+p.add_argument("--merge-level", type=int, choices=[6, 7, 8], default=6)
 a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
 RDLogger.DisableLog("rdApp.*")
@@ -29,13 +31,13 @@ for row in f.to_dict("records"):
     reason = None
     if any(atom.GetSymbol() not in {"H", "C", "N", "O", "F"} for atom in m.GetAtoms()):
         reason = "outside_pretrained_vocabulary"
-    elif m.GetNumAtoms() > 40:
+    elif m.GetNumAtoms() > a.max_atoms:
         reason = "outside_current_adaptation_size"
     else:
         try:
             m = ocelot_conformer(row['canonical_smiles'])
             coords = m.GetConformer().GetPositions()
-            if np.linalg.norm(coords[:, None] - coords[None, :], axis=-1).max() > 14.8:
+            if np.linalg.norm(coords[:, None] - coords[None, :], axis=-1).max() > .24 * 2**a.merge_level - .56:
                 reason = "outside_rotation_safe_octree_span"
             else:
                 try:
@@ -56,6 +58,8 @@ for row in f.to_dict("records"):
     ids.append(row["identifier"])
 write_precise_sdf(a.output / "train.sdf", mols)
 report = {
+    "max_atoms": a.max_atoms,
+    "merge_level": a.merge_level,
     "source_sha256": hashlib.sha256(a.train_csv.read_bytes()).hexdigest(),
     "selected": len(mols),
     "training_ids": ids,

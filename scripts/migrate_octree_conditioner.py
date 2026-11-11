@@ -17,7 +17,8 @@ if a.output.exists():
     raise FileExistsError(a.output)
 old, state = load_octree_checkpoint(a.checkpoint, device='cpu')
 torch.manual_seed(a.seed)
-new = build_octree('cpu', len(state['target_cols']), condition_version=a.condition_version)
+new = build_octree('cpu', len(state['target_cols']), condition_version=a.condition_version,
+                   representation_config=state.get('representation_config'))
 parameters = {k: v for k, v in old.state_dict().items() if not k.startswith('interval_conditioner.')}
 missing = new.load_state_dict(parameters, strict=False)
 assert not missing.unexpected_keys and all(k.startswith('interval_conditioner.') for k in missing.missing_keys)
