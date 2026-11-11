@@ -210,3 +210,25 @@ validates the mapping and weight migration, not sampled molecular quality.
 The migrated model is undergoing 1000 backbone-adaptation steps on these 512
 true-label structures. Generalization beyond the original property-model
 training domain still requires separate measurement.
+
+## Domain-aligned FP32 GRPO, 50 steps (2026-11-12)
+
+The v3 smooth checkpoint was aligned for 50 steps, 16 proposals per group
+(800 training rollouts), with the same terminal even-electron constraint and
+Morgan-domain filter used at deployment. OOD structures receive the explicit
+invalid reward and do not query the property model. Weights are KL 0.02,
+physics 0.2, replay 0.1 and uncertainty 0, with learning rate 2e-5.
+
+On the same three inference seeds and 64-attempt budget with parity enabled,
+SFT gives joint successes `[3, 0, 1]` and the aligned model gives `[2,3,3]`: the
+mean rate changes from 2.08% to 4.17%. Independent fingerprint joint counts
+change from `[2,0,2]` to `[2,4,2]`, also 4/192 to 8/192 overall. Chemical-valid
+counts for GRPO are `[53,55,53]`; average domain-eligible count increases from
+7.0 to 11.33 per run. These are exploratory observations from one training seed
+and three inference seeds, not a demonstrated replicated-training effect.
+
+Disabling the terminal parity mask at inference lowers validity but yields
+the same aggregate 8/192 joint successes for this aligned checkpoint. That
+mask therefore still primarily addresses chemical rejection.
+[Per-run results and independently scored cohorts](experiments/grpo50_factorial_20261112.json)
+are archived with input hashes and the alignment reference checkpoint.
