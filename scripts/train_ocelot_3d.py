@@ -10,6 +10,9 @@ from rdkit.Chem import AllChem
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from orbit3d.utils.dataset_io import write_precise_sdf
+from orbit3d.utils.run_evidence import freeze_run
+from orbit3d.utils.reproducibility import lock_deterministic_environment
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)
@@ -19,10 +22,13 @@ p.add_argument("--device", default="cpu")
 p.add_argument("--train", type=int, default=512)
 p.add_argument("--eval", type=int, default=64)
 p.add_argument("--epochs", type=int, default=15)
+p.add_argument("--batch-size", type=int, default=16)
+p.add_argument("--seed", type=int, default=42)
 a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
+freeze_run(a.output, __file__)
 torch.set_num_threads(2)
-torch.manual_seed(42)
+lock_deterministic_environment(a.seed)
 started = time.perf_counter()
 frames = {}
 molecules = {}
@@ -36,7 +42,6 @@ for split, limit in [("train", a.train), ("valid", a.eval), ("test", a.eval)]:
     frame = frame.sort_values("rank")
     rows = []
     mols = []
-    writer = Chem.SDWriter(str(a.output / f"{split}.sdf"))
     for row in frame.to_dict("records"):
         if len(rows) >= limit:
             break
@@ -52,28 +57,30 @@ for split, limit in [("train", a.train), ("valid", a.eval), ("test", a.eval)]:
         mol.SetProp("GeometryOrigin", "RDKit ETKDG; not original OCELOT DFT geometry")
         for name in names:
             mol.SetProp(name, str(row[name]))
-        writer.write(mol)
         mols.append(mol)
         rows.append(row)
-    writer.close()
+    write_precise_sdf(a.output / f"{split}.sdf", mols)
     frames[split] = pd.DataFrame(rows)
     molecules[split] = mols
     print(split, len(mols), "conformers", flush=True)
 ff = DPAPotentialGuidance(a.weight, atom_type_map=ATOM_TYPES, device=a.device)
 oracle = InternalDPA4PropertyOracle(ff, 2, names, n_ensemble_heads=3)
+oracle.target_units = ['eV', 'eV']
 oracle.fit_from_dataset(
     molecules["train"],
     frames["train"][names].to_numpy(),
     str(a.output / "oracle"),
     epochs=a.epochs,
+    batch_size=a.batch_size,
+    seed=a.seed,
     validation_mols=molecules["valid"],
     validation_targets=frames["valid"][names].to_numpy(),
 )
 restored = InternalDPA4PropertyOracle.load_from_dir(str(a.output / "oracle"), ff)
 metrics = {}
 for split in ["valid", "test"]:
-    pred, std = oracle.predict_3d_mols(molecules[split])
-    again, _ = restored.predict_3d_mols(molecules[split])
+    pred, std = oracle.predict_3d_mols_batched(molecules[split])
+    again, _ = restored.predict_3d_mols_batched(molecules[split])
     np.testing.assert_allclose(pred, again, atol=1e-6, rtol=1e-6)
     true = frames[split][names].to_numpy()
     metrics[split] = {
@@ -92,7 +99,9 @@ for split in ["valid", "test"]:
         result[name + "_std"] = std[:, i]
     result.to_csv(a.output / f"{split}_predictions.csv", index=False)
 report = {
-    "task": "OCELOT small 3D bootstrap-DPA pilot",
+    "task": "OCELOT 3D bootstrap-DPA training",
+    "seed": a.seed,
+    "batch_size": a.batch_size,
     "geometry_origin": "ETKDG+MMFF; original DFT coordinates unavailable",
     "metrics": metrics,
     "embedding_failures": failures,

@@ -80,6 +80,10 @@ def test_bootstrap_dpa_uses_train_only_scalers_and_reloads(tmp_path):
     pred, _ = restored.forward_differentiable_3d(x, [a.GetSymbol() for a in valid[0].GetAtoms()])
     gradient = torch.autograd.grad(pred.sum(), x)[0]
     assert torch.isfinite(gradient).all() and gradient.abs().sum() > 0
+    with (tmp_path / 'target_scaler.ss').open('ab') as stream:
+        stream.write(b'corruption')
+    with pytest.raises(ValueError, match='scaler checksum'):
+        InternalDPA4PropertyOracle.load_from_dir(str(tmp_path), ff)
 
 
 def test_disconnected_descriptor_does_not_return_partial_coordinate_gradient():

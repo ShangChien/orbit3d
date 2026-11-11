@@ -259,6 +259,12 @@ def run_octree_from_config(cfg, config_path=None):
             row = {
                 "candidate_id": idx,
                 "status": "not_selected",
+                "smiles": None,
+                "raw_valid": False,
+                "self_score": None,
+                "initial_force": None,
+                "final_force": None,
+                "y_pred": None,
                 "joint_success": False,
                 "token_sha256": hashlib.sha256(tokens.tobytes()).hexdigest(),
                 "sampling_seed": candidate_seed(inference.get("base_seed", 2026), idx)

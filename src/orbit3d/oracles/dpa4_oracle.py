@@ -250,6 +250,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         seed=42,
         validation_mols=None,
         validation_targets=None,
+        batch_size=1,
     ):
         from sklearn.model_selection import GroupShuffleSplit
 
@@ -279,16 +280,33 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         self.scalers = fit_target_scalers(yt, mode=scaler_mode)
         norm_train = transform_with_scalers(yt, self.scalers)
         norm_valid = transform_with_scalers(yv, self.scalers)
-        cached = []
-        for index, mol in enumerate(train + valid):
-            atoms = [a.GetSymbol() for a in mol.GetAtoms()]
-            pos = torch.tensor(mol.GetConformer().GetPositions(), dtype=torch.float32, device=self.device)
-            desc, energy, force = self.dpa_guidance.extract_native_descriptor_and_forces(pos, atoms)
-            if not all(torch.isfinite(v).all() for v in (desc, energy, force)):
-                raise FloatingPointError("Nonfinite descriptor cache")
-            cached.append((desc.detach(), pos.detach()))
-            if index % 100 == 0:
-                print(f"DPA descriptors {index + 1}/{len(train) + len(valid)}", flush=True)
+        all_mols = train + valid
+        cached = [None] * len(all_mols)
+
+        def batches(indices, rng=None):
+            groups = {}
+            for i in indices:
+                groups.setdefault(all_mols[i].GetNumAtoms(), []).append(int(i))
+            chunks = [ids[b:b + batch_size] for ids in groups.values() for b in range(0, len(ids), batch_size)]
+            if rng is not None:
+                rng.shuffle(chunks)
+            return chunks
+
+        completed = 0
+        for ids in batches(range(len(all_mols))):
+            symbols = [[a.GetSymbol() for a in all_mols[i].GetAtoms()] for i in ids]
+            positions = torch.tensor(np.stack([all_mols[i].GetConformer().GetPositions() for i in ids]),
+                                     dtype=torch.float32, device=self.device)
+            if batch_size == 1:
+                desc, _, _ = self.dpa_guidance.extract_native_descriptor_and_forces(positions[0], symbols[0])
+                descriptors = desc[None]
+            else:
+                descriptors, _, _ = self.dpa_guidance.extract_native_batch(positions, symbols)
+            for i, desc, pos in zip(ids, descriptors, positions):
+                cached[i] = (desc.detach(), pos.detach())
+            completed += len(ids)
+            if completed % 100 < batch_size:
+                print(f"DPA descriptors {completed}/{len(all_mols)}", flush=True)
         training_history = []
         for index in range(self.n_ensemble_heads):
             torch.manual_seed(seed + index)
@@ -303,9 +321,10 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             for epoch in range(epochs):
                 member.train()
                 order = rng.permutation(bootstrap)
-                for i in order:
-                    desc, pos = cached[i]
-                    target = torch.tensor(norm_train[i], device=self.device)
+                for ids in batches(order, rng):
+                    desc = torch.stack([cached[i][0] for i in ids])
+                    pos = torch.stack([cached[i][1] for i in ids])
+                    target = torch.tensor(norm_train[ids], device=self.device)
                     pred, _ = member(desc, pos)
                     loss = F.smooth_l1_loss(pred, target, beta=0.1)
                     opt.zero_grad()
@@ -314,15 +333,12 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
                     opt.step()
                 member.eval()
                 with torch.no_grad():
-                    errors = [
-                        float(
-                            torch.abs(
-                                member(*cached[len(train) + i])[0]
-                                - torch.tensor(norm_valid[i], device=self.device)
-                            ).mean()
-                        )
-                        for i in range(len(valid))
-                    ]
+                    errors = []
+                    for ids in batches(range(len(train), len(all_mols))):
+                        desc = torch.stack([cached[i][0] for i in ids])
+                        pos = torch.stack([cached[i][1] for i in ids])
+                        target = torch.tensor(norm_valid[np.array(ids) - len(train)], device=self.device)
+                        errors.extend((member(desc, pos)[0] - target).abs().mean(-1).tolist())
                 score = float(np.mean(errors))
                 history.append(score)
                 if score < best:
@@ -349,12 +365,16 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         torch.save({"adapter_state_dict": self.adapter.state_dict()}, checkpoint)
         weight = getattr(self.dpa_guidance, "model_path", None)
         meta = {
+            "schema_version": 3,
             "oracle_type": "internal_dpa4",
             "ensemble_kind": "bootstrap_adapters_v2",
             "desc_dim": self.desc_dim,
             "output_dim": self.output_dim,
             "n_ensemble_heads": self.n_ensemble_heads,
             "target_cols": self.target_cols,
+            "target_units": getattr(self, 'target_units', ['unspecified'] * self.output_dim),
+            "scaler_sha256": hashlib.sha256(open(os.path.join(save_dir, 'target_scaler.ss'), 'rb').read()).hexdigest(),
+            "batch_size": batch_size,
             "train_records": len(train),
             "validation_records": len(valid),
             "history": training_history,
@@ -373,6 +393,9 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         if meta.get("ensemble_kind") != "bootstrap_adapters_v2":
             raise ValueError("Legacy shared-head oracle requires retraining")
         checkpoint = os.path.join(load_dir, "dpa4_prop_adapter.pt")
+        scaler_path = os.path.join(load_dir, 'target_scaler.ss')
+        if meta.get('schema_version') == 3 and hashlib.sha256(open(scaler_path, 'rb').read()).hexdigest() != meta['scaler_sha256']:
+            raise ValueError('Oracle target scaler checksum mismatch')
         if hashlib.sha256(open(checkpoint, "rb").read()).hexdigest() != meta["checkpoint_sha256"]:
             raise ValueError("Oracle checkpoint checksum mismatch")
         weight = getattr(dpa_guidance, "model_path", None)
@@ -381,7 +404,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         ):
             raise ValueError("Forcefield mismatch for property adapter")
         obj = cls(dpa_guidance, int(meta["output_dim"]), meta["target_cols"], int(meta["n_ensemble_heads"]))
-        obj.scalers = joblib.load(os.path.join(load_dir, "target_scaler.ss"))
+        obj.scalers = joblib.load(scaler_path)
+        obj.target_units = meta.get('target_units', ['unspecified'] * obj.output_dim)
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)["adapter_state_dict"]
         obj.adapter.load_state_dict(state, strict=True)
         obj.adapter.eval()
