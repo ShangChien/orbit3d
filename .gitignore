@@ -1,0 +1,54 @@
+# Python & uv virtual environments / build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# macOS / IDE metadata
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Third-party external reference repositories (cloned separately)
+external/
+
+# Model checkpoints, packed weights & runtime outputs
+pretrained/
+checkpoints/
+outputs/
+*.pt
+*.pth
+*.ckpt
+*.pb
+*.onnx
+
+# LaTeX build intermediates
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.synctex.gz

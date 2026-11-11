@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+<rect width="900" height="900" fill="#ffffff"/>
+<text x="450.0" y="30" font-family="Helvetica, Arial, sans-serif" font-size="15.5" font-weight="bold" text-anchor="middle" fill="#0f172a">Figure 6: Dataset Statistical Distributions (QM9 / rQM9 &amp; 3D-SAT-OLED Organometallic Complexes)</text>
+<text x="248.0" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(a) QM9 Prior Density vs. ORBIT-3D Hit Rate (%)</text>
+<text transform="translate(26.0,235.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Percentage of Molecules (%)</text>
+<line x1="68" y1="395.0" x2="428" y2="395.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="399.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="68" y1="348.6" x2="428" y2="348.6" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="352.6" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">20</text>
+<line x1="68" y1="302.2" x2="428" y2="302.2" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="306.2" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">40</text>
+<line x1="68" y1="255.9" x2="428" y2="255.9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="259.9" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">60</text>
+<line x1="68" y1="209.5" x2="428" y2="209.5" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="213.5" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">80</text>
+<line x1="68" y1="163.1" x2="428" y2="163.1" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="167.1" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">100</text>
+<line x1="68" y1="75" x2="68" y2="395" stroke="#334155" stroke-width="1.5"/>
+<line x1="68" y1="395" x2="428" y2="395" stroke="#334155" stroke-width="1.5"/>
+<text x="113.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">OOD Gap</text>
+<text x="113.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">[0.18, 0.23]Ha</text>
+<rect x="80.6" y="322.9" width="18.6" height="72.1" fill="#94a3b8" stroke="#334155" stroke-width="1.2" rx="2"/>
+<text x="89.9" y="317.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">31.1%</text>
+<rect x="102.2" y="375.7" width="18.6" height="19.3" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="111.5" y="370.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">8.3%</text>
+<rect x="123.8" y="177.6" width="18.6" height="217.4" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="133.1" y="172.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">93.8%</text>
+<text x="203.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">LUMO Level</text>
+<text x="203.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">[0.02, 0.05]Ha</text>
+<rect x="170.6" y="352.5" width="18.6" height="42.5" fill="#94a3b8" stroke="#334155" stroke-width="1.2" rx="2"/>
+<text x="179.9" y="347.5" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">18.3%</text>
+<rect x="192.2" y="366.0" width="18.6" height="29.0" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="201.5" y="361.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">12.5%</text>
+<rect x="213.8" y="163.1" width="18.6" height="231.9" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="223.1" y="158.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<text x="293.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">HOMO Level</text>
+<text x="293.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">[-0.24,-0.21]Ha</text>
+<rect x="260.6" y="303.8" width="18.6" height="91.2" fill="#94a3b8" stroke="#334155" stroke-width="1.2" rx="2"/>
+<text x="269.9" y="298.8" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">39.3%</text>
+<rect x="282.2" y="327.4" width="18.6" height="67.6" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="291.5" y="322.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">29.2%</text>
+<rect x="303.8" y="182.4" width="18.6" height="212.6" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="313.1" y="177.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">91.7%</text>
+<text x="383.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Joint 3-Prop</text>
+<text x="383.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">OLED Window</text>
+<rect x="350.6" y="355.9" width="18.6" height="39.1" fill="#94a3b8" stroke="#334155" stroke-width="1.2" rx="2"/>
+<text x="359.9" y="350.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">16.9%</text>
+<rect x="372.2" y="380.5" width="18.6" height="14.5" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="381.5" y="375.5" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">6.2%</text>
+<rect x="393.8" y="163.1" width="18.6" height="231.9" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="403.1" y="158.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<rect x="78" y="83" width="340.0" height="59" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="86" y="87" width="11" height="9" fill="#94a3b8" stroke="#334155" stroke-width="1"/>
+<text x="102" y="95" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">QM9 Dataset Prior Coverage (%)</text>
+<rect x="86" y="104" width="11" height="9" fill="#f59e0b" stroke="#78350f" stroke-width="1"/>
+<text x="102" y="112" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Stage 1 Uncond Sampling (%)</text>
+<rect x="86" y="121" width="11" height="9" fill="#10b981" stroke="#064e3b" stroke-width="1"/>
+<text x="102" y="129" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">ORBIT-3D Stage 5 Hit Rate (%)</text>
+<text x="688.0" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(b) Molecular Size (N_atoms) Distribution (%)</text>
+<text transform="translate(466.0,235.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Dataset Fraction (%)</text>
+<line x1="508" y1="395.0" x2="868" y2="395.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="399.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="508" y1="352.9" x2="868" y2="352.9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="356.9" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">10</text>
+<line x1="508" y1="310.8" x2="868" y2="310.8" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="314.8" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">20</text>
+<line x1="508" y1="268.7" x2="868" y2="268.7" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="272.7" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">30</text>
+<line x1="508" y1="226.6" x2="868" y2="226.6" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="230.6" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">40</text>
+<line x1="508" y1="184.5" x2="868" y2="184.5" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="188.5" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">50</text>
+<line x1="508" y1="142.4" x2="868" y2="142.4" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="146.4" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">60</text>
+<line x1="508" y1="75" x2="508" y2="395" stroke="#334155" stroke-width="1.5"/>
+<line x1="508" y1="395" x2="868" y2="395" stroke="#334155" stroke-width="1.5"/>
+<text x="538.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N&lt;=14</text>
+<text x="538.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Small)</text>
+<rect x="516.4" y="346.3" width="18.6" height="48.7" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="525.7" y="341.3" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">11.6%</text>
+<rect x="538.0" y="395.0" width="18.6" height="0.0" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="547.3" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<text x="598.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N=15..17</text>
+<text x="598.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(QM9 Med)</text>
+<rect x="576.4" y="262.7" width="18.6" height="132.3" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="585.7" y="257.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">31.4%</text>
+<rect x="598.0" y="395.0" width="18.6" height="0.0" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="607.3" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<text x="658.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N=18..20</text>
+<text x="658.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(QM9 Mode)</text>
+<rect x="636.4" y="240.6" width="18.6" height="154.4" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="645.7" y="235.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">36.7%</text>
+<rect x="658.0" y="395.0" width="18.6" height="0.0" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="667.3" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<text x="718.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N=21..29</text>
+<text x="718.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(QM9 Lrg)</text>
+<rect x="696.4" y="309.4" width="18.6" height="85.6" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="705.7" y="304.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">20.3%</text>
+<rect x="718.0" y="395.0" width="18.6" height="0.0" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="727.3" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<text x="778.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N=42..60</text>
+<text x="778.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Ir-OLED)</text>
+<rect x="756.4" y="395.0" width="18.6" height="0.0" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="765.7" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<rect x="778.0" y="221.5" width="18.6" height="173.5" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="787.3" y="216.5" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">41.2%</text>
+<text x="838.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N=61..98</text>
+<text x="838.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Ir-OLED)</text>
+<rect x="816.4" y="395.0" width="18.6" height="0.0" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="825.7" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<rect x="838.0" y="147.4" width="18.6" height="247.6" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="847.3" y="142.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">58.8%</text>
+<rect x="518" y="83" width="340.0" height="42" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="526" y="87" width="11" height="9" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/>
+<text x="542" y="95" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">rQM9 Train Split (100,000 Organic Mols, %)</text>
+<rect x="526" y="104" width="11" height="9" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1"/>
+<text x="542" y="112" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">3D-SAT-OLED Split (1,000 Ir(III) Complexes, %)</text>
+<text x="248.0" y="476.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(c) Elemental Composition Comparison (%)</text>
+<text transform="translate(26.0,650.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Atomic Fraction (%)</text>
+<line x1="68" y1="810.0" x2="428" y2="810.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="814.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="68" y1="760.0" x2="428" y2="760.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="764.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">10</text>
+<line x1="68" y1="710.0" x2="428" y2="710.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="714.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">20</text>
+<line x1="68" y1="660.0" x2="428" y2="660.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="664.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">30</text>
+<line x1="68" y1="610.0" x2="428" y2="610.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="614.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">40</text>
+<line x1="68" y1="560.0" x2="428" y2="560.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="564.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">50</text>
+<line x1="68" y1="490" x2="68" y2="810" stroke="#334155" stroke-width="1.5"/>
+<line x1="68" y1="810" x2="428" y2="810" stroke="#334155" stroke-width="1.5"/>
+<text x="98.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">H</text>
+<text x="98.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Z=1)</text>
+<rect x="76.4" y="554.4" width="18.6" height="255.7" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="85.7" y="549.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">51.1%</text>
+<rect x="98.0" y="622.0" width="18.6" height="188.1" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="107.3" y="617.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">37.6%</text>
+<text x="158.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">C</text>
+<text x="158.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Z=6)</text>
+<rect x="136.4" y="634.2" width="18.6" height="175.8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="145.7" y="629.2" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">35.2%</text>
+<rect x="158.0" y="583.2" width="18.6" height="226.8" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="167.3" y="578.2" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">45.4%</text>
+<text x="218.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">N</text>
+<text x="218.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Z=7)</text>
+<rect x="196.4" y="781.1" width="18.6" height="28.9" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="205.7" y="776.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">5.8%</text>
+<rect x="218.0" y="750.1" width="18.6" height="59.9" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="227.3" y="745.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">12.0%</text>
+<text x="278.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">O</text>
+<text x="278.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Z=8)</text>
+<rect x="256.4" y="771.0" width="18.6" height="39.0" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="265.7" y="766.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">7.8%</text>
+<rect x="278.0" y="803.1" width="18.6" height="6.9" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="287.3" y="798.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">1.4%</text>
+<text x="338.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">F</text>
+<text x="338.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Z=9)</text>
+<rect x="316.4" y="809.3" width="18.6" height="0.7" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="325.7" y="804.3" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.1%</text>
+<rect x="338.0" y="800.9" width="18.6" height="9.1" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="347.3" y="795.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">1.8%</text>
+<text x="398.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Ir / S / Cl</text>
+<text x="398.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Z=77,16,17)</text>
+<rect x="376.4" y="810.0" width="18.6" height="0.0" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="385.7" y="805.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<rect x="398.0" y="800.7" width="18.6" height="9.3" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="407.3" y="795.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">1.9%</text>
+<rect x="78" y="498" width="340.0" height="42" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="86" y="502" width="11" height="9" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1"/>
+<text x="102" y="510" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">QM9 / rQM9 Organic (133,885 Mols, %)</text>
+<rect x="86" y="519" width="11" height="9" fill="#ec4899" stroke="#831843" stroke-width="1"/>
+<text x="102" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">3D-SAT-OLED Organometallic (1,000 Mols, %)</text>
+<text x="688.0" y="476.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(d) Quantum Energy Scale Comparison (eV)</text>
+<text transform="translate(466.0,650.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Energy Magnitude (eV)</text>
+<line x1="508" y1="810.0" x2="868" y2="810.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="814.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="508" y1="772.4" x2="868" y2="772.4" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="776.4" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">1</text>
+<line x1="508" y1="734.7" x2="868" y2="734.7" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="738.7" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">2</text>
+<line x1="508" y1="697.1" x2="868" y2="697.1" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="701.1" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">3</text>
+<line x1="508" y1="659.4" x2="868" y2="659.4" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="663.4" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">4</text>
+<line x1="508" y1="621.8" x2="868" y2="621.8" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="625.8" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">5</text>
+<line x1="508" y1="584.1" x2="868" y2="584.1" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="588.1" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">6</text>
+<line x1="508" y1="546.5" x2="868" y2="546.5" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="550.5" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">7</text>
+<line x1="508" y1="490" x2="508" y2="810" stroke="#334155" stroke-width="1.5"/>
+<line x1="508" y1="810" x2="868" y2="810" stroke="#334155" stroke-width="1.5"/>
+<text x="553.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">|HOMO|</text>
+<text x="553.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(eV)</text>
+<rect x="520.6" y="564.2" width="29.4" height="245.8" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="535.3" y="559.2" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">6.53</text>
+<rect x="553.0" y="601.8" width="29.4" height="208.2" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="567.7" y="596.8" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">5.53</text>
+<text x="643.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">|LUMO|</text>
+<text x="643.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(eV)</text>
+<rect x="610.6" y="798.7" width="29.4" height="11.3" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="625.3" y="793.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.30</text>
+<rect x="643.0" y="706.8" width="29.4" height="103.2" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="657.7" y="701.8" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">2.74</text>
+<text x="733.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Bandgap Eg</text>
+<text x="733.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(eV)</text>
+<rect x="700.6" y="552.9" width="29.4" height="257.1" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="715.3" y="547.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">6.83</text>
+<rect x="733.0" y="705.0" width="29.4" height="105.0" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="747.7" y="700.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">2.79</text>
+<text x="823.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Triplet E_ad</text>
+<text x="823.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(eV)</text>
+<rect x="790.6" y="810.0" width="29.4" height="0.0" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>
+<text x="805.3" y="805.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.00</text>
+<rect x="823.0" y="709.9" width="29.4" height="100.1" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="837.7" y="704.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">2.66</text>
+<rect x="518" y="498" width="340.0" height="42" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="526" y="502" width="11" height="9" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/>
+<text x="542" y="510" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">QM9 DFT B3LYP/6-31G(2df,p) Mean (eV)</text>
+<rect x="526" y="519" width="11" height="9" fill="#10b981" stroke="#064e3b" stroke-width="1"/>
+<text x="542" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">3D-SAT-OLED B3LYP/LANL2DZ Mean (eV)</text>
+</svg>
