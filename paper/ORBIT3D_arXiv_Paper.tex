@@ -75,10 +75,11 @@ contribution is their coordinated use and evaluation, not a new claim
 about their underlying architectures.
 
 \textbf{Scope of the numerical evidence.} The method sections specify
-the target architecture. The results in Section 4 are archived pilot
-runs of an octree/GVP implementation. They are not measurements of a
-newly corrected unified CLI, and they do not establish DFT-level
-property accuracy or general superiority over other generators.
+the target architecture. Section 4 separates current unified-package
+experiments from archived octree/GVP pilot runs. The current results
+include paired implementation checks and negative conditioning results;
+neither set establishes general superiority or DFT-level property
+accuracy.
 
 \subsection{Relation to existing
 methods}\label{relation-to-existing-methods}
@@ -175,11 +176,14 @@ conditioning}\label{stage-2-learn-interval-conditioning}
 
 During supervised fine-tuning (SFT), intervals are sampled around
 observed properties, with independently varied widths and active-target
-masks. The condition contains normalized interval bounds, target
-identities, and the requested electronic state. A condition prefix and
-layer-wise adaptive normalization modulate the autoregressive policy.
-Any new input semantics, such as rescaled spatial bins or additional
-elements, require explicit checkpoint migration and validation.
+masks. The current condition contains normalized interval bounds and
+target identities. The tested mainline is restricted to neutral
+closed-shell molecules; broad charge/spin-conditioned generation
+requires separate representation and training validation. A condition
+prefix and layer-wise adaptive normalization modulate the autoregressive
+policy. Any new input semantics, such as rescaled spatial bins or
+additional elements, require explicit checkpoint migration and
+validation.
 
 The token likelihood is trained on the same admissible vocabulary used
 for sampling. All active property dimensions contribute to conditioning;
@@ -326,11 +330,11 @@ interface; this does not establish a family-wide limitation on charge or
 spin conditioning.
 
 The two evaluators may share a backbone to reduce memory use, but remain
-distinct logical interfaces. Force clipping may be used to limit a
-proposal displacement; physical diagnostics use raw finite forces.
-Element mappings, bond orders, formal charges, coordinate units, target
-scales, and electronic-state conventions must be preserved across both
-interfaces.
+distinct logical interfaces. One scalar per molecule limits the largest
+atom displacement while preserving the projected direction; physical
+diagnostics use raw finite forces. Element mappings, bond orders, formal
+charges, coordinate units, target scales, and electronic-state
+conventions must be preserved across both interfaces.
 
 The five stages describe a learning-and-refinement workflow. They are
 not five models retrained for each requested molecule. Deployment uses a
@@ -391,8 +395,8 @@ LUMO & 0.2379 & 0.4848 \\
   >{\raggedleft\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
 \caption{Three inference seeds and identical proposal pools, before
 applying the later applicability-domain filter. Joint success uses the
-optimizing surrogate and includes all 32 attempts in its denominator.
-}\tabularnewline
+optimizing surrogate and includes all 32 attempts in its
+denominator.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Candidate ranking
@@ -418,6 +422,48 @@ Across-seed SD (percentage points)
 first valid & 11.46 & 1.80 \\
 self & 11.46 & 1.80 \\
 external & 20.83 & 1.80 \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\caption{Matched conditioner comparison with domain filtering, 64
+attempts per inference seed (three seeds). Both variants use the same
+structural prior and adaptation labels; v3 jointly changes frequency
+encoding and interval sampling. The validity gain does not establish
+improved joint success. }\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Conditioner
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Even-electron constraint
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Chemical validity (\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Joint success (\%)
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Conditioner
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Even-electron constraint
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Chemical validity (\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Joint success (\%)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+v2 reset & off & 47.40 & 3.12 \\
+v2 reset & on & 88.02 & 3.12 \\
+v3 smooth & off & 42.19 & 1.56 \\
+v3 smooth & on & 82.29 & 2.08 \\
 \end{longtable}
 
 The three ranking runs use identical proposal tokens for each seed, with
@@ -446,9 +492,15 @@ the DFT RMS force is 0.00255 eV/Å. Its HOMO/LUMO are
 \(-8.81566/-0.00179\) eV, versus the optimizing surrogate's
 \(-7.74292/-0.26839\) eV; the HOMO misses the original \([-8.2,-7.2]\)
 eV interval. Full spin-adapted TDDFT gives vertical S1/T1 energies
-4.03502/3.08312 eV. These are not adiabatic gaps. Because reference
-naphthalene calculations do not reproduce the published OCELOT CSV,
-these numbers are protocol diagnostics, not same-protocol dataset MAEs.
+4.03502/3.08312 eV. Separate state optimizations at the same S0-tuned
+range parameter give adiabatic excitations of 3.63105/2.51208 eV and an
+S1-T1 difference of 1.11897 eV, without zero-point corrections. Central
+differences of all 51 gradient coordinates give 45 positive vibrational
+modes in each state (lowest 47.46/23.90 inverse centimeters); both
+preserve the graph. These checks use corrected third-order XC evaluation
+and response-state indexing. Because reference naphthalene calculations
+do not reproduce the published OCELOT CSV, these are internally
+consistent protocol diagnostics, not dataset MAEs.
 
 \subsection{What the archived experiments
 establish}\label{what-the-archived-experiments-establish}

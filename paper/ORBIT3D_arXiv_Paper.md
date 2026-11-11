@@ -17,7 +17,7 @@ ORBIT-3D organizes this problem into five stages: learn a 3D prior, condition it
 
 Our contributions are a modular formulation of interval-targeted generation, a reward construction that separates positive gated utility from invalidity penalties, and a finite-step acceptance rule for constrained refinement. We treat foundation generators, property predictors, and interatomic potentials as reusable components. The contribution is their coordinated use and evaluation, not a new claim about their underlying architectures.
 
-**Scope of the numerical evidence.** The method sections specify the target architecture. The results in Section 4 are archived pilot runs of an octree/GVP implementation. They are not measurements of a newly corrected unified CLI, and they do not establish DFT-level property accuracy or general superiority over other generators.
+**Scope of the numerical evidence.** The method sections specify the target architecture. Section 4 separates current unified-package experiments from archived octree/GVP pilot runs. The current results include paired implementation checks and negative conditioning results; neither set establishes general superiority or DFT-level property accuracy.
 
 ### 1.1. Relation to existing methods
 
@@ -52,7 +52,7 @@ Octree grammar constrains spatial tokenization. Chemical constraints require add
 
 ### 2.3. Stage 2: learn interval conditioning
 
-During supervised fine-tuning (SFT), intervals are sampled around observed properties, with independently varied widths and active-target masks. The condition contains normalized interval bounds, target identities, and the requested electronic state. A condition prefix and layer-wise adaptive normalization modulate the autoregressive policy. Any new input semantics, such as rescaled spatial bins or additional elements, require explicit checkpoint migration and validation.
+During supervised fine-tuning (SFT), intervals are sampled around observed properties, with independently varied widths and active-target masks. The current condition contains normalized interval bounds and target identities. The tested mainline is restricted to neutral closed-shell molecules; broad charge/spin-conditioned generation requires separate representation and training validation. A condition prefix and layer-wise adaptive normalization modulate the autoregressive policy. Any new input semantics, such as rescaled spatial bins or additional elements, require explicit checkpoint migration and validation.
 
 The token likelihood is trained on the same admissible vocabulary used for sampling. All active property dimensions contribute to conditioning; missing targets are represented by masks, not by placeholder values that can be mistaken for measurements.
 
@@ -122,7 +122,7 @@ A property oracle exposes predictions, uncertainty information, supported target
 
 A force-field backend exposes energy, forces, supported elements and states, and a failure indicator. DPA-4 [@deepmodeling2026dpa4] and HyFF [@hyra2026hyff] are alternative backends; their precise capabilities depend on the selected version and checkpoint. OMol25 provides broad molecular, elemental, charge, and spin coverage [@levine2025omol25], but dataset coverage alone does not certify a generator or a downstream adapter for each regime. The legacy DPA checkpoints used below were called through a geometry-and-element interface; this does not establish a family-wide limitation on charge or spin conditioning.
 
-The two evaluators may share a backbone to reduce memory use, but remain distinct logical interfaces. Force clipping may be used to limit a proposal displacement; physical diagnostics use raw finite forces. Element mappings, bond orders, formal charges, coordinate units, target scales, and electronic-state conventions must be preserved across both interfaces.
+The two evaluators may share a backbone to reduce memory use, but remain distinct logical interfaces. One scalar per molecule limits the largest atom displacement while preserving the projected direction; physical diagnostics use raw finite forces. Element mappings, bond orders, formal charges, coordinate units, target scales, and electronic-state conventions must be preserved across both interfaces.
 
 The five stages describe a learning-and-refinement workflow. They are not five models retrained for each requested molecule. Deployment uses a saved, aligned policy and ranking head, followed by Stage 5. Specialist online adaptation is an optional separate operation with its own budget and checkpoint.
 
@@ -153,6 +153,15 @@ Table: 4096 training records, three independent bootstrap adapters, 256 held-out
 | external | 20.83 | 1.80 |
 
 Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.
+
+| Conditioner | Even-electron constraint | Chemical validity (%) | Joint success (%) |
+| :--- | :--- | ---: | ---: |
+| v2 reset | off | 47.40 | 3.12 |
+| v2 reset | on | 88.02 | 3.12 |
+| v3 smooth | off | 42.19 | 1.56 |
+| v3 smooth | on | 82.29 | 2.08 |
+
+Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.
 <!-- END CURRENT RESULTS -->
 
 The three ranking runs use identical proposal tokens for each seed, with a fixed
@@ -177,9 +186,14 @@ of one molecule. At an explicit IP-tuned LC-wPBE/def2-SVP diagnostic level, its
 optimized graph is preserved and the DFT RMS force is 0.00255 eV/Å. Its HOMO/LUMO
 are $-8.81566/-0.00179$ eV, versus the optimizing surrogate's $-7.74292/-0.26839$ eV;
 the HOMO misses the original $[-8.2,-7.2]$ eV interval. Full spin-adapted TDDFT gives
-vertical S1/T1 energies 4.03502/3.08312 eV. These are not adiabatic gaps. Because
-reference naphthalene calculations do not reproduce the published OCELOT CSV,
-these numbers are protocol diagnostics, not same-protocol dataset MAEs.
+vertical S1/T1 energies 4.03502/3.08312 eV. Separate state optimizations at the
+same S0-tuned range parameter give adiabatic excitations of 3.63105/2.51208 eV
+and an S1-T1 difference of 1.11897 eV, without zero-point corrections. Central
+differences of all 51 gradient coordinates give 45 positive vibrational modes
+in each state (lowest 47.46/23.90 inverse centimeters); both preserve the graph.
+These checks use corrected third-order XC evaluation and response-state indexing.
+Because reference naphthalene calculations do not reproduce the published OCELOT
+CSV, these are internally consistent protocol diagnostics, not dataset MAEs.
 
 ### 4.2. What the archived experiments establish
 

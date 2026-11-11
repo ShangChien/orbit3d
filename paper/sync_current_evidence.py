@@ -6,7 +6,8 @@ paper = Path(__file__).resolve().parent
 names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
          'ocelot_generator_continued_20261111.json', 'generated_quantum_diagnostic_20261111.json',
          'batched_pipeline_comparison_20261111.json', 'batched_pipeline_reload_20261111.json',
-         'clean_deepmd_native_20261111.json']
+         'clean_deepmd_native_20261111.json', 'conditioning_factorial_20261112.json',
+         'generated_excited_minima_20261112.json']
 records = {}
 for name in names:
     path = paper.parent/'docs/experiments'/name

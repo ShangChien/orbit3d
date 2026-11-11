@@ -113,6 +113,14 @@ def build():
     for name, row in current['ranking_ablation_20261111.json']['aggregate'].items():
         lines.append(f"| {name.replace('_', ' ')} | {100*row['mean_joint_success_rate']:.2f} | {100*row['seed_std']:.2f} |")
     lines += ['', 'Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.']
+    experiment = current['conditioning_factorial_20261112.json']
+    lines += ['', '| Conditioner | Even-electron constraint | Chemical validity (%) | Joint success (%) |',
+              '| :--- | :--- | ---: | ---: |']
+    for row in experiment['aggregate']:
+        valid = row['raw_valid']['mean'] / experiment['budget_per_run']['attempts'] * 100
+        hit = row['joint_success_rate']['mean'] * 100
+        lines.append(f"| {row['variant'].replace('_', ' ')} | {'on' if row['electron_parity'] == 0 else 'off'} | {valid:.2f} | {hit:.2f} |")
+    lines += ['', 'Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.']
     text = re.sub(r'<!-- BEGIN CURRENT RESULTS -->.*?<!-- END CURRENT RESULTS -->',
                   lambda _: '<!-- BEGIN CURRENT RESULTS -->\n'+'\n'.join(lines)+'\n<!-- END CURRENT RESULTS -->', text, flags=re.S)
     text = re.sub(
