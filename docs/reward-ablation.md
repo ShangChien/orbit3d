@@ -1,47 +1,48 @@
 # GRPO reward ablations
 
-The four models start from the same v3 OCELOT conditioner and use training seed 42,
-50 rollout iterations with two optimizer passes each, 16 candidates per group, identical intervals, and the same forcefield,
-Oracle and applicability domain. All physical energies use the float64 reporting
-path. Evaluation uses seeds 2026–2028, 64 attempts each, even-electron sampling,
-external ranking and 30 refinement steps with strict zero acceptance tolerances.
+The completed matrix contains five objectives, training seeds 42–44 and inference
+seeds 2026–2028: 45 runs, 64 proposals per run. Every policy starts from one shared
+v3 SFT checkpoint and receives 50 rollout iterations, two optimizer passes per
+group and 16 proposals per rollout. The forcefield, Oracle, applicability domain,
+intervals, external-ranking cap and strict 30-step refinement protocol are fixed.
+The uncertainty treatment uses weight 1; the Full baseline uses weight 0.
 
-| Training objective | Valid / 192 | Optimization-Oracle joint hits / 192 | Independent-surrogate joint hits / 192 |
+| Objective | Valid / 576 | Optimizing joint / 576 | Independent joint / 576 |
 | --- | ---: | ---: | ---: |
-| Full | 161 | 8 | 8 |
-| KL weight 0 | 159 | 2 | 3 |
-| Physics weight 0 | 158 | 3 | 5 |
-| SFT replay weight 0 | 169 | 7 | 8 |
+| full | 482 | 20 | 20 |
+| no kl | 483 | 14 | 17 |
+| no physics | 482 | 14 | 17 |
+| no replay | 484 | 16 | 19 |
+| uncertainty on | 489 | 17 | 20 |
 
-The full objective performs better than the no-KL/no-physics controls in this
-pilot. Replay does not improve the independent joint count. These are one
-training-seed comparisons; the three inference seeds do not establish robustness
-across training runs. The independent model is an OCELOT fingerprint ensemble,
-not DFT ground truth. No uncertainty penalty was used because held-out ensemble
-spread has weak error-ranking ability.
+| Objective | Optimizing counts, train seeds 42/43/44 (each /192) | Independent counts (each /192) |
+| --- | --- | --- |
+| full | 8/7/5 | 8/5/7 |
+| no kl | 2/3/9 | 3/5/9 |
+| no physics | 3/6/5 | 5/5/7 |
+| no replay | 7/4/5 | 8/7/4 |
+| uncertainty on | 6/7/4 | 8/5/7 |
 
-[Raw per-run metrics, independent results and artifact hashes](experiments/reward_ablation_20261112.json)
-record all denominators and retained pools. The old energy32 experiment is kept
-separately and is not a causal control for these results.
+Full has more aggregate hits than the removal controls, but the effect is not
+uniform across seeds: no-KL seed 44 outperforms Full under both evaluators. Adding
+the uncertainty term leaves the independent total unchanged and lowers the
+optimizing total. These small results do not establish a robust component ranking.
+All models share one SFT initialization; SFT variability is not measured.
+The independent predictor is a separately trained fingerprint model, not DFT truth.
 
+The report gives per-training-seed rates, sample standard deviations, ranges and
+all 27 training-cluster bootstrap resamples through their percentile interval.
+With only three clusters these are descriptive sensitivity intervals, not reliable
+95% coverage or a significance test. Inference samples are not substituted for
+independent training replications.
 
-Additional full-objective training seeds 43 and 44 are complete. Each is evaluated
-with the same three inference seeds and 192-attempt denominator:
+[Complete 45-run record](experiments/grpo_factorial_20261112.json) contains source
+hashes and every cell. The assembly script rejects incomplete, duplicate or
+wrong-budget matrices. The earlier [seed-42 pilot](experiments/reward_ablation_20261112.json)
+remains archived; it is no longer the only evidence for the reward comparisons.
 
-| Training seed | Optimizing joint hits / 192 | Independent joint hits / 192 |
-| --- | ---: | ---: |
-| 42 | 8 | 8 |
-| 43 | 7 | 5 |
-| 44 | 5 | 7 |
-
-Both evaluators total 20/576 (3.47%); the across-training-seed standard deviation
-is 0.80 percentage points for each. All runs share one SFT checkpoint, so SFT
-training variability is not measured. The remaining reward controls are being
-replicated at seeds 43/44, along with an explicit nonzero-uncertainty treatment.
-
-A matched stage-bundle control gives unconditional-prior 1/192 optimizing and
-2/192 independent joint hits, versus SFT 4/192 on both. The prior uses verified
-upstream EMA weights and zero identity conditioning/constant shortlist scores.
-SFT changes both interval conditioning and the self-shortlist, so this is not an
-isolated conditioning intervention. [All stage and training-seed records](experiments/stage_and_training_seeds_20261112.json)
-retain each denominator, checkpoint hash and independent evaluation.
+A stage-bundle comparison gives unconditional-prior 1/192 optimizing and 2/192
+independent hits versus SFT 4/192 for both. The prior uses verified EMA weights
+and constant shortlist scores. This changes both conditioning and self-shortlisting,
+so it is not a single-factor conditioning intervention.
+[Stage records](experiments/stage_and_training_seeds_20261112.json) retain all counts.

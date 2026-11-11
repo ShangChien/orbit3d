@@ -115,3 +115,21 @@ Spearman correlations are 0.200/0.066/0.086/0.091. The intervals are broad and t
 ensemble spread remains a weak error-ranking signal. These measurements do not
 justify enabling an uncertainty reward by default. Complete calibration IDs,
 exclusions and coverage curves are in `experiments/optical_calibration_20261112.json`.
+
+
+## Completed generation pilot
+
+| Active targets | Attempts | Valid | In domain | Optimizing joint | Independent joint |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| HOMO/LUMO | 192 | 111 | 9 | 1 | 1 |
+| Vertical S1/T1 | 192 | 94 | 5 | 1 | 1 |
+| All four | 192 | 111 | 11 | 0 | 0 |
+
+The four-target interface trains, calibrates, generates and reloads end to end,
+but this pilot does not establish useful joint four-property design. The full
+576-proposal ledger is in `experiments/optical_generation_20261112.json`. All
+64 raw proposals and six exports of a joint-window run replay under the latest
+installed wheel, including token/graph identity, coordinates, predictions and
+refinement decisions; see `experiments/optical_wheel_reload_20261112.json`.
+The installed package uses the existing tested Linux dependencies in an isolated
+package target and does not modify the runtimes of ongoing experiments.

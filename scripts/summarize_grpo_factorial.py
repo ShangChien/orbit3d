@@ -50,7 +50,10 @@ def main():
     p.add_argument('--remaining',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     a=p.parse_args()
     stages=json.loads(a.stages.read_text());original=json.loads(a.seed42_ablation.read_text())
-    runs=stages['grpo_replicas'] + [
+    # This source collection explicitly contains only full-objective replicas;
+    # its seed-43/44 records predate the per-row variant field.
+    assert all(r.get('variant', 'full') == 'full' for r in stages['grpo_replicas'])
+    runs=[{**r, 'variant':'full'} for r in stages['grpo_replicas']] + [
         {**r,'training_seed':42} for r in original['runs'] if r['variant']!='full'
     ] + json.loads(a.remaining.read_text())
     aggregate=summarize(runs)
