@@ -20,3 +20,18 @@ def test_ocelot_joint_tuning_distinguishes_neutral_lumo_and_anion_homo():
     # E(N+1)=-100.2 gives EA=+0.2 Ha; only anion HOMO satisfies -EA here.
     assert np.isclose(tuning_objective('J2', -100, -99.5, -.5, .1, -100.2, -.2), 0)
     assert np.isclose(tuning_objective('Jn2', -100, -99.5, -.5, .1, -100.2, -.2), .09)
+
+
+def test_excited_scanner_checks_the_requested_one_based_root():
+    from types import SimpleNamespace
+    from orbit3d.quantum.excited_states import ResponseStateConvergence
+    scanner = ResponseStateConvergence()
+    scanner.state = 1
+    scanner.base = SimpleNamespace(_scf=SimpleNamespace(converged=True), converged=np.array([True]))
+    assert scanner.converged
+    scanner.base.converged = np.array([False, True])
+    assert not scanner.converged
+    scanner.state = 2
+    assert scanner.converged
+    scanner.base._scf.converged = False
+    assert not scanner.converged

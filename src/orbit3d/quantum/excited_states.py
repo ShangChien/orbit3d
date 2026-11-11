@@ -4,6 +4,25 @@ import numpy as np
 from .ocelot import HARTREE_EV, host_array
 
 
+class ResponseStateConvergence:
+    @property
+    def converged(self):
+        # TD states are numbered from 1; the root convergence array is zero-based.
+        return bool(self.base._scf.converged and self.base.converged[self.state - 1])
+
+
+def response_gradient_scanner(td, state=1):
+    scanner = td.nuc_grad_method().as_scanner(state=state)
+    if getattr(td, 'device', None) == 'gpu':
+        from pyscf import lib
+
+        # GPU4PySCF 1.9.1 indexes this array with self.state, unlike its own
+        # energy/gradient access. Correct the index instead of requesting a
+        # gratuitous extra root or ignoring electronic convergence.
+        scanner = lib.set_class(scanner, (ResponseStateConvergence, scanner.__class__))
+    return scanner
+
+
 def restricted_reference(molecule, omega, theory, density=None):
     if theory.engine == 'gpu':
         import cupy

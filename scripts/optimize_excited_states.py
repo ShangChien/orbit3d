@@ -10,7 +10,7 @@ from rdkit import Chem
 from pyscf import gto, lib
 from pyscf.geomopt.geometric_solver import kernel
 from orbit3d.quantum.ocelot import OcelotTheory, HARTREE_EV, BOHR_ANGSTROM, host_array
-from orbit3d.quantum.excited_states import restricted_reference, response
+from orbit3d.quantum.excited_states import restricted_reference, response, response_gradient_scanner
 from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.run_evidence import freeze_run
@@ -32,7 +32,7 @@ mol=gto.M(atom=list(zip(symbols,m.GetConformer().GetPositions().tolist())), unit
 started=time.perf_counter()
 mf=restricted_reference(mol,r['omega'],theory)
 td,_=response(mf,a.state=='S1')
-scanner=td.nuc_grad_method().as_scanner(state=1)
+scanner=response_gradient_scanner(td,state=1)
 converged, optimized=kernel(scanner, maxsteps=theory.max_geometry_steps,
                             convergence_energy=1e-6, convergence_grms=3e-4, convergence_gmax=4.5e-4,
                             convergence_drms=1.2e-3, convergence_dmax=1.8e-3)
