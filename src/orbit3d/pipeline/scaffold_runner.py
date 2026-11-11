@@ -65,7 +65,7 @@ def run_scaffold_from_config(cfg, config_path=None):
     record_input_hashes(output, {'scaffolds': paths['scaffolds_path'], 'forcefield': paths['forcefield_path'],
                                 'oracle': paths['property_checkpoint_dir'],
                                 'domain': cfg['oracle_config'].get('applicability_domain_path')})
-    ff, oracle, domain = load_evaluators(cfg, elements)
+    ff, oracle, domain = load_evaluators(cfg, elements, torch.float64)
     intervals = TargetIntervals.parse(inference['target_interval'], oracle.target_cols)
     if domain:
         domain.save(output/'oracle_domain.json')

@@ -121,6 +121,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
     Uses 100% of `DPA-4`'s native equivariant descriptor tensor (`inp[0]` of `fitting_net`).
     """
 
+    coordinate_dtype = torch.float32
+
     def __init__(
         self,
         dpa_guidance: DPAPotentialGuidance,
@@ -217,7 +219,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         for mol in mols:
             self.validate_molecule(mol)
             atoms = [a.GetSymbol() for a in mol.GetAtoms()]
-            pos = torch.tensor(mol.GetConformer().GetPositions(), dtype=torch.float32, device=self.device)
+            pos = torch.tensor(mol.GetConformer().GetPositions(), dtype=self.coordinate_dtype, device=self.device)
             with torch.enable_grad():
                 yp, ys, _, _ = self.forward_shared_force_and_property(pos, atoms)
             preds.append(yp.detach().cpu().numpy())
@@ -252,7 +254,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             for begin in range(0, len(ids), batch_size):
                 ix = ids[begin:begin + batch_size]
                 coords = torch.tensor(np.stack([mols[i].GetConformer().GetPositions() for i in ix]),
-                                      dtype=torch.float32, device=self.device)
+                                      dtype=self.coordinate_dtype, device=self.device)
                 symbols = [[atom.GetSymbol() for atom in mols[i].GetAtoms()] for i in ix]
                 features, energy, force = self.dpa_guidance.extract_native_batch(coords, symbols, check_finite=False)
                 yp, ys = self._properties_from_descriptor(features, coords)

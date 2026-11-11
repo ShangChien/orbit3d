@@ -77,3 +77,24 @@ def test_float64_adapter_geometry_is_translation_invariant_before_precision_conv
     shifted = oracle._properties_from_descriptor(features, coords+100000.)
     for a, b in zip(expected, shifted):
         torch.testing.assert_close(a, b, atol=1e-7, rtol=1e-7)
+
+
+def test_ordinary_oracle_preserves_the_same_float64_geometry_as_shared_forward():
+    from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle, _BootstrapAdapters
+    oracle = InternalDPA4PropertyOracle.__new__(InternalDPA4PropertyOracle)
+    torch.nn.Module.__init__(oracle)
+    oracle.device, oracle.coordinate_dtype = torch.device('cpu'), torch.float64
+    torch.manual_seed(7)
+    oracle.adapter = _BootstrapAdapters(8, 2, 2, hidden_dim=16).eval()
+    oracle.output_dim, oracle.scalers = 2, []
+    features = torch.randn(2, 8)
+    oracle.dpa_guidance = SimpleNamespace(extract_native_descriptor_and_forces=lambda coords, symbols:
+                                         (features, torch.zeros(()), torch.zeros_like(coords)))
+    mol = Chem.MolFromSmiles('CC')
+    coords = np.array([[.123456789, .1, 0.], [1.987654321, .3, -.4]]) + 100000.
+    conf = Chem.Conformer(2)
+    conf.SetPositions(coords)
+    mol.AddConformer(conf)
+    expected, _, _, _ = oracle.forward_shared_force_and_property(torch.tensor(coords), ['C', 'C'])
+    actual, _ = oracle.predict_3d_mols([mol])
+    np.testing.assert_allclose(actual[0], expected.detach().numpy(), atol=1e-7, rtol=1e-7)
