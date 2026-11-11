@@ -11,16 +11,6 @@ Usage:
 """
 
 import argparse
-import os
-import sys
-from pathlib import Path
-
-_PKG_DIR = Path(__file__).resolve().parent
-_SRC_DIR = _PKG_DIR.parent
-for _p in [str(_SRC_DIR), "/opt/orbit3d/src", "/opt/deepmd_v32", "/sjtu-combustion/wjw/chensq/deepmd_v32"]:
-    if os.path.exists(_p) and _p not in sys.path:
-        sys.path.insert(0, _p)
-
 from orbit3d.pipeline import run_from_config
 
 

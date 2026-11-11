@@ -58,15 +58,19 @@ def run_octree_from_config(cfg, config_path=None):
         raise ValueError('Alignment requires positive grpo_steps')
     checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_conditional.pt"
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
-    ff, oracle, domain = load_evaluators(cfg, ATOM_TYPES)
-    domain_path = cfg['oracle_config'].get('applicability_domain_path')
+    uses_evaluators = (mode != 'train' or int(settings.get('grpo_steps', 0)) > 0
+                       or settings.get('label_source', 'sdf') == 'oracle')
+    ff, oracle, domain = load_evaluators(cfg, ATOM_TYPES) if uses_evaluators else (None, None, None)
+    domain_path = cfg['oracle_config'].get('applicability_domain_path') if uses_evaluators else None
     if domain:
         domain.save(output / 'oracle_domain.json')
     needs_training = mode in {'train', 'train_and_predict'} or (int(settings.get('grpo_steps', 0)) > 0 and float(settings.get('replay_weight', .1)) > 0)
     generator_source = paths.get('checkpoint_load_path') or (
         checkpoint if mode in {'predict', 'align'} else paths.get('generator_pretrained_path'))
-    record_input_hashes(output, {'generator': generator_source, 'forcefield': paths['forcefield_path'],
-                                'property_model': paths['property_checkpoint_dir'], 'applicability_domain': domain_path,
+    record_input_hashes(output, {'generator': generator_source,
+                                'forcefield': paths['forcefield_path'] if uses_evaluators else None,
+                                'property_model': paths['property_checkpoint_dir'] if uses_evaluators else None,
+                                'applicability_domain': domain_path,
                                 'adaptation_data': paths.get('train_data_path') if needs_training else None})
     training = []
     if needs_training and paths.get("train_data_path"):

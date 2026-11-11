@@ -381,3 +381,33 @@ def test_target_expansion_preserves_old_conditions_and_readout_when_new_targets_
     features = torch.randn(3, 96)
     torch.testing.assert_close(old_head.net(features), new_head.net(features)[:,[3,1]], atol=1e-6, rtol=1e-6)
     assert torch.count_nonzero(new_head.net(features)[:,[0,2]]) == 0
+
+
+def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatch):
+    import json
+    from orbit3d.pipeline import octree_runner as runner
+    args = build_default_uni3dar_args(2)
+    args.emb_dim, args.num_head, args.layer = 96, 4, 2
+    args.condition_version = 3
+    model = ConditionalUni3DAR(args, AtomFeatDict(args), 2)
+    monkeypatch.setattr(runner, 'load_pretrained', lambda *a, **kw: model)
+    def unavailable(*a, **kw):
+        raise AssertionError('SDF-labelled SFT must not load an evaluator')
+    monkeypatch.setattr(runner, 'load_evaluators', unavailable)
+    source = tmp_path/'initial.pt'; source.write_bytes(b'fixture pretrained source')
+    sdf = tmp_path/'train.sdf'
+    with Chem.SDWriter(str(sdf)) as writer:
+        for i, smi in enumerate(['CC', 'CO']):
+            mol = Chem.AddHs(Chem.MolFromSmiles(smi))
+            AllChem.EmbedMolecule(mol, randomSeed=42)
+            mol.SetProp('homo', str(-6.+i)); mol.SetProp('lumo', str(-1.+i))
+            writer.write(mol)
+    cfg = {'device': 'cpu', 'mode': 'train', 'generator_config': {'sft_steps': 2, 'batch_size': 2},
+           'oracle_config': {'target_cols': ['homo','lumo'], 'target_units': ['eV','eV']},
+           'mount_paths': {'output_dir': str(tmp_path/'run'), 'checkpoint_save_dir': str(tmp_path/'save'),
+                           'generator_pretrained_path': str(source), 'train_data_path': str(sdf)}}
+    result = runner.run_octree_from_config(cfg)
+    state = torch.load(result['checkpoint'], weights_only=False)
+    assert len(state['history']) == 2 and state['label_source'] == 'sdf'
+    manifest = json.loads((tmp_path/'run/input_manifest.json').read_text())
+    assert set(manifest) == {'generator', 'adaptation_data'}
