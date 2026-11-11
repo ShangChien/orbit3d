@@ -1,0 +1,917 @@
+{
+  "task": "Matched GRPO reward ablations under float64 physical energy reporting",
+  "training_seed": 42,
+  "inference_seeds": [
+    2026,
+    2027,
+    2028
+  ],
+  "steps": 50,
+  "group_size": 16,
+  "candidate_budget_per_inference_seed": 64,
+  "configuration": {
+    "mode": "predict",
+    "device": "cuda:0",
+    "seed": 42,
+    "generator_config": {
+      "backend": "uni3dar_octree",
+      "sft_steps": 4000,
+      "batch_size": 16,
+      "sft_lr": 0.0002,
+      "grpo_steps": 50,
+      "label_source": "sdf",
+      "train_backbone": false,
+      "backbone_lr": 5e-05,
+      "checkpoint_every": 1000,
+      "grpo_lr": 2e-05,
+      "group_size": 16,
+      "kl_beta": 0.02,
+      "physics_weight": 0.2,
+      "uncertainty_weight": 0.0,
+      "replay_weight": 0.1
+    },
+    "oracle_config": {
+      "oracle_mode": "internal_dpa4",
+      "target_cols": [
+        "homo",
+        "lumo"
+      ],
+      "applicability_domain_path": "ocelot_calibration_4096/applicability.json",
+      "target_units": [
+        "eV",
+        "eV"
+      ]
+    },
+    "inference_config": {
+      "target_interval": {
+        "homo": [
+          -8.2,
+          -7.2
+        ],
+        "lumo": [
+          -0.6,
+          0.8
+        ]
+      },
+      "num_candidates": 64,
+      "num_molecules": 16,
+      "batch_size": 16,
+      "max_rms_force_eva": 0.5,
+      "oracle_candidates": 32,
+      "sampling_mode": "independent",
+      "precision": "float32",
+      "electron_parity": 0,
+      "base_seed": 2026
+    },
+    "stage5_relax_config": {
+      "relax_steps": 30,
+      "batch_refinement": true,
+      "enabled": true
+    }
+  },
+  "runs": [
+    {
+      "variant": "full",
+      "electron_parity": 0,
+      "inference_seed": 2026,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 53,
+      "domain_eligible": 11,
+      "out_of_oracle_domain": 42,
+      "ranking": "external",
+      "external_ranking_calls": 11,
+      "refinement_evaluation_calls": 326,
+      "refinement_gradient_calls": 138,
+      "export_recheck_calls": 11,
+      "stage_seconds": {
+        "generation": 43.25878844037652,
+        "validation": 0.33415351435542107,
+        "ranking": 0.6651318408548832,
+        "refinement": 32.019086726009846
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8844188798591723,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 53,
+      "retained": 11,
+      "qualified": 2,
+      "joint_success_rate": 0.03125,
+      "retained_novel_vs_adaptation": 11,
+      "property_hit_retained": 2,
+      "mean_final_force": 1.0364246527579697,
+      "maximum_retained_atom_force_eva": 13.42326831817627,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 89.26430082321167,
+      "checkpoint_sha256": "237d3c03155cb445cf4efb543ec73b7398d2554bf97e3a5282261baa2aa3828b",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 11,
+        "independent_interval_hits": 6,
+        "independent_joint_successes": 2,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 3.1104989778737577,
+          "maximum": 4.389475946389052,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.707863556806206,
+          "lumo": 0.5202647225119953
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "55f5d9bf5bba82337b94e31d67934b081733b4895ef8cb0ecca1cfc56b30dda6",
+        "run_manifest.json": "75832a4f4ab8c6767f499eae4e9ea562434d2ffdf80c0e30555eea810ca5515f",
+        "candidates.csv": "b91031077a139a5bcdc28f5dbd46116f5baf56d68158c7bcd096bc8b8e855014",
+        "generated.sdf": "80f49d8b8b08ad84721664d375440c22eeef3ac7ed99ac169588d2203954eb68",
+        "independent_predictions.csv": "6b15a3d8080758a7384206a2c4ad79c2711a3dae77f6c0b91dcc18d806b3a87b"
+      }
+    },
+    {
+      "variant": "full",
+      "electron_parity": 0,
+      "inference_seed": 2027,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 55,
+      "domain_eligible": 13,
+      "out_of_oracle_domain": 42,
+      "ranking": "external",
+      "external_ranking_calls": 13,
+      "refinement_evaluation_calls": 451,
+      "refinement_gradient_calls": 173,
+      "export_recheck_calls": 13,
+      "stage_seconds": {
+        "generation": 44.32135823741555,
+        "validation": 0.1559869721531868,
+        "ranking": 0.7657037563621998,
+        "refinement": 50.92757696658373
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8727680565975866,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 55,
+      "retained": 13,
+      "qualified": 3,
+      "joint_success_rate": 0.046875,
+      "retained_novel_vs_adaptation": 13,
+      "property_hit_retained": 3,
+      "mean_final_force": 1.1739977219930062,
+      "maximum_retained_atom_force_eva": 25.142616271972656,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 101.26241707801819,
+      "checkpoint_sha256": "237d3c03155cb445cf4efb543ec73b7398d2554bf97e3a5282261baa2aa3828b",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 13,
+        "independent_interval_hits": 6,
+        "independent_joint_successes": 4,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.9343173204746575,
+          "maximum": 4.1743391107998375,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.4911471079736262,
+          "lumo": 0.31305082235955023
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "3d73a12a1eef75d1cbaeb97c0b5a725897e4e281270c0d1eeb0ac3cb14e1ea27",
+        "run_manifest.json": "f68b1d6f823c6ff6fbeefea00a869133f4f811a5b9b666029080bb1e320a22d8",
+        "candidates.csv": "9ae9c21ca5b0d130cd5989e43c7cb839c742446c0ffae63d80f1e0208041bf28",
+        "generated.sdf": "302a56a2bc906da56b789f1cecf7dae0ddf632726068192e16552b1715dcb456",
+        "independent_predictions.csv": "a2c43b8293a7a0533b29ae3ab5e77709c7d42e0d8e0caeffb8c13b2912908482"
+      }
+    },
+    {
+      "variant": "full",
+      "electron_parity": 0,
+      "inference_seed": 2028,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 53,
+      "domain_eligible": 10,
+      "out_of_oracle_domain": 43,
+      "ranking": "external",
+      "external_ranking_calls": 10,
+      "refinement_evaluation_calls": 291,
+      "refinement_gradient_calls": 78,
+      "export_recheck_calls": 10,
+      "stage_seconds": {
+        "generation": 41.34127379581332,
+        "validation": 0.1489393189549446,
+        "ranking": 0.6854557171463966,
+        "refinement": 30.63816849514842
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8972985375225216,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 53,
+      "retained": 10,
+      "qualified": 3,
+      "joint_success_rate": 0.046875,
+      "retained_novel_vs_adaptation": 10,
+      "property_hit_retained": 3,
+      "mean_final_force": 1.9361524380743504,
+      "maximum_retained_atom_force_eva": 42.712215423583984,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 77.8037182316184,
+      "checkpoint_sha256": "237d3c03155cb445cf4efb543ec73b7398d2554bf97e3a5282261baa2aa3828b",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 10,
+        "independent_interval_hits": 5,
+        "independent_joint_successes": 2,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.7970117597681328,
+          "maximum": 3.6947583935291917,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.7079051170640518,
+          "lumo": 0.36298063145872944
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "eaf0711476dde94b447ade4581d90c5e9ec427dd421c881b825fb69d291f5a5a",
+        "run_manifest.json": "f731aca1b9e000c99cf78b5a845105662ea4a03cea110d87fe8e5027ae714739",
+        "candidates.csv": "1ca4ce685fed1dfc85520b7da264f7e0248d0e89750509da0220435f9ce22a10",
+        "generated.sdf": "48caa1310e3d7a3fd868ff8a2c38db7f338d030128fe1be82230f26fd995eea5",
+        "independent_predictions.csv": "9587cfe7d179a2b6b5a24a5c324396d37f75546744ed0613e328930664ae7f8d"
+      }
+    },
+    {
+      "variant": "no_kl",
+      "electron_parity": 0,
+      "inference_seed": 2026,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 51,
+      "domain_eligible": 9,
+      "out_of_oracle_domain": 42,
+      "ranking": "external",
+      "external_ranking_calls": 9,
+      "refinement_evaluation_calls": 242,
+      "refinement_gradient_calls": 79,
+      "export_recheck_calls": 9,
+      "stage_seconds": {
+        "generation": 41.1311846524477,
+        "validation": 0.14851979166269302,
+        "ranking": 0.5221586674451828,
+        "refinement": 24.303538538515568
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8612357123965033,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 51,
+      "retained": 9,
+      "qualified": 1,
+      "joint_success_rate": 0.015625,
+      "retained_novel_vs_adaptation": 9,
+      "property_hit_retained": 1,
+      "mean_final_force": 0.7891504036055671,
+      "maximum_retained_atom_force_eva": 3.170254707336426,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 70.92891411855817,
+      "checkpoint_sha256": "24bd21fbb9a1d2f9da0fa41652e5e5b01d08be2c903c255bcfcf5cd5a5a9cbef",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 9,
+        "independent_interval_hits": 5,
+        "independent_joint_successes": 1,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.913335055790324,
+          "maximum": 3.9289009837095357,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.5349968442902466,
+          "lumo": 0.6158202848499401
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "96371741e5395baad60b69e9111227e7eb9dd760b93368f041494d3d7c582192",
+        "run_manifest.json": "d0f230c43cf0eb7efe8f30101d560aec3d2b5b83a6923f892b200e83b4e13c69",
+        "candidates.csv": "0d665457c936faf7b0b4e021d831822fd675fe7ee9097b1d873b3cd623e7cb0a",
+        "generated.sdf": "6e6b47bdab7b7ebd67fbd40fdb268dfdd430b45c22c492a5ae5a37b8c47a3ccc",
+        "independent_predictions.csv": "66db33add49706efe9026397ef37f180897f1858556e7cd6d15ecb9be66ee66e"
+      }
+    },
+    {
+      "variant": "no_kl",
+      "electron_parity": 0,
+      "inference_seed": 2027,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 52,
+      "domain_eligible": 3,
+      "out_of_oracle_domain": 49,
+      "ranking": "external",
+      "external_ranking_calls": 3,
+      "refinement_evaluation_calls": 86,
+      "refinement_gradient_calls": 25,
+      "export_recheck_calls": 3,
+      "stage_seconds": {
+        "generation": 42.61688017845154,
+        "validation": 0.16206105798482895,
+        "ranking": 0.2208336777985096,
+        "refinement": 9.191935982555151
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8686450189275048,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 52,
+      "retained": 3,
+      "qualified": 0,
+      "joint_success_rate": 0.0,
+      "retained_novel_vs_adaptation": 3,
+      "property_hit_retained": 0,
+      "mean_final_force": 0.7728870908419291,
+      "maximum_retained_atom_force_eva": 2.5262420177459717,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 56.55399909988046,
+      "checkpoint_sha256": "24bd21fbb9a1d2f9da0fa41652e5e5b01d08be2c903c255bcfcf5cd5a5a9cbef",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 3,
+        "independent_interval_hits": 1,
+        "independent_joint_successes": 0,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.440022388882774,
+          "maximum": 2.90833086711803,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.47878576567592085,
+          "lumo": 0.40918717619319916
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "06301602a3b9caf340d6db0c2e0f9a2f91d505e1b6ebae9643843fe106feaf2f",
+        "run_manifest.json": "816283569d5ac78dbb06440e61c3325cea095a8b05e5213d1822da1d869d7118",
+        "candidates.csv": "541adc59cbbc4b0276b8aeeabc80b3890d260d5584bd449d70adb12e77e2a026",
+        "generated.sdf": "b050f866dd0a3456be43d5f342db0b66cb4ab4fdea5bace9a659b5859b118e8f",
+        "independent_predictions.csv": "85b0c0a141d9d3a71ec5d1658a3afb99d3292c05d28821c780d571110ad2aea9"
+      }
+    },
+    {
+      "variant": "no_kl",
+      "electron_parity": 0,
+      "inference_seed": 2028,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 56,
+      "domain_eligible": 12,
+      "out_of_oracle_domain": 44,
+      "ranking": "external",
+      "external_ranking_calls": 12,
+      "refinement_evaluation_calls": 336,
+      "refinement_gradient_calls": 163,
+      "export_recheck_calls": 12,
+      "stage_seconds": {
+        "generation": 40.19957360252738,
+        "validation": 0.16037695482373238,
+        "ranking": 0.6651130802929401,
+        "refinement": 38.88559190183878
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8640082751614561,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 56,
+      "retained": 12,
+      "qualified": 1,
+      "joint_success_rate": 0.015625,
+      "retained_novel_vs_adaptation": 12,
+      "property_hit_retained": 1,
+      "mean_final_force": 2.3170448603729406,
+      "maximum_retained_atom_force_eva": 40.69434356689453,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 84.9700175859034,
+      "checkpoint_sha256": "24bd21fbb9a1d2f9da0fa41652e5e5b01d08be2c903c255bcfcf5cd5a5a9cbef",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 12,
+        "independent_interval_hits": 7,
+        "independent_joint_successes": 2,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.868484800516893,
+          "maximum": 3.7007997380013897,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.4781635111162841,
+          "lumo": 0.30835435722221316
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "fbd89bda4bb6f68dde721200f2c7030c9b06e52f9dc0d6e3e5a805f56eed7e3d",
+        "run_manifest.json": "08e77ed369773445e3b079c35a9364c80690f05f61399921e4285780cdba34f6",
+        "candidates.csv": "1f5028fb907b8f7971ca9af513c36129b498e8938c648cd6ed41189a60f15fb8",
+        "generated.sdf": "c06ad5c668edeb258e02c2e7a5073c8f7d5d52cb7492c29870506c1821e4c138",
+        "independent_predictions.csv": "fa329f2ad57b89e4f39c6fc354f5d9ee1eee02f3e6c45bd31877881eabfe55b9"
+      }
+    },
+    {
+      "variant": "no_physics",
+      "electron_parity": 0,
+      "inference_seed": 2026,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 51,
+      "domain_eligible": 7,
+      "out_of_oracle_domain": 44,
+      "ranking": "external",
+      "external_ranking_calls": 7,
+      "refinement_evaluation_calls": 263,
+      "refinement_gradient_calls": 121,
+      "export_recheck_calls": 7,
+      "stage_seconds": {
+        "generation": 41.40247540175915,
+        "validation": 0.1461249142885208,
+        "ranking": 0.44523144140839577,
+        "refinement": 27.227468386292458
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.876009836755831,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 51,
+      "retained": 7,
+      "qualified": 1,
+      "joint_success_rate": 0.015625,
+      "retained_novel_vs_adaptation": 7,
+      "property_hit_retained": 1,
+      "mean_final_force": 0.6996382411037173,
+      "maximum_retained_atom_force_eva": 3.6877965927124023,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 73.95174353569746,
+      "checkpoint_sha256": "a3cdb85da73ac028b05a5d27c243bd67f8f6a61803f695f8159d2c1a45543fd3",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 7,
+        "independent_interval_hits": 2,
+        "independent_joint_successes": 1,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 3.0268735336800257,
+          "maximum": 4.316910496911274,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.341205094177863,
+          "lumo": 0.34315967654611196
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "b51716bbcbb41095e6e35e1d16bbfd24f772f525c94f82398069b00055806f2f",
+        "run_manifest.json": "16b01ed603768f58af16359f01b06db53f2b6d64e4d4682e4d03c0acebc947c8",
+        "candidates.csv": "cdd92563fa7f40543d90ba66e129b9a6a9890edd16d543f12e74ca0d6cb60a6e",
+        "generated.sdf": "7581cdffd458b4446911190f62fe41be57e4c34f5cfe882a13ea3ac10f479231",
+        "independent_predictions.csv": "d932b72894fcf44d65c07805f8aa255619a87fa80d20f51285fd3ae8198d78b0"
+      }
+    },
+    {
+      "variant": "no_physics",
+      "electron_parity": 0,
+      "inference_seed": 2027,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 52,
+      "domain_eligible": 10,
+      "out_of_oracle_domain": 42,
+      "ranking": "external",
+      "external_ranking_calls": 10,
+      "refinement_evaluation_calls": 291,
+      "refinement_gradient_calls": 152,
+      "export_recheck_calls": 10,
+      "stage_seconds": {
+        "generation": 38.405050065368414,
+        "validation": 0.1603301279246807,
+        "ranking": 0.6628653332591057,
+        "refinement": 34.647725488990545
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8708270201244174,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 52,
+      "retained": 10,
+      "qualified": 0,
+      "joint_success_rate": 0.0,
+      "retained_novel_vs_adaptation": 10,
+      "property_hit_retained": 0,
+      "mean_final_force": 1.1037259072065353,
+      "maximum_retained_atom_force_eva": 7.587547302246094,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 78.83081580325961,
+      "checkpoint_sha256": "a3cdb85da73ac028b05a5d27c243bd67f8f6a61803f695f8159d2c1a45543fd3",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 10,
+        "independent_interval_hits": 4,
+        "independent_joint_successes": 1,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 3.205596464759671,
+          "maximum": 3.6696799134754228,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.612645034977252,
+          "lumo": 0.3536174486882389
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "e73964746bb03638fdf556b96dc47ed11957b6087de7ced077e821c8ae7a1e72",
+        "run_manifest.json": "c42747fc6f7ca12ebe27e0587ec24a167d79c689c4314f21e2bf70884fe1a6aa",
+        "candidates.csv": "8241c286b61349d13e1319df685cf98723a6bbfe987ac29ce28426735815c58a",
+        "generated.sdf": "e1b7722400dfaf15b104db287faad79d49c379120a3f9bd91b901ba529098363",
+        "independent_predictions.csv": "dc378184bd4ff8b95c7ca20b62a285d46274606b242a39fdfd7febfe52887dba"
+      }
+    },
+    {
+      "variant": "no_physics",
+      "electron_parity": 0,
+      "inference_seed": 2028,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 55,
+      "domain_eligible": 11,
+      "out_of_oracle_domain": 44,
+      "ranking": "external",
+      "external_ranking_calls": 11,
+      "refinement_evaluation_calls": 364,
+      "refinement_gradient_calls": 129,
+      "export_recheck_calls": 11,
+      "stage_seconds": {
+        "generation": 39.94059778004885,
+        "validation": 0.16019239649176598,
+        "ranking": 0.5867727361619473,
+        "refinement": 38.38065819069743
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8754097751624799,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 55,
+      "retained": 11,
+      "qualified": 2,
+      "joint_success_rate": 0.03125,
+      "retained_novel_vs_adaptation": 10,
+      "property_hit_retained": 2,
+      "mean_final_force": 0.9094134122133255,
+      "maximum_retained_atom_force_eva": 5.895049571990967,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 84.13550033792853,
+      "checkpoint_sha256": "a3cdb85da73ac028b05a5d27c243bd67f8f6a61803f695f8159d2c1a45543fd3",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 11,
+        "independent_interval_hits": 6,
+        "independent_joint_successes": 3,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.943860432131079,
+          "maximum": 3.612393309659586,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.38858197358446367,
+          "lumo": 0.26737668302435186
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "060ac95917d8641dd8ae8087ab083aacd6784962e21741726a5def0f75dd4b88",
+        "run_manifest.json": "ec8550c3c9ad95292e3f8bc86ebdf21fd53960d26807aa73c71965ed9dc7a1f0",
+        "candidates.csv": "6f13f6178fc7cfd9f70f500882e54aa651c131cd4a6c066ac17491180802012b",
+        "generated.sdf": "092295a6c1f162344c532db41c82ac5ad51f57bc87a9d9fb0c036060e3168a6a",
+        "independent_predictions.csv": "d51b15a5456b9f398c0fb5d93453b254edaae38660783c4f1e2727127c88e687"
+      }
+    },
+    {
+      "variant": "no_replay",
+      "electron_parity": 0,
+      "inference_seed": 2026,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 56,
+      "domain_eligible": 6,
+      "out_of_oracle_domain": 50,
+      "ranking": "external",
+      "external_ranking_calls": 6,
+      "refinement_evaluation_calls": 227,
+      "refinement_gradient_calls": 102,
+      "export_recheck_calls": 6,
+      "stage_seconds": {
+        "generation": 41.35577950626612,
+        "validation": 0.162260290235281,
+        "ranking": 0.3660038746893406,
+        "refinement": 24.66022791340947
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.88233944795371,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 56,
+      "retained": 6,
+      "qualified": 1,
+      "joint_success_rate": 0.015625,
+      "retained_novel_vs_adaptation": 6,
+      "property_hit_retained": 1,
+      "mean_final_force": 1.1991545607646306,
+      "maximum_retained_atom_force_eva": 16.392786026000977,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 71.21098953858018,
+      "checkpoint_sha256": "95a17d45985150e7f747b4fb51bc890a3eaa25f7173b835104f297c14f945a87",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 6,
+        "independent_interval_hits": 4,
+        "independent_joint_successes": 1,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.9954673680858357,
+          "maximum": 4.744578211547288,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.5235443261825122,
+          "lumo": 0.2869825232739172
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "cb13044c72bed0152feefcd5672405ecaaac5815a33b7465403e9a0537aa6131",
+        "run_manifest.json": "da010bd2a7b943b111f1a0c8b8c8bb57b4784cd7475d90f3adffc7ff6ad29709",
+        "candidates.csv": "e61d98837503b788517977b5b7dc914fb08a089d197197f24a7238b59675c39c",
+        "generated.sdf": "23a2fd0feae748a46ad58fc7deb22077cbe64eb6ae1a50aed9cce2acdf220298",
+        "independent_predictions.csv": "b1da78d7a427e31d98815407ab8ef546e39c7ed12e523a33135672503cb46b1c"
+      }
+    },
+    {
+      "variant": "no_replay",
+      "electron_parity": 0,
+      "inference_seed": 2027,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 59,
+      "domain_eligible": 10,
+      "out_of_oracle_domain": 49,
+      "ranking": "external",
+      "external_ranking_calls": 10,
+      "refinement_evaluation_calls": 356,
+      "refinement_gradient_calls": 173,
+      "export_recheck_calls": 10,
+      "stage_seconds": {
+        "generation": 41.581756468862295,
+        "validation": 0.1678844764828682,
+        "ranking": 0.5253451503813267,
+        "refinement": 36.188338443636894
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8559251671209769,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 59,
+      "retained": 10,
+      "qualified": 1,
+      "joint_success_rate": 0.015625,
+      "retained_novel_vs_adaptation": 10,
+      "property_hit_retained": 1,
+      "mean_final_force": 0.5445053957402706,
+      "maximum_retained_atom_force_eva": 2.8026247024536133,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 83.47568751871586,
+      "checkpoint_sha256": "95a17d45985150e7f747b4fb51bc890a3eaa25f7173b835104f297c14f945a87",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 10,
+        "independent_interval_hits": 4,
+        "independent_joint_successes": 2,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 2.821211515101508,
+          "maximum": 4.107753515191012,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.38905507994340455,
+          "lumo": 0.30474555100598116
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "6a84fd037d337a34ccc01d14b75dd2d9e2dd7eafcd008e6e9e5c6f26638d649c",
+        "run_manifest.json": "7fd150373137e801375f665808d85afe3bacd146182204135a8c15dfa2b5433d",
+        "candidates.csv": "87aff2c6cc7423f99fb8b0c73da6feafae1b8409a7c4ec29b84c032eaa5edd61",
+        "generated.sdf": "ea786072fdb4682bb30e61fa5eb6eb6d33fa9838a57af2eacd7de3dc8a20415c",
+        "independent_predictions.csv": "5104e9913fbbf59cdb137730bc15ecb839b59db75d5e748703800a355f39b2ef"
+      }
+    },
+    {
+      "variant": "no_replay",
+      "electron_parity": 0,
+      "inference_seed": 2028,
+      "backend": "uni3dar_octree_v3",
+      "attempted": 64,
+      "raw_valid": 54,
+      "domain_eligible": 16,
+      "out_of_oracle_domain": 38,
+      "ranking": "external",
+      "external_ranking_calls": 16,
+      "refinement_evaluation_calls": 553,
+      "refinement_gradient_calls": 172,
+      "export_recheck_calls": 16,
+      "stage_seconds": {
+        "generation": 40.650992926210165,
+        "validation": 0.14811533316969872,
+        "ranking": 0.5923192724585533,
+        "refinement": 47.620885509997606
+      },
+      "batch_refinement": true,
+      "retained_morgan_diversity": 0.8902710132389864,
+      "refinement_failed": 0,
+      "oracle_failed": 0,
+      "unique_raw_valid": 54,
+      "retained": 16,
+      "qualified": 5,
+      "joint_success_rate": 0.078125,
+      "retained_novel_vs_adaptation": 16,
+      "property_hit_retained": 5,
+      "mean_final_force": 1.2839061804115772,
+      "maximum_retained_atom_force_eva": 39.674522399902344,
+      "export_prediction_recheck_passed": true,
+      "elapsed_seconds": 94.59535287693143,
+      "checkpoint_sha256": "95a17d45985150e7f747b4fb51bc890a3eaa25f7173b835104f297c14f945a87",
+      "independent": {
+        "evaluator": "Independent OCELOT fingerprint bootstrap; no DFT ground truth",
+        "exported": 16,
+        "independent_interval_hits": 9,
+        "independent_joint_successes": 5,
+        "attempted": 64,
+        "synthetic_accessibility": {
+          "implementation": "RDKit Ertl-Schuffenhauer SA score",
+          "mean": 3.1096433744060104,
+          "maximum": 4.747166827014231,
+          "interpretation": "1 easier to 10 harder; heuristic, not a synthesis route or proof"
+        },
+        "mean_absolute_oracle_disagreement_eV": {
+          "homo": 0.4043172134474736,
+          "lumo": 0.4929506836043921
+        }
+      },
+      "artifact_sha256": {
+        "run_config.json": "fc9ba2b2f7f7d0f2f7c4a14a56a54aa7e55034aeda2bb383055a5c31f9eb7c9b",
+        "run_manifest.json": "88097a4a2eb4101fddae7c8e42e97acf352e99604ff9e0af264a816ee69d8a71",
+        "candidates.csv": "ca68df389a2f57ba045c2691dfb9b6ec658a165688fd1340b610d0ba6a5c5318",
+        "generated.sdf": "130b8621f9c97c587d88653137bab156dbf62e39d237af4d86ea6feabd0b6931",
+        "independent_predictions.csv": "b28f2aa7af7228eb4ebf30dd18e43048686a27951ddec11320c52e75b85d442a"
+      }
+    }
+  ],
+  "aggregate": [
+    {
+      "variant": "full",
+      "electron_parity": 0,
+      "inference_seeds": [
+        2026,
+        2027,
+        2028
+      ],
+      "raw_valid": {
+        "mean": 53.666666666666664,
+        "seed_sd": 1.1547005383792517
+      },
+      "domain_eligible": {
+        "mean": 11.333333333333334,
+        "seed_sd": 1.5275252316519468
+      },
+      "retained": {
+        "mean": 11.333333333333334,
+        "seed_sd": 1.5275252316519468
+      },
+      "qualified": {
+        "mean": 2.6666666666666665,
+        "seed_sd": 0.5773502691896258
+      },
+      "joint_success_rate": {
+        "mean": 0.041666666666666664,
+        "seed_sd": 0.009021097956087904
+      }
+    },
+    {
+      "variant": "no_kl",
+      "electron_parity": 0,
+      "inference_seeds": [
+        2026,
+        2027,
+        2028
+      ],
+      "raw_valid": {
+        "mean": 53.0,
+        "seed_sd": 2.6457513110645907
+      },
+      "domain_eligible": {
+        "mean": 8.0,
+        "seed_sd": 4.58257569495584
+      },
+      "retained": {
+        "mean": 8.0,
+        "seed_sd": 4.58257569495584
+      },
+      "qualified": {
+        "mean": 0.6666666666666666,
+        "seed_sd": 0.5773502691896258
+      },
+      "joint_success_rate": {
+        "mean": 0.010416666666666666,
+        "seed_sd": 0.009021097956087904
+      }
+    },
+    {
+      "variant": "no_physics",
+      "electron_parity": 0,
+      "inference_seeds": [
+        2026,
+        2027,
+        2028
+      ],
+      "raw_valid": {
+        "mean": 52.666666666666664,
+        "seed_sd": 2.0816659994661326
+      },
+      "domain_eligible": {
+        "mean": 9.333333333333334,
+        "seed_sd": 2.081665999466133
+      },
+      "retained": {
+        "mean": 9.333333333333334,
+        "seed_sd": 2.081665999466133
+      },
+      "qualified": {
+        "mean": 1.0,
+        "seed_sd": 1.0
+      },
+      "joint_success_rate": {
+        "mean": 0.015625,
+        "seed_sd": 0.015625
+      }
+    },
+    {
+      "variant": "no_replay",
+      "electron_parity": 0,
+      "inference_seeds": [
+        2026,
+        2027,
+        2028
+      ],
+      "raw_valid": {
+        "mean": 56.333333333333336,
+        "seed_sd": 2.516611478423583
+      },
+      "domain_eligible": {
+        "mean": 10.666666666666666,
+        "seed_sd": 5.033222956847166
+      },
+      "retained": {
+        "mean": 10.666666666666666,
+        "seed_sd": 5.033222956847166
+      },
+      "qualified": {
+        "mean": 2.3333333333333335,
+        "seed_sd": 2.3094010767585034
+      },
+      "joint_success_rate": {
+        "mean": 0.036458333333333336,
+        "seed_sd": 0.036084391824351615
+      }
+    }
+  ],
+  "limitations": [
+    "One training seed; three inference seeds are not independent training replications.",
+    "Independent evaluator is a separately trained fingerprint surrogate, not DFT reference truth.",
+    "All variants use the same strict-zero-tolerance physical acceptance protocol. Old energy32 experiments are not causal controls."
+  ]
+}
