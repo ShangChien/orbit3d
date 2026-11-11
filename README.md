@@ -91,6 +91,15 @@ orbit3d --config configs/qm9s_ocelot_octree.json
 For inference, set `mode` to `predict` and supply `checkpoint_load_path` for the
 saved octree checkpoint. The original pretrained file and training SDF can then
 be omitted. New checkpoints retain target scaling and training identities.
+For GRPO-only updates, set `mode: align`, load an adapted checkpoint and set
+positive `grpo_steps`; supply training data only when replay is enabled. This
+mode saves the updated checkpoint without repeating SFT or generating a final
+inference batch. Supervised modes require positive `sft_steps`.
+
+Consecutive element/depth migrations retain pending element-supervision
+requirements. Structural-only adaptation cannot clear a property-label
+requirement; pseudo-labels for new elements require observed Oracle training
+coverage. See [expanded-element training](docs/wide-element-adaptation.md).
 
 Each run writes `candidates.csv`, `generated.sdf`, `qualified.sdf`,
 `relaxation_traces.json`, `run_config.json` and `summary.json`. `generated.sdf`

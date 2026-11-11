@@ -28,6 +28,7 @@ state.update(model_state_dict=new.state_dict(), backend=f'uni3dar_octree_v{a.con
                                   'seed': a.seed, 'conditioner_reset': True,
                                   'target_condition_version': a.condition_version,
                                   'structural_prior_and_property_head_retained': True,
+                                  'required_elements': old.args.allow_atoms.split(','),
                                   'requires_condition_adaptation': True})
 state.pop('history', None)
 state.pop('grpo_history', None)

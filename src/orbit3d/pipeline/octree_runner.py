@@ -16,6 +16,7 @@ from ..generator.octree_backend import (
     trajectory_to_instance,
     interval_arrays,
     checkpoint_contract,
+    required_condition_elements,
 )
 from ..generator.octree_tokenizer import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
@@ -51,8 +52,12 @@ def run_octree_from_config(cfg, config_path=None):
     names = cfg["oracle_config"]["target_cols"]
     units = cfg['oracle_config'].get('target_units', ['eV' if n in {'homo', 'lumo'} else 'unspecified' for n in names])
     mode = cfg.get("mode", "train_and_predict")
-    if mode not in {"train", "predict", "train_and_predict"}:
+    if mode not in {"train", "predict", "train_and_predict", "align"}:
         raise ValueError(f"Unknown mode: {mode}")
+    if mode in {'train', 'train_and_predict'} and int(settings.get('sft_steps', 100)) <= 0:
+        raise ValueError('Supervised training requires positive sft_steps; use align for GRPO-only training')
+    if mode == 'align' and int(settings.get('grpo_steps', 0)) <= 0:
+        raise ValueError('Alignment requires positive grpo_steps')
     checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_conditional.pt"
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
     oracle_settings = cfg['oracle_config']
@@ -76,9 +81,9 @@ def run_octree_from_config(cfg, config_path=None):
     domain = MorganDomain.load(domain_path) if domain_path else None
     if domain:
         domain.save(output / 'oracle_domain.json')
-    needs_training = mode != 'predict' or (int(settings.get('grpo_steps', 0)) > 0 and float(settings.get('replay_weight', .1)) > 0)
+    needs_training = mode in {'train', 'train_and_predict'} or (int(settings.get('grpo_steps', 0)) > 0 and float(settings.get('replay_weight', .1)) > 0)
     generator_source = paths.get('checkpoint_load_path') or (
-        checkpoint if mode == 'predict' else paths.get('generator_pretrained_path'))
+        checkpoint if mode in {'predict', 'align'} else paths.get('generator_pretrained_path'))
     record_input_hashes(output, {'generator': generator_source, 'forcefield': paths['forcefield_path'],
                                 'property_model': paths['property_checkpoint_dir'], 'applicability_domain': domain_path,
                                 'adaptation_data': paths.get('train_data_path') if needs_training else None})
@@ -105,6 +110,9 @@ def run_octree_from_config(cfg, config_path=None):
                                     condition_version=int(settings.get('condition_version', 2)))
         label_source = settings.get("label_source", "sdf")
         if label_source == "oracle":
+            required = required_condition_elements(initial_state or {})
+            if required - set(getattr(oracle, 'training_elements', None) or []):
+                raise ValueError('New-element pseudo-labels require documented Oracle training coverage')
             y, _ = oracle.predict_3d_mols(training)
             for mol, values in zip(training, y):
                 for name, value in zip(names, values):
@@ -127,7 +135,7 @@ def run_octree_from_config(cfg, config_path=None):
             if migration.get('requires_adaptation') and not train_backbone:
                 raise ValueError('Representation migration requires backbone adaptation')
             if migration.get('requires_adaptation') or initial_state.get('condition_migration', {}).get('requires_condition_adaptation'):
-                added = set(migration.get('new_elements', [])) - set(migration.get('old_elements', []))
+                added = required_condition_elements(initial_state)
                 covered = {atom.GetSymbol() for mol in training for atom in mol.GetAtoms()}
                 if added - covered:
                     raise ValueError(f'Adaptation data lacks newly enabled elements: {sorted(added-covered)}')
@@ -282,7 +290,7 @@ def run_octree_from_config(cfg, config_path=None):
             },
             checkpoint,
         )
-    if mode == "train":
+    if mode in {"train", "align"}:
         return {"checkpoint": str(checkpoint), "history": history}
     lock_deterministic_environment(int(inference.get("base_seed", 2026)))
     model.eval()

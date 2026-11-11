@@ -274,3 +274,18 @@ def test_failed_groups_without_auxiliary_objectives_leave_policy_unchanged(monke
                            steps=2, group_size=4, kl_beta=0, replay_weight=0)
     assert all(row['optimizer_updates'] == 0 and row['valid'] == 0 for row in history)
     assert all(torch.equal(value, model.state_dict()[key]) for key, value in original.items())
+
+
+def test_element_supervision_remains_pending_after_structural_adaptation():
+    from orbit3d.generator.octree_backend import required_condition_elements
+
+    state = {'representation_migration': {'old_elements': ['H', 'C'], 'new_elements': ['H', 'C', 'B'],
+                                        'requires_adaptation': False},
+             'condition_migration': {'requires_condition_adaptation': True}}
+    assert required_condition_elements(state) == {'B'}
+    # Expanding again must carry the earlier B label requirement into the new contract.
+    pending = required_condition_elements(state)
+    state['condition_migration']['required_elements'] = sorted(pending)
+    state['representation_migration'] = {'old_elements': ['H', 'C', 'B'],
+                                        'new_elements': ['H', 'C', 'B', 'Si'], 'requires_adaptation': True}
+    assert required_condition_elements(state) == {'B', 'Si'}

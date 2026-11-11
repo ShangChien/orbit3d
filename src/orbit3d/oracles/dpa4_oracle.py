@@ -446,6 +446,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         obj.scalers = joblib.load(scaler_path)
         obj.target_units = meta.get('target_units', ['unspecified'] * obj.output_dim)
         obj.geometry_method = meta.get('input_geometry_method')
+        obj.training_elements = meta.get('training_elements')
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)["adapter_state_dict"]
         obj.adapter.load_state_dict(state, strict=True)
         obj.adapter.eval()

@@ -12,6 +12,7 @@ from orbit3d.generator.octree_backend import (
     OctreeDataset,
     checkpoint_contract,
     trajectory_to_instance,
+    required_condition_elements,
 )
 from orbit3d.generator.random_streams import candidate_seed
 from orbit3d.utils.dataset_io import write_precise_sdf
@@ -113,6 +114,7 @@ state.update(
     },
     condition_migration={
         "requires_condition_adaptation": True,
+        "required_elements": sorted(required_condition_elements(state)),
         "reason": "Structure-only adaptation; property conditioner and understanding head were frozen",
     },
     contract=checkpoint_contract(

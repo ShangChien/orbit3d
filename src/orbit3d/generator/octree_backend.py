@@ -121,6 +121,16 @@ def interval_arrays(intervals, mean, scale, condition_version):
     return bounds[:, 0], bounds[:, 1], active
 
 
+def required_condition_elements(state):
+    """Carry unfinished element supervision across consecutive checkpoint migrations."""
+    condition = state.get('condition_migration', {})
+    representation = state.get('representation_migration', {})
+    required = set(condition.get('required_elements', []))
+    if condition.get('requires_condition_adaptation') or representation.get('requires_adaptation'):
+        required.update(set(representation.get('new_elements', [])) - set(representation.get('old_elements', [])))
+    return required
+
+
 def trajectory_to_instance(trajectory, spatial_box=None, element_table=tuple(ATOM_TYPES)):
     symbols = trajectory["atom_symbols"]
     types = np.array([element_table.index(s) for s in symbols], dtype=np.int64)

@@ -4,7 +4,7 @@ import argparse
 import hashlib
 from pathlib import Path
 import torch
-from orbit3d.generator.octree_backend import load_octree_checkpoint, build_octree, checkpoint_contract
+from orbit3d.generator.octree_backend import load_octree_checkpoint, build_octree, checkpoint_contract, required_condition_elements
 
 p = argparse.ArgumentParser()
 p.add_argument("--checkpoint", type=Path, required=True)
@@ -26,6 +26,10 @@ levels[: len(old.cur_level.weight)] = old.cur_level.weight.detach()
 levels[len(old.cur_level.weight) :] = old.cur_level.weight[-1].detach()
 weights["cur_level.weight"] = levels
 new.load_state_dict(weights, strict=True)
+pending = required_condition_elements(state)
+if pending:
+    state['condition_migration'] = {**state.get('condition_migration', {}),
+        'requires_condition_adaptation': True, 'required_elements': sorted(pending)}
 state.update(
     model_state_dict=new.state_dict(),
     representation_config=config,
