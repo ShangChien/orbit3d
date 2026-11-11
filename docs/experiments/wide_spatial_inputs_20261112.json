@@ -1,0 +1,182 @@
+{
+  "wide_target_campaign/central_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "d468a0083bbc285b2ae504d940c0e6b7e618387e2944a401fa6116c40185df28"
+  },
+  "wide_target_campaign/central_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "c21bc4d52709ca6d09bdb5b69742e8738a113a3febf6d0afcbeebbeb68c2b75a"
+  },
+  "wide_target_campaign/central_seed2026/candidates.csv": {
+    "candidates.csv": "661ce8ef3291b47aeda9b595bf58710c2282947777410e3bed509fdd1ac594da"
+  },
+  "wide_target_campaign/central_seed2026/summary.json": {
+    "summary.json": "e7268bd49daaee710c259c46b862e8deaae8448c3c801ea900591e84af568ccd"
+  },
+  "wide_target_campaign/central_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "f8864620b5561a9feb81ef9577d09f1b5e4caadaeb75cd2deba37ab559379934"
+  },
+  "wide_target_campaign/central_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "ec0335fd10975afcd03cc4d263e001dd2c0b4c5893c38b9ae752c11c3d684880"
+  },
+  "wide_target_campaign/central_seed2027/candidates.csv": {
+    "candidates.csv": "09ef1a84635fbdca7b562410a3b3b4aa1b06a43841bbdf1e1f6b4cbb0bf2d90d"
+  },
+  "wide_target_campaign/central_seed2027/summary.json": {
+    "summary.json": "0a2c7970534c86aaee66a2a888dad286eeac9a84e058898df19a49b7bffd2715"
+  },
+  "wide_target_campaign/central_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "beb4e148d0eaa52d5aaafe56ef59e59828c0688928d352b6d90f007747d83e45"
+  },
+  "wide_target_campaign/central_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "98d01ceaa4fd778eb7ad298d125d5bc4657592c34b7abc273ae21991b6fbdc02"
+  },
+  "wide_target_campaign/central_seed2028/candidates.csv": {
+    "candidates.csv": "10047666b24f757da75c14735e9029a19caafce6d4bd9f1137ef8c7c70b3d8c1"
+  },
+  "wide_target_campaign/central_seed2028/summary.json": {
+    "summary.json": "0be8e31c22872c6369f4130162da0c0762f6f9d3041b20479b64056a831a3a95"
+  },
+  "wide_target_campaign/lower_gap_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "e40a2095f36c0ad201a162c218353b0d7ff7f9bb720b1534859181adbd2c3311"
+  },
+  "wide_target_campaign/lower_gap_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "247a2cebfe91a551c56274c442e3f4a91a6e27d8782503985a503fd78c4247c6"
+  },
+  "wide_target_campaign/lower_gap_seed2026/candidates.csv": {
+    "candidates.csv": "072d62a79fc7625cfb531109cf43775b4328bf49cbcad347f971536eaef1f37c"
+  },
+  "wide_target_campaign/lower_gap_seed2026/summary.json": {
+    "summary.json": "21ff225d0fcaf25d9077e60dd103c906e480b3a400fc8a257c9763c38415c64a"
+  },
+  "wide_target_campaign/lower_gap_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "efa7d740db6f88165d98acd76b4c84fb970b4afe10a0cf8e9449eca7dc4a64d1"
+  },
+  "wide_target_campaign/lower_gap_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "df5b8728e87c766411a6dca7158c5f971b138fbc2bb635a6cac1a61d54893d77"
+  },
+  "wide_target_campaign/lower_gap_seed2027/candidates.csv": {
+    "candidates.csv": "79225790a68317e6766abe7b5ac0b15e962925fcf0d70b700ea1be4ce24ed9ee"
+  },
+  "wide_target_campaign/lower_gap_seed2027/summary.json": {
+    "summary.json": "59096c4f00e1589bf9c39cc5b113ce44c7a15954f6581ce9f980e4c1a1f7a85c"
+  },
+  "wide_target_campaign/lower_gap_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "e74c3c7a8dcc64ea6b88b857ff83c8398716093bb32ab1896679b964e01fb641"
+  },
+  "wide_target_campaign/lower_gap_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "b0890b62e685a7be678da819a7daed579990b8ec9125a37bf723750b61ea9829"
+  },
+  "wide_target_campaign/lower_gap_seed2028/candidates.csv": {
+    "candidates.csv": "fb19fb9624b847a4487a4ec8d6c8a3cc6f1b03b61db1f0224837c7882f4081f2"
+  },
+  "wide_target_campaign/lower_gap_seed2028/summary.json": {
+    "summary.json": "d8224af4f2462a3a636431b80a6f0693ba148e64b0e12dbe2ec5abd542c2b307"
+  },
+  "wide_target_campaign/original_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "7ab7197f145b3e1a0c92814b96280d83c320fac332a439c4c3e308eb1ce56caa"
+  },
+  "wide_target_campaign/original_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "ae2e19e050c090ee724d6e2a6757481b2fb016bd13afeffd17997c7afc36593b"
+  },
+  "wide_target_campaign/original_seed2026/candidates.csv": {
+    "candidates.csv": "a7569bcbb714c2504e6d0139ab6e22eeef0f2a5664b119e179ec87dce270d83c"
+  },
+  "wide_target_campaign/original_seed2026/summary.json": {
+    "summary.json": "479f7d60673455e1e99625212217106b94e078687e7398771d20638c84cc5662"
+  },
+  "wide_target_campaign/original_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "be7b3d427bdb7253ff582729d1177bb6ad2a8da9f20b05867a9c526d7ed4c3e0"
+  },
+  "wide_target_campaign/original_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "5be22334062fea9c3a9d61621e98ff0f9fd0baceb63f8c5fd98fd56d19fd48ee"
+  },
+  "wide_target_campaign/original_seed2027/candidates.csv": {
+    "candidates.csv": "23eea004b8ec32f1dfc06e242ce6f57258edb79805b78724ed8110a89bd61640"
+  },
+  "wide_target_campaign/original_seed2027/summary.json": {
+    "summary.json": "5ab892d29af8247372479aa4bd46184c2e66d6c1c9940b8ccf1b763c8b5a0b1f"
+  },
+  "wide_target_campaign/original_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "75b5067497006f1f6e5d23c2902d7756908b7f3391729c1e1100bbe6e598fd0e"
+  },
+  "wide_target_campaign/original_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "09f6c02085e76ebff2123459d060344f7e2794539a9280471983e057d60a9dd9"
+  },
+  "wide_target_campaign/original_seed2028/candidates.csv": {
+    "candidates.csv": "356dc2818b26c7b8eb20b0aadabb0d9585fac68266b3e576722afcd4b8f6351b"
+  },
+  "wide_target_campaign/original_seed2028/summary.json": {
+    "summary.json": "4f7a592c4b81e4862720f0cafd7091e13ac6aee176d0bdf2ed5bbc606a23e3bf"
+  },
+  "control_evaluation/central_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "ef909e9d40cde25b31149a1e7361ffe620d8a0c4ba438acfad70ba7a70adcfde"
+  },
+  "control_evaluation/central_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "e887af4975bd405e1f34dcb995b020d0cd09a37dbb628b5edccaed283c70ea1d"
+  },
+  "control_evaluation/central_seed2026/candidates.csv": {
+    "candidates.csv": "cb1c2f4404c6c6a17c382d658bb3c13406ee921e6336fd81d0d8f013d460c092"
+  },
+  "control_evaluation/central_seed2026/summary.json": {
+    "summary.json": "5bdf347c72c18aefa76ecec98bc6448ee391fc815fb30ad1cb3a104900ca25a6"
+  },
+  "control_evaluation/central_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "fa6bc5561e340e0d3e9355b7cf4d2225977d2ebe3925738c354a6b2145edbf28"
+  },
+  "control_evaluation/central_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "0ba810faaa8f60b5a7bf3456d2cfb83276f4d3c4cd6233d31e058d0829d9eaff"
+  },
+  "control_evaluation/central_seed2027/candidates.csv": {
+    "candidates.csv": "33aa52db7d26e509fd2193285d0bc223a668a621566637b70e6f2af715e2dbce"
+  },
+  "control_evaluation/central_seed2027/summary.json": {
+    "summary.json": "fadf6088ad1f10a378cf9223b0bf9544a2d4643e53b5bebbc27c12df8033a6d5"
+  },
+  "control_evaluation/central_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "7f7e7d33dbedc8de3658c7a2c37378c4b00df524ed7cb325dd11f8eeda04551e"
+  },
+  "control_evaluation/central_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "44b31f9c6f9237158909e5d2aeba1858377026afb553be1137e834e5c76bdb93"
+  },
+  "control_evaluation/central_seed2028/candidates.csv": {
+    "candidates.csv": "dcf0f1e2b71b666dde47f2bebee2fed3ff664aff76d41f48330a452c97b4746f"
+  },
+  "control_evaluation/central_seed2028/summary.json": {
+    "summary.json": "c94ffb7e8ec65b9db43f2d0ece2f56c8794c6cf79fd8cb05e3d284092e1667a1"
+  },
+  "control_evaluation/original_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "2ecd7bb96e4d76e3f6e8c4ef50b8bd08a6462be360e38c83fb3e80d6c17aeba9"
+  },
+  "control_evaluation/original_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "13c0e4758052b985eee5d26f4a43c0538d05bec0ece01e0ce768441015638215"
+  },
+  "control_evaluation/original_seed2026/candidates.csv": {
+    "candidates.csv": "208d3f84e6f17e173a2298d9ee68302bc5abce5a292ed241aa7f128c536f5069"
+  },
+  "control_evaluation/original_seed2026/summary.json": {
+    "summary.json": "f94f9962bf4b1de61b523b62a0e0df87e4eae63cd7fdc7206737ac0591ccdbe1"
+  },
+  "control_evaluation/original_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "5c8d109b5b48866ff847522434f0e2d95ed17375370a1390255321f7bcf37bcf"
+  },
+  "control_evaluation/original_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "b0168a451952832ec229c083b130486ab86cad98941f5eb0c5192de114b0c7c2"
+  },
+  "control_evaluation/original_seed2027/candidates.csv": {
+    "candidates.csv": "b29e85c7c69ac883ee26b6c2d39fb41a7ab238951044b8d0ac13e7720a217991"
+  },
+  "control_evaluation/original_seed2027/summary.json": {
+    "summary.json": "bf4ee666bffad93a0a12d25f0ef62f7f15d8a979783b929eef3efdc67c02f72d"
+  },
+  "control_evaluation/original_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "bd4a521bb4deede1a947f8472f28c3efe76795294d75099ccf251b87ea6f933b"
+  },
+  "control_evaluation/original_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "85d83547e400d5883358e860e57ad74c44373b686cc14edf90ad8c6d60ae2d04"
+  },
+  "control_evaluation/original_seed2028/candidates.csv": {
+    "candidates.csv": "66c6320650ca90ea92e452f1701f16ab31134e6d577a0c43c397cc9e2a2852c2"
+  },
+  "control_evaluation/original_seed2028/summary.json": {
+    "summary.json": "05faed9a51290b62acca2344d4075c98d598f867907b4d2a618ec3669b94dcc4"
+  }
+}

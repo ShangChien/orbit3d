@@ -187,7 +187,7 @@ MAE is 0.2226 eV; the absolute difference of means is 0.0537 eV and would hide
 substantial molecule-level errors. These supervised CSV errors neither reproduce
 the unavailable original DFT geometries nor establish an adiabatic gap error. The
 512-record calibration has 89.06% joint test coverage, but mean widths are
-1.58–2.06 eV and spread/error correlations remain weak. 
+1.58–2.06 eV and spread/error correlations remain weak.
 
 
 HyFF-presto adapters trained on exactly the same 8192/512/512 conformers give

@@ -26,3 +26,18 @@ eligibility, self/teacher-forcing diagnostics and joint success over all 384
 proposals per checkpoint. A training-loss decrease or increased rare-element
 frequency alone does not establish improved molecular design. This remains an
 exploratory duration study with one SFT seed.
+
+## Replicate continuation seeds
+
+Before the seed-42 milestone evaluations finish, add seeds 43 and 44 with the
+same 5000-step checkpoint, 15000 further SFT steps and both fixed milestones.
+All training conformers, optimizer settings, sampling temperatures, target windows
+and downstream evaluators remain fixed. Report every seed and both checkpoints;
+no model is selected using the test labels or the best generation score.
+
+These are three independent stochastic **SFT continuations from a common trained
+starting point**. They do not measure variation in the original 5000-step training
+or upstream pretraining. Inference seeds remain 2026–2028 for each trained model.
+The portable `scripts/run_sft_duration_campaign.py` runs the continuation,
+validation diagnostics and the same six evaluations per milestone. Isolated
+source snapshots keep ongoing jobs independent of later repository edits.

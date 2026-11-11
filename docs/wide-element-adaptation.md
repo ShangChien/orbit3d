@@ -122,3 +122,23 @@ Two follow-up interventions are kept separate: a fixed-checkpoint temperature
 comparison, and a matched training comparison with inverse-square-root atom
 frequency weighting. No default recipe or broad-element capability claim is
 changed before observing their full chemical-validity and independent results.
+
+## Saved-cohort spatial coverage
+
+A separate audit of all 960 attempts from the three-window 4000-step campaign and
+the two-window 5000-step control distinguishes atom count from actual spatial
+coverage. Of 515 chemically valid outputs, ten exceed 40 atoms, six exceed the old
+14.80 Å rotation-safe training span, and five have an axis span greater than the
+old 15.36 Å box in their saved orientation. The largest valid diameter is 22.30 Å.
+The six extended structures pass the unchanged connectivity, valence, stereo and
+bond-geometry validator again; their precise SDF coordinates and inferred graphs
+are saved separately. All six contain internally charged atoms, so this is not
+evidence of high-quality long chromophore design. Passing a broad bond-geometry
+check also does not imply low strain or energetic stability.
+
+The full attempt ledger, coordinate/input hashes, atom counts, axis spans and
+bond-length/covalent-radius diagnostics are in
+`experiments/wide_spatial_audit_20261112.json` and
+`experiments/wide_spatial_inputs_20261112.json`; the six structures are in
+`experiments/wide_spatial_valid_extended_20261112.sdf`. This cohort was already
+generated; no extra samples were drawn to obtain favorable long examples.

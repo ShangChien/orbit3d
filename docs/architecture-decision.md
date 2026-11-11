@@ -25,8 +25,9 @@ does not expand the generator's capabilities. SFT trains the zero-initialized
 interval conditioner and condition-masked property head while freezing the
 pretrained backbone. GRPO includes tree, element, X, Y and Z decisions, but is
 opt-in: the corrected FP32 pilot has encouraging optimizing-surrogate results,
-three full-objective training seeds are complete and independent evaluators disagree.
-The full reward-removal replication matrix is being completed separately.
+the complete five-objective matrix includes three training seeds per objective
+and three inference seeds per trained policy. Aggregate gains do not establish a
+uniform component ranking, and independent evaluators disagree.
 See [the reward ablation](reward-ablation.md) for both positive and negative results.
 
 QM9s supplies structures and its original 240-channel spectra are retained
