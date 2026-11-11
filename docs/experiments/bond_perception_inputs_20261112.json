@@ -1,0 +1,59 @@
+{
+  "known_validation_structures": {
+    "train.sdf": "aa1dfbb68fed5ea7c8bce8ebf4de18ded2143412b2dced5292678712974e3441"
+  },
+  "original_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "72defb2060c26af516c03d0b7cf3ad76197e85a8bab0589eae02ac00b3be2357"
+  },
+  "original_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "f0d7081dd715eec62091ee0940cae97dc752427000a17bc56dcc81e86d64ee2d"
+  },
+  "original_seed2026/candidates.csv": {
+    "candidates.csv": "094405c4455939dee8b0d6747dcd9b382216e8a74894a57206da0de35fcbac87"
+  },
+  "original_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "50719c485443a4511bc7a1c494ee6533d29a6aa3a71e3f2070a3b17c6ff2c163"
+  },
+  "original_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "5ea888e35530f7f695c2d6249bf93e463e5f73e0f9d381c7b24fd4aec33866b9"
+  },
+  "original_seed2027/candidates.csv": {
+    "candidates.csv": "6e4260a90702e5489bec93eaba14597b9bb08b9d237c4527be287e62750447ec"
+  },
+  "original_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "478a141cfc13eb5835e503085eb3766cc7d7e1b59bb33a93bba1f6dfa8276a45"
+  },
+  "original_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "e57d21a10dee85d236bfc4d13d855c777444153dcb53de8ebc228cac2aa31f46"
+  },
+  "original_seed2028/candidates.csv": {
+    "candidates.csv": "1ae24be042cba6705669fde3cd588116ee135e2701d04fcd144fcf80bef15730"
+  },
+  "central_seed2026/raw_symbols.json": {
+    "raw_symbols.json": "58d2d7b737adce9c62a9e291f86d97d61528c8b17bb211dfa7c3a3b2ed388216"
+  },
+  "central_seed2026/raw_trajectories.npz": {
+    "raw_trajectories.npz": "0d0fac02ab758b64bb59a0494b22f7ddc992c6a978d23f814725ccd422d6a654"
+  },
+  "central_seed2026/candidates.csv": {
+    "candidates.csv": "c40925bc9ca9211a7936fe675ea7776a20ba365791e049775bafa8bdadc7b626"
+  },
+  "central_seed2027/raw_symbols.json": {
+    "raw_symbols.json": "514d43c29b064315a13afaa0841033ad881b1b336f66dd23a596f8fe359541de"
+  },
+  "central_seed2027/raw_trajectories.npz": {
+    "raw_trajectories.npz": "7a0f1d6a02a1266d73c5ab60dbb96023edfe0c8720c4158cf9da3624ddd47ac9"
+  },
+  "central_seed2027/candidates.csv": {
+    "candidates.csv": "ea700073a1ba786fab2d60d877106f6adcefd75b63b84c122550551b1bff71b1"
+  },
+  "central_seed2028/raw_symbols.json": {
+    "raw_symbols.json": "f5f1414696efa160fd345f8ec7eab490c76791a5a1da7c3737e31b75c0ab9226"
+  },
+  "central_seed2028/raw_trajectories.npz": {
+    "raw_trajectories.npz": "f55f8bad2b3d06b1ac79f94331a0c89625560ea3ed16e0606abb0dc4c13edd5e"
+  },
+  "central_seed2028/candidates.csv": {
+    "candidates.csv": "cca6cedfccecd1f0d253cd074ffdee9979db9800d8b07e1a1b3b0bcb2bbb030c"
+  }
+}

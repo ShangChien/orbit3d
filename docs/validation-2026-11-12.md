@@ -1,12 +1,17 @@
 # Current source and installed-wheel validation
 
-162 CPU regression tests passed on macOS with the frozen dependency set, including
+169 CPU regression tests passed on macOS with the frozen dependency set, including
 complete octree decisions and KL gradients, electronic-state and graph checks,
 paired target errors, target/element migration, fixed-scaffold world coordinates,
 full replay comparison and real serialized Uni-QSAR loading. Two sklearn warnings
 identify the legacy calibrated SVC API used intentionally in its checkpoint test;
 they are not suppressed. CUDA computation is performed only on the remote Linux
 runtime.
+
+Seven added cases cover explicit/implicit hydrogen identity, imine E/Z addition
+versus inversion or loss, isotopes, changed hydrogen counts and the actual quantum
+graph-check rejection. The [bond-perception study](bond-perception-diagnostic.md)
+identified this defect on known validation geometries.
 
 Three additional real-PySCF regressions skip on that macOS environment and pass
 in the remote quantum environment, including a fresh wheel installed into an
