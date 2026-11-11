@@ -164,16 +164,16 @@ def draw(output_dir: Path, render_png=True):
     f = Figure(output_dir)
     f.rect(24, 18, 1112, 44, fill="#F3F6F8", stroke=None, radius=9)
     f.text(43, 47, "INPUTS", size=17, bold=True, color=MUTED)
-    f.text(130, 47, "3D molecules  ·  target property intervals  ·  charge Q and spin multiplicity m", size=21, max_width=980)
+    f.text(130, 47, "3D structures  ·  target property intervals  ·  supported electronic states", size=21, max_width=980)
 
     f.text(24, 96, "POLICY LEARNING", size=17, bold=True, color=BLUE)
     f.line([(191, 90), (906, 90)], RULE, 1.5)
     f.text(944, 96, "REFINEMENT", size=17, bold=True, color=AMBER)
 
     # The only feedback edge in the diagram is a training-time policy update.
-    f.line([(810, 147), (810, 120), (120, 120), (120, 147)], BLUE, 1.7, dash=True, arrow=True)
-    f.rect(355, 105, 220, 27, fill="#FFFFFF", stroke=None, radius=0)
-    f.text(465, 125, "training feedback", size=19, color=BLUE, anchor="middle")
+    f.line([(810, 147), (810, 120), (350, 120), (350, 147)], BLUE, 1.7, dash=True, arrow=True)
+    f.rect(470, 105, 220, 27, fill="#FFFFFF", stroke=None, radius=0)
+    f.text(580, 125, "conditioner update", size=19, color=BLUE, anchor="middle")
 
     stages = [
         (24, BLUE, "#F7FAFD", "01", "3D prior", "Octree generation", octree_icon),

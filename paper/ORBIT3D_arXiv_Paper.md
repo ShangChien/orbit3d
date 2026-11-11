@@ -29,7 +29,7 @@ Domain-specific components can serve complementary roles. OCNet predicts molecul
 
 ## 2. Five-stage architecture
 
-![ORBIT-3D five-stage architecture. Stages 1-4 learn and align a proposal policy; the dashed edge is training feedback. At deployment, the learned policy generates and ranks candidates before Stage 5 refinement. Shared property and force evaluators support alignment and acceptance. An output is released only after explicit validation.](figures/fig0_orbit3d_system_architecture.png){#fig:arch width=100%}
+![ORBIT-3D five-stage architecture. Stages 1-4 learn and align a proposal policy; the dashed edge updates the interval conditioner during GRPO. At deployment, the learned policy generates and ranks candidates before Stage 5 refinement. Shared property and force evaluators support alignment and acceptance. An output is released only after explicit validation.](figures/fig0_orbit3d_system_architecture.png){#fig:arch width=100%}
 
 ### 2.1. Molecular state and interval constraints
 
@@ -61,11 +61,16 @@ The token likelihood is trained on the same admissible vocabulary used for sampl
 A structure-understanding head predicts properties from the generated structure representation and ranks a pool of candidates before expensive external evaluation. To avoid learning the interval midpoint as a shortcut, its regression training uses an unconditional or condition-masked pass. A joint objective is
 
 $$
-L_{\mathrm{SFT}}=-\sum_t\log\pi_\theta(\tau_t\mid\tau_{<t},\mathbf c)
-+\lambda_{\mathrm{self}}\,\operatorname{Huber}(\hat{\mathbf y}_{\mathrm{self}}(\boldsymbol\tau),\mathbf y).
+L_{\mathrm{gen}}=\overline{\mathrm{CE}}_{\mathrm{tree}}
++\overline{\mathrm{CE}}_{\mathrm{atom}}
++\frac{0.1}{3}\sum_{j\in\{x,y,z\}}\overline{\mathrm{CE}}_j,
+\qquad
+L_{\mathrm{SFT}}=L_{\mathrm{gen}}+
+\lambda_{\mathrm{self}}\,\operatorname{SmoothL1}_{0.1}
+(\hat{\mathbf y}_{\mathrm{self}},\mathbf y).
 $$
 
-Self-ranking reduces external oracle calls, but still has a computational cost and can introduce selection bias. The candidate-pool size, ranking criteria, rejected proposals, and retained count must therefore be reported. At deployment, the trained head is used without further SFT.
+Each cross entropy is averaged over its own decision type; the self loss uses training-normalized targets and $\lambda_{\mathrm{self}}=0.5$ in the reported SFT runs. Self-ranking reduces external oracle calls, but still has a computational cost and can introduce selection bias. The candidate-pool size, ranking criteria, rejected proposals, and retained count must therefore be reported. At deployment, the trained head is used without further SFT.
 
 ### 2.5. Stage 4: align with gated group-relative feedback
 
@@ -80,21 +85,21 @@ R(\mathcal M)=C(\mathcal M)\,G_{\mathrm{unc}}(\mathcal M)\,G_{\mathrm{phys}}(\ma
 -\lambda_{\mathrm{invalid}}[1-C(\mathcal M)].
 $$
 
-In the reported runs, $G_{\mathrm{phys}}=\exp[-\lambda_F\max(0,F_{\mathrm{rms}}-0.5)]$ with forces in eV/Å, and $G_{\mathrm{unc}}=\exp[-\lambda_U\operatorname{mean}_k(\sigma_k/s_k)]$. The 0.5 threshold is an experimental setting, not a universal stability criterion. The default $\lambda_U=0$ reflects weak held-out error ranking. This construction avoids multiplying a negative penalty by a gate that would make a worse proposal less penalized. Group-relative advantages are $A_g=(R_g-\bar R)/(\sigma_R+\epsilon)$. Following GRPO [@shao2024grpo], the policy objective combines a clipped likelihood-ratio surrogate with a reference-policy KL term and SFT replay:
+In the reported runs, $G_{\mathrm{phys}}=\exp[-\lambda_F\max(0,F_{\mathrm{rms}}-0.5)]$ with forces in eV/Å, and $G_{\mathrm{unc}}=\exp[-\lambda_U\operatorname{mean}_k(\sigma_k/s_k)]$. The 0.5 threshold is an experimental setting, not a universal stability criterion. The default $\lambda_U=0$ reflects weak held-out error ranking. This construction avoids multiplying a negative penalty by a gate that would make a worse proposal less penalized. Group-relative advantages are $A_g=(R_g-\bar R)/\max(\sigma_R,\epsilon)$. Following GRPO [@shao2024grpo], the policy objective combines a clipped likelihood-ratio surrogate with a reference-policy KL term and SFT replay:
 
 $$
 \begin{aligned}
 L_{\mathrm{policy}}={}&-\frac1G\sum_{g=1}^{G}\frac1{T_g}\sum_{t=1}^{T_g}
 \min\!\left(r_{g,t}A_g,\operatorname{clip}(r_{g,t},1-\varepsilon,1+\varepsilon)A_g\right)\\
-&+\beta D_{\mathrm{KL}}(\pi_\theta\Vert\pi_{\mathrm{ref}})+\lambda_{\mathrm{anchor}}L_{\mathrm{SFT}}.
+&+\beta D_{\mathrm{KL}}(\pi_\theta\Vert\pi_{\mathrm{ref}})+\lambda_{\mathrm{anchor}}L_{\mathrm{gen}}.
 \end{aligned}
 $$
 
-Here $r_{g,t}$ is the new-policy to rollout-policy probability ratio under the same token constraints. The reference is frozen; the current-policy KL contribution must retain gradients. Physics and uncertainty gates are risk controls, not proofs that reward exploitation has been eliminated. Independent property validation remains necessary.
+Replay updates the conditioner using the generation loss only. The KL is averaged over the same per-molecule decision counts as the policy term. Here $r_{g,t}$ is the new-policy to rollout-policy probability ratio under the same token constraints. The reference is frozen; the current-policy KL contribution must retain gradients. Physics and uncertainty gates are risk controls, not proofs that reward exploitation has been eliminated. Independent property validation remains necessary.
 
 ### 2.6. Stage 5: refine with explicit acceptance
 
-For a completed proposal, refinement holds its chemical graph, charge, multiplicity, and any fixed scaffold atoms constant. Let $\mathbf F=-\nabla_{\mathbf X}E$ and $\mathbf g=\nabla_{\mathbf X}L_{\mathrm{int}}$, restricted to movable coordinates. When gradients are available, a regularized projection damps the force component that increases interval violation:
+For a completed proposal, refinement holds its chemical graph, charge, multiplicity, and any fixed scaffold atoms constant. Let $\mathbf F=-\nabla_{\mathbf X}E$ and $\mathbf g=\nabla_{\mathbf X}L_{\mathrm{geom}}$, restricted to movable coordinates. The current relaxer uses $L_{\mathrm{geom}}=\sum_k v_k^2$, where $v_k=s_kd_k$ is the violation in physical property units; the reported HOMO/LUMO targets both use eV. When gradients are available, a regularized projection damps the force component that increases interval violation:
 
 $$
 \mathbf F_{\perp}=\mathbf F-\frac{\max(0,\langle\mathbf F,\mathbf g\rangle)}{\|\mathbf g\|_F^2+\epsilon}\mathbf g,
@@ -108,11 +113,11 @@ The candidate is accepted only if evaluations are finite, chemical constraints r
 $$
 \begin{aligned}
 E(\widetilde{\mathbf X})&\leq E(\mathbf X)+\epsilon_E,\\
-d_k(\widetilde{\mathbf X})&\leq d_k(\mathbf X)+\epsilon_k \quad\text{for every active }k.
+v_k(\widetilde{\mathbf X})&\leq v_k(\mathbf X)+\epsilon_k \quad\text{for every active }k.
 \end{aligned}
 $$
 
-The implementation also anchors energy and each violation to their initial values: $E(\widetilde{\mathbf X})\leq E(\mathbf X_0)+\epsilon_E$ and $d_k(\widetilde{\mathbf X})\leq d_k(\mathbf X_0)+\epsilon_k$. Thus an initially feasible constraint remains within its fixed tolerance band; tolerances do not accumulate at each step. Rejected steps leave the state unchanged and reduce the step size. The accepted coordinates are re-evaluated before export, using the full oracle ensemble, including any non-differentiable stacking model.
+The implementation also anchors energy and each violation to their initial values: $E(\widetilde{\mathbf X})\leq E(\mathbf X_0)+\epsilon_E$ and $v_k(\widetilde{\mathbf X})\leq v_k(\mathbf X_0)+\epsilon_k$. Thus an initially feasible constraint remains within its fixed tolerance band; tolerances do not accumulate at each step. Rejected steps leave the state unchanged and reduce the step size. The accepted coordinates are re-evaluated before export, using the full oracle ensemble, including any non-differentiable stacking model.
 
 **Proposition 1 (conditional feasibility preservation).** Assume fixed deterministic evaluators, exact acceptance tests with $\epsilon_E=\epsilon_k=0$, and an initially chemically valid candidate satisfying all active intervals. Then every accepted or retained iterate remains feasible, and its evaluated potential energy is nonincreasing.
 
@@ -141,13 +146,6 @@ DFT geometries or per-molecule range parameters, so the 3D property model uses
 ETKDG/MMFF reconstructions and fixed scaffold-separated splits in the initial experiments. A separate expanded-element experiment explicitly uses ETKDG/UFF for every input.
 
 <!-- BEGIN CURRENT RESULTS -->
-| Held-out OCELOT property | Bootstrap DPA MAE (eV) | Train-mean MAE (eV) |
-| :--- | ---: | ---: |
-| HOMO | 0.2995 | 0.4701 |
-| LUMO | 0.2379 | 0.4848 |
-
-Table: 4096 training records, three independent bootstrap adapters, 256 held-out test records.
-
 | Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |
 | :--- | ---: | ---: |
 | first valid | 11.46 | 1.80 |
@@ -197,6 +195,16 @@ Table: Identical 34 selected starting structures from 192 proposals; 30-step bud
 | LUMO | 0.2379 | 0.2431 |
 
 Table: Exact same test structures and reconstructed geometries; no overlap with either training set. Expanding training improves HOMO and slightly worsens LUMO on this test.
+
+| Shared optical test (512 molecules) | DPA adapter MAE (eV) | Fingerprint MAE (eV) |
+| :--- | ---: | ---: |
+| HOMO | 0.2895 | 0.3593 |
+| LUMO | 0.2326 | 0.3354 |
+| Vertical S1 | 0.2314 | 0.2968 |
+| Vertical T1 | 0.1381 | 0.2616 |
+| Paired vertical S1–T1 | 0.2226 | 0.2546 |
+
+Table: Official OCELOT labels on the same 512 scaffold-held-out molecules. Training budgets are 8192 for the DPA adapter and 20356 for the fingerprint model; this is not a matched architecture ablation. The last row averages per-molecule absolute gap errors.
 <!-- END CURRENT RESULTS -->
 
 The three ranking runs use identical proposal tokens for each seed, with a fixed
@@ -247,6 +255,40 @@ audit of 321 rare-element inputs recovers 295 exact identities, adds previously
 unspecified stereo in 18, changes charge/bond assignments in seven and rejects
 one. The same counts after 0.01 Å rounding implicate graph inference rather than
 that rounding step.
+
+The 8188 encodable UFF training structures also adapt the 15-element generator.
+Across three inference seeds and 192 proposals per window, the original,
+training-median and lower-gap regimes give 110/95/89 valid structures, 9/9/12
+domain-eligible proposals and 2/0/0 optimizing joint successes. Independent joint
+counts are 1/0/0. Window widths differ, so these are task regimes rather than an
+equal-difficulty comparison. None of the 294 valid structures contains B, Si,
+Se, As or Te; the supported element vocabulary alone is insufficient.
+
+Three matched exploratory interventions expose the quality tradeoff. Raising
+atom temperature from 0.3 to 1.0 introduces all five rare elements into valid
+outputs, but lowers validity from 110/192 to 89/192 and optimizing joint hits
+from two to zero. A paired-condition hinge objective and its unpaired control
+both obtain 3 optimizing and 4 independent joint hits in 384 proposals. Inverse-
+square-root element-frequency weighting increases valid B/Si occurrence to two
+and six molecules, respectively, but reduces optimizing hits from 7/384 to
+3/384 while independent hits remain 6/384. Each training intervention uses one
+matched seed; none establishes improved conditional design, and neither the
+default temperature nor the default objective is changed.
+
+The four-target property extension adds the official vertical S1 and T1 labels
+while reusing the exact UFF conformers and splits. Its paired vertical S1–T1
+MAE is 0.2226 eV; the absolute difference of means is 0.0537 eV and would hide
+substantial molecule-level errors. These supervised CSV errors neither reproduce
+the unavailable original DFT geometries nor establish an adiabatic gap error.
+
+An explicit fragment-attachment CLI separately tests fixed-scaffold refinement.
+It preserves two designated attachment sites and world-frame scaffold positions
+for benzene, naphthalene, pyridine and a boron-containing input, including large
+translations. All 24 proposals are valid, 16 receive external ranking and eight
+are refined; none reaches joint success in the eight-step diagnostic. Full replay
+retains graphs, placements and coordinates exactly, with ordinary property/force
+comparisons using the existing numerical tolerances. This graph-action workflow
+is not learned octree scaffold completion.
 
 HyFF-presto uses the same pipeline with its own property adapters. A 512-training-
 record, 64-test-record diagnostic gives MAEs 0.3853/0.3208 eV; its 32-proposal
@@ -343,7 +385,7 @@ Finally, autoregressive decoding, candidate selection, ensemble evaluation, and 
 
 ORBIT-3D formulates interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, interval conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
 
-The archived octree/GVP results motivate this formulation but do not validate every component of the unified system. The corrected implementation now has matched-budget conditioning and reward ablations, independent surrogate checks, and a state-specific quantum diagnostic. Replicating SFT and every reward intervention, broadening target intervals, and completing independent quantum cohorts remain necessary for general effectiveness claims. This distinction keeps the architectural claim precise and makes subsequent improvements measurable.
+The archived octree/GVP results motivate this formulation but do not validate every component of the unified system. The corrected implementation now has matched-budget conditioning and reward ablations, independent surrogate checks, and a state-specific quantum diagnostic. Replicating SFT and successful training interventions, improving performance across target regimes, and completing independent quantum cohorts remain necessary for general effectiveness claims. This distinction keeps the architectural claim precise and makes subsequent improvements measurable.
 
 ## References
 

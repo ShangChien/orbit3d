@@ -13,7 +13,12 @@ names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
          'depth7_adaptation_20261112.json', 'refinement_matched_20261112.json',
          'stage_and_training_seeds_20261112.json', 'ocelot_wide8192_20261112.json',
          'hyff_property_workflow_20261112.json', 'hyff_full_reload_20261112.json',
-         'oracle8192_full_reload_20261112.json']
+         'oracle8192_full_reload_20261112.json', 'wide_target_campaign_20261112.json',
+         'wide_element_likelihood_20261112.json', 'scaffold_cli_20261112.json',
+         'element_balance_20261112.json', 'element_temperature_20261112.json',
+         'condition_contrast_20261112.json', 'optical_matched512_20261112.json',
+         'ocelot_optical8192_20261112.json', 'fingerprint_optical20356_20261112.json',
+         'latest_mainline_reload_20261112.json', 'boron_unconverged6_20261112.json']
 records = {}
 for name in names:
     path = paper.parent/'docs/experiments'/name

@@ -4,14 +4,14 @@
 <rect x="0" y="0" width="1200" height="550" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
 <rect x="24" y="18" width="1112" height="44" rx="9" fill="#F3F6F8" stroke="none" stroke-width="1.5"/>
 <text x="43" y="47" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#526575" text-anchor="start">INPUTS</text>
-<text x="130" y="47" font-family="Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#172A3A" text-anchor="start">3D molecules  ·  target property intervals  ·  charge Q and spin multiplicity m</text>
+<text x="130" y="47" font-family="Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#172A3A" text-anchor="start">3D structures  ·  target property intervals  ·  supported electronic states</text>
 <text x="24" y="96" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">POLICY LEARNING</text>
 <polyline points="191,90 906,90" fill="none" stroke="#D7E0E7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="944" y="96" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#B46B35" text-anchor="start">REFINEMENT</text>
-<polyline points="810,147 810,120 120,120 120,147" fill="none" stroke="#3F6C9E" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
-<polygon points="120,147 124,138 116,138" fill="#3F6C9E"/>
-<rect x="355" y="105" width="220" height="27" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
-<text x="465" y="125" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#3F6C9E" text-anchor="middle">training feedback</text>
+<polyline points="810,147 810,120 350,120 350,147" fill="none" stroke="#3F6C9E" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polygon points="350,147 354,138 346,138" fill="#3F6C9E"/>
+<rect x="470" y="105" width="220" height="27" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
+<text x="580" y="125" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#3F6C9E" text-anchor="middle">conditioner update</text>
 <rect x="24" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="40" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">01</text>
 <text x="120" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">3D prior</text>

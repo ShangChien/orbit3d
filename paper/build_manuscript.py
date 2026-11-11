@@ -102,14 +102,8 @@ def build():
         if hashlib.sha256(source['json'].encode()).hexdigest() != source['sha256']:
             raise ValueError(f'Current experiment checksum mismatch: {name}')
         current[name] = json.loads(source['json'])
-    test = current['ocelot_4096_20261111.json']['metrics']['test']
-    lines = ['| Held-out OCELOT property | Bootstrap DPA MAE (eV) | Train-mean MAE (eV) |',
+    lines = ['| Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |',
              '| :--- | ---: | ---: |']
-    for key in ['homo', 'lumo']:
-        lines.append(f"| {key.upper()} | {test['mae_eV'][key]:.4f} | {test['train_mean_baseline_mae_eV'][key]:.4f} |")
-    lines += ['', 'Table: 4096 training records, three independent bootstrap adapters, 256 held-out test records.', '',
-              '| Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |',
-              '| :--- | ---: | ---: |']
     for name, row in current['ranking_ablation_20261111.json']['aggregate'].items():
         lines.append(f"| {name.replace('_', ' ')} | {100*row['mean_joint_success_rate']:.2f} | {100*row['seed_std']:.2f} |")
     lines += ['', 'Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.']
@@ -160,6 +154,14 @@ def build():
     for key in ['homo', 'lumo']:
         lines.append(f"| {key.upper()} | {matched['previous_model_mae_eV'][key]:.4f} | {matched['new_model_mae_eV'][key]:.4f} |")
     lines += ['', 'Table: Exact same test structures and reconstructed geometries; no overlap with either training set. Expanding training improves HOMO and slightly worsens LUMO on this test.']
+    optical = current['optical_matched512_20261112.json']['models']
+    lines += ['', '| Shared optical test (512 molecules) | DPA adapter MAE (eV) | Fingerprint MAE (eV) |',
+              '| :--- | ---: | ---: |']
+    for key, label in [('homo', 'HOMO'), ('lumo', 'LUMO'), ('s0s1', 'Vertical S1'), ('s0t1', 'Vertical T1')]:
+        lines.append(f"| {label} | {optical['dpa4']['mae_eV'][key]:.4f} | {optical['fingerprint']['mae_eV'][key]:.4f} |")
+    lines.append(f"| Paired vertical S1–T1 | {optical['dpa4']['vertical_singlet_triplet_gap']['mae_eV']:.4f} | "
+                 f"{optical['fingerprint']['vertical_singlet_triplet_gap']['mae_eV']:.4f} |")
+    lines += ['', 'Table: Official OCELOT labels on the same 512 scaffold-held-out molecules. Training budgets are 8192 for the DPA adapter and 20356 for the fingerprint model; this is not a matched architecture ablation. The last row averages per-molecule absolute gap errors.']
     text = re.sub(r'<!-- BEGIN CURRENT RESULTS -->.*?<!-- END CURRENT RESULTS -->',
                   lambda _: '<!-- BEGIN CURRENT RESULTS -->\n'+'\n'.join(lines)+'\n<!-- END CURRENT RESULTS -->', text, flags=re.S)
     text = re.sub(
