@@ -3,7 +3,9 @@
 The three full-GRPO source runs contribute 192 proposals and 34 selected molecules.
 All four rules start from each selected molecule's saved **pre-refinement**
 coordinates and inferred graph. Selection is fixed. Each rule has at most 30
-steps with the same initial step size and whole-molecule displacement cap. This
+steps with initial step size 0.008 and whole-molecule displacement cap 0.025 Å.
+The production source configuration uses 0.004; this table is the explicitly
+recorded 0.008 step-size diagnostic. A second control uses the source step size. This
 is a step-budget comparison; acceptance/backtracking changes evaluator cost.
 
 | Rule | Optimizing property hits | Optimizing joint hits / 192 | Independent joint hits / 192 | Mean final RMS force (eV/Å) |

@@ -1,7 +1,8 @@
 # Main implementation: pretrained Uni-3DAR octree
 
-Decision updated on 2026-11-11 after remote experiments. The primary backend is
-`uni3dar_octree`, with checkpoint identity `uni3dar_octree_v1`. The earlier
+Decision updated on 2026-11-12 after remote experiments. The primary backend is
+`uni3dar_octree`, with explicit v1/v2/v3 checkpoint contracts; current conditioner
+experiments use v3 and retain matched v2 controls. The earlier
 `dense_grid_v2` freeze served the initial correctness repair; that implementation
 now remains a comparison baseline. A 256-record dense-grid run produced no novel
 structures relative to its adaptation set, and a larger scratch-training run
@@ -16,12 +17,15 @@ historical benchmark runners remain archived implementations, not alternative
 entrypoints for reproducing the new results.
 
 The pretrained model has 12 layers, width 768, 12 attention heads, 0.24 Å leaf
-cells, 0.01 Å coordinate bins, and merge level 6. This mainline supports neutral
-closed-shell H/C/N/O/F molecules. The force field's broader element vocabulary
+cells, 0.01 Å coordinate bins, and merge level 6. The property-conditioned mainline supports neutral
+closed-shell H/C/N/O/F molecules. Explicit depth-seven migration and a separate
+structural-only boron adaptation are tested without claiming boron property accuracy. The force field's broader element vocabulary
 does not expand the generator's capabilities. SFT trains the zero-initialized
 interval conditioner and condition-masked property head while freezing the
 pretrained backbone. GRPO includes tree, element, X, Y and Z decisions, but is
-opt-in: the first matched-budget comparison did not demonstrate an improvement.
+opt-in: the corrected FP32 pilot has encouraging optimizing-surrogate results,
+but training-seed replication is ongoing and independent evaluators disagree.
+See [the reward ablation](reward-ablation.md) for both positive and negative results.
 
 QM9s supplies structures and its original 240-channel spectra are retained
 separately. OCELOT supplies HOMO/LUMO training labels in eV. The generator's
@@ -50,7 +54,8 @@ Property coordinate derivatives use DeepMD's differentiable embedding path.
 The force-inference path detaches edge vectors and cannot supply the full
 property gradient; finite differences exposed and verified this repair.
 Independent bootstrap adapters share frozen descriptors but have separate fitted
-weights and resampled training records. Their disagreement is not yet calibrated.
+weights and resampled training records. Held-out residual intervals have been calibrated, but ensemble spread ranks
+property error weakly; the uncertainty reward remains disabled.
 
 See [remote experiment report](qm9s-ocelot-experiments-2026-11-11.md) for actual
 scope and results. Broad-element generation, scaffold growth, uncertainty
@@ -87,4 +92,19 @@ the learned structural prior and property head, explicitly resets the conditione
 and requires adaptation before conditional inference. Existing v1/v2 checkpoints
 retain their original frequencies and are never relabelled. A frequency-buffer
 mismatch is rejected on load. Generation benefit remains an experimental question;
-the ongoing v3 training is not yet an improvement claim.
+the completed matched comparison did not establish that v3 improves joint success.
+See `experiments/conditioning_factorial_20261112.json`.
+
+
+## Shared evaluators and scaffold proposal boundary
+
+DPA and HyFF now use an explicit factory in the octree workflow. Each trained
+property adapter is tied to the exact forcefield checkpoint digest. HyFF's
+reference graph supports batched property gradients; its native force engine is
+a separate declared execution route. Both preserve float64 physical energies.
+[The HyFF workflow](hyff-property-workflow.md) documents actual training and replay.
+
+[Scaffold graph growth](scaffold-generation.md) is an explicit optional proposal
+path with attachment endpoints, bond orders and fixed world coordinates. Its local
+XYZ support and whole-fragment proposal budget do not imply that the pretrained
+octree has learned scaffold context. That neural extension remains separate.

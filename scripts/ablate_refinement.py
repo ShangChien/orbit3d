@@ -18,6 +18,7 @@ from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
 p=argparse.ArgumentParser()
 p.add_argument('--runs',type=Path,nargs='+',required=True)
 p.add_argument('--output',type=Path,required=True)
+p.add_argument('--step-size',type=float,help='Override the source run step size; default uses its configuration')
 a=p.parse_args();freeze_run(a.output,__file__);lock_deterministic_environment(42);torch.set_num_threads(2)
 config=json.loads((a.runs[0]/'run_config.json').read_text());paths=config['mount_paths']
 ff=build_forcefield('dpa4',paths['forcefield_path'],ATOM_TYPES,'cuda:0')
@@ -28,7 +29,10 @@ for i,run in enumerate(a.runs):
  for name in ['raw_trajectories.npz','raw_symbols.json','generated.sdf','candidates.csv','run_config.json']:
   inputs[f'run{i}_{name}']=run/name
 record_input_hashes(a.output,inputs)
-settings=dict(n_steps=30,step_size=.008,max_atom_disp=.025,prop_grad_weight=.25,property_tolerance=0.,energy_tolerance=0.)
+settings=dict(n_steps=config['stage5_relax_config'].get('relax_steps',30),
+              step_size=a.step_size if a.step_size is not None else config['stage5_relax_config'].get('step_size',.004),
+              max_atom_disp=.025,prop_grad_weight=.25,property_tolerance=0.,energy_tolerance=0.)
+force_threshold=config['inference_config']['max_rms_force_eva']
 
 def evaluate(inst):
  mol3d_to_validated_rdkit_mol(inst)
@@ -70,7 +74,7 @@ for run in a.runs:
     elif rule=='projection_only':result,trace=projection_only(inst)
     else:result,trace=relax_conformer_iso_property(inst,ff,oracle,config['inference_config']['target_interval'],**settings)
     final=evaluate(result)
-    row.update(status='completed',final=final,trace=trace,joint_success=final['property_hit'] and final['rms_force_eV_A']<=.5)
+    row.update(status='completed',final=final,trace=trace,joint_success=final['property_hit'] and final['rms_force_eV_A']<=force_threshold)
     dest=a.output/run.name/rule;dest.mkdir(parents=True,exist_ok=True)
     write_precise_sdf(dest/f'candidate_{index}.sdf',[mol3d_to_validated_rdkit_mol(result)])
    except (ValueError,FloatingPointError) as exc:
@@ -78,7 +82,7 @@ for run in a.runs:
    row['elapsed_seconds']=time.perf_counter()-start;records.append(row)
    print(run.name,index,rule,row['status'],row['joint_success'],flush=True)
   (a.output/'records.json').write_text(json.dumps(records,indent=2)+'\n')
-summary={'attempted_per_rule':attempted,'selected_per_rule':selected,'selection':'Exact pre-refinement coordinates of every exported candidate in each frozen source run; all other attempts remain denominator failures','settings':settings,'rules':{}}
+summary={'attempted_per_rule':attempted,'selected_per_rule':selected,'selection':'Exact pre-refinement coordinates of every exported candidate in each frozen source run; all other attempts remain denominator failures','settings':settings,'max_rms_force_eV_A':force_threshold,'rules':{}}
 for rule in ['no_refinement','energy_only','projection_only','full_acceptance']:
  rows=[r for r in records if r['rule']==rule];ok=[r for r in rows if r['status']=='completed']
  summary['rules'][rule]={'completed':len(ok),'failed':len(rows)-len(ok),'joint_successes':sum(r['joint_success'] for r in rows),'property_hits':sum(r['final']['property_hit'] for r in ok),'mean_final_rms_force_eV_A':float(np.mean([r['final']['rms_force_eV_A'] for r in ok])) if ok else None}
