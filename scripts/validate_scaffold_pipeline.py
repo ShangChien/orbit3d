@@ -8,6 +8,7 @@ import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from orbit3d.generator.scaffold import ScaffoldState
+from orbit3d.generator.scaffold_geometry import propose_attachment
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES, rdkit_mol_to_mol3d_instance
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.oracles.applicability import MorganDomain
@@ -22,6 +23,7 @@ p.add_argument("--oracle", required=True)
 p.add_argument("--domain", required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--seed", type=int, default=2026)
+p.add_argument("--geometry-policy", choices=['hydrogen_axis', 'local_grid'], default='hydrogen_axis')
 a = p.parse_args()
 freeze_run(a.output, __file__)
 record_input_hashes(a.output, {"forcefield": a.weight, "oracle": a.oracle, "domain": a.domain})
@@ -44,9 +46,16 @@ for name, smiles, site in scaffolds:
     for fragment in fragments:
         row = {"candidate_id": len(records), "scaffold": name, "fragment": fragment, "status": "proposed"}
         try:
-            state = source.attach(
-                fragment, next(iter(source.ports)), seed=a.seed, torsion=float(rng.uniform(-np.pi, np.pi))
-            )
+            if a.geometry_policy == 'local_grid':
+                state, proposal = propose_attachment(source, fragment, next(iter(source.ports)),
+                                                      seed=a.seed + len(records), max_attempts=12)
+                row['geometry_proposal'] = proposal
+                if state is None:
+                    raise ValueError(proposal['reason'])
+            else:
+                state = source.attach(
+                    fragment, next(iter(source.ports)), seed=a.seed, torsion=float(rng.uniform(-np.pi, np.pi))
+                )
             instance = rdkit_mol_to_mol3d_instance(state.molecule, np.zeros(2), center=False)
             ids = {atom.GetAtomMapNum(): atom.GetIdx() for atom in state.molecule.GetAtoms()}
             instances.append(instance)
@@ -108,6 +117,8 @@ for index, instance, state, indices, (refined, info) in zip(owners, instances, s
     traces.append({"candidate_id": index, **info})
 report = {
     "backend": "explicit_scaffold_graph_growth",
+    "geometry_policy": a.geometry_policy,
+    "anchor_proposal_attempts": sum(len(row.get('geometry_proposal', {}).get('attempts', [])) for row in records),
     "attempted": len(records),
     "chemically_valid": len(instances),
     "refined": len(exported),

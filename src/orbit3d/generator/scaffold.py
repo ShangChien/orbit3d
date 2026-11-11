@@ -149,7 +149,8 @@ class ScaffoldState:
                 ports.append(OpenPort(port.atom_map, remaining, orders))
         return ScaffoldState(mol, ports, fixed, self.scaffold_bonds, self.actions + (action,))
 
-    def attach(self, fragment_smiles, port_map, fragment_atom=0, order=1, seed=42, torsion=0.0):
+    def attach(self, fragment_smiles, port_map, fragment_atom=0, order=1, seed=42, torsion=0.0,
+               anchor_position=None, optimize=True):
         removals = self._port_hydrogens(port_map, order)
         fragment = Chem.MolFromSmiles(fragment_smiles)
         if fragment is None or len(Chem.GetMolFrags(fragment)) != 1:
@@ -168,6 +169,10 @@ class ScaffoldState:
         positions = self.molecule.GetConformer().GetPositions()
         origin = positions[ids[port_map]]
         direction = positions[ids[removals[0]]] - origin
+        if anchor_position is not None:
+            direction = np.asarray(anchor_position, dtype=float) - origin
+            if direction.shape != (3,) or not np.isfinite(direction).all() or np.linalg.norm(direction) == 0:
+                raise ValueError('Attachment anchor must be a finite point distinct from the open site')
         direction /= np.linalg.norm(direction)
         xyz = fragment.GetConformer().GetPositions()
         rotation = _rotation(xyz[hs[0]] - xyz[fragment_atom], -direction)
@@ -184,6 +189,11 @@ class ScaffoldState:
             table.GetRcovalent(self.molecule.GetAtomWithIdx(ids[port_map]).GetAtomicNum())
             + table.GetRcovalent(anchor.GetAtomicNum())
         ) * {1: 1.0, 2: 0.88, 3: 0.80}[order]
+        if anchor_position is not None:
+            distance = np.linalg.norm(np.asarray(anchor_position) - origin)
+            if not .85 * bond_length <= distance <= 1.15 * bond_length:
+                raise ValueError('Attachment anchor lies outside the selected bond-length shell')
+            bond_length = distance
         xyz = (xyz - xyz[fragment_atom]) @ (twist @ rotation).T + origin + direction * bond_length
         fragment.GetConformer().SetPositions(xyz)
         right = anchor.GetAtomMapNum()
@@ -199,7 +209,10 @@ class ScaffoldState:
             "seed": seed,
             "torsion": torsion,
         }
-        return self._finish(combined, action["removed_hydrogen_maps"], [(port_map, right, order)], action)
+        if anchor_position is not None:
+            action['anchor_position_A'] = np.asarray(anchor_position).tolist()
+        return self._finish(combined, action["removed_hydrogen_maps"], [(port_map, right, order)], action,
+                            optimize=optimize)
 
     def open_new_ports(self, atom_maps):
         """Explicitly enable single-bond growth on previously added fragment atoms."""

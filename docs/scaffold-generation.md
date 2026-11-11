@@ -45,3 +45,28 @@ and fixed coordinates are bitwise unchanged during refinement.
 are archived. This finite fragment-menu diagnostic is neither a learned scaffold
 completion model nor proof of synthesizability. Native octree scaffold-context
 training and joint XYZ/attachment masking remain separate work.
+
+
+## Joint XYZ support on a local attachment grid
+
+`scaffold_geometry.attachment_grid` constructs at most 1536 quantized points from
+512 directions and three covalent-radius bond lengths. It restricts the direction
+around the replaced hydrogen, removes anchor collisions, and optionally applies
+world-coordinate bounds. X/Y prefix masks retain only bins with a full XYZ
+continuation in this finite catalog. This avoids enumerating a dense spatial cube;
+it does not prove that the catalog contains every feasible point.
+
+`propose_attachment` uses explicit endpoint/bond-order actions and at most 12
+whole-fragment proposals. A feasible anchor does not imply that the remaining
+fragment fits: failed placements stay in the attempt ledger, and exhausted budgets
+return a failed proposal without mutating the parent scaffold. Attachment preserves
+the source world frame and every surviving fixed atom. This remains an explicit
+graph proposal backend, not learned octree scaffold completion.
+
+The new local-grid GPU diagnostic produced 18/18 chemically valid structures in
+18 anchor attempts, all retained fixed coordinates and completed DPA refinement.
+None passed the joint domain/property/force threshold in this small run. The
+previous hydrogen-axis run included MMFF preoptimization, while this test preserves
+the sampled grid placement before refinement; their success counts are not an
+isolated mask ablation. [Per-candidate records](experiments/scaffold_grid_20261112.json)
+include the selected cells, conditional support sizes, torsions and final metrics.
