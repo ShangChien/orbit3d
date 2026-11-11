@@ -13,12 +13,9 @@ def build_arxiv_tarball() -> Path:
         "ORBIT3D_arXiv_Paper.tex",
         "ORBIT3D_arXiv_Paper.bbl",
         "references.bib",
-        "figures/fig0_orbit3d_system_architecture.png",
-        "figures/fig1_orbit3d_vs_propmolflow.png",
-        "figures/fig2_five_stage_ablation.png",
-        "figures/fig4_pluggable_oracles_relaxation.png",
-        "figures/fig7_hyff_vs_dpa4_pareto_and_spin.png",
-        "figures/fig8_optoelectronic_paradigms_and_forcefields.png",
+        "figures/fig0_orbit3d_system_architecture.pdf",
+        "data/route_b_dpa4_scaling_summary.json",
+        "data/provenance.json",
     ]
 
     with tarfile.open(out_path, "w:gz") as tar:

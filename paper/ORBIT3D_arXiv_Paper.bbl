@@ -1,84 +1,82 @@
-\begin{thebibliography}{16}
-
-\bibitem{barroso2024omat24}
-Luis Barroso-Luque, Muhammed Shuaibi, Xiang Fu, Brandon~M Wood, Misko Dzamba, Meng Gao, Ammar Rizvi, C~Lawrence Zitnick, and Zachary~W Ulissi.
-\newblock Open {Materials} 2024 ({OMat24}) inorganic materials dataset and models.
-\newblock {\em arXiv preprint arXiv:2410.12771}, 2024.
-
-\bibitem{campbell2024propmolflow}
-Andrew Campbell, Jason Yim, Regina Barzilay, Tom Rainforth, and Tommi Jaakkola.
-\newblock Generative flows on discrete and continuous state spaces for {3D} molecular design.
-\newblock In {\em International Conference on Machine Learning (ICML)}, 2024.
-
-\bibitem{hyra2026hyff}
-{Tencent Hunyuan Hyra Team}.
-\newblock {HyFF}: Element-sparse charge- and spin-conditioned machine-learning force fields evolved by the {Hyra} 2.0 scientific agent on {OMol25}.
-\newblock Technical report, Tencent Hunyuan, 2026.
-\newblock \url{https://github.com/Tencent-Hunyuan/Hyra-results}.
-
-\bibitem{lee2025genmol}
-Seul Lee, Karsten Kreis, Srimukh~Prasad Veccham, Meng Liu, Danny Reidenbach, Yuxing Peng, Saee Paliwal, Weili Nie, and Arash Vahdat.
-\newblock {GenMol}: A drug discovery generalist with discrete diffusion.
-\newblock {\em arXiv preprint arXiv:2501.06158}, 2025.
-
-\bibitem{levine2025omol25}
-Daniel~S Levine, Muhammed Shuaibi, Evan Walter~Clark Spotte-Smith, Michael~G Taylor, Muhammad~R Hasyim, Kyle Michel, Ilyes Batatia, G{\'a}bor Cs{\'a}nyi, Misko Dzamba, Peter Eastman, et~al.
-\newblock The {Open Molecules} 2025 ({OMol25}) dataset, evaluations, and models.
-\newblock {\em arXiv preprint arXiv:2505.08762}, 2025.
-
-\bibitem{loeffler2024reinvent4}
-Hannes~H Loeffler, Jiazhen He, Alessandro Tibo, Jon~Paul Janet, Alexey Voronov, Lewis~H Mervin, and Ola Engkvist.
-\newblock Reinvent 4: Modern {AI}--driven generative molecule design.
-\newblock {\em Journal of Cheminformatics}, 16(1):20, 2024.
+\begin{thebibliography}{13}
 
 \bibitem{lu2025uni3dar}
-Shuqi Lu, Zhifeng Gao, Di~He, Linfeng Zhang, and Guolin Ke.
-\newblock {Uni-3DAR}: Unified {3D} generation and understanding via autoregressive modeling on randomized {3D} octrees.
-\newblock {\em arXiv preprint}, 2025.
+Shuqi Lu, Haowei Lin, Lin Yao, et al.
+\newblock Unified cross-scale 3D generation and understanding via autoregressive modeling.
+\newblock arXiv preprint arXiv:2503.16278v3, 2025.
+\newblock \url{https://arxiv.org/abs/2503.16278v3}.
 
-\bibitem{ramakrishnan2014quantum}
-Raghunathan Ramakrishnan, Pavlo~O Dral, Matthias Rupp, and O~Anatole Von~Lilienfeld.
-\newblock Quantum chemistry structures and properties of 134 kilo molecules.
-\newblock {\em Scientific Data}, 1(1):1--7, 2014.
+\bibitem{loeffler2024reinvent4}
+Hannes H. Loeffler, Jiazhen He, Alessandro Tibo, et al.
+\newblock REINVENT 4: Modern AI-driven generative molecule design.
+\newblock Journal of Cheminformatics, 2024, 16:20.
+\newblock \url{https://github.com/MolecularAI/REINVENT4}.
 
-\bibitem{shao2024grpo}
-Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK~Li, Y~Wu, et~al.
-\newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open language models.
-\newblock {\em arXiv preprint arXiv:2402.03300}, 2024.
+\bibitem{lee2025genmol}
+Seul Lee, Karsten Kreis, Srimukh Prasad Veccham, et al.
+\newblock GenMol: A drug discovery generalist with discrete diffusion.
+\newblock arXiv preprint arXiv:2501.06158, 2025.
+\newblock \url{https://arxiv.org/abs/2501.06158}.
 
-\bibitem{wang2026mimflow}
-Yecheng Wang, Guojiang Zhao, Shangqian Chen, Y~Ding, G~Zhou, Zhifeng Gao, Zifeng Zhao, Zheng Cheng, et~al.
-\newblock {MIM-Flow}: An integrated forward-inverse framework for navigating sparse {Pareto}-optimal regions in functional conjugated molecules.
-\newblock {\em ChemRxiv preprint}, 2026.
-
-\bibitem{zhang2025dpa4}
-Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, Yiming Du, Han Wang, and Linfeng Zhang.
-\newblock {DPA-4}: Large atomic model as a multi-task foundation potential for organic molecules and materials ({OMol25}).
-\newblock {\em DP Technology and AISquare Technical Report}, 2025.
-
-\bibitem{zhao2025ocnet}
-Guojiang Zhao, Qi~Ou, Zifeng Zhao, Shangqian Chen, H~Lin, X~Ji, Z~Wang, Hongshuai Wang, H~Cai, Lirong Wu, Weinan E, Zhifeng Gao, et~al.
-\newblock Virtual characterization via knowledge-enhanced representation learning: from organic conjugated molecules to devices.
-\newblock {\em npj Computational Materials}, 2025.
-
-\bibitem{zhao2025oscff}
-Guojiang Zhao, Taiping Hu, Hongshuai Wang, Lirong Wu, Shuqi Lu, FengTianCi Yang, Shangqian Chen, Zhifeng Gao, Xinyan Wang, Zheng Cheng, et~al.
-\newblock Data-driven parametrization of all-atom force fields for organic semiconductors.
-\newblock {\em Journal of Chemical Information and Modeling}, 2025.
+\bibitem{zeng2026propmolflow}
+Cheng Zeng, Jirui Jin, Connor Ambrose, et al.
+\newblock PropMolFlow: Property-guided molecule generation with geometry-complete flow matching.
+\newblock Nature Computational Science, 2026, 6:233-242.
+\newblock \url{https://www.nature.com/articles/s43588-025-00946-y}.
 
 \bibitem{zhao2026o2gen}
-Guojiang Zhao, Zheng Cheng, K~Xu, T~Wan, M~Feng, Shuqi Lu, Hongshuai Wang, Zhifeng Gao, Qi~Ou, L~Hu, et~al.
-\newblock Fast and flexible {3D} molecule design framework for novel organic optoelectronic materials.
-\newblock {\em JACS Au}, 2026.
+Guojiang Zhao, Zheng Cheng, Kele Xu, et al.
+\newblock Fast and flexible 3D molecular design framework for novel organic optoelectronic materials.
+\newblock JACS Au, 2026.
+\newblock \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC13291986/}.
+
+\bibitem{zhao2025ocnet}
+Guojiang Zhao, et al.
+\newblock Virtual characterization via knowledge-enhanced representation learning: From organic conjugated molecules to devices.
+\newblock npj Computational Materials, 2025, 11:308.
+\newblock \url{https://www.nature.com/articles/s41524-025-01788-y}.
+
+\bibitem{zhao2025oscff}
+Guojiang Zhao, Taiping Hu, Y. Zhang, et al.
+\newblock Data-driven parametrization of all-atom force fields for organic semiconductors.
+\newblock Journal of Chemical Information and Modeling, 2025, 65:7632-7638.
+\newblock \url{https://doi.org/10.1021/acs.jcim.5c00291}.
+
+\bibitem{shao2024grpo}
+Zhihong Shao, Peiyi Wang, Qihao Zhu, et al.
+\newblock DeepSeekMath: Pushing the limits of mathematical reasoning in open language models.
+\newblock arXiv preprint arXiv:2402.03300, 2024.
+\newblock \url{https://arxiv.org/abs/2402.03300}.
 
 \bibitem{zhou2023unimol}
-Gengmo Zhou, Zhifeng Gao, Qiankun Ding, Hang Zheng, Hongteng Xu, Zhewei Wei, Linfeng Zhang, and Guolin Ke.
-\newblock {Uni-Mol}: A universal {3D} molecular representation learning framework.
-\newblock In {\em International Conference on Learning Representations (ICLR)}, 2023.
+Gengmo Zhou, Zhifeng Gao, Qiankun Ding, et al.
+\newblock Uni-Mol: A universal 3D molecular representation learning framework.
+\newblock International Conference on Learning Representations, 2023.
+\newblock \url{https://github.com/dptech-corp/Uni-Mol}.
 
-\bibitem{ziegler1985zbl}
-James~F Ziegler, Jochen~P Biersack, and Uffe Littmark.
-\newblock {\em The Stopping and Range of Ions in Solids}.
-\newblock Pergamon Press, New York, 1985.
+\bibitem{deepmodeling2026dpa4}
+DeePMD-kit Developers.
+\newblock DPA4/SeZM model documentation.
+\newblock DeePMD-kit documentation, 2026.
+\newblock Accessed 2026-11-11; capabilities depend on model version and checkpoint.
+\newblock \url{https://github.com/deepmodeling/deepmd-kit/blob/master/doc/model/dpa4.md}.
 
+\bibitem{hyra2026hyff}
+Tencent Hunyuan Hyra Team.
+\newblock HyFF: Molecular force fields and inference runtime.
+\newblock Hyra research artifacts, 2026.
+\newblock HyFF v0.2.0; accessed 2026-11-11.
+\newblock \url{https://github.com/Tencent-Hunyuan/Hyra-results/tree/main/AI4Science/hyff}.
+
+\bibitem{levine2025omol25}
+Daniel S. Levine, Muhammed Shuaibi, Evan Walter Clark Spotte-Smith, et al.
+\newblock The open molecules 2025 (OMol25) dataset, evaluations, and models.
+\newblock arXiv preprint arXiv:2505.08762, 2025.
+\newblock \url{https://arxiv.org/abs/2505.08762}.
+
+\bibitem{ramakrishnan2014quantum}
+Raghunathan Ramakrishnan, Pavlo O. Dral, Matthias Rupp, O. Anatole von Lilienfeld.
+\newblock Quantum chemistry structures and properties of 134 kilo molecules.
+\newblock Scientific Data, 2014, 1:140022.
+\newblock \url{https://doi.org/10.1038/sdata.2014.22}.
 \end{thebibliography}

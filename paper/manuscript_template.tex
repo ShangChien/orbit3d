@@ -1,0 +1,37 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,array,calc}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,citecolor=teal!55!black,urlcolor=blue!45!black}
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{0.25em}
+\setlength{\LTcapwidth}{\linewidth}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
+\title{\textbf{$title$}}
+\author{Shangqian Chen, Guojiang Zhao, Zheng Cheng,\\
+Jiankun Wang, Hongshuai Wang, Zhifeng Gao\\[3pt]
+\small DP Technology, Beijing, China\\
+\small\texttt{\{chensq,zhaogj,chengz,wangjk,wanghs,gaozf\}@dp.tech}}
+\date{November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+$abstract$
+\end{abstract}
+\setcounter{figure}{-1}
+$body$
+\begingroup
+\small
+\raggedright
+\input{ORBIT3D_arXiv_Paper.bbl}
+\endgroup
+\end{document}

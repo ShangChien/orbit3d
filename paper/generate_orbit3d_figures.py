@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generate publication-quality SVG + high-resolution PNG figures for the ORBIT-3D arXiv paper.
-Uses a square-friendly 1000x920 multi-row layout so CoreGraphics/QuickLook renders 100% of all panels without cropping.
+Render the current architecture figure and optionally the historical illustrative plots.
+Only Figure 0 is used by the revised manuscript; legacy data arrays are not experimental evidence.
 """
 
 import html
@@ -10,10 +10,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-OUT_DIR = Path("/Users/dp/project/mol_gen/paper/figures")
-ARTIFACT_DIR = Path("/Users/dp/.gemini/antigravity/brain/615f5339-d81a-4c2a-9bad-bb218c9859c6")
+OUT_DIR = Path(__file__).resolve().parent / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def esc(s: str) -> str:
@@ -28,8 +26,6 @@ def save_svg_and_png(svg_content: str, stem: str, size_px: int = 1800):
     ql_png = OUT_DIR / f"{stem}.svg.png"
     if ql_png.exists():
         shutil.move(str(ql_png), str(png_path))
-    if ARTIFACT_DIR.exists() and png_path.exists():
-        shutil.copy2(png_path, ARTIFACT_DIR / f"{stem}.png")
     print(f"[Generated] {png_path} & {svg_path}")
 
 
@@ -130,171 +126,12 @@ def draw_line_panel(x0, y0, w, h, title, y_label, x_labels, lines_data, y_min, y
 
 
 def build_fig0():
-    W, H = 960, 960
-    p = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">',
-        '<defs>',
-        '  <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb"/></marker>',
-        '  <marker id="arr-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#0d9488"/></marker>',
-        '  <marker id="arr-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#7c3aed"/></marker>',
-        '  <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#d97706"/></marker>',
-        '</defs>',
-        f'<rect width="{W}" height="{H}" fill="#ffffff"/>',
-        # Header banner
-        '<rect x="36" y="20" width="900" height="52" rx="10" fill="#0f172a"/>',
-        '<text x="486" y="52" font-family="Helvetica, Arial, sans-serif" font-size="18.0" font-weight="bold" text-anchor="middle" fill="#ffffff">ORBIT-3D System Architecture: Five-Stage Closed-Loop 3D Quantum Molecular Design</text>',
-
-        # =========================================================================
-        # BAND 1: STAGES 1 - 3 (y = 92 .. 340)
-        # =========================================================================
-        '<rect x="36" y="92" width="900" height="248" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>',
-        '<rect x="36" y="92" width="900" height="34" rx="10" fill="#1e3a8a"/>',
-        '<text x="52" y="114" font-family="Helvetica, Arial, sans-serif" font-size="14.0" font-weight="bold" fill="#ffffff">LAYER 1 (Generator Backbone) — Stages 1–3: Bidirectional 3D Spatial Octree Transformer</text>',
-
-        # Card 1: Input Spec (x=50, y=144, w=182, h=176)
-        '<rect x="50" y="144" width="182" height="176" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>',
-        '<rect x="50" y="144" width="182" height="32" rx="8" fill="#2563eb"/>',
-        '<text x="141" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Target Specification</text>',
-        '<text x="64" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Property Intervals</text>',
-        '<text x="76" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Single / Multi-Objective</text>',
-        '<text x="64" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Quantum State</text>',
-        '<text x="76" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Total Charge &amp; Spin</text>',
-
-        # Card 2: Stage 2 (x=254, y=144, w=204, h=176)
-        '<rect x="254" y="144" width="204" height="176" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>',
-        '<rect x="254" y="144" width="204" height="32" rx="8" fill="#1d4ed8"/>',
-        '<text x="356" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 2: Interval SFT</text>',
-        '<text x="270" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Root-Prefix [COND]</text>',
-        '<text x="282" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Global Interval Anchor</text>',
-        '<text x="270" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Deep AdaLN-Zero</text>',
-        '<text x="282" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Layer-wise Modulation</text>',
-
-        # Card 3: Stage 1 (x=480, y=144, w=214, h=176)
-        '<rect x="480" y="144" width="214" height="176" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="1.6"/>',
-        '<rect x="480" y="144" width="214" height="32" rx="8" fill="#059669"/>',
-        '<text x="587" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 1: 3D Octree AR</text>',
-        '<text x="496" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Coarse-to-Fine Octree</text>',
-        '<text x="508" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Hierarchical 3D Subdivision</text>',
-        '<text x="496" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Valence Masking</text>',
-        '<text x="508" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">100% Closed-Shell Validity</text>',
-
-        # Card 4: Stage 3 (x=716, y=144, w=204, h=176)
-        '<rect x="716" y="144" width="204" height="176" rx="10" fill="#faf5ff" stroke="#8b5cf6" stroke-width="1.6"/>',
-        '<rect x="716" y="144" width="204" height="32" rx="8" fill="#7c3aed"/>',
-        '<text x="818" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 3: Self-Reranking</text>',
-        '<text x="730" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#5b21b6">• Suffix [CLS] + Atom</text>',
-        '<text x="742" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Joint 3D Understanding</text>',
-        '<text x="730" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#5b21b6">• Fast Self-Reranking</text>',
-        '<text x="742" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Zero External Oracle Cost</text>',
-
-        # Horizontal arrows inside Band 1
-        '<line x1="232" y1="232" x2="252" y2="232" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arr-blue)"/>',
-        '<line x1="458" y1="232" x2="478" y2="232" stroke="#059669" stroke-width="2.4" marker-end="url(#arr-teal)"/>',
-        '<line x1="694" y1="232" x2="714" y2="232" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arr-purple)"/>',
-
-        # =========================================================================
-        # BAND 2: PLUGGABLE ORACLES & FORCE FIELDS (y = 380 .. 648)
-        # =========================================================================
-        # Left Box: Pluggable Oracles (x=36, y=380, w=478, h=268)
-        '<rect x="36" y="380" width="478" height="268" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>',
-        '<rect x="36" y="380" width="478" height="34" rx="10" fill="#0f766e"/>',
-        '<text x="52" y="402" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#ffffff">LAYER 2A — Pluggable Multi-Modal Quantum Oracles</text>',
-
-        # 2x2 Clean Cards for Modes A-D
-        '<rect x="50" y="428" width="218" height="74" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>',
-        '<text x="159" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#0f766e">Mode A: 3D Uni-Mol (Mainline)</text>',
-        '<text x="159" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Open-Source 5-Fold 3D Attention</text>',
-
-        '<rect x="282" y="428" width="218" height="74" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>',
-        '<text x="391" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#1d4ed8">Mode B: Native DPA-4 Hook</text>',
-        '<text x="391" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Shared Equivariant Backbone</text>',
-
-        '<rect x="50" y="516" width="218" height="74" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>',
-        '<text x="159" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#7e22ce">Mode C: Native HyFF Hook</text>',
-        '<text x="159" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Element-Sparse MoE &amp; State Readout</text>',
-
-        '<rect x="282" y="516" width="218" height="74" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>',
-        '<text x="391" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#b45309">Mode D: Uni-QSAR &amp; OCNet</text>',
-        '<text x="391" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Enterprise 1D/2D/3D Ensembles</text>',
-
-        '<rect x="50" y="604" width="450" height="30" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.4"/>',
-        '<text x="275" y="624" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#115e59">Oracle Output Bus: Property Prediction &amp; Epistemic Uncertainty</text>',
-
-        # Right Box: Dual-Engine Force Fields (x=530, y=380, w=406, h=268)
-        '<rect x="530" y="380" width="406" height="268" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>',
-        '<rect x="530" y="380" width="406" height="34" rx="10" fill="#9a3412"/>',
-        '<text x="548" y="402" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#ffffff">LAYER 2B — Dual-Engine Quantum Force Fields</text>',
-
-        '<rect x="546" y="428" width="374" height="74" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>',
-        '<text x="733" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9a3412">Engine 1: DPA-4 (OMol25) + Analytical ZBL</text>',
-        '<text x="733" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Dense SO(2) + Short-Range Nuclear Repulsion</text>',
-
-        '<rect x="546" y="516" width="374" height="74" rx="8" fill="#fef2f2" stroke="#e11d48" stroke-width="1.5"/>',
-        '<text x="733" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9f1239">Engine 2: HyFF (OMol25) Element-Sparse MoE</text>',
-        '<text x="733" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Triton Kernels, Multi-Scale Cutoffs &amp; Q/M States</text>',
-
-        '<rect x="546" y="604" width="374" height="30" rx="6" fill="#ffedd5" stroke="#d97706" stroke-width="1.4"/>',
-        '<text x="733" y="624" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#92400e">Physics Output Bus: Quantum Interatomic Forces &amp; State Energy</text>',
-
-        # =========================================================================
-        # BAND 3: STAGES 4 - 5 & OUTPUT (y = 690 .. 938)
-        # =========================================================================
-        '<rect x="36" y="690" width="900" height="248" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>',
-        '<rect x="36" y="690" width="900" height="34" rx="10" fill="#065f46"/>',
-        '<text x="52" y="712" font-family="Helvetica, Arial, sans-serif" font-size="14.0" font-weight="bold" fill="#ffffff">LAYER 3 (Closed-Loop Alignment &amp; Relaxation) — Stage 4 Online Gated-GRPO &amp; Stage 5 Tangent Relaxation</text>',
-
-        # Stage 4 Card (x=50, y=742, w=324, h=176)
-        '<rect x="50" y="742" width="324" height="176" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="1.6"/>',
-        '<rect x="50" y="742" width="324" height="32" rx="8" fill="#059669"/>',
-        '<text x="212" y="763" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 4: Online Gated-GRPO</text>',
-        '<text x="64" y="798" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Doubly Gated Interval Reward</text>',
-        '<text x="76" y="820" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Uncertainty Gate x Physical Force Gate</text>',
-        '<text x="64" y="858" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Anti-Collapse Policy Alignment</text>',
-        '<text x="76" y="880" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Prevents Reward Hacking in OOD Regions</text>',
-
-        # Stage 5 Card (x=396, y=742, w=336, h=176)
-        '<rect x="396" y="742" width="336" height="176" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6"/>',
-        '<rect x="396" y="742" width="336" height="32" rx="8" fill="#1d4ed8"/>',
-        '<text x="564" y="763" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 5: Iso-Property Relaxation</text>',
-        '<text x="412" y="798" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Tangent-Space Force Projection</text>',
-        '<text x="424" y="820" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Eliminates Strain Without Property Drift</text>',
-        '<text x="412" y="858" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Trust-Region Gate &amp; Hybrid Relay</text>',
-        '<text x="424" y="880" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Supports Black-Box Oracles &amp; ZBL -&gt; Spin Relay</text>',
-
-        # Final Output Card (x=754, y=742, w=166, h=176)
-        '<rect x="754" y="742" width="166" height="176" rx="10" fill="#fefce8" stroke="#ca8a04" stroke-width="1.6"/>',
-        '<rect x="754" y="742" width="166" height="32" rx="8" fill="#ca8a04"/>',
-        '<text x="837" y="763" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Verified 3D Output</text>',
-        '<text x="768" y="800" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#065f46">✓ 100% Closed-Shell</text>',
-        '<text x="768" y="828" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1d4ed8">✓ Target Interval Hit</text>',
-        '<text x="768" y="856" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#9a3412">✓ Relaxed Equilibrium</text>',
-        '<text x="768" y="884" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#7e22ce">✓ Charge &amp; Spin Ready</text>',
-
-        # =========================================================================
-        # INTER-BAND CLEAN BUS ARROWS
-        # =========================================================================
-        # 1. Stage 3 -> Layer 2A & 2B
-        '<path d="M 818 320 L 818 356 L 380 356 L 380 378" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arr-purple)"/>',
-        '<path d="M 818 320 L 818 378" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arr-purple)"/>',
-        '<text x="600" y="350" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#5b21b6">Candidate 3D Conformers</text>',
-
-        # 2. Layer 2A & 2B -> Stage 4 & Stage 5
-        '<path d="M 180 634 L 180 740" fill="none" stroke="#0d9488" stroke-width="2.4" marker-end="url(#arr-teal)"/>',
-        '<path d="M 380 634 L 380 666 L 510 666 L 510 740" fill="none" stroke="#0d9488" stroke-width="2.4" marker-end="url(#arr-teal)"/>',
-        '<path d="M 630 634 L 630 674 L 290 674 L 290 740" fill="none" stroke="#d97706" stroke-width="2.4" marker-end="url(#arr-amber)"/>',
-        '<path d="M 660 634 L 660 740" fill="none" stroke="#d97706" stroke-width="2.4" marker-end="url(#arr-amber)"/>',
-
-        # 3. Stage 4 -> Stage 5 -> Verified Output
-        '<line x1="374" y1="830" x2="394" y2="830" stroke="#059669" stroke-width="2.6" marker-end="url(#arr-teal)"/>',
-        '<line x1="732" y1="830" x2="752" y2="830" stroke="#2563eb" stroke-width="2.6" marker-end="url(#arr-blue)"/>',
-
-        # 4. Closed-Loop Policy Update (Left Margin Bus)
-        '<path d="M 50 875 L 24 875 L 24 134 L 356 134 L 356 142" fill="none" stroke="#059669" stroke-width="2.6" stroke-dasharray="6,4" marker-end="url(#arr-teal)"/>',
-        '<text transform="translate(15, 510) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#047857">Closed-Loop RL Policy Update</text>',
-
-        '</svg>'
-    ]
-    save_svg_and_png("\n".join(p), "fig0_orbit3d_system_architecture")
+    """Current architecture figure; SVG/PDF/PNG share one set of primitives."""
+    try:
+        from .draw_architecture import draw
+    except ImportError:
+        from draw_architecture import draw
+    return draw(OUT_DIR)
 
 
 def build_fig1():
@@ -675,9 +512,14 @@ def build_fig8():
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Render the current architecture figure.")
+    parser.add_argument("--legacy-figures", action="store_true", help="Also regenerate historical illustrative plots, which are not used by the current manuscript.")
+    args = parser.parse_args()
     build_fig0()
-    build_fig1()
-    build_fig2()
-    build_fig4()
-    build_fig7()
-    build_fig8()
+    if args.legacy_figures:
+        build_fig1()
+        build_fig2()
+        build_fig4()
+        build_fig7()
+        build_fig8()
