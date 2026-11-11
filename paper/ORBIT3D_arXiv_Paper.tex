@@ -133,28 +133,28 @@ QM9 / rQM9 & B3LYP/6-31G(2df,p) & Atom Count $N$ & atoms & $17.98$ & $2.91$ & $3
 
 \begin{table}[htbp]
 \centering
-\caption{Head-to-head benchmark comparison across OOD Gap, LUMO, and Joint 3-Property OLED tasks ($N=48$).}
+\caption{Head-to-head benchmark comparison across OOD Gap, LUMO, and Joint 3-Property OLED tasks ($N=48$, Open-Source \textbf{Uni-Mol} / \textbf{DPA-4} Mainline).}
 \label{tab:main_comparison}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{llccccccc}
+\begin{tabular}{lllccccccc}
 \toprule
-\textbf{Task} & \textbf{Method} & \textbf{MLIP} & \textbf{Mol Stable (\%)} & \textbf{Closed-Shell (\%)} & \textbf{Bond MAE (\AA)} & \textbf{RMS Force (eV/\AA)} & \textbf{Hit Rate (\%)} & \textbf{Valid \& Hit (\%)} \\
+\textbf{Task} & \textbf{Method} & \textbf{Oracle \& MLIP} & \textbf{Mol Stable (\%)} & \textbf{Closed-Shell (\%)} & \textbf{Bond MAE (\AA)} & \textbf{RMS Force (eV/\AA)} & \textbf{Hit Rate (\%)} & \textbf{Valid \& Hit (\%)} \\
 \midrule
-OOD Gap & PropMolFlow (Naive GVP) & None & 75.00 & 91.67 & 0.0319 & 1.999 & 100.00 & 75.00 \\
-OOD Gap & PropMolFlow (Orth. Proj.) & DPA4-Mini & 95.83 & 97.92 & 0.0220 & 0.608 & 93.75 & 89.84 \\
-OOD Gap & PropMolFlow (Orth. Proj.) & DPA4-Plus & 91.67 & 97.92 & 0.0223 & 0.625 & 95.83 & 87.85 \\
-OOD Gap & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Mini} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0198} & \textbf{0.366} & 93.75 & \textbf{93.75} \\
-OOD Gap & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Plus} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0198} & \textbf{0.362} & 93.75 & \textbf{93.75} \\
+OOD Gap & PropMolFlow (Naive GVP) & GVP + None & 75.00 & 91.67 & 0.0319 & 1.999 & 100.00 & 75.00 \\
+OOD Gap & PropMolFlow (Orth. Proj.) & GVP + DPA4-Mini & 95.83 & 97.92 & 0.0220 & 0.608 & 93.75 & 89.84 \\
+OOD Gap & PropMolFlow (Orth. Proj.) & GVP + DPA4-Plus & 91.67 & 97.92 & 0.0223 & 0.625 & 95.83 & 87.85 \\
+OOD Gap & \textbf{ORBIT-3D (Uni-Mol Mainline)} & \textbf{5-Fold Uni-Mol + DPA4-Mini} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0198} & \textbf{0.366} & 93.75 & \textbf{93.75} \\
+OOD Gap & \textbf{ORBIT-3D (Uni-Mol / DPA-4)} & \textbf{5-Fold Uni-Mol/DPA4 + DPA4-Plus} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0198} & \textbf{0.362} & 93.75 & \textbf{93.75} \\
 \midrule
-LUMO & PropMolFlow (Orth. Proj.) & DPA4-Mini & 93.75 & 93.75 & 0.0228 & 0.402 & 100.00 & 93.75 \\
-LUMO & PropMolFlow (Orth. Proj.) & DPA4-Plus & 91.67 & 93.75 & 0.0226 & 0.436 & 100.00 & 91.67 \\
-LUMO & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Mini} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0195} & \textbf{0.204} & \textbf{100.00} & \textbf{100.00} \\
-LUMO & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Plus} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0194} & \textbf{0.198} & \textbf{100.00} & \textbf{100.00} \\
+LUMO & PropMolFlow (Orth. Proj.) & GVP + DPA4-Mini & 93.75 & 93.75 & 0.0228 & 0.402 & 100.00 & 93.75 \\
+LUMO & PropMolFlow (Orth. Proj.) & GVP + DPA4-Plus & 91.67 & 93.75 & 0.0226 & 0.436 & 100.00 & 91.67 \\
+LUMO & \textbf{ORBIT-3D (Uni-Mol Mainline)} & \textbf{5-Fold Uni-Mol + DPA4-Mini} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0195} & \textbf{0.204} & \textbf{100.00} & \textbf{100.00} \\
+LUMO & \textbf{ORBIT-3D (Uni-Mol / DPA-4)} & \textbf{5-Fold Uni-Mol/DPA4 + DPA4-Plus} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0194} & \textbf{0.198} & \textbf{100.00} & \textbf{100.00} \\
 \midrule
-Joint OLED & PropMolFlow (Orth. Proj.) & DPA4-Mini & 95.83 & 95.83 & \textbf{0.0196} & 0.382 & 100.00 & 95.83 \\
-Joint OLED & PropMolFlow (Orth. Proj.) & DPA4-Plus & 95.83 & 95.83 & 0.0199 & 0.413 & 100.00 & 95.83 \\
-Joint OLED & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Mini} & \textbf{100.00} & \textbf{100.00} & 0.0199 & 0.385 & \textbf{100.00} & \textbf{100.00} \\
-Joint OLED & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Plus} & \textbf{100.00} & \textbf{100.00} & 0.0200 & \textbf{0.376} & \textbf{100.00} & \textbf{100.00} \\
+Joint OLED & PropMolFlow (Orth. Proj.) & GVP + DPA4-Mini & 95.83 & 95.83 & \textbf{0.0196} & 0.382 & 100.00 & 95.83 \\
+Joint OLED & PropMolFlow (Orth. Proj.) & GVP + DPA4-Plus & 95.83 & 95.83 & 0.0199 & 0.413 & 100.00 & 95.83 \\
+Joint OLED & \textbf{ORBIT-3D (Uni-Mol Mainline)} & \textbf{5-Fold Uni-Mol + DPA4-Mini} & \textbf{100.00} & \textbf{100.00} & 0.0199 & 0.385 & \textbf{100.00} & \textbf{100.00} \\
+Joint OLED & \textbf{ORBIT-3D (Uni-Mol / DPA-4)} & \textbf{5-Fold Uni-Mol/DPA4 + DPA4-Plus} & \textbf{100.00} & \textbf{100.00} & 0.0200 & \textbf{0.376} & \textbf{100.00} & \textbf{100.00} \\
 \bottomrule
 \end{tabular}
 }
@@ -163,9 +163,29 @@ Joint OLED & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Plus} & \textbf{100.00} & \
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.92\textwidth]{figures/fig2_five_stage_ablation.png}
-    \caption{Progressive five-stage ablation study of the \textbf{ORBIT-3D} closed-loop architecture.}
+    \caption{Progressive five-stage ablation study of the \textbf{ORBIT-3D} closed-loop architecture under the open-source 5-Fold \textbf{Uni-Mol} mainline.}
     \label{fig:ablation}
 \end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Five-stage progressive ablation study across four quantum-chemical benchmarks ($N=48$, Open-Source \textbf{Uni-Mol} Mainline).}
+\label{tab:ablation}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llccccccc}
+\toprule
+\textbf{Stage Identifier} & \textbf{Description} & \textbf{OOD Gap Hit (\%)} & \textbf{HOMO Hit (\%)} & \textbf{LUMO Hit (\%)} & \textbf{Joint OLED Hit (\%)} & \textbf{LUMO Err (eV)} & \textbf{Bond MAE (\AA)} & \textbf{RMS Force (eV/\AA)} \\
+\midrule
+Stage 1 (\texttt{1\_uni3dar\_uncond}) & Unconditional 3D Octree Base & 2.08 & 0.00 & 12.50 & 6.25 & 1.5750 & 0.0250 & 0.762 \\
+Stage 2 (\texttt{2\_uni3dar\_prefix\_sft}) & + Root-Prefix \& 12-Layer AdaLN-Zero SFT & 14.58 & 6.25 & 27.08 & 16.67 & 1.2579 & 0.0247 & 0.831 \\
+Stage 3 (\texttt{3\_uni3dar\_sft\_self\_rerank}) & + Suffix \texttt{[CLS]+Atom} Self-Reranking ($K=4$) & 16.67 & 6.25 & 35.42 & 29.17 & 0.4720 & 0.0241 & 0.910 \\
+Stage 4 (\texttt{4\_uni3dar\_gated\_grpo}) & + Online Gated-GRPO (5-Fold \textbf{Uni-Mol} Oracle) & 27.08 & 20.83 & 54.17 & 33.33 & 0.1128 & 0.0255 & 1.125 \\
+Stage 5 (\texttt{5\_uni3dar\_grpo\_dpa31}) & + 5-Fold \textbf{Uni-Mol} GRPO \& DPA-3.1-3M Relax & 64.58 & 81.25 & \textbf{100.00} & 70.83 & \textbf{0.0000} & 0.0195 & 0.252 \\
+\textbf{Stage 5* (\texttt{5\_uni3dar\_grpo\_dpa4})} & \textbf{+ 5-Fold Uni-Mol/DPA-4 GRPO \& DPA-4-Plus Relax} & \textbf{93.75} & \textbf{91.67} & \textbf{100.00} & \textbf{100.00} & \textbf{0.0000} & \textbf{0.0194} & \textbf{0.198} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
 \begin{figure}[htbp]
     \centering
@@ -177,9 +197,26 @@ Joint OLED & \textbf{ORBIT-3D (Ours)} & \textbf{DPA4-Plus} & \textbf{100.00} & \
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.92\textwidth]{figures/fig4_pluggable_oracles_relaxation.png}
-    \caption{Online Gated-GRPO regularization dynamics and plug-and-play multi-Oracle performance.}
+    \caption{Online Gated-GRPO regularization dynamics and plug-and-play compatibility across the open-source \textbf{Uni-Mol}/\textbf{DPA-4} mainlines and the full-matrix enterprise \textbf{Uni-QSAR} ecosystem.}
     \label{fig:oracles}
 \end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Open-source mainlines (\textbf{Uni-Mol}, \textbf{DPA-4}) vs.\ full-matrix enterprise \textbf{Uni-QSAR} ecosystem compatibility.}
+\label{tab:oracle_ecosystem}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Oracle Mode} & \textbf{License / Source} & \textbf{Supported Feature Matrix \& Modalities} & \textbf{PropMolFlow ODE Compatible?} & \textbf{ORBIT-3D Compatible?} & \textbf{5-Fold $R^2$ (\%)} & \textbf{Stage 5 Hit / Stable (\%)} \\
+\midrule
+\textbf{Mode A: \texttt{internal\_unimol} (Mainline)} & 100\% Open-Source (FP16) & 3D SE(3) Gaussian Pair-Distance Attention + 5-Fold Ensemble & Single-fold 3D only & \textbf{Yes (Default Mainline)} & 95.6 & 97.9 / \textbf{100.0} \\
+\textbf{Mode B: \texttt{internal\_dpa4} (Unified)} & 100\% Open-Source (OMol25) & Native \texttt{SeZMModel} Multi-Body Equivariant Hook ($D_{\text{desc}}=32/64$) + 5-Fold CV & Force projection only & \textbf{Yes (Zero Extra VRAM)} & \textbf{96.4} & \textbf{100.0} / \textbf{100.0} \\
+\textbf{Mode C: \texttt{external\_uniqsar} (Enterprise)} & Enterprise / Proprietary & \textbf{Full Matrix}: 1D SMILES + 2D Morgan FP + 3D Uni-Mol + GBDT/MLP Stacking & \textbf{No} (Non-differentiable 1D/2D/Trees) & \textbf{Yes (First-Tier Full Matrix)} & 96.1 & 97.9 / \textbf{100.0} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
 \subsection{Computational Efficiency, Wall-Clock Latency \& Hardware Requirements}
 Figure~\ref{fig:latency_hw} and Table~\ref{tab:latency_hw} summarize the empirical wall-clock latency, saturated GPU throughput (measured on an NVIDIA A800-SXM4-80GB GPU), and hardware VRAM requirements across all paradigms, \textbf{DPA-4} model scales, and pluggable Oracle modes.
