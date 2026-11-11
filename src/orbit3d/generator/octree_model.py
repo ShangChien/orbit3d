@@ -37,6 +37,7 @@ class DynamicIntervalConditioner(nn.Module):
         num_layers: int = 12,
         num_freqs: int = 16,
         bound_masks: bool = False,
+        smooth_frequencies: bool = False,
     ):
         super().__init__()
         self.emb_dim = emb_dim
@@ -44,7 +45,8 @@ class DynamicIntervalConditioner(nn.Module):
         self.num_layers = num_layers
         self.num_freqs = num_freqs
 
-        freqs = (2.0 ** torch.arange(num_freqs, dtype=torch.float32)) * math.pi
+        freqs = (torch.linspace(0.25, 4.0, num_freqs) if smooth_frequencies else
+                 2.0 ** torch.arange(num_freqs, dtype=torch.float32)) * math.pi
         self.register_buffer("freqs", freqs)
 
         in_dim = 4 + 4 * 2 * num_freqs
@@ -217,7 +219,8 @@ class ConditionalUni3DAR(Uni3DARSampler):
             emb_dim=args.emb_dim,
             num_props=num_props,
             num_layers=args.layer,
-            bound_masks=self.condition_version == 2,
+            bound_masks=self.condition_version >= 2,
+            smooth_frequencies=self.condition_version >= 3,
         )
         self.prop_understanding_head = Suffix3DPropertyHead(
             emb_dim=args.emb_dim,

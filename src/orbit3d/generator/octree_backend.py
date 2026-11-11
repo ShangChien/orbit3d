@@ -53,8 +53,8 @@ def checkpoint_contract(model, names, units, mean, scale):
     return {'schema_version': 1, 'semantics': semantics, 'sha256': digest}
 
 
-def load_pretrained(path, device="cuda:0", targets=2, batch_size=16):
-    model = build_octree(device, targets, batch_size)
+def load_pretrained(path, device="cuda:0", targets=2, batch_size=16, condition_version=2):
+    model = build_octree(device, targets, batch_size, condition_version)
     data = torch.load(path, map_location="cpu", weights_only=False)
     state = data["ema"]["params"]
     incompatible = model.load_state_dict(state, strict=False)
@@ -67,7 +67,7 @@ def load_pretrained(path, device="cuda:0", targets=2, batch_size=16):
 
 def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
     state = torch.load(path, map_location="cpu", weights_only=False)
-    versions = {"uni3dar_octree_v1": 1, "uni3dar_octree_v2": 2}
+    versions = {"uni3dar_octree_v1": 1, "uni3dar_octree_v2": 2, "uni3dar_octree_v3": 3}
     if state["backend"] not in versions:
         raise ValueError("Unknown octree checkpoint contract")
     model = build_octree(device, len(state["target_cols"]), batch_size, versions[state["backend"]])
@@ -75,6 +75,8 @@ def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
     contract = checkpoint_contract(model, state['target_cols'], units, state['mean'], state['scale'])
     if 'contract' in state and state['contract'] != contract:
         raise ValueError('Octree checkpoint tokenizer, grid, target units or scaler contract mismatch')
+    if not torch.equal(state['model_state_dict']['interval_conditioner.freqs'].cpu(), model.interval_conditioner.freqs.cpu()):
+        raise ValueError('Condition frequencies differ from the declared version; migrate and retrain explicitly')
     model.load_state_dict(state["model_state_dict"], strict=True)
     return model.eval(), state
 

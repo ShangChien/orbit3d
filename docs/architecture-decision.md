@@ -70,3 +70,21 @@ each candidate's uniforms; batch compaction does not consume another candidate's
 stream. FP32 replay of four tracked candidates matched across batch1/8/48 in the
 real-model check. BF16 replay did not match across those batch sizes. BF16 is an
 explicit faster numerical mode, not a promise of batch-independent token replay.
+
+## Smooth interval conditioning (experimental v3)
+
+A held-out 64-molecule diagnostic found that the v2 condition vector changed by
+4.15% on average for a normalized interval shift of only1e-5, and by10.24% for
+1e-4. Its exponential Fourier frequencies reach32768π. Correct conditions gave
+a generation loss1.0961 versus1.1050 with shuffled targets and1.1180 without
+conditions, showing weak conditional separation and excessive local sensitivity.
+The raw diagnostic is `experiments/condition_diagnostic_8000_20261111.json`.
+
+The opt-in `uni3dar_octree_v3` uses bounded low frequencies and trains on intervals
+that contain the reference value at random positions and widths, instead of
+always placing the reference at the interval midpoint. The migration tool keeps
+the learned structural prior and property head, explicitly resets the conditioner,
+and requires adaptation before conditional inference. Existing v1/v2 checkpoints
+retain their original frequencies and are never relabelled. A frequency-buffer
+mismatch is rejected on load. Generation benefit remains an experimental question;
+the ongoing v3 training is not yet an improvement claim.

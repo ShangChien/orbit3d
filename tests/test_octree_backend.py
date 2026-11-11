@@ -103,3 +103,15 @@ def test_checkpoint_semantics_include_grid_units_and_scaler():
     assert checkpoint_contract(model, ['homo'], ['eV'], [-7.0], [0.5]) != contract
     with pytest.raises(ValueError, match='scaler'):
         checkpoint_contract(model, ['homo'], ['eV'], [-7.0], [0.0])
+
+
+def test_smooth_condition_features_preserve_local_property_neighborhoods():
+    from orbit3d.generator.octree_model import DynamicIntervalConditioner
+
+    smooth = DynamicIntervalConditioner(emb_dim=32, num_props=2, num_layers=1,
+                                        bound_masks=True, smooth_frequencies=True)
+    legacy = DynamicIntervalConditioner(emb_dim=32, num_props=2, num_layers=1, bound_masks=True)
+    values = torch.tensor([[-1.2, .3, -1.5, -.9], [.5, .2, .3, .7]])
+    small = 1e-5
+    assert (smooth._fourier_encode(values+small)-smooth._fourier_encode(values)).abs().max() < .001
+    assert (legacy._fourier_encode(values+small)-legacy._fourier_encode(values)).abs().max() > .1

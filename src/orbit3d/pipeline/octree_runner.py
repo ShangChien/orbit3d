@@ -82,7 +82,8 @@ def run_octree_from_config(cfg, config_path=None):
             train_smiles.update(initial_state.get('training_smiles', []))
         else:
             initial_path = Path(paths['generator_pretrained_path'])
-            model = load_pretrained(initial_path, device, len(names), settings.get('batch_size', 16))
+            model = load_pretrained(initial_path, device, len(names), settings.get('batch_size', 16),
+                                    condition_version=int(settings.get('condition_version', 2)))
         label_source = settings.get("label_source", "sdf")
         if label_source == "oracle":
             y, _ = oracle.predict_3d_mols(training)
@@ -154,14 +155,21 @@ def run_octree_from_config(cfg, config_path=None):
             packed = dataset.collate(indices)
             target = torch.tensor(yn[indices], device=device)
             width = torch.rand_like(target) * 0.25 + 0.15
+            lower, upper = target - width, target + width
+            if model.condition_version >= 3:
+                # Conditions represent a set containing the label, not a narrow
+                # interval whose midpoint always leaks the regression target.
+                span = torch.exp(torch.empty_like(target).uniform_(np.log(.2), np.log(2.0)))
+                offset = torch.rand_like(target) * span
+                lower, upper = target - offset, target + span - offset
             mask = torch.rand_like(target) > 0.2
-            if model.condition_version == 2:
+            if model.condition_version >= 2:
                 mask = mask.unsqueeze(-1) & (torch.rand(*target.shape, 2, device=device) > 0.2)
             with torch.autocast(
                 device_type=device.split(":")[0], dtype=torch.bfloat16, enabled=device.startswith("cuda")
             ):
                 loss, metrics = model.compute_sft_and_understanding_loss(
-                    packed, target, target - width, target + width, mask, understanding_weight=0.5
+                    packed, target, lower, upper, mask, understanding_weight=0.5
                 )
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"Octree SFT diverged at step {step + 1}")
@@ -180,6 +188,8 @@ def run_octree_from_config(cfg, config_path=None):
     else:
         checkpoint = Path(paths.get("checkpoint_load_path", checkpoint))
         model, state = load_octree_checkpoint(checkpoint, device, settings.get("batch_size", 16))
+        if state.get('condition_migration', {}).get('requires_condition_adaptation'):
+            raise ValueError('Migrated conditioner requires adaptation before conditional inference')
         if state["target_cols"] != names:
             raise ValueError("Octree checkpoint semantics differ")
         if 'target_units' in state and state['target_units'] != units:
