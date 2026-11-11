@@ -70,3 +70,36 @@ previous hydrogen-axis run included MMFF preoptimization, while this test preser
 the sampled grid placement before refinement; their success counts are not an
 isolated mask ablation. [Per-candidate records](experiments/scaffold_grid_20261112.json)
 include the selected cells, conditional support sizes, torsions and final metrics.
+
+## Configured input and generation
+
+`orbit3d --config configs/scaffold_graph_growth.json` selects the explicit
+`scaffold_graph_growth` proposal backend. Supply an SDF containing fixed 3D
+coordinates and an `OpenAtomIndices` JSON property on every record, for example
+`[0, 3]`. These zero-based input atom indices identify allowed single-bond
+hydrogen-replacement sites. Every surviving source atom, including its hydrogen
+coordinates, remains fixed. SDF atom maps are retained; missing maps are assigned
+before any graph edit.
+
+The fragment menu and finite placement-attempt limit are explicit. Multiple
+attachments per candidate consume the remaining open ports. A dead end is a
+failed whole proposal, retaining the placement ledger. The backend uses uniform
+fragment/site choices with independent candidate seeds; it does not use the
+pretrained octree as a scaffold-conditioned model. The lower-level graph API
+also supports explicitly specified bond orders, new ports and ring closures.
+
+Eligible proposals are evaluated in candidate order up to the external-call
+budget, then sorted by squared interval violation in physical units. The selected
+structures use the same property/force evaluators and constrained relaxers as the
+octree workflow. `batch_refinement: true` requires a shared DPA/HyFF property
+adapter; black-box fingerprint evaluation uses explicit serial refinement.
+No out-of-domain proposal contributes a qualified design.
+
+Outputs include every attempted candidate, the per-growth placement ledger,
+all chemically valid proposals (including OOD structures), retained and qualified
+SDFs, source hashes, raw forces and relaxation traces. Exported property values
+are rechecked after SDF reload. This route preserves float64 world coordinates
+through conversion and refinement, avoiding float32 rounding of distant fixed
+scaffolds. The property adapter forms relative coordinates before its float32
+network conversion; the existing float32 octree path retains its original
+numerical behavior.

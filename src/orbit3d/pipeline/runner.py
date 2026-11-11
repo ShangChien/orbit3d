@@ -50,6 +50,10 @@ def run_from_config(config_path: str) -> Dict[str, Any]:
     with open(config_path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
 
+    if cfg.get("generator_config", {}).get("backend") == "scaffold_graph_growth":
+        from .scaffold_runner import run_scaffold_from_config
+        return run_scaffold_from_config(cfg, config_path)
+
     if cfg.get("generator_config", {}).get("backend") == "uni3dar_octree":
         from .octree_runner import run_octree_from_config
 

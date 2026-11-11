@@ -465,3 +465,15 @@ def test_dpa_state_is_rejected_before_any_neutral_calculation():
     for state in [{'charges':[1]},{'multiplicities':[3]}]:
         with pytest.raises(ValueError,match='supports'):
             ff.compute_energy_and_forces(torch.zeros(1,3),torch.zeros(1,dtype=torch.long),**state)
+
+
+def test_refinement_preserves_float64_scaffold_world_coordinates():
+    mol = embedded('CC')
+    mol.GetConformer().SetPositions(mol.GetConformer().GetPositions()+[10000.123456789, 20000.987654321, -10000.246813579])
+    inst = rdkit_mol_to_mol3d_instance(mol, np.array([1.]), center=False, coordinate_dtype=np.float64)
+    distance = float(np.linalg.norm(inst.coords[1]-inst.coords[0]))
+    result, _ = relax_conformer_iso_property(inst, BondForce(distance+.05), BondOracle(),
+                                            (distance-.001, distance+.001), n_steps=2, step_size=.0004,
+                                            frozen_indices=[0])
+    assert result.coords.dtype == np.float64
+    np.testing.assert_array_equal(result.coords[0], mol.GetConformer().GetPositions()[0])

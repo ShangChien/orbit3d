@@ -122,6 +122,7 @@ class FingerprintOracle(PropertyOracleBase):
         oracle = cls(metadata["target_cols"], metadata["n_bits"])
         # Load only artifacts produced by this trusted training workflow.
         oracle.models = joblib.load(path)
+        oracle.target_units = metadata["units"]
         oracle.training_elements = metadata.get("training_elements")
         oracle.training_mean = np.array(metadata["training_mean"])
         oracle.training_std = np.array(metadata["training_std"])

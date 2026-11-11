@@ -1,0 +1,38 @@
+{
+  "mode": "predict",
+  "device": "cuda:0",
+  "seed": 2026,
+  "mount_paths": {
+    "scaffolds_path": "/workspace/data/scaffolds.sdf",
+    "forcefield_path": "/workspace/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+    "property_checkpoint_dir": "/workspace/checkpoints/ocelot_3d/oracle",
+    "output_dir": "/workspace/outputs/scaffold_graph_growth"
+  },
+  "generator_config": {
+    "backend": "scaffold_graph_growth",
+    "fragments": ["C", "N", "O", "C#N", "CO", "C=O"],
+    "attachments_per_candidate": 1,
+    "max_attachment_attempts": 12
+  },
+  "oracle_config": {
+    "oracle_mode": "internal_dpa4",
+    "target_cols": ["homo", "lumo"],
+    "target_units": ["eV", "eV"],
+    "applicability_domain_path": "/workspace/checkpoints/ocelot_3d/applicability.json"
+  },
+  "inference_config": {
+    "target_interval": {"homo": [-8.2, -7.2], "lumo": [-0.6, 0.8]},
+    "num_candidates": 64,
+    "oracle_candidates": 32,
+    "num_molecules": 16,
+    "max_rms_force_eva": 0.5
+  },
+  "stage5_relax_config": {
+    "enabled": true,
+    "batch_refinement": true,
+    "relax_steps": 30,
+    "step_size": 0.004,
+    "property_tolerance": 0.0,
+    "energy_tolerance": 0.0
+  }
+}

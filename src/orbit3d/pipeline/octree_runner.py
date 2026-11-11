@@ -22,9 +22,7 @@ from ..generator.octree_tokenizer import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
 from ..generator.spatial_box import BoxSpec3D
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from ..oracles.fingerprint_oracle import FingerprintOracle
-from ..oracles.applicability import MorganDomain
-from ..physics.factory import build_forcefield
+from .evaluators import load_evaluators
 from ..physics.conformer_relaxer import relax_conformer_iso_property
 from ..physics.batched_relaxer import relax_conformers_iso_property
 from ..utils.dataset_io import write_precise_sdf
@@ -60,25 +58,8 @@ def run_octree_from_config(cfg, config_path=None):
         raise ValueError('Alignment requires positive grpo_steps')
     checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_conditional.pt"
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
-    oracle_settings = cfg['oracle_config']
-    oracle_mode = oracle_settings['oracle_mode']
-    backend = electronic_state.get('mlip_backend', oracle_settings.get('mlip_backend',
-        'hyff' if oracle_mode == 'internal_hyff' else 'dpa4'))
-    if oracle_mode in {'internal_dpa4', 'internal_hyff'} and oracle_mode != 'internal_' + backend:
-        raise ValueError('Shared property Oracle and forcefield must use the same backend')
-    ff = build_forcefield(backend, paths['forcefield_path'], ATOM_TYPES, device,
-        tier=electronic_state.get('hyff_tier', oracle_settings.get('hyff_tier', 'vivace')),
-        route=electronic_state.get('hyff_route', 'reference'))
-    if oracle_mode in {"internal_dpa4", "internal_hyff"}:
-        oracle = InternalDPA4PropertyOracle.load_from_dir(paths["property_checkpoint_dir"], ff)
-    elif cfg["oracle_config"]["oracle_mode"] == "fingerprint":
-        oracle = FingerprintOracle.load_from_dir(paths["property_checkpoint_dir"])
-    else:
-        raise ValueError("Octree workflow supports internal_dpa4, internal_hyff or fingerprint oracles")
-    if oracle.target_cols != names:
-        raise ValueError("Property target order mismatch")
-    domain_path = cfg["oracle_config"].get("applicability_domain_path")
-    domain = MorganDomain.load(domain_path) if domain_path else None
+    ff, oracle, domain = load_evaluators(cfg, ATOM_TYPES)
+    domain_path = cfg['oracle_config'].get('applicability_domain_path')
     if domain:
         domain.save(output / 'oracle_domain.json')
     needs_training = mode in {'train', 'train_and_predict'} or (int(settings.get('grpo_steps', 0)) > 0 and float(settings.get('replay_weight', .1)) > 0)

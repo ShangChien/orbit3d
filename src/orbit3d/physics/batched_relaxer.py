@@ -27,7 +27,7 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
             if hasattr(oracle, 'validate_molecule'):
                 oracle.validate_molecule(mol)
             checked[i] = replace(inst, graph=mol)
-            groups.setdefault(len(inst.coords), []).append(i)
+            groups.setdefault((len(inst.coords), inst.coords.dtype), []).append(i)
         except ValueError as exc:
             results[i] = (None, {'status': 'failed', 'reason': str(exc)})
 
@@ -39,7 +39,8 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
     for original_ids in groups.values():
         items = [checked[i] for i in original_ids]
         symbols = [inst.symbols for inst in items]
-        x = torch.tensor(np.stack([m.coords for m in items]), dtype=torch.float32, device=device)
+        coordinate_dtype = torch.float64 if items[0].coords.dtype == np.float64 else torch.float32
+        x = torch.tensor(np.stack([m.coords for m in items]), dtype=coordinate_dtype, device=device)
         b, n, _ = x.shape
         k = len(targets.names)
         movable = torch.ones_like(x)

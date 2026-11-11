@@ -140,7 +140,7 @@ class ScaffoldState:
                 if bond is None or bond.GetBondType() != kind:
                     raise ValueError("Scaffold bond identity changed")
         elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in mol.GetAtoms()))
-        inst = rdkit_mol_to_mol3d_instance(mol, np.empty(0), center=False, element_table=elements)
+        inst = rdkit_mol_to_mol3d_instance(mol, np.empty(0), center=False, element_table=elements, coordinate_dtype=np.float64)
         mol3d_to_validated_rdkit_mol(inst)
         ports = []
         for port in self.ports.values():

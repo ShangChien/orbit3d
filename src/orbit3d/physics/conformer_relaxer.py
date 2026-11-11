@@ -43,7 +43,8 @@ def relax_conformer_iso_property(
         oracle.validate_molecule(initial_mol)
     inst = replace(inst, graph=initial_mol, smiles=mol_to_clean_smiles(initial_mol))
     device = torch.device(dpa_guidance.device_str)
-    x = torch.tensor(inst.coords, dtype=torch.float32, device=device)
+    coordinate_dtype = torch.float64 if inst.coords.dtype == np.float64 else torch.float32
+    x = torch.tensor(inst.coords, dtype=coordinate_dtype, device=device)
     symbols = inst.symbols
     if oracle is None and target_interval is not None:
         raise ValueError('Energy-only refinement cannot evaluate property intervals')

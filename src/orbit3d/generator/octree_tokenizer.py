@@ -239,12 +239,12 @@ def mol3d_to_validated_rdkit_mol(inst: Mol3DInstance) -> Chem.Mol:
     return _validated_molecule(inst)
 
 
-def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True, element_table=tuple(ATOM_TYPES)) -> Optional[Mol3DInstance]:
+def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True, element_table=tuple(ATOM_TYPES), coordinate_dtype=np.float32) -> Optional[Mol3DInstance]:
     """Converts an RDKit 3D Mol to a `Mol3DInstance`."""
     if mol is None or mol.GetNumConformers() == 0:
         return None
     conf = mol.GetConformer()
-    coords = conf.GetPositions().astype(np.float32)
+    coords = conf.GetPositions().astype(coordinate_dtype)
     if center:
         coords = coords - coords.mean(axis=0, keepdims=True)
     atypes = []

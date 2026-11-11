@@ -169,7 +169,10 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         return y_pred_real, y_std_real, energy, forces
 
     def _properties_from_descriptor(self, native_desc, coords):
-        normalized = self.adapter.forward_members(native_desc, coords.float())
+        # Preserve relative geometry before reducing precision for the adapter.
+        # Fixed scaffolds may use float64 coordinates far from the origin.
+        adapter_coords = coords - coords.mean(dim=-2, keepdim=True) if coords.dtype == torch.float64 else coords
+        normalized = self.adapter.forward_members(native_desc, adapter_coords.float())
         physical = torch.stack(
             [
                 torch.stack(
