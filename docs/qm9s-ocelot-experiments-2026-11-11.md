@@ -232,3 +232,20 @@ the same aggregate 8/192 joint successes for this aligned checkpoint. That
 mask therefore still primarily addresses chemical rejection.
 [Per-run results and independently scored cohorts](experiments/grpo50_factorial_20261112.json)
 are archived with input hashes and the alignment reference checkpoint.
+
+## Depth-7 adaptation outcome (2026-11-12)
+
+The 512-structure, 1000-step initial adaptation yields 2/32 chemically valid
+proposals and no domain-eligible outputs. Continuing backbone adaptation for
+4000 steps on 2048 true-label OCELOT structures yields 48/64 chemically valid
+proposals, 12 domain-eligible retained structures and 2 joint successes. The
+independent fingerprint model gives six property hits and two joint successes
+among the same 12 structures. These successive stages change both data volume
+and training duration and therefore are not a controlled size ablation.
+
+Three raw valid samples contain 41-43 atoms and fall outside the current property
+model's Morgan domain. The physical 30.72 A mapping was verified separately on
+long input structures; this generation experiment does not establish reliable
+use of the full enlarged box. [Raw size/span records and run hashes](experiments/depth7_adaptation_20261112.json)
+are retained. These runs used their frozen pre-energy64 physical evaluator;
+subsequent experiments use the corrected evaluator explicitly.
