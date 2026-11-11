@@ -103,3 +103,9 @@ through conversion and refinement, avoiding float32 rounding of distant fixed
 scaffolds. The property adapter forms relative coordinates before its float32
 network conversion; the existing float32 octree path retains its original
 numerical behavior.
+
+Input measured labels and spectra are retained under `ScaffoldSourceProperties`,
+not as labels on a newly substituted molecule. The derived candidate receives
+its actual charge/multiplicity and separately named predicted properties. This
+prevents a generated structure from accidentally becoming a training example
+with its source scaffold's measurements.

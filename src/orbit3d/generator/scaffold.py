@@ -6,6 +6,7 @@ distance-based bond inference is never used to add scaffold connections.
 """
 
 from dataclasses import dataclass
+import json
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -83,6 +84,12 @@ class ScaffoldState:
     def from_molecule(cls, molecule, open_atom_indices):
         """Open one single-bond substitution at each specified input atom index."""
         mol = Chem.AddHs(Chem.Mol(molecule), addCoords=True)
+        # Measured labels belong to the input graph, not a substituted candidate.
+        source_properties = {key: mol.GetProp(key) for key in mol.GetPropNames()
+                             if key not in {'TotalCharge', 'SpinMultiplicity'}}
+        for key in source_properties:
+            mol.ClearProp(key)
+        mol.SetProp('ScaffoldSourceProperties', json.dumps(source_properties))
         if not mol.GetNumConformers():
             raise ValueError("A scaffold must include its fixed 3D coordinates")
         next_map = max(a.GetAtomMapNum() for a in mol.GetAtoms()) + 1
@@ -141,7 +148,7 @@ class ScaffoldState:
                     raise ValueError("Scaffold bond identity changed")
         elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in mol.GetAtoms()))
         inst = rdkit_mol_to_mol3d_instance(mol, np.empty(0), center=False, element_table=elements, coordinate_dtype=np.float64)
-        mol3d_to_validated_rdkit_mol(inst)
+        mol = mol3d_to_validated_rdkit_mol(inst)
         ports = []
         for port in self.ports.values():
             remaining = tuple(h for h in port.replaceable_hydrogen_maps if h not in removals)

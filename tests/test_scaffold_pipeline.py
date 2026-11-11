@@ -31,6 +31,8 @@ def test_scaffold_cli_grows_multiple_ports_without_losing_world_coordinates(tmp_
     AllChem.MMFFOptimizeMolecule(source)
     source.GetConformer().SetPositions(source.GetConformer().GetPositions()+[10000.123456789, -10000.987654321, 20000.246813579])
     source.SetProp('OpenAtomIndices', '[0, 3]')
+    source.SetProp('homo', '-7.5')
+    source.SetProp('spectrum', '[1, 2, 3]')
     sdf = tmp_path/'scaffolds.sdf'
     write_precise_sdf(sdf, [source])
     original = scaffold_runner.read_scaffolds(sdf)[0]
@@ -53,6 +55,10 @@ def test_scaffold_cli_grows_multiple_ports_without_losing_world_coordinates(tmp_
     assert report['export_prediction_recheck_passed']
     for mol in Chem.SDMolSupplier(str(tmp_path/'out/generated.sdf'), removeHs=False):
         assert len(json.loads(mol.GetProp('AttachmentActions'))) == 2
+        assert not mol.HasProp('homo') and not mol.HasProp('spectrum')
+        source_properties = json.loads(mol.GetProp('ScaffoldSourceProperties'))
+        assert source_properties['homo'] == '-7.5' and source_properties['spectrum'] == '[1, 2, 3]'
+        assert int(mol.GetProp('TotalCharge')) == Chem.GetFormalCharge(mol)
         mapping = {atom.GetAtomMapNum(): atom.GetIdx() for atom in mol.GetAtoms()}
         for key in json.loads(mol.GetProp('FixedAtomMaps')):
             np.testing.assert_array_equal(mol.GetConformer().GetPositions()[mapping[key]], original.fixed_positions[key])
