@@ -10,6 +10,7 @@ def summarize(evidence):
         'brics': 'brics_wide_baseline_20261112.json',
         'octree': 'element_balance_20261112.json',
         'hyff': 'brics_hyff_independent_20261112.json',
+        'octree_hyff': 'octree5000_hyff_independent_20261112.json',
     }
     data = {key: json.loads((evidence / name).read_text()) for key, name in filenames.items()}
     sources = {'brics': data['brics'], 'octree_5000': data['octree']['evaluation']['control']}
@@ -34,14 +35,14 @@ def summarize(evidence):
                 aggregate['raw_graph_valid'] = sum(row['raw_graph_valid'] for row in selected)
                 aggregate['retained_novel_vs_training'] = sum(row['retained_novel_vs_training'] for row in selected)
                 aggregate['retained_mean_sa'] = sum(row['independent']['synthetic_accessibility']['mean'] * row['retained'] for row in selected) / aggregate['retained']
-                rescored = {row['source_run']: row for row in data['hyff']}
-                independent = [rescored[f'{window}_seed{row["inference_seed"]}'] for row in selected]
-                if any(row['attempted'] != 64 for row in independent):
-                    raise ValueError('Independent denominator differs from source attempts')
-                for force in ['source', 'own']:
-                    key = f'independent_joint_with_{force}_force'
-                    aggregate[f'hyff_joint_with_{force}_force'] = sum(row[key] for row in independent)
-                    aggregate[f'hyff_joint_with_{force}_force_by_seed'] = [row[key] for row in independent]
+            rescored = {row['source_run']: row for row in data['hyff' if model == 'brics' else 'octree_hyff']}
+            independent = [rescored[f'{window}_seed{row["inference_seed"]}'] for row in selected]
+            if any(row['attempted'] != 64 for row in independent):
+                raise ValueError('Independent denominator differs from source attempts')
+            for force in ['source', 'own']:
+                key = f'independent_joint_with_{force}_force'
+                aggregate[f'hyff_joint_with_{force}_force'] = sum(row[key] for row in independent)
+                aggregate[f'hyff_joint_with_{force}_force_by_seed'] = [row[key] for row in independent]
             results[model][window] = aggregate
     return {
         'protocol': '64 proposals per seed/window, external-ranking cap 32, retained cap 16, 30 refinement steps; 3 inference seeds. Caps match, actual calls and total compute do not.',

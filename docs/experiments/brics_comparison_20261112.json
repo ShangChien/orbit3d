@@ -9,7 +9,8 @@
   "source_sha256": {
     "brics_wide_baseline_20261112.json": "cd573dc42f4eddb9b2f21f15ea03e1a5b54bf8f720721fdc3166ca51c63a17de",
     "element_balance_20261112.json": "a4c811663a94611ade0fc90a855c7fea2f070e31f5a86129321de213de23620f",
-    "brics_hyff_independent_20261112.json": "558d81a9755bd824580f5bd827504af0fe3b0e12307de7210347fc9ab2f6654e"
+    "brics_hyff_independent_20261112.json": "558d81a9755bd824580f5bd827504af0fe3b0e12307de7210347fc9ab2f6654e",
+    "octree5000_hyff_independent_20261112.json": "308f47d002da023b3145aab44dcc66a647714a6c932adfcef54250c122c58840"
   },
   "models": {
     "brics": {
@@ -109,6 +110,18 @@
           0,
           2,
           2
+        ],
+        "hyff_joint_with_source_force": 3,
+        "hyff_joint_with_source_force_by_seed": [
+          0,
+          2,
+          1
+        ],
+        "hyff_joint_with_own_force": 3,
+        "hyff_joint_with_own_force_by_seed": [
+          0,
+          2,
+          1
         ]
       },
       "central": {
@@ -130,6 +143,18 @@
         "fingerprint_joint_by_seed": [
           0,
           2,
+          0
+        ],
+        "hyff_joint_with_source_force": 2,
+        "hyff_joint_with_source_force_by_seed": [
+          1,
+          1,
+          0
+        ],
+        "hyff_joint_with_own_force": 2,
+        "hyff_joint_with_own_force_by_seed": [
+          1,
+          1,
           0
         ]
       }

@@ -61,7 +61,7 @@ Every row has 192 attempted candidates. The octree comparison is the unweighted
 | BRICS / central | 173 | 173 | 48 | 45 | 45 |
 
 BRICS's independently trained HyFF evaluator gives 13 and 44 joint hits for the
-original and central windows. Using either the original DPA force or HyFF force
+original and central windows, versus 3 and 2 for the octree control. Using either the original DPA force or HyFF force
 criterion gives the same counts. All 48 retained products per window are novel
 relative to the adaptation structures. Their mean SA scores are 2.70 and 2.75;
 this is a graph heuristic, not a demonstrated synthesis route.
