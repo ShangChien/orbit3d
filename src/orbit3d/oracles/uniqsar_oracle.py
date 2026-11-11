@@ -23,7 +23,6 @@ import os
 import re
 import sys
 import types
-import warnings
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import joblib
@@ -34,10 +33,8 @@ import torch.nn.functional as F
 import yaml
 from rdkit import Chem
 from rdkit.Chem import Descriptors
-from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect
 from rdkit.ML.Descriptors import MoleculeDescriptors
 
-warnings.filterwarnings("ignore")
 
 # ==============================================================================
 # 1. Exact Dictionary & Tokenizers from Uni-QSAR (`mol.dict.txt` & `smiletokenizer.py`)
@@ -62,12 +59,16 @@ ALL_TOKEN_LIST = [
 ]
 SMI_TOKEN2IDX = {tok: i for i, tok in enumerate(ALL_TOKEN_LIST)}
 SMI_REGEX = re.compile(
-    r"(\[[^\]]+]|Br?|Cl?|N|O|S|P|F|I|b|c|n|o|s|p|\(|\)|\.|=|#|-|\+|\\\\|\/|:|~|@|\?|>|\*|\$|\%[0-9]{2}|[0-9])"
+    r"(\[[^\]]+]|Br?|Cl?|N|O|S|P|F|I|b|c|n|o|s|p|\(|\)|\.|=|#|-|\+|\\|\/|:|~|@|\?|>|\*|\$|\%[0-9]{2}|[0-9])"
 )
 
 
 def tokenize_smiles_1d(smi: str, max_len: int = 200) -> List[int]:
-    tokens = SMI_REGEX.findall(smi)[:max_len]
+    tokens = SMI_REGEX.findall(smi)
+    if ''.join(tokens) != smi:
+        raise ValueError('SMILES contains tokens outside the trained tokenizer grammar')
+    if len(tokens) > max_len:
+        raise ValueError(f'SMILES token count {len(tokens)} exceeds the model limit {max_len}')
     padding = ["[PAD]"] * (max_len - len(tokens))
     tokens = ["[GLO]"] + tokens + padding
     idxs = []
@@ -260,7 +261,7 @@ class ClassificationHead(nn.Module):
 
 
 class StandaloneUniMolModel(nn.Module):
-    """Exact state_dict-compatible replica of `qsar.models.unimol.UniMolModel` without `unicore`."""
+    """Standalone state-dict bridge for `qsar.models.unimol.UniMolModel` without `unicore`."""
 
     def __init__(self, output_dim: int = 1, dict_len: int = 31):
         super().__init__()
@@ -848,18 +849,16 @@ class UniQSARTrainedBridge:
 
         fp_arr = None
         if self.needs_fp:
-            try:
-                from rdkit.Chem import rdFingerprintGenerator
-                gen = rdFingerprintGenerator.GetMorganGenerator(radius=self.fp_radius, fpSize=self.fp_dim)
-                fp_arr = gen.GetFingerprintAsNumPy(mol_2d).astype(np.float32).reshape(1, -1)
-            except Exception:
-                fp_bits = GetMorganFingerprintAsBitVect(mol_2d, self.fp_radius, nBits=self.fp_dim).ToBitString()
-                fp_arr = np.array([[int(c) for c in fp_bits]], dtype=np.float32)
+            from rdkit.Chem import rdFingerprintGenerator
+            generator = rdFingerprintGenerator.GetMorganGenerator(radius=self.fp_radius, fpSize=self.fp_dim)
+            fp_arr = generator.GetFingerprintAsNumPy(mol_2d).astype(np.float32).reshape(1, -1)
 
         desc_arr = None
         if self.needs_handcrafts and self.desc_calc is not None:
             desc = np.array(self.desc_calc.CalcDescriptors(mol_2d), dtype=np.float32)
-            desc_arr = np.nan_to_num(desc, nan=0.0, posinf=99999.0, neginf=-99999.0).reshape(1, -1)
+            if not np.isfinite(desc).all():
+                raise ValueError('Nonfinite descriptors require the fitted training imputer; arbitrary value replacement is unsupported')
+            desc_arr = desc.reshape(1, -1)
 
         if not hasattr(self,"_fold_predictions"):
             self._fold_predictions = {}
@@ -915,17 +914,20 @@ class UniQSARTrainedBridge:
         """
         if "no_h" in key:
             keep = [i for i, sym in enumerate(atom_symbols) if sym != "H"]
-            if len(keep) == 0:
-                keep = list(range(len(atom_symbols)))
+            if not keep:
+                raise ValueError('The no-H Uni-Mol representation requires heavy atoms')
             coords_sub = coords[keep]
             syms_sub = [atom_symbols[i] for i in keep]
         else:
             coords_sub = coords
             syms_sub = atom_symbols
 
+        unknown = sorted(set(syms_sub) - set(UNIMOL_SYM2IDX))
+        if unknown:
+            raise ValueError(f'Uni-Mol vocabulary does not cover elements {unknown}')
         toks = (
             [UNIMOL_BOS_IDX]
-            + [UNIMOL_SYM2IDX.get(s, UNIMOL_UNK_IDX) for s in syms_sub]
+            + [UNIMOL_SYM2IDX[s] for s in syms_sub]
             + [UNIMOL_EOS_IDX]
         )
         src_tokens = torch.tensor(toks, dtype=torch.long, device=coords.device).unsqueeze(0)
@@ -960,11 +962,9 @@ class UniQSARTrainedBridge:
         y_stds_all = []
 
         for mol in mols:
-            rw = Chem.RWMol(mol)
-            for idx in sorted([a.GetIdx() for a in rw.GetAtoms() if a.GetAtomicNum() == 1 and a.GetDegree() == 0], reverse=True):
-                if rw.GetNumAtoms() > 1:
-                    rw.RemoveAtom(idx)
-            smi = Chem.MolToSmiles(Chem.RemoveHs(rw.GetMol(), sanitize=False), isomericSmiles=True) or "C"
+            if mol is None or not mol.GetNumAtoms():
+                raise ValueError('Property prediction requires a nonempty molecular graph')
+            smi = Chem.MolToSmiles(Chem.RemoveHs(Chem.Mol(mol)), isomericSmiles=True)
             cached_1d2d = self._eval_1d_2d_single(smi)
 
             if self.has_3d_unimol:
