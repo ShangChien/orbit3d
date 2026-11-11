@@ -1,165 +1,108 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="980" viewBox="0 0 980 980">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="960" viewBox="0 0 960 960">
 <defs>
   <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb"/></marker>
   <marker id="arr-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#0d9488"/></marker>
   <marker id="arr-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#7c3aed"/></marker>
   <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#d97706"/></marker>
-  <marker id="arr-slate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#334155"/></marker>
 </defs>
-<rect width="980" height="980" fill="#ffffff"/>
-<rect x="26" y="14" width="934" height="46" rx="8" fill="#0f172a"/>
-<text x="493" y="34" font-family="Helvetica, Arial, sans-serif" font-size="15.2" font-weight="bold" text-anchor="middle" fill="#ffffff">ORBIT-3D System Architecture: Five-Stage Closed-Loop 3D Quantum-Chemical Generation</text>
-<text x="493" y="51" font-family="Helvetica, Arial, sans-serif" font-size="11.0" text-anchor="middle" fill="#94a3b8">Decoupled Architecture:  orbit3d/generator (Stages 1–4)   |   orbit3d/oracles (Pluggable Modes A–D)   |   orbit3d/physics (DPA-4 ZBL &amp; HyFF Charge/Spin)</text>
-<rect x="26" y="70" width="934" height="276" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
-<rect x="26" y="70" width="934" height="26" rx="8" fill="#1e3a8a"/>
-<text x="40" y="88" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" fill="#ffffff">LAYER 1 (orbit3d/generator) — Stages 1–3: Bidirectional Interval-Conditioned Uni-3DAR Octree Transformer</text>
-<rect x="38" y="108" width="204" height="224" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
-<rect x="38" y="108" width="204" height="24" rx="6" fill="#2563eb"/>
-<text x="140" y="124" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#ffffff">Dynamic Target Spec (c, Q, M)</text>
-<text x="48" y="147" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#1e3a8a">1. Property Intervals I = {[a_k, b_k]}:</text>
-<text x="52" y="163" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Midpoint m_k = (a_k + b_k) / 2</text>
-<text x="52" y="178" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Half-width w_k = (b_k - a_k) / 2</text>
-<rect x="48" y="188" width="184" height="42" rx="5" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
-<text x="140" y="204" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1d4ed8">Fourier Spectral Encoder</text>
-<text x="140" y="220" font-family="Helvetica, Arial, sans-serif" font-size="9.4" text-anchor="middle" fill="#334155">c = MLP([sin(2^f pi m_k), cos(...)])</text>
-<text x="48" y="248" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#1e3a8a">2. Quantum Electronic State:</text>
-<text x="52" y="264" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Total Charge Q in Z (0, +1, -1)</text>
-<text x="52" y="280" font-family="Helvetica, Arial, sans-serif" font-size="9.8" fill="#1e293b">• Spin Multiplicity M = 2S + 1</text>
-<text x="58" y="296" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#475569">(S0: M=1, D0: M=2, T1: M=3)</text>
-<text x="52" y="314" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#0f766e">• Active Mask a_k in {0, 1}^K</text>
-<rect x="266" y="108" width="390" height="224" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
-<rect x="266" y="108" width="390" height="24" rx="6" fill="#1d4ed8"/>
-<text x="461" y="124" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stages 1 &amp; 2: Conditional 3D Octree Autoregression</text>
-<rect x="278" y="138" width="366" height="78" rx="6" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.2"/>
-<text x="288" y="155" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#1e40af">Stage 2 (2_uni3dar_cond_sft): Dual Interval Conditioning</text>
-<rect x="288" y="163" width="158" height="44" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
-<text x="367" y="180" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1e3a8a">Root-Prefix [COND] Token</text>
-<text x="367" y="196" font-family="Helvetica, Arial, sans-serif" font-size="9.2" text-anchor="middle" fill="#334155">e_0 = W_pref * c (Causal Anchor)</text>
-<rect x="454" y="163" width="178" height="44" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
-<text x="543" y="180" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1e3a8a">12-Layer AdaLN-Zero</text>
-<text x="543" y="196" font-family="Helvetica, Arial, sans-serif" font-size="9.2" text-anchor="middle" fill="#334155">(gamma_l, beta_l, alpha_l) = W_l SiLU(c)</text>
-<rect x="278" y="224" width="366" height="98" rx="6" fill="#f0fdf4" stroke="#34d399" stroke-width="1.2"/>
-<text x="288" y="241" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#065f46">Stage 1 (1_uni3dar_uncond): Coarse-to-Fine 3D Spatial Octree</text>
-<rect x="288" y="249" width="346" height="24" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
-<text x="461" y="265" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#047857">L=0 (8.0 A)  --&gt;  L=1 (4.0 A)  --&gt;  L=2 (2.0 A)  --&gt;  L=3 (1.0 A)  --&gt;  0.01 A XYZ</text>
-<text x="288" y="290" font-family="Helvetica, Arial, sans-serif" font-size="9.6" fill="#1e293b">• Leaf Token tau_i = (octant_path_i, z_i in A, q_x, q_y, q_z)</text>
-<text x="288" y="308" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#065f46">• Deterministic Valence Mask: sum_j b_ij &lt;= v_max(z_i) (100% Closed-Shell)</text>
-<rect x="680" y="108" width="266" height="224" rx="8" fill="#faf5ff" stroke="#8b5cf6" stroke-width="1.5"/>
-<rect x="680" y="108" width="266" height="24" rx="6" fill="#7c3aed"/>
-<text x="813" y="124" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 3: Bidirectional Understanding</text>
-<text x="692" y="147" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#5b21b6">Suffix [CLS] + Leaf Atom Pooling:</text>
-<rect x="692" y="154" width="242" height="36" rx="5" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
-<text x="813" y="170" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#4c1d95">h_mol = [ h_[CLS] ; Mean_{i in Atom}(h_i) ]</text>
-<text x="813" y="184" font-family="Helvetica, Arial, sans-serif" font-size="9.4" text-anchor="middle" fill="#334155">y_self(tau) = MLP_self(h_mol)</text>
-<text x="692" y="208" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#5b21b6">Joint Generation + Understanding Loss:</text>
-<text x="698" y="225" font-family="Helvetica, Arial, sans-serif" font-size="9.6" fill="#1e293b">L_SFT = L_AR(tau | c) + lambda * ||y_self - y||^2</text>
-<rect x="692" y="238" width="242" height="82" rx="6" fill="#ffffff" stroke="#a78bfa" stroke-width="1.2"/>
-<text x="813" y="256" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" text-anchor="middle" fill="#6d28d9">K-Candidate Self-Reranking (K=4)</text>
-<text x="702" y="274" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#334155">1. Sample K octree rollouts {tau^(k)}</text>
-<text x="702" y="290" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#334155">2. Score internal interval error L_int(y_self)</text>
-<text x="702" y="306" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#4c1d95">3. Select best 3D conformer M_0 = (z, X_0)</text>
-<line x1="242" y1="210" x2="264" y2="210" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)"/>
-<line x1="656" y1="210" x2="678" y2="210" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#arr-purple)"/>
-<rect x="26" y="368" width="490" height="280" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
-<rect x="26" y="368" width="490" height="26" rx="8" fill="#0f766e"/>
-<text x="38" y="386" font-family="Helvetica, Arial, sans-serif" font-size="11.6" font-weight="bold" fill="#ffffff">LAYER 2A (orbit3d/oracles) — Pluggable Multi-Modal Quantum Oracles</text>
-<rect x="38" y="404" width="226" height="96" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.3"/>
-<text x="48" y="421" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#0f766e">Mode A (Mainline): internal_unimol</text>
-<text x="48" y="438" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Open-Source 5-Fold 3D Uni-Mol (FP16)</text>
-<text x="48" y="453" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• SE(3) Gaussian Pair-Distance Kernel</text>
-<text x="48" y="468" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Built-in all_h &amp; no_h (181.7 MB)</text>
-<text x="48" y="484" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#047857">• Differentiable d(y_hat)/dX + 5-Fold sigma</text>
-<rect x="278" y="404" width="226" height="96" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.3"/>
-<text x="288" y="421" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#1d4ed8">Mode B (ZBL Unified): internal_dpa4</text>
-<text x="288" y="438" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Open-Source 5-Fold Native DPA-4</text>
-<text x="288" y="453" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Hooks SeZM fitting_net (D=32/64) + RBF</text>
-<text x="288" y="468" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• 100% Shared Weights w/ Force Engine</text>
-<text x="288" y="484" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#1e40af">• Zero Extra GPU VRAM Overhead</text>
-<rect x="38" y="510" width="226" height="98" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.3"/>
-<text x="48" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#7e22ce">Mode C (Charge &amp; Spin): internal_hyff</text>
-<text x="48" y="544" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Open-Source 5-Fold Native HyFF</text>
-<text x="48" y="559" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Hooks readout_norms[-1] (D=32..128)</text>
-<text x="48" y="574" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Explicit Charge Q &amp; Spin M=2S+1 Input</text>
-<text x="48" y="590" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#6b21a8">• Zero-Shot dE(T1-S0) &amp; Vertical IP</text>
-<rect x="278" y="510" width="226" height="98" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.3"/>
-<text x="288" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.2" font-weight="bold" fill="#b45309">Mode D (Enterprise): external_uniqsar</text>
-<text x="288" y="544" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• Full-Matrix Uni-QSAR &amp; OCNet Plugin</text>
-<text x="288" y="559" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• 1D SMILES + 2D Morgan FP + 3D Uni-Mol</text>
-<text x="288" y="574" font-family="Helvetica, Arial, sans-serif" font-size="9.4" fill="#1e293b">• GBDT / CatBoost / Tight-Binding Ensembles</text>
-<text x="288" y="590" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#92400e">• Gradient-Free GRPO &amp; Trust-Region Gate</text>
-<rect x="38" y="616" width="466" height="24" rx="5" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.2"/>
-<text x="271" y="632" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#115e59">Unified Oracle Bus:  Mean mu_k(M),  Epistemic Uncertainty sigma_k(M),  Grad d(y_k)/dX</text>
-<rect x="532" y="368" width="428" height="280" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
-<rect x="532" y="368" width="428" height="26" rx="8" fill="#9a3412"/>
-<text x="544" y="386" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" fill="#ffffff">LAYER 2B (orbit3d/physics) — Dual-Engine OMol25 Quantum Force Fields</text>
-<rect x="544" y="404" width="404" height="96" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.3"/>
-<text x="554" y="421" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#9a3412">Engine 1: Full-Series DPA-4 (OMol25, 62.86 MB Built-in)</text>
-<text x="554" y="438" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• 5 Built-in Scales: Nano (1.95M), Mini (2.62M), Neo (4.42M), Air (19.9M), Plus (34.0M)</text>
-<text x="554" y="453" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• Dense SE(3)-Equivariant SO(2) Message Passing across 83 Elements (incl. 5d Ir)</text>
-<text x="554" y="468" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#c2410c">• Analytical ZBL Short-Range Nuclear Repulsion Bridge: Z_i Z_j / r_ij * phi_ZBL(r_ij)</text>
-<text x="554" y="484" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#7c2d12">• 93.8% Recovery on Severe 0.65 A Steric Clashes (Zero NaN Divergence)</text>
-<rect x="544" y="510" width="404" height="98" rx="6" fill="#fef2f2" stroke="#e11d48" stroke-width="1.3"/>
-<text x="554" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.4" font-weight="bold" fill="#9f1239">Engine 2: Charge/Spin-Conditioned HyFF (OMol25, 167.28 MB Built-in)</text>
-<text x="554" y="544" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• Built-in Sweet-Spot Tiers: presto (8.9M), vivace (25.5M), moderato (132.9M); +andante</text>
-<text x="554" y="559" font-family="Helvetica, Arial, sans-serif" font-size="9.3" fill="#1e293b">• Element-Sparse Routing (0.05M–0.83M active/atom) + Fused Triton &amp; CUDA Graphs</text>
-<text x="554" y="574" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#be123c">• Explicit Total Charge Q in Z &amp; Spin Multiplicity M = 2S+1 (S0, T1, D0+ PES)</text>
-<text x="554" y="590" font-family="Helvetica, Arial, sans-serif" font-size="9.3" font-weight="bold" fill="#881337">• 97.7–113.0 atoms/ms (23.2x Faster, 0.22–1.07 GB VRAM) &amp; Ir(III) dE(T1-S0) r=0.70</text>
-<rect x="544" y="616" width="404" height="24" rx="5" fill="#ffedd5" stroke="#d97706" stroke-width="1.2"/>
-<text x="746" y="632" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#92400e">Unified Physics Bus:  Forces F_MLIP(z, X, Q, M) = -dE/dX  &amp;  State Energy E(Q, M)</text>
-<rect x="26" y="674" width="934" height="270" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
-<rect x="26" y="674" width="934" height="26" rx="8" fill="#065f46"/>
-<text x="40" y="692" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" fill="#ffffff">LAYER 3 (Closed-Loop Alignment &amp; Physical Relaxation) — Stage 4 Online Gated-GRPO &amp; Stage 5 Tangent Relaxation</text>
-<rect x="38" y="710" width="364" height="222" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/>
-<rect x="38" y="710" width="364" height="24" rx="6" fill="#059669"/>
-<text x="220" y="726" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 4 (4_uni3dar_gated_grpo): Online Gated-GRPO</text>
-<text x="48" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#065f46">1. Group Rollout &amp; Doubly Gated Interval Reward:</text>
-<rect x="48" y="756" width="344" height="44" rx="5" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
-<text x="220" y="773" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#047857">R(M^(g)) = G_unc(sigma) * G_phys(||F_MLIP||) * R_int(mu; I)</text>
-<text x="220" y="790" font-family="Helvetica, Arial, sans-serif" font-size="9.1" text-anchor="middle" fill="#334155">G_unc = exp(-max(0, sigma - tau)/tau),   G_phys = exp(-gamma max(0, F_rms - F_th))</text>
-<text x="48" y="818" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#065f46">2. Group-Relative Advantage &amp; Anti-Collapse Objective:</text>
-<rect x="48" y="825" width="344" height="44" rx="5" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
-<text x="220" y="842" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" text-anchor="middle" fill="#065f46">A^(g) = (R^(g) - mean(R)) / (std(R) + eps)</text>
-<text x="220" y="859" font-family="Helvetica, Arial, sans-serif" font-size="9.4" text-anchor="middle" fill="#1e293b">L_total = L_GRPO(theta) + beta_KL D_KL(pi_theta || pi_ref) + lambda L_SFT</text>
-<text x="48" y="888" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#1e293b">• Prevents Oracle epistemic reward hacking &amp; high-strain conformations</text>
-<text x="48" y="904" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#047857">• Updates Uni-3DAR Policy pi_theta in Closed Loop (Left Feedback Bus)</text>
-<rect x="422" y="710" width="346" height="222" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
-<rect x="422" y="710" width="346" height="24" rx="6" fill="#1d4ed8"/>
-<text x="595" y="726" font-family="Helvetica, Arial, sans-serif" font-size="11.4" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 5: Tangent-Projected Iso-Property Relaxation</text>
-<text x="432" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#1e3a8a">1. Tangent-Space Force Projection (White-Box Oracles):</text>
-<rect x="432" y="756" width="326" height="44" rx="5" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
-<text x="595" y="773" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#1d4ed8">F_m^perp = F_m - [max(0, &lt;F_m, g_int&gt;) / (||g_int||^2 + eps)] g_int</text>
-<text x="595" y="790" font-family="Helvetica, Arial, sans-serif" font-size="9.3" text-anchor="middle" fill="#334155">X_{m+1} = X_m + eta_m * F_m^perp   (Zero Interval Violation Drift)</text>
-<text x="432" y="818" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" fill="#1e3a8a">2. Derivative-Free Trust-Region Gate &amp; Hybrid Relay:</text>
-<rect x="432" y="825" width="326" height="44" rx="5" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
-<text x="595" y="842" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" text-anchor="middle" fill="#1e40af">Accepts step iff R_int(X_{m+1}; I) &gt;= R_int(X_m; I)</text>
-<text x="595" y="859" font-family="Helvetica, Arial, sans-serif" font-size="9.3" text-anchor="middle" fill="#334155">Supports Black-Box Uni-QSAR &amp; DPA-4 (ZBL) -&gt; HyFF (Q, M) Relay</text>
-<text x="432" y="888" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#1e293b">• Relaxes sub-grid 0.01 A octree discretization artifacts on S0 or T1 PES</text>
-<text x="432" y="904" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#1d4ed8">• Theorem 1: Monotonic Energy Descent + Exact Interval Preservation</text>
-<rect x="788" y="710" width="158" height="222" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="1.6"/>
-<rect x="788" y="710" width="158" height="24" rx="6" fill="#ca8a04"/>
-<text x="867" y="726" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#ffffff">Verified 3D Output</text>
-<text x="867" y="750" font-family="Helvetica, Arial, sans-serif" font-size="10.0" font-weight="bold" text-anchor="middle" fill="#854d0e">M* = (z, X*, Q, M)</text>
-<line x1="798" y1="758" x2="936" y2="758" stroke="#fde047" stroke-width="1.2"/>
-<text x="798" y="777" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#065f46">✓ 100.0% Closed-Shell</text>
-<text x="798" y="796" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#1d4ed8">✓ 93.8–100% Hit Rate</text>
-<text x="798" y="815" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#9a3412">✓ 0.20 eV/A RMS Force</text>
-<text x="798" y="834" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#7e22ce">✓ 93.8% Clash Recov.</text>
-<text x="798" y="853" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#be123c">✓ Zero-Shot dE(T1-S0)</text>
-<text x="798" y="872" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#0f766e">✓ 97.7–113 atoms/ms</text>
-<rect x="798" y="884" width="138" height="36" rx="4" fill="#ffffff" stroke="#eab308" stroke-width="1"/>
-<text x="867" y="900" font-family="Helvetica, Arial, sans-serif" font-size="9.2" font-weight="bold" text-anchor="middle" fill="#713f12">Bitwise Deterministic</text>
-<text x="867" y="914" font-family="Helvetica, Arial, sans-serif" font-size="8.8" text-anchor="middle" fill="#475569">SHA-256 Seed Lock</text>
-<path d="M 813 332 L 813 356 L 460 356 L 460 366" fill="none" stroke="#7c3aed" stroke-width="2.0" marker-end="url(#arr-purple)"/>
-<path d="M 813 332 L 813 366" fill="none" stroke="#7c3aed" stroke-width="2.0" marker-end="url(#arr-purple)"/>
-<text x="635" y="352" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#5b21b6">Decoded 3D Candidates M = (z, X, Q, M)</text>
-<path d="M 180 640 L 180 708" fill="none" stroke="#0d9488" stroke-width="2.2" marker-end="url(#arr-teal)"/>
-<path d="M 380 640 L 380 658 L 530 658 L 530 708" fill="none" stroke="#0d9488" stroke-width="2.2" marker-end="url(#arr-teal)"/>
-<text x="115" y="662" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#0f766e">mu_k, sigma_k</text>
-<path d="M 640 640 L 640 666 L 310 666 L 310 708" fill="none" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>
-<path d="M 680 640 L 680 708" fill="none" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>
-<text x="745" y="662" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#b45309">F_MLIP(Q,M), E(Q,M)</text>
-<line x1="402" y1="820" x2="420" y2="820" stroke="#059669" stroke-width="2.4" marker-end="url(#arr-teal)"/>
-<line x1="768" y1="820" x2="786" y2="820" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arr-blue)"/>
-<path d="M 38 900 L 12 900 L 12 101 L 461 101 L 461 107" fill="none" stroke="#059669" stroke-width="2.2" stroke-dasharray="5,3" marker-end="url(#arr-teal)"/>
-<text transform="translate(21, 505) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="9.8" font-weight="bold" text-anchor="middle" fill="#047857">Closed-Loop Policy Gradient Update (pi_theta)</text>
+<rect width="960" height="960" fill="#ffffff"/>
+<rect x="36" y="20" width="900" height="52" rx="10" fill="#0f172a"/>
+<text x="486" y="52" font-family="Helvetica, Arial, sans-serif" font-size="18.0" font-weight="bold" text-anchor="middle" fill="#ffffff">ORBIT-3D System Architecture: Five-Stage Closed-Loop 3D Quantum Molecular Design</text>
+<rect x="36" y="92" width="900" height="248" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>
+<rect x="36" y="92" width="900" height="34" rx="10" fill="#1e3a8a"/>
+<text x="52" y="114" font-family="Helvetica, Arial, sans-serif" font-size="14.0" font-weight="bold" fill="#ffffff">LAYER 1 (Generator Backbone) — Stages 1–3: Bidirectional 3D Spatial Octree Transformer</text>
+<rect x="50" y="144" width="182" height="176" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+<rect x="50" y="144" width="182" height="32" rx="8" fill="#2563eb"/>
+<text x="141" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Target Specification</text>
+<text x="64" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Property Intervals</text>
+<text x="76" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Single / Multi-Objective</text>
+<text x="64" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Quantum State</text>
+<text x="76" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Total Charge &amp; Spin</text>
+<rect x="254" y="144" width="204" height="176" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+<rect x="254" y="144" width="204" height="32" rx="8" fill="#1d4ed8"/>
+<text x="356" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 2: Interval SFT</text>
+<text x="270" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Root-Prefix [COND]</text>
+<text x="282" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Global Interval Anchor</text>
+<text x="270" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Deep AdaLN-Zero</text>
+<text x="282" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Layer-wise Modulation</text>
+<rect x="480" y="144" width="214" height="176" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="1.6"/>
+<rect x="480" y="144" width="214" height="32" rx="8" fill="#059669"/>
+<text x="587" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 1: 3D Octree AR</text>
+<text x="496" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Coarse-to-Fine Octree</text>
+<text x="508" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Hierarchical 3D Subdivision</text>
+<text x="496" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Valence Masking</text>
+<text x="508" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">100% Closed-Shell Validity</text>
+<rect x="716" y="144" width="204" height="176" rx="10" fill="#faf5ff" stroke="#8b5cf6" stroke-width="1.6"/>
+<rect x="716" y="144" width="204" height="32" rx="8" fill="#7c3aed"/>
+<text x="818" y="165" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 3: Self-Reranking</text>
+<text x="730" y="200" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#5b21b6">• Suffix [CLS] + Atom</text>
+<text x="742" y="222" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Joint 3D Understanding</text>
+<text x="730" y="260" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#5b21b6">• Fast Self-Reranking</text>
+<text x="742" y="282" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Zero External Oracle Cost</text>
+<line x1="232" y1="232" x2="252" y2="232" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arr-blue)"/>
+<line x1="458" y1="232" x2="478" y2="232" stroke="#059669" stroke-width="2.4" marker-end="url(#arr-teal)"/>
+<line x1="694" y1="232" x2="714" y2="232" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arr-purple)"/>
+<rect x="36" y="380" width="478" height="268" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>
+<rect x="36" y="380" width="478" height="34" rx="10" fill="#0f766e"/>
+<text x="52" y="402" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#ffffff">LAYER 2A — Pluggable Multi-Modal Quantum Oracles</text>
+<rect x="50" y="428" width="218" height="74" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+<text x="159" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#0f766e">Mode A: 3D Uni-Mol (Mainline)</text>
+<text x="159" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Open-Source 5-Fold 3D Attention</text>
+<rect x="282" y="428" width="218" height="74" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+<text x="391" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#1d4ed8">Mode B: Native DPA-4 Hook</text>
+<text x="391" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Shared Equivariant Backbone</text>
+<rect x="50" y="516" width="218" height="74" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+<text x="159" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#7e22ce">Mode C: Native HyFF Hook</text>
+<text x="159" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Charge &amp; Spin State Descriptors</text>
+<rect x="282" y="516" width="218" height="74" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+<text x="391" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#b45309">Mode D: Uni-QSAR &amp; OCNet</text>
+<text x="391" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Enterprise 1D/2D/3D Ensembles</text>
+<rect x="50" y="604" width="450" height="30" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.4"/>
+<text x="275" y="624" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#115e59">Oracle Output Bus: Property Prediction &amp; Epistemic Uncertainty</text>
+<rect x="530" y="380" width="406" height="268" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>
+<rect x="530" y="380" width="406" height="34" rx="10" fill="#9a3412"/>
+<text x="548" y="402" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#ffffff">LAYER 2B — Dual-Engine Quantum Force Fields</text>
+<rect x="546" y="428" width="374" height="74" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+<text x="733" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9a3412">Engine 1: DPA-4 (OMol25) + Analytical ZBL</text>
+<text x="733" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Short-Range Nuclear Repulsion &amp; Clash Resilience</text>
+<rect x="546" y="516" width="374" height="74" rx="8" fill="#fef2f2" stroke="#e11d48" stroke-width="1.5"/>
+<text x="733" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9f1239">Engine 2: HyFF (OMol25) Charge &amp; Spin Engine</text>
+<text x="733" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Element-Sparse High Throughput &amp; Singlet/Triplet PES</text>
+<rect x="546" y="604" width="374" height="30" rx="6" fill="#ffedd5" stroke="#d97706" stroke-width="1.4"/>
+<text x="733" y="624" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#92400e">Physics Output Bus: Quantum Interatomic Forces &amp; State Energy</text>
+<rect x="36" y="690" width="900" height="248" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8"/>
+<rect x="36" y="690" width="900" height="34" rx="10" fill="#065f46"/>
+<text x="52" y="712" font-family="Helvetica, Arial, sans-serif" font-size="14.0" font-weight="bold" fill="#ffffff">LAYER 3 (Closed-Loop Alignment &amp; Relaxation) — Stage 4 Online Gated-GRPO &amp; Stage 5 Tangent Relaxation</text>
+<rect x="50" y="742" width="324" height="176" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="1.6"/>
+<rect x="50" y="742" width="324" height="32" rx="8" fill="#059669"/>
+<text x="212" y="763" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 4: Online Gated-GRPO</text>
+<text x="64" y="798" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Doubly Gated Interval Reward</text>
+<text x="76" y="820" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Uncertainty Gate x Physical Force Gate</text>
+<text x="64" y="858" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#065f46">• Anti-Collapse Policy Alignment</text>
+<text x="76" y="880" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Prevents Reward Hacking in OOD Regions</text>
+<rect x="396" y="742" width="336" height="176" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6"/>
+<rect x="396" y="742" width="336" height="32" rx="8" fill="#1d4ed8"/>
+<text x="564" y="763" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Stage 5: Iso-Property Relaxation</text>
+<text x="412" y="798" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Tangent-Space Force Projection</text>
+<text x="424" y="820" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Eliminates Strain Without Property Drift</text>
+<text x="412" y="858" font-family="Helvetica, Arial, sans-serif" font-size="12.0" font-weight="bold" fill="#1e3a8a">• Trust-Region Gate &amp; Hybrid Relay</text>
+<text x="424" y="880" font-family="Helvetica, Arial, sans-serif" font-size="11.0" fill="#334155">Supports Black-Box Oracles &amp; ZBL -&gt; Spin Relay</text>
+<rect x="754" y="742" width="166" height="176" rx="10" fill="#fefce8" stroke="#ca8a04" stroke-width="1.6"/>
+<rect x="754" y="742" width="166" height="32" rx="8" fill="#ca8a04"/>
+<text x="837" y="763" font-family="Helvetica, Arial, sans-serif" font-size="13.0" font-weight="bold" text-anchor="middle" fill="#ffffff">Verified 3D Output</text>
+<text x="768" y="800" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#065f46">✓ 100% Closed-Shell</text>
+<text x="768" y="828" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1d4ed8">✓ Target Interval Hit</text>
+<text x="768" y="856" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#9a3412">✓ Relaxed Equilibrium</text>
+<text x="768" y="884" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#7e22ce">✓ Charge &amp; Spin Ready</text>
+<path d="M 818 320 L 818 356 L 380 356 L 380 378" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arr-purple)"/>
+<path d="M 818 320 L 818 378" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arr-purple)"/>
+<text x="600" y="350" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#5b21b6">Candidate 3D Conformers</text>
+<path d="M 180 634 L 180 740" fill="none" stroke="#0d9488" stroke-width="2.4" marker-end="url(#arr-teal)"/>
+<path d="M 380 634 L 380 666 L 510 666 L 510 740" fill="none" stroke="#0d9488" stroke-width="2.4" marker-end="url(#arr-teal)"/>
+<path d="M 630 634 L 630 674 L 290 674 L 290 740" fill="none" stroke="#d97706" stroke-width="2.4" marker-end="url(#arr-amber)"/>
+<path d="M 660 634 L 660 740" fill="none" stroke="#d97706" stroke-width="2.4" marker-end="url(#arr-amber)"/>
+<line x1="374" y1="830" x2="394" y2="830" stroke="#059669" stroke-width="2.6" marker-end="url(#arr-teal)"/>
+<line x1="732" y1="830" x2="752" y2="830" stroke="#2563eb" stroke-width="2.6" marker-end="url(#arr-blue)"/>
+<path d="M 50 875 L 24 875 L 24 134 L 356 134 L 356 142" fill="none" stroke="#059669" stroke-width="2.6" stroke-dasharray="6,4" marker-end="url(#arr-teal)"/>
+<text transform="translate(15, 510) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="bold" text-anchor="middle" fill="#047857">Closed-Loop RL Policy Update</text>
 </svg>

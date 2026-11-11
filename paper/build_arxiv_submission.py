@@ -16,10 +16,7 @@ def build_arxiv_tarball() -> Path:
         "figures/fig0_orbit3d_system_architecture.png",
         "figures/fig1_orbit3d_vs_propmolflow.png",
         "figures/fig2_five_stage_ablation.png",
-        "figures/fig3_dpa4_scaling_pareto.png",
         "figures/fig4_pluggable_oracles_relaxation.png",
-        "figures/fig5_latency_and_hardware_profile.png",
-        "figures/fig6_dataset_distributions.png",
         "figures/fig7_hyff_vs_dpa4_pareto_and_spin.png",
         "figures/fig8_optoelectronic_paradigms_and_forcefields.png",
     ]

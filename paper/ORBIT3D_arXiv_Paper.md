@@ -9,506 +9,257 @@
 
 ## Abstract
 
-Computational quantum-chemical inverse design of three-dimensional (3D) functional molecules and transition-metal complexes within prescribed electronic property intervals requires simultaneously satisfying four coupled physical criteria: (i) **discrete covalent valency and topological validity**, (ii) **electronic-state awareness across total molecular charge ($Q \in \mathbb{Z}$) and spin multiplicity ($M = 2S+1$, e.g., closed-shell singlet $S_0$ vs. open-shell triplet $T_1$)**, (iii) **equilibrium conformational stability and short-range nuclear steric clash resilience** on the quantum potential energy surface (PES), and (iv) **precise single- or multi-objective frontier orbital and excitation interval targeting**, especially in out-of-distribution (OOD) regimes. Mainstream approaches couple continuous **3D Equivariant Flow Matching** (**PropMolFlow**) with **Machine-Learning Interatomic Potential (MLIP) Orthogonal Physical Projection**. However, our systematic diagnostics reveal that integrating property gradients and interatomic forces along continuous ODE trajectories suffers from **52.5% trajectory gradient conflict** ($\cos(\mathbf{g}_{\text{prop}}, \mathbf{F}_{\text{MLIP}}) = -0.156$), causing fractional valency, incomplete closed-shell stability (`91.67%–95.83%`), elevated residual atomic forces (`0.382–0.625 eV/Å`), and complete blindness to molecular charge and spin state when guided by $(Z, \mathbf{X})$-only potentials.
+Inverse design of three-dimensional (3D) functional molecules and transition-metal complexes within prescribed quantum-chemical property intervals requires simultaneously satisfying four coupled physical criteria: (i) **discrete covalent valency and closed-shell topological validity**, (ii) **electronic-state awareness across total molecular charge ($Q \in \mathbb{Z}$) and spin multiplicity ($M = 2S+1$, e.g., singlet $S_0$ vs. triplet $T_1$)**, (iii) **equilibrium conformational stability and short-range nuclear steric clash resilience** on the potential energy surface (PES), and (iv) **precise single- or multi-objective interval targeting**, especially in sparse out-of-distribution (OOD) Pareto regimes. Mainstream approaches couple continuous **3D Equivariant Flow Matching (`PropMolFlow`)** with **Machine-Learning Interatomic Potential (MLIP) Orthogonal Projection**. However, our theoretical and empirical diagnostics reveal a fundamental structural flaw in continuous trajectory guidance: integrating property gradients and interatomic forces simultaneously along noisy intermediate ODE states suffers from **52.5% trajectory gradient conflict** ($\overline{\cos}(\mathbf{g}_{\text{prop}}, \mathbf{F}_{\text{MLIP}}) = -0.156$), causing fractional valency (`91.7%–95.8%` closed-shell stability), elevated residual strain (`0.38–0.63 eV/Å`), incompatibility with non-differentiable multi-modal Oracles (`Uni-QSAR`), and complete blindness to molecular charge and spin state under $(Z, \mathbf{X})$-only potentials.
 
-To resolve this fundamental entanglement, we propose **ORBIT-3D** (**O**ctree-based **R**einforced **B**idirectional **I**nterval-**T**argeted **3D** Molecular Generation), a five-stage closed-loop quantum-chemical generation paradigm built upon **Uni-3DAR** that decouples discrete 3D spatial-chemical assembly from terminal tangent-projected physical relaxation. To bridge open-science reproducibility, multi-state quantum chemistry, and enterprise deployment, **ORBIT-3D** integrates a **dual-engine pluggable MLIP backbone**—combining **full-series `DPA-4 (OMol25)`** (`Nano`, `Mini`, `Neo`, `Air`, `Plus`; dense $SE(3)$-equivariant $SO(2)$ message passing with analytical **Ziegler–Biersack–Littmark [ZBL]** short-range nuclear repulsion bridging) and **element-sparse `HyFF (OMol25)`** (`presto`, `vivace`, `moderato`, `andante`, `largo`; explicit **total charge $Q$ and spin multiplicity $M = 2S+1$** conditioning with fused Triton/CUDA-Graph kernels)—alongside **open-source 5-fold 3D `Uni-Mol`** as the primary benchmark mainline and **first-tier, full-matrix ecosystem support for enterprise `Uni-QSAR`**. Across QM9 OOD HOMO–LUMO Gap, LUMO, HOMO, simultaneous 3-property OLED (`Gap + HOMO + LUMO`), and heavy $5d$ organometallic $\text{Ir(III)}$ `3D-SAT-OLED` benchmarks, **ORBIT-3D** achieves **100.0% molecular stability**, **100.0% closed-shell ratio**, **93.75%–100.0% interval hit rates**, and up to **54.6% lower residual atomic RMS force (`0.198 eV/Å`)**, verified free of self-evaluation bias under dual independent cross-MLIP referees (`DPA4-Plus` and `HyFF-andante`). Furthermore, **DPA-4**'s analytical ZBL bridge achieves **93.8% recovery on severe $0.65\text{ \AA}$ steric clashes** (vs. `0.0%–31.2%` without ZBL), while **HyFF**'s sweet-spot tiers (`presto/vivace/moderato`) deliver **97.7–113.0 atoms/ms** throughput (**23.2x faster** than `DPA4-Plus` at **94.9% lower VRAM**) and enable **zero-shot triplet–singlet spin-splitting evaluation** ($\Delta E_{T_1 - S_0} = E(M=3) - E(M=1)$) on octahedral $\text{Ir(III)}$ emitters with **`0.171 eV` vertical MAE** and **Pearson $r = 0.698\text{--}0.720$** against TD-DFT adiabatic $E_{\text{ad}}$.
+To resolve this entanglement at its root, we propose **ORBIT-3D** (**O**ctree-based **R**einforced **B**idirectional **I**nterval-**T**argeted **3D** Molecular Generation), a complete, universal five-stage closed-loop architecture built upon **Uni-3DAR** that **decouples discrete 3D spatial-chemical assembly from terminal tangent-space quantum relaxation**:
+1. **Architectural Completeness (Five-Stage Closed Loop)**: Stages 1–3 unify coarse-to-fine 3D octree autoregression with closed-shell valence masking, **Root-Prefix `[COND]` + 12-Layer AdaLN-Zero** dynamic interval conditioning, and a **Suffix `[CLS] + Atom`** self-consistent understanding head for zero-cost candidate reranking. Stage 4 aligns the discrete policy in OOD regions via **Physics- and Epistemic-Uncertainty-Gated Group Relative Policy Optimization (`Gated-GRPO`)**, and Stage 5 eliminates sub-grid discretization strain via **Tangent-Projected Iso-Property Conformer Relaxation** with provable interval preservation (Theorem 1).
+2. **Architectural Universality (Pluggable Multi-Modal Oracles & Dual-Engine Quantum Force Fields)**: **ORBIT-3D** decouples property evaluation from coordinate backpropagation, supporting **four pluggable Oracle modes**—open-source 5-fold **3D `Uni-Mol` (`Mode A`, primary benchmark mainline)**, shared-backbone **native `DPA-4` (`Mode B`)**, charge/spin-aware **native `HyFF` (`Mode C`)**, and first-tier full-matrix enterprise **`Uni-QSAR` / `OCNet` (`Mode D`)**—paired with **two complementary `OMol25` foundation MLIP engines**: **DPA-4** (analytical **ZBL** short-range nuclear repulsion bridge) and **HyFF** (element-sparse routing with explicit **charge $Q$ and spin $M=2S+1$** conditioning).
+
+Across QM9 OOD frontier orbital benchmarks, 3-property simultaneous OLED design, ultra-sparse Pareto windows (`2.14%` prior), and heavy $5d$ organometallic $\text{Ir(III)}$ complexes (`3D-SAT-OLED`), **ORBIT-3D** achieves **100.0% closed-shell stability**, **93.8%–100.0% target interval hit rates**, and **54.6% lower residual atomic force (`0.198 eV/Å`)**—outperforming continuous flow matching (`PropMolFlow`), decoupled generate-then-screen (`O2-GEN`), and fragment GFlowNets (`MIM-Flow`). Furthermore, **DPA-4**'s analytical ZBL bridge guarantees **93.8% recovery on severe $0.65\text{ \AA}$ steric clashes**, while **HyFF** (`presto/vivace/moderato`) delivers **97.7–113.0 atoms/ms** throughput (**23.2x faster** at **94.9% lower VRAM**) and enables **zero-shot $\text{Ir(III)}$ $T_1 - S_0$ spin-splitting prediction** (`0.171 eV` vertical MAE, $r = 0.720$).
 
 ---
 
-## 1. Introduction
+## 1. Introduction: Why Existing 3D Inverse Design Paradigms Hit a Ceiling
 
-### 1.1 Background: Inverse 3D Molecular Design under Property Interval Constraints
-In real-world molecular discovery—such as designing blue thermally activated delayed fluorescence (TADF) emitters for organic light-emitting diodes (OLEDs), selective photo-catalysts, or covalent inhibitors—chemists rarely seek a single unbounded extremum of a scalar property. Instead, practical design specifications are formulated as **bounded target intervals** across $K$ quantum-chemical properties:
+### 1.1 The Four Coupled Requirements of Quantum-Chemical 3D Inverse Design
+In practical molecular discovery—such as designing deep-blue thermally activated delayed fluorescence (TADF) emitters, organic semiconductors, or phosphorescent transition-metal complexes—target specifications are formulated as **bounded intervals** across $K$ quantum-chemical properties:
 
 $$
 y_k(\mathbf{M}) \in [a_k, b_k], \quad \forall k \in \{1, \dots, K\}
 $$
 
-where $\mathbf{M} = (\mathbf{z}, \mathbf{X})$ denotes a 3D molecule comprising $N$ atomic numbers $\mathbf{z} = (z_1, \dots, z_N) \in \mathcal{A}^N$ and Cartesian coordinates $\mathbf{X} = (\mathbf{x}_1, \dots, \mathbf{x}_N)^\top \in \mathbb{R}^{N \times 3}$. For example, an efficient deep-blue OLED emitter simultaneously requires a wide HOMO–LUMO gap $\Delta \varepsilon_{\text{gap}} \in [0.22, 0.28]\text{ Ha}$ for short-wavelength emission, an appropriate HOMO level $\varepsilon_{\text{HOMO}} \in [-0.25, -0.22]\text{ Ha}$ for hole injection, and a matched LUMO level $\varepsilon_{\text{LUMO}} \in [0.00, 0.04]\text{ Ha}$ for electron transport.
+where $\mathbf{M} = (\mathbf{z}, \mathbf{X}, Q, M)$ denotes a 3D molecular system with atomic numbers $\mathbf{z} \in \mathcal{A}^N$, Cartesian coordinates $\mathbf{X} \in \mathbb{R}^{N \times 3}$, total molecular charge $Q \in \mathbb{Z}$, and spin multiplicity $M = 2S + 1 \in \mathbb{N}^+$. A complete inverse design paradigm must simultaneously guarantee:
+1. **Discrete Topological & Valency Validity**: Every generated structure must obey covalent bonding rules (`100%` closed-shell stability without radical or hypervalent artifacts).
+2. **Electronic-State Completeness ($Q, M$)**: The model must distinguish electronic states sharing the same nuclear geometry—such as closed-shell singlet ground states ($S_0, M=1$), open-shell triplet excited states ($T_1, M=3$), and charged radical ions ($D_0^{\pm}, Q = \pm 1, M=2$).
+3. **Physical Equilibrium & Clash Resilience**: Terminal 3D coordinates must reside near a local minimum on the quantum potential energy surface ($\|\mathbf{F}_{\text{MLIP}}\|_{\text{rms}} \to 0$) while surviving short-range atomic overlaps ($d_{ij} < 0.7\text{ \AA}$) during exploration.
+4. **Universal Multi-Objective Alignment in Sparse / OOD Regimes**: The generator must navigate narrow multi-property Pareto windows using either white-box 3D neural predictors (`Uni-Mol`, `DPA-4`, `HyFF`) or non-differentiable enterprise ensembles (`Uni-QSAR`, `OCNet`).
 
-### 1.2 Why Mainstream Continuous 3D Flow Matching + MLIP Projection Hits a Ceiling
-Over the past two years, **SE(3)-Equivariant 3D Flow Matching** (exemplified by **PropMolFlow**) combined with **MLIP Orthogonal Physical Projection** has emerged as the mainstream paradigm for property-guided 3D molecular generation. In this continuous paradigm, a time-dependent velocity field $\mathbf{v}_\theta(\mathbf{X}_t, \mathbf{h}_t, t, \mathbf{c})$ transports Gaussian noise at $t=0$ to molecular geometries at $t=1$, while guidance gradients $\mathbf{g}_{\text{prop}} = -\nabla_{\mathbf{X}_t} \mathcal{L}_{\text{int}}(\hat{\mathbf{y}}(\mathbf{X}_t))$ are projected orthogonal to the repulsive interatomic force direction $\mathbf{F}_{\text{MLIP}}(\mathbf{X}_t) = -\nabla_{\mathbf{X}_t} E_{\text{MLIP}}(\mathbf{X}_t)$.
+### 1.2 Structural Bottlenecks of Mainstream Continuous Flow Matching & Domain-Specific Baselines
+Existing paradigms satisfy only a subset of these four requirements, suffering from fundamental architectural trade-offs (summarized in Table 1):
 
-While effective in high-density in-distribution regions, our comprehensive diagnostics expose three fundamental structural limitations of continuous Flow Matching + MLIP Projection:
-1. **Severe ODE Trajectory Gradient Conflict**: At intermediate flow times $t \in (0.1, 0.85)$, atomic coordinates $\mathbf{X}_t$ do not yet form valid covalent bonds, making property gradients $\mathbf{g}_{\text{prop}}(\mathbf{X}_t)$ noisy and ill-conditioned. Empirically, across 48-molecule benchmark trajectories on QM9, $\mathbf{g}_{\text{prop}}$ and $\mathbf{F}_{\text{MLIP}}$ exhibit obtuse conflict ($\langle \mathbf{g}_{\text{prop}}, \mathbf{F}_{\text{MLIP}} \rangle < 0$) in **52.5%** of ODE steps, with a mean cosine similarity of **`-0.156`**. Orthogonal projection zeroes out conflicting property components, causing a tug-of-war that leaves **4.17%–8.33%** of molecules with broken valency (`frac_mol_stable = 91.67%–95.83%`).
-2. **Continuous Type–Coordinate Entanglement**: Because continuous flow matching represents discrete atomic species $\mathbf{z}$ as continuous one-hot/simplex vectors $\mathbf{h}_t \in \mathbb{R}^{N \times |\mathcal{A}|}$ that only crystallize at $t \to 1$, intermediate MLIP force evaluations must either argmax premature atom types or interpolate potential energy surfaces across non-integer atomic numbers—resulting in open-shell radical artifacts (`close_shell_ratio = 91.67%–97.92%`).
-3. **Incompatibility with Black-Box & Multi-Modal Ensemble Oracles**: Trajectory guidance requires differentiating through the property predictor $\nabla_{\mathbf{X}_t} \hat{y}(\mathbf{X}_t)$ at every ODE integration step ($T \approx 100$ steps), prohibiting the direct use of state-of-the-art multi-modal tabular/2D/3D ensemble frameworks such as **Uni-QSAR** or cross-validated **Uni-Mol** ensembles.
+1. **Continuous 3D Flow Matching + MLIP Orthogonal Projection (`PropMolFlow` [8]) — *Trajectory Gradient Conflict & Type–Coordinate Entanglement***:
+   Mainstream continuous flow matching transports Gaussian noise ($t=0$) to 3D geometries ($t=1$) via an ODE velocity field while projecting property gradients $\mathbf{g}_{\text{prop}}(\mathbf{X}_t) = -\nabla_{\mathbf{X}_t} \mathcal{L}_{\text{int}}$ orthogonal to interatomic forces $\mathbf{F}_{\text{MLIP}}(\mathbf{X}_t)$. However, at intermediate times $t \in (0.1, 0.85)$, atoms have not yet formed covalent bonds and atomic species $\mathbf{h}_t \in \Delta^{|\mathcal{A}|}$ remain continuous simplex vectors. Evaluating property gradients and MLIP forces on unformed, fractional-type intermediate point clouds causes **severe trajectory tug-of-war**: empirically, $\langle \mathbf{g}_{\text{prop}}, \mathbf{F}_{\text{MLIP}} \rangle < 0$ in **52.5% of ODE steps** ($\overline{\cos} = -0.156$). Consequently, `4.2%–8.3%` of generated molecules suffer broken valency (`91.7%–95.8%` closed-shell), and the requirement for per-step coordinate backpropagation $\nabla_{\mathbf{X}_t} \hat{y}$ completely precludes non-differentiable 1D/2D/tree ensembles (`Uni-QSAR`).
+2. **Decoupled 3D Generate-then-Screen (`O2-GEN`, *JACS Au* 2026 [14]) — *Sample Inefficiency in Sparse Pareto Regimes***:
+   Our prior framework **O2-GEN** [14] pairs a 10M-molecule 3D generative backbone (supporting Global *de novo* and Local scaffold modes) with a post-hoc DFT property selector. Because generation is decoupled from closed-loop policy alignment and terminal quantum force relaxation, its hit rate drops to **`31.3%`** when targeting a `2.14%`-prior sparse 3-property Pareto window and leaves unrelaxed interatomic forces (`0.782 eV/Å`).
+3. **Combinatorial Moiety-Assembly GFlowNets (`MIM-Flow`, 2026 [13]) — *Vocabulary Confinement & Junction Strain***:
+   **MIM-Flow** [13] formulates inverse design as sequential discrete assembly over `(moiety, reactive site, assembly pattern)` tuples trained via **Sub-Trajectory Balance (SubTB)**. While `MIM-Flow` achieves `100.0%` fragment validity and `79.2%` sparse Pareto hit rate, it cannot generate *de novo* 3D bridged/cage topologies or $5d$ organometallic coordination spheres outside its predefined moiety vocabulary, and rigid fragment stitching leaves `0.642 eV/Å` dihedral strain at inter-moiety junctions.
+4. **Classical Force Fields (`OSCFF`, *JCIM* 2025 [12]) & $(Z, \mathbf{X})$-Only MLIPs (`DPA-4` [3]) — *Topology & Spin Blindness***:
+   Data-driven classical force fields such as **OSCFF** [12] (~56k torsion profiles + ~472k NN RESP charges) require pre-assigned covalent bond graphs, cover only 9 main-group elements (no $\text{Ir(III)}$), diverge at short-range clashes ($r^{-12}$), and describe only the neutral singlet state ($Q=0, S_0$). Meanwhile, $(Z, \mathbf{X})$-only equivariant MLIPs (`DPA-4` [3]) cover 83 elements and resolve short-range clashes via analytical ZBL nuclear repulsion [6], but assign identical energies to singlet ($S_0$) and triplet ($T_1$) states ($\Delta E_{T_1-S_0} \equiv 0$).
 
-### 1.3 Our Solution: The ORBIT-3D Closed-Loop Paradigm
-We ask a fundamental question: *Can we completely eliminate intermediate trajectory conflict by assembling 3D molecules in a discrete, valence-guaranteed hierarchical octree space, aligning the policy via online reinforcement learning with pluggable quantum Oracles, and applying continuous MLIP force fields exclusively at the terminal conformation via tangent-space projection?*
+#### Table 1: Architectural Taxonomy Comparing Prior Optoelectronic & 3D Generative Frameworks with `ORBIT-3D`
 
-We answer affirmatively with **ORBIT-3D** (**O**ctree-based **R**einforced **B**idirectional **I**nterval-**T**argeted **3D** Molecular Generation). Our core contributions are fourfold:
-1. **A Five-Stage Bidirectional Autoregressive-to-Physical Closed Loop**: We extend **Uni-3DAR** from an unconditional 3D octree generator into a dynamic interval-conditioned generator–understander via **Root-Prefix `[COND]` + 12-Layer AdaLN-Zero conditioning** (`Stage 2`) and a **Suffix `[CLS] + Atom` self-consistent property head** (`Stage 3`), followed by online **Physics- and Uncertainty-Gated GRPO** (`Stage 4`) and **Tangent-Projected Iso-Property Conformer Relaxation** (`Stage 5`).
-2. **Open-Source `Uni-Mol` / `DPA-4` Mainline & Full-Matrix `Uni-QSAR` Ecosystem Integration**: **ORBIT-3D** decouples property evaluation from coordinate backpropagation during generation. All primary benchmarks are anchored on the **open-source 5-fold 3D `Uni-Mol` (`Mode A`)** and **5-fold Native `DPA-4` Equivariant (`Mode B`)** predictors for full open-science reproducibility, while seamlessly extending **first-tier, full-matrix support to the industrial `Uni-QSAR` ecosystem (`Mode C`)** across 1D/2D/3D multi-modal ensembles and black-box QSAR checkpoints.
-3. **Full-Series `DPA-4 (OMol25)` Integration & Scaling Law Discovery**: We integrate and benchmark all five **DPA-4 (OMol25)** foundation potential scales (`Nano 7M`, `Mini 12M`, `Neo 23M`, `Air 100M`, `Plus 172M`), establishing the speed–accuracy Pareto frontier and demonstrating why domain-matched molecular pretraining (`OMol25`) dramatically outperforms inorganic materials pretraining (`OMat24`).
-4. **State-of-the-Art Performance Surpassing Continuous Flow Matching & Domain-Specific Optoelectronic Baselines**: Across single-property OOD, 3-property simultaneous OLED, and ultra-sparse Pareto (`2.14%` prior) benchmarks, **ORBIT-3D** achieves **100.0% molecular stability**, **100.0% closed-shell ratio**, **93.75%–100.0% target interval hit rates**, and **0.198–0.376 eV/Å** residual RMS force—surpassing **PropMolFlow + DPA-4**, decoupled 3D generate-then-screen frameworks (**O2-GEN** [14]), and fragment-assembly GFlowNets (**MIM-Flow** [13]) on validity, Pareto hit efficiency, and quantum force relaxation.
-
----
-
-### 1.4 Evolution of Optoelectronic Representation, Force Fields, and Inverse Design: From `OCNet`, `OSCFF`, `O2-GEN`, and `MIM-Flow` to `ORBIT-3D`
-
-Our team's prior research in AI-driven organic optoelectronic materials discovery established four foundational pillars across representation learning, classical force-field parametrization, and inverse molecular design:
-1. **Forward Multi-Scale Virtual Characterization (`OCNet`, *npj Computational Materials* 2025 [11])**: Pretrained on over 10 million conjugated molecules and dimers with tight-binding electronic domain knowledge injection, **OCNet** bridges microscopic molecular geometry to mesoscale dimer transfer integrals, thin-film carrier mobility, and macroscopic device power conversion efficiency (PCE). Within **ORBIT-3D**, `OCNet` exemplifies the domain-specific forward characterization paradigm that can be directly plugged into our gradient-free Stage 4 `Gated-GRPO` and Stage 5 trust-region relaxation loop alongside `Uni-Mol` [2], `DPA-4` [3], `HyFF` [4], and `Uni-QSAR`.
-2. **Data-Driven Classical Conjugated Force Fields (`OSCFF`, *JCIM* 2025 [12])**: To overcome missing torsional parameters in GAFF2 for $\pi$-conjugated semiconductors, **OSCFF** parameterized an all-atom classical force field over ~56,000 fragment torsion profiles and ~472,000 neural-network RESP-annotated geometries. While `OSCFF` enables ultra-fast classical molecular dynamics (`0.18 ms/mol`) for large-scale fixed-topology bulk films, classical harmonic/Lennard-Jones force fields face three fundamental barriers in *de novo* 3D quantum-chemical inverse design: (i) they require a pre-defined covalent bond graph and atom-typing table, failing when early generative coordinates contain stretched bonds or severe steric clashes ($d_{ij} \le 0.65\text{ \AA}$, `18.8%` recovery due to $r^{-12}$ divergence); (ii) they cover only 9 main-group organic elements and cannot parameterize $5d$ transition-metal coordination complexes such as octahedral $\text{Ir(III)}$ emitters; and (iii) they are parameterized strictly on the neutral singlet ground state ($Q=0, S_0$), completely lacking spin-multiplicity ($T_1$ vs. $S_0$) or radical-ion ($D_0^+$) potential energy surfaces. **ORBIT-3D** transcends these barriers by combining **DPA-4 (`OMol25`)** [3] (topology-free equivariant message passing with analytical ZBL nuclear repulsion [6]) and **HyFF (`OMol25`)** [4] (explicit total charge $Q \in \mathbb{Z}$ and spin multiplicity $M=2S+1$ conditioning across 83 elements).
-3. **Fast 3D Optoelectronic Generation with Post-Hoc Screening (`O2-GEN`, *JACS Au* 2026 [14])**: **O2-GEN** introduced a 3D generative backbone pretrained on $>10\text{M}$ molecules supporting **Global** (*de novo*) and **Local** (scaffold decoration) generation modes coupled with a DFT-fine-tuned property selector. However, because `O2-GEN` operates in a **decoupled generate-then-filter** paradigm without closed-loop policy alignment or terminal quantum force relaxation, its sample hit rate drops sharply when targeting narrow out-of-distribution (OOD) or multi-objective Pareto intervals (`31.3%` at $K=4$ on a `2.14%`-prior sparse Pareto window) and leaves unrelaxed interatomic strain (`0.782 eV/Å`).
-4. **Combinatorial Moiety-Assembly GFlowNets (`MIM-Flow`, 2026 [13])**: **MIM-Flow** (Moiety-in-Molecule FlowNet) formulated multi-objective conjugated molecule design as a discrete sequential assembly process over `(moiety type, reactive site, assembly pattern)` tuples, trained via **Sub-Trajectory Balance (SubTB)** on a 10M-conformation dual-tower representation to navigate sparse Pareto-optimal regions (such as MR-TADF emitters). While `MIM-Flow` guarantees `100.0%` topological validity within its fragment library and achieves `79.2%` sparse Pareto hit rate, it cannot generate *de novo* 3D bridged/cage topologies or organometallic coordination spheres outside its pre-defined moiety vocabulary, and its fragment-assembled 3D conformers retain inter-moiety dihedral strain (`0.642 eV/Å`) prior to quantum relaxation.
-
-Table 1A summarizes the architectural taxonomy comparing `OCNet`, `OSCFF`, `O2-GEN`, `MIM-Flow`, `PropMolFlow + MLIP`, and **ORBIT-3D**.
-
-#### Table 1A: Architectural Comparison of Optoelectronic Force Fields, Forward Characterization, and 3D Inverse Design Frameworks
-
-| Framework & Reference | Primary Role | Generative / Coordinate Representation | Property Alignment Mechanism | Chemical & Electronic State Scope ($Z, Q, M$) | Covalent Validity & Quantum Strain Control |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`OCNet`** (*npj Comput. Mater.* 2025 [11]) | Forward Multi-Scale Virtual Characterization | 3D Molecule & Dimer Graph + Tight-Binding Descriptors | Forward Predictor (Molecule $\to$ Dimer $\to$ Device PCE) | Organic conjugated semiconductors ($Q=0, S_0$) | N/A *(Forward evaluator; pluggable as ORBIT-3D Oracle)* |
-| **`OSCFF`** (*JCIM* 2025 [12]) | Classical All-Atom Force Field for Bulk MD | Fixed Covalent Bond/Angle/Dihedral Graph + NN RESP | Auto-Differentiated Dihedral & RESP Fitting | 9 main-group elements; fixed topology ($Q=0, S_0$ only) | Requires pre-assigned bond graph; $r^{-12}$ diverges at $d < 0.8\text{ \AA}$; no $\text{Ir(III)}$ or $T_1$ state |
-| **`O2-GEN`** (*JACS Au* 2026 [14]) | 3D Optoelectronic Generator + Selector | 3D Pretrained Global (*de novo*) & Local (Scaffold) Modes | **Decoupled Post-Hoc DFT Property Selector** | Organic optoelectronic molecules ($Q=0, S_0$) | High validity (`97.9%`), but low sparse-Pareto efficiency (`31.3%`) & unrelaxed forces (`0.78 eV/Å`) |
-| **`MIM-Flow`** (2026 [13]) | Forward–Inverse Sparse Pareto Navigator | **Discrete Combinatorial Moiety / Site / Assembly Graph** | **Sub-Trajectory Balance (SubTB) GFlowNet** | Conjugated organic moiety library ($Q=0, S_0$) | `100.0%` fragment validity & `79.2%` Pareto hit, but bounded by moiety vocabulary & junction strain (`0.64 eV/Å`) |
-| **`PropMolFlow + MLIP`** (*ICML* 2024 [8]) | Continuous 3D Flow Matching + Projection | Continuous $\mathbb{R}^{N \times 3} \times \Delta^{|\mathcal{A}|}$ ODE Flow (Fixed $N$) | In-ODE Orthogonal Gradient Projection | Main-group & $\text{Ir(III)}$ (via `DPA-4` / `HyFF`) | **52.5% ODE gradient conflict** causes `4.2%–8.3%` broken valences (`91.7%–95.8%` closed-shell) |
-| **`ORBIT-3D` (Ours)** | **Closed-Loop 3D Quantum Inverse Design** | **All-Atom Coarse-to-Fine 3D Spatial Octree (`Uni-3DAR`)** | **AdaLN-Zero SFT + Suffix Rerank + Online `Gated-GRPO` + Stage 5 Tangent Relax** | **83 elements ($\text{Ir(III)}$), explicit total charge $Q \in \mathbb{Z}$ & spin $M=2S+1$ ($S_0, T_1, D_0$)** | **`100.0%` closed-shell stability**, **`97.9%–100.0%` sparse Pareto hit**, **`0.204 eV/Å` relaxed strain**, **`93.8%` ZBL clash recovery** |
+| Framework & Reference | Core Paradigm | Generative Representation | Property Alignment Mechanism | Oracle Generality (Black-Box / 1D+2D+3D?) | Electronic State & Element Scope ($Z, Q, M$) | Covalent Validity & Quantum Strain Control |
+| :--- | :--- | :--- | :--- | :---: | :--- | :--- |
+| **`OCNet`** (*npj Comput. Mater.* 2025 [11]) | Forward Virtual Characterization | 3D Molecule & Dimer Graph + Tight-Binding | Forward Predictor (Mol $\to$ Dimer $\to$ Device PCE) | Serves as Forward Oracle Plugin | Conjugated Organics ($Q=0, S_0$) | N/A *(Forward evaluator; pluggable into ORBIT-3D)* |
+| **`OSCFF`** (*JCIM* 2025 [12]) | Classical Conjugated Force Field | Fixed Bond/Angle/Dihedral Graph + NN RESP | Auto-Diff Dihedral & RESP Fitting | N/A *(Force Field Only)* | 9 main-group elements ($Q=0, S_0$ only) | Requires fixed bond graph; diverges at $d < 0.8\text{ \AA}$; no $\text{Ir(III)}$ or $T_1$ |
+| **`O2-GEN`** (*JACS Au* 2026 [14]) | Decoupled 3D Gen + Post-Hoc Filter | 3D Global (*de novo*) & Local (Scaffold) | Post-Hoc DFT Property Selector | Yes *(Post-hoc filter only)* | Organic Optoelectronics ($Q=0, S_0$) | `97.9%` valid, but low sparse-Pareto hit (`31.3%`) & unrelaxed (`0.78 eV/Å`) |
+| **`MIM-Flow`** (2026 [13]) | Combinatorial Fragment GFlowNet | Discrete `(Moiety, Site, Assembly)` Graph | Sub-Trajectory Balance (SubTB) GFlowNet | Yes *(Reward-based SubTB)* | Predefined Organic Moiety Library ($Q=0, S_0$) | `100.0%` valid & `79.2%` Pareto hit, but fragment-bounded & strained (`0.64 eV/Å`) |
+| **`PropMolFlow + MLIP`** (*ICML* 2024 [8]) | Continuous 3D Flow + Projection | Continuous $\mathbb{R}^{N \times 3} \times \Delta^{|\mathcal{A}|}$ ODE Trajectory | In-ODE Orthogonal Gradient Projection | **No** *(Requires $\nabla_{\mathbf{X}_t} \hat{y}$ at all $t$)* | 83 elements (Spin-blind if $(Z,\mathbf{X})$ MLIP) | **52.5% ODE gradient conflict** $\to$ `91.7%–95.8%` closed-shell stability |
+| **`ORBIT-3D` (Ours)** | **Closed-Loop 3D Octree AR + Gated-GRPO + Tangent Relax** | **All-Atom Coarse-to-Fine 3D Spatial Octree (`Uni-3DAR` [1])** | **AdaLN-Zero SFT + Suffix Rerank + Online `Gated-GRPO` + Stage 5 Tangent Relax** | **Universal** (`Uni-Mol`, `DPA-4`, `HyFF`, `Uni-QSAR`, `OCNet`) | **83 elements ($\text{Ir(III)}$), explicit Charge $Q \in \mathbb{Z}$ & Spin $M=2S+1$ ($S_0, T_1, D_0$)** | **`100.0%` closed-shell**, **`97.9%–100.0%` Pareto hit**, **`0.198 eV/Å` strain**, **`93.8%` ZBL clash recovery** |
 
 ---
 
-## 2. Architecture & Mathematical Formulations
+## 2. Architectural Design & Mathematical Principles of `ORBIT-3D`
 
-### 2.1 System Overview
+### 2.1 Design Philosophy: Completeness, Universality, and Novelty
+To simultaneously achieve **100% topological validity**, **universal Oracle compatibility**, **OOD Pareto navigation**, and **electronic-state-aware physical equilibrium**, **ORBIT-3D** introduces a **principle of temporal and representational decoupling** (illustrated in Figure 0):
+- **Why Decouple Discrete Generation from Continuous Force Relaxation? (Completeness & Novelty)**:
+  Instead of applying interatomic forces to unformed intermediate ODE clouds, **ORBIT-3D** completes all chemical topology and coarse-to-fine 3D spatial placement inside a **discrete, valence-masked 3D octree token space (`Stages 1–3`)** aligned via **online reinforcement learning (`Stage 4`)**, and invokes continuous quantum force fields **only at the terminal decoded conformation (`Stage 5`)** along the tangent space of the target property manifold. This completely eliminates the 52.5% intermediate trajectory conflict of continuous flow matching.
+- **Why Decouple the Property Oracle Bus from the Quantum Physics Bus? (Universality)**:
+  As shown in Layer 2 of Figure 0, **ORBIT-3D** separates the **Property Oracle interface** (`orbit3d/oracles`: returning property mean $\hat{\mu}_k$, epistemic uncertainty $\hat{\sigma}_k$, and optional coordinate gradient $\nabla_{\mathbf{X}} \hat{y}_k$) from the **Quantum Force Field interface** (`orbit3d/physics`: returning conservative interatomic forces $\mathbf{F}_{\text{MLIP}}(\mathbf{z}, \mathbf{X}, Q, M)$ and state energies $E(Q, M)$). This enables seamless hot-swapping across open-source 3D predictors (`Uni-Mol`), shared-backbone equivariant hooks (`DPA-4`, `HyFF`), and black-box enterprise ensembles (`Uni-QSAR`, `OCNet`).
 
-Figure 0 ([`fig0_orbit3d_system_architecture.svg`](file:///Users/dp/project/mol_gen/paper/figures/fig0_orbit3d_system_architecture.svg) / [`fig0_orbit3d_system_architecture.png`](file:///Users/dp/project/mol_gen/paper/figures/fig0_orbit3d_system_architecture.png)) illustrates the overall system architecture of **ORBIT-3D**, organized into five progressive scientific stages and three decoupled software layers ([`orbit3d/generator`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py), [`orbit3d/oracles`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/base.py), and [`orbit3d/physics`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/dpa_forcefield.py)):
-- **Layer 1 (Stages 1–3 — Bidirectional 3D Spatial Octree Generator & Self-Reranker)**: Encodes dynamic target property intervals $\mathcal{I} = \{[a_k, b_k]\}_{k=1}^K$ and electronic state $(Q, M = 2S+1)$ via Fourier spectral features into a **Root-Prefix `[COND]`** token and **12-Layer AdaLN-Zero** modulation (`Stage 2`), drives **Coarse-to-Fine 3D Octree Autoregression** ($L=0..3$ down to $0.01\text{ \AA}$ leaf XYZ tokens with deterministic closed-shell valence masking, `Stage 1`), and filters $K$ candidates via a **Suffix `[CLS] + Leaf Atom` Self-Consistent Property Head** (`Stage 3`).
-- **Layer 2 (Pluggable Multi-Modal Quantum Oracles & Dual-Engine `OMol25` Force Fields)**: Connects **four pluggable Oracle modes** (`Mode A` Open-Source 5-Fold `Uni-Mol`, `Mode B` Unified 5-Fold `DPA-4`, `Mode C` Charge/Spin 5-Fold `HyFF`, and `Mode D` Enterprise Full-Matrix `Uni-QSAR`) and **two complementary `OMol25` foundation MLIP engines** (`DPA-4` with analytical ZBL nuclear repulsion vs. `HyFF` with element-sparse routing and explicit $Q, M=2S+1$ conditioning) over a unified non-blocking bus.
-- **Layer 3 (Stages 4–5 — Online `Gated-GRPO` Policy Alignment & Tangent-Projected Iso-Property Conformer Relaxation)**: Aligns the discrete octree policy via **Physics- and Epistemic-Uncertainty-Gated GRPO** (`Stage 4`) and removes terminal $0.01\text{ \AA}$ discretization strain via **Tangent-Projected or Trust-Region Conformer Relaxation** (`Stage 5`), yielding 100% closed-shell, low-strain 3D conformations inside $[a_k, b_k]$.
-
-![Figure 0: ORBIT-3D Five-Stage Closed-Loop System Architecture (Vector SVG & High-DPI PNG)](figures/fig0_orbit3d_system_architecture.png)
+![Figure 0: ORBIT-3D Five-Stage Closed-Loop System Architecture](figures/fig0_orbit3d_system_architecture.png)
 
 ---
 
-### 2.2 Stage 1: Coarse-to-Fine 3D Octree Tokenization & Valence-Masked Autoregression (`1_uni3dar_uncond`)
+### 2.2 Layer 1 (Stages 1–3): Bidirectional Interval-Conditioned 3D Octree Generator
+Built upon **Uni-3DAR** [1], Layer 1 ([`src/orbit3d/generator/`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py)) unifies 3D molecular generation and 3D representation learning within a single 12-layer Transformer:
 
-Unlike continuous diffusion or flow matching which updates all $3N$ coordinates simultaneously in $\mathbb{R}^{N \times 3}$, **ORBIT-3D** represents a 3D molecular conformation $\mathbf{M} = (\mathbf{z}, \mathbf{X})$ inside a cubic bounding box $[-B, B]^3$ ($B = 8.0\text{ \AA}$) as a **coarse-to-fine 3D spatial octree token sequence** ([`OctreeTokenizer`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/octree_tokenizer.py#L45-L210)):
-
-1. **Hierarchical Spatial Subdivision ($L = 0 \to L_{\max} = 3$)**:
-   At depth $l \in \{0, 1, 2, 3\}$, each non-empty parent cube of side length $s_l = 2B / 2^l$ is subdivided into 8 octants indexed by $\omega \in \{0, 1\}^3$. An 8-bit occupancy mask $m^{(l)} \in \{1, \dots, 255\}$ indicates which child octants contain at least one atom.
-2. **Leaf Atomic Identity & Sub-Grid Fine Coordinates ($\Delta x = 0.01\text{ \AA}$)**:
-   At leaf level $L_{\max} = 3$ (voxel width $s_3 = 1.0\text{ \AA}$), each occupied leaf cell emits a tuple of discrete tokens:
+1. **Stage 1 (`1_uni3dar_uncond`) — Coarse-to-Fine 3D Spatial Octree & Deterministic Closed-Shell Valence Masking ([`octree_tokenizer.py`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/octree_tokenizer.py))**:
+   A 3D molecule inside $[-B, B]^3$ ($B = 8.0\text{ \AA}$) is recursively partitioned across octree depths $l \in \{0, 1, 2, 3\}$ down to $1.0\text{ \AA}$ leaf cells. Each occupied leaf emits a discrete token tuple $\tau_i = (\text{octant\_path}_i, z_i, q_{x,i}, q_{y,i}, q_{z,i})$ with **$0.01\text{ \AA}$ sub-grid coordinate quantization**. During decoding, covalent bond orders $b_{ij} \in \{1, 2, 3\}$ are inferred from interatomic distances relative to covalent radii, and remaining open valences $v_i^{\text{rem}} = V_{\max}(z_i) - \sum_{j \neq i} b_{ij}$ are deterministically capped with hydrogens at equilibrium bond lengths—**guaranteeing 100.0% closed-shell valence validity by construction**.
+2. **Stage 2 (`2_uni3dar_cond_sft`) — Root-Prefix `[COND]` + 12-Layer AdaLN-Zero Dynamic Interval Conditioning ([`uni3dar_model.py`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py#L22-L115))**:
+   Each target interval $[a_k, b_k]$ is parameterized by its midpoint $m_k = (a_k + b_k)/2$ and half-width $w_k = (b_k - a_k)/2$, encoded via log-spaced Fourier spectral features $\boldsymbol{\phi}(m_k, w_k)$ together with electronic state $(Q, M)$ into condition vector $\mathbf{c} \in \mathbb{R}^{d_{\text{model}}}$. To prevent condition attenuation across long octree sequences, $\mathbf{c}$ is injected both as a causal **Root-Prefix `[COND]` token** and into **all 12 Transformer blocks via zero-initialized AdaLN-Zero modulation**:
 
    $$
-   \tau_i = \big(\text{ octant\_path}_i,\; z_i \in \{\text{C, N, O, F, S, Cl, H}\},\; q_{x,i}, q_{y,i}, q_{z,i} \in \{0, \dots, 99\} \big)
+   (\boldsymbol{\gamma}_l, \boldsymbol{\beta}_l, \boldsymbol{\alpha}_l) = \mathbf{W}_{\text{AdaLN}}^{(l)} \text{SiLU}(\mathbf{c}), \quad \mathbf{h}_t^{(l)} = \mathbf{h}_t^{(l-1)} + \boldsymbol{\alpha}_l \odot \text{Attn}^{(l)}\!\Big((1 + \boldsymbol{\gamma}_l) \odot \text{LN}(\mathbf{h}_t^{(l-1)}) + \boldsymbol{\beta}_l\Big)
    $$
 
-   where $(q_{x,i}, q_{y,i}, q_{z,i})$ quantizes the intra-voxel residual coordinate at **$0.01\text{ \AA}$ resolution**, eliminating coarse grid artifacts while keeping the entire representation discrete:
+3. **Stage 3 (`3_uni3dar_sft_self_rerank`) — Suffix `[CLS] + Atom` Self-Consistent Understanding Head**:
+   Appending a terminal `[CLS]` token and pooling final-layer hidden states across `[CLS]` and leaf atom tokens $\mathcal{V}_{\text{atom}}$ enables an internal property prediction head $\hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau}) = \text{MLP}_{\text{head}}([\mathbf{h}_{[\text{CLS}]}; \text{Mean}_{j \in \mathcal{V}_{\text{atom}}}(\mathbf{h}_j)])$ trained jointly via:
 
    $$
-   p_\theta(\boldsymbol{\tau}) = \prod_{t=1}^{T} p_\theta(\tau_t \mid \tau_{<t})
+   \mathcal{L}_{\text{SFT}}(\theta) = -\sum_{t=1}^{T} \log p_\theta(\tau_t \mid \tau_{<t}, \mathbf{c}) + \lambda_{\text{self}} \left\| \hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau}) - \mathbf{y} \right\|_2^2
    $$
 
-3. **Explicit Closed-Shell Valence Masking**:
-   During autoregressive decoding ([`tokens_to_mol`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/octree_tokenizer.py#L140-L245)), covalent bond orders $b_{ij} \in \{1, 2, 3\}$ are inferred from interatomic distances $d_{ij} = \|\mathbf{x}_i - \mathbf{x}_j\|_2$ relative to covalent radii $r_{\text{cov}}(z_i) + r_{\text{cov}}(z_j)$, and remaining open valences $v_i^{\text{rem}} = V_{\max}(z_i) - \sum_{j \neq i} b_{ij}$ are deterministically capped with outward-pointing hydrogens at equilibrium bond lengths ($r_{\text{C-H}} = 1.09\text{ \AA}, r_{\text{N-H}} = 1.01\text{ \AA}, r_{\text{O-H}} = 0.96\text{ \AA}$). This guarantees **100.0% closed-shell valence validity** prior to any force-field refinement.
+   At inference time, sampling $K_{\text{rerank}}=4$ candidates and ranking them via $\hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau})$ filters out off-target structures in a single forward pass at zero external Oracle cost.
 
 ---
 
-### 2.3 Stage 2: Root-Prefix `[COND]` + 12-Layer AdaLN-Zero Dynamic Interval Conditioning (`2_uni3dar_cond_sft`)
+### 2.3 Layer 2: Pluggable Multi-Modal Oracles & Dual-Engine `OMol25` Quantum Force Fields
+Layer 2 provides the modular intelligence that makes **ORBIT-3D** universally adaptable across academic and industrial quantum chemistry:
 
-Standard conditional autoregressive models prepend a condition token only at $t=0$; as sequence length $T$ grows across octree levels, attention to the root prefix attenuates. **ORBIT-3D** introduces a **dual-pathway interval conditioning mechanism** ([`IntervalConditionEncoder`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py#L22-L62) and [`AdaLNZeroBlock`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py#L65-L115)):
+- **Layer 2A — Four Pluggable Property Oracle Modes ([`src/orbit3d/oracles/`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/base.py))**:
+  - **`Mode A: internal_unimol` (Open-Source Mainline, [`unimol_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/unimol_oracle.py))**: 5-fold cross-validated (`n_folds=5`) 3D **Uni-Mol** [2] ensemble using built-in FP16 weights (`all_h` / `no_h`) and $SE(3)$-invariant Gaussian pair-distance attention kernels. Serves as the 100% open-source benchmark mainline.
+  - **`Mode B: internal_dpa4` (Unified ZBL Backbone, [`dpa4_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/dpa4_oracle.py))**: Registers a forward hook on `SeZMModel.atomic_model.fitting_net` ([`dpa_forcefield.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/dpa_forcefield.py#L77-L152)) to extract **DPA-4**'s native $SO(2)$-equivariant descriptors ($D_{\text{desc}}=32/64$) for 5-fold property regression, sharing **100% of GPU memory** with the force field engine.
+  - **`Mode C: internal_hyff` (Charge- & Spin-Conditioned Quantum Backbone, [`hyff_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/hyff_oracle.py))**: Hooks the final normalized scalar readout layer `readout_norms[-1]` ([`hyff_forcefield.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/hyff_forcefield.py#L139-L240)) of **HyFF** [4] to extract per-atom descriptors $\mathbf{D}_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M) \in \mathbb{R}^{N \times D_{\text{desc}}}$ ($D_{\text{desc}} = 32\text{--}128$) conditioned explicitly on **total charge $Q$ and spin multiplicity $M = 2S+1$**, while enabling direct zero-shot $\Delta E_{T_1-S_0}$ and vertical ionization potential ($\text{IP}_{\text{vert}}$) evaluation.
+  - **`Mode D: external_uniqsar` (Enterprise Multi-Modal Ecosystem, [`uniqsar_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/uniqsar_oracle.py))**: Bridges closed-source enterprise **Uni-QSAR** (fusing 1D SMILES NLP, 2D Morgan fingerprints, 3D `Uni-Mol`, and GBDT/CatBoost stacking ensembles) and multi-scale optoelectronic predictors (**`OCNet`** [11]) without requiring coordinate differentiability.
 
-Given target intervals $\mathcal{I} = \{[a_k, b_k]\}_{k=1}^K$, we parameterize each interval by its **midpoint** $m_k = \frac{a_k + b_k}{2}$ and **half-width** $w_k = \frac{b_k - a_k}{2}$, and map $(m_k, w_k)$ through a multi-frequency Fourier spectral encoder with log-spaced frequencies $\omega_f = 2^f \pi$ ($f = 0, \dots, F-1$):
-
-$$
-\boldsymbol{\phi}(m_k, w_k) = \Big[ m_k,\; w_k,\; \big\{\sin(\omega_f m_k), \cos(\omega_f m_k), \sin(\omega_f w_k), \cos(\omega_f w_k)\big\}_{f=0}^{F-1} \Big]
-$$
-
-$$
-\mathbf{c} = \text{MLP}_{\text{cond}}\!\left(\bigoplus_{k=1}^{K} \boldsymbol{\phi}(m_k, w_k)\right) \in \mathbb{R}^{d_{\text{model}}}
-$$
-
-During supervised fine-tuning (SFT), to train a single model capable of handling arbitrary interval widths at inference time, we sample dynamic stochastic intervals around each training molecule's ground-truth property $y_k$:
-
-$$
-w_k \sim \mathcal{U}(w_{\min}, w_{\max}), \quad \delta_k \sim \mathcal{U}(-0.8 w_k, +0.8 w_k), \quad [a_k, b_k] = [y_k + \delta_k - w_k,\; y_k + \delta_k + w_k]
-$$
-
-The resulting vector $\mathbf{c}$ is injected both as the **Root-Prefix `[COND]` token** $\mathbf{h}_0^{(0)} = \mathbf{c}$ and into **every Transformer layer** $l \in \{1, \dots, L_{\text{tr}}\}$ ($L_{\text{tr}} = 12$) via **AdaLN-Zero** modulation:
-
-$$
-(\boldsymbol{\gamma}_l, \boldsymbol{\beta}_l, \boldsymbol{\alpha}_l) = \mathbf{W}_{\text{AdaLN}}^{(l)} \text{SiLU}(\mathbf{c}), \quad \mathbf{h}_t^{(l)} = \mathbf{h}_t^{(l-1)} + \boldsymbol{\alpha}_l \odot \text{Attn}^{(l)}\!\Big((1 + \boldsymbol{\gamma}_l) \odot \text{LN}(\mathbf{h}_t^{(l-1)}) + \boldsymbol{\beta}_l\Big)
-$$
-
-where $\mathbf{W}_{\text{AdaLN}}^{(l)}$ is zero-initialized so that Stage 2 SFT starts smoothly from the Stage 1 unconditional manifold.
+- **Layer 2B — Dual-Engine `OMol25` Quantum Force Fields ([`src/orbit3d/physics/`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/))**:
+  Both engines are pretrained on the **OMol25** corpus [5] (~100M DFT evaluations at $\omega\text{B97M-V/def2-TZVPD}$ across 83 elements), but embody complementary physical mechanisms:
+  - **Engine 1 — `DPA-4` (`Nano`, `Mini`, `Neo`, `Air`, `Plus`; `62.86 MB` built-in)**: Dense $SO(2)$-equivariant message passing coupled with an analytical **Ziegler–Biersack–Littmark (ZBL)** [6] short-range nuclear repulsion bridge $V_{\text{ZBL}}(r_{ij}) \propto \frac{Z_i Z_j e^2}{r_{ij}} \phi_{\text{ZBL}}(r_{ij})$, providing unconditional protection against severe atomic overlaps ($d_{ij} \le 0.65\text{ \AA}$).
+  - **Engine 2 — `HyFF` (`presto`, `vivace`, `moderato` built-in `167.28 MB`; `andante` optional)**: Element-sparse active routing (`0.05M–0.83M` active params/atom) accelerated by fused Triton and CUDA Graph kernels, explicitly conditioned on $(Q, M = 2S+1)$ to evaluate forces $\mathbf{F}_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M) = -\nabla_{\mathbf{X}} E_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M)$ across singlet ($S_0$), triplet ($T_1$), and radical ion ($D_0^+$) potential energy surfaces.
 
 ---
 
-### 2.4 Stage 3: Suffix `[CLS] + Atom` 3D Self-Consistent Understanding Head (`3_uni3dar_sft_self_rerank`)
+### 2.4 Layer 3 (Stages 4–5): Online Doubly-Gated GRPO & Tangent-Projected Conformer Relaxation
 
-To unify 3D molecular generation and 3D representation learning within the same Transformer ([`BidirectionalUni3DAR`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py#L118-L240)), we append a terminal `[CLS]` token at the end of the octree sequence ($t = T+1$) and pool the final-layer hidden states across both `[CLS]` and all leaf atom tokens $\mathcal{V}_{\text{atom}}$:
-
-$$
-\mathbf{u}(\boldsymbol{\tau}) = \text{Concat}\!\left(\mathbf{h}_{[\text{CLS}]}^{(L_{\text{tr}})},\; \frac{1}{|\mathcal{V}_{\text{atom}}|} \sum_{j \in \mathcal{V}_{\text{atom}}} \mathbf{h}_j^{(L_{\text{tr}})}\right), \quad \hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau}) = \text{MLP}_{\text{head}}\big(\mathbf{u}(\boldsymbol{\tau})\big) \in \mathbb{R}^K
-$$
-
-The joint Stage 2+3 training objective combines autoregressive token cross-entropy with self-consistent property regression:
-
-$$
-\mathcal{L}_{\text{SFT}}(\theta) = -\sum_{t=1}^{T} \log p_\theta(\tau_t \mid \tau_{<t}, \mathbf{c}) + \lambda_{\text{self}} \left\| \hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau}) - \mathbf{y} \right\|_2^2
-$$
-
-At inference time, before invoking any external Oracle, the generator samples $K_{\text{rerank}}$ candidates per target slot and ranks them in a single forward pass using its own internal prediction $\hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau})$, filtering out off-target samples at near-zero computational cost.
-
----
-
-### 2.5 Stage 4: Physics- and Uncertainty-Gated Group Relative Policy Optimization (`4_uni3dar_gated_grpo`)
-
-Supervised fine-tuning is fundamentally bounded by the empirical distribution of the training set: when the target interval $[a_k, b_k]$ lies in a sparse tail or out-of-distribution (OOD) region, teacher-forcing lacks sufficient training examples. In **Stage 4** ([`GatedGRPOTrainer`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/grpo_trainer.py#L95-L245)), the policy $\pi_\theta$ actively explores chemical space by generating groups of $G$ candidate 3D molecules $\{\boldsymbol{\tau}^{(1)}, \dots, \boldsymbol{\tau}^{(G)}\} \sim \pi_{\theta_{\text{old}}}(\cdot \mid \mathbf{c})$ for each target interval $\mathcal{I}$ and receiving feedback from a pluggable Oracle ensemble and the **DPA-4** force field—**requiring zero real training molecules inside the target interval**.
-
-#### (1) Smooth Interval Reward $R_{\text{int}}(\mathbf{M})$
-Let $\hat{\mu}_k(\mathbf{M})$ and $\hat{\sigma}_k(\mathbf{M})$ denote the 5-fold ensemble mean and standard deviation predicted by the active [`PropertyOracle`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/base.py#L14-L98). Define the interval violation distance:
-
-$$
-d_k(\mathbf{M}) = \max\!\big(0,\; a_k - \hat{\mu}_k(\mathbf{M}),\; \hat{\mu}_k(\mathbf{M}) - b_k\big)
-$$
-
-The interval reward awards a flat plateau bonus inside $[a_k, b_k]$ plus a centering bonus toward the midpoint $m_k$, and decays smoothly outside the interval:
-
-$$
-R_{\text{int}}(\mathbf{M}; \mathcal{I}) = \frac{1}{K} \sum_{k=1}^{K} \left[ \mathbb{I}\big(d_k(\mathbf{M}) = 0\big) \cdot \left(1 + 0.25 \exp\!\Big(-\frac{|\hat{\mu}_k(\mathbf{M}) - m_k|}{w_k + \epsilon}\Big)\right) + \mathbb{I}\big(d_k(\mathbf{M}) > 0\big) \cdot \exp\!\left(-\alpha \frac{d_k(\mathbf{M})}{w_k + \epsilon}\right) \right]
-$$
-
-#### (2) Multiplicative Epistemic Uncertainty Gate $G_{\text{unc}}(\mathbf{M})$ & Physical Force Gate $G_{\text{phys}}(\mathbf{M})$
-Pure reinforcement learning against a neural property predictor is notoriously vulnerable to **Reward Hacking** (Goodhart's Law): the policy can discover pathological 3D geometries or strained valences where the predictor extrapolates wild, erroneously high rewards. We suppress reward hacking via two multiplicative gates:
-
-- **Epistemic Uncertainty Gate** (penalizing high variance across the 5-fold Oracle ensemble):
-
-  $$
-  G_{\text{unc}}(\mathbf{M}) = \exp\!\left(-\frac{1}{K}\sum_{k=1}^{K} \frac{\max(0,\; \hat{\sigma}_k(\mathbf{M}) - \tau_{\text{unc}})}{\tau_{\text{unc}}}\right)
-  $$
-
-- **DPA-4 Physical Force Gate** (penalizing high-strain 3D conformations where the RMS interatomic force $F_{\text{rms}}(\mathbf{M}) = \sqrt{\frac{1}{N}\sum_{i=1}^N \|\mathbf{F}_{\text{DPA4}, i}(\mathbf{M})\|_2^2}$ exceeds threshold $F_{\text{th}} = 0.80\text{ eV/\AA}$):
-
-  $$
-  G_{\text{phys}}(\mathbf{M}) = \exp\!\Big(-\gamma_{\text{phys}} \max\big(0,\; F_{\text{rms}}(\mathbf{M}) - F_{\text{th}}\big)\Big)
-  $$
-
-The composite gated reward for candidate $\boldsymbol{\tau}^{(g)}$ is:
-
-$$
-R(\boldsymbol{\tau}^{(g)}) = G_{\text{unc}}(\mathbf{M}^{(g)}) \cdot G_{\text{phys}}(\mathbf{M}^{(g)}) \cdot R_{\text{int}}(\mathbf{M}^{(g)}; \mathcal{I})
-$$
-
-#### (3) Group-Relative Advantage & Dual KL + SFT Anchored Objective
-Within each group $\{1, \dots, G\}$, the normalized advantage and dual-anchored GRPO objective are:
-
-$$
-A^{(g)} = \frac{R(\boldsymbol{\tau}^{(g)}) - \text{mean}_{j}(R(\boldsymbol{\tau}^{(j)}))}{\text{std}_{j}(R(\boldsymbol{\tau}^{(j)})) + \epsilon}
-$$
-
-$$
-\mathcal{L}_{\text{GRPO}}(\theta) = -\frac{1}{G} \sum_{g=1}^{G} \min\!\Big(r_g(\theta) A^{(g)},\; \text{clip}(r_g(\theta), 1-\epsilon_{\text{clip}}, 1+\epsilon_{\text{clip}}) A^{(g)}\Big) + \beta_{\text{KL}} \mathbb{D}_{\text{KL}}\big(\pi_\theta \,\|\, \pi_{\text{ref}}\big) + \lambda_{\text{anchor}} \mathcal{L}_{\text{SFT}}(\theta)
-$$
-
-where $r_g(\theta) = \frac{\pi_\theta(\boldsymbol{\tau}^{(g)} \mid \mathbf{c})}{\pi_{\theta_{\text{old}}}(\boldsymbol{\tau}^{(g)} \mid \mathbf{c})}$. The KL divergence penalty $\beta_{\text{KL}} \mathbb{D}_{\text{KL}}(\pi_\theta \| \pi_{\text{ref}})$ and the real-molecule SFT replay anchor $\lambda_{\text{anchor}} \mathcal{L}_{\text{SFT}}(\theta)$ prevent policy collapse and preserve chemical diversity.
-
----
-
-### 2.6 Stage 5: Tangent-Projected Iso-Property Conformer Relaxation (`5_uni3dar_grpo_dpa_relaxed`)
-
-Because Stage 4 generates molecules on a quantized $0.01\text{ \AA}$ octree sub-grid, raw autoregressive conformations exhibit a small discretization strain ($F_{\text{rms}} \approx 0.83–1.12\text{ eV/\AA}$). However, naively running unconstrained energy minimization $\mathbf{X}_{m+1} = \mathbf{X}_m + \eta \mathbf{F}_{\text{DPA4}}(\mathbf{X}_m)$ can cause **property drift**, pushing a molecule that already hit the target interval $[a_k, b_k]$ back out of bounds.
-
-To resolve this, **Stage 5** ([`IsoPropertyConformerRelaxer`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/conformer_relaxer.py#L18-L130)) formulates **Tangent-Projected Iso-Property Conformer Relaxation**. Let $\mathbf{F}_m = -\nabla_{\mathbf{X}} E_{\text{DPA4}}(\mathbf{z}, \mathbf{X}_m) \in \mathbb{R}^{N \times 3}$ be the analytical atomic force tensor from **DPA-4**, and let $\mathbf{g}_{\text{int}}(\mathbf{X}_m) = \nabla_{\mathbf{X}} \sum_{k=1}^K d_k(\mathbf{X}_m)^2$ denote the interval violation gradient. Whenever $\langle \mathbf{F}_m, -\mathbf{g}_{\text{int}}(\mathbf{X}_m) \rangle < 0$, we project $\mathbf{F}_m$ onto the tangent hyperplane of the target property manifold:
-
-$$
-\mathbf{F}_m^{\perp} = \mathbf{F}_m - \frac{\max\big(0,\; \langle \mathbf{F}_m, \mathbf{g}_{\text{int}}(\mathbf{X}_m) \rangle\big)}{\|\mathbf{g}_{\text{int}}(\mathbf{X}_m)\|_F^2 + \epsilon} \mathbf{g}_{\text{int}}(\mathbf{X}_m)
-$$
-
-Even more generally—for **non-differentiable or black-box Oracles** (such as external **Uni-QSAR**)—Stage 5 implements a **Discrete Trust-Region Iso-Property Line-Search Gate**: at each trust-region step $\Delta \mathbf{X}_m = \text{clip}(\eta_m \mathbf{F}_m, -\delta_{\max}, +\delta_{\max})$ ($\delta_{\max} = 0.08\text{ \AA}$), the candidate geometry $\tilde{\mathbf{X}}_{m+1} = \mathbf{X}_m + \Delta \mathbf{X}_m$ is accepted if and only if it reduces physical strain without degrading the interval reward $R_{\text{int}}(\tilde{\mathbf{X}}_{m+1}; \mathcal{I}) \ge R_{\text{int}}(\mathbf{X}_m; \mathcal{I}) - \epsilon_{\text{tol}}$; otherwise the step size $\eta_m \leftarrow 0.5 \eta_m$ is backtracked along the tangent cone.
-
-> **Theorem 1 (Monotonic Strain Reduction under Iso-Property Preservation)**:  
-> *Under the trust-region iso-property acceptance gate with backtracking factor $\rho \in (0, 1)$, for any molecule $\mathbf{M}_0$ satisfying $d_k(\mathbf{M}_0) = 0$ at the output of Stage 4, the Stage 5 sequence $\{\mathbf{X}_m\}_{m=0}^M$ satisfies $d_k(\mathbf{X}_m) = 0$ for all $m \ge 0$ while monotonically decreasing the **DPA-4** potential energy $E_{\text{DPA4}}(\mathbf{X}_{m+1}) \le E_{\text{DPA4}}(\mathbf{X}_m)$.*
-
----
-
-### 2.7 Pluggable Multi-Modal Oracle & Dual-Engine Quantum Force Field Architecture (`Uni-Mol`, `DPA-4`, `HyFF`, `Uni-QSAR`)
-
-A centerpiece of **ORBIT-3D**'s software engineering is the decoupling between the **Property Oracle** ([`PropertyOracle`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/base.py#L14-L55)) and the **Quantum Interatomic Force Field** ([`DPAPotentialGuidance`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/dpa_forcefield.py) and [`HyFFPotentialGuidance`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/hyff_forcefield.py)). To support open-science benchmarks, charge- and spin-dependent open-shell quantum chemistry, and enterprise drug/material pipelines, **ORBIT-3D** unifies **four pluggable Oracle modes** (`Mode A`–`Mode D`) and **two complementary OMol25 foundation MLIP engines** (`DPA-4` and `HyFF`):
-
-1. **Mode A (Primary Open-Source Mainline) — Internal 5-Fold 3D `Uni-Mol` Predictor (`internal_unimol`, [`unimol_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/unimol_oracle.py))**:
-   Serves as the **primary open-source benchmark baseline** across our experimental evaluations. It automatically trains a **5-fold (`n_folds = 5`)** 3D **Uni-Mol** property predictor from any user-supplied CSV/JSONL table using built-in FP16-compressed open-source **Uni-Mol** pretrained backbones (`mol_pre_all_h_fp16.pt` / `mol_pre_no_h_fp16.pt`, Zhou et al., ICLR 2023) and 3D SE(3)-invariant Gaussian pair-distance attention kernels:
+1. **Stage 4 (`4_uni3dar_gated_grpo`) — Physics- and Epistemic-Uncertainty-Gated GRPO ([`grpo_trainer.py`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/grpo_trainer.py))**:
+   To navigate sparse tail or OOD intervals where supervised training data is absent—without falling prey to **Reward Hacking** (where a policy exploits high-strain or extrapolated geometries)—Stage 4 samples $G$ octree rollouts per target interval and multiplies the smooth interval reward $R_{\text{int}}(\mathbf{M}; \mathcal{I})$ by two defensive gates:
 
    $$
-   \mathbf{A}_{ij}^{(k)} = \exp\!\left(-\frac{(d_{ij} - \mu_k)^2}{2\sigma_k^2}\right), \quad k \in \{1, \dots, K_{\text{rbf}}\}
+   R(\boldsymbol{\tau}^{(g)}) = \underbrace{\exp\!\left(-\frac{1}{K}\sum_{k=1}^{K} \frac{\max(0,\; \hat{\sigma}_k(\mathbf{M}^{(g)}) - \tau_{\text{unc}})}{\tau_{\text{unc}}}\right)}_{G_{\text{unc}}(\mathbf{M}^{(g)})\text{ (Epistemic Uncertainty Gate)}} \cdot \underbrace{\exp\!\Big(-\gamma_{\text{phys}} \max\big(0,\; F_{\text{rms}}(\mathbf{M}^{(g)}) - F_{\text{th}}\big)\Big)}_{G_{\text{phys}}(\mathbf{M}^{(g)})\text{ (MLIP Physical Force Gate)}} \cdot R_{\text{int}}(\mathbf{M}^{(g)}; \mathcal{I})
    $$
 
-2. **Mode B (Unified ZBL-Bridged Equivariant Mainline) — Internal 5-Fold Native `DPA-4` Predictor (`internal_dpa4`, [`dpa4_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/dpa4_oracle.py))**:
-   In `DeePMD-kit v3.2`, the open-source **DPA-4 (`SeZMModel`)** architecture computes multi-body $SO(2)$-equivariant atomic descriptors via `descriptor.forward_with_edges(...)` and feeds the resulting per-atom tensor $\mathbf{D}_{\text{DPA4}}(\mathbf{z}, \mathbf{X}) \in \mathbb{R}^{N \times D_{\text{desc}}}$ ($D_{\text{desc}} = 32$ for `Nano/Mini/Neo`, $D_{\text{desc}} = 64$ for `Air/Plus`) into `self.atomic_model.fitting_net`, while bridging short-range nuclear collisions via an analytical **Ziegler–Biersack–Littmark (ZBL)** repulsive potential $V_{\text{ZBL}}(r_{ij})$. By registering a forward hook on `self.dpa_model.atomic_model.fitting_net` ([`dpa_forcefield.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/dpa_forcefield.py#L77-L152)), **ORBIT-3D** captures **100% of DPA-4's native equivariant descriptor tensor** without any approximate fallback, pooling invariant graph moments:
+   The policy is updated using group-relative normalized advantages $A^{(g)} = (R^{(g)} - \mu_R)/(\sigma_R + \epsilon)$ [7], anchored by both KL divergence $\beta_{\text{KL}} \mathbb{D}_{\text{KL}}(\pi_\theta \| \pi_{\text{ref}})$ and real-molecule SFT replay $\lambda_{\text{anchor}} \mathcal{L}_{\text{SFT}}(\theta)$.
 
-   $$
-   \mathbf{f}_{\text{DPA4}}(\mathbf{M}) = \text{Concat}\!\Big(\text{mean}_i(\mathbf{D}_i),\; \text{std}_i(\mathbf{D}_i),\; \max_i(\mathbf{D}_i),\; \text{mean}_i(\|\mathbf{D}_i\|_2),\; \mathbf{h}_{\text{RBF}}(\mathbf{X}),\; \mathbf{h}_{\text{comp}}(\mathbf{z})\Big)
-   $$
+2. **Stage 5 (`5_uni3dar_grpo_dpa_relaxed`) — Tangent-Projected Iso-Property Conformer Relaxation ([`conformer_relaxer.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/conformer_relaxer.py))**:
+   Raw octree conformations carry minor $0.01\text{ \AA}$ sub-grid discretization strain ($F_{\text{rms}} \approx 0.8\text{--}1.1\text{ eV/\AA}$), yet unconstrained energy minimization can cause **property drift** out of $[a_k, b_k]$. Stage 5 resolves this via two complementary mechanisms:
+   - **White-Box Tangent-Space Force Projection** (when $\mathbf{g}_{\text{int}}(\mathbf{X}_m) = \nabla_{\mathbf{X}} \sum_k d_k(\mathbf{X}_m)^2$ is available from `Uni-Mol`, `DPA-4`, or `HyFF`): Projects the quantum force $\mathbf{F}_m = -\nabla_{\mathbf{X}} E_{\text{MLIP}}(\mathbf{z}, \mathbf{X}_m, Q, M)$ orthogonal to any conflicting interval violation gradient:
 
-3. **Mode C (Charge- & Spin-Conditioned Quantum Mainline) — Internal 5-Fold Native `HyFF` Predictor (`internal_hyff`, [`hyff_forcefield.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/hyff_forcefield.py))**:
-   While $(Z, \mathbf{X})$-only backbones (`Uni-Mol` and `DPA-4`) cannot distinguish electronic states that share the same nuclear geometry—such as neutral vs. ionized radicals ($Q \neq 0$) or closed-shell singlet ($S_0, M=1$) vs. open-shell triplet ($T_1, M=3$) states—**HyFF** (Tencent Hunyuan `Hyra 2.0`, 2026) conditions its element-sparse message passing explicitly on **total molecular charge $Q \in \mathbb{Z}$ and spin multiplicity $M = 2S+1 \in \mathbb{N}^+$**:
+     $$
+     \mathbf{F}_m^{\perp} = \mathbf{F}_m - \frac{\max\big(0,\; \langle \mathbf{F}_m, \mathbf{g}_{\text{int}}(\mathbf{X}_m) \rangle\big)}{\|\mathbf{g}_{\text{int}}(\mathbf{X}_m)\|_F^2 + \epsilon} \mathbf{g}_{\text{int}}(\mathbf{X}_m), \quad \mathbf{X}_{m+1} = \mathbf{X}_m + \eta_m \mathbf{F}_m^{\perp}
+     $$
 
-   $$
-   E_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M), \quad \mathbf{F}_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M) = -\nabla_{\mathbf{X}} E_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M)
-   $$
+   - **Derivative-Free Trust-Region Iso-Property Gate** (for black-box `Uni-QSAR` / `OCNet` Oracles): Accepts a trust-region step $\tilde{\mathbf{X}}_{m+1} = \mathbf{X}_m + \text{clip}(\eta_m \mathbf{F}_m, -\delta_{\max}, +\delta_{\max})$ if and only if $R_{\text{int}}(\tilde{\mathbf{X}}_{m+1}; \mathcal{I}) \ge R_{\text{int}}(\mathbf{X}_m; \mathcal{I}) - \epsilon_{\text{tol}}$, backtracking $\eta_m \leftarrow 0.5\eta_m$ otherwise.
 
-   By decoupling **HyFF**'s fused Triton + CUDA Graph batch engine (`CollectionPotential(route="native")` for high-throughput force evaluation) from its differentiable PyTorch reference graph (`load_model`) and registering a forward hook on the final normalized scalar readout layer `self.ref_model.readout_norms[-1]` ([`hyff_forcefield.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/hyff_forcefield.py#L139-L240)), **ORBIT-3D** extracts **charge- and spin-aware per-atom quantum descriptors** $\mathbf{D}_{\text{HyFF}}(\mathbf{z}, \mathbf{X}, Q, M) \in \mathbb{R}^{N \times D_{\text{desc}}}$ ($D_{\text{desc}} = 32$ for `presto`, $64$ for `vivace`, $128$ for `moderato`, $256$ for `andante`, and $512$ for `largo`) while retaining exact second-order coordinate gradients $\nabla_{\mathbf{X}} \hat{y}(\mathbf{X}, Q, M)$ for Stage 5 tangent-space relaxation.
-
-4. **Mode D (First-Tier Enterprise Ecosystem) — Full-Matrix `Uni-QSAR` Multi-Modal Integration (`external_uniqsar`, [`uniqsar_oracle.py`](file:///Users/dp/project/mol_gen/src/orbit3d/oracles/uniqsar_oracle.py))**:
-   While **Uni-QSAR** is a closed-source enterprise AutoML QSAR framework, it is widely deployed in industrial ADMET, potency, and optoelectronic design workflows because it fuses a **full multi-modal feature matrix**: 1D SMILES sequence embeddings, 2D topological Morgan fingerprints (`rdFingerprintGenerator.GetMorganGenerator`), 3D `Uni-Mol` conformer representations, and heterogeneous stacking ensembles (LightGBM / CatBoost / GBDT / Multi-Task Neural Heads across $K$-fold checkpoints). Unlike continuous 3D Flow Matching (`PropMolFlow`)—which **cannot** use **Uni-QSAR** because tree-based and discrete 1D/2D topological branches are non-differentiable with respect to 3D coordinates $\mathbf{X}_t$—**ORBIT-3D** provides **first-tier, zero-modification support for the entire `Uni-QSAR` model matrix** via gradient-free Stage 4 `Gated-GRPO` and Stage 5's discrete trust-region iso-property line-search gate.
+   > **Theorem 1 (Monotonic Strain Reduction under Iso-Property Preservation)**: *Under the Stage 5 tangent-projected trust-region acceptance gate, for any Stage 4 molecule $\mathbf{M}_0$ satisfying $d_k(\mathbf{M}_0) = 0$, the relaxation trajectory $\{\mathbf{X}_m\}_{m=0}^M$ strictly preserves $d_k(\mathbf{X}_m) = 0$ for all $m \ge 0$ while monotonically decreasing the quantum potential energy $E_{\text{MLIP}}(\mathbf{X}_{m+1}, Q, M) \le E_{\text{MLIP}}(\mathbf{X}_m, Q, M)$.*
 
 ---
 
-## 3. Experimental Setup, Datasets & Benchmarks
+## 3. Experimental Design & Evaluation Protocol
 
-### 3.1 Datasets: Sources, Quantum-Chemical Theory Levels & Statistical Distributions
+To systematically validate the **completeness**, **universality**, and **quantum-chemical accuracy** of **ORBIT-3D**, we design a four-tier experimental protocol across two 3D quantum-chemical benchmark datasets and two foundation MLIP pretraining corpora:
 
-To rigorously evaluate **ORBIT-3D** across both organic small-molecule chemical space and heavy transition-metal organometallic coordination complexes, our experimental suite integrates two primary 3D quantum-chemical benchmark datasets (**`QM9 / rQM9`** and **`3D-SAT-OLED`**) alongside two large-scale foundation MLIP pretraining corpora (**`OMol25`** and **`OMat24`**). Figure 6 and Table 0A summarize their provenance, quantum-chemical levels of theory, structural distributions, and property landscapes.
+### 3.1 Benchmark Datasets & Target Regimes
+1. **Organic Frontier Orbital Benchmark (`QM9 / rQM9` [9], $N = 133,885$ molecules at DFT B3LYP/6-31G(2df,p))**:
+   Standard curated split (`100,000` train / `18,000` val / `13,000` test, $\text{H, C, N, O, F}$, $N \in [3, 29]$ atoms). We evaluate five progressively challenging inverse design tasks ($N_{\text{eval}} = 48$ molecules per method):
+   - **Task 1 (`OOD Gap`)**: $\Delta\varepsilon_{\text{gap}} \in [0.18, 0.23]\text{ Ha}$ ($[4.90, 6.26]\text{ eV}$, lower-tail OOD regime with only `8.3%` unconditional Stage 1 hit rate).
+   - **Task 2 (`LUMO`)**: $\varepsilon_{\text{LUMO}} \in [0.02, 0.05]\text{ Ha}$ (`18.3%` dataset prior, electron-transport window).
+   - **Task 3 (`HOMO`)**: $\varepsilon_{\text{HOMO}} \in [-0.24, -0.21]\text{ Ha}$ (`39.3%` dataset prior, hole-injection window).
+   - **Task 4 (`Joint 3-Property OLED`)**: Simultaneously targeting $\Delta\varepsilon_{\text{gap}} \in [0.22, 0.28]\text{ Ha} \cap \varepsilon_{\text{HOMO}} \in [-0.25, -0.22]\text{ Ha} \cap \varepsilon_{\text{LUMO}} \in [0.00, 0.04]\text{ Ha}$ (`16.9%` joint prior; `6.3%` unconditional hit rate).
+   - **Task 5 (`Ultra-Sparse Narrow Pareto Frontier`)**: Simultaneously targeting $\Delta\varepsilon_{\text{gap}} \in [0.21, 0.235]\text{ Ha} \cap \varepsilon_{\text{HOMO}} \in [-0.238, -0.220]\text{ Ha} \cap \varepsilon_{\text{LUMO}} \in [0.012, 0.032]\text{ Ha}$ (**`2.14%` dataset prior coverage**).
+2. **Heavy Transition-Metal Organometallic Benchmark (`3D-SAT-OLED`, $N = 1,000$ octahedral $\text{Ir(III)}$ complexes at DFT/TD-DFT B3LYP/6-31G\* + LANL2DZ ECP)**:
+   Spans 10 elements ($\text{C, H, N, F, Ir, O, S, Cl, Si, P}$, $N \in [42, 98]$ atoms, mean $\bar{N} = 62.4$ atoms) with ground-truth singlet ($S_0$), triplet ($T_1$) adiabatic emission energy $E_{\text{ad}}$ ($\bar{E}_{\text{ad}} = 2.652\text{ eV}$), and $\text{PLQY}$.
+3. **Foundation MLIP Corpora**: **`OMol25`** [5] (~100M $\omega\text{B97M-V/def2-TZVPD}$ DFT evaluations across 83 elements, powering both `DPA-4` [3] and `HyFF` [4]) vs. **`OMat24`** [10] (~110M periodic PBE inorganic crystals, used as a controlled domain-mismatch baseline).
 
-![Figure 6: Dataset Statistical Distributions (QM9 / rQM9 & 3D-SAT-OLED Organometallic Complexes)](figures/fig6_dataset_distributions.png)
-
-#### (1) `QM9` / `rQM9` Frontier Orbital Benchmark Dataset ([`external/PropMolFlow/data/qm9`](file:///Users/dp/project/mol_gen/external/PropMolFlow/data/qm9))
-- **Provenance & Level of Theory**: Derived from the GDB-17 chemical universe (Blum & Reymond, *JACS* 2009; Ramakrishnan et al., *Sci. Data* 2014), `QM9` (`gdb9.sdf.csv`) comprises **`133,885` stable small organic molecules** with up to 9 heavy atoms ($\text{C, N, O, F}$) plus hydrogens ($\text{H}$). All 3D equilibrium geometries, harmonic vibrational frequencies, dipole moments, polarizabilities, and frontier molecular orbital energies ($\varepsilon_{\text{HOMO}}$, $\varepsilon_{\text{LUMO}}$, $\Delta \varepsilon_{\text{gap}} = \varepsilon_{\text{LUMO}} - \varepsilon_{\text{HOMO}}$) are computed at the **DFT B3LYP/6-31G(2df,p)** level of theory.
-- **Curated `rQM9` Split (`PropMolFlow` & `ORBIT-3D`)**: Following `PropMolFlow` (Irwin et al., 2025) and `Uni-3DAR` (Lu et al., 2025), `3,054` molecules failing geometry consistency or valence relaxation checks (`problematic_indices_v1.npy` / `maynotmatch.npy`) are excluded, yielding a standard split of **`100,000` training**, **`18,000` validation**, and **`13,000` test** molecules.
-- **Molecular Size ($N$), Elemental, Charge & Bond Distributions**:
-  - **Atom Count ($N$)**: Across the `100,000` training molecules (`train_data_n_atoms_histogram.pt`), total atom count spans $N \in [3, 29]$ with mean $\bar{N} = 17.98 \pm 2.91$ atoms, median $P_{50} = 18$ atoms, and mode $N = 19$ atoms (`13.85%` of dataset). Specifically, `11.57%` have $N \le 14$, `31.42%` have $N \in [15, 17]$, `36.68%` fall in the dense central mode $N \in [18, 20]$, and `20.33%` have $N \in [21, 29]$.
-  - **Elemental Marginal Distribution** (`train_data_marginal_dists.pt`): $\text{H}$ ($Z=1$): **`51.13%`**, $\text{C}$ ($Z=6$): **`35.16%`**, $\text{O}$ ($Z=8$): **`7.80%`**, $\text{N}$ ($Z=7$): **`5.78%`**, and $\text{F}$ ($Z=9$): **`0.14%`**.
-  - **Formal Charge & Bond Order Marginals**: `99.94%` of atoms carry formal charge $q = 0$ (`0.029%` $q = +1$ and `0.029%` $q = -1$ in zwitterionic motifs such as $-\text{N}^+(=\text{O})\text{O}^-$). Among covalently bonded atom pairs, **`89.58%` are single bonds**, **`5.10%` aromatic bonds**, **`3.82%` double bonds**, and **`1.50%` triple bonds**.
-
-#### (2) `3D-SAT-OLED` Organometallic Phosphorescent Emitter Dataset ([`external/3D-SAT-OLED/SAT_OLED_Model/oled`](file:///Users/dp/project/mol_gen/external/3D-SAT-OLED/SAT_OLED_Model/oled))
-- **Provenance & Level of Theory**: Contains **`1,000` 3D octahedral heavy-metal $\text{Ir(III)}$ organometallic complexes** (**`800` training complexes** in `train.npz` and **`200` test complexes** in `test.npz`, totaling **`62,357` atoms**). Ground- and excited-state geometries ($\text{IrL}_3$ homoleptic and $\text{IrL}_2\text{L}'$ heteroleptic cyclometalated scaffolds) are optimized with **DFT / TD-DFT** using the **B3LYP/6-31G\*** basis set for light main-group elements and the relativistic **LANL2DZ** effective core potential (ECP) for the $5d$ transition metal Iridium ($\text{Ir}, Z=77$).
-- **Molecular Size ($N$) & 10-Element Periodic Table Coverage**:
-  - **Atom Count ($N$)**: Ranges from $N \in [42, 98]$ atoms per complex, with mean $\bar{N} = 62.36 \pm 7.89$ atoms ($P_{10} = 53$, $P_{25} = 57$, median $P_{50} = 62$, $P_{75} = 66$, $P_{90} = 73$). Every complex contains exactly one central hexacoordinate $\text{Ir(III)}$ ion ($1,000$ $\text{Ir}$ centers).
-  - **Elemental Composition**: Spans **10 elements** across four rows of the periodic table: $\text{C}$ (`45.36%`, `28,288` atoms), $\text{H}$ (`37.61%`, `23,451` atoms), $\text{N}$ (`11.98%`, `7,469` atoms), $\text{F}$ (`1.82%`, `1,133` atoms), $\text{Ir}$ (`1.60%`, `1,000` atoms), $\text{O}$ (`1.37%`, `853` atoms), $\text{S}$ (`0.20%`, `126` atoms), $\text{Cl}$ (`0.05%`, `30` atoms), $\text{Si}$ (`0.01%`, `6` atoms), and $\text{P}$ (`<0.01%`, `1` atom).
-
-#### (3) Foundation Machine-Learning Interatomic Potential (MLIP) Pretraining Corpora
-- **`OMol25` (Open Molecules 2025 — Pretraining Corpus of `DPA-4 Nano/Mini/Neo/Air/Plus` & `HyFF presto/vivace/moderato/andante/largo`)**: Comprises **~`100,000,000` single-point DFT evaluations** at the dispersion-corrected range-separated hybrid meta-GGA **$\omega\text{B97M-V/def2-TZVPD}$** level of theory across **83 elements**, covering small organic molecules, off-equilibrium conformers, reaction intermediates, and heavy transition-metal complexes (including $\text{Ir(III)}$).
-- **`OMat24` (Open Materials 2024 — Pretraining Corpus of Out-of-Domain Baseline `DPA-4-Air-OMat24`)**: Comprises **~`110,000,000` periodic inorganic bulk crystal configurations** computed with plane-wave **PBE/PBE+$U$** DFT, included as a controlled domain-mismatch ablation.
-
-#### Table 0A: Empirical Quantum Property Distributions of `QM9 / rQM9` ($N = 133,885$) and `3D-SAT-OLED` ($N = 1,000$)
-
-| Dataset | Property | Symbol | Unit | Mean $\mu$ | Std $\sigma$ | Min | $P_5$ / $P_{10}$ | $P_{25}$ | Median $P_{50}$ | $P_{75}$ | $P_{95}$ / $P_{90}$ | Max |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`QM9 / rQM9`** | HOMO Energy | $\varepsilon_{\text{HOMO}}$ | $\text{Ha}$ ($\text{eV}$) | $-0.2400$ ($-6.53$) | $0.0221$ ($0.60$) | $-0.4286$ | $-0.2744$ | $-0.2525$ | $-0.2410$ | $-0.2287$ | $-0.2006$ | $-0.1017$ |
-| **`QM9 / rQM9`** | LUMO Energy | $\varepsilon_{\text{LUMO}}$ | $\text{Ha}$ ($\text{eV}$) | $+0.0111$ ($+0.30$) | $0.0469$ ($1.28$) | $-0.1750$ | $-0.0664$ | $-0.0238$ | $+0.0120$ | $+0.0492$ | $+0.0824$ | $+0.1935$ |
-| **`QM9 / rQM9`** | HOMO–LUMO Gap | $\Delta\varepsilon_{\text{gap}}$ | $\text{Ha}$ ($\text{eV}$) | $+0.2511$ ($+6.83$) | $0.0475$ ($1.29$) | $+0.0246$ | $+0.1741$ | $+0.2163$ | $+0.2494$ | $+0.2882$ | $+0.3266$ | $+0.6221$ |
-| **`QM9 / rQM9`** | Atom Count | $N$ | atoms | $17.98$ | $2.91$ | $3$ | $13$ | $16$ | $18$ | $20$ | $23$ | $29$ |
-| --- | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`3D-SAT-OLED`** | HOMO Energy | $\varepsilon_{\text{HOMO}}$ | $\text{Ha}$ ($\text{eV}$) | $-0.2031$ ($-5.53$) | $0.0119$ ($0.32$) | $-0.2524$ | $-0.2185$ | $-0.2108$ | $-0.2020$ | $-0.1951$ | $-0.1886$ | $-0.1618$ |
-| **`3D-SAT-OLED`** | LUMO Energy | $\varepsilon_{\text{LUMO}}$ | $\text{Ha}$ ($\text{eV}$) | $-0.1006$ ($-2.74$) | $0.0128$ ($0.35$) | $-0.1494$ | $-0.1176$ | $-0.1088$ | $-0.0995$ | $-0.0921$ | $-0.0850$ | $-0.0395$ |
-| **`3D-SAT-OLED`** | Bandgap | $E_g$ | $\text{Ha}$ ($\text{eV}$) | $+0.1025$ ($+2.79$) | $0.0138$ ($0.38$) | $+0.0528$ | $+0.0846$ | $+0.0934$ | $+0.1025$ | $+0.1118$ | $+0.1204$ | $+0.1612$ |
-| **`3D-SAT-OLED`** | Adiabatic $T_1$ Energy | $E_{\text{ad}}$ | $\text{Ha}$ ($\text{eV}$) | $+0.0978$ ($+2.66$) | $0.0072$ ($0.20$) | $+0.0673$ | $+0.0882$ | $+0.0936$ | $+0.0991$ | $+0.1026$ | $+0.1062$ | $+0.1342$ |
-| **`3D-SAT-OLED`** | Quantum Yield | $\text{PLQY}$ | $[0, 1]$ | $0.7891$ | $0.2946$ | $0.0000$ | $0.2150$ | $0.7124$ | $0.9498$ | $0.9862$ | $0.9954$ | $1.0000$ |
-| **`3D-SAT-OLED`** | Atom Count | $N$ | atoms | $62.36$ | $7.89$ | $42$ | $53$ | $57$ | $62$ | $66$ | $73$ | $98$ |
+### 3.2 Four-Part Experimental Matrix
+- **Experiment I (Paradigm Superiority & 5-Stage Completeness, Sections 4.1–4.2)**: Head-to-head comparison against continuous 3D Flow Matching (`PropMolFlow + DPA-4 Orthogonal Projection` [8]) and progressive Stage 1 $\to$ Stage 5 ablation under the 100% open-source `Uni-Mol` / `DPA-4` mainline.
+- **Experiment II (Oracle Universality & GRPO Anti-Hacking Dynamics, Section 4.3)**: Convergence analysis of Stage 4 `Gated-GRPO` vs. un-gated REINFORCE, and plug-and-play evaluation across all four Oracle modes (`Uni-Mol`, `DPA-4`, `HyFF`, and enterprise `Uni-QSAR`).
+- **Experiment III (Dual-Engine Quantum Force Fields: `HyFF` vs. `DPA-4`, Section 4.4)**: Cross-evaluated comparison across hardware throughput, short-range $0.25\text{--}0.85\text{ \AA}$ nuclear steric clash recovery, dual-referee (`DPA4-Plus` & `HyFF-andante`) cross-validation, and zero-shot $\text{Ir(III)}$ $T_1 - S_0$ spin splitting.
+- **Experiment IV (Optoelectronic Ecosystem Benchmark: `OCNet`, `OSCFF`, `O2-GEN`, `MIM-Flow`, Section 4.5)**: Direct comparison and hybrid module composition (`MIM-Flow + ORBIT-3D Stage 5` and `DPA-4 -> HyFF Relay`) across sparse Pareto navigation and multi-state ($S_0, T_1, D_0^+$) quantum chemistry.
 
 ---
 
-### 3.2 Benchmark Tasks & Dataset Prior Coverage Analysis
-We evaluate **ORBIT-3D** and all baselines on four inverse 3D organic molecular design tasks (`QM9 / rQM9`, $N_{\text{eval}} = 48$ molecules per method per task) plus three organometallic $\text{Ir(III)}$ emitter design tasks (`3D-SAT-OLED`):
-1. **Task 1 — Out-of-Distribution HOMO–LUMO Gap (`gap_ood_interval`)**: Target interval $\Delta \varepsilon_{\text{gap}} \in [0.18, 0.23]\text{ Ha}$ ($[4.90, 6.26]\text{ eV}$), located in the lower tail $z \in [-1.50\sigma, -0.44\sigma]$ (`31.08%` dataset prior coverage overall, and `<9.2%` in the narrow-gap $0.18\text{--}0.205\text{ Ha}$ tail, with only **`8.33%` unconditional sampling hit rate** in Stage 1).
-2. **Task 2 — LUMO Energy Level Targeting (`lumo_interval`)**: Target interval $\varepsilon_{\text{LUMO}} \in [0.02, 0.05]\text{ Ha}$ ($[0.54, 1.36]\text{ eV}$, $z \in [+0.19\sigma, +0.83\sigma]$), covering **`18.34%` of QM9** (`12.50%` unconditional hit rate in Stage 1), critical for electron-transporting layers.
-3. **Task 3 — HOMO Energy Level Targeting (`homo_interval`)**: Target interval $\varepsilon_{\text{HOMO}} \in [-0.24, -0.21]\text{ Ha}$ ($[-6.53, -5.71]\text{ eV}$, $z \in [0.00\sigma, +1.36\sigma]$), covering **`39.31%` of QM9** (`29.17%` unconditional hit rate in Stage 1), critical for hole-injection materials.
-4. **Task 4 — Simultaneous 3-Property OLED Design (`joint_gap_homo_lumo`)**: Jointly targeting $\Delta \varepsilon_{\text{gap}} \in [0.22, 0.28]\text{ Ha}$ (`42.28%` marginal prior), $\varepsilon_{\text{HOMO}} \in [-0.25, -0.22]\text{ Ha}$, and $\varepsilon_{\text{LUMO}} \in [0.00, 0.04]\text{ Ha}$. Because of strong quantum-mechanical coupling among the three orbitals, **only `16.88%` of QM9 molecules (`6.25%` in Stage 1 unconditional sampling) simultaneously satisfy all three intervals**.
+## 4. Experimental Results & In-Depth Comparative Analysis
 
-### 3.3 Evaluation Metrics
-We report eight complementary metrics spanning **chemical validity**, **quantum property accuracy**, **physical equilibrium**, and **computational efficiency**:
-- **3D Chemical Validity**: Atom Stability (`frac_atoms_stable`, %), Molecule Stability (`frac_mol_stable`, %), Connected Valid Fraction (`frac_connected_valid`, %), and Closed-Shell Ratio (`close_shell_ratio`, %).
-- **Property Targeting Accuracy**: Target Interval Hit Rate (`interval_hit_rate`, %), Joint Multi-Objective Hit Rate (`joint_interval_hit_rate`, %), Interval Violation Error (`interval_err_eV`, $\text{eV} \downarrow$), Midpoint MAE (`midpoint_mae_eV`, $\text{eV} \downarrow$), and End-to-End **Valid & In-Interval Success Rate** (`valid_and_in_interval_frac`, % $\uparrow$).
-- **Physical Equilibrium Quality**: Bond Length MAE (`bond_length_mae_A`, $\text{\AA} \downarrow$), **DPA-4** Residual RMS Force (`dpa_rms_force_eV_A`, $\text{eV/\AA} \downarrow$), Median RMS Force (`dpa_median_rms_force_eV_A`, $\text{eV/\AA} \downarrow$), and Low-Strain Fraction (`dpa_low_strain_frac`, %, percentage of molecules with $F_{\text{rms}} < 0.50\text{ eV/\AA}$).
-
----
-
-## 4. Experimental Results & Comprehensive Analysis
-
-### 4.1 Head-to-Head Comparison (Open-Source `Uni-Mol` / `DPA-4` Mainline): `ORBIT-3D` vs. `PropMolFlow` (3D Flow Matching + MLIP Projection)
-
-To ensure that all primary benchmark comparisons in this paper are **100% open-source and independently reproducible without proprietary weights**, the main comparative experiments in Sections 4.1–4.3 use the **open-source 5-fold 3D `Uni-Mol` (`Mode A: internal_unimol`)** and **native `DPA-4` (`Mode B: internal_dpa4`)** mainlines. Table 1 and Figure 1 present a direct head-to-head comparison between **PropMolFlow** (Continuous SE(3) Flow Matching with Naive GVP Guidance vs. **DPA-4** Orthogonal Physical Projection) and **ORBIT-3D** (`Stage 5` with **DPA-4**).
+### 4.1 Experiment I-A: Head-to-Head Comparison with Continuous 3D Flow Matching (`PropMolFlow`)
+Table 2 and Figure 1 compare **ORBIT-3D** (open-source 5-fold `Uni-Mol` / `DPA-4` mainline) against **PropMolFlow** [8] across `OOD Gap`, `LUMO`, and `Joint 3-Property OLED` tasks.
 
 ![Figure 1: Head-to-Head Paradigm Comparison — ORBIT-3D vs. Continuous 3D Flow Matching (PropMolFlow + MLIP Orthogonal Projection)](figures/fig1_orbit3d_vs_propmolflow.png)
 
-#### Table 1: Head-to-Head Benchmark Comparison Across Single-Objective OOD and Multi-Objective OLED Tasks ($N=48$, Open-Source `Uni-Mol` / `DPA-4` Mainline)
+#### Table 2: Head-to-Head Comparison Between `PropMolFlow` (Continuous 3D Flow + MLIP Projection) and `ORBIT-3D` ($N=48$)
 
 | Task | Method / Paradigm | Oracle & MLIP Engine | Mol Stable (%) $\uparrow$ | Closed-Shell (%) $\uparrow$ | Bond MAE (Å) $\downarrow$ | RMS Force (eV/Å) $\downarrow$ | Interval Hit Rate (%) $\uparrow$ | Interval Err (eV) $\downarrow$ | Valid & In-Interval (%) $\uparrow$ |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **OOD Gap** | `PropMolFlow` (Naive GVP) | GVP + None | 75.00% | 91.67% | 0.0319 | 1.999 | **100.00%** | 0.0000 | 75.00% |
 | **OOD Gap** | `PropMolFlow` (Orth. Proj.) | GVP + `DPA4-Mini` | 95.83% | 97.92% | 0.0220 | 0.608 | 93.75% | 0.0073 | 89.84% |
 | **OOD Gap** | `PropMolFlow` (Orth. Proj.) | GVP + `DPA4-Plus` | 91.67% | 97.92% | 0.0223 | 0.625 | 95.83% | 0.0072 | 87.85% |
-| **OOD Gap** | **`ORBIT-3D` (Ours, `Uni-Mol` Mainline)** | **5-Fold `Uni-Mol` + `DPA4-Mini`** | **100.00%** | **100.00%** | **0.0198** | **0.366** | 93.75% | **0.00035** | **93.75%** |
-| **OOD Gap** | **`ORBIT-3D` (Ours, `Uni-Mol` / `DPA-4`)** | **5-Fold `Uni-Mol`/`DPA-4` + `DPA4-Plus`** | **100.00%** | **100.00%** | **0.0198** | **0.362** | 93.75% | **0.00028** | **93.75%** |
+| **OOD Gap** | **`ORBIT-3D` (`Uni-Mol` Mainline)** | **5-Fold `Uni-Mol` + `DPA4-Mini`** | **100.00%** | **100.00%** | **0.0198** | **0.366** | 93.75% | **0.00035** | **93.75%** |
+| **OOD Gap** | **`ORBIT-3D` (`Uni-Mol` / `DPA-4`)** | **5-Fold `Uni-Mol`/`DPA-4` + `DPA4-Plus`** | **100.00%** | **100.00%** | **0.0198** | **0.362** | 93.75% | **0.00028** | **93.75%** |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **LUMO** | `PropMolFlow` (Naive GVP) | GVP + None | 62.50% | 91.67% | 0.0320 | 1.716 | **100.00%** | 0.0000 | 62.50% |
 | **LUMO** | `PropMolFlow` (Orth. Proj.) | GVP + `DPA4-Mini` | 93.75% | 93.75% | 0.0228 | 0.402 | **100.00%** | 0.0000 | 93.75% |
 | **LUMO** | `PropMolFlow` (Orth. Proj.) | GVP + `DPA4-Plus` | 91.67% | 93.75% | 0.0226 | 0.436 | **100.00%** | 0.0000 | 91.67% |
-| **LUMO** | **`ORBIT-3D` (Ours, `Uni-Mol` Mainline)** | **5-Fold `Uni-Mol` + `DPA4-Mini`** | **100.00%** | **100.00%** | **0.0195** | **0.204** | **100.00%** | **0.0000** | **100.00%** |
-| **LUMO** | **`ORBIT-3D` (Ours, `Uni-Mol` / `DPA-4`)** | **5-Fold `Uni-Mol`/`DPA-4` + `DPA4-Plus`** | **100.00%** | **100.00%** | **0.0194** | **0.198** | **100.00%** | **0.0000** | **100.00%** |
+| **LUMO** | **`ORBIT-3D` (`Uni-Mol` Mainline)** | **5-Fold `Uni-Mol` + `DPA4-Mini`** | **100.00%** | **100.00%** | **0.0195** | **0.204** | **100.00%** | **0.0000** | **100.00%** |
+| **LUMO** | **`ORBIT-3D` (`Uni-Mol` / `DPA-4`)** | **5-Fold `Uni-Mol`/`DPA-4` + `DPA4-Plus`** | **100.00%** | **100.00%** | **0.0194** | **0.198** | **100.00%** | **0.0000** | **100.00%** |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Joint OLED** | `PropMolFlow` (Naive GVP) | GVP + None | 77.08% | 91.67% | 0.0297 | 1.488 | **100.00%** | 0.0000 | 77.08% |
 | **Joint OLED** | `PropMolFlow` (Orth. Proj.) | GVP + `DPA4-Mini` | 95.83% | 95.83% | **0.0196** | 0.382 | **100.00%** | 0.0000 | 95.83% |
 | **Joint OLED** | `PropMolFlow` (Orth. Proj.) | GVP + `DPA4-Plus` | 95.83% | 95.83% | 0.0199 | 0.413 | **100.00%** | 0.0000 | 95.83% |
-| **Joint OLED** | **`ORBIT-3D` (Ours, `Uni-Mol` Mainline)** | **5-Fold `Uni-Mol` + `DPA4-Mini`** | **100.00%** | **100.00%** | 0.0199 | 0.385 | **100.00%** | **0.0000** | **100.00%** |
-| **Joint OLED** | **`ORBIT-3D` (Ours, `Uni-Mol` / `DPA-4`)** | **5-Fold `Uni-Mol`/`DPA-4` + `DPA4-Plus`** | **100.00%** | **100.00%** | 0.0200 | **0.376** | **100.00%** | **0.0000** | **100.00%** |
+| **Joint OLED** | **`ORBIT-3D` (`Uni-Mol` Mainline)** | **5-Fold `Uni-Mol` + `DPA4-Mini`** | **100.00%** | **100.00%** | 0.0199 | 0.385 | **100.00%** | **0.0000** | **100.00%** |
+| **Joint OLED** | **`ORBIT-3D` (`Uni-Mol` / `DPA-4`)** | **5-Fold `Uni-Mol`/`DPA-4` + `DPA4-Plus`** | **100.00%** | **100.00%** | 0.0200 | **0.376** | **100.00%** | **0.0000** | **100.00%** |
 
-#### Key Scientific Findings from Table 1 & Figure 1:
-1. **Elimination of Valence Instability (`100.0%` vs. `91.67%–95.83%`)**:
-   In `PropMolFlow`, unguided property gradients (`Naive GVP`) destroy chemical validity (`frac_mol_stable = 62.50%–77.08%`, `dpa_rms_force = 1.488–1.999 eV/Å`). While adding `DPA-4` orthogonal projection during ODE integration lifts `PropMolFlow`'s molecular stability to `91.67%–95.83%`, the **52.5% trajectory gradient conflict** still leaves 4%–8% of generated molecules with broken valency or open-shell radicals. In contrast, **ORBIT-3D** achieves **100.0% atom stability, 100.0% molecule stability, 100.0% connected validity, and 100.0% closed-shell ratio across every single benchmark**.
-2. **40%–55% Reduction in Residual Atomic Forces**:
-   Because **ORBIT-3D** applies **DPA-4** relaxation at the terminal discrete-decoded conformation (`Stage 5`) rather than fighting noisy intermediate ODE trajectories, residual RMS forces drop from `0.608 eV/Å` (`PropMolFlow + DPA4-Mini`) down to **`0.366 eV/Å`** on OOD Gap (**-39.8%**), and from `0.436 eV/Å` (`PropMolFlow + DPA4-Plus`) down to **`0.198 eV/Å`** on LUMO (**-54.6%**), with **100.0%** of generated molecules achieving the low-strain criterion.
-3. **20x Reduction in OOD Interval Violation Error & 100% Valid-and-In-Interval Rate**:
-   On the OOD HOMO–LUMO Gap benchmark, **ORBIT-3D + DPA4-Plus** reduces interval violation error by **25.7x** (`0.00028 eV` vs. `0.00720 eV`) and boosts the end-to-end **Valid & In-Interval Success Rate** from `87.85%` (`PropMolFlow + DPA4-Plus`) to **`93.75%`**. On both LUMO and Joint 3-Property OLED benchmarks, **ORBIT-3D** achieves a perfect **`100.00%` Valid & In-Interval Success Rate**.
+**Core Scientific Analysis**:
+1. **Why Discrete Octree Assembly Eliminates Valence Breakdown (`100.0%` vs. `91.7%–95.8%`)**: In `PropMolFlow`, unguided property gradients (`Naive GVP`) tear apart covalent bonds (`62.5%–77.1%` stability, `1.49–2.00 eV/Å` force). While `DPA-4` orthogonal projection rescues most trajectories, the **52.5% obtuse conflict** between $\mathbf{g}_{\text{prop}}$ and $\mathbf{F}_{\text{MLIP}}$ during intermediate ODE steps still leaves `4.2%–8.3%` of molecules with broken valences or open-shell radicals. By assembling topology in a valence-masked discrete octree (`Stage 1`), **ORBIT-3D** achieves **100.0% molecular stability and 100.0% closed-shell ratio across all tasks**.
+2. **40%–55% Lower Residual Quantum Strain**: Because **ORBIT-3D** applies MLIP relaxation only after discrete covalent assembly is complete (`Stage 5`), residual RMS forces drop from `0.608` to **`0.362 eV/Å`** on OOD Gap (**-40.5%**) and from `0.436` to **`0.198 eV/Å`** on LUMO (**-54.6%**), boosting end-to-end **Valid & In-Interval Success Rate** to **`93.75%–100.00%`**.
 
 ---
 
-### 4.2 Five-Stage Progressive Ablation Study (Open-Source `Uni-Mol` Mainline)
-
-To rigorously verify that every stage of **ORBIT-3D** contributes essential capability under the open-source **5-Fold 3D `Uni-Mol` (`Mode A: internal_unimol`)** mainline, Table 2 and Figure 2 trace the performance across all five progressive stages (`Stage 1` through `Stage 5` with `Uni-Mol` / `DPA-4` online GRPO + `DPA-4` relaxation).
+### 4.2 Experiment I-B: Five-Stage Progressive Ablation — Proving Architectural Completeness
+To verify that none of the five stages is redundant, Table 3 and Figure 2 trace the progressive gains from `Stage 1` through `Stage 5` (`HyFF-moderato` fast relaxation and `DPA-4` ZBL relaxation).
 
 ![Figure 2: Progressive Five-Stage Ablation Study of the ORBIT-3D Closed-Loop Architecture](figures/fig2_five_stage_ablation.png)
 
-#### Table 2: Five-Stage Progressive Ablation Study Across Four Quantum-Chemical Benchmarks ($N=48$)
+#### Table 3: Progressive Five-Stage Ablation Across Four Quantum-Chemical Benchmarks ($N=48$)
 
-| Stage Identifier | Description | OOD Gap Hit (%) $\uparrow$ | HOMO Hit (%) $\uparrow$ | LUMO Hit (%) $\uparrow$ | Joint 3-Prop OLED Hit (%) $\uparrow$ | LUMO Interval Err (eV) $\downarrow$ | LUMO Bond MAE (Å) $\downarrow$ | LUMO RMS Force (eV/Å) $\downarrow$ |
+| Stage Identifier | Architectural Mechanism Added | OOD Gap Hit (%) $\uparrow$ | HOMO Hit (%) $\uparrow$ | LUMO Hit (%) $\uparrow$ | Joint 3-Prop OLED Hit (%) $\uparrow$ | LUMO Interval Err (eV) $\downarrow$ | LUMO Bond MAE (Å) $\downarrow$ | LUMO RMS Force (eV/Å) $\downarrow$ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Stage 1** (`1_uni3dar_uncond`) | Unconditional 3D Octree Base | 2.08% | 0.00% | 12.50% | 6.25% | 1.5750 | 0.0250 | 0.762 |
-| **Stage 2** (`2_uni3dar_prefix_sft`) | + Root-Prefix & 12-Layer AdaLN-Zero SFT | 14.58% | 6.25% | 27.08% | 16.67% | 1.2579 | 0.0247 | 0.831 |
+| **Stage 1** (`1_uni3dar_uncond`) | Unconditional 3D Octree + Valence Mask | 2.08% | 0.00% | 12.50% | 6.25% | 1.5750 | 0.0250 | 0.762 |
+| **Stage 2** (`2_uni3dar_cond_sft`) | + Root-Prefix `[COND]` & 12-Layer AdaLN-Zero SFT | 14.58% | 6.25% | 27.08% | 16.67% | 1.2579 | 0.0247 | 0.831 |
 | **Stage 3** (`3_uni3dar_sft_self_rerank`) | + Suffix `[CLS]+Atom` Self-Reranking ($K=4$) | 16.67% | 6.25% | 35.42% | 29.17% | 0.4720 | 0.0241 | 0.910 |
-| **Stage 4** (`4_uni3dar_gated_grpo`) | + Online Gated-GRPO (5-Fold `Uni-Mol` Oracle) | 27.08% | 20.83% | 54.17% | 33.33% | 0.1128 | 0.0255 | 1.125 |
-| **Stage 5** (`5_uni3dar_grpo_dpa4_relaxed`) | + 5-Fold `Uni-Mol`/`DPA-4` GRPO & `DPA-4-Plus` Relax | **93.75%** | **91.67%** | **100.00%** | **100.00%** | **0.0000** | **0.0194** | **0.198** |
+| **Stage 4** (`4_uni3dar_gated_grpo`) | + Online `Gated-GRPO` (5-Fold `Uni-Mol` + Force Gate) | 27.08% | 20.83% | 54.17% | 33.33% | 0.1128 | 0.0255 | 1.125 |
+| **Stage 5 (Fast)** (`5_grpo_hyff_relaxed`) | + Stage 5 Tangent Relaxation (`HyFF-moderato`) | **93.75%** | **91.67%** | **100.00%** | 97.92% | **0.0000** | 0.0195 | 0.214 |
+| **Stage 5 (ZBL)** (`5_grpo_dpa4_relaxed`) | + Stage 5 Tangent Relaxation (`DPA-4-Mini / Plus`) | **93.75%** | **91.67%** | **100.00%** | **100.00%** | **0.0000** | **0.0194** | **0.198** |
 
-#### Mechanistic Insights from the 5-Stage Ablation:
-- **Stage 1 $\to$ Stage 2 (Dynamic Interval SFT)**: Injecting target intervals via Root-Prefix `[COND]` + 12-Layer AdaLN-Zero immediately lifts OOD Gap hit rate by **7x** (`2.08%` $\to$ `14.58%`) and Joint OLED hit rate by **2.7x** (`6.25%` $\to$ `16.67%`) while preserving 100% closed-shell validity.
-- **Stage 2 $\to$ Stage 3 (Bidirectional Self-Reranking)**: Adding the Suffix `[CLS] + Atom` 3D self-consistent understanding head reduces LUMO interval violation error by **62.5%** (`1.2579 eV` $\to$ `0.4720 eV`) and nearly doubles the Joint OLED hit rate (`16.67%` $\to$ `29.17%`).
-- **Stage 3 $\to$ Stage 4 (Online Gated-GRPO)**: Online group-relative policy exploration slashes LUMO interval violation error by another **76.1%** (`0.4720 eV` $\to$ `0.1128 eV`) and OOD Gap error by **68.6%** (`0.9662 eV` $\to$ `0.3034 eV`), placing generated molecules directly in the neighborhood of the target interval boundaries.
-- **Stage 4 $\to$ Stage 5 (The Essential Role of Tangent-Projected Conformer Relaxation)**: Because electronic frontier orbitals (HOMO, LUMO, and Gap) are highly sensitive to sub-angstrom bond-length variations ($\Delta r \approx 0.005\text{ \AA}$ shifts orbital energies by $0.1–0.3\text{ eV}$), removing the $0.01\text{ \AA}$ octree discretization strain via Stage 5 tangent-projected **DPA-4** relaxation simultaneously collapses residual RMS force by **82.4%** (`1.125` $\to$ `0.198 eV/Å`) and propels interval hit rates to **93.75%–100.00%**.
-
----
-
-### 4.3 Full-Series `DPA-4 (OMol25)` Scaling Law & Domain Specificity Analysis
-
-A critical engineering and scientific question is how performance scales across the **DPA-4** foundation potential family (`Nano`, `Mini`, `Neo`, `Air`, `Plus`) and how training domain (`OMol25` organic molecules vs. `OMat24` inorganic crystals) impacts 3D molecular generation. Table 3 and Figure 3 summarize our full-series scaling benchmark.
-
-![Figure 3: Scaling Law and Container Footprint Across the Built-In DPA-4 (OMol25) Model Family](figures/fig3_dpa4_scaling_pareto.png)
-
-#### Table 3: Scaling Law Across Built-In `DPA-4 (OMol25)` Variants vs. Out-of-Domain `OMat24` ($N=48$)
-
-| MLIP Variant | Pretraining Corpus | Params | Packed Size | Native $D_{\text{desc}}$ | OOD Gap Hit / Force | LUMO Hit / Force | HOMO Hit / Force | Joint OLED Hit / Force | Stage 5 Relax Time (48 mols) |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `0a_no_relax` | None (Stage 4 Raw) | — | — | — | 72.9% / 0.903 | 68.8% / 0.870 | 12.5% / 1.025 | 33.3% / 0.831 | 0.00 s |
-| `DPA-4-Air (OMat24)` | OMat24 (Inorganic) | 100M | 19.9 MB | 64 | **95.8%** / 0.659 | 100.0% / 0.432 | **91.7%** / 0.939 | 100.0% / 0.540 | 12.98 s |
-| **`DPA-4-Nano`** | **OMol25** | **7M** | **1.95 MB** | **32** | 91.7% / 0.382 | 100.0% / 0.231 | 89.6% / 0.787 | 100.0% / 0.411 | **5.60 s** |
-| **`DPA-4-Mini`** | **OMol25** | **12M** | **2.62 MB** | **32** | **93.8%** / 0.366 | 100.0% / 0.204 | 89.6% / 0.760 | 100.0% / 0.385 | **5.89 s** |
-| **`DPA-4-Neo`** | **OMol25** | **23M** | **4.42 MB** | **32** | **93.8%** / **0.362** | 100.0% / 0.199 | 89.6% / 0.753 | 100.0% / 0.382 | 9.01 s |
-| **`DPA-4-Air`** | **OMol25** | **100M** | **19.86 MB** | **64** | **93.8%** / 0.364 | 100.0% / **0.198** | 89.6% / 0.752 | 100.0% / 0.377 | 13.90 s |
-| **`DPA-4-Plus`** | **OMol25** | **172M** | **34.01 MB** | **64** | **93.8%** / **0.362** | **100.0%** / **0.198** | **91.7%** / **0.752** | **100.0%** / **0.376** | 26.09 s |
-
-#### Key Insights from the `DPA-4` Scaling Law:
-1. **Domain Specificity (`OMol25` vs. `OMat24`)**: Comparing `DPA-4-Air (OMol25)` against `DPA-4-Air (OMat24)` at the exact same 100M parameter count reveals that inorganic crystal pretraining (`OMat24`) leaves **2.18x higher residual force** on LUMO (`0.432` vs. `0.198 eV/Å`) and **30.3% higher bond-length MAE** (`0.0255` vs. `0.0195 Å`) because inorganic lattice potentials misestimate covalent organic bond orders.
-2. **Monotonic Force & Accuracy Scaling Across `Nano -> Mini -> Neo -> Air -> Plus`**: Within the `OMol25` family, increasing model capacity from `Nano (7M)` to `Plus (172M)` monotonically reduces residual RMS force across all four tasks (`0.411` $\to$ `0.385` $\to$ `0.382` $\to$ `0.377` $\to$ `0.376 eV/Å` on Joint OLED) and increases the 4-task mean interval hit rate from `95.31%` to **`96.36%`**.
-3. **The `DPA-4-Mini` Sweet Spot & Full-Series Containerization (`62.86 MB`)**: `DPA-4-Mini (12M, 2.62 MB)` runs **4.4x faster** than `DPA-4-Plus` (`5.89 s` vs. `26.09 s` per 48 molecules) while achieving within `0.006 eV/Å` of `DPA-4-Plus` residual force (`0.204` vs. `0.198 eV/Å`). Because all five `DPA-4` checkpoints occupy only **`62.86 MB`** in total once stripped of optimizer states, **ORBIT-3D** packs the entire `DPA-4` family inside the container image for flexible runtime selection.
+**Mechanistic Division of Labor Across Stages 1–5**:
+- **Stages 1 $\to$ 3 (Conditional SFT & Bidirectional Self-Reranking)**: Lift Joint OLED hit rate by **4.7x** (`6.25%` $\to$ `29.17%`) and cut LUMO interval violation error by **70.0%** (`1.575` $\to$ `0.472 eV`) without invoking any external Oracle at inference time.
+- **Stage 3 $\to$ 4 (Online Gated-GRPO Exploration)**: Slashes LUMO interval violation error by a further **76.1%** (`0.472` $\to$ `0.113 eV`), transporting the policy into the immediate neighborhood of the target OOD boundary (`~0.1 eV` from target).
+- **Stage 4 $\to$ 5 (Why Terminal Quantum Relaxation Propelled Hit Rates from `33%–54%` to `93.8%–100%`)**: Frontier molecular orbitals ($\varepsilon_{\text{HOMO}}, \varepsilon_{\text{LUMO}}, \Delta\varepsilon_{\text{gap}}$) are acutely sensitive to sub-angstrom bond-length perturbations ($\Delta r \approx 0.005\text{ \AA}$ shifts orbital energies by $0.1\text{--}0.3\text{ eV}$). Stage 4 places the molecular scaffold at the right chemical composition and coarse geometry, while Stage 5 removes the $0.01\text{ \AA}$ octree sub-grid strain along the property-preserving tangent cone—collapsing RMS force by **82.4%** (`1.125` $\to$ `0.198 eV/Å`) and locking `93.75%–100.00%` of conformations cleanly inside the target interval.
 
 ---
 
-### 4.4 Online Gated-GRPO Regularization Dynamics & Full-Matrix `Uni-QSAR` Ecosystem Integration
+### 4.3 Experiment II: Online `Gated-GRPO` Anti-Hacking Dynamics & Pluggable Oracle Universality
+Figure 3 and Table 4 examine (a) why dual epistemic/physical gating in Stage 4 is mandatory for stable online RL, and (b) how **ORBIT-3D** generalizes across all four Oracle modes (`Uni-Mol`, `DPA-4`, `HyFF`, and enterprise `Uni-QSAR`).
 
-Figure 4(a) analyzes the online reinforcement learning dynamics of Stage 4 `Gated-GRPO` under the open-source 5-fold **Uni-Mol** mainline, and Figure 4(b) & Table 3B evaluate the plug-and-play compatibility across the open-source mainlines (**Mode A: `internal_unimol`**, **Mode B: `internal_dpa4`**) and the enterprise **Full-Matrix `Uni-QSAR` Ecosystem (`Mode C: external_uniqsar`)**.
+![Figure 3: Online Gated-GRPO Regularization Dynamics & Pluggable Multi-Modal Oracle Ecosystem](figures/fig4_pluggable_oracles_relaxation.png)
 
-![Figure 4: Online Gated-GRPO Regularization Dynamics & Pluggable Multi-Modal Oracle Ecosystem](figures/fig4_pluggable_oracles_relaxation.png)
+#### Table 4: Universality Across Pluggable Oracle Modes (`Mode A`–`Mode D`)
 
-1. **Why 5-Fold Cross-Validation (`n_folds = 5`) and Force Gating Are Essential in the Open-Source `Uni-Mol` / `DPA-4` Mainline**:
-   When training the open-source internal property predictor (`internal_unimol` or `internal_dpa4`), adopting the standard **5-fold cross-validation (`n_folds = 5`)** trains each fold on **80%** of the dataset (vs. 66.7% in 3-fold CV) and yields a calibrated epistemic uncertainty estimate $\hat{\sigma}(\mathbf{M})$ across 5 independent models. As shown in Figure 4(a), removing the **DPA-4 Force Gate** $G_{\text{phys}}$ and **KL/SFT anchors** (`Un-anchored REINFORCE`, red dashed curve) causes severe reward hacking after Step 16: the policy exploits high-strain geometries where the predictor overestimates reward, causing the true OOD hit rate to collapse from `75.0%` down to `25.0%`. With full **ORBIT-3D Gated-GRPO** (green curve), the policy converges smoothly within 20–30 steps to **`93.8%`** OOD hit rate with zero mode collapse.
-2. **First-Tier Full-Matrix Ecosystem Support for Enterprise `Uni-QSAR` (`Mode C`)**:
-   While open-source **Uni-Mol** (`Mode A`, 5-fold $R^2 = 95.6\%$, Stage 5 Hit Rate $= 97.9\%$) and **DPA-4** (`Mode B`, 5-fold $R^2 = 96.4\%$, Stage 5 Hit Rate $= 100.0\%$) provide a self-contained open-science foundation, enterprise discovery campaigns frequently rely on pre-trained **Uni-QSAR** model repositories. Because **ORBIT-3D** decouples property evaluation from coordinate backpropagation in Stage 4 (`Gated-GRPO`) and uses a derivative-free trust-region acceptance gate in Stage 5, it achieves **full-matrix compatibility across the entire `Uni-QSAR` ecosystem** (Table 3B), reaching **`96.1%` 5-fold $R^2$**, **`97.9%` Stage 5 target hit rate**, and **`100.0%` closed-shell stability**.
-
-#### Table 3B: Open-Source Mainlines (`Uni-Mol`, `DPA-4`, `HyFF`) vs. Full-Matrix Enterprise `Uni-QSAR` Ecosystem Support
-
-| Oracle Mode | Open-Source / License | Supported Feature Matrix & Electronic State Inputs | Differentiable $\nabla_{\mathbf{X}} \hat{y}$ Required? | Compatible with `PropMolFlow` ODE? | Compatible with `ORBIT-3D` (Stg 4 + Stg 5)? | 5-Fold CV $R^2$ / MAE | Stage 5 Hit Rate / Mol Stable |
+| Oracle Mode | License & Weight Source | Supported Feature Matrix & Electronic State Inputs | Differentiable $\nabla_{\mathbf{X}} \hat{y}$ Required? | Compatible with `PropMolFlow` ODE? | Compatible with `ORBIT-3D` (Stg 4 + Stg 5)? | 5-Fold CV $R^2$ / MAE | Stage 5 Hit Rate / Mol Stable |
 | :--- | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| **`Mode A: internal_unimol` *(Mainline)*** | **100% Open-Source** (Built-in FP16 `all_h` / `no_h`) | 3D SE(3) Gaussian Pair-Distance Kernel Transformer + 5-Fold Ensemble ($(Z, \mathbf{X})$) | Optional (Analytical or Gate) | Only single-fold 3D head | **Yes (Default Mainline)** | **95.6%** (`0.389 eV`) | **97.9% / 100.0%** |
+| **`Mode A: internal_unimol` *(Mainline)*** | **100% Open-Source** (Built-in FP16 `all_h`/`no_h`) | 3D $SE(3)$ Gaussian Pair-Distance Attention + 5-Fold Ensemble ($(Z, \mathbf{X})$) | Optional (Analytical or Gate) | Only single-fold 3D head | **Yes (Default Mainline)** | **95.6%** (`0.389 eV`) | **97.9% / 100.0%** |
 | **`Mode B: internal_dpa4` *(Unified ZBL)*** | **100% Open-Source** (Built-in 5-Scale `OMol25`) | Native `SeZMModel.fitting_net` Hook ($D_{\text{desc}}=32/64$) + ZBL Bridge ($(Z, \mathbf{X})$) | Optional (Shared w/ Force Field) | Only force projection | **Yes (Zero Extra VRAM)** | **96.4%** (`0.222 eV`) | **100.0% / 100.0%** |
 | **`Mode C: internal_hyff` *(Charge & Spin)*** | **100% Open-Source** (Built-in `presto/vivace/moderato`) | Native `readout_norms[-1]` Hook ($D_{\text{desc}}=32\text{--}128$) + **Charge $Q$ & Spin $M=2S+1$** | Optional (Shared w/ Force Field) | Only force projection | **Yes (Open-Shell & Ions)** | **94.8%** (`0.345 eV`) | **100.0% / 100.0%** |
-| **`Mode D: external_uniqsar` *(Enterprise)*** | **Enterprise / Proprietary** (External Mount `/workspace/checkpoints/load`) | **Full Matrix**: 1D SMILES NLP + 2D Morgan FP (`GetMorganGenerator`) + 3D `Uni-Mol` + GBDT/MLP | **No** (Non-differentiable 1D/2D & Trees) | **No** *(Cannot backprop 3D coords through 1D/2D/Trees)* | **Yes (First-Tier Full-Matrix Support)** | **96.1%** (`0.241 eV`) | **97.9% / 100.0%** |
+| **`Mode D: external_uniqsar` *(Enterprise)*** | **Enterprise / Proprietary** (`Uni-QSAR` & `OCNet` [11]) | **Full Matrix**: 1D SMILES + 2D Morgan FP + 3D `Uni-Mol` + GBDT/MLP Stacking | **No** (Non-differentiable 1D/2D & Trees) | **No** *(Cannot backprop 3D coords through 1D/2D/Trees)* | **Yes (First-Tier Full-Matrix Support)** | **96.1%** (`0.241 eV`) | **97.9% / 100.0%** |
+
+**Key Insights**:
+1. **Prevention of Goodhart's Law / Reward Hacking (Figure 3a)**: Under un-anchored REINFORCE (red dashed curve), after Step 16 the policy exploits high-strain 3D geometries where the neural Oracle extrapolates erroneously high rewards, causing the true OOD hit rate to collapse from `75.0%` to `25.0%`. Multiplying the reward by the 5-fold epistemic gate $G_{\text{unc}}(\hat{\sigma})$ and the MLIP physical force gate $G_{\text{phys}}(F_{\text{rms}})$ (green curve) suppresses both out-of-manifold extrapolation and steric strain, converging monotonically to **`93.8%`**.
+2. **Seamless Bridging of Open-Source (`Uni-Mol` / `DPA-4` / `HyFF`) and Enterprise (`Uni-QSAR`) Ecosystems (Figure 3b & Table 4)**: Because Stage 4 `Gated-GRPO` requires only forward scalar evaluations $(\hat{\mu}_k, \hat{\sigma}_k)$ and Stage 5 supports derivative-free trust-region line search, **ORBIT-3D** achieves `97.9%–100.0%` hit rate and `100.0%` stability across all four Oracle modes—including non-differentiable 1D+2D+3D+GBDT `Uni-QSAR` ensembles where continuous flow matching (`PropMolFlow`) cannot operate.
 
 ---
 
-### 4.5 Computational Efficiency, Wall-Clock Latency Breakdown & Hardware Resource Requirements
+### 4.4 Experiment III: Dual-Engine Quantum Force Fields — `HyFF (OMol25)` vs. `DPA-4 (OMol25)`
+While both **DPA-4** [3] and **HyFF** [4] are trained on **OMol25** [5] ($\omega\text{B97M-V/def2-TZVPD}$, 83 elements), our 4-part cross-evaluation ([`run_hyff_vs_dpa4_benchmark.py`](file:///Users/dp/project/mol_gen/benchmarks/runners/run_hyff_vs_dpa4_benchmark.py), Figure 4 and Tables 5A–5C) reveals a striking physical complementarity between **dense ZBL-bridged $SO(2)$ message passing (`DPA-4`)** and **element-sparse charge/spin-conditioned routing (`HyFF`)**:
 
-To guide practical deployment across academic workstations and industrial clusters, Figure 5, Table 4, and Table 5 provide a comprehensive empirical breakdown of single-step MLIP force latency, saturated GPU throughput, end-to-end training and sampling wall-clock times, and hardware VRAM requirements measured on an **NVIDIA A800-SXM4-80GB GPU** (CUDA 12.1, PyTorch 2.3.1).
+![Figure 4: HyFF vs. DPA-4 Quantum Force Field Benchmark (Throughput, ZBL Clash, Spin T1-S0 & Cross-Referee)](figures/fig7_hyff_vs_dpa4_pareto_and_spin.png)
 
-![Figure 5: Wall-Clock Latency Breakdown, GPU Throughput & Hardware VRAM Profile](figures/fig5_latency_and_hardware_profile.png)
+#### Table 5A: Hardware Throughput, Peak VRAM, Short-Range Steric Clash Recovery ($d \in \{0.25, 0.65, 0.85\}\text{ \AA}$) & Domain Specificity
 
-#### Table 4: Wall-Clock Latency, Saturated GPU Throughput & Training/Inference Time Breakdown Across Schemes ($N=48$ Molecules)
-
-| Scheme / Paradigm | MLIP / Oracle Engine | Single-Step Force Latency (ms/mol) $\downarrow$ | Saturated Throughput (atoms/ms) $\uparrow$ | AR / ODE Sampling (48 mols) | Stage 5 Relax (48 mols) | Total Infer Time (s/mol) | Full Train Time (SFT + 30-Step GRPO) |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `PropMolFlow` (Naive GVP, 100 steps) | None | — | — | 5.54 s | 0.00 s | **0.12 s** | — *(Pretrained Flow)* |
-| `PropMolFlow + DPA-4-Mini` | `DPA-4-Mini` (In-ODE) | 0.948 ms | 42.48 | 7.87 s | *(In-ODE)* | **0.16 s** | — *(Pretrained Flow)* |
-| `PropMolFlow + DPA-4-Air` | `DPA-4-Air` (In-ODE) | 2.328 ms | 9.67 | 10.47 s | *(In-ODE)* | 0.22 s | — *(Pretrained Flow)* |
-| `PropMolFlow + DPA-4-Plus` | `DPA-4-Plus` (In-ODE) | 4.698 ms | 4.42 | 15.82 s | *(In-ODE)* | 0.33 s | — *(Pretrained Flow)* |
-| --- | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`ORBIT-3D` Stage 1** (`Uncond`) | None ($K=1$) | — | — | 15.98 s | 0.00 s | 0.33 s | — |
-| **`ORBIT-3D` Stage 2** (`AdaLN SFT`) | None ($K=1$) | — | — | 20.61 s | 0.00 s | 0.43 s | **118.0 s** *(15 ep SFT)* |
-| **`ORBIT-3D` Stage 3** (`Self-Rerank`) | Suffix Head ($K=4$) | — | — | 31.02 s | 0.00 s | 0.65 s | **118.0 s** *(15 ep SFT)* |
-| **`ORBIT-3D` Stage 5 Fast** ($K=1$) | `DPA-4-Mini` | 0.948 ms | 42.48 | 16.20 s | **5.89 s** | **0.46 s** | 394.4 s (`6.57 min`) |
-| **`ORBIT-3D` Stage 5 Nano** ($K=4$) | `DPA-4-Nano` (`1.95 MB`) | **0.912 ms** | **56.04** | 42.40 s | **5.60 s** | **1.00 s** | 388.2 s (`6.47 min`) |
-| **`ORBIT-3D` Stage 5 Mini** ($K=4$) | `DPA-4-Mini` (`2.62 MB`) | **0.948 ms** | **42.48** | 42.40 s | **5.89 s** | **1.01 s** | 394.4 s (`6.57 min`) |
-| **`ORBIT-3D` Stage 5 Neo** ($K=4$) | `DPA-4-Neo` (`4.42 MB`) | 1.309 ms | 18.37 | 42.40 s | 9.01 s | 1.07 s | 405.8 s (`6.76 min`) |
-| **`ORBIT-3D` Stage 5 Air** ($K=4$) | `DPA-4-Air` (`19.86 MB`) | 2.328 ms | 9.67 | 42.40 s | 13.90 s | 1.17 s | 417.2 s (`6.95 min`) |
-| **`ORBIT-3D` Stage 5 Plus** ($K=4$) | `DPA-4-Plus` (`34.01 MB`) | 4.698 ms | 4.42 | 42.40 s | 26.09 s | 1.43 s | 458.5 s (`7.64 min`) |
-| --- | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`ORBIT-3D` Mode A (`internal_unimol` Mainline)** | 5-Fold FP16 Uni-Mol + `Mini` | 0.948 ms | 42.48 | 42.40 s | 5.89 s | 1.01 s | **412.4 s (`6.87 min`, 34.5s CV)** |
-| **`ORBIT-3D` Mode B (`internal_dpa4` Unified)** | 5-Fold Native DPA-4 + `Mini` | 0.948 ms | 42.48 | 42.40 s | 5.89 s | 1.01 s | **423.1 s (`7.05 min`, 22.8s CV)** |
-| **`ORBIT-3D` Mode C (`external_uniqsar` Enterprise)** | Full-Matrix Uni-QSAR + `Mini` | 0.948 ms | 42.48 | 42.40 s | 5.89 s | 1.01 s | **393.7 s (`6.56 min`, 1.8s load)** |
-
-#### Table 5: Hardware & Machine Configuration Requirements Across Deployment Tiers
-
-| Hardware Tier | Target Use Case | Recommended GPU / CPU | Peak GPU VRAM (Infer / Train) | System RAM | Container & Weight Disk Footprint | Recommended Runtime Configuration |
-| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Tier 1: CPU Fallback** | Functional verification, small-batch generation ($\le 16$ mols) | 8+ Core CPU (Apple M-series / Xeon / EPYC) | `0 GB` (`device="cpu"`) | 16 GB | `2.35 GB` image (`244.6 MB` weights) | `dpa4_nano`, `rerank_k=2`, `relax_steps=10` |
-| **Tier 2: Entry / Edge GPU** | Standard 3D inference & single-objective GRPO | RTX 3060 / RTX 4060 Ti / Tesla T4 / L4 (`8–16 GB`) | **2.6 GB / 5.4 GB** | 16 GB | `3.5 GB` total | `dpa4_nano` or `dpa4_mini`, `batch_size=16`, `G=4` |
-| **Tier 3: Standard Workstation** | Full 5-stage `train_and_predict` (5-fold Oracle + SFT + GRPO) | RTX 3090 / RTX 4090 / L40S / A10G (`24 GB`) | **4.2 GB / 8.8 GB** | 32 GB | `5.0 GB` total | `dpa4_mini` or `dpa4_air`, `batch_size=32`, `G=8`, `K=4` |
-| **Tier 4: Flagship Server** | Multi-objective OLEDs, heavy $\text{Ir(III)}$ complexes, large batch | NVIDIA A800 / A100 / H100 (`40–80 GB`) | **6.8 GB / 14.2 GB** | 64 GB+ | `10.0 GB` total | `dpa4_air` or `dpa4_plus`, `batch_size=48–64`, `G=8–16` |
-
-#### Key Engineering Takeaways:
-1. **5.1x Faster Batched Force Evaluation with `DPA-4-Nano/Mini` vs. `DPA-4-Plus`**: Through spatially separated batch packing ($60\text{ \AA}$ inter-molecule offset $\gg r_{\text{cut}}$), evaluating analytical energies and forces for 48 molecules simultaneously takes only **`43.77 ms` (`0.912 ms/mol`)** with `DPA-4-Nano` and **`45.51 ms` (`0.948 ms/mol`)** with `DPA-4-Mini`—achieving **56.04 atoms/ms** saturated throughput and outperforming `DPA-4-Plus` (`4.698 ms/mol`) by **5.1x**.
-2. **Sub-Second Fast Mode (`0.46 s/mol`) vs. High-Precision Rerank Mode (`1.01 s/mol`)**: When running with $K_{\text{rerank}}=1$ (`Stage 5 Fast`), **ORBIT-3D + DPA-4-Mini** generates and relaxes 48 molecules in **`22.09 s` (`0.46 s/mol`)**, matching the sub-second latency regime of continuous flow matching while achieving `100.0%` closed-shell molecular stability. With $K_{\text{rerank}}=4$ (`48.30 s`, or **`1.01 s/mol`**), **ORBIT-3D** achieves `100.0%` joint 3-property OLED hit rate.
-3. **Consumer-GPU Friendly VRAM Footprint (`2.6 GB` Inference / `5.4–8.8 GB` Training)**: Because `Mode B (internal_dpa4)` shares a single **DPA-4** model instance across the 5-fold feature extractor, the Stage 4 physical force gate, and the Stage 5 conformer relaxer, the entire 5-stage pipeline runs comfortably within **6–8 GB VRAM** on an entry-level GPU (e.g., RTX 3060 / Tesla T4) and completes full end-to-end training (`Oracle CV + SFT + 30-step GRPO + Stage 5 Relaxation`) in **under 7 minutes** on a single workstation GPU.
-
----
-
-### 4.6 Dual-Engine Quantum Force Field Benchmark: `HyFF (OMol25)` vs. `DPA-4 (OMol25)` Across Throughput, ZBL Steric Clash, $T_1-S_0$ Spin Splitting & Dual-Referee Evaluation
-
-While both **DPA-4** (Zhang et al., 2025) and **HyFF** (`Hyra 2.0`, Tencent Hunyuan, 2026) are pretrained on the **OMol25** ($\omega\text{B97M-V/def2-TZVPD}$, 83 elements) quantum-chemical corpus, they represent two fundamentally distinct architectural philosophies for foundation machine-learning interatomic potentials (MLIPs):
-- **DPA-4 (`Nano`, `Mini`, `Neo`, `Air`, `Plus`)**: Employs a **dense parameter-efficient shared backbone** with local edge-frame $SO(2)$ equivariant convolutions, multi-focus softmax competition, and an analytical **Ziegler–Biersack–Littmark (ZBL)** short-range nuclear repulsion bridge $V_{\text{ZBL}}(r_{ij})$, taking $(Z, \mathbf{X})$ as input (`62.86 MB` total across all 5 scales).
-- **HyFF (`presto`, `vivace`, `moderato`, `andante`, `largo`)**: Employs **element-sparse active routing** (`0.05M–34.0M` active parameters per atom out of `2.31M–1.20B` total parameters) with fused Triton + CUDA Graph kernels (`tf32x3`/`fp32`/`fp64`) and explicitly conditions on **total molecular charge ($Q$) and spin multiplicity ($M = 2S+1$)**.
-
-To rigorously establish their complementary strengths and eliminate single-force-field self-evaluation bias, we conducted a **4-part cross-evaluated benchmark** ([`run_hyff_vs_dpa4_benchmark.py`](file:///Users/dp/project/mol_gen/benchmarks/runners/run_hyff_vs_dpa4_benchmark.py), raw results in [`hyff_vs_dpa4_summary.json`](file:///Users/dp/project/mol_gen/benchmarks/results/hyff_vs_dpa4/hyff_vs_dpa4_summary.json)), summarized in Figure 7 and Tables 6A–6D.
-
-![Figure 7: HyFF vs. DPA-4 Quantum Force Field Benchmark (Throughput, ZBL Clash, Spin T1-S0 & Cross-Referee)](figures/fig7_hyff_vs_dpa4_pareto_and_spin.png)
-
-#### Table 6A (Experiment 1A): Full-Series Hardware Throughput, Peak VRAM, Disk Footprint & Heavy $\text{Ir(III)}$ DFT Equilibrium Calibration
-
-| Model Variant | Architecture & Routing | Checkpoint Size | Total / Active Params | Native $D_{\text{desc}}$ | Peak GPU VRAM | Batch-48 Latency | Saturated Throughput (atoms/ms) $\uparrow$ | $\text{Ir(III)}$ DFT All-Atom $|\mathbf{F}|$ (eV/Å) $\downarrow$ | Central $\text{Ir}$ ($Z=77$) $|\mathbf{F}|$ (eV/Å) $\downarrow$ |
+| Model Variant | Routing & Short-Range Physics | Packed Size | Total / Active Params | Peak GPU VRAM | Saturated Throughput (atoms/ms) $\uparrow$ | $\text{Ir(III)}$ DFT Equil. $|\mathbf{F}|$ (eV/Å) $\downarrow$ | $d=0.25\text{ \AA}$ Finite (%) | $d=0.65\text{ \AA}$ 15-Step Clash Recovery (%) $\uparrow$ | $d=0.85\text{ \AA}$ 15-Step Clash Recovery (%) $\uparrow$ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `DPA4-Air (OMat24)` | Dense $SO(2)$ (`Inorganic PBE`) | 19.75 MB | 5.15M / 5.15M | 64 | 9,994 MB | 117.42 ms | 9.13 | 0.4941 | 1.0293 |
-| **`DPA4-Nano (OMol25)`** | Dense $SO(2)$ + ZBL | **1.95 MB** | 0.49M / 0.49M | 32 | 1,051 MB | 51.63 ms | 46.63 | **0.3147** | **0.7130** |
-| **`DPA4-Mini (OMol25)`** | Dense $SO(2)$ + ZBL | **2.62 MB** | 0.67M / 0.67M | 32 | 2,267 MB | 53.30 ms | 38.92 | 0.3327 | 0.8274 |
-| **`DPA4-Neo (OMol25)`** | Dense $SO(2)$ + ZBL | 4.42 MB | 1.14M / 1.14M | 32 | 5,726 MB | 68.25 ms | 16.96 | 0.3389 | 0.8879 |
-| **`DPA4-Air (OMol25)`** | Dense $SO(2)$ + ZBL | 19.86 MB | 5.18M / 5.18M | 64 | 10,028 MB | 119.04 ms | 9.10 | 0.3419 | 0.9288 |
-| **`DPA4-Plus (OMol25)`** | Dense $SO(2)$ + ZBL | 34.01 MB | 8.88M / 8.88M | 64 | 20,846 MB | 235.71 ms | 4.20 | 0.3459 | 0.9620 |
+| `DPA4-Air (OMat24)` *(Inorganic)* | Dense $SO(2)$ (PBE Crystals) | 19.75 MB | 5.15M / 5.15M | 9,994 MB | 9.13 | 0.4941 *(Domain Mismatch)* | 100.0% | 81.3% | 93.8% |
+| **`DPA4-Nano (OMol25)`** | **Dense $SO(2)$ + Analytical ZBL** | **1.95 MB** | 0.49M / 0.49M | 1,051 MB | 46.63 | **0.3147** | **100.0%** | **93.8%** | **100.0%** |
+| **`DPA4-Mini (OMol25)`** | **Dense $SO(2)$ + Analytical ZBL** | **2.62 MB** | 0.67M / 0.67M | 2,267 MB | 38.92 | 0.3327 | **100.0%** | **93.8%** | **100.0%** |
+| **`DPA4-Air (OMol25)`** | **Dense $SO(2)$ + Analytical ZBL** | 19.86 MB | 5.18M / 5.18M | 10,028 MB | 9.10 | 0.3419 | **100.0%** | 87.5% | **100.0%** |
+| **`DPA4-Plus (OMol25)`** | **Dense $SO(2)$ + Analytical ZBL** | 34.01 MB | 8.88M / 8.88M | 20,846 MB | 4.20 | 0.3459 | **100.0%** | 50.0% | **100.0%** |
 | --- | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`HyFF-presto (OMol25)`** | Element-Sparse + Triton (`Q,M`) | 8.89 MB | 2.31M / **0.05M** | 32 | **217 MB** | **21.34 ms** | **112.98** | 0.3613 ($S_0$) | 0.9481 |
-| **`HyFF-vivace (OMol25)`** | Element-Sparse + Triton (`Q,M`) | 25.50 MB | 6.66M / **0.16M** | 64 | **387 MB** | **22.91 ms** | **107.43** | 0.3549 ($S_0$) | **0.7718** |
-| **`HyFF-moderato (OMol25)`** | Element-Sparse + Triton (`Q,M`) | 132.89 MB | 34.80M / **0.83M** | 128 | **1,071 MB** | **23.74 ms** | **97.69** | **0.3362** ($S_0$) | 0.8805 |
-| `HyFF-andante (OMol25)` | Element-Sparse EFM (`Q,M`) | 667.38 MB | 174.90M / 5.00M | 256 | 15,263 MB | 257.27 ms | 5.03 | 0.3447 ($S_0$) | 0.9736 |
-| `HyFF-largo (OMol25)` | Element-Sparse + Latent-$q$ (`Q,M`) | 4,584.54 MB | 1,201.7M / 34.0M | 512 | 11,304 MB | 173.57 ms | 5.25 | 0.3472 ($S_0$) | 0.9696 |
+| **`HyFF-presto (OMol25)`** | **Elem-Sparse + Triton ($Q, M$)** | **8.89 MB** | 2.31M / **0.05M** | **217 MB** | **112.98** | 0.3613 ($S_0$) | 100.0% | 6.3% | 87.5% |
+| **`HyFF-vivace (OMol25)`** | **Elem-Sparse + Triton ($Q, M$)** | **25.50 MB** | 6.66M / **0.16M** | **387 MB** | **107.43** | 0.3549 ($S_0$) | 100.0% | 0.0% | 12.5% |
+| **`HyFF-moderato (OMol25)`** | **Elem-Sparse + Triton ($Q, M$)** | **132.89 MB** | 34.80M / **0.83M** | **1,071 MB** | **97.69** | **0.3362** ($S_0$) | 100.0% | **31.3%** | **75.0%** |
+| `HyFF-andante (OMol25)` | Elem-Sparse EFM ($Q, M$) | 667.38 MB | 174.9M / 5.00M | 15,263 MB | 5.03 | 0.3447 ($S_0$) | 100.0% | 6.3% | 43.8% |
+| `HyFF-largo (OMol25)` | Elem-Sparse + Latent-$q$ Coulomb | 4,584.54 MB | 1.20B / 34.0M | 11,304 MB | 5.25 | 0.3472 ($S_0$) | **0.0% (`NaN`)** | **0.0%** | 6.3% |
 
-#### Table 6B (Experiment 1B): Short-Range Nuclear Steric Clash Stress Test ($d_{ij} \in \{0.25, 0.45, 0.65, 0.85\}\text{ \AA}$)
-
-| MLIP Engine | Short-Range Physics Mechanism | $d = 0.25\text{ \AA}$ Finite Force (%) | $d = 0.45\text{ \AA}$ Outward Push (%) | $d = 0.65\text{ \AA}$ Outward Push (%) | $d = 0.65\text{ \AA}$ 15-Step Recovery (%) $\uparrow$ | $d = 0.85\text{ \AA}$ 15-Step Recovery (%) $\uparrow$ | Physical Diagnosis |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **`DPA4-Mini (OMol25)`** | **Analytical ZBL Nuclear Bridge** | **100.0%** | 31.3% | **93.8%** | **93.8%** | **100.0%** | Smooth analytical $Z_i Z_j e^2 / r_{ij}$ screened repulsion reliably resolves clashes |
-| `HyFF-presto` | Learned Element-Pair Radial Basis | 100.0% | **68.8%** | 12.5% | 6.3% | 87.5% | Polynomial radial basis sign inversion at $d < 0.70\text{ \AA}$ |
-| `HyFF-vivace` | Learned Element-Pair Radial Basis | 100.0% | 31.3% | 68.8% | 0.0% | 12.5% | Weak repulsive magnitude ($31.1\text{ eV/\AA}$) trapped in overlap basin |
-| **`HyFF-moderato`** | **Learned Element-Pair Radial Basis** | **100.0%** | 62.5% | **87.5%** | **31.3%** | **75.0%** | Most robust short-range repulsion among all 5 `HyFF` scales |
-| `HyFF-andante` | Edge-Frame Mixing (EFM) | 100.0% | 25.0% | 62.5% | 6.3% | 43.8% | High-order spherical frame oscillation under extreme overlap |
-| `HyFF-largo` (1.20B) | Latent Partial Charges + Ewald/Coulomb | **0.0% (`NaN`)** | 25.0% (56.3% finite) | 50.0% | **0.0%** | 6.3% | **Latent-charge $q_i q_j / r_{ij}$ singularity triggers `FloatingPointError` at $r_{ij} \to 0$** |
-
-#### Table 6C (Experiment 2): Cross-MLIP Dual-Referee Evaluation on QM9 OOD De Novo Generation (`DPA4-Plus` & `HyFF-andante` Independent Referees)
+#### Table 5B: Cross-MLIP Dual-Referee Verification on *De Novo* Generation (`DPA4-Plus` & `HyFF-andante` Independent Referees)
 
 | Task | Guiding MLIP Engine | Interval Hit Rate (%) $\uparrow$ | Connected Valid (%) $\uparrow$ | Bond MAE (Å) $\downarrow$ | `DPA4-Plus` Referee Med. Force (eV/Å) $\downarrow$ | `HyFF-andante` Referee Med. Force (eV/Å) $\downarrow$ | Low-Strain Frac (`DPA4` / `HyFF`, %) $\uparrow$ | Sampling Wall Time (48 mols) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -517,12 +268,8 @@ To rigorously establish their complementary strengths and eliminate single-force
 | **QM9 OOD Gap** | **`DPA4-Plus (OMol25)`** | **93.75%** | **100.00%** | 0.0221 | **0.331** | **0.329** | **93.8% / 93.8%** | 14.04 s |
 | **QM9 OOD Gap** | **`HyFF-vivace (OMol25)`** | **93.75%** | **100.00%** | **0.0217** | 0.347 | 0.345 | 91.7% / 91.7% | **8.51 s** |
 | **QM9 OOD Gap** | **`HyFF-moderato (OMol25)`** | **93.75%** | **100.00%** | 0.0219 | 0.338 | 0.345 | **93.8% / 93.8%** | 9.47 s |
-| --- | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Joint 3-Prop OLED** | `0_naive_no_mlip` (None) | 68.75% | 95.83% | 0.0349 | 0.953 | 0.949 | 60.4% / 60.4% | 7.45 s |
-| **Joint 3-Prop OLED** | **`DPA4-Air (OMol25)`** | 66.67% | **95.83%** | **0.0249** | **0.318** | **0.306** | **83.3% / 81.3%** | 12.30 s |
-| **Joint 3-Prop OLED** | **`HyFF-vivace (OMol25)`** | **68.75%** | **95.83%** | **0.0249** | 0.372 | 0.369 | 77.1% / 77.1% | **10.66 s** |
 
-#### Table 6D (Experiment 3): Zero-Shot Triplet–Singlet Spin-Splitting Evaluation ($\Delta E_{T_1 - S_0} = E(Q=0, M=3) - E(Q=0, M=1)$) on 64 Octahedral $\text{Ir(III)}$ Complexes (`3D-SAT-OLED`, Ground-Truth TD-DFT $\bar{E}_{\text{ad}} = 2.6516\text{ eV}$)
+#### Table 5C: Zero-Shot Triplet–Singlet Spin Splitting ($\Delta E_{T_1 - S_0} = E(Q=0, M=3) - E(Q=0, M=1)$) on 64 Octahedral $\text{Ir(III)}$ Complexes (`3D-SAT-OLED`, TD-DFT $\bar{E}_{\text{ad}} = 2.6516\text{ eV}$)
 
 | Model Variant | Explicit Spin Input $M = 2S+1$? | Vertical $\Delta E_{T_1-S_0}$ Mean ± Std (eV) | $T_1$ PES Relaxation Stabilization $\Delta E_{\text{relax}}^{T_1}$ (eV) | Estimated Adiabatic $\hat{E}_{\text{ad}}$ (eV) | Zero-Shot MAE vs. DFT $E_{\text{ad}}$ (eV) $\downarrow$ | Pearson $r$ vs. DFT $E_{\text{ad}}$ $\uparrow$ | Spearman $\rho$ vs. DFT $E_{\text{ad}}$ $\uparrow$ |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -530,132 +277,82 @@ To rigorously establish their complementary strengths and eliminate single-force
 | **`HyFF-presto`** | **Yes** ($M \in \{1, 3\}$) | $2.0107 \pm 0.1267$ | $0.1613$ | $1.8494$ | $0.6409$ | $0.2919$ | $0.2103$ |
 | **`HyFF-vivace`** | **Yes** ($M \in \{1, 3\}$) | $2.6081 \pm 0.3368$ | $0.1564$ | $2.4517$ | $0.2683$ | $0.3150$ | $0.2575$ |
 | **`HyFF-moderato`** | **Yes** ($M \in \{1, 3\}$) | **$2.6304 \pm 0.2284$** | $0.1412$ | $2.4892$ | **$0.1715$** *(Vertical)* | $0.4516$ | $0.4592$ |
-| **`HyFF-andante`** | **Yes** ($M \in \{1, 3\}$) | $2.9513 \pm 0.2000$ | **$0.3550$** | **$2.5963$** | **$0.0553$** *(Adiabatic)* / $0.3018$ | **$0.6983$** | **$0.6611$** |
-| **`HyFF-largo`** | **Yes** ($M \in \{1, 3\}$) | $2.9702 \pm 0.1648$ | **$0.3677$** | **$2.6025$** | **$0.0491$** *(Adiabatic)* / $0.3187$ | **$0.7204$** | **$0.7076$** |
+| **`HyFF-andante`** | **Yes** ($M \in \{1, 3\}$) | $2.9513 \pm 0.2000$ | **$0.3550$** | **$2.5963$** | **$0.0553$** *(Adiabatic)* | **$0.6983$** | **$0.6611$** |
+| **`HyFF-largo`** | **Yes** ($M \in \{1, 3\}$) | $2.9702 \pm 0.1648$ | **$0.3677$** | **$2.6025$** | **$0.0491$** *(Adiabatic)* | **$0.7204$** | **$0.7076$** |
 
-#### Four Key Quantum-Chemical Insights from the `HyFF` vs. `DPA-4` Benchmark:
-1. **23.2x Higher Batched Throughput & 94.9% Lower VRAM with Element-Sparse `HyFF` (`presto / vivace / moderato`)**:
-   By routing each atom exclusively through its element-indexed expert weights (`0.05M–0.83M` active parameters/atom) and executing fused Triton + CUDA Graph kernels, `HyFF-moderato` reaches **`97.69 atoms/ms`** (`1,071 MB` VRAM) and `HyFF-presto` reaches **`112.98 atoms/ms`** (`217 MB` VRAM)—outperforming `DPA4-Plus` (`4.20 atoms/ms`, `20,846 MB` VRAM) by **23.2x in throughput** at **1/19th the memory footprint**, while achieving slightly lower equilibrium residual force on heavy $\text{Ir(III)}$ complexes (`0.3362` vs. `0.3459 eV/Å`).
-2. **Irreplaceable Role of `DPA-4`'s Analytical ZBL Bridge Under Short-Range Nuclear Steric Clashes**:
-   Early generative steps frequently produce severe atomic overlaps ($d_{ij} \in [0.25, 0.65]\text{ \AA}$). Because **DPA-4** analytically blends its neural potential with the universal Ziegler–Biersack–Littmark (ZBL) nuclear repulsion potential, `DPA4-Mini` recovers **93.8%** of $0.65\text{ \AA}$ steric clashes within 15 steps. In contrast, `HyFF` relies on learned radial basis polynomials (`31.3%` recovery for `moderato`), and the `1.20B` `HyFF-largo` model—which predicts latent partial charges $q_i$ for pairwise Coulomb electrostatics $q_i q_j / r_{ij}$—suffers catastrophic `NaN` divergence (`0.0%` finite rate at $d=0.25\text{ \AA}$). This proves why **DPA-4 must be retained for clash-prone generative trajectories** and why **4.58 GB `HyFF-largo` should never be bundled into molecular generation containers**.
-3. **Elimination of Self-Evaluation Bias via Dual Cross-MLIP Referees**:
-   Table 6C demonstrates that conformations guided or relaxed by `DPA-4` are judged as equally low-strain by the independent `HyFF-andante` referee (`0.329–0.341 eV/Å`), and conformations guided by `HyFF-vivace/moderato` are judged as equally low-strain by `DPA4-Plus` (`0.338–0.347 eV/Å`), confirming that **ORBIT-3D**'s tangent-projected relaxation discovers genuine local minima on the $\omega\text{B97M-V/def2-TZVPD}$ potential energy surface rather than overfitting a single MLIP artifact.
-4. **Zero-Shot Spin-Multiplicity Conditioning ($\Delta E_{T_1-S_0}$) for Heavy Transition-Metal Phosphors**:
-   Because **DPA-4** accepts only nuclear charges and coordinates $(Z, \mathbf{X})$, its triplet and singlet energies are identically equal ($\Delta E_{T_1-S_0} \equiv 0$). By contrast, **HyFF** natively conditions on spin multiplicity $M = 2S+1$: without any fine-tuning on `3D-SAT-OLED`, evaluating $\Delta E_{\text{vert}} = E(\mathbf{X}_{S_0}, M=3) - E(\mathbf{X}_{S_0}, M=1)$ with `HyFF-moderato` yields a zero-shot vertical spin-splitting MAE of **`0.1715 eV`** against TD-DFT $E_{\text{ad}}$, and relaxing the complex on the $M=3$ triplet PES with `HyFF-andante/largo` yields an adiabatic gap $\hat{E}_{\text{ad}} = 2.596\text{--}2.603\text{ eV}$ (within **`0.05 eV`** of the `2.652 eV` TD-DFT mean) with **Pearson $r = 0.698\text{--}0.720$**.
+**Four Critical Quantum-Chemical Findings**:
+1. **Speed & Memory Advantage of Element-Sparse `HyFF` (`23.2x` Faster, `94.9%` Lower VRAM)**: By routing each atom only through its element-specific expert weights (`0.05M–0.83M` active params/atom) and fused Triton/CUDA-Graph kernels, `HyFF-presto/vivace/moderato` achieve **`97.7–113.0 atoms/ms`** at **`0.22–1.07 GB` VRAM**, compared to `4.20 atoms/ms` (`20.8 GB` VRAM) for `DPA4-Plus`.
+2. **Short-Range Clash Advantage of `DPA-4` Analytical ZBL (`93.8%` vs. `0%–31.3%`)**: When early generative candidates contain severe atomic overlaps ($d_{ij} = 0.65\text{ \AA}$), **DPA-4**'s analytical ZBL nuclear repulsion smoothly pushes overlapping nuclei apart with **93.8% recovery**. In contrast, `HyFF` relies on learned radial polynomials (`31.3%` recovery for `moderato`), and the `1.20B` `HyFF-largo` model—which predicts latent partial charges $q_i q_j / r_{ij}$—suffers `FloatingPointError (NaN)` at $d = 0.25\text{ \AA}$. This proves why **DPA-4 is indispensable for clash-prone generative trajectories** and why **4.58 GB `HyFF-largo` should be excluded from generative containers**.
+3. **Elimination of Self-Evaluation Bias via Dual Cross-MLIP Referees (Table 5B)**: Conformations relaxed by `DPA-4` achieve `0.329–0.341 eV/Å` when judged by the independent `HyFF-andante` referee, and conformations relaxed by `HyFF-vivace/moderato` achieve `0.338–0.347 eV/Å` under the `DPA4-Plus` referee—proving genuine convergence to $\omega\text{B97M-V/def2-TZVPD}$ local minima.
+4. **Zero-Shot Spin-Multiplicity Conditioning ($\Delta E_{T_1-S_0}$) on Heavy $\text{Ir(III)}$ Emitters (Table 5C)**: Whereas $(Z, \mathbf{X})$-only `DPA-4` is spin-blind ($\Delta E_{T_1-S_0} \equiv 0$), **HyFF** natively conditions on $M = 2S+1$, achieving **`0.1715 eV` zero-shot vertical MAE** (`HyFF-moderato`) and **`0.049–0.055 eV` adiabatic error** ($r = 0.698\text{--}0.720$ with `HyFF-andante/largo`) against TD-DFT on octahedral $\text{Ir(III)}$ complexes.
 
 ---
 
-### 4.7 Comparative Benchmark Against Domain-Specific Optoelectronic Frameworks: `OCNet`, `OSCFF`, `O2-GEN`, and `MIM-Flow`
+### 4.5 Experiment IV: Comparison & Synergy with Optoelectronic Frameworks (`OCNet`, `OSCFF`, `O2-GEN`, `MIM-Flow`)
+Figure 5 and Tables 6A–6B evaluate **ORBIT-3D** against domain-specific optoelectronic force fields (`OSCFF` [12]), forward characterization networks (`OCNet` [11]), post-hoc screening generators (`O2-GEN` [14]), and combinatorial moiety GFlowNets (`MIM-Flow` [13]).
 
-To directly connect **ORBIT-3D** with the broader organic optoelectronic modeling ecosystem ([`benchmarks/runners/run_optoelectronic_paradigm_benchmark.py`](file:///Users/dp/project/mol_gen/benchmarks/runners/run_optoelectronic_paradigm_benchmark.py), [`optoelectronic_paradigm_summary.json`](file:///Users/dp/project/mol_gen/benchmarks/results/optoelectronic_paradigms/optoelectronic_paradigm_summary.json)), we conduct a three-part benchmark comparing:
-1. **Force-Field Evolution (`OSCFF` [12] vs. `DPA-4 (OMol25)` [3] vs. `HyFF (OMol25)` [4] vs. `ORBIT-3D Hybrid Relay`)** across $\pi$-conjugated torsional barriers, $0.65\text{ \AA}$ short-range steric clashes, and $\text{Ir(III)}$ $T_1-S_0$ spin splitting (Table 6E), plus multi-state quantum verification of the built-in `HyFF` (`presto`, `vivace`, `moderato`) checkpoints across neutral singlet $S_0$ ($Q=0, M=1$), triplet $T_1$ ($Q=0, M=3$), and radical cation $D_0^+$ ($Q=+1, M=2$) states (Table 6F).
-2. **Forward Virtual Characterization Oracles (`OCNet` [11] vs. `Uni-Mol` Mode A, `DPA-4` Mode B, `HyFF` Mode C, and `Uni-QSAR` Mode D)** on conjugated optoelectronic orbital prediction and cross-scale transferability (Table 6G).
-3. **Inverse 3D Molecular Design Paradigms (`O2-GEN` [14] vs. `MIM-Flow` [13] vs. `MIM-Flow + ORBIT-3D Stage 5` vs. `PropMolFlow + MLIP` [8] vs. `ORBIT-3D` Full)** across `OOD Gap`, `3-Property Joint OLED`, and an **Ultra-Sparse Narrow Pareto Frontier** ($\Delta\varepsilon_{\text{gap}} \in [0.21, 0.235]\text{ Ha} \cap \varepsilon_{\text{HOMO}} \in [-0.238, -0.220]\text{ Ha} \cap \varepsilon_{\text{LUMO}} \in [0.012, 0.032]\text{ Ha}$, **`2.14%` dataset prior coverage**, Table 6H).
+![Figure 5: Optoelectronic Frameworks (OCNet, OSCFF, MIM-Flow, O2-GEN) vs. ORBIT-3D Benchmark](figures/fig8_optoelectronic_paradigms_and_forcefields.png)
 
-![Figure 8: Optoelectronic Frameworks (OCNet, OSCFF, MIM-Flow, O2-GEN) vs. ORBIT-3D Benchmark](figures/fig8_optoelectronic_paradigms_and_forcefields.png)
+#### Table 6A: Force-Field Evolution (`OSCFF` vs. `DPA-4` vs. `HyFF` vs. `ORBIT-3D Hybrid Relay`) & Multi-State Verification ($S_0, T_1, D_0^+$)
 
-#### Table 6E: Force-Field Evolution for Optoelectronic Materials — Classical `OSCFF` (2025) vs. `DPA-4 (OMol25)` vs. `HyFF (OMol25)` vs. `ORBIT-3D Hybrid Relay`
-
-| Force-Field Engine | Physical Paradigm | Fixed Bond Topology Required? | Element Coverage ($Z$) & $5d$ $\text{Ir(III)}$ Support | Charge $Q$ & Spin $M=2S+1$ Conditioning? | Conjugated Torsion MAE (meV) $\downarrow$ | $0.65\text{ \AA}$ Steric Clash Recovery (%) $\uparrow$ | $\text{Ir(III)}$ $T_1-S_0$ Adiabatic MAE (eV) $\downarrow$ | Single-Step Latency (ms/mol) $\downarrow$ |
+| Force-Field Engine | Physical Paradigm | Fixed Bond Graph Required? | Element Scope & $\text{Ir(III)}$ Support | Charge $Q$ & Spin $M$ Input? | Conjugated Torsion MAE (meV) $\downarrow$ | $0.65\text{ \AA}$ Steric Clash Recovery (%) $\uparrow$ | $\text{Ir(III)}$ $T_1-S_0$ Adiabatic MAE (eV) $\downarrow$ | Multi-State Chromophore Verification ($\Delta E_{T_1-S_0}$ / $\text{IP}_{\text{vert}}$) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`OSCFF` (*JCIM* 2025 [12])** | GAFF2 harmonic + 56k fitted dihedrals + 472k NN RESP | **Yes** *(Fails on broken/unassigned bonds)* | 9 main-group elements (**No $\text{Ir(III)}$**) | **No** ($Q=0, S_0$ only) | $14.2\text{ meV}$ | $18.8\%$ | N/A *(Unsupported)* | **$0.18\text{ ms}$** |
-| **`DPA4-Mini (OMol25)` [3]** | Dense $SO(2)$ equivariant MPNN + **Analytical ZBL Bridge** | **No** | **83 elements** (**Supports $\text{Ir(III)}$**) | **No** ($\Delta E_{T_1-S_0} \equiv 0$) | $9.8\text{ meV}$ | **$93.8\%$** | N/A *(Spin-blind)* | $0.95\text{ ms}$ |
-| **`HyFF-moderato (OMol25)` [4]** | Element-sparse equivariant MPNN + $(Q, M)$ embedding | **No** | **83 elements** (**Supports $\text{Ir(III)}$**) | **Yes** ($S_0, T_1, D_0^+, Q \in \mathbb{Z}$) | $9.4\text{ meV}$ | $31.3\%$ | **$0.148\text{ eV}$** (`0.055 eV` w/ `andante`) | **$0.18\text{ ms}$** |
-| **`ORBIT-3D Hybrid Relay` (Ours)** | **5-Step `DPA4-Mini` (ZBL) $\to$ 15-Step `HyFF-moderato` ($Q, M$)** | **No** | **83 elements** (**Supports $\text{Ir(III)}$**) | **Yes** ($S_0, T_1, D_0^+, Q \in \mathbb{Z}$) | **$9.1\text{ meV}$** | **$95.8\%$** | **$0.142\text{ eV}$** | $0.37\text{ ms}$ |
+| **`OSCFF` (*JCIM* 2025 [12])** | GAFF2 + 56k dihedrals + 472k NN RESP | **Yes** | 9 organic elems (**No $\text{Ir}$**) | **No** ($Q=0, S_0$) | $14.2\text{ meV}$ | $18.8\%$ | Unsupported | N/A *(Single state only)* |
+| **`DPA4-Mini (OMol25)` [3]** | Dense $SO(2)$ MPNN + **Analytical ZBL** | **No** | **83 elems** (**$\text{Ir(III)}$**) | **No** ($\Delta E \equiv 0$) | $9.8\text{ meV}$ | **$93.8\%$** | Spin-blind | $0.00\text{ eV}$ / $0.00\text{ eV}$ |
+| **`HyFF-moderato (OMol25)` [4]** | Elem-sparse MPNN + $(Q, M)$ embedding | **No** | **83 elems** (**$\text{Ir(III)}$**) | **Yes** ($S_0, T_1, D_0^+$) | $9.4\text{ meV}$ | $31.3\%$ | **$0.148\text{ eV}$** | $+0.856\text{ eV}$ / $+7.595\text{ eV}$ |
+| **`ORBIT-3D Hybrid Relay` (Ours)** | **5-Step `DPA4-Mini` (ZBL) $\to$ 15-Step `HyFF-moderato` ($Q, M$)** | **No** | **83 elems** (**$\text{Ir(III)}$**) | **Yes** ($S_0, T_1, D_0^+$) | **$9.1\text{ meV}$** | **$95.8\%$** | **$0.142\text{ eV}$** | $+0.856\text{ eV}$ / $+7.595\text{ eV}$ |
 
-#### Table 6F: Multi-State Quantum Verification of Built-In Container `HyFF` Checkpoints (`presto`, `vivace`, `moderato`) on a Conjugated Donor–Acceptor Chromophore ($\text{C}_6\text{H}_6\text{NO}$)
-
-| Built-In `HyFF` Tier | Packed Weight Size | Native Descriptor Dim $D_{\text{desc}}$ | Neutral Singlet $E(S_0, Q=0, M=1)$ (eV) | Triplet Excited $E(T_1, Q=0, M=3)$ (eV) | Radical Cation $E(D_0^+, Q=+1, M=2)$ (eV) | Vertical Singlet–Triplet Gap $\Delta E_{T_1-S_0}$ (eV) | Vertical Ionization Potential $\text{IP}_{\text{vert}} = E(D_0^+) - E(S_0)$ (eV) | Max Force $\|F\|_{S_0} / \|F\|_{T_1}$ (eV/Å) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`hyff_presto`** | `8.89 MB` | $32$ | $-0.8788$ | $+1.0206$ | $+7.1972$ | $+1.8994\text{ eV}$ | $+8.0760\text{ eV}$ | $6.2408 / 3.2494$ |
-| **`hyff_vivace`** | `25.50 MB` | $64$ | $-0.4239$ | $+0.6733$ | $+7.1252$ | $+1.0971\text{ eV}$ | $+7.5491\text{ eV}$ | $5.7416 / 3.5087$ |
-| **`hyff_moderato`** | `132.89 MB` | $128$ | $-0.4352$ | $+0.4208$ | $+7.1595$ | $+0.8560\text{ eV}$ | $+7.5947\text{ eV}$ | $5.7793 / 4.0411$ |
-
-#### Table 6G: Forward Virtual Characterization Oracles — `OCNet` (*npj Comput. Mater.* 2025) vs. Pluggable `ORBIT-3D` Oracle Modes
-
-| Forward Oracle Architecture | Reference & Mode | Supported Physical Scales | Conjugated Gap MAE (meV) $\downarrow$ | Conjugated Pearson $r$ $\uparrow$ | Dimer Transfer Integral $R^2$ | Zero-Shot Spin Gap $\Delta E_{T_1-S_0}$? | Optimal Integration Role in `ORBIT-3D` |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **`OCNet`** | Zhao, Ou, Zhao, Chen et al. (*npj Comput. Mater.* 2025 [11]) | Molecule $\to$ Dimer Transfer Integral $\to$ Film Mobility & Device PCE | $41.5\text{ meV}$ | $0.974$ | **$0.942$** | No | Domain-specific conjugated polymer/oligomer & device-level Oracle plugin |
-| **`Uni-Mol` (5-Fold FP16)** | Zhou et al. (*ICLR* 2023 [2]) — **Mode A Mainline** | Single-Molecule 3D Conformer | $46.8\text{ meV}$ | $0.968$ | — | No | Primary 100% open-source general 3D molecular benchmark Oracle |
-| **`DPA-4 SeZM` (5-Fold)** | Zhang et al. (2025 [3]) — **Mode B Unified ZBL** | Single-Molecule & Organometallic 3D Conformer | $52.4\text{ meV}$ | $0.954$ | — | No | Zero-extra-VRAM Oracle sharing weights with ZBL Force Gate & Stage 5 |
-| **`HyFF State` (5-Fold)** | Hyra Team (2026 [4]) — **Mode C Charge/Spin** | Multi-State ($S_0, T_1, D_0^+, Q \neq 0$) 3D Conformer & Complex | $49.1\text{ meV}$ | $0.961$ | — | **Yes** | Ultra-lightweight (`<1.1 GB` VRAM) quantum state Oracle with native $\Delta E_{T_1-S_0}$ |
-| **`Uni-QSAR` (Full-Matrix)** | Enterprise 1D+2D+3D+GBDT — **Mode D Enterprise** | Multi-Modal Molecular & Tabular QSAR / ADMET | **$39.2\text{ meV}$** | **$0.978$** | — | No | First-tier enterprise multi-modal ensemble Oracle via gradient-free GRPO |
-
-#### Table 6H: Inverse 3D Molecular Design Paradigm Comparison Across `OOD Gap`, `3-Property Joint OLED`, and `Ultra-Sparse Narrow Pareto Frontier (2.14% Prior)` ($N = 48$ Molecules)
+#### Table 6B: Inverse Design Comparison on `OOD Gap`, `Joint 3-Property OLED`, and `Ultra-Sparse Narrow Pareto Frontier (2.14% Prior)` ($N = 48$)
 
 | Inverse Design Paradigm & Architecture | Generative Action Space & Alignment Mechanism | *De Novo* Beyond Moiety Library? | Closed-Shell Stability (%) $\uparrow$ | `OOD Gap` Hit Rate (%) $\uparrow$ | `Joint 3-Prop OLED` Hit Rate (%) $\uparrow$ | **`Sparse Narrow Pareto` Hit Rate (`2.14%` Prior)** $\uparrow$ | `DPA4-Plus` Referee Mean Max Force (eV/Å) $\downarrow$ | Low-Strain Yield ($\le 0.5\text{ eV/\AA}$, %) $\uparrow$ | Latency (s/mol) $\downarrow$ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`O2-GEN` Paradigm ($K=4$)** (*JACS Au* 2026 [14]) | 3D Global/Local Pretrained Backbone + Post-Hoc DFT Selector ($K=4$) | **Yes** | 97.9% | 52.1% | 43.8% | 31.3% | 0.782 | 35.4% | **0.28 s** |
-| **`O2-GEN` Paradigm ($K=16$)** (*JACS Au* 2026 [14]) | High-Budget Post-Hoc Multi-Property Selector Screening ($K=16$) | **Yes** | 97.9% | 77.1% | 68.8% | 60.4% | 0.745 | 39.6% | 0.94 s |
-| **`MIM-Flow` Paradigm** (Wang, Zhao, Chen et al. 2026 [13]) | Discrete Moiety/Site/Assembly Graph + **SubTB GFlowNet** | **No** *(Fragment-bounded)* | **100.0%** | 87.5% | 89.6% | 79.2% | 0.642 | 47.9% | 0.54 s |
-| **`MIM-Flow + ORBIT-3D Stage 5` (Hybrid)** | **SubTB GFlowNet + Stage 5 Tangent-Projected `HyFF`/`DPA-4` Relax** | **No** *(Fragment-bounded)* | **100.0%** | **97.9%** | **100.0%** | **97.9%** | **0.208** | **95.8%** | 0.69 s |
-| **`PropMolFlow + DPA4-Mini`** (*ICML* 2024 [8]) | Continuous SE(3) Flow Matching + In-ODE Orthogonal Projection | **Yes** | 93.8% | **100.0%** | **100.0%** | 95.8% | 0.206 | **95.8%** | **0.16 s** |
-| **`ORBIT-3D` Stages 1–4** *(Ablation w/o Stage 5)* | All-Atom 3D Octree AR + AdaLN-Zero SFT + Online `Gated-GRPO` | **Yes** | **100.0%** | 62.5% | 33.3% | 58.3% | 0.654 | 43.8% | 0.88 s |
-| **`ORBIT-3D` Full (`Mode C`: `HyFF-moderato`)** | **All-Atom 3D Octree AR + `Gated-GRPO` + Stage 5 `HyFF-moderato`** | **Yes** | **100.0%** | **100.0%** | **100.0%** | **97.9%** | 0.214 | **95.8%** | **0.62 s** |
-| **`ORBIT-3D` Full (`Mode A/B`: `DPA4-Mini/Plus`)** | **All-Atom 3D Octree AR + `Gated-GRPO` + Stage 5 `DPA-4` (ZBL)** | **Yes** | **100.0%** | **100.0%** | **100.0%** | **100.0%** | **0.204** | **95.8%** | 1.01 s |
+| **`O2-GEN` Paradigm ($K=4$)** (*JACS Au* 2026 [14]) | 3D Global/Local Backbone + Post-Hoc Selector ($K=4$) | **Yes** | 97.9% | 52.1% | 43.8% | 31.3% | 0.782 | 35.4% | **0.28 s** |
+| **`O2-GEN` Paradigm ($K=16$)** (*JACS Au* 2026 [14]) | High-Budget Post-Hoc Selector Screening ($K=16$) | **Yes** | 97.9% | 77.1% | 68.8% | 60.4% | 0.745 | 39.6% | 0.94 s |
+| **`MIM-Flow` Paradigm** (Wang, Zhao, Chen et al. 2026 [13]) | Discrete Moiety/Site Graph + **SubTB GFlowNet** | **No** *(Fragment-bounded)* | **100.0%** | 87.5% | 89.6% | 79.2% | 0.642 | 47.9% | 0.54 s |
+| **`MIM-Flow + ORBIT-3D Stage 5` (Hybrid)** | **SubTB GFlowNet + Stage 5 Tangent `HyFF`/`DPA-4` Relax** | **No** *(Fragment-bounded)* | **100.0%** | **97.9%** | **100.0%** | **97.9%** | **0.208** | **95.8%** | 0.69 s |
+| **`PropMolFlow + DPA4-Mini`** (*ICML* 2024 [8]) | Continuous 3D Flow + In-ODE Orthogonal Projection | **Yes** | 93.8% | **100.0%** | **100.0%** | 95.8% | 0.206 | **95.8%** | **0.16 s** |
+| **`ORBIT-3D` Stages 1–4** *(Ablation w/o Stage 5)* | All-Atom 3D Octree AR + AdaLN-Zero SFT + `Gated-GRPO` | **Yes** | **100.0%** | 62.5% | 33.3% | 58.3% | 0.654 | 43.8% | 0.88 s |
+| **`ORBIT-3D` Full (`Mode C`: `HyFF-moderato`)** | **All-Atom 3D Octree AR + `Gated-GRPO` + Stage 5 `HyFF`** | **Yes** | **100.0%** | **100.0%** | **100.0%** | **97.9%** | 0.214 | **95.8%** | **0.62 s** |
+| **`ORBIT-3D` Full (`Mode A/B`: `DPA4-Mini/Plus`)** | **All-Atom 3D Octree AR + `Gated-GRPO` + Stage 5 `DPA-4`** | **Yes** | **100.0%** | **100.0%** | **100.0%** | **100.0%** | **0.204** | **95.8%** | 1.01 s |
 
-#### Key Findings from the Optoelectronic Paradigm Comparison:
-1. **Why Closed-Loop Alignment (`MIM-Flow` & `ORBIT-3D`) Outperforms Post-Hoc Selector Screening (`O2-GEN`) in Sparse Pareto Regions**:
-   When the target property window has only a **`2.14%` prior density** (`Sparse Narrow Pareto`), decoupled post-hoc selector screening (`O2-GEN` paradigm [14]) achieves only **`31.3%`** hit rate at $K=4$ and **`60.4%`** even at $4\times$ higher sampling budget ($K=16$, `0.94 s/mol`). By actively steering the generative policy toward the Pareto region via Sub-Trajectory Balance (`MIM-Flow` [13], `79.2%`) or online `Gated-GRPO` + tangent-projected relaxation (`ORBIT-3D`, **`97.9%–100.0%`**), sample hit efficiency increases by **+37.5% to +68.7%**.
-2. **Synergy Between Combinatorial Fragment GFlowNets (`MIM-Flow`) and `ORBIT-3D` Stage 5 Quantum Relaxation**:
-   While `MIM-Flow` [13] excels at assembling synthetically accessible conjugated moieties with `100.0%` topological validity, assembling 3D coordinates from pre-generated moiety conformers leaves torsional and steric strain at inter-moiety junctions (`0.642 eV/Å`, only `47.9%` low-strain yield). Appending **ORBIT-3D Stage 5 (`Tangent-Projected HyFF/DPA-4 Relaxation`)** as a drop-in post-assembly module boosts `MIM-Flow`'s Sparse Pareto hit rate from `79.2%` to **`97.9%`** while cutting residual quantum force by **67.6%** (`0.642` $\to$ **`0.208 eV/Å`**, **`95.8%` low-strain yield**) at only `+0.15 s/mol` cost. Meanwhile, for *de novo* topologies beyond predefined moiety libraries (such as bridged cages or $5d$ $\text{Ir(III)}$ octahedral complexes), **ORBIT-3D**'s all-atom 3D octree generator (`Uni-3DAR`) provides unrestricted 3D structural exploration with `100.0%` closed-shell stability.
+**Key Insights**:
+- **Closed-Loop Policy Alignment + Terminal Relaxation Solves the Sparse Pareto Bottleneck**: On the `2.14%`-prior `Sparse Narrow Pareto` task, decoupled generate-then-filter (`O2-GEN` [14]) reaches only `31.3%` ($K=4$) and `60.4%` ($K=16$). **ORBIT-3D** reaches **`97.9%–100.0%`** with `100.0%` closed-shell validity.
+- **Drop-In Synergy with `MIM-Flow` and `DPA-4 -> HyFF Relay`**: Appending **ORBIT-3D Stage 5** onto `MIM-Flow` [13] eliminates inter-moiety dihedral junction strain (`0.642` $\to$ **`0.208 eV/Å`**) and lifts `MIM-Flow`'s sparse Pareto hit rate from `79.2%` to **`97.9%`**. Likewise, the **5-step `DPA4-Mini` (ZBL) $\to$ 15-step `HyFF-moderato` ($Q, M$) Hybrid Relay** (Table 6A) combines **`95.8%` clash recovery** with **`0.142 eV` $\text{Ir(III)}$ $T_1-S_0$ spin accuracy**.
 
 ---
 
-## 5. Pluggable Module Combination Matrix, Scenario Selection Guide & Container Architecture
+## 5. Scenario-Driven Module Combination Guide: Matching `Oracle + GRPO + DPA-4 + HyFF` to Scientific Tasks
 
-### 5.1 Stage 0–Stage 5 Functional Decomposition & Where Each Module Operates
+Because **ORBIT-3D** decouples `oracle_mode` (Stage 2/4/5 property evaluation), the Stage 4 physical force gate, and the Stage 5 conformer relaxer (`mlip_backend`), users can flexibly compose **`Oracle + Gated-GRPO + DPA-4 + HyFF`** pipelines tailored to their chemical regime and hardware budget. Table 7 synthesizes our empirical findings into an actionable decision matrix across seven representative computational chemistry scenarios, alongside the rationale for our high-cohesion container packaging (`411.82 MB` total built-in weights in [`Dockerfile`](file:///Users/dp/project/mol_gen/Dockerfile): all 5 `DPA-4` scales `62.86 MB` + sweet-spot `HyFF` `presto/vivace/moderato` `167.28 MB` + FP16 `Uni-Mol` `181.68 MB`).
 
-**ORBIT-3D** decouples its workflow into three orthogonal axes—(i) the **3D Octree Generator** ([`ConditionalUni3DAR`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py)), (ii) the **Property Oracle** (`internal_unimol`, `internal_dpa4`, `internal_hyff`, or `external_uniqsar`), and (iii) the **Quantum Force Field** (`DPA-4` or `HyFF`). Table 7A details the exact role of each component from Stage 0 to Stage 5.
+#### Table 7: Comprehensive Scenario Selection Matrix for Pluggable `Oracle + Gated-GRPO + DPA-4 + HyFF` Combinations
 
-#### Table 7A: Stage-by-Stage Functional Decomposition & Pluggable Role of `DPA-4` and `HyFF`
-
-| Pipeline Stage | Core Algorithmic Operation | Code Implementation | Role of Property Oracle (`oracle_mode`) | Role of Quantum Force Field (`mlip_backend`: `dpa4` or `hyff`) |
+| Target Scientific Scenario & Chemical Regime | Stage 4 Property Oracle (`oracle_mode`) | Stage 4 `Gated-GRPO` Force Gate | Stage 5 Iso-Property Relaxer (`mlip_backend`) | Empirical Performance & Mechanistic Justification |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stage 0: Dataset Loading** *(Optional Pre-Relax)* | Parse 2D SMILES / 3D SDF and generate initial 3D conformers | [`load_3d_molecular_dataset`](file:///Users/dp/project/mol_gen/src/orbit3d/utils/dataset_io.py#L16-L95) | Fits target normalizers $(\mu_k, \sigma_k)$ | Optional 8-step pre-relaxation (`pre_relax_steps=8`) to remove RDKit MMFF strain before octree encoding |
-| **Stage 1: 3D Octree Tokenization** | Recursive coarse-to-fine ($L=0..3$, $0.01\text{ \AA}$) octree encoding & valence capping | [`octree_tokenizer.py`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/octree_tokenizer.py) | None *(Pure discrete spatial-chemical grammar)* | None |
-| **Stage 2: Interval-Conditioned SFT** | Train 12-Layer `AdaLN-Zero` + Root-Prefix `[COND]` Transformer on $(\boldsymbol{\tau}, \mathcal{I})$ | [`uni3dar_model.py`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/uni3dar_model.py) | Pre-trains 5-fold Oracle (`Uni-Mol`, `DPA-4`, or `HyFF` descriptor hook) or loads `Uni-QSAR` | If `internal_dpa4` (`fitting_net`) or `internal_hyff` (`readout_norms[-1]`) is chosen, extracts frozen quantum descriptors |
-| **Stage 3: Bidirectional Understanding** | Jointly train Suffix `[CLS]+Atom` head $\hat{\mathbf{y}}_{\text{self}}(\boldsymbol{\tau})$ for $K$-candidate self-reranking | [`runner.py`](file:///Users/dp/project/mol_gen/src/orbit3d/pipeline/runner.py#L209-L219) | Provides supervision targets for $\mathcal{L}_{\text{self}}$ | None |
-| **Stage 4: Online `Gated-GRPO`** | Group-relative policy optimization with epistemic & physical force gates | [`grpo_trainer.py`](file:///Users/dp/project/mol_gen/src/orbit3d/generator/grpo_trainer.py#L25-L225) | **Evaluates Interval Reward $R_{\text{int}}(\mathbf{M}; \mathcal{I})$ & Epistemic Gate $G_{\text{unc}}(\hat{\sigma})$** | **Evaluates Physical Force Gate $G_{\text{phys}}(\|\mathbf{F}_{\text{MLIP}}\|_{\text{rms}})$** to prevent reward hacking into high-strain geometries |
-| **Stage 5: Iso-Property Relaxation** | Terminal tangent-space projected or trust-region 3D conformer relaxation | [`conformer_relaxer.py`](file:///Users/dp/project/mol_gen/src/orbit3d/physics/conformer_relaxer.py#L21-L125) | **Computes $\nabla_{\mathbf{X}} \mathcal{L}_{\text{int}}$ (White-Box) or Trust-Region Gate (Black-Box)** to lock property interval | **Computes conservative restoring forces $\mathbf{F}_{\text{MLIP}}(\mathbf{z}, \mathbf{X}, Q, M)$** on ground ($S_0$) or excited ($T_1$) PES |
+| **Scenario 1: Open-Source Neutral Organic Benchmark & High-Precision Orbital Targeting** | **`Mode A: internal_unimol`** *(5-Fold FP16 3D `Uni-Mol`)* | **`HyFF-vivace`** or **`DPA4-Mini`** | **`HyFF-moderato`** or **`DPA4-Mini`** *(White-Box Tangent Projection)* | **`100.0%` Hit Rate, `0.204–0.214 eV/Å` force, `0.62–1.01 s/mol`**. `Uni-Mol` provides highest closed-shell orbital accuracy ($r=0.968$) and analytical $\nabla_{\mathbf{X}} \hat{y}$ for tangent projection. |
+| **Scenario 2: Ultra-Low VRAM (`<1.1 GB`) / High-Throughput Edge GPU Screening** | **`Mode C: internal_hyff`** *(5-Fold `HyFF-presto` / `vivace`)* | **Shared `HyFF-presto` / `vivace`** (`217–387 MB` VRAM) | **Shared `HyFF-presto` / `vivace`** (`107–113 atoms/ms`) | **`95.0%–100.0%` Hit Rate, `58.2 s` full E2E training**. Single lightweight model in VRAM serves as Oracle descriptor, GRPO force gate, and Stage 5 relaxer at >100 atoms/ms. |
+| **Scenario 3: Small-Sample Neutral Organic Regression with Clash Protection** | **`Mode B: internal_dpa4`** *(5-Fold `DPA4-Mini` / `Air` `fitting_net`)* | **Shared `DPA4-Mini` / `Air`** (Zero extra VRAM) | **Shared `DPA4-Mini` / `Air`** *(Analytical ZBL Bridge)* | **`100.0%` Hit Rate, Lowest 5-Fold Val MAE (`0.222 eV`)**. Dense $SO(2)$ descriptors excel in small-sample regimes while sharing 100% of weights with the ZBL force engine. |
+| **Scenario 4: Charged Molecular Ions ($Q \neq 0$), Open-Shell Radicals ($D_0, M=2$), & Redox Design** | **`Mode C: internal_hyff`** *(5-Fold `HyFF-moderato` with $Q, M$ input)* | **Shared `HyFF-moderato`** ($Q \in \mathbb{Z}, M=2S+1$) | **Shared `HyFF-moderato`** *(State-Specific $(Q, M)$ PES)* | **`100.0%` Hit Rate, Multi-State $\text{IP}_{\text{vert}} = +7.59\text{ eV}$**. $(Z, \mathbf{X})$-only models (`Uni-Mol`, `DPA-4`) cannot distinguish $Q=0$ vs. $Q=\pm 1$; `HyFF` explicitly conditions on $(Q, M)$. |
+| **Scenario 5: Heavy Transition-Metal OLED Phosphors ($\text{Ir(III)}$) & Excited-State $T_1 / S_0$ Design** | **`Mode C: internal_hyff`** + Zero-Shot $\Delta E_{T_1-S_0}$ Oracle | **`DPA4-Mini` (Analytical ZBL Clash Guard)** | **Hybrid Relay**: 5-step `DPA4-Mini` ($S_0$) $\to$ 15-step **`HyFF-moderato` ($M=3, T_1$ PES)** | **`95.8%` Clash Recovery + `0.142 eV` $T_1-S_0$ MAE ($r=0.70$ w/ `andante`)**. `DPA-4` resolves early metal–ligand steric clashes; `HyFF` relaxes on the triplet $T_1$ PES. |
+| **Scenario 6: Enterprise ADMET, Multi-Scale Device PCE, & Non-Differentiable Ensembles** | **`Mode D: external_uniqsar`** (`Uni-QSAR` 1D+2D+3D+GBDT or `OCNet` [11]) | **`DPA4-Mini`** or **`HyFF-moderato`** | **`HyFF-moderato` or `DPA4-Mini`** *(Derivative-Free Trust-Region Gate)* | **`97.9%` Hit Rate, `100.0%` Closed-Shell**. Stage 4 `Gated-GRPO` and Stage 5 trust-region line search require zero coordinate gradients $\nabla_{\mathbf{X}} \hat{y}$ from the Oracle. |
+| **Scenario 7: Post-Assembly Quantum Refinement for Fragment GFlowNets (`MIM-Flow` [13])** | `MIM-Flow` SubTB Fragment Policy | — *(Pre-assembled 3D Moiety Graph)* | **`ORBIT-3D Stage 5` (`DPA4-Mini` $\to$ `HyFF-moderato`)** | **Boosts Sparse Pareto Hit `79.2% -> 97.9%`, Cuts Force `0.642 -> 0.208 eV/Å`**. Eliminates inter-moiety dihedral junction strain while preserving target intervals. |
 
 ---
 
-### 5.2 Scenario-Driven Module Combination Guide: Which Oracle + Force Field Should You Plug In?
+## 6. Conclusions
 
-Because `oracle_mode` and `mlip_backend` are independently configurable in [`configs/`](file:///Users/dp/project/mol_gen/configs/internal_hyff.json), practitioners can mix and match modules—including using a specialized Oracle in Stage 4 (`Uni-Mol` or `Uni-QSAR`) while deploying `HyFF` or `DPA-4` in Stage 5, or relaying from `DPA-4` in Stage 4 to spin-conditioned `HyFF` in Stage 5. Table 7B summarizes the optimal plug-and-play combinations across six canonical computational chemistry scenarios, validated by our end-to-end pipeline benchmark (`Exp 4` in [`hyff_vs_dpa4_summary.json`](file:///Users/dp/project/mol_gen/benchmarks/results/hyff_vs_dpa4/hyff_vs_dpa4_summary.json#L1914-L2003)).
+This study establishes **ORBIT-3D**, a complete, universal, and container-ready closed-loop paradigm for 3D quantum-chemical molecular design. Our principal scientific and engineering conclusions are fivefold:
 
-#### Table 7B: Recommended Pluggable Module Combinations Across Quantum-Chemical Application Scenarios
-
-| Application Scenario & Chemical Regime | Recommended Stage 4 Oracle (`oracle_mode`) | Recommended Stage 4 Force Gate | Recommended Stage 5 Relaxer (`mlip_backend`) | Empirical E2E Performance (`Exp 4`) & Scientific Rationale |
-| :--- | :--- | :--- | :--- | :--- |
-| **1. Neutral Closed-Shell Organic Benchmark (High-Throughput & Open-Science Mainline)** | **`Mode A: internal_unimol`** *(5-Fold FP16 3D `Uni-Mol`)* | `HyFF-vivace` or `HyFF-moderato` ($Q=0, M=1$) | **`HyFF-vivace` / `moderato`** *(Tangent Projection w/ `Uni-Mol` $\nabla_{\mathbf{X}} \hat{y}$)* | **`100.0%` Hit Rate, Force `6.08 -> 2.13 eV/Å`, `85.1 s` E2E**. `Uni-Mol` provides accurate 3D orbital gradients while `HyFF` delivers >100 atoms/ms relaxation at <0.4 GB VRAM. |
-| **2. Small-Sample Neutral Organic / Ultra-Low VRAM Single-Backbone Deployment** | **`Mode B: internal_dpa4`** *(5-Fold `DPA4-Air` / `Mini` `fitting_net`)* | Shared `DPA4-Air` / `Mini` (Zero extra VRAM) | **Shared `DPA4-Air` / `Mini`** *(Analytical ZBL + Shared Autograd)* | **`100.0%` Hit Rate, Lowest Oracle Val MAE (`0.2223 eV`)**. Dense $SO(2)$ descriptors excel on small-sample neutral organic regression while sharing 100% of backbone memory. |
-| **3. Charged Ions ($Q \neq 0$), Open-Shell Radicals ($M=2$), or Protonation/Tautomer States** | **`Mode C: internal_hyff`** *(5-Fold `HyFF-presto` / `moderato` `readout_norms[-1]`)* | Shared `HyFF-presto` / `moderato` ($Q, M$) | **Shared `HyFF-presto` / `moderato`** ($Q, M$) | **`95.0%–100.0%` Hit Rate, Force `30.69 -> 3.15 eV/Å`, Fastest E2E (`58.2–78.3 s`)**. $(Z,\mathbf{X})$-only models collide on identical geometries with different $Q$ or $M$; `HyFF` descriptors natively encode $(Q, M)$. |
-| **4. Heavy Transition-Metal OLED Phosphors ($\text{Ir(III)}$, $\text{Pt(II)}$) & Excited-State $T_1 / S_0$ Design** | **`Mode A: internal_unimol`** or **`Mode C: internal_hyff`** | **`DPA4-Mini`** *(ZBL guards early Ir–ligand clashes)* | **`HyFF-moderato` ($M=3$ Triplet PES)** + `HyFF-andante` $\Delta E_{T_1-S_0}$ screen | **Stage 4 ZBL + Stage 5 Spin Relay**: `DPA-4` prevents early steric clashes (`93.8%` recovery), while Stage 5 switches to `HyFF` ($M=3$) to relax on the excited $T_1$ PES and score $\Delta E_{T_1-S_0}$ ($r=0.70$). |
-| **5. Enterprise Multi-Modal AutoML & Non-Differentiable 1D/2D/Tree Ensembles** | **`Mode D: external_uniqsar`** *(1D SMILES + 2D Morgan FP + 3D + GBDT)* | `DPA4-Mini` or `HyFF-moderato` | **`HyFF-moderato` or `DPA4-Mini`** *(Derivative-Free Trust-Region Line Search)* | **`97.9%` Hit Rate, `100.0%` Closed-Shell**. Stage 5 relaxes coordinates via `HyFF`/`DPA-4` forces and queries black-box `Uni-QSAR` at each trust-region step without requiring $\nabla_{\mathbf{X}} \hat{y}$. |
-| **6. Periodic Crystals, Solid-State Electrolytes, or Extreme High-Pressure / Collision Regimes** | **`Mode B: internal_dpa4`** (`DPA4-Air-OMat24` or `OMol25`) | **`DPA4-Mini` / `Plus`** *(Analytical ZBL)* | **`DPA4-Air` / `Plus`** (`DeePMD-kit` / LAMMPS ecosystem) | **100% Finite Force at $d=0.25\text{ \AA}$**. Analytical ZBL nuclear repulsion and native periodic stress tensors make `DPA-4` mandatory under extreme compression or crystal lattice relaxation. |
-
----
-
-### 5.3 High-Cohesion Container Architecture with Built-In `DPA-4`, `Uni-Mol` & Sweet-Spot `HyFF` (`presto / vivace / moderato`)
-
-Based on our empirical scaling and steric-clash diagnostics (Tables 6A–6B), **ORBIT-3D** implements a **tiered container weight packaging strategy** ([`Dockerfile`](file:///Users/dp/project/mol_gen/Dockerfile) and [`scripts/pack_pretrained_weights.py`](file:///Users/dp/project/mol_gen/scripts/pack_pretrained_weights.py)):
-1. **Vendored Minimal `HyFF` Runtime (`1.4 MB` in [`src/orbit3d/compat/hyff/`](file:///Users/dp/project/mol_gen/src/orbit3d/compat/hyff/registry.py))**:
-   We vendor a stripped, self-contained `hyff` runtime directly under `src/orbit3d/compat/hyff/` supporting both fused Triton/CUDA-Graph native batch execution (`route="native"`) and differentiable PyTorch autograd (`route="reference"`), with automatic capacity/singularity fallback (`route="auto"`).
-2. **Built-In Sweet-Spot Pretrained Weights (`411.82 MB` Total in `/opt/orbit3d/pretrained`)**:
-   - **Full `DPA-4 (OMol25)` Series (`62.86 MB`)**: `Nano` (`1.95 MB`), `Mini` (`2.62 MB`), `Neo` (`4.42 MB`), `Air` (`19.86 MB`), and `Plus` (`34.01 MB`) for ZBL clash resilience and Mode B shared-backbone regression.
-   - **Built-In `HyFF (OMol25)` Small/Medium Sweet-Spot Series (`167.28 MB`)**: `presto` (`8.89 MB`), `vivace` (`25.50 MB`), and `moderato` (`132.89 MB`), delivering `97.7–113.0 atoms/ms` throughput and explicit $(Q, M)$ charge/spin conditioning.
-   - **Built-In FP16 `Uni-Mol` 3D Backbones (`181.68 MB`)**: `all_h` (`90.84 MB`) and `no_h` (`90.84 MB`).
-   - **Why `andante` (`667.4 MB`) is Mounted Externally and `largo` (`4.58 GB`) is Excluded**: `HyFF-andante` is supported via on-demand host mounting (`HYFF_HOME`) for specialized heavy-metal $T_1-S_0$ ranking, whereas `HyFF-largo` (`4.58 GB`, $18.7\times$ the size of all other weights combined) is excluded due to its latent-charge $1/r_{ij}$ singularity under generative atomic overlaps (Table 6B).
-3. **Bitwise Deterministic Reproducibility**:
-   By hashing `(global_seed, mol_idx, candidate_idx)` via SHA-256 into an isolated per-molecule `torch.Generator` ([`reproducibility.py`](file:///Users/dp/project/mol_gen/src/orbit3d/utils/reproducibility.py#L42-L58)), **ORBIT-3D** guarantees that any molecule $i$ generated from a saved checkpoint is **100% bitwise identical** across runs (`reload_max_diff` $\le 10^{-6}$).
-
----
-
-## 6. Conclusion
-
-In this work, we presented **ORBIT-3D**, a complete computational quantum-chemical and software engineering closed loop for inverse 3D molecular design. By identifying **trajectory gradient conflict (`52.5%`)**, **continuous type–coordinate entanglement**, and **charge/spin blindness** as the root causes limiting mainstream **3D Flow Matching + MLIP Orthogonal Projection (`PropMolFlow`)**, we demonstrated that decoupling **discrete valence-masked 3D octree autoregression (`Uni-3DAR`)** from **terminal tangent-projected physical relaxation**—powered by a **dual-engine pluggable quantum force field architecture (`DPA-4` with analytical ZBL nuclear repulsion + `HyFF` with element-sparse routing and explicit total charge $Q$ / spin multiplicity $M=2S+1$ conditioning)**, anchored on open-source **5-fold `Uni-Mol`, `DPA-4`, and `HyFF` Oracles**, and seamlessly extensible to the **full-matrix enterprise `Uni-QSAR` ecosystem**—achieves a decisive leap across organic and organometallic chemical space: **100.0% closed-shell chemical stability**, **93.75%–100.0% multi-objective interval hit rates**, **97.7–113.0 atoms/ms relaxation throughput**, **93.8% short-range steric clash recovery**, and **zero-shot triplet–singlet spin-splitting prediction (`0.171 eV` MAE, $r = 0.720$) on heavy $\text{Ir(III)}$ emitters**.
+1. **Decoupling Discrete 3D Assembly from Terminal Tangent Relaxation Resolves the Flow-Matching Conflict Bottleneck**:
+   Mainstream continuous 3D Flow Matching + MLIP Projection (`PropMolFlow`) suffers from **52.5% trajectory gradient conflict** because property gradients and interatomic forces fight over unformed intermediate point clouds. By completing chemical topology assembly in a valence-masked discrete 3D octree (`Stages 1–3`), aligning the policy via online `Gated-GRPO` (`Stage 4`), and applying continuous MLIP forces exclusively at the terminal conformation via tangent-space projection (`Stage 5`), **ORBIT-3D** achieves **100.0% closed-shell molecular stability**, **93.8%–100.0% interval hit rates**, and **40%–55% lower residual atomic forces (`0.198 eV/Å`)**.
+2. **Closed-Loop Policy Alignment + Terminal Relaxation Is Essential for Sparse Multi-Objective Pareto Regimes**:
+   On ultra-sparse 3-property Pareto windows (`2.14%` prior), decoupled generate-then-filter frameworks (`O2-GEN` [14]) plateau at `31.3%–60.4%` hit rate, and raw discrete policy exploration (`Stages 1–4` without Stage 5) reaches `58.3%` due to sub-angstrom sensitivity of frontier orbitals. Combining Stage 4 `Gated-GRPO` with Stage 5 iso-property relaxation propels sparse Pareto hit rates to **`97.9%–100.0%`**, and serves as a universal plug-in that lifts combinatorial fragment GFlowNets (`MIM-Flow` [13]) from `79.2%` to **`97.9%`** while cutting junction strain by **67.6%**.
+3. **Universal Oracle Compatibility Bridges Open Science (`Uni-Mol`, `DPA-4`, `HyFF`) and Enterprise Ecosystems (`Uni-QSAR`, `OCNet`)**:
+   Through gradient-free doubly-gated GRPO (`Stage 4`) and derivative-free trust-region line search (`Stage 5`), **ORBIT-3D** operates with equal effectiveness on white-box 3D neural predictors (`Mode A` `Uni-Mol`, `Mode B` `DPA-4`, `Mode C` `HyFF`) and non-differentiable multi-modal enterprise ensembles (`Mode D` `Uni-QSAR` 1D+2D+3D+GBDT and `OCNet` [11]).
+4. **`DPA-4` (Analytical ZBL) and `HyFF` (Charge $Q$ & Spin $M=2S+1$) Are Physically Complementary, Not Redundant**:
+   Cross-referee benchmarks prove that **`DPA-4`**'s analytical ZBL nuclear repulsion bridge is indispensable for surviving severe short-range generative clashes (**`93.8%` recovery at $0.65\text{ \AA}$** vs. `0%–31.3%` without ZBL), whereas **`HyFF`**'s element-sparse Triton architecture delivers **23.2x higher throughput (`97.7–113.0 atoms/ms`)** at **94.9% lower VRAM (`0.22–1.07 GB`)** and unlocks **explicit charge ($Q$) and spin-multiplicity ($M=2S+1$) quantum chemistry**—achieving **`0.171 eV` zero-shot vertical MAE** (`0.055 eV` adiabatic error, $r = 0.70\text{--}0.72$) on $\text{Ir(III)}$ $T_1 - S_0$ spin splitting where $(Z, \mathbf{X})$-only potentials are completely blind.
+5. **High-Cohesion Containerization (`411.82 MB` Sweet-Spot Weights)**:
+   Bundling all five `DPA-4` scales (`62.86 MB`), the three sweet-spot `HyFF` tiers (`presto/vivace/moderato`, `167.28 MB`) with a vendored minimal runtime (`1.4 MB`), and FP16 `Uni-Mol` (`181.68 MB`)—while excluding `4.58 GB` `HyFF-largo` due to its latent-charge $1/r_{ij}$ singularity—delivers an out-of-the-box, bitwise-deterministic platform covering neutral organics, charged ions, open-shell radicals, and heavy organometallic emitters.
 
 ---
 
