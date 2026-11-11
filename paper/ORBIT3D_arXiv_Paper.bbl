@@ -1,4 +1,4 @@
-\begin{thebibliography}{15}
+\begin{thebibliography}{16}
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Haowei Lin, Lin Yao, et al.
@@ -86,6 +86,12 @@ Vinayak Bhat, Parker Sornberger, Balaji Sesha Sarath Pokuri, et al.
 \newblock Electronic, redox, and optical property prediction of organic pi-conjugated molecules through a hierarchy of machine learning approaches.
 \newblock Chemical Science, 2023, 14:203-213.
 \newblock \url{https://pubs.rsc.org/en/content/articlelanding/2023/sc/d2sc04676h}.
+
+\bibitem{degen2008brics}
+Jörg Degen, Christof Wegscheid-Gerlach, Andrea Zaliani, Matthias Rarey.
+\newblock On the art of compiling and using drug-like chemical fragment spaces.
+\newblock ChemMedChem, 2008, 3:1503-1507.
+\newblock \url{https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cmdc.200800178}.
 
 \bibitem{ramakrishnan2014quantum}
 Raghunathan Ramakrishnan, Pavlo O. Dral, Matthias Rupp, O. Anatole von Lilienfeld.

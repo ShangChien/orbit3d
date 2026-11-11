@@ -23,7 +23,10 @@ names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
          'grpo_factorial_20261112.json', 'optical_generation_20261112.json',
          'optical_calibration_20261112.json', 'optical_wheel_reload_20261112.json',
          'boron_quantum_cohort_20261112.json', 'boron_quantum_oracles_20261112.json',
-         'boron_geometry160_20261112.json', 'kv_buffer_20261112.json']
+         'boron_geometry160_20261112.json', 'kv_buffer_20261112.json',
+         'brics_comparison_20261112.json', 'hyff_optical8192_20261112.json',
+         'hyff_optical_calibration_20261112.json', 'optical_hyff_independent_20261112.json',
+         'relocated_artifact_verification_20261112.json']
 records = {}
 for name in names:
     path = paper.parent/'docs/experiments'/name

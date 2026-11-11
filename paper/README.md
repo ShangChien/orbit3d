@@ -4,9 +4,11 @@
 generates the synchronized LaTeX, numeric bibliography, and pilot-results table.
 Edit the Markdown and `references.bib`; do not edit the generated TeX or BBL.
 
-The manuscript separates current unified-package measurements from the archived
-octree/GVP pilot. Current tables include property training, stage/reward controls,
-five GRPO objectives across three training seeds, four-target generation and matched refinement. Independent-surrogate and
+The main results are organized by property prediction, proposal quality, controlled
+ablations, quantum diagnostics and replay. Exploratory adaptation and the archived
+octree/GVP pilot are separated into appendices. Short tables remain unbroken. Current tables include property training, stage/reward controls,
+five GRPO objectives across three training seeds, four-target generation, matched
+DPA/HyFF property prediction, fragment recombination and matched refinement. Independent-surrogate and
 quantum disagreements remain explicit. These experiments establish the stated
 implementation behavior and limited empirical scope, not general superiority.
 
