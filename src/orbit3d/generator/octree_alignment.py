@@ -27,7 +27,7 @@ def categorical_policy_loss(current, previous, reference, advantages, beta=0.02,
 
 def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
-    seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1,
+    seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
 ):
     device = next(model.parameters()).device
     reference = copy.deepcopy(model).eval().requires_grad_(False)
@@ -58,9 +58,10 @@ def align_octree(
                 xyz_temp=0.25,
                 evaluate_self_consistency=False,
                 row_seeds=[candidate_seed(seed, step * group_size + i) for i in range(group_size)],
+                electron_parity=electron_parity,
             )
-            old = model.trajectory_distributions(trajectories, low, high, mask)
-            ref = reference.trajectory_distributions(trajectories, low, high, mask)
+            old = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
+            ref = reference.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
         rewards = [-1.0] * len(trajectories)
         hits = [False] * len(trajectories)
         instances = []
@@ -73,7 +74,12 @@ def align_octree(
             try:
                 inst = trajectory_to_instance(trajectory)
                 row.update(valid=True, smiles=inst.smiles)
-                instances.append((i, inst))
+                similarity = domain.score(inst.graph) if domain else None
+                row['oracle_domain_similarity'] = similarity
+                if domain and similarity < domain.cutoff:
+                    row.update(reason='out_of_oracle_domain', evaluation_status='not_evaluated')
+                else:
+                    instances.append((i, inst))
             except ValueError as exc:
                 row['reason'] = str(exc)
             rollout_records.append(row)
@@ -126,7 +132,7 @@ def align_octree(
         adv = (reward - reward.mean()) / reward.std(unbiased=False).clamp_min(1e-6)
         for _ in range(2):
             with torch.autocast(device_type=device.type, enabled=False):
-                current = model.trajectory_distributions(trajectories, low, high, mask)
+                current = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
                 loss = categorical_policy_loss(current, old, ref, adv, beta=kl_beta)
                 indices = rng.integers(0, len(molecules), size=4)
                 packed = dataset.collate(indices)
@@ -148,7 +154,10 @@ def align_octree(
             optimizer.step()
         row = {
             "step": step + 1,
-            "valid": len(instances),
+            "valid": sum(row['valid'] for row in rollout_records),
+            "domain_eligible": len(instances),
+            "domain_cutoff": domain.cutoff if domain else None,
+            "electron_parity": electron_parity,
             "group_size": group_size,
             "property_hits": sum(hits),
             "reward_mean": float(reward.mean()),

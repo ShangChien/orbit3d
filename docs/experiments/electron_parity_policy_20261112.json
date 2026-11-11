@@ -1,0 +1,26 @@
+{
+  "trajectories": 4,
+  "decision_counts": [
+    184.0,
+    207.0,
+    220.0,
+    146.0
+  ],
+  "rollout_log_probability": [
+    -202.71109008789062,
+    -239.70773315429688,
+    -220.58889770507812,
+    -118.48719787597656
+  ],
+  "teacher_log_probability": [
+    -202.71102905273438,
+    -239.7076873779297,
+    -220.58885192871094,
+    -118.4872817993164
+  ],
+  "max_mean_token_logprob_error": 5.748174203290546e-07,
+  "precision": "float32",
+  "cfg_scale": 1.0,
+  "electron_parity": 0,
+  "passed": true
+}

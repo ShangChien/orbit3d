@@ -1,0 +1,215 @@
+{
+  "passed": true,
+  "tiers": [
+    {
+      "tier": "presto",
+      "weights_sha256": "353d6b3cdf3934cb71c9f0f18b65c184a39121644a1d93327b6f60dea93cc257",
+      "charges": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "multiplicities": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "atom_counts": [
+        8,
+        6,
+        5,
+        4
+      ],
+      "reference_energy_eV": [
+        -0.9623419642448425,
+        -0.4794679880142212,
+        4.5801615715026855,
+        1.500844955444336
+      ],
+      "native_energy_eV": [
+        -0.9623405337333679,
+        -0.47946789860725403,
+        4.580158233642578,
+        1.5008437633514404
+      ],
+      "max_energy_error_eV": 3.337860107421875e-06,
+      "max_raw_force_error_eV_A": 7.3909759521484375e-06,
+      "finite_difference_force_eV_A": 1.8873213529586792,
+      "analytic_force_eV_A": 1.8869518041610718,
+      "force_difference_tolerance_eV_A": 0.001,
+      "energy_difference_tolerance_eV": 0.001,
+      "scope": "Checkpoint execution only; not broad-element generation or property accuracy",
+      "passed": true
+    },
+    {
+      "tier": "vivace",
+      "weights_sha256": "4730a0391bdf714b3389c74ef3cf970cafb0410b1ed6e9114ee09f46ed8c02b3",
+      "charges": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "multiplicities": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "atom_counts": [
+        8,
+        6,
+        5,
+        4
+      ],
+      "reference_energy_eV": [
+        -0.9639857411384583,
+        -0.47969353199005127,
+        4.499746799468994,
+        1.77097749710083
+      ],
+      "native_energy_eV": [
+        -0.9639862179756165,
+        -0.47969430685043335,
+        4.499746322631836,
+        1.770977258682251
+      ],
+      "max_energy_error_eV": 7.748603820800781e-07,
+      "max_raw_force_error_eV_A": 4.887580871582031e-06,
+      "finite_difference_force_eV_A": -2.068042516708374,
+      "analytic_force_eV_A": -2.0681943893432617,
+      "force_difference_tolerance_eV_A": 0.001,
+      "energy_difference_tolerance_eV": 0.001,
+      "scope": "Checkpoint execution only; not broad-element generation or property accuracy",
+      "passed": true
+    },
+    {
+      "tier": "moderato",
+      "weights_sha256": "09df56119ef34b097b4e2aa4538a0ca534fdc8ee273018f1926a774ed05d0395",
+      "charges": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "multiplicities": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "atom_counts": [
+        8,
+        6,
+        5,
+        4
+      ],
+      "reference_energy_eV": [
+        -0.9654918909072876,
+        -0.4703068733215332,
+        4.50941276550293,
+        1.8602149486541748
+      ],
+      "native_energy_eV": [
+        -0.9654920697212219,
+        -0.4703073799610138,
+        4.509410381317139,
+        1.8602147102355957
+      ],
+      "max_energy_error_eV": 2.384185791015625e-06,
+      "max_raw_force_error_eV_A": 3.635883331298828e-06,
+      "finite_difference_force_eV_A": -2.3779866695404053,
+      "analytic_force_eV_A": -2.3778953552246094,
+      "force_difference_tolerance_eV_A": 0.001,
+      "energy_difference_tolerance_eV": 0.001,
+      "scope": "Checkpoint execution only; not broad-element generation or property accuracy",
+      "passed": true
+    },
+    {
+      "tier": "andante",
+      "weights_sha256": "a624df0994bb05ed6ad70e511531391ba813b226a408c03019c09f414644b8fb",
+      "charges": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "multiplicities": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "atom_counts": [
+        8,
+        6,
+        5,
+        4
+      ],
+      "reference_energy_eV": [
+        -0.9659455418586731,
+        -0.4698997437953949,
+        4.508968353271484,
+        1.8606138229370117
+      ],
+      "native_energy_eV": [
+        -0.9659457206726074,
+        -0.46989986300468445,
+        4.508967876434326,
+        1.8606139421463013
+      ],
+      "max_energy_error_eV": 4.76837158203125e-07,
+      "max_raw_force_error_eV_A": 3.635883331298828e-06,
+      "finite_difference_force_eV_A": -2.4207828044891357,
+      "analytic_force_eV_A": -2.4208858013153076,
+      "force_difference_tolerance_eV_A": 0.001,
+      "energy_difference_tolerance_eV": 0.001,
+      "scope": "Checkpoint execution only; not broad-element generation or property accuracy",
+      "passed": true
+    },
+    {
+      "tier": "largo",
+      "weights_sha256": "e71ca60a2afe4c64282a38ae29982a52b75e8648c9fb3fd3102ba2d1d3c8d10d",
+      "charges": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "multiplicities": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "atom_counts": [
+        8,
+        6,
+        5,
+        4
+      ],
+      "reference_energy_eV": [
+        -0.9656869173049927,
+        -0.4698215126991272,
+        4.5068535804748535,
+        1.8603304624557495
+      ],
+      "native_energy_eV": [
+        -0.9656866788864136,
+        -0.4698218107223511,
+        4.506855010986328,
+        1.8603302240371704
+      ],
+      "max_energy_error_eV": 1.430511474609375e-06,
+      "max_raw_force_error_eV_A": 4.112720489501953e-06,
+      "finite_difference_force_eV_A": -2.4030206203460693,
+      "analytic_force_eV_A": -2.4032740592956543,
+      "force_difference_tolerance_eV_A": 0.001,
+      "energy_difference_tolerance_eV": 0.001,
+      "scope": "Checkpoint execution only; not broad-element generation or property accuracy",
+      "passed": true
+    }
+  ]
+}

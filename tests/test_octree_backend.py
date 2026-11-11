@@ -136,3 +136,16 @@ def test_cfg_guides_each_nonlinear_head_with_the_same_sampled_prefix():
         expected = [u+scale*(c-u) for c, u in zip(head(conditional, targets), head(unconditional, targets))]
         for actual, reference in zip(captured, expected):
             torch.testing.assert_close(actual, reference, atol=1e-6, rtol=1e-5)
+
+
+def test_terminal_parity_mask_is_a_conditional_categorical_distribution():
+    from orbit3d.generator.electronic_constraints import mask_terminal_element_logits
+    # H/C/N/O/F/null: only the last decision is restricted. Previous atoms
+    # contribute odd/even electron counts independently for each molecule.
+    probabilities=torch.tensor([[.2,.3,.1,.2,.1,.1]]).repeat(3,1)
+    logits=mask_terminal_element_logits(probabilities.log(),torch.tensor([0,1,0]),
+                                       torch.tensor([True,True,False]),0,torch.tensor([1,0,1,0,1,0]))
+    p=logits.softmax(-1)
+    torch.testing.assert_close(p[0],torch.tensor([0.,.5,0.,1/3,0.,1/6]))
+    torch.testing.assert_close(p[1],torch.tensor([.5,0.,.25,0.,.25,0.]))
+    torch.testing.assert_close(p[2],probabilities[2])

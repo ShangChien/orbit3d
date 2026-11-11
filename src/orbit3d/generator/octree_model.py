@@ -23,6 +23,7 @@ from ..vendor.uni3dar.models.uni3dar_sampler import (
     NUM_FEAT,
 )
 from .random_streams import RowRandomStreams
+from .electronic_constraints import atom_electron_parities, mask_terminal_element_logits
 
 
 class DynamicIntervalConditioner(nn.Module):
@@ -355,6 +356,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
         evaluate_self_consistency: bool = True,
         row_seeds=None,
         spatial_box=None,
+        electron_parity=None,
     ) -> List[Dict]:
         self.eval()
         device = y_min.device
@@ -366,6 +368,11 @@ class ConditionalUni3DAR(Uni3DARSampler):
             raise ValueError('CFG scale must be finite and nonnegative')
         use_cfg = has_cond and cfg_scale != 1.0
         guidance = {'hidden': None, 'scale': cfg_scale} if use_cfg else None
+        electron_state = {}
+        parities = atom_electron_parities(self, device) if electron_parity is not None else None
+        def mask_atom(logits, selected):
+            return mask_terminal_element_logits(logits, electron_state['accumulated'][selected],
+                                                electron_state['terminal'][selected], electron_parity, parities)
 
         orig_tree_t = list(self.tree_temperature)
         orig_atom_t = list(self.atom_temperature)
@@ -422,7 +429,8 @@ class ConditionalUni3DAR(Uni3DARSampler):
                 finished_trajs = []
 
                 atom_predict_funcs, cond_vars = self.get_atom_predict_funcs(
-                    batch_size, device, None, cond_vars, sample_uniforms if streams else None, guidance=guidance
+                    batch_size, device, None, cond_vars, sample_uniforms if streams else None, guidance=guidance,
+                    atom_logit_mask=mask_atom if electron_parity is not None else None,
                 )
                 def mask_tree(logits, selected):
                     return spatial_box.mask_tree_logits(logits, next_feat[selected, :3], next_feat[selected, IDX_LEVEL])
@@ -489,6 +497,12 @@ class ConditionalUni3DAR(Uni3DARSampler):
                     is_atom_layer = last_level == self.atom_level_index
                     is_pred_atom = is_atom_layer & (last_type == self.atom_mask_id) & (next_type < 0)
                     is_first_cnt = (last_level == self.args.merge_level) & (last_type == self.atom_mask_id)
+                    if electron_parity is not None and is_pred_atom.any():
+                        types = decoder_feat[:, :, IDX_TYPE]
+                        actual = (decoder_feat[:, :, IDX_LEVEL] == self.atom_level_index) & (types < len(atom_list)) & (types >= 0)
+                        safe = torch.where(actual, types, self.atom_null_id)
+                        electron_state['accumulated'] = parities[safe].sum(-1) % 2
+                        electron_state['terminal'] = torch.tensor([len(queue) == 0 for queue in raw_feat], device=device)
 
                     pred_type, pred_count, pred_xyz, scores = self.predict_and_sample(
                         is_pred_atom,
@@ -713,7 +727,7 @@ class ConditionalUni3DAR(Uni3DARSampler):
         allowed[self.atom_null_id] = True
         return allowed
 
-    def trajectory_distributions(self, trajs, y_min, y_max, active_mask, temperatures=(0.85, 0.3, 0.25), cfg_scale=1.0):
+    def trajectory_distributions(self, trajs, y_min, y_max, active_mask, temperatures=(0.85, 0.3, 0.25), cfg_scale=1.0, electron_parity=None):
         """Categorical distributions for every sampled tree, atom and XYZ decision."""
         packed = self.pack_sampled_trajectories(trajs, y_min.device)
         decoder_input, target, _ = self.get_feat_from_dataloader(packed)
@@ -748,6 +762,15 @@ class ConditionalUni3DAR(Uni3DARSampler):
                 null_logits = self.atom_heads[0](uncond[atom], labels)
                 logits = [guided(x, u) for x, u in zip(logits, null_logits)]
             allowed = self.allowed_atom_mask(y_min.device)
+            if electron_parity is not None:
+                parities = atom_electron_parities(self, y_min.device)
+                atom_owner = owner[atom]
+                terminal = torch.ones_like(atom_owner, dtype=torch.bool)
+                terminal[:-1] = atom_owner[:-1] != atom_owner[1:]
+                accumulated = torch.zeros(len(trajs), dtype=torch.long, device=y_min.device)
+                accumulated.index_add_(0, atom_owner[~terminal], parities[labels[0][~terminal]])
+                logits[0] = mask_terminal_element_logits(logits[0], accumulated[atom_owner] % 2, terminal,
+                                                        electron_parity, parities)
             for axis, values in enumerate(logits):
                 values = values.float() / (temperatures[1] if axis == 0 else temperatures[2])
                 if axis == 0:

@@ -9,6 +9,24 @@ from pathlib import Path
 import orbit3d
 
 
+def record_input_hashes(output, inputs):
+    """Identify the exact data, weights, scalers and domain used by a run."""
+    manifest = {}
+    for role, supplied in inputs.items():
+        if supplied is None:
+            continue
+        root = Path(supplied)
+        files = sorted(p for p in root.rglob('*') if p.is_file()) if root.is_dir() else [root]
+        records = {}
+        for path in files:
+            with path.open('rb') as stream:
+                digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+            records[str(path.relative_to(root)) if root.is_dir() else path.name] = digest
+        manifest[role] = records
+    (Path(output) / 'input_manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    return manifest
+
+
 def freeze_run(output, entrypoint):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)

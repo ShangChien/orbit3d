@@ -28,7 +28,7 @@ from ..physics.conformer_relaxer import relax_conformer_iso_property
 from ..physics.batched_relaxer import relax_conformers_iso_property
 from ..utils.dataset_io import write_precise_sdf
 from ..utils.reproducibility import lock_deterministic_environment
-from ..utils.run_evidence import freeze_run
+from ..utils.run_evidence import freeze_run, record_input_hashes
 
 
 def run_octree_from_config(cfg, config_path=None):
@@ -63,8 +63,16 @@ def run_octree_from_config(cfg, config_path=None):
         raise ValueError("Property target order mismatch")
     domain_path = cfg["oracle_config"].get("applicability_domain_path")
     domain = MorganDomain.load(domain_path) if domain_path else None
+    if domain:
+        domain.save(output / 'oracle_domain.json')
+    needs_training = mode != 'predict' or int(settings.get('grpo_steps', 0)) > 0
+    generator_source = paths.get('checkpoint_load_path') or (
+        checkpoint if mode == 'predict' else paths.get('generator_pretrained_path'))
+    record_input_hashes(output, {'generator': generator_source, 'forcefield': paths['forcefield_path'],
+                                'property_model': paths['property_checkpoint_dir'], 'applicability_domain': domain_path,
+                                'adaptation_data': paths.get('train_data_path') if needs_training else None})
     training = []
-    if paths.get("train_data_path"):
+    if needs_training and paths.get("train_data_path"):
         training = list(Chem.SDMolSupplier(paths["train_data_path"], removeHs=False))
         if any(m is None for m in training):
             raise ValueError("Training SDF contains unreadable molecules")
@@ -210,6 +218,7 @@ def run_octree_from_config(cfg, config_path=None):
         if not training:
             raise ValueError("GRPO replay requires training molecules")
         y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32)
+        reference_hash = hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
         history = align_octree(
             model,
             training,
@@ -220,12 +229,15 @@ def run_octree_from_config(cfg, config_path=None):
             oracle,
             ff,
             steps=int(settings["grpo_steps"]),
+            lr=float(settings.get('grpo_lr', 2e-5)),
             group_size=int(settings.get("group_size", 8)),
             seed=int(cfg.get('seed', 42)),
             kl_beta=float(settings.get('kl_beta', 0.02)),
             physics_weight=float(settings.get('physics_weight', 0.2)),
             uncertainty_weight=float(settings.get('uncertainty_weight', 0.0)),
             replay_weight=float(settings.get('replay_weight', 0.1)),
+            domain=domain,
+            electron_parity=inference.get('electron_parity'),
         )
         checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_aligned.pt"
         torch.save(
@@ -238,6 +250,7 @@ def run_octree_from_config(cfg, config_path=None):
                 "mean": mean,
                 "scale": scale,
                 "grpo_history": history,
+                "alignment_reference_sha256": reference_hash,
                 "training_smiles": sorted(train_smiles),
             },
             checkpoint,
@@ -279,6 +292,7 @@ def run_octree_from_config(cfg, config_path=None):
                 high,
                 active,
                 cfg_scale=float(inference.get("cfg_scale", 1.0)),
+                electron_parity=inference.get('electron_parity'),
                 evaluate_self_consistency=True,
                 row_seeds=[candidate_seed(inference.get("base_seed", 2026), begin + j) for j in range(count)]
                 if independent_sampling

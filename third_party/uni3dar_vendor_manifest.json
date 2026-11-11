@@ -52,6 +52,7 @@
     "Use project-local PyTorch SDPA and minimal UniCore compatibility implementations",
     "Replace automatic CLI module discovery with explicit imports for packaged runtime",
     "Accept explicit per-candidate uniforms in sampling callbacks; retain legacy multinomial path for archived runs",
-    "Apply classifier-free guidance to categorical head logits with a shared sampled prefix; hidden-state interpolation is removed"
+    "Apply classifier-free guidance to categorical head logits with a shared sampled prefix; hidden-state interpolation is removed",
+    "Support an opt-in terminal electron-parity categorical mask, shared with full-prefix policy probabilities"
   ]
 }

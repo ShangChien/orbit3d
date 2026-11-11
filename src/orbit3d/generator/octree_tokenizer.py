@@ -136,57 +136,68 @@ def decode_tokens_to_mol3d(tokens: List[int]) -> Mol3DInstance:
     )
 
 
-def mol3d_to_rdkit_mol(inst: Mol3DInstance) -> Optional[Chem.Mol]:
-    """Preserve a supplied graph, or infer bonds for explicit-H neutral structures.
-
-    Failed/ambiguous chemistry is rejected, never replaced with a fallback molecule.
-    """
-    try:
-        coords = np.asarray(inst.coords, dtype=float)
-        n = len(inst.atom_types)
-        if n == 0 or coords.shape != (n, 3) or not np.isfinite(coords).all():
-            return None
-        if np.any((inst.atom_types < 0) | (inst.atom_types >= NUM_ATOM_TYPES)):
-            return None
-        syms = [ATOM_TYPES[int(a)] for a in inst.atom_types]
-        if inst.graph is not None:
-            mol = Chem.Mol(inst.graph)
-            if [a.GetSymbol() for a in mol.GetAtoms()] != syms:
-                return None
-        else:
-            rw = Chem.RWMol()
-            for sym in syms:
-                atom = Chem.Atom(sym)
-                atom.SetNoImplicit(True)
-                rw.AddAtom(atom)
-            mol = rw.GetMol()
-        mol.RemoveAllConformers()
-        conf = Chem.Conformer(n)
-        for i, xyz in enumerate(coords):
-            conf.SetAtomPosition(i, xyz.tolist())
-        mol.AddConformer(conf)
-        if inst.graph is None:
+def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
+    coords = np.asarray(inst.coords, dtype=float)
+    types = np.asarray(inst.atom_types)
+    n = len(types)
+    if n == 0 or coords.shape != (n, 3) or not np.isfinite(coords).all():
+        raise ValueError('coordinates: empty, malformed or nonfinite')
+    if np.any((types < 0) | (types >= NUM_ATOM_TYPES)) or not np.equal(types, types.astype(int)).all():
+        raise ValueError('elements: atom indices outside the representation')
+    syms = [ATOM_TYPES[int(a)] for a in types]
+    distances = np.linalg.norm(coords[:, None] - coords[None, :], axis=-1)
+    np.fill_diagonal(distances, np.inf)
+    if n > 1 and distances.min() < 0.45:
+        raise ValueError(f'collision: minimum separation {distances.min():.6f} A < 0.45 A')
+    if inst.graph is not None:
+        mol = Chem.Mol(inst.graph)
+        if [a.GetSymbol() for a in mol.GetAtoms()] != syms:
+            raise ValueError('graph_identity: supplied graph and coordinate element order differ')
+    else:
+        rw = Chem.RWMol()
+        for sym in syms:
+            atom = Chem.Atom(sym)
+            atom.SetNoImplicit(True)
+            rw.AddAtom(atom)
+        mol = rw.GetMol()
+    mol.RemoveAllConformers()
+    conf = Chem.Conformer(n)
+    for i, xyz in enumerate(coords):
+        conf.SetAtomPosition(i, xyz.tolist())
+    mol.AddConformer(conf)
+    if inst.graph is None:
+        try:
             rdDetermineBonds.DetermineBonds(mol, charge=int(inst.charge), allowChargedFragments=True)
+        except (ValueError, RuntimeError) as exc:
+            raise ValueError(f'bond_inference: {exc}') from exc
+    try:
         Chem.SanitizeMol(mol)
-        if len(Chem.GetMolFrags(mol)) != 1 or Chem.GetFormalCharge(mol) != inst.charge:
-            return None
-        electrons = sum(a.GetAtomicNum() + a.GetTotalNumHs() for a in mol.GetAtoms()) - inst.charge
-        if inst.multiplicity < 1 or inst.multiplicity > electrons + 1 or (electrons - inst.multiplicity + 1) % 2:
-            return None
-        if inst.multiplicity == 1 and any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
-            return None
-        distances = np.linalg.norm(coords[:, None] - coords[None, :], axis=-1)
-        np.fill_diagonal(distances, np.inf)
-        if n > 1 and distances.min() < 0.45:
-            return None
-        for bond in mol.GetBonds():
-            i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
-            radius = _COVALENT_RADII[syms[i]] + _COVALENT_RADII[syms[j]]
-            if not 0.6 * radius <= distances[i, j] <= 1.4 * radius:
-                return None
-        mol.SetIntProp("TotalCharge", int(inst.charge))
-        mol.SetIntProp("SpinMultiplicity", int(inst.multiplicity))
-        return mol
+    except (ValueError, RuntimeError) as exc:
+        raise ValueError(f'valence_or_aromaticity: {exc}') from exc
+    fragments = len(Chem.GetMolFrags(mol))
+    if fragments != 1:
+        raise ValueError(f'connectivity: {fragments} disconnected fragments')
+    if Chem.GetFormalCharge(mol) != inst.charge:
+        raise ValueError('charge: graph and requested total charge differ')
+    electrons = sum(a.GetAtomicNum() + a.GetTotalNumHs() for a in mol.GetAtoms()) - inst.charge
+    if inst.multiplicity < 1 or inst.multiplicity > electrons + 1 or (electrons - inst.multiplicity + 1) % 2:
+        raise ValueError('electronic_state: multiplicity and electron-count parity differ')
+    if inst.multiplicity == 1 and any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
+        raise ValueError('radicals: closed-shell generation contains radical centers')
+    for bond in mol.GetBonds():
+        i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        radius = _COVALENT_RADII[syms[i]] + _COVALENT_RADII[syms[j]]
+        if not 0.6 * radius <= distances[i, j] <= 1.4 * radius:
+            raise ValueError(f'bond_geometry: {i}-{j} ({syms[i]}-{syms[j]}) length {distances[i,j]:.6f} A')
+    mol.SetIntProp('TotalCharge', int(inst.charge))
+    mol.SetIntProp('SpinMultiplicity', int(inst.multiplicity))
+    return mol
+
+
+def mol3d_to_rdkit_mol(inst: Mol3DInstance) -> Optional[Chem.Mol]:
+    """Compatibility query returning None for chemical rejection."""
+    try:
+        return _validated_molecule(inst)
     except (ValueError, RuntimeError):
         return None
 
@@ -198,10 +209,7 @@ def mol_to_clean_smiles(mol: Optional[Chem.Mol]) -> str:
 
 
 def mol3d_to_validated_rdkit_mol(inst: Mol3DInstance) -> Chem.Mol:
-    mol = mol3d_to_rdkit_mol(inst)
-    if mol is None:
-        raise ValueError("Molecule failed graph, charge, connectivity or geometry validation")
-    return mol
+    return _validated_molecule(inst)
 
 
 def rdkit_mol_to_mol3d_instance(mol: Chem.Mol, y_vec: np.ndarray, center=True) -> Optional[Mol3DInstance]:

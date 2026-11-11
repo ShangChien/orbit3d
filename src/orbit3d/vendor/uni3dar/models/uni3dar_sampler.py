@@ -565,6 +565,7 @@ class Uni3DARSampler(Uni3DAR):
         cond_vars,
         sample_uniforms=None,
         guidance=None,
+        atom_logit_mask=None,
     ):
         atom_type_mask = torch.ones(
             self.num_atom,
@@ -617,6 +618,8 @@ class Uni3DARSampler(Uni3DAR):
             return probs
 
         def atom_sampling_func(logits, batch_indices, tree_i):
+            if atom_logit_mask is not None:
+                logits = atom_logit_mask(logits, batch_indices)
             atom_type, score = softmax_sampling(
                 logits,
                 1.0,
@@ -627,6 +630,8 @@ class Uni3DARSampler(Uni3DAR):
             return atom_type, score
 
         def atom_constraint_sampling_func(logits, batch_indices, tree_i):
+            if atom_logit_mask is not None:
+                logits = atom_logit_mask(logits, batch_indices)
             atom_type, score = softmax_sampling(
                 logits,
                 1.0,
