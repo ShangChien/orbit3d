@@ -4,9 +4,11 @@
 generates the synchronized LaTeX, numeric bibliography, and pilot-results table.
 Edit the Markdown and `references.bib`; do not edit the generated TeX or BBL.
 
-The manuscript describes the intended corrected architecture. Its numerical
-table is explicitly limited to the archived octree/GVP pilot. It does not claim
-that the unified implementation has been repaired or experimentally validated.
+The manuscript separates current unified-package measurements from the archived
+octree/GVP pilot. Current tables include property training, stage/reward controls,
+three GRPO training seeds and matched refinement. Independent-surrogate and
+quantum disagreements remain explicit. These experiments establish the stated
+implementation behavior and limited empirical scope, not general superiority.
 
 ## Figure 0
 
@@ -26,6 +28,7 @@ must not be treated as experiment outputs.
 ## Build the manuscript
 
 ```bash
+python paper/sync_current_evidence.py
 uv run --no-project --with pypandoc-binary python paper/build_manuscript.py
 ```
 
@@ -54,4 +57,5 @@ python paper/build_arxiv_submission.py
 
 This rebuilds the local source archive; it does not submit or publish the paper.
 The archive includes the main TeX, bibliography, vector Figure 0, and pilot data
-with provenance. Superseded figures are excluded.
+with provenance, plus the checksum-verified current evidence archive. Superseded
+figures are excluded.

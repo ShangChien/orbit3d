@@ -1,4 +1,4 @@
-\begin{thebibliography}{13}
+\begin{thebibliography}{15}
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Haowei Lin, Lin Yao, et al.
@@ -73,6 +73,19 @@ Daniel S. Levine, Muhammed Shuaibi, Evan Walter Clark Spotte-Smith, et al.
 \newblock The open molecules 2025 (OMol25) dataset, evaluations, and models.
 \newblock arXiv preprint arXiv:2505.08762, 2025.
 \newblock \url{https://arxiv.org/abs/2505.08762}.
+
+\bibitem{cheng2026mimdata}
+Zheng Cheng.
+\newblock MIM-Flow forward data and model.
+\newblock Zenodo dataset, 2026.
+\newblock Publisher metadata and archive checksums are retained with the experiment data manifest.
+\newblock \url{https://zenodo.org/records/21887607}.
+
+\bibitem{bhat2023ocelot}
+Vinayak Bhat, Parker Sornberger, Balaji Sesha Sarath Pokuri, et al.
+\newblock Electronic, redox, and optical property prediction of organic pi-conjugated molecules through a hierarchy of machine learning approaches.
+\newblock Chemical Science, 2023, 14:203-213.
+\newblock \url{https://pubs.rsc.org/en/content/articlelanding/2023/sc/d2sc04676h}.
 
 \bibitem{ramakrishnan2014quantum}
 Raghunathan Ramakrishnan, Pavlo O. Dral, Matthias Rupp, O. Anatole von Lilienfeld.

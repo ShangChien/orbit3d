@@ -130,7 +130,30 @@ def build():
         lines.append(f"| {variant.replace('_', ' ')} | {sum(row['raw_valid'] for row in runs)} | "
                      f"{sum(row['qualified'] for row in runs)} | "
                      f"{sum(row['independent']['independent_joint_successes'] for row in runs)} |")
-    lines += ['', 'Table: Fifty GRPO updates, training seed 42, three inference seeds, and identical float64 energy reporting. The independent evaluator is a separately trained fingerprint surrogate, not DFT truth.']
+    lines += ['', 'Table: Fifty rollout iterations (two optimizer passes per group), training seed 42, three inference seeds, and identical float64 energy reporting. The independent evaluator is a separately trained fingerprint surrogate, not DFT truth.']
+    stages = current['stage_and_training_seeds_20261112.json']
+    lines += ['', '| Policy stage | Attempts | Optimizing joint hits | Independent joint hits |',
+              '| :--- | ---: | ---: | ---: |']
+    for variant, label in [('unconditional_prior', 'Unconditional prior'), ('interval_sft', 'Interval SFT')]:
+        runs = [row for row in stages['stage_runs'] if row['variant'] == variant]
+        assert len(runs) == 3 and sum(row['attempted'] for row in runs) == 192
+        lines.append(f"| {label} | 192 | {sum(row['qualified'] for row in runs)} | "
+                     f"{sum(row['independent']['independent_joint_successes'] for row in runs)} |")
+    runs = stages['grpo_replicas']
+    assert len(runs) == 9 and sum(row['attempted'] for row in runs) == 576
+    lines.append(f"| SFT + full GRPO | 576 | {sum(row['qualified'] for row in runs)} | "
+                 f"{sum(row['independent']['independent_joint_successes'] for row in runs)} |")
+    lines += ['', 'Table: Three inference seeds per policy. GRPO additionally uses three training seeds (42-44), all initialized from one SFT checkpoint. The prior-to-SFT comparison changes both conditioning and the self-shortlist.']
+    refinement = current['refinement_matched_20261112.json']
+    assert refinement['attempted_per_rule'] == 192 and refinement['settings']['step_size'] == .004
+    lines += ['', '| Refinement rule | Optimizing joint hits / 192 | Independent joint hits / 192 | Mean RMS force (eV/Å) |',
+              '| :--- | ---: | ---: | ---: |']
+    for key, label in [('no_refinement', 'None'), ('energy_only', 'Energy only'),
+                       ('projection_only', 'Projection only'), ('full_acceptance', 'Full acceptance')]:
+        row = refinement['rules'][key]
+        lines.append(f"| {label} | {row['joint_successes']} | {row['independent_joint_successes']} | "
+                     f"{row['mean_final_rms_force_eV_A']:.4f} |")
+    lines += ['', 'Table: Identical 34 selected starting structures from 192 proposals; 30-step budget and production step size 0.004. Selection is fixed, but backtracking changes evaluator cost. The independent fingerprint surrogate favors energy-only refinement.']
     matched = current['ocelot8192_evaluation_20261112.json']['evaluation']['matched_previous_test']
     lines += ['', '| Matched OCELOT test (256 structures) | 4096 training records, MAE (eV) | 8192 training records, MAE (eV) |',
               '| :--- | ---: | ---: |']
@@ -158,8 +181,9 @@ def build():
     # graphicx; keep arXiv's older TeX installations compatible.
     latex = re.sub(r",alt=\{[^}]*\}(?=\])", "", latex)
     # Give the short task label less width than the model and force columns.
-    widths = iter(["0.1000", "0.2700", "0.1900", "0.2500", "0.1900"])
-    latex = re.sub(r"\\real\{0\.2000\}", lambda _: r"\real{"+next(widths)+"}", latex)
+    pilot_widths = ["0.1000", "0.2700", "0.1900", "0.2500", "0.1900"]
+    for width in pilot_widths:
+        latex = latex.replace(r"\real{0.2000}", r"\real{"+width+"}", 1)
     (PAPER / "ORBIT3D_arXiv_Paper.tex").write_text(latex)
     write_bibliography(latex)
     print(f"Updated {SOURCE.name} table and ORBIT3D_arXiv_Paper.tex (Pandoc {pypandoc.get_pandoc_version()})")

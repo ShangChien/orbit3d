@@ -1,7 +1,7 @@
 # GRPO reward ablations
 
 The four models start from the same v3 OCELOT conditioner and use training seed 42,
-50 updates, 16 candidates per group, identical intervals, and the same forcefield,
+50 rollout iterations with two optimizer passes each, 16 candidates per group, identical intervals, and the same forcefield,
 Oracle and applicability domain. All physical energies use the float64 reporting
 path. Evaluation uses seeds 2026–2028, 64 attempts each, even-electron sampling,
 external ranking and 30 refinement steps with strict zero acceptance tolerances.
