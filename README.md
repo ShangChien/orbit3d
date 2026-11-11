@@ -134,6 +134,10 @@ filtered proposals remain in the original candidate denominator.
 | `utils/qm9s.py` | Spectrum-preserving structural adapter |
 | `vendor/` | Pinned Uni-3DAR source and minimal runtime dependencies |
 
+Every configuration declares `generator_config.backend` explicitly. Missing or
+unknown values fail before model loading; they no longer select the legacy model.
+The archived configurations explicitly name `dense_grid_v2`.
+
 The older `internal_*.json` configurations and `benchmarks/runners/` belong to
 previous baselines or archived experiments. They are not the recommended route
 for the new QM9s/OCELOT workflow. Historical hardcoded comparisons cannot be

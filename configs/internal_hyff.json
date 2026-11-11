@@ -28,14 +28,18 @@
     "grpo_mode": "multi_window_general",
     "grpo_steps": 30,
     "group_size": 8,
-    "lr": 0.00002,
-    "temperature": 0.90,
+    "lr": 2e-05,
+    "temperature": 0.9,
     "kl_beta": 0.04,
     "sft_anchor_weight": 0.15,
-    "uncertainty_weight": 0.35
+    "uncertainty_weight": 0.35,
+    "backend": "dense_grid_v2"
   },
   "inference_config": {
-    "target_interval": [620.0, 640.0],
+    "target_interval": [
+      620.0,
+      640.0
+    ],
     "run_specialist_grpo_before_gen": true,
     "specialist_grpo_steps": 25,
     "num_molecules": 32,

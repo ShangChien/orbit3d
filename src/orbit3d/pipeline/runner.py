@@ -50,11 +50,16 @@ def run_from_config(config_path: str) -> Dict[str, Any]:
     with open(config_path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
 
-    if cfg.get("generator_config", {}).get("backend") == "scaffold_graph_growth":
+    backend = cfg.get("generator_config", {}).get("backend")
+    supported = {"uni3dar_octree", "scaffold_graph_growth", "dense_grid_v2"}
+    if backend not in supported:
+        raise ValueError("Declare generator_config.backend explicitly as one of: "
+                         + ", ".join(sorted(supported)))
+    if backend == "scaffold_graph_growth":
         from .scaffold_runner import run_scaffold_from_config
         return run_scaffold_from_config(cfg, config_path)
 
-    if cfg.get("generator_config", {}).get("backend") == "uni3dar_octree":
+    if backend == "uni3dar_octree":
         from .octree_runner import run_octree_from_config
 
         return run_octree_from_config(cfg, config_path)
@@ -80,9 +85,6 @@ def run_from_config(config_path: str) -> Dict[str, Any]:
         os.path.isfile(os.path.join(ckpt_load_dir, n)) for n in ["uni3dar_grpo.pt", "uni3dar_sft.pt"]
     ):
         raise FileNotFoundError("No trained generator checkpoint found")
-    if cfg.get("generator_config", {}).get("backend", "dense_grid_v2") != "dense_grid_v2":
-        raise ValueError("This CLI supports dense_grid_v2; upstream octree is a separate backend")
-
     os.makedirs(ckpt_save_dir, exist_ok=True)
     os.makedirs(output_dir, exist_ok=True)
 

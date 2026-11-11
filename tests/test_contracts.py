@@ -195,7 +195,7 @@ def test_missing_generator_fails_before_loading_oracle(tmp_path):
 
     path = tmp_path / "config.json"
     path.write_text(
-        json.dumps({"mode": "predict", "mount_paths": {"checkpoint_load_dir": str(tmp_path / "missing")}})
+        json.dumps({"mode": "predict", "generator_config": {"backend": "dense_grid_v2"}, "mount_paths": {"checkpoint_load_dir": str(tmp_path / "missing")}})
     )
     with pytest.raises(FileNotFoundError, match="generator"):
         run_from_config(str(path))
@@ -235,7 +235,7 @@ def test_pipeline_train_reload_all_records(tmp_path, monkeypatch):
             "output_dir": str(tmp_path / "out"),
         },
         "oracle_config": {"oracle_mode": "internal_dpa4", "target_cols": ["a", "b"]},
-        "generator_config": {"d_model": 16, "n_layers": 1, "n_heads": 2, "sft_epochs": 1, "grpo_steps": 0},
+        "generator_config": {"backend": "dense_grid_v2", "d_model": 16, "n_layers": 1, "n_heads": 2, "sft_epochs": 1, "grpo_steps": 0},
         "stage5_relax_config": {"enabled": False},
         "inference_config": {"num_molecules": 3, "target_interval": {"b": [0, 1], "a": [0, 1]}},
     }
@@ -477,3 +477,13 @@ def test_refinement_preserves_float64_scaffold_world_coordinates():
                                             frozen_indices=[0])
     assert result.coords.dtype == np.float64
     np.testing.assert_array_equal(result.coords[0], mol.GetConformer().GetPositions()[0])
+
+
+@pytest.mark.parametrize("backend", [None, "uni3dar", "unrecognized"])
+def test_generator_identity_is_never_inferred_as_the_legacy_model(tmp_path, backend):
+    import json
+    from orbit3d.pipeline.runner import run_from_config
+    path = tmp_path / "configuration.json"
+    path.write_text(json.dumps({"generator_config": {"backend": backend}}))
+    with pytest.raises(ValueError, match="Declare generator_config.backend"):
+        run_from_config(str(path))
