@@ -52,6 +52,7 @@ def vertical_excitations(molecule, omega, theory, density=None, unrestricted_ene
     return {'method': 'full linear-response TDDFT; spin-adapted restricted reference',
             'response_residual_tolerance': singlet.conv_tol,
             'trial_gram_eigenvalue_threshold': singlet.lindep,
+            'third_order_xc_engine': 'CPU Libxc (GPU SCF/response)' if theory.engine == 'gpu' else 'CPU Libxc',
             'geometry': 'same optimized S0 geometry for S1 and T1',
             'omega': omega, 'ground_energy_Ha': float(mf.e_tot),
             'singlet_eV': (se * HARTREE_EV).tolist(), 'triplet_eV': (te * HARTREE_EV).tolist(),

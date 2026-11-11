@@ -1,0 +1,15 @@
+{
+  "state": "S1",
+  "energy_definition": "RKS ground energy + full LR-TDDFT root energy",
+  "functional": "HYB_GGA_XC_LC_WPBE",
+  "basis": "def2-svp",
+  "omega": 0.2762,
+  "coordinate": 40,
+  "step_A": 0.001,
+  "analytic_Ha_A": -0.0734515378083555,
+  "finite_difference_Ha_A": -0.07348184581701389,
+  "absolute_error_Ha_A": 3.0308008658386232e-05,
+  "tolerance_Ha_A": 0.0007345153780835551,
+  "total_energy_Ha": -488.4490204870721,
+  "passed": true
+}

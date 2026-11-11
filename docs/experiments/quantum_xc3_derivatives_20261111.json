@@ -1,0 +1,120 @@
+{
+  "functional": "HYB_GGA_XC_LC_WPBE",
+  "omega": 0.2762,
+  "records": [
+    {
+      "spin": 0,
+      "requested_order": 2,
+      "derivatives": [
+        {
+          "order": 0,
+          "native_max_abs_error": 4.290377608739959e-09,
+          "partitioned_max_abs_error": 4.290377608739959e-09
+        },
+        {
+          "order": 1,
+          "native_max_abs_error": 6.014808429100071e-09,
+          "partitioned_max_abs_error": 6.014808429100071e-09
+        },
+        {
+          "order": 2,
+          "native_max_abs_error": 1.121245564922324e-06,
+          "partitioned_max_abs_error": 1.121245564922324e-06
+        }
+      ]
+    },
+    {
+      "spin": 0,
+      "requested_order": 3,
+      "derivatives": [
+        {
+          "order": 0,
+          "native_max_abs_error": 0.7810652947458109,
+          "partitioned_max_abs_error": 0.0
+        },
+        {
+          "order": 1,
+          "native_max_abs_error": 1.087176416460962,
+          "partitioned_max_abs_error": 0.0
+        },
+        {
+          "order": 2,
+          "native_max_abs_error": 2.060812800286681,
+          "partitioned_max_abs_error": 0.0
+        },
+        {
+          "order": 3,
+          "native_max_abs_error": 22.21149907528764,
+          "partitioned_max_abs_error": 0.0
+        }
+      ]
+    },
+    {
+      "spin": 1,
+      "requested_order": 2,
+      "derivatives": [
+        {
+          "order": 0,
+          "native_max_abs_error": 5.5158344558492445e-09,
+          "partitioned_max_abs_error": 5.5158344558492445e-09
+        },
+        {
+          "order": 1,
+          "native_max_abs_error": 7.837044568859142e-09,
+          "partitioned_max_abs_error": 7.837044568859142e-09
+        },
+        {
+          "order": 2,
+          "native_max_abs_error": 1.7565135276426114e-06,
+          "partitioned_max_abs_error": 1.7565135276426114e-06
+        }
+      ]
+    },
+    {
+      "spin": 1,
+      "requested_order": 3,
+      "derivatives": [
+        {
+          "order": 0,
+          "native_max_abs_error": 0.9988195777528519,
+          "partitioned_max_abs_error": 0.0
+        },
+        {
+          "order": 1,
+          "native_max_abs_error": 1.4116883589725604,
+          "partitioned_max_abs_error": 0.0
+        },
+        {
+          "order": 2,
+          "native_max_abs_error": 2.9731174474221596,
+          "partitioned_max_abs_error": 0.0
+        },
+        {
+          "order": 3,
+          "native_max_abs_error": 41.98009308583904,
+          "partitioned_max_abs_error": 0.0
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "execution": "Native GPU for order <=2; CPU Libxc for order >=3; no functional change",
+  "molecular_failure_before_correction": {
+    "state": "S1",
+    "energy_definition": "RKS ground energy + full LR-TDDFT root energy",
+    "functional": "HYB_GGA_XC_LC_WPBE",
+    "basis": "def2-svp",
+    "omega": 0.2762,
+    "coordinate": 26,
+    "step_A": 0.001,
+    "analytic_Ha_A": -0.6516480591716635,
+    "finite_difference_Ha_A": 0.005452199218325404,
+    "absolute_error_Ha_A": 0.6571002583899889,
+    "tolerance_Ha_A": 0.006516480591716635,
+    "total_energy_Ha": -488.44902048702164,
+    "passed": false,
+    "cpu_analytic_Ha_A": 0.005489421033081443,
+    "cpu_finite_difference_error_Ha_A": 3.7221814756039154e-05,
+    "cpu_gpu_gradient_max_abs_Ha_A": 0.6571374802047449
+  }
+}

@@ -107,3 +107,20 @@ its geometry, functional, basis and omega instead of retuning for each state.
 J2 and Jn2 diagnostics with Libxc478 also failed to reproduce naphthalene's CSV
 frontier orbitals: J2 gave −8.15746/+0.53337 eV and Jn2 −8.15902/+0.53452 eV.
 Changing the tested tuning objective does not resolve the dataset discrepancy.
+
+## Excited-state gradient kernel correction
+
+Native GPU Libxc0.9's LC-wPBE call at derivative order3 loses the exchange term,
+including lower-order values returned in that call. A molecular S1 gradient then
+differed from finite differences by0.6571 Ha/Å; the CPU analytic result on the same
+orbitals agreed within3.73e-5 Ha/Å. Fixed spin0/spin1 density tests isolated the
+failure to that kernel, not omega tuning, geometry, or the TDDFT solver.
+
+`ThirdOrderCPUIntegrator` now assigns orders≥3 to PySCF's CPU Libxc and retains
+native GPU SCF/linear-response kernels for orders≤2. It does not change the
+functional, basis, grid, omega, density fitting or excited-state approximation.
+The corrected S1 molecular gradient passes finite differences (3.03e-5 Ha/Å
+absolute error at the largest analytic component). This explicit workload split
+replaces use of an incorrect derivative; it is not an exception-triggered fallback.
+The density-level and molecular checks are reproducible with
+`scripts/validate_xc_derivatives.py` and `scripts/validate_excited_gradient.py`.

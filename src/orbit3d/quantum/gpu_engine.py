@@ -10,7 +10,12 @@ def gpu_scf(molecule, unrestricted=True):
     if unrestricted:
         from gpu4pyscf.dft.uks import UKS
 
-        return UKS(molecule)
-    from gpu4pyscf.dft.rks import RKS
+        mf = UKS(molecule)
+    else:
+        from gpu4pyscf.dft.rks import RKS
 
-    return RKS(molecule)
+        mf = RKS(molecule)
+    from .xc_integrator import ThirdOrderCPUIntegrator
+
+    mf._numint = ThirdOrderCPUIntegrator()
+    return mf
