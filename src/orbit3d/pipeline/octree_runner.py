@@ -25,6 +25,7 @@ from ..oracles.fingerprint_oracle import FingerprintOracle
 from ..oracles.applicability import MorganDomain
 from ..physics.dpa_forcefield import DPAPotentialGuidance
 from ..physics.conformer_relaxer import relax_conformer_iso_property
+from ..physics.batched_relaxer import relax_conformers_iso_property
 from ..utils.dataset_io import write_precise_sdf
 from ..utils.reproducibility import lock_deterministic_environment
 from ..utils.run_evidence import freeze_run
@@ -329,11 +330,17 @@ def run_octree_from_config(cfg, config_path=None):
         external_ranking_calls = len(shortlist)
         ranking_mols = [inst.graph for _, _, inst in shortlist]
         if isinstance(oracle, InternalDPA4PropertyOracle):
-            predictions, uncertainty = oracle.predict_3d_mols_batched(ranking_mols)
+            evaluation = oracle.evaluate_3d_mols_batched(ranking_mols)
+            predictions, uncertainty = evaluation['mean'], evaluation['std']
+            errors = evaluation['errors']
         else:
             predictions, uncertainty = oracle.predict_3d_mols(ranking_mols)
+            errors = [''] * len(ranking_mols)
         reranked = []
-        for (self_score, idx, inst), prediction, std in zip(shortlist, predictions, uncertainty):
+        for (self_score, idx, inst), prediction, std, error in zip(shortlist, predictions, uncertainty, errors):
+            if error:
+                records[idx].update(status='oracle_failed', reason=error)
+                continue
             deviation = intervals.violations(prediction).numpy() / scale
             score = float(np.square(deviation).sum())
             records[idx].update(
@@ -358,21 +365,38 @@ def run_octree_from_config(cfg, config_path=None):
     traces = []
     relax_settings = cfg.get("stage5_relax_config", {})
     relax_steps = int(relax_settings.get("relax_steps", 8)) if relax_settings.get("enabled", True) else 0
-    for idx, inst in selected:
+    use_batch_refinement = bool(relax_settings.get('batch_refinement', False))
+    batch_results = None
+    if use_batch_refinement:
+        batch_start = time.perf_counter()
+        batch_results = relax_conformers_iso_property(
+            [inst for _, inst in selected], ff, oracle, dict(zip(names, intervals.bounds)),
+            n_steps=relax_steps, step_size=float(relax_settings.get('step_size', .004)),
+            coordinate_bounds=spatial_box.world_bounds if spatial_box else None,
+        )
+        stage_seconds['refinement'] = time.perf_counter() - batch_start
+    for selected_index, (idx, inst) in enumerate(selected):
         refine_start = time.perf_counter()
-        try:
-            out, info = relax_conformer_iso_property(
-                inst, ff, oracle, dict(zip(names, intervals.bounds)),
-                n_steps=relax_steps,
-                step_size=float(relax_settings.get("step_size", 0.004)),
-                coordinate_bounds=spatial_box.world_bounds if spatial_box else None,
-            )
-        except (ValueError, FloatingPointError) as exc:
-            records[idx].update(status="refinement_failed", reason=str(exc))
-            pd.DataFrame(records).to_csv(output / "candidates.csv", index=False)
+        if use_batch_refinement:
+            out, info = batch_results[selected_index]
+            if out is None:
+                records[idx].update(info, status='refinement_failed')
+                pd.DataFrame(records).to_csv(output / 'candidates.csv', index=False)
+                continue
+        else:
+            try:
+                out, info = relax_conformer_iso_property(
+                    inst, ff, oracle, dict(zip(names, intervals.bounds)),
+                    n_steps=relax_steps,
+                    step_size=float(relax_settings.get("step_size", 0.004)),
+                    coordinate_bounds=spatial_box.world_bounds if spatial_box else None,
+                )
+            except (ValueError, FloatingPointError) as exc:
+                records[idx].update(status="refinement_failed", reason=str(exc))
+                pd.DataFrame(records).to_csv(output / "candidates.csv", index=False)
+                stage_seconds["refinement"] += time.perf_counter() - refine_start
+                continue
             stage_seconds["refinement"] += time.perf_counter() - refine_start
-            continue
-        stage_seconds["refinement"] += time.perf_counter() - refine_start
         passed = info["interval_hit"] and info["final_force_eva"] <= threshold
         mol = out.graph
         mol.RemoveAllConformers()
@@ -393,7 +417,7 @@ def run_octree_from_config(cfg, config_path=None):
             final_force=info["final_force_eva"],
             initial_max_force=info["init_max_force_eva"],
             final_max_force=info["final_max_force_eva"],
-            refinement_seconds=time.perf_counter() - refine_start,
+            refinement_seconds=None if use_batch_refinement else time.perf_counter() - refine_start,
             evaluation_calls=info["evaluation_calls"],
             gradient_calls=info["gradient_calls"],
             joint_success=passed,
@@ -431,8 +455,10 @@ def run_octree_from_config(cfg, config_path=None):
         "refinement_gradient_calls": sum(r.get("gradient_calls", 0) for r in records),
         "export_recheck_calls": len(exported),
         "stage_seconds": stage_seconds,
+        "batch_refinement": use_batch_refinement,
         "retained_morgan_diversity": float(1 - np.mean(similarities)) if similarities else None,
         "refinement_failed": sum(r["status"] == "refinement_failed" for r in records),
+        "oracle_failed": sum(r['status'] == 'oracle_failed' for r in records),
         "unique_raw_valid": len({r["smiles"] for r in records if r.get("raw_valid")}),
         "retained": len(mols),
         "qualified": len(qualified),

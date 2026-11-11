@@ -1,0 +1,16 @@
+{
+  "comparison": "serial versus native batched physical evaluation",
+  "all_candidates": 32,
+  "retained": 8,
+  "token_and_decision_equality": true,
+  "max_coordinate_error_A": 2.3841900009813344e-07,
+  "max_prediction_error_eV": 1.430511474609375e-06,
+  "max_raw_force_error_eV_A": 1.2949109077453613e-05,
+  "tolerances": {
+    "coordinates_A": 1e-05,
+    "properties_eV": 1e-05,
+    "raw_forces_eV_A": 0.0001
+  },
+  "same_path_replay_is_separate": true,
+  "passed": true
+}

@@ -201,7 +201,7 @@ class DPAPotentialGuidance(nn.Module):
                 raise NotImplementedError("Descriptor computation is disconnected from input coordinates")
         return descriptor
 
-    def extract_native_batch(self, coords, atom_symbols):
+    def extract_native_batch(self, coords, atom_symbols, check_finite=True):
         """Evaluate equal-size independent frames in one native DeePMD call."""
         batch, atoms, _ = coords.shape
         atypes = torch.tensor([[self.dpa_type_map.index(s) for s in row] for row in atom_symbols],
@@ -220,9 +220,21 @@ class DPAPotentialGuidance(nn.Module):
         descriptor = captured['descriptor'].detach()
         energy = prediction['energy'].reshape(batch).detach().to(coords.dtype)
         forces = prediction['force'].reshape(batch, atoms, 3).detach().to(coords.dtype)
-        if not all(torch.isfinite(v).all() for v in [descriptor, energy, forces]):
+        if check_finite and not all(torch.isfinite(v).all() for v in [descriptor, energy, forces]):
             raise FloatingPointError('Nonfinite native DPA batch')
         return descriptor, energy, forces
+
+    def extract_differentiable_batch(self, coords, atom_symbols):
+        """Coordinate-connected descriptors for independent equal-size frames."""
+        model = self.dpa_model
+        batch, atoms, _ = coords.shape
+        atypes = torch.tensor([[self.dpa_type_map.index(s) for s in row] for row in atom_symbols],
+                              device=coords.device, dtype=torch.long)
+        edges = model.build_neighbor_list(coords.to(self.coord_dtype), atypes, None)
+        result = model.forward_common_lower(edges.coord, edges.atype, edges.edge_index, edges.edge_vec,
+                                            edges.edge_scatter_index, edges.edge_mask,
+                                            embedding_only=True, use_compile=False)
+        return result['descriptor'].reshape(batch, atoms, -1).float()
 
     def set_atom_type_map(self, atom_type_map: List[str]) -> None:
         self.atom_type_map = list(atom_type_map)

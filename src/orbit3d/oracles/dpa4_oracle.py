@@ -142,7 +142,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
 
     @staticmethod
     def validate_molecule(mol):
-        if Chem.GetFormalCharge(mol) != 0 or any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
+        multiplicity = int(mol.GetProp('SpinMultiplicity')) if mol.HasProp('SpinMultiplicity') else 1
+        if Chem.GetFormalCharge(mol) != 0 or multiplicity != 1 or any(a.GetNumRadicalElectrons() for a in mol.GetAtoms()):
             raise ValueError('OCELOT DPA property adapters support neutral closed-shell molecules only')
 
     def forward_shared_force_and_property(
@@ -222,24 +223,54 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
 
     @torch.no_grad()
     def predict_3d_mols_batched(self, mols, batch_size=16):
+        result = self.evaluate_3d_mols_batched(mols, batch_size)
+        failed = [i for i, reason in enumerate(result['errors']) if reason]
+        if failed:
+            raise ValueError(f'Property evaluation failed for rows {failed}: {[result["errors"][i] for i in failed]}')
+        return result['mean'], result['std']
+
+    @torch.no_grad()
+    def evaluate_3d_mols_batched(self, mols, batch_size=16):
         """Group by atom count; vectorize native descriptors and property adapters."""
         self.adapter.eval()
         groups = {}
+        errors = [''] * len(mols)
         for i, mol in enumerate(mols):
-            self.validate_molecule(mol)
-            groups.setdefault(mol.GetNumAtoms(), []).append(i)
-        mean = np.empty((len(mols), self.output_dim), dtype=np.float32)
-        std = np.empty_like(mean)
+            try:
+                self.validate_molecule(mol)
+                groups.setdefault(mol.GetNumAtoms(), []).append(i)
+            except ValueError as exc:
+                errors[i] = str(exc)
+        mean = np.full((len(mols), self.output_dim), np.nan, dtype=np.float32)
+        std = np.full_like(mean, np.nan)
+        energies = np.full(len(mols), np.nan, dtype=np.float32)
+        forces = [None] * len(mols)
         for ids in groups.values():
             for begin in range(0, len(ids), batch_size):
                 ix = ids[begin:begin + batch_size]
                 coords = torch.tensor(np.stack([mols[i].GetConformer().GetPositions() for i in ix]),
                                       dtype=torch.float32, device=self.device)
                 symbols = [[atom.GetSymbol() for atom in mols[i].GetAtoms()] for i in ix]
-                features, _, _ = self.dpa_guidance.extract_native_batch(coords, symbols)
+                features, energy, force = self.dpa_guidance.extract_native_batch(coords, symbols, check_finite=False)
                 yp, ys = self._properties_from_descriptor(features, coords)
                 mean[ix], std[ix] = yp.cpu().numpy(), ys.cpu().numpy()
-        return mean, std
+                energies[ix] = energy.cpu().numpy()
+                finite = torch.isfinite(yp).all(-1) & torch.isfinite(ys).all(-1) & torch.isfinite(energy) & torch.isfinite(force).all((-1, -2))
+                for j, i in enumerate(ix):
+                    forces[i] = force[j].cpu().numpy()
+                    if not finite[j]:
+                        errors[i] = 'Nonfinite DPA descriptor/property/energy/forces'
+        return {'mean': mean, 'std': std, 'energy_eV': energies, 'forces_eV_A': forces, 'errors': errors,
+                'target_cols': self.target_cols, 'target_units': getattr(self, 'target_units', None)}
+
+    def forward_shared_batch(self, coords, atom_symbols):
+        descriptor, energy, force = self.dpa_guidance.extract_native_batch(coords, atom_symbols, check_finite=False)
+        mean, std = self._properties_from_descriptor(descriptor, coords)
+        return mean, std, energy, force
+
+    def forward_differentiable_batch(self, coords, atom_symbols):
+        descriptor = self.dpa_guidance.extract_differentiable_batch(coords, atom_symbols)
+        return self._properties_from_descriptor(descriptor, coords)
 
     def fit_from_dataset(
         self,

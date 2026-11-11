@@ -1,10 +1,12 @@
 """GRPO on complete octree trajectories, including all coordinate decisions."""
 
 import copy
+import hashlib
 import numpy as np
 import torch
 from .octree_backend import trajectory_to_instance, OctreeDataset, interval_arrays
 from .random_streams import candidate_seed
+from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 
 
 def categorical_policy_loss(current, previous, reference, advantages, beta=0.02, clip=0.2):
@@ -59,25 +61,48 @@ def align_octree(
             )
             old = model.trajectory_distributions(trajectories, low, high, mask)
             ref = reference.trajectory_distributions(trajectories, low, high, mask)
-        rewards = []
-        hits = []
-        valid = 0
-        for trajectory in trajectories:
+        rewards = [-1.0] * len(trajectories)
+        hits = [False] * len(trajectories)
+        instances = []
+        rollout_records = []
+        for i, trajectory in enumerate(trajectories):
+            tokens = trajectory['decoder_feat'].cpu().numpy()
+            row = {'candidate_seed': candidate_seed(seed, step * group_size + i), 'valid': False,
+                   'token_sha256': hashlib.sha256(tokens.tobytes()).hexdigest(),
+                   'atom_symbols': trajectory['atom_symbols'], 'coordinates_A': trajectory['positions_np'].tolist()}
             try:
                 inst = trajectory_to_instance(trajectory)
-                valid += 1
-                prediction, std = oracle.predict_3d_mols([inst.graph])
-                prediction = np.asarray(prediction).reshape(-1)
-                std = np.asarray(std).reshape(-1)
-                energy, force = forcefield.compute_energy_and_forces(
-                    torch.tensor(inst.coords, device=device),
-                    torch.tensor(inst.atom_types, device=device),
-                    clip_forces=False,
-                    zero_com_forces=False,
-                )
+                row.update(valid=True, smiles=inst.smiles)
+                instances.append((i, inst))
+            except ValueError as exc:
+                row['reason'] = str(exc)
+            rollout_records.append(row)
+        evaluation = None
+        if instances and isinstance(oracle, InternalDPA4PropertyOracle):
+            evaluation = oracle.evaluate_3d_mols_batched([inst.graph for _, inst in instances])
+        for j, (i, inst) in enumerate(instances):
+            try:
+                if evaluation is not None:
+                    raw_force = evaluation['forces_eV_A'][j]
+                    rollout_records[i].update(energy_eV=float(evaluation['energy_eV'][j]),
+                                              raw_forces_eV_A=raw_force.tolist() if raw_force is not None else None)
+                    if evaluation['errors'][j]:
+                        raise ValueError(evaluation['errors'][j])
+                    prediction, std = evaluation['mean'][j], evaluation['std'][j]
+                    energy = evaluation['energy_eV'][j]
+                    force = torch.as_tensor(evaluation['forces_eV_A'][j])
+                else:
+                    prediction, std = oracle.predict_3d_mols([inst.graph])
+                    prediction = np.asarray(prediction).reshape(-1)
+                    std = np.asarray(std).reshape(-1)
+                    energy, force = forcefield.compute_energy_and_forces(
+                        torch.tensor(inst.coords, device=device), torch.tensor(inst.atom_types, device=device),
+                        clip_forces=False, zero_com_forces=False,
+                    )
                 if (
                     not np.isfinite(prediction).all()
                     or not np.isfinite(std).all()
+                    or not np.isfinite(float(energy))
                     or not torch.isfinite(force).all()
                 ):
                     raise ValueError("Nonfinite evaluation")
@@ -88,11 +113,15 @@ def align_octree(
                         -np.square(violation).sum() - physics_weight * max(0.0, rms - 0.5) - uncertainty_weight * np.mean(std / scale)
                     )
                 )
-                rewards.append(reward)
-                hits.append(intervals.hit(prediction))
-            except (ValueError, FloatingPointError):
-                rewards.append(-1.0)
-                hits.append(False)
+                rewards[i] = reward
+                hits[i] = intervals.hit(prediction)
+                rollout_records[i].update(prediction=prediction.tolist(), std=std.tolist(), rms_force=rms,
+                                          energy_eV=float(energy), raw_forces_eV_A=force.cpu().tolist(), property_hit=hits[i],
+                                          evaluation_status='completed')
+            except (ValueError, FloatingPointError) as exc:
+                rollout_records[i].update(reason=str(exc), evaluation_status='failed')
+        for row, value in zip(rollout_records, rewards):
+            row['reward'] = value
         reward = torch.tensor(rewards, device=device)
         adv = (reward - reward.mean()) / reward.std(unbiased=False).clamp_min(1e-6)
         for _ in range(2):
@@ -119,15 +148,16 @@ def align_octree(
             optimizer.step()
         row = {
             "step": step + 1,
-            "valid": valid,
+            "valid": len(instances),
             "group_size": group_size,
             "property_hits": sum(hits),
             "reward_mean": float(reward.mean()),
             "loss": float(loss.detach()),
             "precision": "float32",
             "weights": {'kl': kl_beta, 'physics': physics_weight, 'uncertainty': uncertainty_weight, 'replay': replay_weight},
+            "rollout_records": rollout_records,
         }
         history.append(row)
-        print("octree GRPO", row, flush=True)
+        print("octree GRPO", {k: v for k, v in row.items() if k != 'rollout_records'}, flush=True)
     del reference
     return history

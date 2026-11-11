@@ -45,6 +45,7 @@
     "precision": "float32"
   },
   "stage5_relax_config": {
-    "relax_steps": 30
+    "relax_steps": 30,
+    "batch_refinement": true
   }
 }

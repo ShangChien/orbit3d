@@ -1,0 +1,74 @@
+{
+  "records": [
+    {
+      "index": 0,
+      "coordinate_max_abs_A": 0.0,
+      "prediction_max_abs_eV": 0.0,
+      "force_max_abs_eV_A": 0.0,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 1,
+      "coordinate_max_abs_A": 0.0,
+      "prediction_max_abs_eV": 0.0,
+      "force_max_abs_eV_A": 0.0,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 2,
+      "coordinate_max_abs_A": 2.9802322387695312e-08,
+      "prediction_max_abs_eV": 7.152557373046875e-07,
+      "force_max_abs_eV_A": 4.306435585021973e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 3,
+      "coordinate_max_abs_A": 0.0,
+      "prediction_max_abs_eV": 0.0,
+      "force_max_abs_eV_A": 0.0,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 4,
+      "coordinate_max_abs_A": 5.960464477539063e-08,
+      "prediction_max_abs_eV": 9.5367431640625e-07,
+      "force_max_abs_eV_A": 4.209578037261963e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 5,
+      "coordinate_max_abs_A": 0.0,
+      "prediction_max_abs_eV": 0.0,
+      "force_max_abs_eV_A": 0.0,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 6,
+      "coordinate_max_abs_A": 0.0,
+      "prediction_max_abs_eV": 0.0,
+      "force_max_abs_eV_A": 0.0,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 7,
+      "coordinate_max_abs_A": 0.0,
+      "prediction_max_abs_eV": 0.0,
+      "force_max_abs_eV_A": 0.0,
+      "acceptance_identical": true,
+      "hit_identical": true
+    }
+  ],
+  "gradient_serial_batch_max_abs": 3.591179847717285e-06,
+  "autograd": -1.0771286487579346,
+  "finite_difference": -1.076578974723816,
+  "serial_seconds": 8.343758527189493,
+  "batch_seconds": 8.386227920651436,
+  "timing_scope": "Shared server, contention included"
+}
