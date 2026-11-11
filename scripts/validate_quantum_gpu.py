@@ -6,23 +6,21 @@ from pathlib import Path
 import cupy
 from pyscf import dft, lib
 from pyscf.scf.chkfile import load_scf
-from gpu4pyscf.dft.uks import UKS
-from orbit3d.quantum.gpu_numint import OcelotNumInt
+from orbit3d.quantum.gpu_engine import gpu_scf
 from orbit3d.quantum.ocelot import frontier_orbitals, HARTREE_EV
 from orbit3d.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument('--input-checkpoint', required=True)
 p.add_argument('--omega', type=float, required=True)
-p.add_argument('--xc', default='HYB_GGA_XC_LC_WPBE_WHS')
+p.add_argument('--xc', default='HYB_GGA_XC_LC_WPBE')
 p.add_argument('--output', type=Path, required=True)
 a = p.parse_args()
 freeze_run(a.output, __file__)
 lib.num_threads(2)
 mol, data = load_scf(a.input_checkpoint)
 cpu = dft.UKS(mol)
-gpu = UKS(mol)
-gpu._numint = OcelotNumInt()
+gpu = gpu_scf(mol)
 initial = cpu.make_rdm1(data['mo_coeff'], data['mo_occ'])
 for mf in [cpu, gpu]:
     mf.xc = a.xc

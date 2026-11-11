@@ -21,7 +21,7 @@ the run manifest; none is silently selected based on CSV agreement.
 
 ## Reference and GPU checks (2026-11-11)
 
-For `csd_CAKRUB11` (naphthalene), GPU Jh tuning/optimization converged at omega
+For `csd_CAKRUB11` (naphthalene), the initial Libxc486 GPU Jh tuning/optimization converged at omega
 0.2723. HOMO/LUMO were -8.197418/+0.534015 eV; CSV values are
 -7.387079/-0.096873 eV. The discrepancy is unresolved, so generated-molecule
 cohort calculations using this protocol were stopped with partial logs preserved.
@@ -36,18 +36,30 @@ maps Gaussian LC-wHPBE is withdrawn; neither name matching nor CPU/GPU parity
 establishes cross-program equivalence. The reusable checker is
 `scripts/validate_gaussian_reference.py`, with explicit functional and source hashes.
 
-GPU4PySCF 1.5.0's numerical integrator does not forward custom omega to its
-cached Libxc objects. `quantum/gpu_numint.py` explicitly sets Libxc 486's `_omega`
-parameter. Without it, a fixed-geometry CPU/GPU comparison differed by 5.30 Ha.
-With it, energy differs by -1.08e-10 Ha and HOMO/LUMO by 8.28e-6/1.21e-5 eV.
-This checks engine parity, not dataset protocol fidelity. The measured stack is
-PySCF 2.12.1, GPU4PySCF CUDA12x 1.5.0, GPU Libxc 0.5, CuPy 13.4.1,
-cuTENSOR 2.2.0 and NumPy 2.2.6; no density fitting. GPU jobs use `--engine gpu`.
+The initial GPU4PySCF 1.5.0 build silently omitted custom omega when initializing
+Libxc. That diagnostic first exposed a 5.30 Ha CPU/GPU mismatch. The temporary
+local Libxc patch has now been removed: the supported GPU extra pins official
+GPU4PySCF CUDA12x 1.9.1 / GPU Libxc 0.9.0, which forward omega natively.
+At the same geometry and omega, the unpatched official engine agrees with CPU
+PySCF to 8.996e-10 Ha and 1.34e-6 eV in frontier orbitals (no density fitting).
+See `experiments/quantum_gpu19_parity_20261111.json`.
+
+The previous full-TDDFT failure was a solver-threshold conflict. A residual target
+of 1e-7 with the default trial Gram eigenvalue threshold 1e-12 can discard
+corrections before convergence. With the latter set to 1e-16, full spin-adapted
+singlet and triplet TDDFT converge at unchanged functional, basis, omega and grid.
+For the J2/478 naphthalene geometry (omega0.2674), vertical S1=4.6019275 eV,
+T1=2.6072350 eV and S1−T1=1.9946925 eV. These are vertical diagnostic results,
+not adiabatic gaps or validation against the OCELOT CSV. The restricted reference
+must agree with the neutral unrestricted ground energy within1e-5 Ha.
+Ground-state results and optimized geometry are written before optional excited
+states so an excited-state failure does not erase an already completed ground run.
 
 ## Exact implementation choices
 
 - The initial diagnostic used Libxc `HYB_GGA_XC_LC_WPBE_WHS` (486). The alternative
-  `HYB_GGA_XC_LC_WPBE` (478) is being cross-checked with public Gaussian logs.
+  `HYB_GGA_XC_LC_WPBE` (478) is now the explicit default based on the two neutral
+  public Gaussian checks above; the cation discrepancy remains unresolved.
   Both have zero SR and 100% LR HF. Their identity with the reference implementation
   is not assumed.
 - Gaussian's LC-w**H**PBE naming must not be confused with Libxc LC-wPBE**h**
@@ -84,3 +96,14 @@ Use `--fixed-geometry` only for a separately labelled single-geometry evaluation
 The initial validation cohort is fixed to all16 retained molecules from
 `octree_mainline_v1`, plus the naphthalene entry `csd_CAKRUB11` for a reference
 cross-check. Model scores do not select a favorable subset for quantum reporting.
+
+On Linux/CUDA12, `uv sync --extra quantum-gpu` selects the tested native GPU
+versions. Use `--engine gpu --workers 1 --threads 2 --excitations` to evaluate
+all supplied molecules at this explicit diagnostic level. CPU and GPU response
+solvers share the same convergence thresholds. The optional
+`scripts/validate_excited_states.py` accepts a saved `--ground-run`, preserving
+its geometry, functional, basis and omega instead of retuning for each state.
+
+J2 and Jn2 diagnostics with Libxc478 also failed to reproduce naphthalene's CSV
+frontier orbitals: J2 gave −8.15746/+0.53337 eV and Jn2 −8.15902/+0.53452 eV.
+Changing the tested tuning objective does not resolve the dataset discrepancy.

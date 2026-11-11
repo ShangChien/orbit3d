@@ -13,7 +13,7 @@ from orbit3d.utils.run_evidence import freeze_run
 
 
 def evaluate_one(task):
-    index, block, coordinates, properties, output, settings, optimize = task
+    index, block, coordinates, properties, output, settings, optimize, excitations = task
     workdir = Path(output) / f"molecule_{index:04d}"
     mol = Chem.MolFromMolBlock(block, removeHs=False)
     for i, xyz in enumerate(coordinates):
@@ -22,7 +22,7 @@ def evaluate_one(task):
         mol.SetProp(k, v)
     try:
         evaluator = OcelotEvaluator(OcelotTheory(**settings), workdir)
-        result = evaluator.evaluate(mol, optimize_geometry=optimize)
+        result = evaluator.evaluate(mol, optimize_geometry=optimize, excitations=excitations)
         result.update(index=index, properties=properties, status="completed")
     except Exception as exc:
         result = {"index": index, "properties": properties, "status": "failed", "error": str(exc)}
@@ -39,7 +39,8 @@ def main():
     p.add_argument("--threads", type=int, default=4)
     p.add_argument("--limit", type=int)
     p.add_argument("--engine", choices=["cpu", "gpu"], default="cpu")
-    p.add_argument('--xc', choices=['HYB_GGA_XC_LC_WPBE', 'HYB_GGA_XC_LC_WPBE_WHS'], default='HYB_GGA_XC_LC_WPBE_WHS')
+    p.add_argument('--xc', choices=['HYB_GGA_XC_LC_WPBE', 'HYB_GGA_XC_LC_WPBE_WHS'], default='HYB_GGA_XC_LC_WPBE')
+    p.add_argument('--excitations', action='store_true')
     p.add_argument('--tuning-objective', choices=['Jh', 'J2', 'Jn2'], default='Jh')
     p.add_argument("--offset", type=int, default=0)
     p.add_argument("--stride", type=int, default=1)
@@ -61,6 +62,7 @@ def main():
         "selected_indices": [i for i in range(len(molecules)) if i % a.stride == a.offset],
         "protocol_status": "Protocol diagnostic; OCELOT production objective and functional mapping unconfirmed",
         "optimize_geometry": not a.fixed_geometry,
+        "vertical_singlet_triplet_tddft": a.excitations,
     }
     (a.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     tasks = [
@@ -72,6 +74,7 @@ def main():
             str(a.output),
             settings,
             not a.fixed_geometry,
+            a.excitations,
         )
         for i, m in enumerate(molecules)
         if i % a.stride == a.offset

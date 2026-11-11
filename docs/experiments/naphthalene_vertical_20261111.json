@@ -1,0 +1,16 @@
+{
+  "method": "full linear-response TDDFT; spin-adapted restricted reference",
+  "response_residual_tolerance": 1e-07,
+  "trial_gram_eigenvalue_threshold": 1e-16,
+  "geometry": "same optimized S0 geometry for S1 and T1",
+  "omega": 0.2674,
+  "ground_energy_Ha": -385.28738389372853,
+  "singlet_eV": [
+    4.601927498534942
+  ],
+  "triplet_eV": [
+    2.6072349529360044
+  ],
+  "S1_minus_T1_eV": 1.9946925455989375,
+  "ground_result_sha256": "998726b7595f7d9e14e0f94f0f5d55bfad823f547ad88ef51e0e4902193d1b5e"
+}

@@ -22,7 +22,7 @@ BOHR_ANGSTROM = 0.529177210903
 @dataclass(frozen=True)
 class OcelotTheory:
     engine: str = "cpu"
-    xc: str = "HYB_GGA_XC_LC_WPBE_WHS"
+    xc: str = "HYB_GGA_XC_LC_WPBE"
     basis: str = "def2-svp"
     tuning_objective: str = 'Jh'
     omega_bounds: tuple = (0.05, 0.5)
@@ -92,11 +92,9 @@ class OcelotEvaluator:
         )
         # OCELOT's source uses uLC-wHPBE for neutral and charged species.
         if s.engine == "gpu":
-            from gpu4pyscf.dft.uks import UKS
-            from .gpu_numint import OcelotNumInt
+            from .gpu_engine import gpu_scf
 
-            mf = UKS(mol)
-            mf._numint = OcelotNumInt()
+            mf = gpu_scf(mol)
         elif s.engine == "cpu":
             mf = dft.UKS(mol)
         else:
@@ -114,6 +112,10 @@ class OcelotEvaluator:
 
             dm0 = cupy.asarray(dm0)
         mf.kernel(dm0=dm0)
+        (self.workdir / f'scf_{self.counter:04d}.json').write_text(json.dumps({
+            'omega': mf.omega, 'charge': charge, 'spin_2S': spin, 'xc': s.xc, 'basis': s.basis,
+            'converged': bool(mf.converged), 'energy_Ha': float(mf.e_tot),
+        }, indent=2) + '\n')
         if not mf.converged:
             raise RuntimeError(f"SCF did not converge at omega={mf.omega}, charge={charge}")
         self.density_guesses[geometry_key] = host_array(mf.make_rdm1())
@@ -141,6 +143,7 @@ class OcelotEvaluator:
                     "Jh_eV": ip_objective(n.e_tot, c.e_tot, homo) * HARTREE_EV,
                     "objective": self.theory.tuning_objective,
                     "objective_atomic_units": float(j),
+                    "objective_units": 'Ha' if self.theory.tuning_objective == 'Jh' else 'Ha^2',
                     "anion_E_Ha": float(anion.e_tot) if anion is not None else None,
                     "anion_homo_eV": anion_homo * HARTREE_EV if anion_homo is not None else None,
                     "cation_S2": float(c.spin_square()[0]),
@@ -221,11 +224,6 @@ class OcelotEvaluator:
             "max_force_eV_A": float(np.linalg.norm(forces, axis=-1).max()),
             "elapsed_seconds": time.perf_counter() - started,
         }
-        if excitations:
-            td = final.TDDFT()
-            td.nstates = 3
-            energies, _ = td.kernel()
-            result["linear_response_excitation_eV"] = (np.asarray(energies) * HARTREE_EV).tolist()
         out = Chem.Mol(molecule)
         for i, xyz in enumerate(coords):
             out.GetConformer().SetAtomPosition(i, xyz.tolist())
@@ -240,4 +238,10 @@ class OcelotEvaluator:
         ) == Chem.MolToSmiles(Chem.RemoveHs(molecule), isomericSmiles=True)
         write_precise_sdf(self.workdir / "optimized.sdf", [out])
         (self.workdir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+        if excitations:
+            from .excited_states import vertical_excitations
+
+            result['vertical_excitations'] = vertical_excitations(final.mol, omega, self.theory,
+                                                                  host_array(final.make_rdm1()).sum(0), float(final.e_tot))
+            (self.workdir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
         return result
