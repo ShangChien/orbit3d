@@ -169,6 +169,8 @@ def run_octree_from_config(cfg, config_path=None):
                     "label_source": label_source,
                     "train_backbone": train_backbone,
                     "element_loss_weighting": weighting_metadata,
+                    "target_migration": ({**initial_state['target_migration'], 'new_target_predictions_trained': True}
+                                         if initial_state and initial_state.get('target_migration') else {}),
                     "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
                     "representation_migration": ({**initial_state.get('representation_migration', {}),
                         'requires_adaptation': steps <= 0} if initial_state and initial_state.get('representation_migration') else {}),
@@ -505,7 +507,8 @@ def run_octree_from_config(cfg, config_path=None):
     summary = {
         "backend": f"uni3dar_octree_v{model.condition_version}",
         "sampling_temperatures": {
-            name: inference.get(name + '_temperature', list(getattr(model, name + '_temperature')))
+            name: (inference[name + '_temperature'] if inference.get(name + '_temperature') is not None
+                   else list(getattr(model, name + '_temperature')))
             for name in ['tree', 'atom', 'xyz']
         },
         "attempted": len(records),

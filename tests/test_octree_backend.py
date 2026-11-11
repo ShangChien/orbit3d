@@ -358,3 +358,26 @@ def test_element_loss_weights_come_only_from_the_supplied_training_atoms():
     assert weights[dictionary['C']].item() == 1.
     assert weights[dictionary['O']].item() == pytest.approx(3**.5)
     assert weights[dictionary['[NULL]']].item() == 1.
+
+
+def test_target_expansion_preserves_old_conditions_and_readout_when_new_targets_are_inactive():
+    from orbit3d.generator.octree_model import DynamicIntervalConditioner, Suffix3DPropertyHead
+    from orbit3d.generator.target_migration import expand_interval_conditioner, expand_property_readout
+    torch.manual_seed(42)
+    before = DynamicIntervalConditioner(emb_dim=32, num_props=2, num_layers=2, bound_masks=True, smooth_frequencies=True)
+    after = DynamicIntervalConditioner(emb_dim=32, num_props=4, num_layers=2, bound_masks=True, smooth_frequencies=True)
+    old_names, names = ['homo','lumo'], ['s0s1','lumo','s0t1','homo']
+    expand_interval_conditioner(before, after, old_names, names)
+    lower = torch.randn(3, 2);upper = lower+.7
+    old_mask = torch.ones(3, 2, 2, dtype=torch.bool)
+    new_lower, new_upper = torch.zeros(3, 4), torch.zeros(3, 4)
+    new_mask = torch.zeros(3, 4, 2, dtype=torch.bool)
+    for i, name in enumerate(old_names):
+        j = names.index(name)
+        new_lower[:,j], new_upper[:,j], new_mask[:,j] = lower[:,i], upper[:,i], True
+    torch.testing.assert_close(before(lower, upper, old_mask), after(new_lower, new_upper, new_mask), atol=2e-6, rtol=2e-6)
+    old_head, new_head = Suffix3DPropertyHead(32, 2), Suffix3DPropertyHead(32, 4)
+    expand_property_readout(old_head, new_head, old_names, names)
+    features = torch.randn(3, 96)
+    torch.testing.assert_close(old_head.net(features), new_head.net(features)[:,[3,1]], atol=1e-6, rtol=1e-6)
+    assert torch.count_nonzero(new_head.net(features)[:,[0,2]]) == 0

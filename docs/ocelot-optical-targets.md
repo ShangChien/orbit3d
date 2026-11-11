@@ -25,3 +25,13 @@ These are supervised predictions against the official CSV. They do not resolve
 the independent PySCF/Gaussian protocol discrepancy or establish excited-state
 minimum accuracy. The separate quantum calculations retain their own geometry,
 state, functional, basis, omega and failure records.
+
+
+`scripts/migrate_octree_targets.py` explicitly expands a trained generator's
+ordered target interface. Existing target normalizations, conditioner blocks and
+self-head rows are retained. New conditioner input columns and new readout rows
+start at zero; new readouts therefore begin at their training-set means. The
+existing conditioner behavior is mathematically preserved when added targets
+are inactive, with floating-point comparisons checked separately. The migrated
+checkpoint blocks conditional inference until labelled adaptation is completed.
+It records both source checkpoint/data hashes and the new-target training status.
