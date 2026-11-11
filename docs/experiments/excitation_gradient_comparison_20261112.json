@@ -1,0 +1,298 @@
+{
+  "attempted_quantum_cohort": 10,
+  "completed_quantum_gradient_cases": 5,
+  "per_property": {
+    "dpa": {
+      "s0s1": {
+        "n": 5,
+        "mean_cosine": 0.6301399981120738,
+        "cosine_range": [
+          0.34496081120293415,
+          0.8189306840747942
+        ],
+        "surrogate_to_quantum_norm_ratio_range": [
+          0.39195139031134063,
+          0.732996162313634
+        ]
+      },
+      "s0t1": {
+        "n": 5,
+        "mean_cosine": 0.6580986832231255,
+        "cosine_range": [
+          0.49979697438989257,
+          0.7713225774112337
+        ],
+        "surrogate_to_quantum_norm_ratio_range": [
+          0.30668736496643756,
+          0.7208088218437148
+        ]
+      }
+    },
+    "hyff": {
+      "s0s1": {
+        "n": 5,
+        "mean_cosine": 0.4222762917851101,
+        "cosine_range": [
+          0.32587159599088694,
+          0.5550390552157038
+        ],
+        "surrogate_to_quantum_norm_ratio_range": [
+          0.40651289464571605,
+          1.1665064614855742
+        ]
+      },
+      "s0t1": {
+        "n": 5,
+        "mean_cosine": 0.5728203148207995,
+        "cosine_range": [
+          0.3263352623845506,
+          0.7816219396944221
+        ],
+        "surrogate_to_quantum_norm_ratio_range": [
+          0.32228591621552133,
+          0.6788763843621416
+        ]
+      }
+    }
+  },
+  "post_hoc_interval_check": {
+    "window": {
+      "s0s1": [
+        2.5,
+        3.5
+      ],
+      "s0t1": [
+        1.5,
+        2.5
+      ]
+    },
+    "loss": "sum of squared violations in eV, as in Stage 5",
+    "records": [
+      {
+        "model": "dpa",
+        "quantum_index": 0,
+        "quantum_eV": {
+          "s0s1": 3.6260037261126015,
+          "s0t1": 2.3548649611989325
+        },
+        "surrogate_eV": {
+          "s0s1": 3.3738555908203125,
+          "s0t1": 2.348863124847412
+        },
+        "quantum_interval_loss_eV2": 0.015876938994259484,
+        "surrogate_interval_loss_eV2": 0.0,
+        "interval_gradient_cosine": null,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": null,
+        "domain": {
+          "similarity": 0.26666666666666666,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "dpa",
+        "quantum_index": 2,
+        "quantum_eV": {
+          "s0s1": 2.277001931252459,
+          "s0t1": 1.7825873366592597
+        },
+        "surrogate_eV": {
+          "s0s1": 3.5425233840942383,
+          "s0t1": 2.1156492233276367
+        },
+        "quantum_interval_loss_eV2": 0.04972813866513303,
+        "surrogate_interval_loss_eV2": 0.0018082381948261173,
+        "interval_gradient_cosine": -0.8189306672968841,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": 1.9538284062792732,
+        "domain": {
+          "similarity": 0.2,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "dpa",
+        "quantum_index": 5,
+        "quantum_eV": {
+          "s0s1": 1.7556438484404473,
+          "s0t1": 1.197629889012115
+        },
+        "surrogate_eV": {
+          "s0s1": 2.0765233039855957,
+          "s0t1": 0.9447767734527588
+        },
+        "quantum_interval_loss_eV2": 0.6454937643833736,
+        "surrogate_interval_loss_eV2": 0.4876053433648053,
+        "interval_gradient_cosine": 0.6005624541541499,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": -5.016374221148206,
+        "domain": {
+          "similarity": 0.14814814814814814,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "dpa",
+        "quantum_index": 7,
+        "quantum_eV": {
+          "s0s1": 3.8086249950138273,
+          "s0t1": 2.740357080358695
+        },
+        "surrogate_eV": {
+          "s0s1": 3.1621360778808594,
+          "s0t1": 2.3269872665405273
+        },
+        "quantum_interval_loss_eV2": 0.1530209136258412,
+        "surrogate_interval_loss_eV2": 0.0,
+        "interval_gradient_cosine": null,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": null,
+        "domain": {
+          "similarity": 0.3157894736842105,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "dpa",
+        "quantum_index": 9,
+        "quantum_eV": {
+          "s0s1": 2.6158367002432614,
+          "s0t1": 1.5986216834665266
+        },
+        "surrogate_eV": {
+          "s0s1": 2.7369258403778076,
+          "s0t1": 1.6530499458312988
+        },
+        "quantum_interval_loss_eV2": 0.0,
+        "surrogate_interval_loss_eV2": 0.0,
+        "interval_gradient_cosine": null,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": null,
+        "domain": {
+          "similarity": 0.208955223880597,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "hyff",
+        "quantum_index": 0,
+        "quantum_eV": {
+          "s0s1": 3.6260037261126015,
+          "s0t1": 2.3548649611989325
+        },
+        "surrogate_eV": {
+          "s0s1": 3.4686942100524902,
+          "s0t1": 2.317228317260742
+        },
+        "quantum_interval_loss_eV2": 0.015876938994259484,
+        "surrogate_interval_loss_eV2": 0.0,
+        "interval_gradient_cosine": null,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": null,
+        "domain": {
+          "similarity": 0.26666666666666666,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "hyff",
+        "quantum_index": 2,
+        "quantum_eV": {
+          "s0s1": 2.277001931252459,
+          "s0t1": 1.7825873366592597
+        },
+        "surrogate_eV": {
+          "s0s1": 3.386556625366211,
+          "s0t1": 2.2353515625
+        },
+        "quantum_interval_loss_eV2": 0.04972813866513303,
+        "surrogate_interval_loss_eV2": 0.0,
+        "interval_gradient_cosine": null,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": null,
+        "domain": {
+          "similarity": 0.2,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "hyff",
+        "quantum_index": 5,
+        "quantum_eV": {
+          "s0s1": 1.7556438484404473,
+          "s0t1": 1.197629889012115
+        },
+        "surrogate_eV": {
+          "s0s1": 2.1363072395324707,
+          "s0t1": 1.257369041442871
+        },
+        "quantum_interval_loss_eV2": 0.6454937643833736,
+        "surrogate_interval_loss_eV2": 0.19114220606684285,
+        "interval_gradient_cosine": 0.387683588481159,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": -3.238240995198713,
+        "domain": {
+          "similarity": 0.14814814814814814,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "hyff",
+        "quantum_index": 7,
+        "quantum_eV": {
+          "s0s1": 3.8086249950138273,
+          "s0t1": 2.740357080358695
+        },
+        "surrogate_eV": {
+          "s0s1": 3.622359037399292,
+          "s0t1": 2.41324520111084
+        },
+        "quantum_interval_loss_eV2": 0.1530209136258412,
+        "surrogate_interval_loss_eV2": 0.014971734033281336,
+        "interval_gradient_cosine": 0.5946118120628698,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": -2.87956043478022,
+        "domain": {
+          "similarity": 0.3157894736842105,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      },
+      {
+        "model": "hyff",
+        "quantum_index": 9,
+        "quantum_eV": {
+          "s0s1": 2.6158367002432614,
+          "s0t1": 1.5986216834665266
+        },
+        "surrogate_eV": {
+          "s0s1": 2.786479949951172,
+          "s0t1": 1.6608980894088745
+        },
+        "quantum_interval_loss_eV2": 0.0,
+        "surrogate_interval_loss_eV2": 0.0,
+        "interval_gradient_cosine": null,
+        "quantum_interval_loss_slope_along_unit_surrogate_descent_eV2_A": null,
+        "domain": {
+          "similarity": 0.208955223880597,
+          "unseen_training_elements": [],
+          "in_domain": false
+        }
+      }
+    ]
+  },
+  "source_sha256": {
+    "quantum": "172df86dc3d756421a78f7cdbadf78274bd1cd4f0fd2088a8db054027eebcc98",
+    "quantum_gradients": "76852228330949feee4c9dcd1176dc36f2c23c0294bbb9cc49b4a5be08cd2634",
+    "target_windows": "02c0aab71ee145307aef73495d74853e14a836832c3aa19f51a2f04536ad7716",
+    "dpa_predictions": "d1887f5ec3ad2b4be46660d63f3869083a6e060208c7ccb8a87abc0641c16dc8",
+    "dpa_gradients": "babcdfbb9b7d531a4c7366a32f4f8b90854470d0fc96821ae93877983f9d3476",
+    "hyff_predictions": "8931bd27ca0c0d5c702f1b3fb5c8b6accec1d9c939d75e6dd812c2ed864adbbb",
+    "hyff_gradients": "0409c7b2483cb6311c3025edb21a6a640a94d5a0034fa7997f9a6e6c4e2d47b9"
+  },
+  "limitations": [
+    "All five molecules are out of the training applicability domain and are excluded from qualified pipeline designs.",
+    "The individual-property gradient comparison was predeclared; the interval-loss analysis is post hoc, using an existing target window.",
+    "Positive property-gradient alignment does not guarantee aligned interval-loss descent when scalar predictions lie on the wrong side of a bound.",
+    "These are local fixed-omega derivatives, not finite-step optimization or a reproduced OCELOT reference benchmark."
+  ]
+}

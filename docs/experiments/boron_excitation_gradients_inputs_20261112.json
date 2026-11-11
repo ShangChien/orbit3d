@@ -1,0 +1,35 @@
+{
+  "quantum_cohort": {
+    "summary.json": "0c9c514178ddd315baea73eee073f16da96ec41284d58acc08bc60df08f50e91"
+  },
+  "quantum_protocol": {
+    "manifest.json": "5c7786d19b9c1050ee8c6889a851dcac643174ec5b2cb582c66841160dfb2799"
+  },
+  "internal_dpa4_gradients": {
+    "gradients.npz": "babcdfbb9b7d531a4c7366a32f4f8b90854470d0fc96821ae93877983f9d3476"
+  },
+  "internal_dpa4_metadata": {
+    "summary.json": "d1887f5ec3ad2b4be46660d63f3869083a6e060208c7ccb8a87abc0641c16dc8"
+  },
+  "internal_hyff_gradients": {
+    "gradients.npz": "0409c7b2483cb6311c3025edb21a6a640a94d5a0034fa7997f9a6e6c4e2d47b9"
+  },
+  "internal_hyff_metadata": {
+    "summary.json": "8931bd27ca0c0d5c702f1b3fb5c8b6accec1d9c939d75e6dd812c2ed864adbbb"
+  },
+  "geometry_0": {
+    "optimized.sdf": "18fa1581a27e3e9eb74afe6daaadbb78a6f4d2c1a8e072246e255a9483fc5385"
+  },
+  "geometry_2": {
+    "optimized.sdf": "c64be7a008acfa5d16d7549b2455b1f7a68a695d9da94e53fdc6ccfe5cae91f8"
+  },
+  "geometry_5": {
+    "optimized.sdf": "c8bbae6a12b3b7357fdb2528a607d25655f67c75c540186828aaaf54b65171c7"
+  },
+  "geometry_7": {
+    "optimized.sdf": "cf7cc2697fc5641e274f43d8f3a3fde5738704aa17453a5645c7d5cd0372382a"
+  },
+  "geometry_9": {
+    "optimized.sdf": "c160d0907e104d1c7d94e99b46ff0ae014d4b8273d594800664e8158262a2896"
+  }
+}

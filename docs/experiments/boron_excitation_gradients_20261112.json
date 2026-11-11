@@ -1,0 +1,261 @@
+{
+  "attempted_quantum_cohort": 10,
+  "gradient_cohort": 5,
+  "original_failed_indices": [
+    1,
+    3,
+    4,
+    6,
+    8
+  ],
+  "completed_gradients": 5,
+  "theory": {
+    "engine": "gpu",
+    "xc": "HYB_GGA_XC_LC_WPBE",
+    "basis": "def2-svp",
+    "tuning_objective": "Jh",
+    "omega_bounds": [
+      0.05,
+      0.5
+    ],
+    "omega_tolerance": 0.001,
+    "omega_geometry_tolerance": 0.01,
+    "max_outer_cycles": 5,
+    "scf_tolerance": 1e-09,
+    "max_scf_cycles": 100,
+    "radial_grid": 99,
+    "angular_grid": 590,
+    "threads": 2,
+    "memory_mb": 4000,
+    "max_geometry_steps": 80
+  },
+  "records": [
+    {
+      "quantum_index": 0,
+      "omega": 0.2085,
+      "status": "completed",
+      "ground_energy_Ha": -865.1217113594248,
+      "vertical_excitations_eV": {
+        "s0s1": 3.6260037261126015,
+        "s0t1": 2.3548649611989325
+      },
+      "comparison": {
+        "s0s1": {
+          "internal_dpa4": {
+            "cosine": 0.6934218957183725,
+            "quantum_norm_eV_A": 5.799877096833753,
+            "surrogate_norm_eV_A": 2.2732698917388916,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -4.021761771420032,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.2292934172836858
+          },
+          "internal_hyff": {
+            "cosine": 0.5476042039135016,
+            "quantum_norm_eV_A": 5.799877096833753,
+            "surrogate_norm_eV_A": 4.222411632537842,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -3.176037080407798,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.2538109795843198
+          }
+        },
+        "s0t1": {
+          "internal_dpa4": {
+            "cosine": 0.7713225774112337,
+            "quantum_norm_eV_A": 7.457786780905344,
+            "surrogate_norm_eV_A": 3.4302608966827393,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -5.752359321631338,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.22556928978437352
+          },
+          "internal_hyff": {
+            "cosine": 0.7816219396944221,
+            "quantum_norm_eV_A": 7.457786780905344,
+            "surrogate_norm_eV_A": 5.062915325164795,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -5.829169769518654,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.22499934049778905
+          }
+        }
+      },
+      "elapsed_seconds": 124.23210062459111
+    },
+    {
+      "quantum_index": 2,
+      "omega": 0.2788,
+      "status": "completed",
+      "ground_energy_Ha": -741.4038403240409,
+      "vertical_excitations_eV": {
+        "s0s1": 2.277001931252459,
+        "s0t1": 1.7825873366592597
+      },
+      "comparison": {
+        "s0s1": {
+          "internal_dpa4": {
+            "cosine": 0.8189306840747942,
+            "quantum_norm_eV_A": 5.349438352059213,
+            "surrogate_norm_eV_A": 3.9211177825927734,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -4.38081920906779,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.19843659150608334
+          },
+          "internal_hyff": {
+            "cosine": 0.5550390552157038,
+            "quantum_norm_eV_A": 5.349438352059213,
+            "surrogate_norm_eV_A": 2.4817018508911133,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -2.9691472088615973,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.21628894705366936
+          }
+        },
+        "s0t1": {
+          "internal_dpa4": {
+            "cosine": 0.6710327839149676,
+            "quantum_norm_eV_A": 6.1114085691942766,
+            "surrogate_norm_eV_A": 3.7341201305389404,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -4.100955505828224,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.24793646713129816
+          },
+          "internal_hyff": {
+            "cosine": 0.6834288313753866,
+            "quantum_norm_eV_A": 6.1114085691942766,
+            "surrogate_norm_eV_A": 3.119494676589966,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -4.1767128165019685,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.19789592474902468
+          }
+        }
+      },
+      "elapsed_seconds": 77.0789999216795
+    },
+    {
+      "quantum_index": 5,
+      "omega": 0.2235,
+      "status": "completed",
+      "ground_energy_Ha": -1147.344140957846,
+      "vertical_excitations_eV": {
+        "s0s1": 1.7556438484404473,
+        "s0t1": 1.197629889012115
+      },
+      "comparison": {
+        "s0s1": {
+          "internal_dpa4": {
+            "cosine": 0.5489421617796185,
+            "quantum_norm_eV_A": 3.906521263336963,
+            "surrogate_norm_eV_A": 1.8313319683074951,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -2.144454227334239,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.17930045414706067
+          },
+          "internal_hyff": {
+            "cosine": 0.32587159599088694,
+            "quantum_norm_eV_A": 3.906521263336963,
+            "surrogate_norm_eV_A": 2.7419536113739014,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -1.273024318855952,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.17668871425705845
+          }
+        },
+        "s0t1": {
+          "internal_dpa4": {
+            "cosine": 0.49979697438989257,
+            "quantum_norm_eV_A": 4.449753638812128,
+            "surrogate_norm_eV_A": 1.677570104598999,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -2.2239734054587164,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.1772719547279645
+          },
+          "internal_hyff": {
+            "cosine": 0.4447538977049905,
+            "quantum_norm_eV_A": 4.449753638812128,
+            "surrogate_norm_eV_A": 2.3047001361846924,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -1.9790452746886584,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.17093133969876065
+          }
+        }
+      },
+      "elapsed_seconds": 167.56465037167072
+    },
+    {
+      "quantum_index": 7,
+      "omega": 0.2215,
+      "status": "completed",
+      "ground_energy_Ha": -854.0697545553767,
+      "vertical_excitations_eV": {
+        "s0s1": 3.8086249950138273,
+        "s0t1": 2.740357080358695
+      },
+      "comparison": {
+        "s0s1": {
+          "internal_dpa4": {
+            "cosine": 0.34496081120293415,
+            "quantum_norm_eV_A": 3.6527747724810844,
+            "surrogate_norm_eV_A": 2.1884617805480957,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -1.260064148656688,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.2039766205156392
+          },
+          "internal_hyff": {
+            "cosine": 0.3437313507125817,
+            "quantum_norm_eV_A": 3.6527747724810844,
+            "surrogate_norm_eV_A": 4.260985374450684,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -1.2555732063937666,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.2699977497319699
+          }
+        },
+        "s0t1": {
+          "internal_dpa4": {
+            "cosine": 0.6426334282675833,
+            "quantum_norm_eV_A": 6.707315111701898,
+            "surrogate_norm_eV_A": 2.057048797607422,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -4.310344904703959,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.2572629712386164
+          },
+          "internal_hyff": {
+            "cosine": 0.627961642944648,
+            "quantum_norm_eV_A": 6.707315111701898,
+            "surrogate_norm_eV_A": 3.0194060802459717,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -4.211936617291789,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.257458425833681
+          }
+        }
+      },
+      "elapsed_seconds": 119.78455475345254
+    },
+    {
+      "quantum_index": 9,
+      "omega": 0.2143,
+      "status": "completed",
+      "ground_energy_Ha": -879.8256278427323,
+      "vertical_excitations_eV": {
+        "s0s1": 2.6158367002432614,
+        "s0t1": 1.5986216834665266
+      },
+      "comparison": {
+        "s0s1": {
+          "internal_dpa4": {
+            "cosine": 0.7444444377846494,
+            "quantum_norm_eV_A": 4.520228591010499,
+            "surrogate_norm_eV_A": 3.169590711593628,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -3.365059032092909,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.20346203694938086
+          },
+          "internal_hyff": {
+            "cosine": 0.33913525309287673,
+            "quantum_norm_eV_A": 4.520228591010499,
+            "surrogate_norm_eV_A": 1.8375312089920044,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -1.532968867250003,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.26850265850817523
+          }
+        },
+        "s0t1": {
+          "internal_dpa4": {
+            "cosine": 0.7057076521319504,
+            "quantum_norm_eV_A": 5.0592425133050005,
+            "surrogate_norm_eV_A": 3.6467466354370117,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -3.5703461556306197,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.2071405394210038
+          },
+          "internal_hyff": {
+            "cosine": 0.3263352623845506,
+            "quantum_norm_eV_A": 5.0592425133050005,
+            "surrogate_norm_eV_A": 1.630522608757019,
+            "quantum_slope_along_unit_negative_surrogate_gradient_eV_A": -1.6510092330464605,
+            "cartesian_mean_absolute_disagreement_eV_A": 0.287505043793916
+          }
+        }
+      },
+      "elapsed_seconds": 118.13885694369674
+    }
+  ],
+  "definition": "Gradient of the vertical excitation = total excited-state gradient minus S0 gradient; fixed original per-molecule omega and geometry, full TDDFT, no TDA or density-fitting substitution.",
+  "scope": "All five completed generated-boron cases are OOD. These cross-model directional diagnostics do not validate in-domain OCELOT accuracy or adiabatic state gradients."
+}
