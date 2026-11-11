@@ -1,0 +1,31 @@
+{
+  "forcefield": {
+    ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "weights.json": "3f974d30ff10ca89253721ece23e11175c83e73572eaaff1d51d77463381d26e",
+    "weights.safetensors": "353d6b3cdf3934cb71c9f0f18b65c184a39121644a1d93327b6f60dea93cc257"
+  },
+  "train_csv": {
+    "train.csv": "f316b962d5bd456b387de72274c81e3beb0e9b19737a3ff3badcb9fe69c42f65"
+  },
+  "valid_csv": {
+    "valid.csv": "3f3e0d397a5feb50b90562f062201447d615724349632a853e551173e91073d3"
+  },
+  "test_csv": {
+    "test.csv": "b2fc45cfd75ef5e6f7b557551bdb0fae0a82f32f5251ddeb8a8d0902e78e734b"
+  },
+  "train_source_conformers": {
+    "train.sdf": "4171273633e7f6d664b614ccfc842507bf65a3e1120d56006e87d0795e89fd6d"
+  },
+  "valid_source_conformers": {
+    "valid.sdf": "6448e94d4b5574cead8a39464b2ffdc76e17f0419e4e8a33517b6e559ff01259"
+  },
+  "test_source_conformers": {
+    "test.sdf": "28923759dc8fc2bae30b418886d4138e5efacd2245bb05e909fa48ef636ad59d"
+  },
+  "source_geometry_summary": {
+    "summary.json": "972f2bdc9610c750dd8bee4eefaed57d81b0539e5b4fae504eba609aa822de3e"
+  },
+  "source_geometry_config": {
+    "run_config.json": "cfdc51b678799b4c90d03ddc13109ea94cac3931faea77a4af60309bc99e36dd"
+  }
+}

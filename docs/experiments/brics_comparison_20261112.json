@@ -1,0 +1,138 @@
+{
+  "protocol": "64 proposals per seed/window, external-ranking cap 32, retained cap 16, 30 refinement steps; 3 inference seeds. Caps match, actual calls and total compute do not.",
+  "limitations": [
+    "BRICS reuses the same 192 unconditional proposals across two target windows; 384 condition-specific attempts are not 384 independent graph draws.",
+    "Both methods use the same 8188 training conformers, DPA evaluator, target scaling and interval definitions. Octree also uses upstream pretrained weights.",
+    "Fingerprint and HyFF are separately trained surrogates sharing OCELOT labels, not quantum ground truth.",
+    "Training novelty is relative to the 8188 adaptation structures, not the upstream pretraining corpus; SA is a heuristic, not a synthesis route."
+  ],
+  "source_sha256": {
+    "brics_wide_baseline_20261112.json": "cd573dc42f4eddb9b2f21f15ea03e1a5b54bf8f720721fdc3166ca51c63a17de",
+    "element_balance_20261112.json": "a4c811663a94611ade0fc90a855c7fea2f070e31f5a86129321de213de23620f",
+    "brics_hyff_independent_20261112.json": "558d81a9755bd824580f5bd827504af0fe3b0e12307de7210347fc9ab2f6654e"
+  },
+  "models": {
+    "brics": {
+      "original": {
+        "attempted": 192,
+        "raw_valid": 173,
+        "domain_eligible": 173,
+        "retained": 48,
+        "qualified": 10,
+        "external_ranking_calls": 96,
+        "refinement_evaluation_calls": 1572,
+        "refinement_gradient_calls": 1071,
+        "export_recheck_calls": 48,
+        "fingerprint_joint": 4,
+        "dpa_joint_by_seed": [
+          3,
+          7,
+          0
+        ],
+        "fingerprint_joint_by_seed": [
+          2,
+          2,
+          0
+        ],
+        "raw_graph_valid": 188,
+        "retained_novel_vs_training": 48,
+        "retained_mean_sa": 2.7045840044719185,
+        "hyff_joint_with_source_force": 13,
+        "hyff_joint_with_source_force_by_seed": [
+          6,
+          4,
+          3
+        ],
+        "hyff_joint_with_own_force": 13,
+        "hyff_joint_with_own_force_by_seed": [
+          6,
+          4,
+          3
+        ]
+      },
+      "central": {
+        "attempted": 192,
+        "raw_valid": 173,
+        "domain_eligible": 173,
+        "retained": 48,
+        "qualified": 45,
+        "external_ranking_calls": 96,
+        "refinement_evaluation_calls": 1548,
+        "refinement_gradient_calls": 65,
+        "export_recheck_calls": 48,
+        "fingerprint_joint": 45,
+        "dpa_joint_by_seed": [
+          16,
+          16,
+          13
+        ],
+        "fingerprint_joint_by_seed": [
+          16,
+          15,
+          14
+        ],
+        "raw_graph_valid": 188,
+        "retained_novel_vs_training": 48,
+        "retained_mean_sa": 2.7540869292907857,
+        "hyff_joint_with_source_force": 44,
+        "hyff_joint_with_source_force_by_seed": [
+          15,
+          15,
+          14
+        ],
+        "hyff_joint_with_own_force": 44,
+        "hyff_joint_with_own_force_by_seed": [
+          15,
+          15,
+          14
+        ]
+      }
+    },
+    "octree_5000": {
+      "original": {
+        "attempted": 192,
+        "raw_valid": 113,
+        "domain_eligible": 9,
+        "retained": 9,
+        "qualified": 4,
+        "external_ranking_calls": 9,
+        "refinement_evaluation_calls": 235,
+        "refinement_gradient_calls": 90,
+        "export_recheck_calls": 9,
+        "fingerprint_joint": 4,
+        "dpa_joint_by_seed": [
+          0,
+          2,
+          2
+        ],
+        "fingerprint_joint_by_seed": [
+          0,
+          2,
+          2
+        ]
+      },
+      "central": {
+        "attempted": 192,
+        "raw_valid": 108,
+        "domain_eligible": 13,
+        "retained": 13,
+        "qualified": 3,
+        "external_ranking_calls": 13,
+        "refinement_evaluation_calls": 462,
+        "refinement_gradient_calls": 148,
+        "export_recheck_calls": 13,
+        "fingerprint_joint": 2,
+        "dpa_joint_by_seed": [
+          2,
+          1,
+          0
+        ],
+        "fingerprint_joint_by_seed": [
+          0,
+          2,
+          0
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "training_structures": {
+    "train.sdf": "c126b7a0b831a5dbe7f1a5c77e552e046e9f8471e1a286e584220c0e222b9faf"
+  },
+  "reference_scaler": {
+    "octree_conditional.pt": "3cb64fa4fe7abe8e75d1ee6dadea351d439c1f5549f6de86ae0d85bcd41fb016"
+  },
+  "configuration": {
+    "control.json": "26d35b3f501995c0c3ceaa19627314c283ee2057d9ff84e7fbb1f70795ad6d9d"
+  },
+  "target_windows": {
+    "windows.json": "a9463f3ce325fe54f2177c05d2cd602ce677ea533a0605f0d9b5d3c81c597f31"
+  },
+  "independent_model": {
+    "ensemble.joblib": "9128b1bcccfe6b333bfb0f6e8524babe80c25a3e2239c351b1119cb4213fc466",
+    "metadata.json": "82c44bcc59af53faec4df3221009a6444f00c1aa78fe70da81eddc4e295f988f"
+  }
+}

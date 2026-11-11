@@ -47,3 +47,46 @@ python scripts/evaluate_brics_baseline.py \
   --independent-oracle /path/to/fingerprint_wide/oracle \
   --output /path/to/fresh_brics_run
 ```
+
+## Completed three-seed comparison
+
+Every row has 192 attempted candidates. The octree comparison is the unweighted
+5000-step control, using the same 8188 training conformers and target scaling.
+
+| Method / interval | Valid 3D | In domain | Retained | DPA joint | Fingerprint joint |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Octree / original | 113 | 9 | 9 | 4 | 4 |
+| BRICS / original | 173 | 173 | 48 | 10 | 4 |
+| Octree / central | 108 | 13 | 13 | 3 | 2 |
+| BRICS / central | 173 | 173 | 48 | 45 | 45 |
+
+BRICS's independently trained HyFF evaluator gives 13 and 44 joint hits for the
+original and central windows. Using either the original DPA force or HyFF force
+criterion gives the same counts. All 48 retained products per window are novel
+relative to the adaptation structures. Their mean SA scores are 2.70 and 2.75;
+this is a graph heuristic, not a demonstrated synthesis route.
+
+The baseline substantially outperforms this octree control on the central window
+under both original evaluators. In the original window, the fingerprint joint
+count ties the octree, despite the DPA count being higher. Thus there is no uniform
+ranking across targets and evaluators. Low domain coverage of octree proposals is
+a concrete bottleneck; successful fragment recombination does not establish that
+3D autoregression cannot improve with further training.
+
+Actual external ranking calls are 96 per BRICS window versus 9/13 for octree.
+BRICS refinement evaluation/gradient calls are 1572/1071 (original) and 1548/65
+(central); octree uses 235/90 and 462/148. These differ despite matched maximum
+candidate and iteration budgets. BRICS library construction took 17.16 seconds
+once. The two windows reuse the same 192 unconditional proposals, so the 384
+condition-specific attempts are not independent graph samples. Timings were taken
+on a shared GPU and are not a throughput comparison.
+
+Rebuild the table from all six per-method records, preserving failures and seeds:
+
+```bash
+python scripts/summarize_brics_comparison.py \
+  --output docs/experiments/brics_comparison_20261112.json
+```
+
+The original per-attempt graph actions, input hashes, independent evaluations and
+aggregate are preserved in `docs/experiments/brics_*_20261112.json`.

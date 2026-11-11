@@ -1,0 +1,123 @@
+{
+  "property_model": {
+    "dpa4_prop_adapter.pt": "c8d2bf7ae89719d71a3e1cd995d3275daed1eb78bfbc1df8d36232d85b64a41a",
+    "oracle_meta.json": "8628440fa9f8fdb8ec10163e3cd4b207ac12e9686a3484218642cc7058c59185",
+    "target_scaler.ss": "c95ba9c14fdac2c0d16100947d9ef570a68a4fb38c502668b24669216928cb5d"
+  },
+  "forcefield": {
+    ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "weights.json": "3f974d30ff10ca89253721ece23e11175c83e73572eaaff1d51d77463381d26e",
+    "weights.safetensors": "353d6b3cdf3934cb71c9f0f18b65c184a39121644a1d93327b6f60dea93cc257"
+  },
+  "domain": {
+    "applicability.json": "451f758dbfd8857db25a18ea757999039fdec2b8e7d3f608fe289218eb4e596e"
+  },
+  "joint_seed2026/generated.sdf": {
+    "generated.sdf": "1d73e117ca8387f724c94440f31c356581a3a8f261b1bb45b2278ad56287e0f3"
+  },
+  "joint_seed2026/candidates.csv": {
+    "candidates.csv": "dda46f61e72f3e8221985d8661c0033f7db6f6df940c1d086db9972cdf259018"
+  },
+  "joint_seed2026/run_config.json": {
+    "run_config.json": "c90fc9abeb769d1339f3873380be1ad7eccff59247520f8891db07e02f1f7306"
+  },
+  "joint_seed2026/summary.json": {
+    "summary.json": "4b4e79cff3d8a71a0fbbd33cbe2622a66acdd1a611beb837b3c36bd586b8aa89"
+  },
+  "joint_seed2027/generated.sdf": {
+    "generated.sdf": "f7956b7bf3d8fa0b48c990cf0f073100aa03ea03932aeb36cf123d4a16506fd0"
+  },
+  "joint_seed2027/candidates.csv": {
+    "candidates.csv": "456a1b8ed17895c068e09f66deb4cc0982b9f1840f63097d609cb3e96b0c6f22"
+  },
+  "joint_seed2027/run_config.json": {
+    "run_config.json": "80fab0d0ebe480b563608cdd39b82d6f8ad25199672006e2c88ec0e38c26687a"
+  },
+  "joint_seed2027/summary.json": {
+    "summary.json": "a66a9b023cb0c34eb275e42eb1038f028ab99730fa02e8326521788be1d63e1b"
+  },
+  "joint_seed2028/generated.sdf": {
+    "generated.sdf": "3bc7d600ae06821bcd42ccdc077234d2284e549626d3b8354f77507712dd0a01"
+  },
+  "joint_seed2028/candidates.csv": {
+    "candidates.csv": "d8cd14b358623e2341d5f9cb1cf7c2c8334f4f084934ccc20e46726678b8d693"
+  },
+  "joint_seed2028/run_config.json": {
+    "run_config.json": "4de9eefe1779cbd8fe38ad5ecf4806b854b2e6e14beeac2515c7cd1c36fa7a51"
+  },
+  "joint_seed2028/summary.json": {
+    "summary.json": "5f8a262e9e554a1ae6ee35232da4da43a965a663c8b47e1594bcfa596e396cb0"
+  },
+  "orbitals_seed2026/generated.sdf": {
+    "generated.sdf": "fb68d6d5d5060e58512ebfd16bc50e580506cb59165f448959c9c39fb3696fca"
+  },
+  "orbitals_seed2026/candidates.csv": {
+    "candidates.csv": "a81a51064670ce7684fbe156d4c045d567c50221fc3ad298aebe6edfd9074a7e"
+  },
+  "orbitals_seed2026/run_config.json": {
+    "run_config.json": "7a7889926a1c39f21c42cd268a2878e2963f72a8402c9e26bd57a6df7aec6556"
+  },
+  "orbitals_seed2026/summary.json": {
+    "summary.json": "0333e9b4e7176c4c41289805fa1c27ecae316b04dffe884e057d1e77427785c2"
+  },
+  "orbitals_seed2027/generated.sdf": {
+    "generated.sdf": "4a9a50a1969e9dbed3662e9913e900f0424558a1f063939009974ab3647b7386"
+  },
+  "orbitals_seed2027/candidates.csv": {
+    "candidates.csv": "e0b3a85badd7dbf7e6b4a65d1457d0ae04b2e45de2bc47f33ca9087e290f2762"
+  },
+  "orbitals_seed2027/run_config.json": {
+    "run_config.json": "d55b19ad76a6614cd82ca611eeb132c6532c69a8c4c26a4609f475a7b3890bc9"
+  },
+  "orbitals_seed2027/summary.json": {
+    "summary.json": "272c2bb9ef2d4f636e7e3b80c07e33fd3f72c6ac5a3bbadcf731f1ae980e6422"
+  },
+  "orbitals_seed2028/generated.sdf": {
+    "generated.sdf": "6d66b60829695d1c7dad1be67103647ebc1a40d3033903e16df7dcec79c746df"
+  },
+  "orbitals_seed2028/candidates.csv": {
+    "candidates.csv": "3c6ca475cc78791ea9e477d8d3e2f32ae024b73289a455f33404eab6302f51f7"
+  },
+  "orbitals_seed2028/run_config.json": {
+    "run_config.json": "b0a349c1521c1486f5e8e8194908de7dc8b4bbbdfe76fc141e8eaa1033e9ffb3"
+  },
+  "orbitals_seed2028/summary.json": {
+    "summary.json": "ed5a80e92daeac3f1e9443fcf0e1d9f5ed78e907c021b0c645488077e83673f1"
+  },
+  "vertical_seed2026/generated.sdf": {
+    "generated.sdf": "c44cb495fa19941b3c2286cd919b3c2bf87bec8fb60c30b07c7a037745f0a108"
+  },
+  "vertical_seed2026/candidates.csv": {
+    "candidates.csv": "85267ffd13897cea995c47ba766a8e66ee6937aeb9667083ac747ca125c4fa1d"
+  },
+  "vertical_seed2026/run_config.json": {
+    "run_config.json": "4878751eb624b413df948e361df8b24d5cb287028c207f6990a31c6af7db2507"
+  },
+  "vertical_seed2026/summary.json": {
+    "summary.json": "7eb8f45142a8d70adde77427127f08140df3252213c25d41cbd0faeef4392ea5"
+  },
+  "vertical_seed2027/generated.sdf": {
+    "generated.sdf": "3ffd6dc2cdcf3ca336be7b622d6eb8d51b573a65b0e31036441f99c8f56a9341"
+  },
+  "vertical_seed2027/candidates.csv": {
+    "candidates.csv": "ef6c89d503e69e76bf7aacf4f9f334a7f6106f879f3001ff3fa4377bbfc53a04"
+  },
+  "vertical_seed2027/run_config.json": {
+    "run_config.json": "273b93afd5c75314d11968960971dc390ecff59a4629cce994ae05a0735f96a7"
+  },
+  "vertical_seed2027/summary.json": {
+    "summary.json": "762edec94bda05affc6b79d46c889873b5c139ecbe379dbf522218ea4c13b1f9"
+  },
+  "vertical_seed2028/generated.sdf": {
+    "generated.sdf": "c5341df1ea9165062e73831dcb6f301011ee2b7c63a5e19192e7d4e1fdb65dfd"
+  },
+  "vertical_seed2028/candidates.csv": {
+    "candidates.csv": "cbe87278d287e421425082536c3857a2db5f38f06fb0edad30506cd9a6261cd9"
+  },
+  "vertical_seed2028/run_config.json": {
+    "run_config.json": "08176c0f78a0d30f17d942d60e37fdabbbcc35edaa7f5717875504e7916cf131"
+  },
+  "vertical_seed2028/summary.json": {
+    "summary.json": "e62a0986baf140b0d07b216e3ab77c8a5899bc546a47a2438eafbf4c72271b65"
+  }
+}
