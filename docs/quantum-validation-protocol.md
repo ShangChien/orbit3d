@@ -189,3 +189,14 @@ residual force alone is insufficient to certify preserved molecular identity.
 The full geometries, raw forces and inferred edge/charge differences are in
 `experiments/boron_failed_final_state3_20261112.json` and
 `experiments/boron_failed_final_state8_20261112.json`.
+
+
+## Matching scalar core potentials
+
+Quantum molecule construction now applies the scalar def2 ECP associated with
+heavy elements such as Te and I, rather than loading only the valence orbital
+basis. Existing saved calculations keep their recorded ECP convention on replay;
+light-element calculations are unchanged. [The ECP correction and real CPU/GPU
+checks](quantum-ecp.md) include the original strict force-parity failure and a
+separate tighter-convergence check. Core CI installs the CPU quantum extra so the
+three electron-count/Hamiltonian regressions execute instead of silently skipping.

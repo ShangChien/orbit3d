@@ -9,8 +9,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install uv==0.12.3
-      - run: uv sync --frozen --extra octree
-      - run: uv run --frozen --extra octree pytest tests -q
+      - run: uv sync --frozen --extra octree --extra quantum
+      - run: uv run --frozen --extra octree --extra quantum pytest tests -q
       - run: uv build --wheel
       - run: python scripts/check_wheel.py
       - name: Verify the installed wheel outside the checkout
