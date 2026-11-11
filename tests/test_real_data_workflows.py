@@ -152,3 +152,18 @@ def test_applicability_domain_preserves_reference_and_hydrogen_convention(tmp_pa
     loaded = MorganDomain.load(path)
     assert loaded.score(Chem.AddHs(Chem.MolFromSmiles('CCO'))) == 1.0
     assert loaded.score(Chem.MolFromSmiles('C#N')) < loaded.cutoff
+
+
+def test_vectorized_adapter_keeps_frames_and_coordinate_gradients_independent():
+    from orbit3d.oracles.dpa4_oracle import _BootstrapAdapters
+
+    torch.manual_seed(7)
+    adapter = _BootstrapAdapters(12, 2, 3, hidden_dim=16)
+    features = torch.randn(3, 5, 12)
+    coords = torch.randn(3, 5, 3, requires_grad=True)
+    together = adapter.forward_members(features, coords)
+    separate = torch.stack([adapter.forward_members(f, x) for f, x in zip(features, coords)], dim=1)
+    torch.testing.assert_close(together, separate)
+    gradient = torch.autograd.grad(together[:, 0].sum(), coords)[0]
+    assert gradient[0].abs().sum() > 0
+    assert torch.count_nonzero(gradient[1:]) == 0

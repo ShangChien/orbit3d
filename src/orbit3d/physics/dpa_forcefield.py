@@ -201,6 +201,29 @@ class DPAPotentialGuidance(nn.Module):
                 raise NotImplementedError("Descriptor computation is disconnected from input coordinates")
         return descriptor
 
+    def extract_native_batch(self, coords, atom_symbols):
+        """Evaluate equal-size independent frames in one native DeePMD call."""
+        batch, atoms, _ = coords.shape
+        atypes = torch.tensor([[self.dpa_type_map.index(s) for s in row] for row in atom_symbols],
+                              device=coords.device, dtype=torch.long)
+        captured = {}
+
+        def capture(module, inputs, output):
+            captured['descriptor'] = inputs[0].reshape(batch, atoms, -1).float()
+
+        hook = self._get_fitting_hook_target().register_forward_hook(capture)
+        try:
+            with torch.enable_grad():
+                prediction = self.wrapper(coords.to(self.coord_dtype).requires_grad_(True), atypes)[0]
+        finally:
+            hook.remove()
+        descriptor = captured['descriptor'].detach()
+        energy = prediction['energy'].reshape(batch).detach().to(coords.dtype)
+        forces = prediction['force'].reshape(batch, atoms, 3).detach().to(coords.dtype)
+        if not all(torch.isfinite(v).all() for v in [descriptor, energy, forces]):
+            raise FloatingPointError('Nonfinite native DPA batch')
+        return descriptor, energy, forces
+
     def set_atom_type_map(self, atom_type_map: List[str]) -> None:
         self.atom_type_map = list(atom_type_map)
         idx_list = []

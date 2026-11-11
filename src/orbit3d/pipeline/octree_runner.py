@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import torch
 from rdkit import Chem, RDLogger
+from rdkit import DataStructs
+from rdkit.Chem import rdFingerprintGenerator
 from ..constraints import TargetIntervals
 from ..generator.octree_backend import (
     load_pretrained,
@@ -205,11 +207,19 @@ def run_octree_from_config(cfg, config_path=None):
     batch = int(inference.get("batch_size", 16))
     records = []
     candidates = []
+    token_arrays = []
+    coordinate_arrays = []
+    raw_symbols = []
+    stage_seconds = {"generation": 0.0, "validation": 0.0, "ranking": 0.0, "refinement": 0.0}
+    ranking = inference.get("ranking", "external")
+    if ranking not in {"first_valid", "self", "external"}:
+        raise ValueError("ranking must be first_valid, self or external")
     independent_sampling = inference.get("sampling_mode", "legacy") == "independent"
     precision = inference.get("precision", "bfloat16")
     if precision not in {"float32", "bfloat16"}:
         raise ValueError("Inference precision must be float32 or bfloat16")
     for begin in range(0, total, batch):
+        batch_start = time.perf_counter()
         count = min(batch, total - begin)
         low = torch.tensor(lower, device=device).repeat(count, 1)
         high = torch.tensor(upper, device=device).repeat(count, 1)
@@ -233,11 +243,19 @@ def run_octree_from_config(cfg, config_path=None):
                 else None,
             )
         for j, trajectory in enumerate(trajectories):
+            if j == 0:
+                stage_seconds["generation"] += time.perf_counter() - batch_start
+                validation_start = time.perf_counter()
             idx = len(records)
+            tokens = trajectory["decoder_feat"].detach().cpu().numpy()
+            token_arrays.append(tokens)
+            coordinate_arrays.append(np.asarray(trajectory["positions_np"]))
+            raw_symbols.append(trajectory["atom_symbols"])
             row = {
                 "candidate_id": idx,
                 "status": "not_selected",
                 "joint_success": False,
+                "token_sha256": hashlib.sha256(tokens.tobytes()).hexdigest(),
                 "sampling_seed": candidate_seed(inference.get("base_seed", 2026), idx)
                 if independent_sampling
                 else None,
@@ -256,12 +274,26 @@ def run_octree_from_config(cfg, config_path=None):
             except ValueError as exc:
                 row.update(status="invalid", raw_valid=False, reason=str(exc))
             records.append(row)
+        stage_seconds["validation"] += time.perf_counter() - validation_start
         print("octree candidates", len(records), flush=True)
-    candidates.sort(key=lambda item: (item[0], item[1]))
+    np.savez_compressed(output / "raw_trajectories.npz",
+                        **{f"tokens_{i}": t for i, t in enumerate(token_arrays)},
+                        **{f"coordinates_{i}": c for i, c in enumerate(coordinate_arrays)})
+    (output / "raw_symbols.json").write_text(json.dumps(raw_symbols) + "\n")
+    pd.DataFrame(records).to_csv(output / "candidates.csv", index=False)
+    ranking_start = time.perf_counter()
+    if ranking != "first_valid":
+        candidates.sort(key=lambda item: (item[0], item[1]))
     budget = int(inference.get("oracle_candidates", requested * 2))
-    shortlist = candidates[:budget] if budget > 0 else candidates
-    if budget > 0 and shortlist:
-        predictions, uncertainty = oracle.predict_3d_mols([inst.graph for _, _, inst in shortlist])
+    shortlist = candidates[:budget] if ranking == "external" and budget > 0 else candidates
+    external_ranking_calls = 0
+    if ranking == "external" and budget > 0 and shortlist:
+        external_ranking_calls = len(shortlist)
+        ranking_mols = [inst.graph for _, _, inst in shortlist]
+        if isinstance(oracle, InternalDPA4PropertyOracle):
+            predictions, uncertainty = oracle.predict_3d_mols_batched(ranking_mols)
+        else:
+            predictions, uncertainty = oracle.predict_3d_mols(ranking_mols)
         reranked = []
         for (self_score, idx, inst), prediction, std in zip(shortlist, predictions, uncertainty):
             deviation = intervals.violations(prediction).numpy() / scale
@@ -281,6 +313,7 @@ def run_octree_from_config(cfg, config_path=None):
         if len(selected) < requested:
             selected.append((idx, inst))
             seen.add(inst.smiles)
+    stage_seconds["ranking"] = time.perf_counter() - ranking_start
     threshold = float(inference.get("max_rms_force_eva", 0.5))
     mols = []
     qualified = []
@@ -288,14 +321,19 @@ def run_octree_from_config(cfg, config_path=None):
     relax_settings = cfg.get("stage5_relax_config", {})
     relax_steps = int(relax_settings.get("relax_steps", 8)) if relax_settings.get("enabled", True) else 0
     for idx, inst in selected:
-        out, info = relax_conformer_iso_property(
-            inst,
-            ff,
-            oracle,
-            dict(zip(names, intervals.bounds)),
-            n_steps=relax_steps,
-            step_size=float(relax_settings.get("step_size", 0.004)),
-        )
+        refine_start = time.perf_counter()
+        try:
+            out, info = relax_conformer_iso_property(
+                inst, ff, oracle, dict(zip(names, intervals.bounds)),
+                n_steps=relax_steps,
+                step_size=float(relax_settings.get("step_size", 0.004)),
+            )
+        except (ValueError, FloatingPointError) as exc:
+            records[idx].update(status="refinement_failed", reason=str(exc))
+            pd.DataFrame(records).to_csv(output / "candidates.csv", index=False)
+            stage_seconds["refinement"] += time.perf_counter() - refine_start
+            continue
+        stage_seconds["refinement"] += time.perf_counter() - refine_start
         passed = info["interval_hit"] and info["final_force_eva"] <= threshold
         mol = out.graph
         mol.RemoveAllConformers()
@@ -314,9 +352,15 @@ def run_octree_from_config(cfg, config_path=None):
             y_pred=info["y_pred"],
             initial_force=info["init_force_eva"],
             final_force=info["final_force_eva"],
+            initial_max_force=info["init_max_force_eva"],
+            final_max_force=info["final_max_force_eva"],
+            refinement_seconds=time.perf_counter() - refine_start,
+            evaluation_calls=info["evaluation_calls"],
+            gradient_calls=info["gradient_calls"],
             joint_success=passed,
         )
-        traces.append({"candidate_id": idx, "history": info["history"]})
+        traces.append({"candidate_id": idx, **info})
+        pd.DataFrame(records).to_csv(output / "candidates.csv", index=False)
     write_precise_sdf(output / "generated.sdf", mols)
     write_precise_sdf(output / "qualified.sdf", qualified)
     exported = (
@@ -333,24 +377,35 @@ def run_octree_from_config(cfg, config_path=None):
             pred[0], json.loads(before.GetProp("PredictedValue")), atol=1e-5, rtol=1e-6
         )
     assert len(exported) == len(mols)
+    fingerprints = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048, includeChirality=True)
+    fps = [fingerprints.GetFingerprint(Chem.RemoveHs(m)) for m in mols]
+    similarities = [s for i, fp in enumerate(fps) for s in DataStructs.BulkTanimotoSimilarity(fp, fps[:i])]
     summary = {
         "backend": f"uni3dar_octree_v{model.condition_version}",
         "attempted": len(records),
         "raw_valid": sum(bool(r.get("raw_valid", False)) for r in records),
         "domain_eligible": len(candidates),
         "out_of_oracle_domain": sum(r["status"] == "out_of_oracle_domain" for r in records),
-        "external_ranking_calls": len(shortlist) if budget > 0 else 0,
+        "ranking": ranking,
+        "external_ranking_calls": external_ranking_calls,
+        "refinement_evaluation_calls": sum(r.get("evaluation_calls", 0) for r in records),
+        "refinement_gradient_calls": sum(r.get("gradient_calls", 0) for r in records),
+        "export_recheck_calls": len(exported),
+        "stage_seconds": stage_seconds,
+        "retained_morgan_diversity": float(1 - np.mean(similarities)) if similarities else None,
+        "refinement_failed": sum(r["status"] == "refinement_failed" for r in records),
         "unique_raw_valid": len({r["smiles"] for r in records if r.get("raw_valid")}),
         "retained": len(mols),
         "qualified": len(qualified),
         "joint_success_rate": len(qualified) / len(records),
-        "retained_novel_vs_adaptation": sum(inst.smiles not in train_smiles for _, inst in selected)
+        "retained_novel_vs_adaptation": sum(r["smiles"] not in train_smiles for r in records if r["status"] == "refined")
         if train_smiles
         else None,
         "property_hit_retained": sum(intervals.hit(r["y_pred"]) for r in records if r["status"] == "refined"),
         "mean_final_force": float(np.mean([r["final_force"] for r in records if r["status"] == "refined"]))
         if mols
         else None,
+        "maximum_retained_atom_force_eva": max((r["final_max_force"] for r in records if r["status"] == "refined"), default=None),
         "export_prediction_recheck_passed": True,
         "elapsed_seconds": time.perf_counter() - started,
         "checkpoint": str(checkpoint),

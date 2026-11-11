@@ -69,32 +69,37 @@ class _DPA4EquivariantPropertyAdapter(nn.Module):
         self.register_buffer("rbf_centers", torch.linspace(0.5, 6.0, 16))
 
     def forward(self, atom_repr: torch.Tensor, coords: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        single = atom_repr.ndim == 2
+        if single:
+            atom_repr, coords = atom_repr[None], coords[None]
         h = self.norm1(self.in_proj(atom_repr))
-        N, H = h.shape
-        dist = torch.cdist(coords.unsqueeze(0), coords.unsqueeze(0), p=2.0).squeeze(0)
+        B, N, H = h.shape
+        dist = torch.cdist(coords, coords, p=2.0)
         rbf = torch.exp(-0.5 * ((dist.unsqueeze(-1) - self.rbf_centers) / 0.4) ** 2)
-        attn_bias = self.dist_rbf(rbf).permute(2, 0, 1)
+        attn_bias = self.dist_rbf(rbf).permute(0, 3, 1, 2)
 
         q, k, v = self.qkv(h).chunk(3, dim=-1)
-        q = q.view(N, 4, H // 4).transpose(0, 1)
-        k = k.view(N, 4, H // 4).transpose(0, 1)
-        v = v.view(N, 4, H // 4).transpose(0, 1)
+        q = q.view(B, N, 4, H // 4).transpose(1, 2)
+        k = k.view(B, N, 4, H // 4).transpose(1, 2)
+        v = v.view(B, N, 4, H // 4).transpose(1, 2)
 
-        scores = torch.bmm(q, k.transpose(1, 2)) / ((H // 4) ** 0.5) + attn_bias
+        scores = torch.matmul(q, k.transpose(-1, -2)) / ((H // 4) ** 0.5) + attn_bias
         probs = F.softmax(scores, dim=-1)
-        ctx = torch.bmm(probs, v).transpose(0, 1).contiguous().view(N, H)
+        ctx = torch.matmul(probs, v).transpose(1, 2).contiguous().view(B, N, H)
         h = h + self.out_proj(ctx)
         h = h + self.ffn(self.norm2(h))
 
-        mean_pool = h.mean(dim=0)
+        mean_pool = h.mean(dim=1)
         head_preds = []
         for gate, mlp in zip(self.gates, self.heads):
-            w = F.softmax(gate(h), dim=0)
-            attn_pool = (h * w).sum(dim=0)
+            w = F.softmax(gate(h), dim=1)
+            attn_pool = (h * w).sum(dim=1)
             mol_vec = torch.cat([mean_pool, attn_pool], dim=-1)
             head_preds.append(mlp(mol_vec))
 
         stacked = torch.stack(head_preds, dim=0)
+        if single:
+            stacked = stacked[:, 0]
         return stacked.mean(dim=0), stacked.std(dim=0, unbiased=False)
 
 
@@ -168,9 +173,9 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             [
                 torch.stack(
                     [
-                        inverse_single_scaler_torch(row[k], self.scalers[k] if self.scalers else None)
+                        inverse_single_scaler_torch(row[..., k], self.scalers[k] if self.scalers else None)
                         for k in range(self.output_dim)
-                    ]
+                    ], dim=-1
                 )
                 for row in normalized
             ]
@@ -213,6 +218,26 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             preds.append(yp.detach().cpu().numpy())
             stds.append(ys.detach().cpu().numpy())
         return np.array(preds, dtype=np.float32), np.array(stds, dtype=np.float32)
+
+    @torch.no_grad()
+    def predict_3d_mols_batched(self, mols, batch_size=16):
+        """Group by atom count; vectorize native descriptors and property adapters."""
+        self.adapter.eval()
+        groups = {}
+        for i, mol in enumerate(mols):
+            groups.setdefault(mol.GetNumAtoms(), []).append(i)
+        mean = np.empty((len(mols), self.output_dim), dtype=np.float32)
+        std = np.empty_like(mean)
+        for ids in groups.values():
+            for begin in range(0, len(ids), batch_size):
+                ix = ids[begin:begin + batch_size]
+                coords = torch.tensor(np.stack([mols[i].GetConformer().GetPositions() for i in ix]),
+                                      dtype=torch.float32, device=self.device)
+                symbols = [[atom.GetSymbol() for atom in mols[i].GetAtoms()] for i in ix]
+                features, _, _ = self.dpa_guidance.extract_native_batch(coords, symbols)
+                yp, ys = self._properties_from_descriptor(features, coords)
+                mean[ix], std[ix] = yp.cpu().numpy(), ys.cpu().numpy()
+        return mean, std
 
     def fit_from_dataset(
         self,

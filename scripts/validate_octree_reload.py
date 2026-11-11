@@ -31,6 +31,12 @@ second = pd.read_csv(second_path / "candidates.csv")
 # Compare semantic fields exactly, numeric model/force results within declared tolerances.
 for field in ["candidate_id", "status", "joint_success", "smiles", "raw_valid"]:
     pd.testing.assert_series_equal(first[field].fillna(""), second[field].fillna(""))
+if "token_sha256" in first:
+    pd.testing.assert_series_equal(first.token_sha256, second.token_sha256)
+    with np.load(first_path / "raw_trajectories.npz") as x, np.load(second_path / "raw_trajectories.npz") as y:
+        assert set(x.files) == set(y.files)
+        for key in x.files:
+            np.testing.assert_array_equal(x[key], y[key])
 for field in ["self_score", "initial_force", "final_force"]:
     np.testing.assert_allclose(first[field], second[field], equal_nan=True, atol=1e-5, rtol=1e-5)
 for x, y in zip(first.y_pred, second.y_pred):
@@ -53,6 +59,12 @@ for x, y in zip(*mols):
     np.testing.assert_allclose(
         x.GetConformer().GetPositions(), y.GetConformer().GetPositions(), atol=1e-5, rtol=0
     )
+traces = [json.loads((p / "relaxation_traces.json").read_text()) for p in [first_path, second_path]]
+for x, y in zip(*traces):
+    assert x['candidate_id'] == y['candidate_id']
+    for key in ['initial_forces_eva', 'final_forces_eva']:
+        if key in x:
+            np.testing.assert_allclose(x[key], y[key], atol=1e-5, rtol=1e-5)
 (a.output / "reload_summary.json").write_text(
     json.dumps(
         {
@@ -61,6 +73,7 @@ for x, y in zip(*mols):
             "exported_molecules": len(mols[0]),
             "prediction_atol": 1e-5,
             "coordinate_atol_A": 1e-5,
+            "raw_tokens_compared": "token_sha256" in first,
             "upstream_pretrained_and_training_data_required": False,
         },
         indent=2,

@@ -41,8 +41,12 @@ def relax_conformer_iso_property(
     movable = torch.ones_like(x)
     if len(frozen_indices):
         movable[list(frozen_indices)] = 0
+    evaluations = 0
+    gradient_evaluations = 0
 
     def evaluate(coords):
+        nonlocal evaluations
+        evaluations += 1
         candidate = replace(inst, coords=coords.detach().cpu().numpy())
         mol = mol3d_to_validated_rdkit_mol(candidate)
         if getattr(oracle, "dpa_guidance", None) is dpa_guidance:
@@ -66,12 +70,15 @@ def relax_conformer_iso_property(
     initial_e = e.clone()
     initial_d = targets.violations(y)
     initial_force = float(f.square().sum(-1).mean().sqrt())
+    initial_max_force = float(f.norm(dim=-1).max())
+    initial_forces = f.cpu().tolist()
     history = []
     for step in range(n_steps):
         grad = torch.zeros_like(x)
         if targets.violations(y).any():
             try:
                 xv = x.detach().clone().requires_grad_(True)
+                gradient_evaluations += 1
                 yp, _ = oracle.forward_differentiable_3d(xv, symbols, smiles=inst.smiles)
                 loss = targets.violations(yp).square().sum()
                 if loss.requires_grad:
@@ -123,6 +130,14 @@ def relax_conformer_iso_property(
     return result, {
         "init_force_eva": initial_force,
         "final_force_eva": float(f.square().sum(-1).mean().sqrt()),
+        "init_max_force_eva": initial_max_force,
+        "final_max_force_eva": float(f.norm(dim=-1).max()),
+        "initial_forces_eva": initial_forces,
+        "final_forces_eva": f.cpu().tolist(),
+        "initial_energy_ev": float(initial_e),
+        "final_energy_ev": float(e),
+        "evaluation_calls": evaluations,
+        "gradient_calls": gradient_evaluations,
         "y_pred": scalar(y),
         "y_std": scalar(std),
         "interval_hit": targets.hit(y),
