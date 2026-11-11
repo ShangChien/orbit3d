@@ -1,0 +1,214 @@
+{
+  "task": "Skip identity KV-cache compaction in octree sampling",
+  "reference_source_commit": "70877c2",
+  "batch_size": 8,
+  "reference": {
+    "batch_size": 8,
+    "seconds": [
+      8.829666070640087,
+      8.961704421788454,
+      9.615873511880636
+    ],
+    "median_seconds": 8.961704421788454,
+    "operator_counts": {
+      "aten::index": {
+        "calls": 6171,
+        "self_cpu_us": 82919.43299995273
+      },
+      "aten::nonzero": {
+        "calls": 6844,
+        "self_cpu_us": 165189.72899993113
+      },
+      "aten::cat": {
+        "calls": 8794,
+        "self_cpu_us": 128849.96000018113
+      }
+    },
+    "top_cpu_operators": {
+      "cudaStreamSynchronize": {
+        "calls": 12534,
+        "self_cpu_us": 6489221.076999986
+      },
+      "aten::mm": {
+        "calls": 14182,
+        "self_cpu_us": 884801.7349999938
+      },
+      "cudaLaunchKernel": {
+        "calls": 230541,
+        "self_cpu_us": 864523.2060001533
+      },
+      "cudaMemcpyAsync": {
+        "calls": 15439,
+        "self_cpu_us": 389208.0170000615
+      },
+      "aten::mul": {
+        "calls": 32155,
+        "self_cpu_us": 248740.8230001047
+      },
+      "aten::bmm": {
+        "calls": 3336,
+        "self_cpu_us": 219707.63599999392
+      },
+      "aten::nonzero": {
+        "calls": 6844,
+        "self_cpu_us": 165189.72899993113
+      },
+      "aten::fill_": {
+        "calls": 46262,
+        "self_cpu_us": 159121.89199979417
+      },
+      "aten::empty": {
+        "calls": 25954,
+        "self_cpu_us": 131750.96099993435
+      },
+      "aten::cat": {
+        "calls": 8794,
+        "self_cpu_us": 128849.96000018113
+      },
+      "aten::add": {
+        "calls": 15826,
+        "self_cpu_us": 128455.60499982673
+      },
+      "aten::index": {
+        "calls": 6171,
+        "self_cpu_us": 82919.43299995273
+      },
+      "aten::copy_": {
+        "calls": 17098,
+        "self_cpu_us": 80109.45300005315
+      },
+      "aten::matmul": {
+        "calls": 17518,
+        "self_cpu_us": 80078.45000003601
+      },
+      "aten::as_strided": {
+        "calls": 130589,
+        "self_cpu_us": 73556.19299996775
+      }
+    },
+    "precision": "float32",
+    "gpu": "NVIDIA A800-SXM4-80GB",
+    "timing_scope": "Shared GPU; uninstrumented sampling/CPU decoding after warm-up. Operator counts measured in a separate CPU profiling pass."
+  },
+  "optimized": {
+    "batch_size": 8,
+    "seconds": [
+      7.584891673177481,
+      7.942858267575502,
+      7.970100790262222
+    ],
+    "median_seconds": 7.942858267575502,
+    "operator_counts": {
+      "aten::index": {
+        "calls": 1516,
+        "self_cpu_us": 22582.635999971855
+      },
+      "aten::nonzero": {
+        "calls": 2189,
+        "self_cpu_us": 56899.557000047454
+      },
+      "aten::cat": {
+        "calls": 8794,
+        "self_cpu_us": 129400.92699994547
+      }
+    },
+    "top_cpu_operators": {
+      "cudaStreamSynchronize": {
+        "calls": 7879,
+        "self_cpu_us": 3870975.6819999637
+      },
+      "aten::mm": {
+        "calls": 14182,
+        "self_cpu_us": 893347.3200000006
+      },
+      "cudaLaunchKernel": {
+        "calls": 197956,
+        "self_cpu_us": 604630.6020001993
+      },
+      "cudaMemcpyAsync": {
+        "calls": 10784,
+        "self_cpu_us": 387251.3040000143
+      },
+      "aten::mul": {
+        "calls": 32155,
+        "self_cpu_us": 246409.510000019
+      },
+      "aten::bmm": {
+        "calls": 3336,
+        "self_cpu_us": 222395.47699998526
+      },
+      "aten::cat": {
+        "calls": 8794,
+        "self_cpu_us": 129400.92699994547
+      },
+      "aten::add": {
+        "calls": 15826,
+        "self_cpu_us": 125898.83200007872
+      },
+      "aten::fill_": {
+        "calls": 36952,
+        "self_cpu_us": 124892.55200019079
+      },
+      "aten::empty": {
+        "calls": 21299,
+        "self_cpu_us": 105639.79799989563
+      },
+      "aten::copy_": {
+        "calls": 17098,
+        "self_cpu_us": 81376.66200008705
+      },
+      "aten::matmul": {
+        "calls": 17518,
+        "self_cpu_us": 79986.52599992615
+      },
+      "aten::as_strided": {
+        "calls": 116624,
+        "self_cpu_us": 66948.0909999803
+      },
+      "aten::slice": {
+        "calls": 34210,
+        "self_cpu_us": 65143.69699993272
+      },
+      "aten::nonzero": {
+        "calls": 2189,
+        "self_cpu_us": 56899.557000047454
+      }
+    },
+    "precision": "float32",
+    "gpu": "NVIDIA A800-SXM4-80GB",
+    "timing_scope": "Shared GPU; uninstrumented sampling/CPU decoding after warm-up. Operator counts measured in a separate CPU profiling pass."
+  },
+  "comparison": {
+    "arrays": 24,
+    "tokens_positions_scores_bitwise_equal": true,
+    "maximum_absolute_difference": 0.0,
+    "observed_median_latency_ratio": 1.1282719796690954
+  },
+  "cfg2_rollout_prefix": {
+    "trajectories": 4,
+    "decision_counts": [
+      198.0,
+      229.0,
+      235.0,
+      134.0
+    ],
+    "rollout_log_probability": [
+      -207.98019409179688,
+      -236.2551727294922,
+      -268.8020324707031,
+      -123.19451141357422
+    ],
+    "teacher_log_probability": [
+      -207.9806365966797,
+      -236.2550811767578,
+      -268.802001953125,
+      -123.19432830810547
+    ],
+    "max_mean_token_logprob_error": 2.2348731363308616e-06,
+    "precision": "float32",
+    "cfg_scale": 2.0,
+    "electron_parity": 0,
+    "passed": true
+  },
+  "limitations": "Three repeats on a shared A800 with concurrent jobs; no general speedup claim. This change does not precompute AdaLN projections."
+}

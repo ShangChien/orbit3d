@@ -6,11 +6,10 @@ Uses pinned Uni-3DAR, with no GVP/PropMolFlow/DGL orchestration dependency.
 import argparse
 import math
 from typing import Dict, List, Optional, Tuple
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..vendor.uni3dar.data import AtomFeatDict, GridDataset
+from ..vendor.uni3dar.data import AtomFeatDict as AtomFeatDict, GridDataset as GridDataset
 from ..vendor.uni3dar.data.atom_data import atom_list
 from ..vendor.uni3dar.models.uni3dar import DecoderInputFeat
 from ..vendor.uni3dar.models.uni3dar_sampler import (
@@ -20,7 +19,6 @@ from ..vendor.uni3dar.models.uni3dar_sampler import (
     IDX_SPACE,
     IDX_TREE,
     IDX_TYPE,
-    NUM_FEAT,
 )
 from .random_streams import RowRandomStreams
 from .electronic_constraints import atom_electron_parities, mask_terminal_element_logits
@@ -547,25 +545,30 @@ class ConditionalUni3DAR(Uni3DARSampler):
                     if empty:
                         break
 
+                    rows_finished = len(new_raw_feat) != len(raw_feat)
                     next_feat = torch.cat(next_feat_list, dim=0)
                     raw_feat = new_raw_feat
-                    decoder_feat = decoder_feat[~is_delete]
-                    decoder_phy_pos = decoder_phy_pos[~is_delete]
-                    for k in cond_vars:
-                        if cond_vars[k] is not None:
-                            cond_vars[k] = cond_vars[k][~is_delete]
-                    for k in count_vars:
-                        if count_vars[k] is not None:
-                            count_vars[k] = count_vars[k][~is_delete]
-                    scores = scores[~is_delete]
-                    for cache_obj in [kv_cache, kv_cache_uncond]:
-                        if cache_obj is None:
-                            continue
-                        for r_i in range(len(cache_obj)):
-                            for l_i in range(len(cache_obj[r_i])):
-                                if "k" in cache_obj[r_i][l_i]:
-                                    cache_obj[r_i][l_i]["k"] = cache_obj[r_i][l_i]["k"][~is_delete]
-                                    cache_obj[r_i][l_i]["v"] = cache_obj[r_i][l_i]["v"][~is_delete]
+                    # Identity boolean indexing copies every KV tensor and
+                    # synchronizes dynamic row counts. Compact only when a row
+                    # actually finishes; Python queue lengths already tell us.
+                    if rows_finished:
+                        decoder_feat = decoder_feat[~is_delete]
+                        decoder_phy_pos = decoder_phy_pos[~is_delete]
+                        for k in cond_vars:
+                            if cond_vars[k] is not None:
+                                cond_vars[k] = cond_vars[k][~is_delete]
+                        for k in count_vars:
+                            if count_vars[k] is not None:
+                                count_vars[k] = count_vars[k][~is_delete]
+                        scores = scores[~is_delete]
+                        for cache_obj in [kv_cache, kv_cache_uncond]:
+                            if cache_obj is None:
+                                continue
+                            for r_i in range(len(cache_obj)):
+                                for l_i in range(len(cache_obj[r_i])):
+                                    if "k" in cache_obj[r_i][l_i]:
+                                        cache_obj[r_i][l_i]["k"] = cache_obj[r_i][l_i]["k"][~is_delete]
+                                        cache_obj[r_i][l_i]["v"] = cache_obj[r_i][l_i]["v"][~is_delete]
 
                     last_level = decoder_feat[:, -1, IDX_LEVEL]
                     is_new_level = last_level != next_feat[:, IDX_LEVEL]
