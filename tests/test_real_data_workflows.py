@@ -205,3 +205,17 @@ def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
     assert type(model).__module__.startswith('orbit3d.compat.hyff.')
     assert set(registry.manifest()['models'])=={'presto','vivace','moderato','andante','largo'}
     assert sys.path==before
+
+
+def test_mim_wide_element_adapter_requires_declared_spectrum_and_explicit_atoms():
+    m=mol('B(O)O')
+    row={'smi':'B(O)O','atoms':[a.GetSymbol() for a in m.GetAtoms()],
+         'coordinates':[m.GetConformer().GetPositions()],'target':np.arange(450,dtype=np.float32)}
+    with pytest.raises(ValueError,match='spectrum'):
+        adapt_record(row)
+    instance,_=adapt_record(row,element_table=('H','C','B','O'),spectrum_size=450)
+    np.testing.assert_array_equal(instance.props,row['target'])
+    assert 5 in instance.atomic_numbers
+    row['smi']='[C]'
+    with pytest.raises(ValueError,match='radical'):
+        adapt_record(row,element_table=('H','C','B','O'),spectrum_size=450)

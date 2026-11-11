@@ -45,7 +45,13 @@ def relax_conformer_iso_property(
     device = torch.device(dpa_guidance.device_str)
     x = torch.tensor(inst.coords, dtype=torch.float32, device=device)
     symbols = inst.symbols
-    targets = TargetIntervals.parse(target_interval, oracle.target_cols)
+    if oracle is None and target_interval is not None:
+        raise ValueError('Energy-only refinement cannot evaluate property intervals')
+    targets = TargetIntervals.parse(target_interval, oracle.target_cols) if oracle is not None else None
+
+    def violations(values):
+        return targets.violations(values) if targets is not None else torch.empty(0, device=device)
+
     movable = torch.ones_like(x)
     if len(frozen_indices):
         movable[list(frozen_indices)] = 0
@@ -61,13 +67,18 @@ def relax_conformer_iso_property(
                 raise ValueError('Refinement candidate lies outside the spatial window')
         candidate = replace(inst, coords=coords.detach().cpu().numpy())
         mol = mol3d_to_validated_rdkit_mol(candidate)
-        if getattr(oracle, "dpa_guidance", None) is dpa_guidance:
+        if oracle is None:
+            energy, force = dpa_guidance.compute_energy_and_forces(
+                coords.detach(), torch.tensor([dpa_guidance.atom_type_map.index(s) for s in symbols], device=device),
+                clip_forces=False, zero_com_forces=False, charges=[inst.charge], multiplicities=[inst.multiplicity])
+            yp = ys = torch.empty(0, device=device)
+        elif getattr(oracle, "dpa_guidance", None) is dpa_guidance:
             yp, ys, energy, force = oracle.forward_shared_force_and_property(coords.detach(), symbols)
         else:
             energy, force = dpa_guidance.compute_energy_and_forces(
                 coords.detach(), torch.tensor([dpa_guidance.atom_type_map.index(s) for s in symbols],
                                                dtype=torch.long, device=device),
-                clip_forces=False, zero_com_forces=False
+                clip_forces=False, zero_com_forces=False, charges=[inst.charge], multiplicities=[inst.multiplicity]
             )
             try:
                 yp, ys = oracle.predict_3d_mols([mol])
@@ -82,19 +93,19 @@ def relax_conformer_iso_property(
 
     e, f, y, std = evaluate(x)
     initial_e = e.clone()
-    initial_d = targets.violations(y)
+    initial_d = violations(y)
     initial_force = float(f.square().sum(-1).mean().sqrt())
     initial_max_force = float(f.norm(dim=-1).max())
     initial_forces = f.cpu().tolist()
     history = []
     for step in range(n_steps):
         grad = torch.zeros_like(x)
-        if targets.violations(y).any():
+        if violations(y).any():
             try:
                 xv = x.detach().clone().requires_grad_(True)
                 gradient_evaluations += 1
                 yp, _ = oracle.forward_differentiable_3d(xv, symbols, smiles=inst.smiles)
-                loss = targets.violations(yp).square().sum()
+                loss = violations(yp).square().sum()
                 if loss.requires_grad:
                     g = torch.autograd.grad(loss, xv, allow_unused=True)[0]
                     if g is not None:
@@ -106,14 +117,14 @@ def relax_conformer_iso_property(
         direction = project_force(f * movable, grad) if tangent_projection else f * movable
         direction = (direction - prop_grad_weight * grad) * movable
         accepted = False
-        old_d = targets.violations(y)
+        old_d = violations(y)
         for backtrack in range(max_backtracks + 1):
             disp = direction * (step_size * 2 ** (-backtrack))
             disp = cap_molecular_displacement(disp, max_atom_disp)
             candidate = x + disp
             try:
                 en, fn, yn, sn = evaluate(candidate)
-                dn = targets.violations(yn)
+                dn = violations(yn)
                 # No accumulated tolerance drift: both local and initial budgets.
                 accept = bool(
                     en <= e + energy_tolerance
@@ -133,7 +144,7 @@ def relax_conformer_iso_property(
                 "accepted": accepted,
                 "backtracks": backtrack,
                 "energy": float(e),
-                "violations": targets.violations(y).tolist(),
+                "violations": violations(y).tolist(),
             }
         )
         if not accepted or float(disp.abs().max()) < 1e-8:
@@ -152,9 +163,15 @@ def relax_conformer_iso_property(
         "final_energy_ev": float(e),
         "evaluation_calls": evaluations,
         "gradient_calls": gradient_evaluations,
-        "y_pred": scalar(y),
-        "y_std": scalar(std),
-        "interval_hit": targets.hit(y),
+        "target_names": list(targets.names) if targets else [],
+        "y_pred": scalar(y) if targets else None,
+        "y_std": scalar(std) if targets else None,
+        "interval_hit": targets.hit(y) if targets else None,
         "history": history,
-        "status": "feasible" if targets.hit(y) else "infeasible",
+        "status": ("feasible" if targets.hit(y) else "infeasible") if targets else "energy_only",
     }
+
+
+def relax_conformer_energy_only(inst, forcefield, **settings):
+    """Physical baseline with graph/stereo acceptance and no property evaluator."""
+    return relax_conformer_iso_property(inst, forcefield, None, None, **settings)

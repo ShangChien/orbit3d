@@ -12,6 +12,7 @@ from ..generator.octree_tokenizer import (
     decode_tokens_to_mol3d,
     mol3d_to_validated_rdkit_mol,
     mol_to_clean_smiles,
+    ATOM_TYPES,
 )
 
 
@@ -49,7 +50,7 @@ def canonical_record(record):
     return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 
-def adapt_record(record, max_atoms=40, backend="uni3dar_octree"):
+def adapt_record(record, max_atoms=40, backend="uni3dar_octree", element_table=tuple(ATOM_TYPES), spectrum_size=240):
     mol = Chem.MolFromSmiles(str(record.get("smi", "")))
     if mol is None:
         raise ValueError("invalid_smiles")
@@ -70,14 +71,14 @@ def adapt_record(record, max_atoms=40, backend="uni3dar_octree"):
     if coords.shape != (mol.GetNumAtoms(), 3) or not np.isfinite(coords).all():
         raise ValueError("invalid_coordinates")
     spectrum = np.asarray(record["target"], dtype=np.float32)
-    if spectrum.shape != (240,) or not np.isfinite(spectrum).all():
+    if spectrum.shape != (spectrum_size,) or not np.isfinite(spectrum).all():
         raise ValueError("invalid_spectrum")
     mol.RemoveAllConformers()
     conf = Chem.Conformer(mol.GetNumAtoms())
     for index, xyz in enumerate(coords):
         conf.SetAtomPosition(index, xyz.tolist())
     mol.AddConformer(conf)
-    inst = rdkit_mol_to_mol3d_instance(mol, spectrum)
+    inst = rdkit_mol_to_mol3d_instance(mol, spectrum, element_table=element_table)
     if mol.GetNumAtoms() > max_atoms:
         raise ValueError("oversized_molecule")
     mol3d_to_validated_rdkit_mol(inst)

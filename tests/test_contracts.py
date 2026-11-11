@@ -419,3 +419,49 @@ def test_large_atomic_energy_offsets_do_not_erase_small_physical_energy_changes(
     expected=(moved.double().square()-x.double().square()).sum()
     assert e.dtype==torch.float64
     torch.testing.assert_close(after-e,expected.reshape(1),atol=1e-7,rtol=0)
+
+
+def test_reflected_coordinates_cannot_keep_an_incompatible_stereocenter_label():
+    from dataclasses import replace
+    inst=rdkit_mol_to_mol3d_instance(embedded('C[C@H](O)F'),np.zeros(1))
+    reflected=inst.coords.copy();reflected[:,0]*=-1
+    with pytest.raises(ValueError,match='stereo_geometry'):
+        mol3d_to_validated_rdkit_mol(replace(inst,coords=reflected))
+
+
+def test_cis_geometry_cannot_retain_a_trans_graph_label():
+    from dataclasses import replace
+    trans=rdkit_mol_to_mol3d_instance(embedded('F/C=C/F'),np.zeros(1))
+    cis=rdkit_mol_to_mol3d_instance(embedded('F/C=C\\F'),np.zeros(1))
+    mol3d_to_validated_rdkit_mol(trans)
+    mol3d_to_validated_rdkit_mol(cis)
+    with pytest.raises(ValueError,match='stereo_geometry'):
+        mol3d_to_validated_rdkit_mol(replace(trans,coords=cis.coords))
+
+
+def test_energy_only_refinement_has_no_fake_property_success_and_forwards_state():
+    from orbit3d.physics.conformer_relaxer import relax_conformer_energy_only
+    inst=rdkit_mol_to_mol3d_instance(embedded('CC'),np.zeros(1))
+    out,info=relax_conformer_energy_only(inst,BondForce(1.6),n_steps=8,step_size=.0004)
+    assert info['status']=='energy_only' and info['interval_hit'] is None
+    assert info['y_pred'] is None and info['gradient_calls']==0
+    assert info['final_energy_ev']<=info['initial_energy_ev']
+    assert info['final_force_eva']<info['init_force_eva']
+    charged=rdkit_mol_to_mol3d_instance(embedded('[NH4+]'),np.zeros(1))
+    class StateAwareField:
+        device_str='cpu'
+        atom_type_map=ATOM_TYPES
+        def compute_energy_and_forces(self,x,types,charges,multiplicities,**kwargs):
+            assert charges==[1] and multiplicities==[1]
+            return torch.tensor(0.,dtype=torch.float64),torch.zeros_like(x)
+    out,info=relax_conformer_energy_only(charged,StateAwareField(),n_steps=0)
+    assert out.charge==1
+
+
+def test_dpa_state_is_rejected_before_any_neutral_calculation():
+    from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+    ff=DPAPotentialGuidance.__new__(DPAPotentialGuidance)
+    torch.nn.Module.__init__(ff)
+    for state in [{'charges':[1]},{'multiplicities':[3]}]:
+        with pytest.raises(ValueError,match='supports'):
+            ff.compute_energy_and_forces(torch.zeros(1,3),torch.zeros(1,dtype=torch.long),**state)

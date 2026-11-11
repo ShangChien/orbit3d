@@ -1,0 +1,120 @@
+{
+  "task": "MIM-Flow-MR-TADF-explicit-H-closed-shell-subset",
+  "seed": 42,
+  "backend": "uni3dar_octree",
+  "max_atoms": 180,
+  "allowed_elements": [
+    "H",
+    "C",
+    "N",
+    "O",
+    "F",
+    "B",
+    "S",
+    "Si",
+    "Se"
+  ],
+  "merge_level": 7,
+  "property_labels": "450-channel spectrum, preserved separately; not HOMO/LUMO",
+  "splits": {
+    "test": {
+      "selected": 0,
+      "scanned_in_hash_order": 0,
+      "rejections": {},
+      "source_split": "valid"
+    },
+    "train": {
+      "selected": 512,
+      "scanned_in_hash_order": 4933,
+      "rejections": {
+        "radical_representation": 3736,
+        "invalid_smiles": 71,
+        "atom_order_mismatch": 93,
+        "bond_geometry: 17-19 (C-C) length 2.400065 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.520478 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.520601 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.599793 A": 1,
+        "bond_geometry: 29-36 (C-C) length 2.800859 A": 1,
+        "bond_geometry: 9-10 (C-C) length 5.721389 A": 1,
+        "bond_geometry: 12-13 (C-C) length 2.568426 A": 1,
+        "bond_geometry: 12-13 (C-C) length 3.852189 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.601081 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.596123 A": 1,
+        "bond_geometry: 9-13 (C-C) length 4.951928 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.497674 A": 1,
+        "bond_geometry: 10-15 (C-C) length 5.188463 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.525438 A": 1,
+        "bond_geometry: 13-15 (C-C) length 2.488974 A": 1,
+        "bond_geometry: 13-14 (C-C) length 3.823197 A": 1,
+        "bond_geometry: 11-12 (C-C) length 2.557308 A": 1,
+        "bond_geometry: 9-10 (C-C) length 5.712606 A": 1,
+        "bond_geometry: 10-14 (C-C) length 4.396800 A": 1,
+        "bond_geometry: 28-31 (C-C) length 2.820569 A": 1,
+        "bond_geometry: 6-9 (C-C) length 3.829952 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.560109 A": 1,
+        "bond_geometry: 9-10 (C-C) length 3.832604 A": 1,
+        "bond_geometry: 19-20 (C-C) length 4.237146 A": 1,
+        "bond_geometry: 3-11 (C-C) length 7.339872 A": 1,
+        "bond_geometry: 3-11 (C-C) length 8.511272 A": 1,
+        "bond_geometry: 9-10 (C-C) length 4.953487 A": 1,
+        "bond_geometry: 30-31 (C-C) length 4.309132 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.610242 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.505451 A": 1,
+        "bond_geometry: 5-13 (C-C) length 6.441417 A": 1,
+        "bond_geometry: 9-10 (C-C) length 4.420293 A": 1,
+        "bond_geometry: 12-13 (C-C) length 2.570648 A": 1,
+        "bond_geometry: 16-17 (C-C) length 3.910608 A": 1
+      },
+      "source_split": "train"
+    },
+    "dev": {
+      "selected": 64,
+      "scanned_in_hash_order": 5760,
+      "rejections": {
+        "radical_representation": 496,
+        "invalid_smiles": 79,
+        "atom_order_mismatch": 9,
+        "bond_geometry: 9-10 (C-C) length 3.794691 A": 1,
+        "bond_geometry: 9-10 (C-C) length 5.009126 A": 1,
+        "bond_geometry: 5-6 (C-C) length 2.651616 A": 1
+      },
+      "source_split": "train"
+    }
+  },
+  "selected_structure_overlap": 0,
+  "official_valid_excluded_from_all_training": true,
+  "elapsed_seconds": 32.3612408451736,
+  "output_sha256": {
+    "dev.sdf": "6585ca364907df04c5ad65d903eba521ec7fd3fb0fb6a8d615bc073780b0d165",
+    "dev_arrays.npz": "ddfba10d429c849e4ff171d28e87e1fd0561e58d99f6e9811f494fd4ce341267",
+    "dev_index.json": "30d0bfa5c2f48fd17776dd609055e8cb24d2f2fe5903e8653e87a31f7cda08ec",
+    "rejections.jsonl": "fc89819ed21a11b29ff74c0a85414ab42c0f31c693449e040b0a2b11445be6cf",
+    "test.sdf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "test_arrays.npz": "1973f29acccf9a87a352d362db2fbe5c96a66b9db6de0c6f72aaac842cf70970",
+    "test_index.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "train.sdf": "37b881ab0a7afebebdcd1a165e2471ccc6ecf86be0fc3fb2fbec98856761fb90",
+    "train_arrays.npz": "cff2e00847dfb469dd07927d49fd2db5e667c4663f3112c1619b711f3f428925",
+    "train_index.json": "76cdc385e60918a1615ec9eec410b3fe3eb99a934052200447c7f5018acbb1c4"
+  },
+  "publisher_record_url": "https://zenodo.org/records/21887607",
+  "license": "CC-BY-4.0",
+  "source_lmdb_sha256": {
+    "de_novo_gen/mrtadf_norm_350/valid.lmdb": "e71828d7e189e82ba697219f2e0b5c2fc4a62c910628f4075441b43a9d88d67a",
+    "de_novo_gen/mrtadf_norm_350/train.lmdb": "2a6921ce9fdc6fe00e2e60fda509f8adf11e65d61746c7a2c2cde358cd91b72a"
+  },
+  "observed_training_elements": [
+    "B",
+    "C",
+    "H",
+    "N"
+  ],
+  "train_atoms_range": [
+    26,
+    74
+  ],
+  "dev_atoms_range": [
+    30,
+    68
+  ],
+  "independent_test_status": "No test subset selected; all official-valid identities excluded from train/dev. This supports structural adaptation only."
+}

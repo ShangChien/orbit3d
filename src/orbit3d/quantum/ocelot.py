@@ -173,7 +173,7 @@ class OcelotEvaluator:
         from ..utils.dataset_io import write_precise_sdf
 
         started = time.perf_counter()
-        if Chem.GetFormalCharge(molecule) or any(a.GetNumRadicalElectrons() for a in molecule.GetAtoms()):
+        if Chem.GetFormalCharge(molecule) or any(a.GetNumRadicalElectrons() for a in molecule.GetAtoms()) or (molecule.HasProp('SpinMultiplicity') and molecule.GetIntProp('SpinMultiplicity') != 1):
             raise ValueError("This OCELOT validation protocol requires a neutral closed-shell input")
         atoms = [a.GetSymbol() for a in molecule.GetAtoms()]
         original = molecule.GetConformer().GetPositions()
@@ -227,7 +227,7 @@ class OcelotEvaluator:
         out = Chem.Mol(molecule)
         for i, xyz in enumerate(coords):
             out.GetConformer().SetAtomPosition(i, xyz.tolist())
-        inst = rdkit_mol_to_mol3d_instance(out, np.array([homo, lumo]) * HARTREE_EV)
+        inst = rdkit_mol_to_mol3d_instance(out, np.array([homo, lumo]) * HARTREE_EV, element_table=tuple(dict.fromkeys(atoms)))
         mol3d_to_validated_rdkit_mol(inst)
         # Check recovered graph as well as the supplied graph after optimization.
         from dataclasses import replace
@@ -238,6 +238,8 @@ class OcelotEvaluator:
         ) == Chem.MolToSmiles(Chem.RemoveHs(molecule), isomericSmiles=True)
         write_precise_sdf(self.workdir / "optimized.sdf", [out])
         (self.workdir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+        if not result['graph_preserved']:
+            raise ValueError('Quantum optimization changed the molecular graph or stereochemistry')
         if excitations:
             from .excited_states import vertical_excitations
 

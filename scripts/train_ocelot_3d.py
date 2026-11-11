@@ -9,7 +9,7 @@ from orbit3d.generator.octree_tokenizer import ATOM_TYPES
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run
+from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
 from orbit3d.utils.reproducibility import lock_deterministic_environment
 from orbit3d.utils.conformers import ocelot_conformer
 
@@ -26,6 +26,8 @@ p.add_argument("--seed", type=int, default=42)
 a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
 freeze_run(a.output, __file__)
+(a.output / 'run_config.json').write_text(json.dumps(vars(a), default=str, indent=2)+'\n')
+record_input_hashes(a.output, {'forcefield': a.weight, **{split+'_csv': a.data / (split+'.csv') for split in ['train','valid','test']}})
 torch.set_num_threads(2)
 lock_deterministic_environment(a.seed)
 started = time.perf_counter()

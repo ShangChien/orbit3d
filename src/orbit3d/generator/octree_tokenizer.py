@@ -203,6 +203,19 @@ def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
         radius = sum(radii)
         if not 0.6 * radius <= distances[i, j] <= 1.4 * radius:
             raise ValueError(f'bond_geometry: {i}-{j} ({syms[i]}-{syms[j]}) length {distances[i,j]:.6f} A')
+    if inst.graph is not None:
+        chiral_atoms = [(a.GetIdx(), a.GetChiralTag()) for a in mol.GetAtoms()
+                       if a.GetChiralTag() in (Chem.ChiralType.CHI_TETRAHEDRAL_CW, Chem.ChiralType.CHI_TETRAHEDRAL_CCW)]
+        stereo_bonds = [(b.GetIdx(), b.GetStereo()) for b in mol.GetBonds()
+                        if b.GetStereo() in (Chem.BondStereo.STEREOE, Chem.BondStereo.STEREOZ)]
+        if chiral_atoms or stereo_bonds:
+            geometric = Chem.Mol(mol)
+            Chem.AssignStereochemistryFrom3D(geometric, replaceExistingTags=True)
+            Chem.AssignStereochemistry(geometric, cleanIt=True, force=True)
+            if any(geometric.GetAtomWithIdx(i).GetChiralTag() != tag for i, tag in chiral_atoms):
+                raise ValueError('stereo_geometry: coordinates disagree with a specified tetrahedral center')
+            if any(geometric.GetBondWithIdx(i).GetStereo() != tag for i, tag in stereo_bonds):
+                raise ValueError('stereo_geometry: coordinates disagree with a specified double-bond configuration')
     mol.SetIntProp('TotalCharge', int(inst.charge))
     mol.SetIntProp('SpinMultiplicity', int(inst.multiplicity))
     return mol

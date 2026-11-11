@@ -265,7 +265,13 @@ class DPAPotentialGuidance(nn.Module):
         node_batch_idx: Optional[torch.Tensor] = None,
         clip_forces: bool = True,
         zero_com_forces: bool = True,
+        charges=None,
+        multiplicities=None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        if charges is not None and bool((torch.as_tensor(charges) != 0).any()):
+            raise ValueError('This DPA interface supports neutral states only')
+        if multiplicities is not None and bool((torch.as_tensor(multiplicities) != 1).any()):
+            raise ValueError('This DPA interface supports closed-shell singlets only')
         device = coords.device
         n_total = coords.shape[0]
         if node_batch_idx is None:

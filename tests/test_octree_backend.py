@@ -205,3 +205,10 @@ def test_expanding_allowed_elements_retains_dictionary_ids_and_changes_support()
     assert not old.allowed_atom_mask(torch.device('cpu'))[old.dictionary['B']]
     assert new.allowed_atom_mask(torch.device('cpu'))[new.dictionary['B']]
     assert checkpoint_contract(old,['homo','lumo'],['eV','eV'],[0,0],[1,1]) != checkpoint_contract(new,['homo','lumo'],['eV','eV'],[0,0],[1,1])
+
+
+@pytest.mark.parametrize('state',[{'charge':1},{'multiplicity':3}])
+def test_octree_pipeline_does_not_ignore_unsupported_electronic_state(state):
+    from orbit3d.pipeline.octree_runner import run_octree_from_config
+    with pytest.raises(ValueError,match='neutral closed-shell'):
+        run_octree_from_config({'stage5_relax_config':state})

@@ -32,6 +32,9 @@ from ..utils.run_evidence import freeze_run, record_input_hashes
 
 
 def run_octree_from_config(cfg, config_path=None):
+    electronic_state = cfg.get('stage5_relax_config', {})
+    if electronic_state.get('charge', 0) != 0 or electronic_state.get('multiplicity', 1) != 1:
+        raise ValueError('Current octree/property checkpoints support neutral closed-shell generation only')
     started = time.perf_counter()
     lock_deterministic_environment(int(cfg.get("seed", 42)))
     RDLogger.DisableLog("rdApp.*")
@@ -111,8 +114,15 @@ def run_octree_from_config(cfg, config_path=None):
         yn = (y - mean) / scale
         dataset = OctreeDataset(training, model, seed=int(cfg.get("seed", 42)))
         train_backbone = bool(settings.get("train_backbone", False))
-        if initial_state and initial_state.get('representation_migration', {}).get('requires_adaptation') and not train_backbone:
-            raise ValueError('Tree-depth migration requires backbone adaptation, including the new level embedding')
+        if initial_state:
+            migration = initial_state.get('representation_migration', {})
+            if migration.get('requires_adaptation') and not train_backbone:
+                raise ValueError('Representation migration requires backbone adaptation')
+            if migration.get('requires_adaptation') or initial_state.get('condition_migration', {}).get('requires_condition_adaptation'):
+                added = set(migration.get('new_elements', [])) - set(migration.get('old_elements', []))
+                covered = {atom.GetSymbol() for mol in training for atom in mol.GetAtoms()}
+                if added - covered:
+                    raise ValueError(f'Adaptation data lacks newly enabled elements: {sorted(added-covered)}')
         model.requires_grad_(train_backbone)
         model.interval_conditioner.requires_grad_(True)
         model.prop_understanding_head.requires_grad_(True)

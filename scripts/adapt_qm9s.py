@@ -3,11 +3,14 @@
 import argparse, hashlib, json, time
 from collections import Counter
 from pathlib import Path
+from types import SimpleNamespace
 import lmdb
 import numpy as np
 from rdkit import Chem, RDLogger
 from orbit3d.utils.qm9s import read_record, canonical_record, adapt_record
-from orbit3d.generator.octree_tokenizer import mol3d_to_validated_rdkit_mol
+from orbit3d.generator.octree_tokenizer import ATOM_TYPES, mol3d_to_validated_rdkit_mol
+from orbit3d.generator.octree_backend import OctreeDataset
+from orbit3d.generator.octree_model import build_default_uni3dar_args, AtomFeatDict
 
 p = argparse.ArgumentParser()
 p.add_argument("--source", type=Path, required=True)
@@ -16,12 +19,25 @@ p.add_argument("--train", type=int, default=2048)
 p.add_argument("--dev", type=int, default=256)
 p.add_argument("--test", type=int, default=256)
 p.add_argument("--backend", choices=["uni3dar_octree", "dense_grid_v2"], default="uni3dar_octree")
+p.add_argument('--task-name',default='QM9s structural adapter integration subset')
+p.add_argument('--elements',nargs='+',default=ATOM_TYPES)
+p.add_argument('--spectrum-size',type=int,default=240)
+p.add_argument('--max-atoms',type=int,default=40)
+p.add_argument('--merge-level',type=int,choices=[6,7,8],default=6)
 a = p.parse_args()
+args=build_default_uni3dar_args(1)
+args.merge_level=a.merge_level;args.allow_atoms=','.join(a.elements)
+representation=SimpleNamespace(args=args,dictionary=AtomFeatDict(args))
 if a.output.exists():
     raise FileExistsError(a.output)
 a.output.mkdir(parents=True)
 RDLogger.DisableLog("rdApp.*")
 started = time.perf_counter()
+
+
+def file_digest(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
 def ranking(key):
@@ -68,8 +84,10 @@ for split, source, limit in [("test", "valid", a.test), ("train", "train", a.tra
                     continue
                 if canonical in seen:
                     raise ValueError("duplicate_structure")
-                inst, tok = adapt_record(record, backend=a.backend)
+                inst, tok = adapt_record(record, backend=a.backend, max_atoms=a.max_atoms, element_table=tuple(a.elements), spectrum_size=a.spectrum_size)
                 mol = mol3d_to_validated_rdkit_mol(inst)
+                if a.backend == "uni3dar_octree":
+                    OctreeDataset([mol], representation, training=False).collate([0])
                 mol.SetProp("SourceKey", key.decode())
                 mol.SetProp("SourceID", str(record.get("ID", "")))
                 mol.SetProp("SourceSplit", source)
@@ -88,14 +106,14 @@ for split, source, limit in [("test", "valid", a.test), ("train", "train", a.tra
                 spectra.append(inst.props)
                 if tok is not None:
                     tokens.append(tok)
-            except (ValueError, RuntimeError) as exc:
+            except (ValueError, RuntimeError, AssertionError) as exc:
                 reason = str(exc)
                 reasons[reason] += 1
                 rejections.append({"split": split, "source_key": key.decode(), "reason": reason})
     writer.close()
     if len(selected) != limit:
         raise RuntimeError(f"Insufficient compatible records in {split}")
-    arrays = {"spectrum": np.stack(spectra)}
+    arrays = {"spectrum": np.stack(spectra) if spectra else np.empty((0,a.spectrum_size),dtype=np.float32)}
     if tokens:
         packed = np.zeros((len(tokens), max(map(len, tokens))), dtype=np.int16)
         for i, tok in enumerate(tokens):
@@ -118,15 +136,18 @@ assert not (
 )
 (a.output / "rejections.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rejections))
 manifest = {
-    "task": "QM9s structural adapter integration subset",
+    "task": a.task_name,
     "seed": 42,
     "backend": a.backend,
-    "max_atoms": 40,
-    "property_labels": "240-channel spectrum, preserved separately; not HOMO/LUMO",
+    "max_atoms": a.max_atoms,
+    "allowed_elements": a.elements,
+    "merge_level": a.merge_level,
+    "property_labels": f"{a.spectrum_size}-channel spectrum, preserved separately; not HOMO/LUMO",
     "splits": report,
     "selected_structure_overlap": 0,
     "official_valid_excluded_from_all_training": True,
     "elapsed_seconds": time.perf_counter() - started,
+    "source_lmdb_sha256": {s: file_digest(a.source / f"{s}.lmdb") for s in envs},
     "output_sha256": {
         p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in a.output.iterdir() if p.is_file()
     },
