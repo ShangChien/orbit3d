@@ -24,6 +24,17 @@ def indexed_graph(molecule):
     return atoms, bonds, Chem.MolToSmiles(Chem.RemoveHs(molecule), isomericSmiles=True)
 
 
+def quantum_targets(record, names):
+    values = {'homo': record['homo_eV'], 'lumo': record['lumo_eV']}
+    if 'vertical_excitations' in record:
+        values.update(s0s1=record['vertical_excitations']['singlet_eV'][0],
+                      s0t1=record['vertical_excitations']['triplet_eV'][0])
+    missing = set(names) - values.keys()
+    if missing:
+        raise ValueError(f'Quantum reference quantities were not calculated: {sorted(missing)}')
+    return [values[name] for name in names]
+
+
 def main():
     parser = argparse.ArgumentParser()
     for name in ['quantum-run', 'source-sdf', 'config', 'output']:
@@ -38,9 +49,10 @@ def main():
     if hashlib.sha256(args.source_sdf.read_bytes()).hexdigest() != manifest['source_sha256']:
         raise ValueError('Source SDF does not match the predeclared quantum cohort')
     cfg = json.loads(args.config.read_text())
-    if cfg['oracle_config']['target_cols'] != ['homo', 'lumo', 's0s1', 's0t1']:
-        raise ValueError('This quantum comparison uses HOMO/LUMO/vertical-S1/vertical-T1 in that order')
-    if cfg['oracle_config']['target_units'] != ['eV'] * 4:
+    requested = cfg['oracle_config']['target_cols']
+    if not requested or len(set(requested)) != len(requested) or set(requested) - {'homo', 'lumo', 's0s1', 's0t1'}:
+        raise ValueError('Supported quantum quantities are HOMO/LUMO/vertical-S1/vertical-T1')
+    if cfg['oracle_config']['target_units'] != ['eV'] * len(requested):
         raise ValueError('The quantum and surrogate target units must be eV')
     if len(quantum['records']) != quantum['attempted'] or len({r['index'] for r in quantum['records']}) != quantum['attempted']:
         raise ValueError('Quantum cohort has missing or duplicated records')
@@ -77,8 +89,7 @@ def main():
         predictions['fingerprint'], _ = independent.predict_3d_mols(molecules)
         inputs['fingerprint_model'] = args.fingerprint_model
     record_input_hashes(args.output, inputs)
-    reference = np.array([[r['homo_eV'], r['lumo_eV'], r['vertical_excitations']['singlet_eV'][0],
-                           r['vertical_excitations']['triplet_eV'][0]] for r in completed])
+    reference = np.array([quantum_targets(r, names) for r in completed])
     rows, forces = [], {}
     for index, (mol, result) in enumerate(zip(molecules, completed)):
         force = np.asarray(evaluated['forces_eV_A'][index])
@@ -90,10 +101,12 @@ def main():
                      'domain': domain.assess(mol),
                      'surrogate_rms_force_eV_A': float(np.sqrt(np.square(force).sum(-1).mean())),
                      'quantum_rms_force_eV_A': result['rms_force_eV_A']})
-    aggregate = {name: {'paired_molecules': len(rows),
-                       'mean_absolute_disagreement_eV': dict(zip(names, np.abs(prediction - reference).mean(0).tolist())),
-                       'paired_vertical_gap_disagreement': paired_energy_difference_metrics(prediction, reference, names, 's0s1', 's0t1')}
-                 for name, prediction in predictions.items()}
+    aggregate = {}
+    for name, prediction in predictions.items():
+        aggregate[name] = {'paired_molecules': len(rows),
+                          'mean_absolute_disagreement_eV': dict(zip(names, np.abs(prediction - reference).mean(0).tolist()))}
+        if {'s0s1', 's0t1'} <= set(names):
+            aggregate[name]['paired_vertical_gap_disagreement'] = paired_energy_difference_metrics(prediction, reference, names, 's0s1', 's0t1')
     report = {'attempted_quantum_cohort': quantum['attempted'], 'completed_paired': len(rows),
               'failed_quantum_indices': [r['index'] for r in quantum['records'] if r['status'] != 'completed'],
               'target_names': names, 'quantum_manifest': manifest, 'records': rows, 'aggregate': aggregate,
