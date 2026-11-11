@@ -1,0 +1,505 @@
+{
+  "attempted": 10,
+  "completed": 5,
+  "elapsed_seconds": 14109.859135352075,
+  "records": [
+    {
+      "theory": {
+        "engine": "gpu",
+        "xc": "HYB_GGA_XC_LC_WPBE",
+        "basis": "def2-svp",
+        "tuning_objective": "Jh",
+        "omega_bounds": [
+          0.05,
+          0.5
+        ],
+        "omega_tolerance": 0.001,
+        "omega_geometry_tolerance": 0.01,
+        "max_outer_cycles": 5,
+        "scf_tolerance": 1e-09,
+        "max_scf_cycles": 100,
+        "radial_grid": 99,
+        "angular_grid": 590,
+        "threads": 2,
+        "memory_mb": 4000,
+        "max_geometry_steps": 80
+      },
+      "pyscf_version": "2.12.1",
+      "omega": 0.2085,
+      "omega_geometry_cycles": [
+        {
+          "cycle": 0,
+          "omega": 0.2105,
+          "omega_change": 0.0895
+        },
+        {
+          "cycle": 1,
+          "omega": 0.2085,
+          "omega_change": 0.0020000000000000018
+        }
+      ],
+      "geometry_optimized": true,
+      "energy_Ha": -865.1217113594232,
+      "homo_eV": -6.716013908462565,
+      "lumo_eV": 0.1891145738734256,
+      "S2": 2.842170943040401e-14,
+      "rms_force_eV_A": 0.0008070121930529831,
+      "max_force_eV_A": 0.0017167582739068196,
+      "elapsed_seconds": 691.0148634202778,
+      "graph_preserved": true,
+      "vertical_excitations": {
+        "method": "full linear-response TDDFT; spin-adapted restricted reference",
+        "response_residual_tolerance": 1e-07,
+        "trial_gram_eigenvalue_threshold": 1e-16,
+        "third_order_xc_engine": "CPU Libxc (GPU SCF/response)",
+        "geometry": "same optimized S0 geometry for S1 and T1",
+        "omega": 0.2085,
+        "ground_energy_Ha": -865.1217113595787,
+        "singlet_eV": [
+          3.626013982588375
+        ],
+        "triplet_eV": [
+          2.3548630353835507
+        ],
+        "S1_minus_T1_eV": 1.2711509472048241
+      },
+      "index": 0,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "6"
+      },
+      "status": "completed",
+      "candidate_id": 6,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 2.2092578411102295,
+        "final_force_eva": 0.2371838241815567,
+        "status": "completed"
+      }
+    },
+    {
+      "index": 1,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "7"
+      },
+      "status": "failed",
+      "error": "SCF did not converge at omega=0.0862, charge=1",
+      "candidate_id": 7,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 9.794329643249512,
+        "final_force_eva": 2.058858871459961,
+        "status": "completed"
+      }
+    },
+    {
+      "theory": {
+        "engine": "gpu",
+        "xc": "HYB_GGA_XC_LC_WPBE",
+        "basis": "def2-svp",
+        "tuning_objective": "Jh",
+        "omega_bounds": [
+          0.05,
+          0.5
+        ],
+        "omega_tolerance": 0.001,
+        "omega_geometry_tolerance": 0.01,
+        "max_outer_cycles": 5,
+        "scf_tolerance": 1e-09,
+        "max_scf_cycles": 100,
+        "radial_grid": 99,
+        "angular_grid": 590,
+        "threads": 2,
+        "memory_mb": 4000,
+        "max_geometry_steps": 80
+      },
+      "pyscf_version": "2.12.1",
+      "omega": 0.2788,
+      "omega_geometry_cycles": [
+        {
+          "cycle": 0,
+          "omega": 0.2895,
+          "omega_change": 0.01050000000000001
+        },
+        {
+          "cycle": 1,
+          "omega": 0.2792,
+          "omega_change": 0.010299999999999976
+        },
+        {
+          "cycle": 2,
+          "omega": 0.2788,
+          "omega_change": 0.00040000000000001146
+        }
+      ],
+      "geometry_optimized": true,
+      "energy_Ha": -741.4038403240681,
+      "homo_eV": -8.034102129329499,
+      "lumo_eV": -0.6488010662112063,
+      "S2": -7.105427357601002e-15,
+      "rms_force_eV_A": 0.0014029969455096971,
+      "max_force_eV_A": 0.0034131978106258522,
+      "elapsed_seconds": 712.9728309027851,
+      "graph_preserved": true,
+      "vertical_excitations": {
+        "method": "full linear-response TDDFT; spin-adapted restricted reference",
+        "response_residual_tolerance": 1e-07,
+        "trial_gram_eigenvalue_threshold": 1e-16,
+        "third_order_xc_engine": "CPU Libxc (GPU SCF/response)",
+        "geometry": "same optimized S0 geometry for S1 and T1",
+        "omega": 0.2788,
+        "ground_energy_Ha": -741.4038403240304,
+        "singlet_eV": [
+          2.2769422410619504
+        ],
+        "triplet_eV": [
+          1.78252700938626
+        ],
+        "S1_minus_T1_eV": 0.49441523167569046
+      },
+      "index": 2,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "8"
+      },
+      "status": "completed",
+      "candidate_id": 8,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 9.252973556518555,
+        "final_force_eva": 0.15079365670681,
+        "status": "completed"
+      }
+    },
+    {
+      "index": 3,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "23"
+      },
+      "status": "failed",
+      "error": "Quantum optimization changed the molecular graph or stereochemistry",
+      "candidate_id": 23,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 2.8394575119018555,
+        "final_force_eva": 0.2569945752620697,
+        "status": "completed"
+      }
+    },
+    {
+      "index": 4,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "26"
+      },
+      "status": "failed",
+      "error": "stereo_geometry: coordinates disagree with a specified double-bond configuration",
+      "candidate_id": 26,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 3.0338308811187744,
+        "final_force_eva": 0.2661270797252655,
+        "status": "completed"
+      }
+    },
+    {
+      "theory": {
+        "engine": "gpu",
+        "xc": "HYB_GGA_XC_LC_WPBE",
+        "basis": "def2-svp",
+        "tuning_objective": "Jh",
+        "omega_bounds": [
+          0.05,
+          0.5
+        ],
+        "omega_tolerance": 0.001,
+        "omega_geometry_tolerance": 0.01,
+        "max_outer_cycles": 5,
+        "scf_tolerance": 1e-09,
+        "max_scf_cycles": 100,
+        "radial_grid": 99,
+        "angular_grid": 590,
+        "threads": 2,
+        "memory_mb": 4000,
+        "max_geometry_steps": 80
+      },
+      "pyscf_version": "2.12.1",
+      "omega": 0.2235,
+      "omega_geometry_cycles": [
+        {
+          "cycle": 0,
+          "omega": 0.2252,
+          "omega_change": 0.07479999999999998
+        },
+        {
+          "cycle": 1,
+          "omega": 0.2235,
+          "omega_change": 0.001700000000000007
+        }
+      ],
+      "geometry_optimized": true,
+      "energy_Ha": -1147.344140957877,
+      "homo_eV": -7.319177432458909,
+      "lumo_eV": -2.4474590850624995,
+      "S2": 5.684341886080802e-14,
+      "rms_force_eV_A": 0.0017027493243863836,
+      "max_force_eV_A": 0.004958748849680759,
+      "elapsed_seconds": 1221.9178317002952,
+      "graph_preserved": true,
+      "vertical_excitations": {
+        "method": "full linear-response TDDFT; spin-adapted restricted reference",
+        "response_residual_tolerance": 1e-07,
+        "trial_gram_eigenvalue_threshold": 1e-16,
+        "third_order_xc_engine": "CPU Libxc (GPU SCF/response)",
+        "geometry": "same optimized S0 geometry for S1 and T1",
+        "omega": 0.2235,
+        "ground_energy_Ha": -1147.3441409578497,
+        "singlet_eV": [
+          1.7556654822845852
+        ],
+        "triplet_eV": [
+          1.1976548277395325
+        ],
+        "S1_minus_T1_eV": 0.5580106545450527
+      },
+      "index": 5,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "34"
+      },
+      "status": "completed",
+      "candidate_id": 34,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 5.763471603393555,
+        "final_force_eva": 0.19127580523490906,
+        "status": "completed"
+      }
+    },
+    {
+      "index": 6,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "36"
+      },
+      "status": "failed",
+      "error": "Geometry optimization did not converge",
+      "candidate_id": 36,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 2.468078136444092,
+        "final_force_eva": 0.27182695269584656,
+        "status": "completed"
+      }
+    },
+    {
+      "theory": {
+        "engine": "gpu",
+        "xc": "HYB_GGA_XC_LC_WPBE",
+        "basis": "def2-svp",
+        "tuning_objective": "Jh",
+        "omega_bounds": [
+          0.05,
+          0.5
+        ],
+        "omega_tolerance": 0.001,
+        "omega_geometry_tolerance": 0.01,
+        "max_outer_cycles": 5,
+        "scf_tolerance": 1e-09,
+        "max_scf_cycles": 100,
+        "radial_grid": 99,
+        "angular_grid": 590,
+        "threads": 2,
+        "memory_mb": 4000,
+        "max_geometry_steps": 80
+      },
+      "pyscf_version": "2.12.1",
+      "omega": 0.2215,
+      "omega_geometry_cycles": [
+        {
+          "cycle": 0,
+          "omega": 0.2219,
+          "omega_change": 0.0781
+        },
+        {
+          "cycle": 1,
+          "omega": 0.2215,
+          "omega_change": 0.0003999999999999837
+        }
+      ],
+      "geometry_optimized": true,
+      "energy_Ha": -854.0697545553471,
+      "homo_eV": -7.650617960442113,
+      "lumo_eV": -0.40320297699993113,
+      "S2": 0.0,
+      "rms_force_eV_A": 0.000595963992293782,
+      "max_force_eV_A": 0.0016909586581612924,
+      "elapsed_seconds": 670.5741322338581,
+      "graph_preserved": true,
+      "vertical_excitations": {
+        "method": "full linear-response TDDFT; spin-adapted restricted reference",
+        "response_residual_tolerance": 1e-07,
+        "trial_gram_eigenvalue_threshold": 1e-16,
+        "third_order_xc_engine": "CPU Libxc (GPU SCF/response)",
+        "geometry": "same optimized S0 geometry for S1 and T1",
+        "omega": 0.2215,
+        "ground_energy_Ha": -854.0697545555049,
+        "singlet_eV": [
+          3.8086370325851338
+        ],
+        "triplet_eV": [
+          2.740354168335964
+        ],
+        "S1_minus_T1_eV": 1.06828286424917
+      },
+      "index": 7,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "51"
+      },
+      "status": "completed",
+      "candidate_id": 51,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 2.191915512084961,
+        "final_force_eva": 0.15352413058280945,
+        "status": "completed"
+      }
+    },
+    {
+      "index": 8,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "58"
+      },
+      "status": "failed",
+      "error": "bond_geometry: 35-7 (H-C) length 1.816837 A",
+      "candidate_id": 58,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 3.2244467735290527,
+        "final_force_eva": 0.28727200627326965,
+        "status": "completed"
+      }
+    },
+    {
+      "theory": {
+        "engine": "gpu",
+        "xc": "HYB_GGA_XC_LC_WPBE",
+        "basis": "def2-svp",
+        "tuning_objective": "Jh",
+        "omega_bounds": [
+          0.05,
+          0.5
+        ],
+        "omega_tolerance": 0.001,
+        "omega_geometry_tolerance": 0.01,
+        "max_outer_cycles": 5,
+        "scf_tolerance": 1e-09,
+        "max_scf_cycles": 100,
+        "radial_grid": 99,
+        "angular_grid": 590,
+        "threads": 2,
+        "memory_mb": 4000,
+        "max_geometry_steps": 80
+      },
+      "pyscf_version": "2.12.1",
+      "omega": 0.2143,
+      "omega_geometry_cycles": [
+        {
+          "cycle": 0,
+          "omega": 0.2175,
+          "omega_change": 0.08249999999999999
+        },
+        {
+          "cycle": 1,
+          "omega": 0.2143,
+          "omega_change": 0.0032000000000000084
+        }
+      ],
+      "geometry_optimized": true,
+      "energy_Ha": -879.8256278427316,
+      "homo_eV": -6.390490770879686,
+      "lumo_eV": -0.7194583322498436,
+      "S2": 0.0,
+      "rms_force_eV_A": 0.001893640234656868,
+      "max_force_eV_A": 0.004223476127369507,
+      "elapsed_seconds": 958.142470818013,
+      "graph_preserved": true,
+      "vertical_excitations": {
+        "method": "full linear-response TDDFT; spin-adapted restricted reference",
+        "response_residual_tolerance": 1e-07,
+        "trial_gram_eigenvalue_threshold": 1e-16,
+        "third_order_xc_engine": "CPU Libxc (GPU SCF/response)",
+        "geometry": "same optimized S0 geometry for S1 and T1",
+        "omega": 0.2143,
+        "ground_energy_Ha": -879.8256278434765,
+        "singlet_eV": [
+          2.615867353181284
+        ],
+        "triplet_eV": [
+          1.5986192243687072
+        ],
+        "S1_minus_T1_eV": 1.017248128812577
+      },
+      "index": 9,
+      "properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "62"
+      },
+      "status": "completed",
+      "candidate_id": 62,
+      "prior_mlip_relaxation": {
+        "init_force_eva": 2.1327404975891113,
+        "final_force_eva": 0.22450576722621918,
+        "status": "completed"
+      }
+    }
+  ],
+  "manifest": {
+    "source_sha256": "83e83f6536687d46e0e0b80e810ca4e44733562a3619b09aa2f4dc96414f5c5b",
+    "theory": {
+      "engine": "gpu",
+      "xc": "HYB_GGA_XC_LC_WPBE",
+      "basis": "def2-svp",
+      "tuning_objective": "Jh",
+      "omega_bounds": [
+        0.05,
+        0.5
+      ],
+      "omega_tolerance": 0.001,
+      "omega_geometry_tolerance": 0.01,
+      "max_outer_cycles": 5,
+      "scf_tolerance": 1e-09,
+      "max_scf_cycles": 100,
+      "radial_grid": 99,
+      "angular_grid": 590,
+      "threads": 2,
+      "memory_mb": 4000,
+      "max_geometry_steps": 80
+    },
+    "sample_count": 10,
+    "selected_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "protocol_status": "Protocol diagnostic; OCELOT production objective and functional mapping unconfirmed",
+    "optimize_geometry": true,
+    "vertical_singlet_triplet_tddft": true
+  },
+  "selection_rule": "Every chemically valid generated molecule containing the specified element; no property/force preselection",
+  "all_original_generator_attempts": 64,
+  "scope": "Complete preselected B-containing cohort; original 100-cycle SCF and 80-step geometry budgets. Longer-budget retries are reported separately, and failed cases are not replaced.",
+  "limitations": "Internally consistent nominal theory; OCELOT production omega/geometry and protocol fidelity are unresolved. Low force is not a verified minimum; these are structural-only generation diagnostics, not demonstrated boron-conditioned property design."
+}
