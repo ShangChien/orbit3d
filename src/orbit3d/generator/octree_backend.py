@@ -9,9 +9,9 @@ from .octree_tokenizer import ATOM_TYPES, Mol3DInstance, mol3d_to_validated_rdki
 
 
 class OctreeDataset:
-    def __init__(self, molecules, model, training=True):
+    def __init__(self, molecules, model, training=True, seed=42):
         self.molecules = molecules
-        self.grid = GridDataset(self, 42, model.dictionary, "atom_type", "atom_pos", training, model.args)
+        self.grid = GridDataset(self, seed, model.dictionary, "atom_type", "atom_pos", training, model.args)
         self.grid.set_epoch(1)
 
     def __len__(self):

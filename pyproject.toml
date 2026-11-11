@@ -87,3 +87,6 @@ baselines = [
 line-length = 110
 target-version = "py311"
 src = ["src", "benchmarks", "scripts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

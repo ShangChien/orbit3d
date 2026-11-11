@@ -1,0 +1,60 @@
+{
+  "method": "Held-out normalized-residual intervals; not a Gaussian standard deviation",
+  "calibration_disjoint_from_train_selection_test": true,
+  "test": {
+    "n": 64,
+    "joint_coverage": 0.90625,
+    "marginal_coverage": {
+      "homo": 0.921875,
+      "lumo": 0.96875
+    },
+    "mean_interval_width_eV": {
+      "homo": 3.0517308557812304,
+      "lumo": 2.644619082999901
+    },
+    "std_absolute_error_spearman": {
+      "homo": 0.01804029304029304,
+      "lumo": -0.09148351648351648
+    }
+  },
+  "coverage_curve": [
+    {
+      "nominal_joint_coverage": 0.5,
+      "test_joint_coverage": 0.625
+    },
+    {
+      "nominal_joint_coverage": 0.7,
+      "test_joint_coverage": 0.78125
+    },
+    {
+      "nominal_joint_coverage": 0.8,
+      "test_joint_coverage": 0.859375
+    },
+    {
+      "nominal_joint_coverage": 0.9,
+      "test_joint_coverage": 0.90625
+    },
+    {
+      "nominal_joint_coverage": 0.95,
+      "test_joint_coverage": 0.96875
+    }
+  ],
+  "limitations": "Scaffold shift and QM9s OOD are not covered by exchangeability assumptions",
+  "applicability_domain": {
+    "method": "maximum Morgan Tanimoto to the actual 512 training structures",
+    "cutoff_from_calibration_5th_percentile": 0.24504273504273505,
+    "generated_outside": 14,
+    "generated_count": 16
+  },
+  "calibration_records": 128,
+  "embedding_failures": 0,
+  "generator_adaptation_400_steps": {
+    "training_records": 1024,
+    "attempted": 64,
+    "raw_valid": 15,
+    "domain_eligible": 0,
+    "retained": 0,
+    "qualified": 0,
+    "checkpoint_sha256": "c7ce58750d26628f6a7d26d74e91b948e0c88dcf5c7cfa3ad9ec7b8d259f7be9"
+  }
+}

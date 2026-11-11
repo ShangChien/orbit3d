@@ -127,3 +127,28 @@ def test_precise_sdf_roundtrips_coordinates(tmp_path):
         m.GetConformer().GetPositions(), reloaded.GetConformer().GetPositions(), atol=1e-10, rtol=0
     )
     assert reloaded.GetProp("Value") == "[1.1, 2.2]"
+
+
+def test_calibration_uses_finite_sample_joint_residual_quantiles():
+    from orbit3d.oracles.calibration import ResidualCalibration
+
+    y = np.array([[i, 2 * i] for i in range(10)], dtype=float)
+    mean = np.zeros_like(y)
+    std = np.ones_like(y)
+    c = ResidualCalibration.fit(["a", "b"], y, mean, std, coverage=0.8)
+    assert c.marginal_q == [8.0, 16.0]
+    assert c.joint_q == 16.0
+    lo, hi = c.intervals(np.array([[2.0, 3.0]]), np.ones((1, 2)))
+    np.testing.assert_array_equal(lo, [[-14.0, -13.0]])
+    np.testing.assert_array_equal(hi, [[18.0, 19.0]])
+
+
+def test_applicability_domain_preserves_reference_and_hydrogen_convention(tmp_path):
+    from orbit3d.oracles.applicability import MorganDomain
+
+    domain = MorganDomain(['c1ccccc1', 'CCO'], 0.5)
+    path = tmp_path / 'domain.json'
+    domain.save(path)
+    loaded = MorganDomain.load(path)
+    assert loaded.score(Chem.AddHs(Chem.MolFromSmiles('CCO'))) == 1.0
+    assert loaded.score(Chem.MolFromSmiles('C#N')) < loaded.cutoff

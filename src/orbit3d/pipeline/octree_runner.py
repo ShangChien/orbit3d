@@ -18,6 +18,7 @@ from ..generator.octree_tokenizer import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from ..oracles.fingerprint_oracle import FingerprintOracle
+from ..oracles.applicability import MorganDomain
 from ..physics.dpa_forcefield import DPAPotentialGuidance
 from ..physics.conformer_relaxer import relax_conformer_iso_property
 from ..utils.dataset_io import write_precise_sdf
@@ -53,6 +54,8 @@ def run_octree_from_config(cfg, config_path=None):
         raise ValueError("Octree workflow supports internal_dpa4 or fingerprint oracles")
     if oracle.target_cols != names:
         raise ValueError("Property target order mismatch")
+    domain_path = cfg["oracle_config"].get("applicability_domain_path")
+    domain = MorganDomain.load(domain_path) if domain_path else None
     training = []
     if paths.get("train_data_path"):
         training = list(Chem.SDMolSupplier(paths["train_data_path"], removeHs=False))
@@ -83,7 +86,7 @@ def run_octree_from_config(cfg, config_path=None):
         mean = y.mean(0)
         scale = y.std(0).clip(1e-6)
         yn = (y - mean) / scale
-        dataset = OctreeDataset(training, model)
+        dataset = OctreeDataset(training, model, seed=int(cfg.get("seed", 42)))
         train_backbone = bool(settings.get("train_backbone", False))
         model.requires_grad_(train_backbone)
         model.interval_conditioner.requires_grad_(True)
@@ -107,7 +110,7 @@ def run_octree_from_config(cfg, config_path=None):
         scheduler = torch.optim.lr_scheduler.LambdaLR(
             opt, lambda step: 0.1 + 0.9 * 0.5 * (1 + np.cos(np.pi * step / steps))
         )
-        rng = np.random.default_rng(42)
+        rng = np.random.default_rng(int(cfg.get("seed", 42)))
         for step in range(steps):
             model.train()
             dataset.grid.set_epoch(step + 1)
@@ -244,7 +247,12 @@ def run_octree_from_config(cfg, config_path=None):
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
                 score = float(np.square(intervals.violations(self_y).numpy() / scale).sum())
                 row.update(smiles=inst.smiles, self_score=score, raw_valid=True)
-                candidates.append((score, idx, inst))
+                similarity = domain.score(inst.graph) if domain else None
+                row["oracle_domain_similarity"] = similarity
+                if domain and similarity < domain.cutoff:
+                    row["status"] = "out_of_oracle_domain"
+                else:
+                    candidates.append((score, idx, inst))
             except ValueError as exc:
                 row.update(status="invalid", raw_valid=False, reason=str(exc))
             records.append(row)
@@ -328,9 +336,11 @@ def run_octree_from_config(cfg, config_path=None):
     summary = {
         "backend": f"uni3dar_octree_v{model.condition_version}",
         "attempted": len(records),
-        "raw_valid": len(candidates),
+        "raw_valid": sum(bool(r.get("raw_valid", False)) for r in records),
+        "domain_eligible": len(candidates),
+        "out_of_oracle_domain": sum(r["status"] == "out_of_oracle_domain" for r in records),
         "external_ranking_calls": len(shortlist) if budget > 0 else 0,
-        "unique_raw_valid": len({i.smiles for _, _, i in candidates}),
+        "unique_raw_valid": len({r["smiles"] for r in records if r.get("raw_valid")}),
         "retained": len(mols),
         "qualified": len(qualified),
         "joint_success_rate": len(qualified) / len(records),
