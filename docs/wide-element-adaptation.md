@@ -72,3 +72,19 @@ preserve the source constitution and every specified stereo constraint; the
 seven graph changes remain failures. This audit does not test the full octree
 transform. Known input graphs are preserved directly in property training; the
 coordinate-only generator still faces bond-assignment ambiguity.
+
+
+The independent fingerprint ensemble now also covers all 15 training elements.
+It uses all 20356 training graphs, three bootstrap fits and 128 trees per fit;
+2322 scaffold-held-out test graphs give HOMO/LUMO MAEs of 0.3542/0.3398 eV.
+On the identical 512 test identities used by the 3D model, its MAEs are
+0.3502/0.3338 eV, versus 0.2985/0.2382 eV for the 3D adapters. Training budgets
+and representations differ, so this is a paired prediction check, not a controlled
+architecture ranking. Reloaded predictions are exactly equal. Rare-element counts
+and errors are retained in [the independent evaluator report](experiments/fingerprint_wide20356_20261112.json).
+
+The first 4000-step generator run completes 64 proposals: 40 valid, three
+in-domain retained and zero joint hits. A separate reload reproduces all 64 raw
+proposals and all three exports, including acceptance trajectories. This initial
+run is followed by three predeclared target windows and three inference seeds;
+its zero-hit result is retained in that assessment.

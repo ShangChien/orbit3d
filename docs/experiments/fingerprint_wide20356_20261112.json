@@ -1,0 +1,349 @@
+{
+  "scope": "Independent graph-property evaluator for expanded-element experiments",
+  "training": {
+    "task": "OCELOT 2D fingerprint property baseline",
+    "targets": [
+      "homo",
+      "lumo"
+    ],
+    "units": "eV",
+    "split": "fixed scaffold holdouts",
+    "training_records": 20356,
+    "training_elements": [
+      "As",
+      "B",
+      "Br",
+      "C",
+      "Cl",
+      "F",
+      "H",
+      "I",
+      "N",
+      "O",
+      "P",
+      "S",
+      "Se",
+      "Si",
+      "Te"
+    ],
+    "elapsed_seconds": 137.22563423588872,
+    "reused_trained_oracle": false,
+    "metrics": {
+      "valid": {
+        "n": 2282,
+        "mae_eV": {
+          "homo": 0.37866984993008057,
+          "lumo": 0.3469177662017311
+        },
+        "rmse_eV": {
+          "homo": 0.5139766061452614,
+          "lumo": 0.45069690228414283
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.5214530697835015,
+          "lumo": 0.545658124849129
+        },
+        "gap_from_homo_lumo_mae_eV": 0.6103487883542528,
+        "reload_max_abs_diff": 0.0,
+        "element_subgroups": {
+          "As": {
+            "n": 1,
+            "mae_eV": {
+              "homo": 0.8270985432409432,
+              "lumo": 0.2253935757897566
+            }
+          },
+          "B": {
+            "n": 13,
+            "mae_eV": {
+              "homo": 0.29417724818717966,
+              "lumo": 0.41932880045031495
+            }
+          },
+          "Br": {
+            "n": 155,
+            "mae_eV": {
+              "homo": 0.31586338614420634,
+              "lumo": 0.33114061133097594
+            }
+          },
+          "C": {
+            "n": 2282,
+            "mae_eV": {
+              "homo": 0.37866984993008057,
+              "lumo": 0.3469177662017311
+            }
+          },
+          "Cl": {
+            "n": 240,
+            "mae_eV": {
+              "homo": 0.38525910717643697,
+              "lumo": 0.37678729721763066
+            }
+          },
+          "F": {
+            "n": 162,
+            "mae_eV": {
+              "homo": 0.3932276825766386,
+              "lumo": 0.34436504756320224
+            }
+          },
+          "H": {
+            "n": 2276,
+            "mae_eV": {
+              "homo": 0.377928973584585,
+              "lumo": 0.34660180934569573
+            }
+          },
+          "I": {
+            "n": 32,
+            "mae_eV": {
+              "homo": 0.367385440897276,
+              "lumo": 0.3329840547798063
+            }
+          },
+          "N": {
+            "n": 1626,
+            "mae_eV": {
+              "homo": 0.38403666513968576,
+              "lumo": 0.3451182164721443
+            }
+          },
+          "O": {
+            "n": 1478,
+            "mae_eV": {
+              "homo": 0.36910161044841644,
+              "lumo": 0.3365235723852429
+            }
+          },
+          "P": {
+            "n": 17,
+            "mae_eV": {
+              "homo": 0.5280768981911623,
+              "lumo": 0.4999916364967678
+            }
+          },
+          "S": {
+            "n": 344,
+            "mae_eV": {
+              "homo": 0.43215546907792574,
+              "lumo": 0.3408468813824963
+            }
+          },
+          "Se": {
+            "n": 16,
+            "mae_eV": {
+              "homo": 0.4712050143020645,
+              "lumo": 0.3205817554095747
+            }
+          },
+          "Si": {
+            "n": 15,
+            "mae_eV": {
+              "homo": 0.5161394853719181,
+              "lumo": 0.4434573283339113
+            }
+          },
+          "Te": {
+            "n": 1,
+            "mae_eV": {
+              "homo": 1.3918414237188408,
+              "lumo": 0.8229630442514726
+            }
+          }
+        }
+      },
+      "test": {
+        "n": 2322,
+        "mae_eV": {
+          "homo": 0.35421988595594495,
+          "lumo": 0.339770173610777
+        },
+        "rmse_eV": {
+          "homo": 0.48222866422901245,
+          "lumo": 0.44558521109586346
+        },
+        "train_mean_baseline_mae_eV": {
+          "homo": 0.49986770717472356,
+          "lumo": 0.5085002402301779
+        },
+        "gap_from_homo_lumo_mae_eV": 0.5713957121934967,
+        "reload_max_abs_diff": 0.0,
+        "element_subgroups": {
+          "As": {
+            "n": 2,
+            "mae_eV": {
+              "homo": 0.23708802248686123,
+              "lumo": 0.16782044068430962
+            }
+          },
+          "B": {
+            "n": 13,
+            "mae_eV": {
+              "homo": 0.37048386708007286,
+              "lumo": 0.27952357683048656
+            }
+          },
+          "Br": {
+            "n": 203,
+            "mae_eV": {
+              "homo": 0.32976902071200564,
+              "lumo": 0.3208342367777098
+            }
+          },
+          "C": {
+            "n": 2322,
+            "mae_eV": {
+              "homo": 0.35421988595594495,
+              "lumo": 0.339770173610777
+            }
+          },
+          "Cl": {
+            "n": 277,
+            "mae_eV": {
+              "homo": 0.34749494973160766,
+              "lumo": 0.3506819244188988
+            }
+          },
+          "F": {
+            "n": 150,
+            "mae_eV": {
+              "homo": 0.3960432692386027,
+              "lumo": 0.3344500265111881
+            }
+          },
+          "H": {
+            "n": 2321,
+            "mae_eV": {
+              "homo": 0.354363743963925,
+              "lumo": 0.33972592518974093
+            }
+          },
+          "I": {
+            "n": 23,
+            "mae_eV": {
+              "homo": 0.29837212443511346,
+              "lumo": 0.25880929185750395
+            }
+          },
+          "N": {
+            "n": 1806,
+            "mae_eV": {
+              "homo": 0.3523424679923365,
+              "lumo": 0.33703607883667835
+            }
+          },
+          "O": {
+            "n": 1584,
+            "mae_eV": {
+              "homo": 0.3589048461750266,
+              "lumo": 0.33457516856651714
+            }
+          },
+          "P": {
+            "n": 15,
+            "mae_eV": {
+              "homo": 0.4969173496882725,
+              "lumo": 0.3400388171599294
+            }
+          },
+          "S": {
+            "n": 367,
+            "mae_eV": {
+              "homo": 0.41048504552192644,
+              "lumo": 0.3737356329314245
+            }
+          },
+          "Se": {
+            "n": 21,
+            "mae_eV": {
+              "homo": 0.6089780346829383,
+              "lumo": 0.4913284106734584
+            }
+          },
+          "Si": {
+            "n": 7,
+            "mae_eV": {
+              "homo": 0.25105095302831276,
+              "lumo": 0.3375477848584339
+            }
+          },
+          "Te": {
+            "n": 4,
+            "mae_eV": {
+              "homo": 0.25116158172775904,
+              "lumo": 0.3394265778024379
+            }
+          }
+        }
+      }
+    },
+    "data_sha256": {
+      "train": "f316b962d5bd456b387de72274c81e3beb0e9b19737a3ff3badcb9fe69c42f65",
+      "valid": "3f3e0d397a5feb50b90562f062201447d615724349632a853e551173e91073d3",
+      "test": "b2fc45cfd75ef5e6f7b557551bdb0fae0a82f32f5251ddeb8a8d0902e78e734b"
+    },
+    "note": "Predictor validation only; no coordinate gradient or calibrated uncertainty claim"
+  },
+  "metadata": {
+    "oracle_type": "fingerprint_bootstrap_v1",
+    "target_cols": [
+      "homo",
+      "lumo"
+    ],
+    "units": [
+      "eV",
+      "eV"
+    ],
+    "n_bits": 2048,
+    "training_elements": [
+      "As",
+      "B",
+      "Br",
+      "C",
+      "Cl",
+      "F",
+      "H",
+      "I",
+      "N",
+      "O",
+      "P",
+      "S",
+      "Se",
+      "Si",
+      "Te"
+    ],
+    "training_mean": [
+      -7.318822845770288,
+      -0.6110039681876597
+    ],
+    "training_std": [
+      0.6702200047181764,
+      0.6986420405095203
+    ],
+    "uncertainty": "bootstrap disagreement; not calibrated probability",
+    "model_sha256": "9128b1bcccfe6b333bfb0f6e8524babe80c25a3e2239c351b1119cb4213fc466"
+  },
+  "matched_3d_test": {
+    "scope": "Paired evaluation on identical 512 property-test identities; training budgets and representations differ",
+    "n": 512,
+    "training_records": {
+      "3d": 8192,
+      "2d": 20356
+    },
+    "mae_eV": {
+      "homo": {
+        "3d": 0.2984514741328125,
+        "2d": 0.35017157541241517
+      },
+      "lumo": {
+        "3d": 0.23821721968144532,
+        "2d": 0.33375766369359483
+      }
+    },
+    "input_sha256": {
+      "test_predictions.csv_fingerprint_wide20356": "d0cf8177b5924f025b67b282e3739244e01fa41be0728df7326eaa5d0159895c",
+      "test_predictions.csv_oracle_wide8192_uff": "15748507dabd87f71e3f532e0707e076669bd8413c698e897d97480b46dcadfa"
+    }
+  }
+}

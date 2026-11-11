@@ -50,3 +50,12 @@ charge/multiplicity is forwarded through energy-only relaxation to state-aware
 backends; the present DPA interface rejects unsupported nonneutral/nonsinglet
 requests before computation. The octree property pipeline likewise refuses to
 silently ignore an unsupported electronic-state configuration.
+
+
+The quantum cohort has exposed failures that the earlier finite-step DPA check
+did not establish. For cohort index 4, the final same-level SCF geometry conflicts
+with the input E/Z assignment and its inferred graph differs. Fixed-geometry
+re-evaluation from the saved SCF density reproduces the energy within 1.52e-10 Ha
+and gives RMS force 0.00137 eV/Å; a low force therefore does not rescue the
+source-graph validation failure. [Coordinates, raw forces and the failed graph check](experiments/boron_quantum_failed_geometry4_20261112.json)
+are preserved separately, and the original cohort outcome remains failed.
