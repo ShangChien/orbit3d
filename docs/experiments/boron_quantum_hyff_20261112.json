@@ -1,0 +1,282 @@
+{
+  "attempted_quantum_cohort": 10,
+  "completed_paired": 5,
+  "failed_quantum_indices": [
+    1,
+    3,
+    4,
+    6,
+    8
+  ],
+  "target_names": [
+    "homo",
+    "lumo",
+    "s0s1",
+    "s0t1"
+  ],
+  "quantum_manifest": {
+    "source_sha256": "83e83f6536687d46e0e0b80e810ca4e44733562a3619b09aa2f4dc96414f5c5b",
+    "theory": {
+      "engine": "gpu",
+      "xc": "HYB_GGA_XC_LC_WPBE",
+      "basis": "def2-svp",
+      "tuning_objective": "Jh",
+      "omega_bounds": [
+        0.05,
+        0.5
+      ],
+      "omega_tolerance": 0.001,
+      "omega_geometry_tolerance": 0.01,
+      "max_outer_cycles": 5,
+      "scf_tolerance": 1e-09,
+      "max_scf_cycles": 100,
+      "radial_grid": 99,
+      "angular_grid": 590,
+      "threads": 2,
+      "memory_mb": 4000,
+      "max_geometry_steps": 80
+    },
+    "sample_count": 10,
+    "selected_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "protocol_status": "Protocol diagnostic; OCELOT production objective and functional mapping unconfirmed",
+    "optimize_geometry": true,
+    "vertical_singlet_triplet_tddft": true
+  },
+  "records": [
+    {
+      "quantum_index": 0,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "6"
+      },
+      "smiles": "C1=CB2OC3=C(CNCC3)c3cc4ccccc4c(c32)N1",
+      "omega": 0.2085,
+      "reference_eV": {
+        "homo": -6.716013908462565,
+        "lumo": 0.1891145738734256,
+        "s0s1": 3.626013982588375,
+        "s0t1": 2.3548630353835507
+      },
+      "predictions_eV": {
+        "internal_hyff": {
+          "homo": -6.485713005065918,
+          "lumo": 0.01020713709294796,
+          "s0s1": 3.4686942100524902,
+          "s0t1": 2.317228317260742
+        },
+        "fingerprint": {
+          "homo": -6.533784127421412,
+          "lumo": 0.032288714171076205,
+          "s0s1": 3.5702189653689076,
+          "s0t1": 2.4598511514516166
+        }
+      },
+      "domain": {
+        "similarity": 0.26666666666666666,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "surrogate_rms_force_eV_A": 0.5707931518554688,
+      "quantum_rms_force_eV_A": 0.0008070121930529831
+    },
+    {
+      "quantum_index": 2,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "8"
+      },
+      "smiles": "C=C(/C=[O+]/[O-])c1cn(B2C=CNC=C2)nn1",
+      "omega": 0.2788,
+      "reference_eV": {
+        "homo": -8.034102129329499,
+        "lumo": -0.6488010662112063,
+        "s0s1": 2.2769422410619504,
+        "s0t1": 1.78252700938626
+      },
+      "predictions_eV": {
+        "internal_hyff": {
+          "homo": -7.216369152069092,
+          "lumo": -0.8073460459709167,
+          "s0s1": 3.386556625366211,
+          "s0t1": 2.2353515625
+        },
+        "fingerprint": {
+          "homo": -7.477713102813413,
+          "lumo": -0.31921540532920895,
+          "s0s1": 4.065907946643953,
+          "s0t1": 2.7085514267993034
+        }
+      },
+      "domain": {
+        "similarity": 0.2,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "surrogate_rms_force_eV_A": 0.8311471939086914,
+      "quantum_rms_force_eV_A": 0.0014029969455096971
+    },
+    {
+      "quantum_index": 5,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "34"
+      },
+      "smiles": "[H]\\N=C1/C(O)=C2BC3=CCC4=C(N=CNC=C4)B3C2=C(C#N)/C1=C/C=[O+]/[O-]",
+      "omega": 0.2235,
+      "reference_eV": {
+        "homo": -7.319177432458909,
+        "lumo": -2.4474590850624995,
+        "s0s1": 1.7556654822845852,
+        "s0t1": 1.1976548277395325
+      },
+      "predictions_eV": {
+        "internal_hyff": {
+          "homo": -6.815444469451904,
+          "lumo": -1.8484867811203003,
+          "s0s1": 2.1363072395324707,
+          "s0t1": 1.257369041442871
+        },
+        "fingerprint": {
+          "homo": -7.228868233009231,
+          "lumo": -1.2452621325224154,
+          "s0s1": 3.137200184244674,
+          "s0t1": 1.9800451885173123
+        }
+      },
+      "domain": {
+        "similarity": 0.14814814814814814,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "surrogate_rms_force_eV_A": 0.8530385494232178,
+      "quantum_rms_force_eV_A": 0.0017027493243863836
+    },
+    {
+      "quantum_index": 7,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "51"
+      },
+      "smiles": "O=c1oc2c(c3c(O)cccc13)BC1=CCCCB1C2",
+      "omega": 0.2215,
+      "reference_eV": {
+        "homo": -7.650617960442113,
+        "lumo": -0.40320297699993113,
+        "s0s1": 3.8086370325851338,
+        "s0t1": 2.740354168335964
+      },
+      "predictions_eV": {
+        "internal_hyff": {
+          "homo": -7.397904396057129,
+          "lumo": -0.6341619491577148,
+          "s0s1": 3.622359037399292,
+          "s0t1": 2.41324520111084
+        },
+        "fingerprint": {
+          "homo": -7.344617841817352,
+          "lumo": -0.5465397615679813,
+          "s0s1": 3.635462580465184,
+          "s0t1": 2.5452483900087706
+        }
+      },
+      "domain": {
+        "similarity": 0.3157894736842105,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "surrogate_rms_force_eV_A": 0.5070030093193054,
+      "quantum_rms_force_eV_A": 0.000595963992293782
+    },
+    {
+      "quantum_index": 9,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "62"
+      },
+      "smiles": "OC1=C2C=CC=CB2c2cc3cccn3c3c2C1=CNN3",
+      "omega": 0.2143,
+      "reference_eV": {
+        "homo": -6.390490770879686,
+        "lumo": -0.7194583322498436,
+        "s0s1": 2.615867353181284,
+        "s0t1": 1.5986192243687072
+      },
+      "predictions_eV": {
+        "internal_hyff": {
+          "homo": -6.109349727630615,
+          "lumo": -0.5796059370040894,
+          "s0s1": 2.786479949951172,
+          "s0t1": 1.6608980894088745
+        },
+        "fingerprint": {
+          "homo": -6.6998576389837945,
+          "lumo": 0.17005567086277362,
+          "s0s1": 3.7353207133962987,
+          "s0t1": 2.637329032742062
+        }
+      },
+      "domain": {
+        "similarity": 0.208955223880597,
+        "unseen_training_elements": [],
+        "in_domain": false
+      },
+      "surrogate_rms_force_eV_A": 0.6483781933784485,
+      "quantum_rms_force_eV_A": 0.001893640234656868
+    }
+  ],
+  "aggregate": {
+    "internal_hyff": {
+      "paired_molecules": 5,
+      "mean_absolute_disagreement_eV": {
+        "homo": 0.41712429025962283,
+        "lumo": 0.26144721757718503,
+        "s0s1": 0.4008933012087521,
+        "s0t1": 0.18791226344103568
+      },
+      "paired_vertical_gap_disagreement": {
+        "n": 5,
+        "difference": "s0s1 - s0t1",
+        "unit": "eV",
+        "mae_eV": 0.26931342658342927,
+        "rmse_eV": 0.3406644809564644,
+        "mean_signed_error_eV": 0.22143940481819877,
+        "absolute_difference_of_means_eV": 0.22143940481819877
+      }
+    },
+    "fingerprint": {
+      "paired_molecules": 5,
+      "mean_absolute_disagreement_eV": {
+        "homo": 0.28885899874715726,
+        "lumo": 0.5442918521610196,
+        "s0s1": 0.9037846474193045,
+        "s0t1": 0.6094436961918875
+      },
+      "paired_vertical_gap_disagreement": {
+        "n": 5,
+        "difference": "s0s1 - s0t1",
+        "unit": "eV",
+        "mae_eV": 0.3451087281375409,
+        "rmse_eV": 0.4767584983155429,
+        "mean_signed_error_eV": 0.28079547482252754,
+        "absolute_difference_of_means_eV": 0.28079547482252754
+      }
+    }
+  },
+  "scope": "Same saved quantum geometries, no optimization or retuning. Conditional disagreement on completed cases, not OCELOT reference MAE. Surrogate and quantum forces are cross-potential diagnostics, not identical-theory force errors."
+}

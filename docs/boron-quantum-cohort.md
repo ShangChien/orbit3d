@@ -61,6 +61,7 @@ same saved optimized geometries as an extrapolation diagnostic:
 | Model | HOMO | LUMO | Vertical S1 | Vertical T1 | Paired S1–T1 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | DPA property adapter | 0.4355 | 0.3303 | 0.5212 | 0.2120 | 0.4104 |
+| HyFF property adapter | 0.4171 | 0.2614 | 0.4009 | 0.1879 | 0.2693 |
 | Fingerprint ensemble | 0.2889 | 0.5443 | 0.9038 | 0.6094 | 0.3451 |
 
 Values are mean absolute disagreements in eV on the five completed cases, against
@@ -79,3 +80,25 @@ Those arrays have now been recovered from the saved final SCF states without
 repeating geometry optimization. Coordinates agree with the optimized SDFs within
 5.1e-13 Å. Each recovery retains its own scalar values and differences from the
 original result; it does not overwrite the original SCF/TDDFT measurements.
+
+
+The later HyFF row uses the same five optimized SDFs and exactly the same quantum
+reference scalars; its fingerprint predictions reproduce the earlier comparison
+exactly. No geometry optimization, omega retuning or calculation-level change was
+introduced. HyFF's RMS forces at those geometries range from 0.507 to 0.853 eV/Å,
+so the independent potential also disagrees with the quantum stationary forces.
+These models were not trained on this exact quantum level; that range is not an
+identical-theory force MAE. All five remain outside the HyFF property model's domain.
+
+The comparison now has a portable entrypoint rather than requiring private
+working-directory assumptions:
+
+```bash
+python scripts/compare_quantum_oracles.py   --quantum-run /path/to/completed_quantum_run   --source-sdf /path/to/original_cohort.sdf   --config /path/to/four_target_dpa_or_hyff_config.json   --fingerprint-model /path/to/fingerprint_oracle   --output /path/to/fresh_comparison
+```
+
+It verifies the original cohort checksum, atom-indexed graph identity and target
+units, uses every completed quantum record and retains the original failure
+indices. Raw independent forces and input hashes accompany the report. The new
+paired results and manifest are `experiments/boron_quantum_hyff_20261112.json`
+and `experiments/boron_quantum_hyff_inputs_20261112.json`.

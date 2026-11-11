@@ -1,0 +1,46 @@
+{
+  "quantum_results": {
+    "summary.json": "0c9c514178ddd315baea73eee073f16da96ec41284d58acc08bc60df08f50e91"
+  },
+  "quantum_protocol": {
+    "manifest.json": "5c7786d19b9c1050ee8c6889a851dcac643174ec5b2cb582c66841160dfb2799"
+  },
+  "source_structures": {
+    "boron_cohort_20261112.sdf": "83e83f6536687d46e0e0b80e810ca4e44733562a3619b09aa2f4dc96414f5c5b"
+  },
+  "configuration": {
+    "boron_quantum_hyff_configuration.json": "43ab42967c9a6bbeffe2d3b6374ec3ff6dec70b093bb26c8dc0a293c04dc05ca"
+  },
+  "property_model": {
+    "dpa4_prop_adapter.pt": "c8d2bf7ae89719d71a3e1cd995d3275daed1eb78bfbc1df8d36232d85b64a41a",
+    "oracle_meta.json": "8628440fa9f8fdb8ec10163e3cd4b207ac12e9686a3484218642cc7058c59185",
+    "target_scaler.ss": "c95ba9c14fdac2c0d16100947d9ef570a68a4fb38c502668b24669216928cb5d"
+  },
+  "forcefield": {
+    ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "weights.json": "3f974d30ff10ca89253721ece23e11175c83e73572eaaff1d51d77463381d26e",
+    "weights.safetensors": "353d6b3cdf3934cb71c9f0f18b65c184a39121644a1d93327b6f60dea93cc257"
+  },
+  "domain": {
+    "applicability.json": "451f758dbfd8857db25a18ea757999039fdec2b8e7d3f608fe289218eb4e596e"
+  },
+  "optimized_geometry_0": {
+    "optimized.sdf": "18fa1581a27e3e9eb74afe6daaadbb78a6f4d2c1a8e072246e255a9483fc5385"
+  },
+  "optimized_geometry_2": {
+    "optimized.sdf": "c64be7a008acfa5d16d7549b2455b1f7a68a695d9da94e53fdc6ccfe5cae91f8"
+  },
+  "optimized_geometry_5": {
+    "optimized.sdf": "c8bbae6a12b3b7357fdb2528a607d25655f67c75c540186828aaaf54b65171c7"
+  },
+  "optimized_geometry_7": {
+    "optimized.sdf": "cf7cc2697fc5641e274f43d8f3a3fde5738704aa17453a5645c7d5cd0372382a"
+  },
+  "optimized_geometry_9": {
+    "optimized.sdf": "c160d0907e104d1c7d94e99b46ff0ae014d4b8273d594800664e8158262a2896"
+  },
+  "fingerprint_model": {
+    "ensemble.joblib": "82759105141d976c062be67c79a4075c7e1ee6b09c29ff5e186af4f58ce6413d",
+    "metadata.json": "9eaf28e936f2db63482325c365fd3fc15376a172acad2ad3bfb6e857c8f86447"
+  }
+}
