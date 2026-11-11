@@ -211,7 +211,7 @@ def build_fig0():
 
         '<rect x="50" y="516" width="218" height="74" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>',
         '<text x="159" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#7e22ce">Mode C: Native HyFF Hook</text>',
-        '<text x="159" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Charge &amp; Spin State Descriptors</text>',
+        '<text x="159" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Element-Sparse MoE &amp; State Readout</text>',
 
         '<rect x="282" y="516" width="218" height="74" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>',
         '<text x="391" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.2" font-weight="bold" text-anchor="middle" fill="#b45309">Mode D: Uni-QSAR &amp; OCNet</text>',
@@ -227,11 +227,11 @@ def build_fig0():
 
         '<rect x="546" y="428" width="374" height="74" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>',
         '<text x="733" y="456" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9a3412">Engine 1: DPA-4 (OMol25) + Analytical ZBL</text>',
-        '<text x="733" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Short-Range Nuclear Repulsion &amp; Clash Resilience</text>',
+        '<text x="733" y="480" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Dense SO(2) + Short-Range Nuclear Repulsion</text>',
 
         '<rect x="546" y="516" width="374" height="74" rx="8" fill="#fef2f2" stroke="#e11d48" stroke-width="1.5"/>',
-        '<text x="733" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9f1239">Engine 2: HyFF (OMol25) Charge &amp; Spin Engine</text>',
-        '<text x="733" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Element-Sparse High Throughput &amp; Singlet/Triplet PES</text>',
+        '<text x="733" y="544" font-family="Helvetica, Arial, sans-serif" font-size="12.4" font-weight="bold" text-anchor="middle" fill="#9f1239">Engine 2: HyFF (OMol25) Element-Sparse MoE</text>',
+        '<text x="733" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10.8" text-anchor="middle" fill="#334155">Triton Kernels, Multi-Scale Cutoffs &amp; Q/M States</text>',
 
         '<rect x="546" y="604" width="374" height="30" rx="6" fill="#ffedd5" stroke="#d97706" stroke-width="1.4"/>',
         '<text x="733" y="624" font-family="Helvetica, Arial, sans-serif" font-size="11.2" font-weight="bold" text-anchor="middle" fill="#92400e">Physics Output Bus: Quantum Interatomic Forces &amp; State Energy</text>',
