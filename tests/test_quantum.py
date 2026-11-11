@@ -35,3 +35,22 @@ def test_excited_scanner_checks_the_requested_one_based_root():
     assert scanner.converged
     scanner.base._scf.converged = False
     assert not scanner.converged
+
+
+def test_quantum_graph_failure_retains_diagnostics_and_does_not_relabel_itself():
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+    from orbit3d.quantum.ocelot import inspect_optimized_graph
+
+    mol = Chem.AddHs(Chem.MolFromSmiles('CC'))
+    AllChem.EmbedMolecule(mol, randomSeed=42)
+    xyz = mol.GetConformer().GetPositions()
+    # Separate the two methyl groups while leaving their internal geometry intact.
+    right = [1] + [atom.GetIdx() for atom in mol.GetAtomWithIdx(1).GetNeighbors() if atom.GetAtomicNum() == 1]
+    xyz[right] += [4., 0., 0.]
+    mol.GetConformer().SetPositions(xyz)
+    result = inspect_optimized_graph(mol)
+    assert not result['graph_preserved'] and not result['source_graph_compatible']
+    assert result['graph_check_status'] == 'incompatible_source_graph'
+    assert 'bond_geometry' in result['source_graph_error']
+    assert result['source_smiles'] == 'CC'

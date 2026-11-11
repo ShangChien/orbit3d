@@ -64,6 +64,32 @@ def host_array(value):
     return value.get() if hasattr(value, "get") else np.asarray(value)
 
 
+def inspect_optimized_graph(molecule):
+    """Report geometry/graph consistency without treating bond inference as DFT truth."""
+    from dataclasses import replace
+    from rdkit import Chem
+    from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+
+    elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in molecule.GetAtoms()))
+    inst = rdkit_mol_to_mol3d_instance(molecule, np.empty(0), center=False, element_table=elements)
+    report = {'source_smiles': Chem.MolToSmiles(Chem.RemoveHs(molecule), isomericSmiles=True),
+              'source_graph_compatible': False, 'recovered_smiles': None}
+    try:
+        mol3d_to_validated_rdkit_mol(inst)
+        report['source_graph_compatible'] = True
+    except ValueError as exc:
+        report['source_graph_error'] = str(exc)
+    try:
+        recovered = mol3d_to_validated_rdkit_mol(replace(inst, graph=None))
+        report['recovered_smiles'] = Chem.MolToSmiles(Chem.RemoveHs(recovered), isomericSmiles=True)
+    except ValueError as exc:
+        report['reconstruction_error'] = str(exc)
+    report['graph_preserved'] = report['source_graph_compatible'] and report['recovered_smiles'] == report['source_smiles']
+    report['graph_check_status'] = ('consistent' if report['graph_preserved'] else
+        'incompatible_source_graph' if not report['source_graph_compatible'] else 'reconstruction_disagrees')
+    return report
+
+
 class OcelotEvaluator:
     def __init__(self, theory, workdir):
         from pyscf import lib
@@ -170,7 +196,6 @@ class OcelotEvaluator:
         import pyscf
         from pyscf.geomopt.geometric_solver import kernel
         from rdkit import Chem
-        from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
         from ..utils.dataset_io import write_precise_sdf
 
         started = time.perf_counter()
@@ -224,27 +249,26 @@ class OcelotEvaluator:
             "rms_force_eV_A": float(np.sqrt(np.mean(np.sum(forces**2, axis=-1)))),
             "max_force_eV_A": float(np.linalg.norm(forces, axis=-1).max()),
             "elapsed_seconds": time.perf_counter() - started,
+            "ground_state_elapsed_seconds": time.perf_counter() - started,
+            "atom_symbols": atoms,
+            "optimized_coordinates_A": coords.tolist(),
+            "raw_forces_eV_A": forces.tolist(),
         }
         out = Chem.Mol(molecule)
         for i, xyz in enumerate(coords):
             out.GetConformer().SetAtomPosition(i, xyz.tolist())
-        inst = rdkit_mol_to_mol3d_instance(out, np.array([homo, lumo]) * HARTREE_EV, element_table=tuple(dict.fromkeys(atoms)))
-        mol3d_to_validated_rdkit_mol(inst)
-        # Check recovered graph as well as the supplied graph after optimization.
-        from dataclasses import replace
-
-        recovered = mol3d_to_validated_rdkit_mol(replace(inst, graph=None))
-        result["graph_preserved"] = Chem.MolToSmiles(
-            Chem.RemoveHs(recovered), isomericSmiles=True
-        ) == Chem.MolToSmiles(Chem.RemoveHs(molecule), isomericSmiles=True)
-        write_precise_sdf(self.workdir / "optimized.sdf", [out])
+        result.update(inspect_optimized_graph(out))
+        # Preserve failed coordinates separately from graph-validated outputs.
+        out.SetProp('QuantumGraphCheck', result['graph_check_status'])
+        write_precise_sdf(self.workdir / ("optimized.sdf" if result['graph_preserved'] else "diagnostic_input_graph.sdf"), [out])
         (self.workdir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
         if not result['graph_preserved']:
-            raise ValueError('Quantum optimization changed the molecular graph or stereochemistry')
+            raise ValueError('Quantum geometry did not pass graph-preservation checks: ' + result['graph_check_status'])
         if excitations:
             from .excited_states import vertical_excitations
 
             result['vertical_excitations'] = vertical_excitations(final.mol, omega, self.theory,
                                                                   host_array(final.make_rdm1()).sum(0), float(final.e_tot))
+            result['elapsed_seconds'] = time.perf_counter() - started
             (self.workdir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
         return result
