@@ -9,6 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 import urllib.request
+import zipfile
+import shutil
 
 
 def digest(path):
@@ -17,6 +19,32 @@ def digest(path):
         for block in iter(lambda: f.read(1024 * 1024), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def acquire(row, path, archive_cache):
+    """Download a raw file or the declared member of a hash-pinned ZIP release."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + '.part')
+    member = row.get('archive_member')
+    if member:
+        archive_hash = row['archive_sha256']
+        archive_cache.mkdir(parents=True, exist_ok=True)
+        archive = archive_cache / (archive_hash + '.zip')
+        if not archive.exists():
+            pending = archive.with_suffix('.zip.part')
+            urllib.request.urlretrieve(row['source_url'], pending)
+            if digest(pending) != archive_hash:
+                raise ValueError(f'Archive checksum mismatch: {pending}')
+            pending.replace(archive)
+        if digest(archive) != archive_hash:
+            raise ValueError(f'Archive checksum mismatch: {archive}')
+        with zipfile.ZipFile(archive) as package, package.open(member) as source, tmp.open('wb') as target:
+            shutil.copyfileobj(source, target)
+    else:
+        urllib.request.urlretrieve(row['source_url'], tmp)
+    if digest(tmp) != row['sha256']:
+        raise ValueError(f'Checksum mismatch: {tmp}')
+    tmp.replace(path)
 
 
 def main():
@@ -39,12 +67,7 @@ def main():
                 raise ValueError(f"Incomplete source/license/hash: {row['path']}")
             if not row["source_url"].startswith("https://"):
                 raise ValueError("HTTPS source required")
-            path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = path.with_name(path.name + ".part")
-            urllib.request.urlretrieve(row["source_url"], tmp)
-            if digest(tmp) != row["sha256"]:
-                raise ValueError(f"Checksum mismatch: {tmp}")
-            tmp.replace(path)
+            acquire(row, path, root / 'dataset/raw/archives')
         if not path.exists() or digest(path) != row["sha256"]:
             raise ValueError(f"Missing or changed data: {row['path']}")
     print(json.dumps({"verified_local_files": len(rows), "incomplete_provenance": missing_provenance}))

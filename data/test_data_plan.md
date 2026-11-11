@@ -92,3 +92,16 @@ OCELOT 指纹模型在上述完整兼容训练划分训练；3D adapter pilot �
 [实验报告](../docs/qm9s-ocelot-experiments-2026-11-11.md)。上述40原子及±6.4Å覆盖率
 是旧 dense-grid 的审计数据，不能作为新八叉树的空间合同；MR-TADF 依然受预训练
 词表和数据域限制，尚未运行完整测试。
+
+## 发布来源核实（2026-11-12）
+
+服务器原始下载命令指向 [MIM-Flow Forward Data and Model](https://zenodo.org/records/21887607)。
+原包大小 3,248,316,986 字节、MD5 `df6cc75c2e575f3f25348ad83d3ca551` 与发布方
+完全一致，发布许可为 CC BY 4.0。包含 QM9s 和 MR-TADF 下游 LMDB 的是此包。
+另一个 Inverse Design 记录 21429926 的 4.69 GB 包也已独立校验，但内容为
+微调数据、推理资源及模型，不含 QM9s train/valid LMDB，不能替代当前包。
+
+主要测试数据的获取入口现在分别为 `data/mim_flow_download.json` 和
+`data/ocelot_download.json`，配合 `scripts/manage_data.py --manifest ... --download`。
+OCELOT 处理、固定划分、QM9s 适配及来源哈希均保留。其他 figshare/DB_chromophore
+资源继续按用户要求暂缓清洗，不阻塞这两套优先数据的实验。

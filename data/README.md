@@ -11,9 +11,14 @@ match but source/license provenance is incomplete. After provenance is populated
 only after verification. It never automatically extracts unverified archives.
 The remote MIM-Flow archive has completed its download and passed full gzip CRC
 verification. `mim_flow_archive.json` records its SHA-256 and extracted downstream
-LMDB files. A local checksum establishes artifact identity, not a match to an
-independently published checksum. Target meaning, units and dataset license remain
-separate checks.
+LMDB files. The original 3,248,316,986-byte archive now matches the published MD5 of
+[Forward Data and Model, Zenodo 21887607](https://zenodo.org/records/21887607),
+licensed CC BY 4.0. Its raw API metadata is in `mim_flow_publisher_record.json`.
+The 4.69 GB Inverse Design package, record 21429926, is a different artifact and
+does not contain the QM9s train/valid LMDB files. Spectrum labels are not
+HOMO/LUMO labels. The publisher describes its MR-TADF spectra as ORCA 6.0 ESD
+Franck-Condon spectra based on B3LYP-D3BJ/def2-SVP ground and TDA-B3LYP-D3BJ/def2-SVP
+excited geometries; this does not make them OCELOT LC-wPBE labels.
 
 ## Selected test data
 
@@ -45,3 +50,18 @@ python scripts/inspect_mim_lmdb.py /path/to/new_output /path/to/new_output/lmdb_
 The first tool verifies integrity and extracts only downstream data. The second
 requires LMDB, NumPy and RDKit and uses a restricted NumPy-only pickle reader.
 See `test_data_plan.md` for task selection and outstanding compatibility checks.
+
+Acquire the original forward-data archive using its SHA-256-pinned manifest:
+
+```bash
+python scripts/manage_data.py --manifest data/mim_flow_download.json --download
+python scripts/inspect_mim_archive.py dataset/raw/mim_flow_forward_21887607/data.tar.gz dataset/processed/mim_forward
+```
+
+The existing remote extraction has matching per-file hashes in
+`mim_flow_archive.json`; there is no need to download it again for current runs.
+
+For OCELOT, use `python scripts/manage_data.py --manifest data/ocelot_download.json
+--download`. Its URL serves a ZIP, not a CSV: the downloader verifies the release
+ZIP hash, extracts only the named CSV/readme members, then verifies each member
+hash. The shared archive is downloaded once.

@@ -1,0 +1,47 @@
+{
+  "id": 21887607,
+  "doi": "10.5281/zenodo.21887607",
+  "metadata": {
+    "title": "MIM-Flow Forward Data and Model",
+    "doi": "10.5281/zenodo.21887607",
+    "publication_date": "2026-08-11",
+    "description": "<p>This record provides the trained spectrum-prediction models and the associated high-precision quantum-chemical dataset developed for MIM-Flow. The dataset contains vibronically resolved emission spectra of MR-TADF molecules generated in this work.</p>\n<p>The spectra were calculated using the ESD module in ORCA 6.0 within the Franck&ndash;Condon approximation. Ground- and first-excited-state equilibrium geometries were obtained at the B3LYP-D3BJ/def2-SVP and TDA-B3LYP-D3BJ/def2-SVP levels, respectively. The corresponding vibrational information and adiabatic \\(S_1-S_0\\) energy differences were used to construct the vibronic emission spectra. Vibrational modes below 50 cm\\(^{-1}\\) were excluded, with the remaining computational settings described in the https://chemrxiv.org/doi/abs/10.26434/chemrxiv.15005860/v1. Generating such a high-precision vibronically resolved emission spectrum typically requires approximately 500-700 CPU core-hours per molecule, as the computational cost varies with molecular size and convergence behavior.&nbsp;</p>\n<p>This record also contains the trained model checkpoints used for spectrum prediction and reward evaluation in MIM-Flow. The models and high-precision quantum-chemical data are released to support reproduction of the reported results and further development of data-driven methods for vibronically resolved excited-state spectra and functional molecular design.&nbsp;</p>",
+    "access_right": "open",
+    "creators": [
+      {
+        "name": "Cheng, Zheng",
+        "affiliation": null
+      }
+    ],
+    "resource_type": {
+      "title": "Dataset",
+      "type": "dataset"
+    },
+    "license": {
+      "id": "cc-by-4.0"
+    },
+    "relations": {
+      "version": [
+        {
+          "index": 0,
+          "is_last": true,
+          "parent": {
+            "pid_type": "recid",
+            "pid_value": "21887606"
+          }
+        }
+      ]
+    }
+  },
+  "files": [
+    {
+      "id": "d4338fd5-06fd-406d-82f5-1e5577382711",
+      "key": "data.tar.gz",
+      "size": 3248316986,
+      "checksum": "md5:df6cc75c2e575f3f25348ad83d3ca551",
+      "links": {
+        "self": "https://zenodo.org/api/records/21887607/files/data.tar.gz/content"
+      }
+    }
+  ]
+}

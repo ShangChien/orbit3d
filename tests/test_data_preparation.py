@@ -77,3 +77,32 @@ def test_conflicting_duplicates_quarantined_and_scaffolds_stay_together(tmp_path
     frame = pd.concat(parts)
     assert len(frame) == 3
     assert frame.groupby("scaffold").partition.nunique().max() == 1
+
+
+def test_dataset_acquisition_extracts_verified_zip_members_once(tmp_path, monkeypatch):
+    import hashlib
+    import shutil
+    import zipfile
+    from scripts.manage_data import acquire
+    archive = tmp_path / 'official.zip'
+    payloads = {'release/data.csv': b'smiles,value\nC,1\n', 'release/readme.txt': b'eV'}
+    with zipfile.ZipFile(archive, 'w') as stream:
+        for name, content in payloads.items():
+            stream.writestr(name, content)
+    calls = []
+    def download(url, dest):
+        calls.append(url)
+        shutil.copyfile(archive, dest)
+    monkeypatch.setattr('urllib.request.urlretrieve', download)
+    for member, payload in payloads.items():
+        row = {'source_url': 'https://example.org/release.zip', 'archive_member': member,
+               'archive_sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
+               'sha256': hashlib.sha256(payload).hexdigest()}
+        dest = tmp_path / 'data' / Path(member).name
+        acquire(row, dest, tmp_path / 'cache')
+        assert dest.read_bytes() == payload
+    assert calls == ['https://example.org/release.zip']
+    row['sha256'] = '0' * 64
+    with pytest.raises(ValueError, match='Checksum mismatch'):
+        acquire(row, tmp_path / 'wrong.txt', tmp_path / 'cache')
+    assert not (tmp_path / 'wrong.txt').exists()

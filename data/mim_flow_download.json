@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "dataset/raw/mim_flow_forward_21887607/data.tar.gz",
+      "bytes": 3248316986,
+      "sha256": "ded9b275805df1976b3c8e666495f723a4d34c8440890b9f535ee52fc22ca43d",
+      "source_url": "https://zenodo.org/api/records/21887607/files/data.tar.gz/content",
+      "license": "CC-BY-4.0",
+      "publisher_md5": "df6cc75c2e575f3f25348ad83d3ca551",
+      "record_url": "https://zenodo.org/records/21887607",
+      "status": "remote_original_archive_matches_publisher_md5_and_bytes",
+      "test_priority": "primary"
+    }
+  ]
+}

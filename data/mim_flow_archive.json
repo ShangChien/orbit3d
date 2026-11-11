@@ -2,7 +2,7 @@
   "archive_bytes": 3248316986,
   "archive_sha256": "ded9b275805df1976b3c8e666495f723a4d34c8440890b9f535ee52fc22ca43d",
   "gzip_crc_verified": true,
-  "publisher_checksum_verified": false,
+  "publisher_checksum_verified": true,
   "members": [
     {
       "name": "._data",
@@ -253,7 +253,15 @@
     "file_url": "https://zenodo.org/records/21429926/files/data.tar.gz?download=1",
     "published_md5": "b870a41afb2b7cabdcd3e352746ae021",
     "local_md5": "df6cc75c2e575f3f25348ad83d3ca551",
-    "status": "different_artifact_or_release; not asserted as exact origin",
-    "checked_on": "2026-11-11"
-  }
+    "status": "Different inverse-design resource package, independently downloaded and verified; contains no QM9s train/valid LMDB",
+    "checked_on": "2026-11-11",
+    "downloaded_sha256": "7a4e44fcaf53e054f42a2f21fb7b9e401c29c3c55f64d3d260252dcc749dfc60",
+    "publisher_checksum_verified": true
+  },
+  "source_url": "https://zenodo.org/api/records/21887607/files/data.tar.gz/content",
+  "record_url": "https://zenodo.org/records/21887607",
+  "publisher_md5": "df6cc75c2e575f3f25348ad83d3ca551",
+  "local_md5": "df6cc75c2e575f3f25348ad83d3ca551",
+  "license": "CC-BY-4.0",
+  "verified_on": "2026-11-12"
 }

@@ -73,7 +73,8 @@
       "status": "official_zip_byte_verified_2026-11-11",
       "test_priority": "primary",
       "terms_url": "https://oscar.as.uky.edu/terms/",
-      "archive_sha256": "777bd8b8f0f02a6d95d50a17823649920c732023d225c92c8901573367550e16"
+      "archive_sha256": "777bd8b8f0f02a6d95d50a17823649920c732023d225c92c8901573367550e16",
+      "archive_member": "ocelot_chromophore_v1/ocelot_chromophore_v1.csv"
     },
     {
       "path": "dataset/raw/ocelot_chromophore_v1/readme.txt",
@@ -84,10 +85,11 @@
       "status": "official_zip_byte_verified_2026-11-11",
       "test_priority": "primary",
       "terms_url": "https://oscar.as.uky.edu/terms/",
-      "archive_sha256": "777bd8b8f0f02a6d95d50a17823649920c732023d225c92c8901573367550e16"
+      "archive_sha256": "777bd8b8f0f02a6d95d50a17823649920c732023d225c92c8901573367550e16",
+      "archive_member": "ocelot_chromophore_v1/readme.txt"
     }
   ],
   "user_reported_origin": "User reports the three local datasets were downloaded from official figshare / zindo sources; exact release URLs are not yet confirmed.",
-  "remote_mim_flow": "Downloaded archive verified for gzip integrity on 2026-11-11; exact publisher checksum and dataset license remain unconfirmed. See mim_flow_archive.json.",
+  "remote_mim_flow": "Original archive matches Forward Data record 21887607, published MD5 and byte size. CC-BY-4.0; see mim_flow_archive.json and mim_flow_download.json. Inverse Design record 21429926 is a separate resource.",
   "ocelot_verified_contents": "Official ZIP contains only the CSV and readme.txt, both byte-identical to local files. No omega, coordinates or raw Gaussian outputs."
 }
