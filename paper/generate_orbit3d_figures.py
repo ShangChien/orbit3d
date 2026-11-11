@@ -437,6 +437,75 @@ def build_fig7():
     save_svg_and_png("\n".join(parts), "fig7_hyff_vs_dpa4_pareto_and_spin")
 
 
+def build_fig8():
+    W, H = 900, 900
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">',
+        f'<rect width="{W}" height="{H}" fill="#ffffff"/>',
+        f'<text x="{W/2}" y="30" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">Figure 8: Optoelectronic Frameworks (OCNet, OSCFF, MIM-Flow, O2-GEN) vs. ORBIT-3D Benchmark</text>'
+    ]
+
+    # Top-Left: Panel A — Inverse Design Paradigms (O2-GEN, MIM-Flow vs. ORBIT-3D)
+    inv_cats = [
+        "O2-GEN\n(K=4)",
+        "O2-GEN\n(K=16)",
+        "MIM-Flow\n(SubTB)",
+        "MIM-Flow\n+Stage 5",
+        "ORBIT-3D\n(HyFF)",
+        "ORBIT-3D\n(DPA-4)"
+    ]
+    ser_a = [
+        ("Sparse Narrow Pareto Hit (2.14% Prior)", [31.3, 60.4, 79.2, 97.9, 97.9, 100.0], "#8b5cf6", "#4c1d95"),
+        ("Low Quantum Strain (max|F|<=0.5 eV/A)", [35.4, 39.6, 47.9, 95.8, 95.8, 95.8], "#10b981", "#064e3b"),
+    ]
+    parts.append(draw_grouped_bar_panel(68, 75, 360, 320, "(a) Inverse Design & Sparse Pareto Navigation", "Success / Yield Rate (%)", inv_cats, ser_a, 0.0, 138.0, [0, 20, 40, 60, 80, 100], fmt="{:.1f}%"))
+
+    # Top-Right: Panel B — Force-Field Evolution (OSCFF JCIM 2025 vs DPA-4 OMol25 vs HyFF OMol25 vs ORBIT-3D Relay)
+    ff_cats = [
+        "OSCFF\n(JCIM 2025)",
+        "DPA-4 Mini\n(OMol25+ZBL)",
+        "HyFF mod.\n(OMol25 Q,M)",
+        "ORBIT Relay\n(DPA4+HyFF)"
+    ]
+    ser_b = [
+        ("Conjugated Torsion Fidelity (100 - MAE meV)", [85.8, 90.2, 90.6, 90.9], "#0ea5e9", "#0c4a6e"),
+        ("Short-Range 0.65 A Steric Clash Recovery (%)", [18.8, 93.8, 31.3, 95.8], "#f59e0b", "#78350f"),
+        ("Ir(III) T1-S0 Spin Splitting Accuracy (%)", [0.0, 0.0, 94.4, 94.6], "#ec4899", "#831843"),
+    ]
+    parts.append(draw_grouped_bar_panel(508, 75, 360, 320, "(b) Force Fields: OSCFF vs. DPA-4 & HyFF", "Capability / Recovery Score (%)", ff_cats, ser_b, 0.0, 142.0, [0, 20, 40, 60, 80, 100], fmt="{:.1f}%"))
+
+    # Bottom-Left: Panel C — Forward Virtual Characterization Oracles (OCNet npj Comput. Mater. 2025 vs Pluggable Oracles)
+    ora_cats = [
+        "OCNet\n(npj 2025)",
+        "Uni-Mol\n(Mode A)",
+        "DPA-4 SeZM\n(Mode B)",
+        "HyFF State\n(Mode C)",
+        "Uni-QSAR\n(Mode D)"
+    ]
+    ser_c = [
+        ("Conjugated Optoelectronic Gap R (x100%)", [97.4, 96.8, 95.4, 96.1, 97.8], "#6366f1", "#312e81"),
+        ("Orbital Precision Score (100 - MAE meV)", [58.5, 53.2, 47.6, 50.9, 60.8], "#14b8a6", "#134e4a"),
+    ]
+    parts.append(draw_grouped_bar_panel(68, 490, 360, 320, "(c) Forward Virtual Characterization Oracles", "Correlation / Precision Score (%)", ora_cats, ser_c, 0.0, 132.0, [0, 20, 40, 60, 80, 100], fmt="{:.1f}%"))
+
+    # Bottom-Right: Panel D — Residual Quantum Force Strain & Closed-Shell Validity Across Optoelectronic Frameworks
+    str_cats = [
+        "O2-GEN\n(JACS Au)",
+        "MIM-Flow\n(SubTB)",
+        "MIM-Flow\n+Stage 5",
+        "ORBIT-3D\n(HyFF)",
+        "ORBIT-3D\n(DPA-4)"
+    ]
+    ser_d = [
+        ("Mean Max Force on DPA4-Plus Referee (eV/A)", [0.782, 0.642, 0.208, 0.214, 0.204], "#f43f5e", "#881337"),
+        ("End-to-End Per-Molecule Latency (s/mol)", [0.280, 0.540, 0.690, 0.620, 1.010], "#0284c7", "#075985"),
+    ]
+    parts.append(draw_grouped_bar_panel(508, 490, 360, 320, "(d) Quantum Force Strain (eV/A) & Latency (s/mol)", "Force (eV/A) or Latency (s/mol)", str_cats, ser_d, 0.0, 1.35, [0.0, 0.2, 0.4, 0.6, 0.8, 1.0], fmt="{:.2f}"))
+
+    parts.append("</svg>")
+    save_svg_and_png("\n".join(parts), "fig8_optoelectronic_paradigms_and_forcefields")
+
+
 if __name__ == "__main__":
     build_fig1()
     build_fig2()
@@ -445,3 +514,4 @@ if __name__ == "__main__":
     build_fig5()
     build_fig6()
     build_fig7()
+    build_fig8()

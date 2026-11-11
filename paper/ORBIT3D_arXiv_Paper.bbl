@@ -1,4 +1,4 @@
-\begin{thebibliography}{10}
+\begin{thebibliography}{16}
 
 \bibitem{barroso2024omat24}
 Luis Barroso-Luque, Muhammed Shuaibi, Xiang Fu, Brandon~M Wood, Misko Dzamba, Meng Gao, Ammar Rizvi, C~Lawrence Zitnick, and Zachary~W Ulissi.
@@ -41,6 +41,11 @@ Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zh
 \newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open language models.
 \newblock {\em arXiv preprint arXiv:2402.03300}, 2024.
 
+\bibitem{wang2026mimflow}
+Yecheng Wang, Guojiang Zhao, Shangqian Chen, Y~Ding, G~Zhou, Zhifeng Gao, Zifeng Zhao, Zheng Cheng, et~al.
+\newblock {MIM-Flow}: An integrated forward-inverse framework for navigating sparse {Pareto}-optimal regions in functional conjugated molecules.
+\newblock {\em ChemRxiv preprint}, 2026.
+
 \bibitem{zhang2024dpa3}
 Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, Yiming Du, Han Wang, and Linfeng Zhang.
 \newblock {DPA-3}: A graph attention model for universal interatomic potentials across the periodic table.
@@ -50,6 +55,21 @@ Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, 
 Duo Zhang, Xinzijian Liu, Xiangyu Zhang, Chengqian Zhang, Chun Cai, Hangrui Bi, Yiming Du, Han Wang, and Linfeng Zhang.
 \newblock {DPA-4}: Large atomic model as a multi-task foundation potential for organic molecules and materials ({OMol25}).
 \newblock {\em DP Technology and AISquare Technical Report}, 2025.
+
+\bibitem{zhao2025ocnet}
+Guojiang Zhao, Qi~Ou, Zifeng Zhao, Shangqian Chen, H~Lin, X~Ji, Z~Wang, Hongshuai Wang, H~Cai, Lirong Wu, Weinan E, Zhifeng Gao, et~al.
+\newblock Virtual characterization via knowledge-enhanced representation learning: from organic conjugated molecules to devices.
+\newblock {\em npj Computational Materials}, 2025.
+
+\bibitem{zhao2025oscff}
+Guojiang Zhao, Taiping Hu, Hongshuai Wang, Lirong Wu, Shuqi Lu, FengTianCi Yang, Shangqian Chen, Zhifeng Gao, Xinyan Wang, Zheng Cheng, et~al.
+\newblock Data-driven parametrization of all-atom force fields for organic semiconductors.
+\newblock {\em Journal of Chemical Information and Modeling}, 2025.
+
+\bibitem{zhao2026o2gen}
+Guojiang Zhao, Zheng Cheng, K~Xu, T~Wan, M~Feng, Shuqi Lu, Hongshuai Wang, Zhifeng Gao, Qi~Ou, L~Hu, et~al.
+\newblock Fast and flexible {3D} molecule design framework for novel organic optoelectronic materials.
+\newblock {\em JACS Au}, 2026.
 
 \bibitem{zhou2023unimol}
 Gengmo Zhou, Zhifeng Gao, Qiankun Ding, Hang Zheng, Hongteng Xu, Zhewei Wei, Linfeng Zhang, and Guolin Ke.

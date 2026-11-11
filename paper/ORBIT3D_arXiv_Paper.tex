@@ -45,7 +45,16 @@ y_k(\mathbf{M}) \in [a_k, b_k], \quad \forall k \in \{1, \dots, K\}.
 \end{equation}
 Mainstream continuous 3D Flow Matching models (\textbf{PropMolFlow}~\cite{campbell2024propmolflow}) guide ODE trajectories in $\mathbb{R}^{N \times 3}$ by projecting property gradients $\mathbf{g}_{\text{prop}}(\mathbf{X}_t)$ orthogonal to interatomic forces $\mathbf{F}_{\text{MLIP}}(\mathbf{X}_t) = -\nabla_{\mathbf{X}_t} E_{\text{MLIP}}(\mathbf{X}_t)$. However, across intermediate noisy flow states $t \in (0.1, 0.85)$, $\mathbf{g}_{\text{prop}}$ and $\mathbf{F}_{\text{MLIP}}$ conflict in \textbf{52.5\%} of steps ($\overline{\cos} = -0.156$), leading to broken valencies ($4.17\%\text{--}8.33\%$ unstable molecules) and preventing integration with non-differentiable multi-modal ensemble Oracles such as \textbf{Uni-QSAR}.
 
-We resolve these bottlenecks with \textbf{ORBIT-3D}, which transfers key reinforcement learning and conditioning innovations onto \textbf{Uni-3DAR}~\cite{lu2025uni3dar}, unifying \textbf{Uni-QSAR}, \textbf{Uni-Mol}~\cite{zhou2023unimol}, and the \textbf{DPA-4 (OMol25)} foundation potential series~\cite{zhang2025dpa4}.
+We resolve these bottlenecks with \textbf{ORBIT-3D}, which transfers key reinforcement learning and conditioning innovations onto \textbf{Uni-3DAR}~\cite{lu2025uni3dar}, unifying \textbf{Uni-QSAR}, \textbf{Uni-Mol}~\cite{zhou2023unimol}, \textbf{DPA-4 (OMol25)}~\cite{zhang2025dpa4}, and charge/spin-conditioned \textbf{HyFF (OMol25)}~\cite{hyra2026hyff}.
+
+\subsection{Evolution of Optoelectronic Representation, Force Fields, and Inverse Design: From \texttt{OCNet}, \texttt{OSCFF}, \texttt{O2-GEN}, and \texttt{MIM-Flow} to \textbf{ORBIT-3D}}
+Our prior research established four foundational pillars for organic optoelectronic discovery that motivate and complement \textbf{ORBIT-3D}:
+\begin{enumerate}
+    \item \textbf{Forward Multi-Scale Virtual Characterization (\texttt{OCNet}, \emph{npj Comput.\ Mater.}\ 2025~\cite{zhao2025ocnet})}: Pretrained on $>10\text{M}$ conjugated molecules and dimers with tight-binding electronic descriptors, \textbf{OCNet} bridges molecular geometry to dimer transfer integrals ($R^2 = 0.942$), carrier mobility, and device PCE, serving as a domain-specific optoelectronic Oracle plugin for \textbf{ORBIT-3D}.
+    \item \textbf{Data-Driven Classical Conjugated Force Fields (\texttt{OSCFF}, \emph{JCIM} 2025~\cite{zhao2025oscff})}: Parameterized on $\sim 56,000$ fragment torsion profiles and $\sim 472,000$ neural-network RESP-annotated geometries, \textbf{OSCFF} delivers ultra-fast ($0.18\text{ ms/mol}$) classical MD for fixed-topology organic semiconductors, but requires pre-assigned covalent bond graphs, covers only 9 main-group elements (lacking $5d$ $\text{Ir(III)}$), diverges at short-range steric clashes ($18.8\%$ recovery at $0.65\text{ \AA}$), and is restricted to closed-shell singlet ground states ($Q=0, S_0$). \textbf{ORBIT-3D} overcomes these limits via topology-free ZBL-bridged \textbf{DPA-4}~\cite{zhang2025dpa4,ziegler1985zbl} and charge/spin-conditioned \textbf{HyFF}~\cite{hyra2026hyff} across 83 elements.
+    \item \textbf{Decoupled 3D Optoelectronic Generation \& Screening (\texttt{O2-GEN}, \emph{JACS Au} 2026~\cite{zhao2026o2gen})}: \textbf{O2-GEN} pairs a 10M-molecule 3D pretrained backbone (Global \emph{de novo} and Local scaffold modes) with a post-hoc DFT property selector, achieving high structural validity ($97.9\%$) but low hit efficiency ($31.3\%$ at $K=4$) and unrelaxed forces ($0.782\text{ eV/\AA}$) on ultra-sparse ($2.14\%$ prior) Pareto intervals due to the absence of closed-loop policy alignment.
+    \item \textbf{Combinatorial Moiety-Assembly GFlowNets (\texttt{MIM-Flow}, 2026~\cite{wang2026mimflow})}: \textbf{MIM-Flow} (Moiety-in-Molecule FlowNet) optimizes Sub-Trajectory Balance (SubTB) over discrete `(moiety, site, assembly)` actions to navigate sparse Pareto regions ($79.2\%$ hit rate, $100\%$ fragment validity), but is bounded by a predefined moiety vocabulary and retains inter-moiety dihedral junction strain ($0.642\text{ eV/\AA}$) prior to continuous 3D quantum relaxation.
+\end{enumerate}
 
 \section{Methodology}
 
@@ -308,6 +317,37 @@ To compare dense ZBL-bridged $SO(2)$ message passing (\textbf{DPA-4}~\cite{zhang
 \end{table}
 
 Accordingly, the production \textbf{ORBIT-3D} container image bundles the vendored minimal \texttt{hyff} runtime ($1.4\text{ MB}$ in \texttt{src/orbit3d/compat/hyff}) together with the three sweet-spot \textbf{HyFF} tiers (\texttt{presto} $8.89\text{ MB}$, \texttt{vivace} $25.50\text{ MB}$, \texttt{moderato} $132.89\text{ MB} = 167.28\text{ MB}$), the full 5-scale \textbf{DPA-4} series ($62.86\text{ MB}$), and FP16 \textbf{Uni-Mol} ($181.68\text{ MB}$), totaling $411.82\text{ MB}$ of built-in weights (while mounting \texttt{HyFF-andante} externally on demand and excluding $4.58\text{ GB}$ \texttt{HyFF-largo}).
+
+\subsection{Comparative Benchmark Against Optoelectronic Frameworks: \texttt{OCNet}, \texttt{OSCFF}, \texttt{O2-GEN}, and \texttt{MIM-Flow}}
+Figure~\ref{fig:opto_paradigms} and Table~\ref{tab:opto_paradigms} benchmark \textbf{ORBIT-3D} against \textbf{OCNet}~\cite{zhao2025ocnet}, \textbf{OSCFF}~\cite{zhao2025oscff}, \textbf{O2-GEN}~\cite{zhao2026o2gen}, and \textbf{MIM-Flow}~\cite{wang2026mimflow} across conjugated torsion barriers, $0.65\text{ \AA}$ steric clash recovery, $\text{Ir(III)}$ $T_1-S_0$ spin splitting, and inverse design on an ultra-sparse 3-property Pareto window ($\Delta\varepsilon_{\text{gap}} \in [0.21, 0.235]\text{ Ha} \cap \varepsilon_{\text{HOMO}} \in [-0.238, -0.220]\text{ Ha} \cap \varepsilon_{\text{LUMO}} \in [0.012, 0.032]\text{ Ha}$, $2.14\%$ prior coverage). Appending \textbf{ORBIT-3D Stage 5} tangent-projected relaxation onto \textbf{MIM-Flow} boosts its sparse Pareto hit rate from $79.2\%$ to \textbf{97.9\%} while reducing inter-moiety junction force from $0.642$ to \textbf{$0.208\text{ eV/\AA}$}, whereas full \textbf{ORBIT-3D} achieves \textbf{97.9\%--100.0\%} hit rate and \textbf{100.0\%} closed-shell stability across unrestricted \emph{de novo} 3D topologies.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{figures/fig8_optoelectronic_paradigms_and_forcefields.png}
+    \caption{Head-to-head optoelectronic benchmark comparing \textbf{ORBIT-3D} against \textbf{O2-GEN}~\cite{zhao2026o2gen}, \textbf{MIM-Flow}~\cite{wang2026mimflow}, \textbf{OSCFF}~\cite{zhao2025oscff}, and \textbf{OCNet}~\cite{zhao2025ocnet} across (a) sparse Pareto navigation \& low-strain yield, (b) force-field capabilities, (c) forward virtual characterization Oracles, and (d) residual quantum force strain vs.\ latency.}
+    \label{fig:opto_paradigms}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of optoelectronic inverse design frameworks across OOD Gap, Joint 3-Property OLED, and Ultra-Sparse Narrow Pareto Frontier ($2.14\%$ prior, $N=48$ molecules).}
+\label{tab:opto_paradigms}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llcccccccc}
+\toprule
+\textbf{Framework / Paradigm} & \textbf{Generative Space \& Alignment} & \textbf{\emph{De Novo}?} & \textbf{Closed-Shell} & \textbf{OOD Gap Hit} & \textbf{Joint OLED Hit} & \textbf{Sparse Pareto Hit ($2.14\%$)} & \textbf{\texttt{DPA4-Plus} Force (eV/\AA)} & \textbf{Low-Strain ($\le 0.5$)} & \textbf{Latency (s/mol)} \\
+\midrule
+\texttt{O2-GEN} ($K=4$)~\cite{zhao2026o2gen} & 3D Global/Local + Post-Hoc Selector ($K=4$) & Yes & 97.9\% & 52.1\% & 43.8\% & 31.3\% & 0.782 & 35.4\% & \textbf{0.28 s} \\
+\texttt{O2-GEN} ($K=16$)~\cite{zhao2026o2gen} & High-Budget Post-Hoc Selector ($K=16$) & Yes & 97.9\% & 77.1\% & 68.8\% & 60.4\% & 0.745 & 39.6\% & 0.94 s \\
+\texttt{MIM-Flow} (SubTB)~\cite{wang2026mimflow} & Discrete Moiety/Site Graph + SubTB GFlowNet & No & \textbf{100.0\%} & 87.5\% & 89.6\% & 79.2\% & 0.642 & 47.9\% & 0.54 s \\
+\textbf{\texttt{MIM-Flow} + ORBIT Stage 5} & SubTB GFlowNet + Stage 5 \texttt{HyFF/DPA-4} Relax & No & \textbf{100.0\%} & \textbf{97.9\%} & \textbf{100.0\%} & \textbf{97.9\%} & \textbf{0.208} & \textbf{95.8\%} & 0.69 s \\
+\texttt{PropMolFlow + DPA4-Mini}~\cite{campbell2024propmolflow} & Continuous 3D Flow + In-ODE Orthogonal Proj. & Yes & 93.8\% & \textbf{100.0\%} & \textbf{100.0\%} & 95.8\% & 0.206 & \textbf{95.8\%} & \textbf{0.16 s} \\
+\textbf{ORBIT-3D Full (\texttt{HyFF-moderato})} & All-Atom 3D Octree AR + GRPO + Stage 5 \texttt{HyFF} & \textbf{Yes} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{97.9\%} & 0.214 & \textbf{95.8\%} & \textbf{0.62 s} \\
+\textbf{ORBIT-3D Full (\texttt{DPA4-Mini/Plus})} & All-Atom 3D Octree AR + GRPO + Stage 5 \texttt{DPA-4} & \textbf{Yes} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{0.204} & \textbf{95.8\%} & 1.01 s \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
 \section{Conclusion}
 \textbf{ORBIT-3D} establishes a high-cohesion, low-coupling, container-ready paradigm for computational quantum-chemical 3D molecular design. By replacing conflict-prone continuous ODE trajectory guidance with discrete 3D octree autoregression, online physics- and uncertainty-gated GRPO, pluggable multi-modal Oracles (\textbf{Uni-Mol}, \textbf{DPA-4}, \textbf{HyFF}, \textbf{Uni-QSAR}), and terminal tangent-projected relaxation across dual ZBL-bridged (\textbf{DPA-4}) and charge/spin-aware (\textbf{HyFF}) quantum force fields, \textbf{ORBIT-3D} achieves \textbf{100.0\% closed-shell molecular stability}, \textbf{93.75\%--100.0\% interval hit rates}, \textbf{97.7--113.0 atoms/ms relaxation throughput}, and \textbf{zero-shot $\text{Ir(III)}$ $T_1 - S_0$ spin-splitting prediction ($0.171\text{ eV}$ MAE, $r = 0.720$)}.

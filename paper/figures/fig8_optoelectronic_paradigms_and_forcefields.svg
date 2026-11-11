@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+<rect width="900" height="900" fill="#ffffff"/>
+<text x="450.0" y="30" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">Figure 8: Optoelectronic Frameworks (OCNet, OSCFF, MIM-Flow, O2-GEN) vs. ORBIT-3D Benchmark</text>
+<text x="248.0" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(a) Inverse Design &amp; Sparse Pareto Navigation</text>
+<text transform="translate(26.0,235.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Success / Yield Rate (%)</text>
+<line x1="68" y1="395.0" x2="428" y2="395.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="399.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="68" y1="348.6" x2="428" y2="348.6" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="352.6" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">20</text>
+<line x1="68" y1="302.2" x2="428" y2="302.2" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="306.2" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">40</text>
+<line x1="68" y1="255.9" x2="428" y2="255.9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="259.9" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">60</text>
+<line x1="68" y1="209.5" x2="428" y2="209.5" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="213.5" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">80</text>
+<line x1="68" y1="163.1" x2="428" y2="163.1" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="167.1" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">100</text>
+<line x1="68" y1="75" x2="68" y2="395" stroke="#334155" stroke-width="1.5"/>
+<line x1="68" y1="395" x2="428" y2="395" stroke="#334155" stroke-width="1.5"/>
+<text x="98.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">O2-GEN</text>
+<text x="98.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(K=4)</text>
+<rect x="76.4" y="322.4" width="18.6" height="72.6" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="85.7" y="317.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">31.3%</text>
+<rect x="98.0" y="312.9" width="18.6" height="82.1" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="107.3" y="307.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">35.4%</text>
+<text x="158.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">O2-GEN</text>
+<text x="158.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(K=16)</text>
+<rect x="136.4" y="254.9" width="18.6" height="140.1" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="145.7" y="249.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">60.4%</text>
+<rect x="158.0" y="303.2" width="18.6" height="91.8" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="167.3" y="298.2" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">39.6%</text>
+<text x="218.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">MIM-Flow</text>
+<text x="218.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(SubTB)</text>
+<rect x="196.4" y="211.3" width="18.6" height="183.7" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="205.7" y="206.3" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">79.2%</text>
+<rect x="218.0" y="283.9" width="18.6" height="111.1" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="227.3" y="278.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">47.9%</text>
+<text x="278.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">MIM-Flow</text>
+<text x="278.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">+Stage 5</text>
+<rect x="256.4" y="168.0" width="18.6" height="227.0" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="265.7" y="163.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.9%</text>
+<rect x="278.0" y="172.9" width="18.6" height="222.1" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="287.3" y="167.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.8%</text>
+<text x="338.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">ORBIT-3D</text>
+<text x="338.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(HyFF)</text>
+<rect x="316.4" y="168.0" width="18.6" height="227.0" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="325.7" y="163.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.9%</text>
+<rect x="338.0" y="172.9" width="18.6" height="222.1" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="347.3" y="167.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.8%</text>
+<text x="398.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">ORBIT-3D</text>
+<text x="398.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(DPA-4)</text>
+<rect x="376.4" y="163.1" width="18.6" height="231.9" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1.2" rx="2"/>
+<text x="385.7" y="158.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">100.0%</text>
+<rect x="398.0" y="172.9" width="18.6" height="222.1" fill="#10b981" stroke="#064e3b" stroke-width="1.2" rx="2"/>
+<text x="407.3" y="167.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.8%</text>
+<rect x="78" y="83" width="340.0" height="42" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="86" y="87" width="11" height="9" fill="#8b5cf6" stroke="#4c1d95" stroke-width="1"/>
+<text x="102" y="95" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Sparse Narrow Pareto Hit (2.14% Prior)</text>
+<rect x="86" y="104" width="11" height="9" fill="#10b981" stroke="#064e3b" stroke-width="1"/>
+<text x="102" y="112" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Low Quantum Strain (max|F|&lt;=0.5 eV/A)</text>
+<text x="688.0" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(b) Force Fields: OSCFF vs. DPA-4 &amp; HyFF</text>
+<text transform="translate(466.0,235.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Capability / Recovery Score (%)</text>
+<line x1="508" y1="395.0" x2="868" y2="395.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="399.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="508" y1="349.9" x2="868" y2="349.9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="353.9" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">20</text>
+<line x1="508" y1="304.9" x2="868" y2="304.9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="308.9" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">40</text>
+<line x1="508" y1="259.8" x2="868" y2="259.8" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="263.8" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">60</text>
+<line x1="508" y1="214.7" x2="868" y2="214.7" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="218.7" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">80</text>
+<line x1="508" y1="169.6" x2="868" y2="169.6" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="173.6" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">100</text>
+<line x1="508" y1="75" x2="508" y2="395" stroke="#334155" stroke-width="1.5"/>
+<line x1="508" y1="395" x2="868" y2="395" stroke="#334155" stroke-width="1.5"/>
+<text x="553.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">OSCFF</text>
+<text x="553.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(JCIM 2025)</text>
+<rect x="520.6" y="201.6" width="18.6" height="193.4" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="529.9" y="196.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">85.8%</text>
+<rect x="542.2" y="352.6" width="18.6" height="42.4" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="551.5" y="347.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">18.8%</text>
+<rect x="563.8" y="395.0" width="18.6" height="0.0" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="573.1" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<text x="643.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">DPA-4 Mini</text>
+<text x="643.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(OMol25+ZBL)</text>
+<rect x="610.6" y="191.7" width="18.6" height="203.3" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="619.9" y="186.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">90.2%</text>
+<rect x="632.2" y="183.6" width="18.6" height="211.4" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="641.5" y="178.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">93.8%</text>
+<rect x="653.8" y="395.0" width="18.6" height="0.0" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="663.1" y="390.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.0%</text>
+<text x="733.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">HyFF mod.</text>
+<text x="733.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(OMol25 Q,M)</text>
+<rect x="700.6" y="190.8" width="18.6" height="204.2" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="709.9" y="185.8" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">90.6%</text>
+<rect x="722.2" y="324.5" width="18.6" height="70.5" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="731.5" y="319.5" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">31.3%</text>
+<rect x="743.8" y="182.3" width="18.6" height="212.7" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="753.1" y="177.3" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">94.4%</text>
+<text x="823.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">ORBIT Relay</text>
+<text x="823.0" y="426.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(DPA4+HyFF)</text>
+<rect x="790.6" y="190.2" width="18.6" height="204.8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.2" rx="2"/>
+<text x="799.9" y="185.2" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">90.9%</text>
+<rect x="812.2" y="179.1" width="18.6" height="215.9" fill="#f59e0b" stroke="#78350f" stroke-width="1.2" rx="2"/>
+<text x="821.5" y="174.1" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.8%</text>
+<rect x="833.8" y="181.8" width="18.6" height="213.2" fill="#ec4899" stroke="#831843" stroke-width="1.2" rx="2"/>
+<text x="843.1" y="176.8" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">94.6%</text>
+<rect x="518" y="83" width="340.0" height="59" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="526" y="87" width="11" height="9" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1"/>
+<text x="542" y="95" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Conjugated Torsion Fidelity (100 - MAE meV)</text>
+<rect x="526" y="104" width="11" height="9" fill="#f59e0b" stroke="#78350f" stroke-width="1"/>
+<text x="542" y="112" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Short-Range 0.65 A Steric Clash Recovery (%)</text>
+<rect x="526" y="121" width="11" height="9" fill="#ec4899" stroke="#831843" stroke-width="1"/>
+<text x="542" y="129" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Ir(III) T1-S0 Spin Splitting Accuracy (%)</text>
+<text x="248.0" y="476.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(c) Forward Virtual Characterization Oracles</text>
+<text transform="translate(26.0,650.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Correlation / Precision Score (%)</text>
+<line x1="68" y1="810.0" x2="428" y2="810.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="814.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="68" y1="761.5" x2="428" y2="761.5" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="765.5" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">20</text>
+<line x1="68" y1="713.0" x2="428" y2="713.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="717.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">40</text>
+<line x1="68" y1="664.5" x2="428" y2="664.5" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="668.5" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">60</text>
+<line x1="68" y1="616.1" x2="428" y2="616.1" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="620.1" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">80</text>
+<line x1="68" y1="567.6" x2="428" y2="567.6" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="60" y="571.6" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">100</text>
+<line x1="68" y1="490" x2="68" y2="810" stroke="#334155" stroke-width="1.5"/>
+<line x1="68" y1="810" x2="428" y2="810" stroke="#334155" stroke-width="1.5"/>
+<text x="104.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">OCNet</text>
+<text x="104.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(npj 2025)</text>
+<rect x="78.1" y="573.9" width="22.9" height="236.1" fill="#6366f1" stroke="#312e81" stroke-width="1.2" rx="2"/>
+<text x="89.5" y="568.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.4%</text>
+<rect x="104.0" y="668.2" width="22.9" height="141.8" fill="#14b8a6" stroke="#134e4a" stroke-width="1.2" rx="2"/>
+<text x="115.5" y="663.2" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">58.5%</text>
+<text x="176.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Uni-Mol</text>
+<text x="176.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Mode A)</text>
+<rect x="150.1" y="575.3" width="22.9" height="234.7" fill="#6366f1" stroke="#312e81" stroke-width="1.2" rx="2"/>
+<text x="161.5" y="570.3" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.8%</text>
+<rect x="176.0" y="681.0" width="22.9" height="129.0" fill="#14b8a6" stroke="#134e4a" stroke-width="1.2" rx="2"/>
+<text x="187.5" y="676.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">53.2%</text>
+<text x="248.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">DPA-4 SeZM</text>
+<text x="248.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Mode B)</text>
+<rect x="222.1" y="578.7" width="22.9" height="231.3" fill="#6366f1" stroke="#312e81" stroke-width="1.2" rx="2"/>
+<text x="233.5" y="573.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">95.4%</text>
+<rect x="248.0" y="694.6" width="22.9" height="115.4" fill="#14b8a6" stroke="#134e4a" stroke-width="1.2" rx="2"/>
+<text x="259.5" y="689.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">47.6%</text>
+<text x="320.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">HyFF State</text>
+<text x="320.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Mode C)</text>
+<rect x="294.1" y="577.0" width="22.9" height="233.0" fill="#6366f1" stroke="#312e81" stroke-width="1.2" rx="2"/>
+<text x="305.5" y="572.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">96.1%</text>
+<rect x="320.0" y="686.6" width="22.9" height="123.4" fill="#14b8a6" stroke="#134e4a" stroke-width="1.2" rx="2"/>
+<text x="331.5" y="681.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">50.9%</text>
+<text x="392.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">Uni-QSAR</text>
+<text x="392.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(Mode D)</text>
+<rect x="366.1" y="572.9" width="22.9" height="237.1" fill="#6366f1" stroke="#312e81" stroke-width="1.2" rx="2"/>
+<text x="377.5" y="567.9" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">97.8%</text>
+<rect x="392.0" y="662.6" width="22.9" height="147.4" fill="#14b8a6" stroke="#134e4a" stroke-width="1.2" rx="2"/>
+<text x="403.5" y="657.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">60.8%</text>
+<rect x="78" y="498" width="340.0" height="42" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="86" y="502" width="11" height="9" fill="#6366f1" stroke="#312e81" stroke-width="1"/>
+<text x="102" y="510" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Conjugated Optoelectronic Gap R (x100%)</text>
+<rect x="86" y="519" width="11" height="9" fill="#14b8a6" stroke="#134e4a" stroke-width="1"/>
+<text x="102" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Orbital Precision Score (100 - MAE meV)</text>
+<text x="688.0" y="476.0" font-family="Helvetica, Arial, sans-serif" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#0f172a">(d) Quantum Force Strain (eV/A) &amp; Latency (s/mol)</text>
+<text transform="translate(466.0,650.0) rotate(-90)" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1e293b">Force (eV/A) or Latency (s/mol)</text>
+<line x1="508" y1="810.0" x2="868" y2="810.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="814.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0</text>
+<line x1="508" y1="762.6" x2="868" y2="762.6" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="766.6" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0.2</text>
+<line x1="508" y1="715.2" x2="868" y2="715.2" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="719.2" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0.4</text>
+<line x1="508" y1="667.8" x2="868" y2="667.8" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="671.8" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0.6</text>
+<line x1="508" y1="620.4" x2="868" y2="620.4" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="624.4" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">0.8</text>
+<line x1="508" y1="573.0" x2="868" y2="573.0" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="500" y="577.0" font-family="Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#334155">1</text>
+<line x1="508" y1="490" x2="508" y2="810" stroke="#334155" stroke-width="1.5"/>
+<line x1="508" y1="810" x2="868" y2="810" stroke="#334155" stroke-width="1.5"/>
+<text x="544.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">O2-GEN</text>
+<text x="544.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(JACS Au)</text>
+<rect x="518.1" y="624.6" width="22.9" height="185.4" fill="#f43f5e" stroke="#881337" stroke-width="1.2" rx="2"/>
+<text x="529.5" y="619.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.78</text>
+<rect x="544.0" y="743.6" width="22.9" height="66.4" fill="#0284c7" stroke="#075985" stroke-width="1.2" rx="2"/>
+<text x="555.5" y="738.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.28</text>
+<text x="616.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">MIM-Flow</text>
+<text x="616.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(SubTB)</text>
+<rect x="590.1" y="657.8" width="22.9" height="152.2" fill="#f43f5e" stroke="#881337" stroke-width="1.2" rx="2"/>
+<text x="601.5" y="652.8" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.64</text>
+<rect x="616.0" y="682.0" width="22.9" height="128.0" fill="#0284c7" stroke="#075985" stroke-width="1.2" rx="2"/>
+<text x="627.5" y="677.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.54</text>
+<text x="688.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">MIM-Flow</text>
+<text x="688.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">+Stage 5</text>
+<rect x="662.1" y="760.7" width="22.9" height="49.3" fill="#f43f5e" stroke="#881337" stroke-width="1.2" rx="2"/>
+<text x="673.5" y="755.7" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.21</text>
+<rect x="688.0" y="646.4" width="22.9" height="163.6" fill="#0284c7" stroke="#075985" stroke-width="1.2" rx="2"/>
+<text x="699.5" y="641.4" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.69</text>
+<text x="760.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">ORBIT-3D</text>
+<text x="760.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(HyFF)</text>
+<rect x="734.1" y="759.3" width="22.9" height="50.7" fill="#f43f5e" stroke="#881337" stroke-width="1.2" rx="2"/>
+<text x="745.5" y="754.3" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.21</text>
+<rect x="760.0" y="663.0" width="22.9" height="147.0" fill="#0284c7" stroke="#075985" stroke-width="1.2" rx="2"/>
+<text x="771.5" y="658.0" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.62</text>
+<text x="832.0" y="828.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">ORBIT-3D</text>
+<text x="832.0" y="841.0" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e293b">(DPA-4)</text>
+<rect x="806.1" y="761.6" width="22.9" height="48.4" fill="#f43f5e" stroke="#881337" stroke-width="1.2" rx="2"/>
+<text x="817.5" y="756.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">0.20</text>
+<rect x="832.0" y="570.6" width="22.9" height="239.4" fill="#0284c7" stroke="#075985" stroke-width="1.2" rx="2"/>
+<text x="843.5" y="565.6" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0f172a">1.01</text>
+<rect x="518" y="498" width="340.0" height="42" fill="#ffffff" fill-opacity="0.92" stroke="#e2e8f0" rx="4"/>
+<rect x="526" y="502" width="11" height="9" fill="#f43f5e" stroke="#881337" stroke-width="1"/>
+<text x="542" y="510" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">Mean Max Force on DPA4-Plus Referee (eV/A)</text>
+<rect x="526" y="519" width="11" height="9" fill="#0284c7" stroke="#075985" stroke-width="1"/>
+<text x="542" y="527" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1e293b">End-to-End Per-Molecule Latency (s/mol)</text>
+</svg>
