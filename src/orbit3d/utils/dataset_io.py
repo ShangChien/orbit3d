@@ -94,6 +94,8 @@ def load_3d_molecular_dataset(
 
 def fit_target_scalers(targets_2d: np.ndarray, mode: str = "standard") -> List[Any]:
     """Fits per-column TargetScaler (StandardScaler or PowerTransformer) for K targets."""
+    if mode not in {"standard", "power"}:
+        raise ValueError(f"Unknown target scaling method: {mode}")
     num_tasks = targets_2d.shape[1]
     scalers = []
     for k in range(num_tasks):
@@ -111,36 +113,57 @@ def transform_with_scalers(targets_2d: np.ndarray, scalers: List[Any]) -> np.nda
     return out
 
 
-def inverse_single_scaler_torch(y_col: torch.Tensor, scaler_obj: Any) -> torch.Tensor:
+def inverse_single_scaler_torch(y_col: torch.Tensor, scaler_obj: Any, feature_index=None) -> torch.Tensor:
     """Differentiable PyTorch inverse_transform for a 1D/scalar tensor `y_col`."""
     if scaler_obj is None:
         return y_col
     inner = getattr(scaler_obj, "scaler", scaler_obj)
     if isinstance(inner, list) and len(inner) == 1:
         inner = inner[0]
+    if inner is None:
+        return y_col
+    def parameter(name):
+        value = np.asarray(getattr(inner, name)).reshape(-1)
+        return float(value[feature_index] if feature_index is not None else value.item())
+
     cls_name = type(inner).__name__
-    if "StandardScaler" in cls_name or (hasattr(inner, "mean_") and hasattr(inner, "scale_")):
-        mean = float(np.squeeze(inner.mean_))
-        scale = float(np.squeeze(inner.scale_))
+    if cls_name == "StandardScaler":
+        mean = parameter("mean_") if getattr(inner, 'with_mean', True) else 0.
+        scale = parameter("scale_") if getattr(inner, 'with_std', True) else 1.
         return y_col * scale + mean
+    if cls_name == 'RobustScaler':
+        center = parameter("center_") if inner.with_centering else 0.
+        scale = parameter("scale_") if inner.with_scaling else 1.
+        return y_col * scale + center
+    if cls_name == 'MinMaxScaler':
+        return (y_col - parameter("min_")) / parameter("scale_")
+    if cls_name == 'MaxAbsScaler':
+        return y_col * parameter("scale_")
+    if cls_name == 'FunctionTransformer':
+        inverse = inner.inverse_func
+        if inverse is None:
+            return y_col
+        functions = {np.exp: torch.exp, np.expm1: torch.expm1, np.log: torch.log, np.log1p: torch.log1p}
+        if inverse in functions:
+            return functions[inverse](y_col)
+        raise NotImplementedError('No verified differentiable inverse for this FunctionTransformer')
     if "PowerTransformer" in cls_name and hasattr(inner, "lambdas_"):
-        lmbda = float(np.squeeze(inner.lambdas_))
-        x = y_col
-        if getattr(inner, "standardize", False) and hasattr(inner, "_scaler"):
-            s_mean = float(np.squeeze(inner._scaler.mean_))
-            s_scale = float(np.squeeze(inner._scaler.scale_))
-            x = x * s_scale + s_mean
-        pos_mask = x >= 0
-        if abs(lmbda) < 1e-6:
-            pos_val = torch.exp(torch.clamp(x, max=15.0)) - 1.0
-        else:
-            pos_val = torch.pow(torch.clamp(x * lmbda + 1.0, min=1e-6), 1.0 / lmbda) - 1.0
-        if abs(2.0 - lmbda) < 1e-6:
-            neg_val = 1.0 - torch.exp(torch.clamp(-x, max=15.0))
-        else:
-            neg_val = 1.0 - torch.pow(torch.clamp(-(2.0 - lmbda) * x + 1.0, min=1e-6), 1.0 / (2.0 - lmbda))
-        return torch.where(pos_mask, pos_val, neg_val)
-    return y_col
+        lmbda = parameter("lambdas_")
+        x = inverse_single_scaler_torch(y_col, inner._scaler, feature_index) if inner.standardize else y_col
+        if inner.method == 'box-cox':
+            return torch.exp(x) if lmbda == 0 else torch.exp(torch.log1p(lmbda * x) / lmbda)
+        if inner.method != 'yeo-johnson':
+            raise NotImplementedError(f'Unknown power transform: {inner.method}')
+        positive = x >= 0
+        # Keep inactive branches in their real domain, without clipping a genuinely
+        # invalid selected inverse into an apparently finite physical prediction.
+        xp = torch.where(positive, x, torch.zeros_like(x))
+        xn = torch.where(positive, torch.zeros_like(x), x)
+        pos_value = torch.expm1(xp) if lmbda == 0 else torch.expm1(torch.log1p(lmbda * xp) / lmbda)
+        complement = 2. - lmbda
+        neg_value = -torch.expm1(-xn) if complement == 0 else -torch.expm1(torch.log1p(-complement * xn) / complement)
+        return torch.where(positive, pos_value, neg_value)
+    raise NotImplementedError(f'No verified differentiable inverse for {cls_name}')
 
 
 def inverse_transform_with_scalers(y_norm: np.ndarray, scalers: List[Any]) -> np.ndarray:

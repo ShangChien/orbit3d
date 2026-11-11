@@ -533,53 +533,9 @@ def _register_qsar_pickle_shims():
 # 5. Differentiable & NumPy TargetScaler Inverse-Transform (Single & Multi-Target)
 # ==============================================================================
 def _inverse_single_scaler_torch(y_col: torch.Tensor, scaler_obj) -> torch.Tensor:
-    """Differentiable PyTorch inverse_transform for a 1D/scalar tensor `y_col`."""
-    if scaler_obj is None:
-        return y_col
-    cls_name = scaler_obj.__class__.__name__
-    if cls_name == "StandardScaler":
-        mean = torch.tensor(float(np.squeeze(scaler_obj.mean_)), dtype=y_col.dtype, device=y_col.device)
-        scale = torch.tensor(float(np.squeeze(scaler_obj.scale_)), dtype=y_col.dtype, device=y_col.device)
-        return y_col * scale + mean
-    elif cls_name == "MinMaxScaler":
-        min_ = torch.tensor(float(np.squeeze(scaler_obj.min_)), dtype=y_col.dtype, device=y_col.device)
-        scale_ = torch.tensor(float(np.squeeze(scaler_obj.scale_)), dtype=y_col.dtype, device=y_col.device)
-        return (y_col - min_) / scale_
-    elif cls_name == "RobustScaler":
-        center = torch.tensor(float(np.squeeze(scaler_obj.center_)), dtype=y_col.dtype, device=y_col.device)
-        scale = torch.tensor(float(np.squeeze(scaler_obj.scale_)), dtype=y_col.dtype, device=y_col.device)
-        return y_col * scale + center
-    elif cls_name == "MaxAbsScaler":
-        scale = torch.tensor(float(np.squeeze(scaler_obj.scale_)), dtype=y_col.dtype, device=y_col.device)
-        return y_col * scale
-    elif cls_name == "PowerTransformer":
-        x = y_col
-        if getattr(scaler_obj, "standardize", True) and hasattr(scaler_obj, "_scaler"):
-            mean = torch.tensor(float(np.squeeze(scaler_obj._scaler.mean_)), dtype=y_col.dtype, device=y_col.device)
-            scale = torch.tensor(float(np.squeeze(scaler_obj._scaler.scale_)), dtype=y_col.dtype, device=y_col.device)
-            x = x * scale + mean
-        lmbda = float(np.squeeze(scaler_obj.lambdas_))
-        method = getattr(scaler_obj, "method", "yeo-johnson")
-        if method == "box-cox":
-            if abs(lmbda) < 1e-7:
-                return torch.exp(x)
-            return torch.clamp(x * lmbda + 1.0, min=1e-6) ** (1.0 / lmbda)
-        else:  # yeo-johnson
-            pos_branch = (
-                torch.exp(x) - 1.0
-                if abs(lmbda) < 1e-7
-                else torch.clamp(x * lmbda + 1.0, min=1e-6) ** (1.0 / lmbda) - 1.0
-            )
-            neg_lmbda = 2.0 - lmbda
-            neg_branch = (
-                1.0 - torch.exp(-x)
-                if abs(neg_lmbda) < 1e-7
-                else 1.0 - torch.clamp(-x * neg_lmbda + 1.0, min=1e-6) ** (1.0 / neg_lmbda)
-            )
-            return torch.where(x >= 0.0, pos_branch, neg_branch)
-    elif cls_name == "FunctionTransformer":
-        return torch.expm1(y_col)
-    return y_col
+    from ..utils.dataset_io import inverse_single_scaler_torch
+
+    return inverse_single_scaler_torch(y_col, scaler_obj)
 
 
 # ==============================================================================
@@ -848,59 +804,36 @@ class UniQSARTrainedBridge:
             return torch.sigmoid(logits)
         return logits
 
-    def _inverse_scale_numpy(self, y_norm: np.ndarray, is_std: bool = False) -> np.ndarray:
-        """
-        Inverse-transforms `y_norm` of shape `(N, K)` or `(K,)` using single or K-list `TargetScaler`.
-        """
+    def _inverse_scale_numpy(self, y_norm: np.ndarray) -> np.ndarray:
+        """Transform predictions, never a standard deviation, to physical units."""
         if self.scaler is None or self.task not in ["regression", "multilabel_regression"]:
             return y_norm
-        orig_shape = y_norm.shape
         y_2d = y_norm.reshape(-1, self.output_dim).copy()
-
         if isinstance(self.scaler, list):
-            for k in range(min(len(self.scaler), self.output_dim)):
-                sc = self.scaler[k]
-                if sc is None:
-                    continue
-                if is_std:
-                    scale = float(np.squeeze(getattr(sc, "scale_", getattr(getattr(sc, "_scaler", None), "scale_", 1.0))))
-                    y_2d[:, k] = y_2d[:, k] * scale
-                else:
+            if len(self.scaler) != self.output_dim:
+                raise ValueError("Target scaler count does not match output_dim")
+            for k, sc in enumerate(self.scaler):
+                if sc is not None:
                     y_2d[:, k : k + 1] = sc.inverse_transform(y_2d[:, k : k + 1])
         else:
-            if is_std:
-                scale = np.asarray(
-                    getattr(self.scaler, "scale_", getattr(getattr(self.scaler, "_scaler", None), "scale_", 1.0)),
-                    dtype=np.float64,
-                ).reshape(1, -1)
-                y_2d = y_2d * scale
-            else:
-                y_2d = self.scaler.inverse_transform(y_2d)
+            y_2d = self.scaler.inverse_transform(y_2d)
+        return y_2d.reshape(y_norm.shape)
 
-        return y_2d.reshape(orig_shape)
+    def _inverse_scale_torch(self, y_norm: torch.Tensor) -> torch.Tensor:
+        """Differentiable inverse for (..., K), including shared multivariate scalers."""
+        from ..utils.dataset_io import inverse_single_scaler_torch
 
-    def _inverse_scale_torch(self, y_norm: torch.Tensor, is_std: bool = False) -> torch.Tensor:
-        """
-        Differentiable PyTorch inverse-transform for `y_norm` of shape `(K,)`!
-        Supports both single `TargetScaler` and `list` of `K` `TargetScaler`s.
-        """
         if self.scaler is None or self.task not in ["regression", "multilabel_regression"]:
             return y_norm
-        y_vec = y_norm.view(self.output_dim)
-        scalers = self.scaler if isinstance(self.scaler, list) else [self.scaler] * self.output_dim
-        out_cols = []
-        for k in range(self.output_dim):
-            sc = scalers[k] if k < len(scalers) else None
-            if sc is None:
-                out_cols.append(y_vec[k])
-            elif is_std:
-                scale_val = float(
-                    np.squeeze(getattr(sc, "scale_", getattr(getattr(sc, "_scaler", None), "scale_", 1.0)))
-                )
-                out_cols.append(y_vec[k] * scale_val)
-            else:
-                out_cols.append(_inverse_single_scaler_torch(y_vec[k], sc))
-        return torch.stack(out_cols, dim=0)
+        if isinstance(self.scaler, list):
+            if len(self.scaler) != self.output_dim:
+                raise ValueError("Target scaler count does not match output_dim")
+            columns = [inverse_single_scaler_torch(y_norm[..., k], sc)
+                       for k, sc in enumerate(self.scaler)]
+        else:
+            columns = [inverse_single_scaler_torch(y_norm[..., k], self.scaler, feature_index=k)
+                       for k in range(self.output_dim)]
+        return torch.stack(columns, dim=-1)
 
     # --------------------------------------------------------------------------
     # Helper: 1D/2D Feature & Base Model Evaluation (Cached by SMILES, Shape: (K,))
@@ -1062,7 +995,7 @@ class UniQSARTrainedBridge:
                 if self.task in ["classification", "multilabel_classification"]:
                     fold_preds = 1.0 / (1.0 + np.exp(-fold_preds))
                 norm_mean = np.mean(fold_preds, axis=0)  # (K,)
-                norm_std = np.std(fold_preds, axis=0)    # (K,)
+                uncertainty_groups = [fold_preds]
             elif self.ensemble_method == "stacking_general":
                 meta_vec = stacked_m_k.reshape(1, -1)  # (1, M * K)
                 fold_preds = np.stack(
@@ -1070,22 +1003,21 @@ class UniQSARTrainedBridge:
                     axis=0,
                 )  # (F, K)
                 norm_mean = np.mean(fold_preds, axis=0)
-                norm_std = np.std(fold_preds, axis=0)
+                uncertainty_groups = [fold_preds]
             elif self.ensemble_method == "vote":
                 norm_mean = np.max(stacked_m_k, axis=0)
-                norm_std = np.std(stacked_m_k, axis=0)
+                uncertainty_groups = [stacked_m_k]
             else:  # average (or single model)
                 norm_mean = np.mean(stacked_m_k, axis=0)
-                norm_std = np.std(stacked_m_k, axis=0)
+                uncertainty_groups = component_folds
 
-            real_mean = self._inverse_scale_numpy(norm_mean, is_std=False)
-            real_std = self._inverse_scale_numpy(norm_std, is_std=True)
-            if self.ensemble_method not in {"stacking_linear", "stacking_general", "vote"}:
-                # Equal model weights, equal fold weights within each model.
-                # Transform individual folds before measuring physical-unit disagreement.
-                real_groups=[np.stack([self._inverse_scale_numpy(f,is_std=False) for f in fs]) for fs in component_folds]
-                center=np.mean([g.mean(0) for g in real_groups],axis=0)
-                real_std=np.sqrt(np.mean([np.square(g-center).mean(0) for g in real_groups],axis=0))
+            # Preserve the trained ensemble's normalized-space point estimate.
+            # Fold disagreement is measured separately, after each inverse transform.
+            real_mean = self._inverse_scale_numpy(norm_mean)
+            real_groups = [self._inverse_scale_numpy(group) for group in uncertainty_groups]
+            center = np.mean([group.mean(0) for group in real_groups], axis=0)
+            real_std = np.sqrt(np.mean([np.square(group - center).mean(0)
+                                      for group in real_groups], axis=0))
             y_preds_all.append(real_mean)
             y_stds_all.append(real_std)
 
@@ -1168,14 +1100,17 @@ class UniQSARTrainedBridge:
             raise NotImplementedError("Nonlinear stacking uses true predict_3d_mols with black-box acceptance")
         cached_1d2d = self._eval_1d_2d_single(smiles)
 
-        model_tensors: List[torch.Tensor] = []  # M tensors, each of shape (K,)
+        model_tensors: List[torch.Tensor] = []
+        component_folds = []
         for key in self.selected_keys:
             if key in cached_1d2d:
-                model_tensors.append(
-                    torch.tensor(cached_1d2d[key], dtype=coords.dtype, device=coords.device)
-                )
+                prediction = torch.as_tensor(cached_1d2d[key], dtype=coords.dtype, device=coords.device)
+                folds = self._fold_predictions[(smiles, key)]
+                component_folds.append(torch.as_tensor(folds, dtype=coords.dtype, device=coords.device))
             else:
-                model_tensors.append(self._forward_unimol_folds(key, coords, atom_symbols))
+                prediction = self._forward_unimol_folds(key, coords, atom_symbols)
+                component_folds.append(self._last_3d_folds)
+            model_tensors.append(prediction)
 
         stacked_m_k = torch.stack(model_tensors, dim=0)  # (M, K)
 
@@ -1187,16 +1122,21 @@ class UniQSARTrainedBridge:
             if self.task in ["classification", "multilabel_classification"]:
                 fold_preds = torch.sigmoid(fold_preds)
             norm_mean = fold_preds.mean(dim=0)  # (K,)
-            norm_std = fold_preds.std(dim=0, unbiased=False)  # (K,)
+            uncertainty_groups = [fold_preds]
         elif self.ensemble_method == "vote":
             norm_mean = stacked_m_k.max(dim=0).values
-            norm_std = stacked_m_k.std(dim=0, unbiased=False)
+            uncertainty_groups = [stacked_m_k]
         else:
             norm_mean = stacked_m_k.mean(dim=0)
-            norm_std = stacked_m_k.std(dim=0, unbiased=False)
+            uncertainty_groups = component_folds
 
-        y_pred_real = self._inverse_scale_torch(norm_mean, is_std=False)  # (K,)
-        y_std_real = self._inverse_scale_torch(norm_std, is_std=True)     # (K,)
+        y_pred_real = self._inverse_scale_torch(norm_mean)
+        real_groups = [self._inverse_scale_torch(group) for group in uncertainty_groups]
+        center = torch.stack([group.mean(0) for group in real_groups]).mean(0)
+        residuals = torch.cat([(group - center) / (len(real_groups) * len(group)) ** .5
+                               for group in real_groups])
+        # vector_norm has a defined zero subgradient for identical folds.
+        y_std_real = torch.linalg.vector_norm(residuals, dim=0)
 
         # Graceful fallback when no 3D UniMol model is present in the checkpoint
         if not self.has_3d_unimol:
