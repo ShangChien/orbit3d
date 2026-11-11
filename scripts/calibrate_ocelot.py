@@ -12,7 +12,7 @@ from rdkit import DataStructs
 from orbit3d.oracles.calibration import ResidualCalibration
 from orbit3d.oracles.applicability import MorganDomain
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+from orbit3d.physics.factory import build_forcefield
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.conformers import ocelot_conformer
@@ -25,6 +25,8 @@ p.add_argument("--evaluation-run",type=Path,help="Separate completed evaluation 
 p.add_argument("--weight", required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--device", default="cpu")
+p.add_argument("--backend", choices=['dpa4', 'hyff'], default='dpa4')
+p.add_argument("--hyff-tier", default='vivace')
 p.add_argument("--size", type=int, default=128)
 p.add_argument("--generated", type=Path)
 a = p.parse_args()
@@ -56,7 +58,7 @@ for row in frame.to_dict("records"):
     mols.append(m)
     rows.append(row)
 assert len(mols) == a.size
-ff = DPAPotentialGuidance(a.weight, atom_type_map=ATOM_TYPES, device=a.device)
+ff = build_forcefield(a.backend, a.weight, ATOM_TYPES, a.device, tier=a.hyff_tier)
 o = InternalDPA4PropertyOracle.load_from_dir(str(a.trained_run / "oracle"), ff)
 pred, std = o.predict_3d_mols(mols)
 names = o.target_cols

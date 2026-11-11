@@ -401,7 +401,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         weight = getattr(self.dpa_guidance, "model_path", None)
         meta = {
             "schema_version": 3,
-            "oracle_type": "internal_dpa4",
+            "oracle_type": 'internal_' + getattr(self.dpa_guidance, 'backend_name', 'test_descriptor'),
+            "descriptor_provider": type(self.dpa_guidance).__name__,
             "ensemble_kind": "bootstrap_adapters_v2",
             "desc_dim": self.desc_dim,
             "output_dim": self.output_dim,

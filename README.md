@@ -6,8 +6,8 @@ property oracles and constrained force-field refinement.
 **Authors:** Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao.
 
 The executable mainline is **Uni-3DAR octree → interval adaptation → candidate
-ranking → DPA4 refinement**. GRPO is available for experiments and disabled in the
-recommended configuration pending a matched FP32 benefit assessment. The initial
+ranking → DPA4 or HyFF refinement**. GRPO is available for experiments and disabled
+in the recommended configuration pending multiple-training-seed benefit assessment. The initial
 BF16 comparison is retained as a numerical diagnostic. The dense-grid implementation remains a baseline.
 
 ![Five-stage architecture](paper/figures/fig0_orbit3d_system_architecture.svg)
@@ -20,12 +20,15 @@ BF16 comparison is retained as a numerical diagnostic. The dense-grid implementa
   bootstrap-DPA property pilot for HOMO/LUMO, with scaffold-separated evaluation.
 - Real pretrained octree generation, multi-target conditioning, chemical checks,
   candidate ranking, real DPA4 forces and finite-step property/energy acceptance.
+- HyFF-presto property adapters, calibration and the same octree end-to-end path;
+  see the [verified HyFF workflow](docs/hyff-property-workflow.md).
 - Whole-candidate ledgers, precise SDF export and re-evaluated exported predictions.
 
 See the [experiment report](docs/qm9s-ocelot-experiments-2026-11-11.md) for metrics,
 failed experiments and evidence. Oracle interval success is not independent
 quantum-chemical accuracy. Current generation covers neutral closed-shell
-H/C/N/O/F molecules; broad-element and open-shell generation are not established.
+H/C/N/O/F molecules. A [structural-only boron adaptation](docs/boron-structural-adaptation.md)
+is tested separately; boron property conditioning and open-shell generation are not established.
 
 ## Setup
 

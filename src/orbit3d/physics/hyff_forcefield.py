@@ -22,6 +22,7 @@ class HyFFPotentialGuidance(nn.Module):
     """
 
     SUPPORTED_TIERS = ("presto", "vivace", "moderato", "andante", "largo")
+    backend_name = 'hyff'
 
     def __init__(
         self,
@@ -59,7 +60,7 @@ class HyFFPotentialGuidance(nn.Module):
         if route == 'native' and self.hyff_device != 'cuda':
             raise ValueError('Native HyFF execution requires CUDA')
 
-        # Load clean PyTorch reference model for differentiable autograd & small-batch/fallback calls
+        # Load the selected checkpoint for differentiable descriptor calls.
         self.ref_model, self.model_config = load_model(self.selection.weights, self.device_str)
         self.ref_model.eval()
         for p in self.ref_model.parameters():
@@ -184,59 +185,70 @@ class HyFFPotentialGuidance(nn.Module):
         charge: Optional[float] = None,
         multiplicity: Optional[int] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """
-        Single forward/backward pass through frozen HyFF PyTorch reference model extracting:
-          1. `native_descriptor`: `(N, D_desc)` differentiable w.r.t. `coords` when `coords.requires_grad`
-          2. `energy_ev`: scalar potential energy (eV)
-          3. `forces_eva`: `(N, 3)` conservative atomic restoring forces `-grad_X E` (eV/Å)
+        """Same descriptor/energy/force contract as the homogeneous batch route."""
+        desc, energy, force = self.extract_native_batch(
+            coords[None], [atom_symbols],
+            charges=[self.default_charge if charge is None else charge],
+            multiplicities=[self.default_multiplicity if multiplicity is None else multiplicity],
+        )
+        return desc[0], energy[0], force[0]
+
+    def _descriptor_batch(self, coords, symbols, charges=None, multiplicities=None, forces=True):
+        """One connected PyTorch graph for a homogeneous batch of molecules.
+
+        Descriptors use the checkpoint's reference graph. This is deliberately
+        distinct from the native CUDA-graph energy/force engine, whose descriptor
+        outputs do not expose an autograd graph to the property adapter.
         """
         from ..compat.hyff.graph import radius_edges
 
+        size, atoms, _ = coords.shape
+        if len(symbols) != size or any(len(row) != atoms for row in symbols):
+            raise ValueError('HyFF descriptor batch requires one symbol for every coordinate')
         device = torch.device(self.device_str)
-        z_list = self._atomic_numbers(atom_symbols)
+        outer_grad = coords.requires_grad
+        captured = {}
+        def capture(module, inputs, output):
+            captured['descriptor'] = output
+        with torch.enable_grad():
+            positions = coords.to(device=device, dtype=torch.float32).reshape(-1, 3)
+            if not outer_grad:
+                positions = positions.detach().requires_grad_(forces)
+            batch = {
+                'positions': positions,
+                'atomic_numbers': torch.tensor([z for row in symbols for z in self._atomic_numbers(row)], device=device),
+                'batch': torch.arange(size, device=device).repeat_interleave(atoms),
+                'ptr': torch.arange(size + 1, device=device) * atoms,
+                'total_charge': torch.as_tensor(charges if charges is not None else [self.default_charge] * size,
+                                               dtype=torch.float32, device=device),
+                'multiplicity': torch.as_tensor(multiplicities if multiplicities is not None else [self.default_multiplicity] * size,
+                                               dtype=torch.long, device=device),
+            }
+            edges = radius_edges(batch, self.cutoff)
+            batch['edge_index'] = edges
+            hook = self._get_readout_hook_target().register_forward_hook(capture)
+            try:
+                energy = self.ref_model.energy(batch, edges)
+                force = -torch.autograd.grad(energy.sum(), positions, retain_graph=outer_grad)[0] if forces else None
+            finally:
+                hook.remove()
+            descriptor = captured['descriptor'].reshape(size, atoms, -1)
+        if not outer_grad:
+            descriptor = descriptor.detach()
+        return descriptor, energy.detach(), force.detach().reshape_as(coords).to(coords.dtype) if forces else None
 
-        need_outer_grad = bool(coords.requires_grad)
-        coords_in = coords.to(device=device, dtype=torch.float32)
-        if not need_outer_grad:
-            coords_in = coords_in.detach().requires_grad_(True)
+    def extract_native_batch(self, coords, symbols, check_finite=True, charges=None, multiplicities=None):
+        descriptor, energy, force = self._descriptor_batch(coords, symbols, charges, multiplicities)
+        if check_finite and not all(torch.isfinite(value).all() for value in (descriptor, energy, force)):
+            raise FloatingPointError('Nonfinite HyFF descriptor/energy/forces')
+        return descriptor, energy, force
 
-        n_atoms = coords_in.shape[0]
-        chg_val = self.default_charge if charge is None else float(charge)
-        mult_val = self.default_multiplicity if multiplicity is None else int(multiplicity)
+    def extract_differentiable_batch(self, coords, symbols):
+        descriptor, _, _ = self._descriptor_batch(coords, symbols, forces=False)
+        return descriptor
 
-        batch = {
-            "positions": coords_in,
-            "atomic_numbers": torch.tensor(z_list, dtype=torch.long, device=device),
-            "batch": torch.zeros(n_atoms, dtype=torch.long, device=device),
-            "ptr": torch.tensor([0, n_atoms], dtype=torch.long, device=device),
-            "total_charge": torch.tensor([chg_val], dtype=torch.float32, device=device),
-            "multiplicity": torch.tensor([mult_val], dtype=torch.long, device=device),
-        }
-        edges = radius_edges(batch, self.cutoff)
-        batch["edge_index"] = edges
-
-        captured: Dict[str, torch.Tensor] = {}
-        target_mod = self._get_readout_hook_target()
-
-        def _hook(mod, inp, out):
-            captured["descriptor"] = out
-
-        h = target_mod.register_forward_hook(_hook)
-        try:
-            with torch.enable_grad():
-                e_vec = self.ref_model.energy(batch, edges)
-                forces_raw = -torch.autograd.grad(
-                    e_vec.sum(), coords_in, retain_graph=need_outer_grad, create_graph=False
-                )[0]
-        finally:
-            h.remove()
-
-        native_desc = captured["descriptor"].float()
-        forces = forces_raw.detach().to(coords.dtype)
-        energy = e_vec.sum().detach().to(coords.dtype)
-        if not all(torch.isfinite(v).all() for v in (native_desc, energy, forces)):
-            raise FloatingPointError("Nonfinite HyFF descriptor/energy/forces")
-        return native_desc, energy, forces
+    def extract_differentiable_descriptor(self, coords, symbols):
+        return self.extract_differentiable_batch(coords[None], [symbols])[0]
 
     def _compute_pytorch_gpu(
         self,
@@ -288,7 +300,7 @@ class HyFFPotentialGuidance(nn.Module):
         if inv_perm is not None:
             forces_out = forces_out[inv_perm]
 
-        return mol_e.detach().to(coords.dtype), forces_out.to(coords.dtype)
+        return mol_e.detach(), forces_out.to(coords.dtype)
 
     def compute_energy_and_forces(
         self,
@@ -363,7 +375,7 @@ class HyFFPotentialGuidance(nn.Module):
 
             cp = self._get_or_create_native_cp(batch_size, n_total)
             out = cp.predict(pos_np, z_np, offsets_np, chg_np, mult_np)
-            mol_energies = torch.as_tensor(out["energies"], dtype=coords.dtype, device=device)
+            mol_energies = torch.as_tensor(out["energies"], dtype=torch.float64, device=device)
             f_t = torch.as_tensor(out["forces"], dtype=coords.dtype, device=device)
             forces = f_t[inv_perm] if inv_perm is not None else f_t
 

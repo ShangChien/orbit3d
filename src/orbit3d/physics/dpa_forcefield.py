@@ -15,6 +15,7 @@ class DPAPotentialGuidance(nn.Module):
     Universal Machine Learning Interatomic Potential (MLIP) physical force & descriptor module
     supporting all DPA-4 scales (`Nano`, `Mini`, `Neo`, `Air`, `Plus`) and `DPA-3.1`.
     """
+    backend_name = 'dpa4'
 
     def __init__(
         self,

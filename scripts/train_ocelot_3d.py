@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import torch
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+from orbit3d.physics.factory import build_forcefield
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.oracles.validation import compare_oracle_reload
 from orbit3d.utils.dataset_io import write_precise_sdf
@@ -19,6 +19,8 @@ p.add_argument("--data", type=Path, required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--weight", required=True)
 p.add_argument("--device", default="cpu")
+p.add_argument("--backend", choices=['dpa4', 'hyff'], default='dpa4')
+p.add_argument("--hyff-tier", default='vivace')
 p.add_argument("--train", type=int, default=512)
 p.add_argument("--eval", type=int, default=64)
 p.add_argument("--epochs", type=int, default=15)
@@ -61,7 +63,7 @@ for split, limit in [("train", a.train), ("valid", a.eval), ("test", a.eval)]:
     frames[split] = pd.DataFrame(rows)
     molecules[split] = mols
     print(split, len(mols), "conformers", flush=True)
-ff = DPAPotentialGuidance(a.weight, atom_type_map=ATOM_TYPES, device=a.device)
+ff = build_forcefield(a.backend, a.weight, ATOM_TYPES, a.device, tier=a.hyff_tier)
 oracle = InternalDPA4PropertyOracle(ff, 2, names, n_ensemble_heads=3)
 oracle.target_units = ['eV', 'eV']
 oracle.fit_from_dataset(
@@ -95,7 +97,8 @@ for split in ["valid", "test"]:
         result[name + "_std"] = std[:, i]
     result.to_csv(a.output / f"{split}_predictions.csv", index=False)
 report = {
-    "task": "OCELOT 3D bootstrap-DPA training",
+    "task": f"OCELOT 3D bootstrap-{a.backend} training",
+    "forcefield_backend": a.backend,
     "seed": a.seed,
     "batch_size": a.batch_size,
     "geometry_origin": "ETKDG+MMFF; original DFT coordinates unavailable",

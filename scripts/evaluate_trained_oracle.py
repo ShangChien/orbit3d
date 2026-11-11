@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 from orbit3d.generator.octree_tokenizer import ATOM_TYPES
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+from orbit3d.physics.factory import build_forcefield
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.oracles.validation import compare_oracle_reload
 from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
@@ -19,6 +19,8 @@ p.add_argument("--trained-run", type=Path, required=True)
 p.add_argument("--weight", required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--compare-run", type=Path)
+p.add_argument("--backend", choices=['dpa4', 'hyff'], default='dpa4')
+p.add_argument("--hyff-tier", default='vivace')
 a = p.parse_args()
 freeze_run(a.output, __file__)
 record_input_hashes(
@@ -33,7 +35,7 @@ record_input_hashes(
 )
 lock_deterministic_environment(42)
 torch.set_num_threads(2)
-ff = DPAPotentialGuidance(a.weight, atom_type_map=ATOM_TYPES, device="cuda:0")
+ff = build_forcefield(a.backend, a.weight, ATOM_TYPES, "cuda:0", tier=a.hyff_tier)
 first = InternalDPA4PropertyOracle.load_from_dir(str(a.trained_run / "oracle"), ff)
 second = InternalDPA4PropertyOracle.load_from_dir(str(a.trained_run / "oracle"), ff)
 cohorts = {
