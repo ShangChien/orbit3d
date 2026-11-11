@@ -349,3 +349,18 @@ def test_hyff_native_failure_is_not_silently_replaced_by_reference():
     ff._compute_pytorch_gpu = lambda **kwargs: pytest.fail('Silent engine replacement')
     with pytest.raises(RuntimeError, match='Native capacity'):
         ff.compute_energy_and_forces(torch.zeros(2, 3), torch.zeros(2, dtype=torch.long))
+
+
+def test_displacement_cap_preserves_molecular_tangent_and_batch_independence():
+    from orbit3d.physics.conformer_relaxer import cap_molecular_displacement
+    gradient = torch.tensor([[2., 0, 0], [1., 0, 0]])
+    tangent = torch.tensor([[1., 0, 0], [-2., 0, 0]])
+    # Per-atom clipping would rotate this tangent and produce g dot d = +0.1.
+    capped = cap_molecular_displacement(tangent, .1)
+    assert abs(float((capped * gradient).sum())) < 1e-8
+    assert capped.norm(dim=-1).max() <= .1
+    batch = torch.stack([tangent, tangent * .01, torch.zeros_like(tangent)])
+    result = cap_molecular_displacement(batch, .1)
+    torch.testing.assert_close(result[0], capped)
+    torch.testing.assert_close(result[1], batch[1])
+    torch.testing.assert_close(result[2], batch[2])

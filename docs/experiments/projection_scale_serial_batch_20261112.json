@@ -1,0 +1,84 @@
+{
+  "records": [
+    {
+      "index": 0,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 1.430511474609375e-06,
+      "force_max_abs_eV_A": 1.4249235391616821e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 1,
+      "coordinate_max_abs_A": 1.1920928955078125e-07,
+      "prediction_max_abs_eV": 9.238719940185547e-07,
+      "force_max_abs_eV_A": 8.016824722290039e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 2,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 4.172325134277344e-07,
+      "force_max_abs_eV_A": 3.606081008911133e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 3,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 3.8035213947296143e-06,
+      "force_max_abs_eV_A": 1.0013580322265625e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 4,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 3.5762786865234375e-06,
+      "force_max_abs_eV_A": 1.1467753211036325e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 5,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 1.5087425708770752e-06,
+      "force_max_abs_eV_A": 6.787478923797607e-06,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 6,
+      "coordinate_max_abs_A": 2.384185791015625e-07,
+      "prediction_max_abs_eV": 4.76837158203125e-07,
+      "force_max_abs_eV_A": 1.901388168334961e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    },
+    {
+      "index": 7,
+      "coordinate_max_abs_A": 4.76837158203125e-07,
+      "prediction_max_abs_eV": 2.384185791015625e-06,
+      "force_max_abs_eV_A": 2.7641654014587402e-05,
+      "acceptance_identical": true,
+      "hit_identical": true
+    }
+  ],
+  "gradient_serial_batch_max_abs": 4.202127456665039e-06,
+  "atom_counts": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "autograd": 1.1796125173568726,
+  "finite_difference": 1.1794565916061401,
+  "serial_seconds": 13.671493906527758,
+  "batch_seconds": 2.77552642300725,
+  "timing_scope": "Shared server, contention included"
+}

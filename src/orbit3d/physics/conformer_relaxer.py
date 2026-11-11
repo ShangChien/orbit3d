@@ -14,6 +14,12 @@ def project_force(force, gradient):
     return force - torch.clamp((force * gradient).sum(), min=0) / norm2 * gradient
 
 
+def cap_molecular_displacement(displacement, max_atom_disp):
+    """Bound every atom with one scale per molecule, preserving the projected direction."""
+    largest = displacement.norm(dim=-1).amax(dim=-1, keepdim=True).unsqueeze(-1)
+    return displacement * torch.clamp(max_atom_disp / largest.clamp_min(1e-12), max=1)
+
+
 def relax_conformer_iso_property(
     inst,
     dpa_guidance,
@@ -102,7 +108,7 @@ def relax_conformer_iso_property(
         old_d = targets.violations(y)
         for backtrack in range(max_backtracks + 1):
             disp = direction * (step_size * 2 ** (-backtrack))
-            disp = disp * torch.clamp(max_atom_disp / disp.norm(dim=-1, keepdim=True).clamp_min(1e-12), max=1)
+            disp = cap_molecular_displacement(disp, max_atom_disp)
             candidate = x + disp
             try:
                 en, fn, yn, sn = evaluate(candidate)

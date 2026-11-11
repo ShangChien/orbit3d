@@ -145,3 +145,18 @@ and force outputs differ from the previous experimental runtime by at most
 and a32-candidate Stage5-off replay passes with all tokens and the sole exported
 molecule checked. Source snapshots separate this clean installation from the
 original experimental environment. Docker execution remains untested.
+
+## Projection-preserving step cap (2026-11-12)
+
+Per-atom displacement clipping rotated a globally projected direction: for
+`g=[2,1]`, `d=[1,-2]`, the tangent has `g·d=0`, but clipping each atom to
+0.1 gives `g·d=0.1`. The cap now applies one positive scale per molecule using
+its largest atom displacement, so direction, frozen coordinates and projection
+are preserved. Independent finite-step Oracle acceptance remains in place.
+The regression failed on the original clipping and passes after the change.
+
+On eight 30-atom OCELOT structures, real GPU serial and batch refinement agree
+on acceptance and interval decisions, with coordinate/property tolerances
+1e-5 and raw-force tolerance 1e-4 eV/A. Timings were 13.67 s serial and 2.78 s
+batched on the shared server; this is not an uncontended throughput benchmark.
+See [the per-molecule comparison](experiments/projection_scale_serial_batch_20261112.json).

@@ -3,6 +3,7 @@
 from dataclasses import replace
 import numpy as np
 import torch
+from .conformer_relaxer import cap_molecular_displacement
 from ..constraints import TargetIntervals
 from ..generator.octree_tokenizer import ATOM_TYPES, mol3d_to_validated_rdkit_mol
 
@@ -112,7 +113,7 @@ def relax_conformers_iso_property(instances, forcefield, oracle, target_interval
                 if not ids:
                     break
                 disp = direction[ids] * (step_size * 2**(-backtrack))
-                disp *= torch.clamp(max_atom_disp / disp.norm(dim=-1, keepdim=True).clamp_min(1e-12), max=1)
+                disp = cap_molecular_displacement(disp, max_atom_disp)
                 proposed = x[ids] + disp
                 en, fn, yn, sn, finite = evaluate(proposed, ids)
                 dn = violations(yn)
