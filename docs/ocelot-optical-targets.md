@@ -76,3 +76,35 @@ than a controlled architectural ablation. New ordinary/native predictions agree
 within the existing 1e-5 eV runtime tolerance; checkpoint parameters and predictions
 from identical descriptors reload exactly. See `experiments/optical_matched512_20261112.json`
 and the two source training summaries.
+
+## Running the expanded interface
+
+`configs/ocelot_optical_octree.json` is the portable four-target example. Set its
+mounted paths to actual artifacts. To construct its `optical_initial.pt`, use the
+explicit migration command; a two-target checkpoint cannot be renamed into a
+four-target model:
+
+```bash
+python scripts/migrate_octree_targets.py \
+  --checkpoint /path/to/labelled_wide_generator.pt \
+  --training-sdf /path/to/ocelot_optical_generator8192/train.sdf \
+  --targets homo lumo s0s1 s0t1 --units eV eV eV eV \
+  --output /path/to/optical_initial.pt
+orbit3d --config configs/ocelot_optical_octree.json
+```
+
+The saved final checkpoint can be evaluated over the frozen three-window protocol
+without further training:
+
+```bash
+python scripts/evaluate_target_windows.py \
+  --config configs/ocelot_optical_octree.json \
+  --checkpoint /path/to/optical_generator/octree_conditional.pt \
+  --windows data/optical_target_windows.json --output /path/to/fresh_evaluation \
+  --independent-oracle /path/to/fingerprint_optical/oracle
+```
+
+The property model must have the same ordered targets and units, and its
+applicability domain must be built from its own training structures. Supply the
+original source CSV labels when preparing the generator SDF; QM9s spectra are
+not substitutes for these four OCELOT quantities.

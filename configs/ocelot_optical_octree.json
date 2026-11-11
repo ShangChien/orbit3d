@@ -1,0 +1,80 @@
+{
+  "mode": "train_and_predict",
+  "device": "cuda:0",
+  "seed": 42,
+  "mount_paths": {
+    "train_data_path": "/workspace/data/ocelot_optical_generator8192/train.sdf",
+    "forcefield_path": "/workspace/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+    "property_checkpoint_dir": "/workspace/checkpoints/ocelot_optical/oracle",
+    "checkpoint_load_path": "/workspace/checkpoints/optical_initial.pt",
+    "checkpoint_save_dir": "/workspace/checkpoints/optical_generator",
+    "output_dir": "/workspace/outputs/optical_generator"
+  },
+  "generator_config": {
+    "backend": "uni3dar_octree",
+    "sft_steps": 2000,
+    "batch_size": 8,
+    "sft_lr": 0.0002,
+    "train_backbone": false,
+    "grpo_steps": 0,
+    "label_source": "sdf",
+    "checkpoint_every": 1000
+  },
+  "oracle_config": {
+    "oracle_mode": "internal_dpa4",
+    "target_cols": [
+      "homo",
+      "lumo",
+      "s0s1",
+      "s0t1"
+    ],
+    "target_units": [
+      "eV",
+      "eV",
+      "eV",
+      "eV"
+    ],
+    "applicability_domain_path": "/workspace/checkpoints/ocelot_optical_calibration/applicability.json"
+  },
+  "inference_config": {
+    "target_interval": {
+      "homo": [
+        -8.2,
+        -7.2
+      ],
+      "lumo": [
+        -0.6,
+        0.8
+      ],
+      "s0s1": [
+        2.5,
+        3.5
+      ],
+      "s0t1": [
+        1.5,
+        2.5
+      ]
+    },
+    "num_candidates": 64,
+    "num_molecules": 16,
+    "batch_size": 16,
+    "max_rms_force_eva": 0.5,
+    "oracle_candidates": 32,
+    "sampling_mode": "independent",
+    "precision": "float32",
+    "electron_parity": 0,
+    "base_seed": 2026,
+    "ranking": "external",
+    "tree_temperature": 0.85,
+    "atom_temperature": 0.3,
+    "xyz_temperature": 0.25
+  },
+  "stage5_relax_config": {
+    "relax_steps": 30,
+    "batch_refinement": true,
+    "enabled": true,
+    "step_size": 0.004,
+    "property_tolerance": 0.0,
+    "energy_tolerance": 0.0
+  }
+}
