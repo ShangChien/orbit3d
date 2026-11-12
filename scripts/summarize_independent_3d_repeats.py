@@ -16,7 +16,9 @@ def main():
             conditions={v['condition']:v['target_mae_equal_quantile_eV'] for v in run['condition_controls'] if v['target']==a.target and v['arm']==arm}
             row['arms'][arm]={'independent_target_mae_eV':r['target_mae_equal_quantile_eV'],'domain_rate':r['evaluated']/r['attempted'],
                              'independent_hit_rate':r['property_hits']/r['attempted'],'independent_mean_response_slope':r['mean_response_slope'],
-                             'independent_condition_specificity_eV':conditions['shuffled']-conditions['correct']}
+                             'independent_condition_specificity_eV':conditions['shuffled']-conditions['correct'],
+                             'independent_alignment_target_mae_eV':float(np.mean([v['target_mae_eV'] for v in r['per_quantile'] if v['quantile'] in ['25','50','75']])),
+                             'independent_other_target_mae_eV':float(np.mean([v['target_mae_eV'] for v in r['per_quantile'] if v['quantile'] in ['10','90']]))}
         for control in ['frozen','continue400','continue_wall']:
             row['paired_grpo_minus_control'][control]={k:row['arms']['grpo200'][k]-v for k,v in row['arms'][control].items()}
         per_seed.append(row)

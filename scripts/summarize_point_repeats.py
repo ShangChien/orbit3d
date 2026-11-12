@@ -36,6 +36,8 @@ def main():
                 'independent_hit_rate':summary['metrics']['fingerprint']['domain_property_hit_rate_all_attempts'],
                 'independent_mean_response_slope':float(np.polyfit(x,y,1)[0]),
                 'independent_condition_specificity_eV':condition_error(shuffled)-condition_error(correct),
+                'independent_alignment_target_mae_eV':condition_error(correct),
+                'independent_other_target_mae_eV':condition_error([r for r in responses if r['scoring_quantile'] in ['10','90']]),
                 'mean_internal_diversity':float(np.mean([r['internal_diversity_valid'] for r in responses])),
                 'mean_unique_valid_fraction':float(np.mean([r['unique_valid']/r['valid'] for r in responses])),
             }
