@@ -210,6 +210,22 @@ def build():
             lines.append(f"| {label} / {window} | {row['raw_valid']} | {row['domain_eligible']} | {row['qualified']} | {row['fingerprint_joint']} | {row['hyff_joint_with_source_force']} |")
     lines += ['', 'Table: Same 8188 adaptation structures, target windows and proposal/ranking/refinement caps. Octree uses the 5000-step control; BRICS uses single-cut training fragments and ETKDG/UFF geometry. FP and HyFF independently rescore unchanged exports; all three joint columns use the source DPA force criterion. Actual evaluator calls and training compute differ.']
     tables['BRICS'] = '\n'.join(lines)
+    qualified = current['qualified20k_quantum_20261112.json']
+    lines = ['| Case / window | Source DPA H / L (eV) | Quantum H / L (eV) | Target check |',
+             '| :--- | ---: | ---: | :--- |']
+    for row in qualified['records']:
+        prediction = row['source_prediction_eV']
+        if row['status'] == 'completed':
+            values = row['quantum_values_eV']
+            reference = f"{values['homo']:.4f} / {values['lumo']:.4f}"
+            missed = [name.upper() for name, hit in row['quantum_target_hits'].items() if not hit]
+            outcome = ', '.join(missed) + ' miss' if missed else 'Hit'
+        else:
+            reference, outcome = 'Not completed', 'Failed'
+        lines.append(f"| {row['quantum_index']} / {row['source_run'].split('_seed')[0]} | "
+                     f"{prediction['homo']:.4f} / {prediction['lumo']:.4f} | {reference} | {outcome} |")
+    lines += ['', 'Table: Preselected subset of eight surrogate-qualified designs from 384 attempts. One lowest-ID candidate is selected per nonempty window/inference-seed stratum before quantum calculation. All five preserve the source graph after S0 optimization; the three unselected qualified designs have unknown quantum outcomes. H/L denote HOMO/LUMO.']
+    tables['QUALIFIED_QUANTUM'] = '\n'.join(lines)
     for name, content in tables.items():
         pattern = r'<!-- BEGIN TABLE '+name+r' -->.*?<!-- END TABLE '+name+r' -->'
         replacement = '<!-- BEGIN TABLE '+name+' -->\n'+content+'\n<!-- END TABLE '+name+' -->'
@@ -225,9 +241,9 @@ def build():
     title = text.splitlines()[0].removeprefix("# ")
     abstract = text.split("## Abstract\n", 1)[1].split("\n## 1.", 1)[0].strip()
     body = text[text.index("## 1. Introduction"):].split("\n## References", 1)[0]
-    body = re.sub(r"^(#{2,3}) \d+(?:\.\d+)?\. ", lambda m: "#"*(len(m[1])-1)+" ", body, flags=re.M)
     body = body.replace('## Appendix A.', '\\appendix\n\n## Appendix A.', 1)
-    body = re.sub(r'^## Appendix [A-Z]\. ', '# ', body, flags=re.M)
+    body = re.sub(r"^(#{2,3}) (?:(?:\d+(?:\.\d+)?|Appendix [A-Z])\. )?",
+                  lambda m: "#"*(len(m[1])-1)+" ", body, flags=re.M)
     body = body.replace("figures/fig0_orbit3d_system_architecture.png", "figures/fig0_orbit3d_system_architecture.pdf")
     body = body.replace("figures/fig1_grpo_training_seeds.png", "figures/fig1_grpo_training_seeds.pdf")
     latex = pypandoc.convert_text(body, "latex", format="markdown+tex_math_dollars+citations", extra_args=[

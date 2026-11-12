@@ -1,4 +1,4 @@
-# ORBIT-3D: Interval-Targeted 3D Molecular Design with Gated Policy Optimization
+# ORBIT-3D: Interval-Targeted Molecular Generation with Constrained 3D Refinement
 
 **Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao**\
 DP Technology, Beijing, China\
@@ -7,13 +7,13 @@ November 2026
 
 ## Abstract
 
-Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. An octree autoregressive prior is adapted to property intervals, paired with a self-ranking head, and aligned through group-relative policy optimization using property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box; the force-field backend is selected according to its supported elements and electronic states. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out four-property OCELOT training, a five-objective GRPO matrix with three training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation. A training-fragment baseline substantially exceeds the adapted octree on a central target window, identifying proposal quality as a bottleneck. The resulting formulation separates implementation guarantees from molecular-design effectiveness and makes negative results reproducible.
+Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. A pretrained octree autoregressive prior is adapted to property intervals and paired with a self-ranking head. Optional group-relative policy optimization uses property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out four-property OCELOT training, a five-objective GRPO matrix with three training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation. A training-fragment baseline substantially exceeds the adapted octree on a central target window, identifying proposal quality as a bottleneck. The resulting formulation separates implementation guarantees from molecular-design effectiveness and makes negative results reproducible.
 
 ## 1. Introduction
 
 Many molecular design tasks seek a feasible region rather than an extreme property value. An emitter may require an orbital-energy window, while a multi-objective campaign may impose several simultaneous intervals. A useful candidate must also preserve its chemical identity and retain an acceptable geometry after refinement. Optimizing a predictor score alone does not establish any of these conditions.
 
-ORBIT-3D organizes this problem into five stages: learn a 3D prior, condition it on intervals, rank proposals, align the policy with external feedback, and refine the selected structures. Uni-3DAR provides the octree autoregressive starting point [@lu2025uni3dar]. The central design choice is to apply continuous force-based refinement to completed molecular proposals, with an explicit acceptance rule that checks the same target properties used during policy alignment.
+ORBIT-3D organizes this problem into five stages: reuse a pretrained 3D prior, condition it on intervals, rank proposals, optionally align the policy with external feedback, and refine the selected structures. Uni-3DAR provides the octree autoregressive starting point [@lu2025uni3dar]. The central design choice is to apply continuous force-based refinement to completed molecular proposals, with an explicit acceptance rule that checks the same target properties used during policy alignment.
 
 Our contributions are a modular formulation of interval-targeted generation, a reward construction that separates positive gated utility from invalidity penalties, and a finite-step acceptance rule for constrained refinement. We treat foundation generators, property predictors, and interatomic potentials as reusable components. The contribution is their coordinated use and evaluation, not a new claim about their underlying architectures.
 
@@ -44,7 +44,7 @@ $$
 
 The chemical predicate $C(\mathcal{M})$ checks the task's requirements for connectivity, valence, formal charge, and electronic state. Closed-shell validity is required only for closed-shell tasks; radicals and triplets require their own explicit state checks. An even electron count is not sufficient evidence of a closed shell.
 
-### 2.2. Stage 1: learn the 3D proposal prior
+### 2.2. Stage 1: reuse a pretrained 3D proposal prior
 
 The generator represents 3D structure through a coarse-to-fine octree and predicts the resulting token sequence autoregressively. The spatial range, quantization resolution, element vocabulary, and sequence limits belong to the model specification and are saved with its checkpoint. Inputs outside that specification are rejected or processed by an explicitly trained alternative representation; they are not silently clipped, truncated, or converted to another element.
 
@@ -154,7 +154,15 @@ S=\frac1{N_{\mathrm{attempted}}}\sum_i
 \mathbf1\{F_{\mathrm{rms}}(\mathcal M_i)\leq F_{\max}\}.
 $$
 
-The force statistic is $F_{\mathrm{rms}}=\sqrt{N^{-1}\sum_j\|\mathbf F_j\|_2^2}$; its evaluation backend and threshold are reported. Marginal validity and hit rates are not multiplied to estimate the joint metric. We additionally report raw and retained counts, connected validity, graph/coordinate consistency, novelty, diversity, per-target violations, maximum force, and numerical-failure rates. Closed-shell statistics apply only to the corresponding target states.
+The force statistic is $F_{\mathrm{rms}}=\sqrt{N^{-1}\sum_j\|\mathbf F_j\|_2^2}$. The wide and optical generation comparisons use a 0.5 eV/Å DPA-force threshold. Marginal validity and hit rates are not multiplied to estimate the joint metric. We additionally report raw and retained counts, connected validity, graph/coordinate consistency, novelty, diversity, per-target violations, maximum force, and numerical-failure rates. Closed-shell statistics apply only to the corresponding target states.
+
+The original HOMO/LUMO intervals are [-8.2, -7.2]/[-0.6, 0.8] eV. The central
+window uses [-7.75, -6.75]/[-1.13, -0.13] eV, centered on training-label medians;
+its width and frequency differ from the original task. The exploratory lower-gap
+window is [-7.26, -6.46]/[-1.46, -0.66] eV. Optical experiments use S1 [2.5, 3.5]
+and T1 [1.5, 2.5] eV; the four-target task combines these with the original orbital
+window. Inactive targets are masked. The ancillary evidence retains the window
+selection rules and values.
 
 ### 4.2. Held-out property prediction
 
@@ -338,19 +346,44 @@ substituted. S1/T1 refer to full linear-response TDDFT at the same S0 geometry
 and S0-tuned omega. These settings define an internal diagnostic; they have not
 reproduced the released OCELOT reference protocol.
 
-An explicit depth-six to depth-seven migration retains 0.24 Angstrom leaf cells
-and expands the spatial range to 30.72 Angstrom. After backbone adaptation, a
-64-proposal diagnostic produces 48 valid structures, including three above the
-old 40-atom limit. It does not demonstrate reliable generation throughout the
-expanded spatial range. A separate structural-only adaptation adds boron using
-512 closed-shell MIM-Flow structures. Of 64 attempts, 33 are valid and ten contain
-boron; all ten are novel relative to the adaptation structures. Energy-only
-refinement preserves their graphs and lowers mean RMS force from 4.29 to 0.41
-eV/Angstrom, with nine below 0.5. This model has no validated boron property
-conditioner. The original 450-channel spectra are retained separately and are
-not relabeled as orbital energies.
+The seed-42 total-20000 SFT checkpoint yields eight surrogate-qualified outputs
+from 384 attempts. Before quantum evaluation, select the lowest original candidate
+ID in each nonempty window/inference-seed stratum: five structures, with no
+replacement for the empty sixth stratum. All five complete graph-preserving S0
+optimization; two retain both original orbital intervals and three miss HOMO.
+All five LUMOs remain in their target windows. Quantum RMS forces are
+0.00117–0.00176 eV/Å, but no vibrational-minimum test is included. The remaining
+three qualified outputs have unknown quantum outcomes.
 
-All ten generated B-containing structures were selected for the same nominal
+<!-- BEGIN TABLE QUALIFIED_QUANTUM -->
+| Case / window | Source DPA H / L (eV) | Quantum H / L (eV) | Target check |
+| :--- | ---: | ---: | :--- |
+| 0 / original | -7.5762 / -0.0745 | -7.8003 / 0.1750 | Hit |
+| 1 / original | -7.9748 / -0.3420 | -8.6653 / 0.1991 | HOMO miss |
+| 2 / central | -6.9484 / -0.5410 | -7.4414 / -0.4153 | Hit |
+| 3 / central | -7.7398 / -0.6621 | -7.8836 / -0.6121 | HOMO miss |
+| 4 / central | -7.7032 / -0.8856 | -8.1364 / -0.5140 | HOMO miss |
+
+Table: Preselected subset of eight surrogate-qualified designs from 384 attempts. One lowest-ID candidate is selected per nonempty window/inference-seed stratum before quantum calculation. All five preserve the source graph after S0 optimization; the three unselected qualified designs have unknown quantum outcomes. H/L denote HOMO/LUMO.
+<!-- END TABLE QUALIFIED_QUANTUM -->
+
+\FloatBarrier
+
+On these unchanged quantum geometries, the frozen two-target DPA and fingerprint
+models give mean absolute HOMO/LUMO disagreements of 0.4689/0.2846 and
+0.3906/0.4082 eV, respectively. All five remain inside the graph applicability
+domain. A post-hoc exact-graph check finds that case 1 matches training record
+`csd_RASWEO`, whose released labels are -7.7901/-0.4019 eV. Its quantum values
+differ by -0.8752/+0.6011 eV, whereas DPA at the quantum geometry predicts
+-7.8780/-0.4530 eV. This is not an unseen graph; the absent original quantum
+geometry and omega prevent separating reference-protocol and conformer effects.
+No correction is fitted to this selected cohort. The two observed hits establish
+feasibility under the internal quantum protocol, not an all-proposal quantum
+success rate or an OCELOT reference-accuracy claim.
+
+A separate structural-only adaptation adds B using 512 MIM-Flow structures
+without validating a B property conditioner. All ten B-containing outputs from
+its 64 proposals were selected for the same nominal
 quantum protocol before inspecting their quantum results. Five complete S0
 optimization, graph-preservation checks and full TDDFT; the other five fail SCF,
 geometry convergence, graph or specified-stereo checks. The successful cases
@@ -389,20 +422,8 @@ by the applicability-domain filter; the diagnostic is not an observed in-domain
 failure rate.
 
 
-The entire retained cohort of the earlier 1024-record/4000-step adaptation consists
-of one molecule. At an explicit IP-tuned LC-wPBE/def2-SVP diagnostic level, its
-optimized graph is preserved and the DFT RMS force is 0.00255 eV/Å. Its HOMO/LUMO
-are $-8.81566/-0.00179$ eV, versus the optimizing surrogate's $-7.74292/-0.26839$ eV;
-the HOMO misses the original $[-8.2,-7.2]$ eV interval. Full spin-adapted TDDFT gives
-vertical S1/T1 energies 4.03502/3.08312 eV. Separate state optimizations at the
-same S0-tuned range parameter give adiabatic excitations of 3.63105/2.51208 eV
-and an S1-T1 difference of 1.11897 eV, without zero-point corrections. Central
-differences of all 51 gradient coordinates give 45 positive vibrational modes
-in each state (lowest 47.46/23.90 inverse centimeters); both preserve the graph.
-These checks use corrected third-order XC evaluation and response-state indexing.
-Because reference naphthalene calculations do not reproduce the published OCELOT
-CSV, these are internally consistent protocol diagnostics, not dataset MAEs.
-
+A separate single-molecule diagnostic verifies two excited-state minima; its
+vertical and adiabatic energies are kept distinct in Appendix A.
 
 ### 4.6. Runtime and reproducibility
 
@@ -436,7 +457,7 @@ Finally, autoregressive decoding, candidate selection, ensemble evaluation, and 
 
 ORBIT-3D formulates interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, interval conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
 
-The corrected implementation has matched-budget controls, three GRPO training seeds, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. These results identify proposal quality and evaluator reliability as the main remaining limitations. Replicated SFT improvements and broader quantum validation are needed before claiming general design effectiveness.
+The corrected implementation has matched-budget controls, three GRPO training seeds, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A separate preselected check of five delivered designs preserves every graph and retains two orbital-window hits under the internal quantum protocol. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. These results identify proposal quality and evaluator reliability as the main remaining limitations. Broader quantum validation with reproducible reference settings is needed before claiming general design effectiveness.
 
 ## Appendix A. Exploratory adaptation and representation
 
@@ -512,6 +533,15 @@ comparisons using the existing numerical tolerances. This graph-action workflow
 is not learned octree scaffold completion.
 
 
+A fixed-coordinate comparison of RDKit's connect-the-dots, van der Waals and
+extended Hueckel connectivity [@rdkit2026bonds] separates proposal defects from perception sensitivity. On
+511 known validation structures, the default and Hueckel each preserve 505
+constitutions. Among 384 generated coordinates, valid graphs without atomic formal
+charges number 89 and 91, while 29 paired valid graphs change constitution. This
+does not support a decoder switch. The audit also fixes an imine identity defect:
+stereo-defining explicit hydrogens must be normalized without discarding specified
+stereo. Seven rechecked quantum geometries retain their previous graph decisions.
+
 An additional Hamiltonian audit corrects omitted scalar def2 core potentials for
 Te and I. HI has 26 explicitly treated electrons with I's 28-electron ECP, versus
 54 under the previous basis-only input. Light-element Hamiltonians and existing
@@ -520,6 +550,34 @@ fails the 1e-5 eV/Angstrom CPU/GPU force-parity gate. A separate 1e-11 SCF,
 full-grid-response check on HI and TeH2 passes the same energy, force-parity and
 finite-difference thresholds. The initial failure is retained; this numerical
 convergence check does not modify completed cohort calculations.
+
+### Additional representation and quantum diagnostics
+
+An explicit depth-six to depth-seven migration retains 0.24 Angstrom leaf cells
+and expands the spatial range to 30.72 Angstrom. After backbone adaptation, a
+64-proposal diagnostic produces 48 valid structures, including three above the
+old 40-atom limit. It does not demonstrate reliable generation throughout the
+expanded spatial range. A separate structural-only adaptation adds boron using
+512 closed-shell MIM-Flow structures. Of 64 attempts, 33 are valid and ten contain
+boron; all ten are novel relative to the adaptation structures. Energy-only
+refinement preserves their graphs and lowers mean RMS force from 4.29 to 0.41
+eV/Angstrom, with nine below 0.5. This model has no validated boron property
+conditioner. The original 450-channel spectra are retained separately and are
+not relabeled as orbital energies.
+
+The entire retained cohort of the earlier 1024-record/4000-step adaptation consists
+of one molecule. At an explicit IP-tuned LC-wPBE/def2-SVP diagnostic level, its
+optimized graph is preserved and the DFT RMS force is 0.00255 eV/Å. Its HOMO/LUMO
+are $-8.81566/-0.00179$ eV, versus the optimizing surrogate's $-7.74292/-0.26839$ eV;
+the HOMO misses the original $[-8.2,-7.2]$ eV interval. Full spin-adapted TDDFT gives
+vertical S1/T1 energies 4.03502/3.08312 eV. Separate state optimizations at the
+same S0-tuned range parameter give adiabatic excitations of 3.63105/2.51208 eV
+and an S1-T1 difference of 1.11897 eV, without zero-point corrections. Central
+differences of all 51 gradient coordinates give 45 positive vibrational modes
+in each state (lowest 47.46/23.90 inverse centimeters); both preserve the graph.
+These checks use corrected third-order XC evaluation and response-state indexing.
+Because reference naphthalene calculations do not reproduce the published OCELOT
+CSV, these are internally consistent protocol diagnostics, not dataset MAEs.
 
 ## Appendix B. Archived octree/GVP pilot
 

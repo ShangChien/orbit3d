@@ -20,6 +20,20 @@ gradient check. Files can be read with numpy.load(..., allow_pickle=False).
 The pilot JSON and provenance describe a separate historical octree/GVP protocol.
 They must not be merged with current unified-package success denominators.
 
+qualified20k_quantum_input_20261112.sdf is a separate five-structure selection
+from eight surrogate-qualified outputs in 384 attempts. Its selection map,
+full quantum coordinates/forces, per-target outcomes and unchanged-geometry
+surrogate comparisons are in the qualified20k JSON entries. The three unselected
+qualified outputs have unknown quantum outcomes. The label-overlap entry is a
+post-hoc exact-graph check, not a reproduction of the original OCELOT quantum
+geometry or tuning parameters. No fitted offset is applied.
+
+The bond-perception entries retain all three methods on 511 known validation
+geometries and 384 saved generated coordinates. Their identity comparison
+normalizes explicit hydrogens while retaining specified stereo and isotopes.
+The quantum-identity recheck preserves seven earlier graph decisions, including
+two actual chemical failures; it does not rerun the quantum calculations.
+
 This archive does not redistribute upstream training datasets or model weights.
 It supports inspection of reported evidence and the gradient counterexample,
 not a complete model-training rerun. No arXiv submission has been performed by
