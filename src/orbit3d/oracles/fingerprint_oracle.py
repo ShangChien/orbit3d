@@ -9,16 +9,18 @@ from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator, Descriptors
 from sklearn.ensemble import ExtraTreesRegressor
 from .base import PropertyOracleBase
+from .graph_features import fingerprint_graph, NORMALIZED_GRAPH, RAW_GRAPH
 
 
 class FingerprintOracle(PropertyOracleBase):
     has_3d_unimol = False
 
-    def __init__(self, target_cols=("homo", "lumo"), n_bits=2048):
+    def __init__(self, target_cols=("homo", "lumo"), n_bits=2048, graph_normalization=NORMALIZED_GRAPH):
         super().__init__()
         self.target_cols = list(target_cols)
         self.output_dim = len(self.target_cols)
         self.n_bits = n_bits
+        self.graph_normalization = graph_normalization
         self.models = []
         self.training_elements = None
         self.fp = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=n_bits, includeChirality=True)
@@ -26,10 +28,7 @@ class FingerprintOracle(PropertyOracleBase):
     def features(self, mols):
         rows = []
         for mol in mols:
-            if mol is None:
-                raise ValueError("Invalid molecule for fingerprint oracle")
-            mol = Chem.RemoveHs(Chem.Mol(mol))
-            Chem.SanitizeMol(mol)
+            mol = fingerprint_graph(mol, self.graph_normalization)
             bits = self.fp.GetFingerprintAsNumPy(mol).astype(np.float32)
             desc = np.array(
                 [
@@ -100,7 +99,8 @@ class FingerprintOracle(PropertyOracleBase):
         path = directory / "ensemble.joblib"
         joblib.dump(self.models, path, compress=3)
         metadata = {
-            "oracle_type": "fingerprint_bootstrap_v1",
+            "oracle_type": "fingerprint_bootstrap_v2",
+            "graph_normalization": self.graph_normalization,
             "target_cols": self.target_cols,
             "units": ["eV"] * self.output_dim,
             "n_bits": self.n_bits,
@@ -120,7 +120,10 @@ class FingerprintOracle(PropertyOracleBase):
         path = directory / "ensemble.joblib"
         if hashlib.sha256(path.read_bytes()).hexdigest() != metadata["model_sha256"]:
             raise ValueError("Oracle checksum mismatch")
-        oracle = cls(metadata["target_cols"], metadata["n_bits"])
+        if metadata['oracle_type'] not in {'fingerprint_bootstrap_v1','fingerprint_bootstrap_v2'}:
+            raise ValueError('Unknown fingerprint model schema')
+        normalization=(RAW_GRAPH if metadata['oracle_type']=='fingerprint_bootstrap_v1' else metadata['graph_normalization'])
+        oracle = cls(metadata["target_cols"], metadata["n_bits"], normalization)
         # Load only artifacts produced by this trusted training workflow.
         oracle.models = joblib.load(path)
         oracle.target_units = metadata["units"]
