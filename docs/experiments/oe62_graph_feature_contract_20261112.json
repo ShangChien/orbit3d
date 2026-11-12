@@ -1,0 +1,140 @@
+{
+  "old_validation_predictions_bitwise_equal": 512,
+  "old_raw_pool_predictions_and_domain_unchanged": 90,
+  "canonical_features_roundtrip_mismatches": [],
+  "canonical_graph_contract": "rdkit_normalize_canonical_v1",
+  "standardized_equivalent_pairs": 13,
+  "old_mean_abs_representation_prediction_change_eV": [
+    0.28618073670106364,
+    0.16030020946987056
+  ],
+  "old_max_abs_representation_prediction_change_eV": [
+    0.6438215548608621,
+    0.4560921462306924
+  ],
+  "new_max_abs_representation_prediction_change_eV": [
+    0.0,
+    0.0
+  ],
+  "pair_source_ids": [
+    "DISGIW",
+    "FUGYAI",
+    "XETBUU",
+    "YOMPUM",
+    "MIZBUT",
+    "XULRUR",
+    "TEDQUO01",
+    "YAMKEE",
+    "FASSUP",
+    "SENROT",
+    "AJORUN",
+    "JOKMAY",
+    "FOWYOG"
+  ],
+  "old_source_metrics": {
+    "valid": {
+      "n": 512,
+      "mae_eV": {
+        "homo": 0.3345849884673652,
+        "lumo": 0.36323475495392155
+      },
+      "reload": {
+        "prediction_max_abs_diff_eV": 0.0
+      }
+    },
+    "calibration": {
+      "n": 512,
+      "mae_eV": {
+        "homo": 0.3374523645845947,
+        "lumo": 0.37093033215173604
+      },
+      "reload": {
+        "prediction_max_abs_diff_eV": 0.0
+      }
+    }
+  },
+  "canonical_source_metrics": {
+    "valid": {
+      "n": 512,
+      "mae_eV": {
+        "homo": 0.333952185588367,
+        "lumo": 0.3665787804989522
+      },
+      "reload": {
+        "prediction_max_abs_diff_eV": 0.0
+      }
+    },
+    "calibration": {
+      "n": 512,
+      "mae_eV": {
+        "homo": 0.33809512473697817,
+        "lumo": 0.370579046728809
+      },
+      "reload": {
+        "prediction_max_abs_diff_eV": 0.0
+      }
+    }
+  },
+  "inputs": {
+    "old_model": {
+      "ensemble.joblib": "24169108b6c470f241f99fdf45d8d4677a1ac015f1ff00e483e1e047ff09c3fa",
+      "metadata.json": "384e7b9237ba4c72aa0c3a90e5b0ad132a688a2f1399bc82ee28b7c8167be4f1"
+    },
+    "new_model": {
+      "ensemble.joblib": "d599b6209556e741dfd929fde09844bf945779cbc18d24441491f1f86e76392d",
+      "metadata.json": "e2e1ecc5e2f3ee3fd37fe4e73dc623498fa325970f574979c583487e42242986"
+    },
+    "old_domain": {
+      "applicability.json": "fc677953e74d6011437fd350056c238fc4cd0980e263e1890f4d98a832d88e76"
+    },
+    "validation": {
+      "valid.sdf": "3bd4432e9d706393c7f496a2369ac56d671dcfae415d3b4f16b5577f6b563e82"
+    },
+    "homo_raw": {
+      "summary.json": "1af8a1fb6e7060dfd53317b7f43eee4b18d01a4f32f15b8c9b4ebc44a4ae4c40"
+    },
+    "homo_coordinates": {
+      "raw_trajectories.npz": "b01b2c4ca46e9e843f1fd2125215967646dc08eb5ad3e057a8ee6f2dfb5aaaa2"
+    },
+    "lumo_raw": {
+      "summary.json": "ea5be99024e0afac88f01faf9655265b1ed68616bb0f9ed9b6a1187e56ed8504"
+    },
+    "lumo_coordinates": {
+      "raw_trajectories.npz": "ddbfc0b58429a71ede066a2668a4e009fb5683c43541bb1a06afda64a5bf8078"
+    },
+    "recovery": {
+      "summary.json": "7a9cf9bfb01e885348b59129a9a32a9f0d9e2e02f1febf0f98a61422a4d39a73"
+    }
+  },
+  "scope": "Versioned graph-feature correctness; primary generation experiments retain frozen v1 predictors/domains. New weights are retrained on the same source IDs.",
+  "source_charge_conservation_records": {
+    "train": 8192,
+    "valid": 512,
+    "calibration": 512
+  },
+  "canonical_training_inputs": {
+    "source_manifest": {
+      "manifest.json": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e"
+    },
+    "train": {
+      "train.sdf": "17d091628ad0120fc49cffcb7d7a8bac22e18dd50c711a34d7186ae4b890ac50"
+    },
+    "valid": {
+      "valid.sdf": "3bd4432e9d706393c7f496a2369ac56d671dcfae415d3b4f16b5577f6b563e82"
+    },
+    "calibration": {
+      "calibration.sdf": "aa8f27086fe6b0f89ec22b6aa4666e0743b22471a1c7c3b551390c35517aa352"
+    }
+  },
+  "normalization_failure_policy": "Preserve total molecular charge. Feature failures remain in the proposal denominator; predict admitted features once, without replacing structures.",
+  "fixed_pool_feature_failures": {
+    "homo": {
+      "attempted": 6336,
+      "failed": 3
+    },
+    "lumo": {
+      "attempted": 6336,
+      "failed": 1
+    }
+  }
+}

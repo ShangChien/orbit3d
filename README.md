@@ -28,7 +28,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 | [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
 | [论文](paper/ORBIT3D_arXiv_Paper.pdf) | 当前研究稿；[可编辑来源与构建](paper/README.md) |
 
-OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。测试集尚未评价，点值控制与GRPO收益尚待对照。
+OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。测试集尚未评价。单训练seed初试中，GRPO提高域内覆盖/代理命中数，目标MAE未优于时间匹配SFT；三个独立训练seed的正式重复正在运行。
 
 OCELOT 既有结果：匹配的 512 分子测试集上，DPA 的 HOMO/LUMO/S1/T1 MAE 为
 0.2895/0.2326/0.2314/0.1381 eV。三组 SFT 续训的 36 次评估中，延长训练
@@ -91,7 +91,7 @@ mol_gen/
 | 性质训练/评价 | `train_source_oracle.py`、`train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
 | 生成训练与迁移 | `initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`ablate_*.py` |
-| 独立评价/汇总 | `evaluate_point_pool.py`、`plot_point_comparison.py`、`evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
+| 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
 | 量化验证 | `select_qualified_quantum_cohort.py`、`validate_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
 | 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py` |
 | 打包与重放 | `check_wheel.py`、`pack_pretrained_weights.py`、`export_inference_bundle.py`、`validate_octree_reload.py` |

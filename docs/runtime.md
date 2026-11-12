@@ -86,3 +86,7 @@ verify_bundle.py`。这是可迁移模型/代码包，不是操作系统镜像�
 ### DeePMD 多卡初始化
 
 DPA 的设备须在 DeePMD 首次导入前确定：库内部分常量张量不属于 PyTorch 注册 buffer，事后 `model.to(device)` 不会移动它们。`DPAPotentialGuidance` 依据显式 device 设置当前 GPU 和 DeePMD 的 `LOCAL_RANK` 后再导入；同一 worker 绑定一个设备，两张卡使用两个进程。也可在进程启动时用 `CUDA_VISIBLE_DEVICES` 选择物理卡并统一使用逻辑 `cuda:0`。
+
+## 图特征模型版本
+
+新训练的指纹模型及Morgan域使用 `rdkit_normalize_canonical_v1`：在图副本上进行官能团标准化和规范异构SMILES转换，原图与三维坐标不被改写。转换必须保持总电荷；无法构建特征的候选保留为评价失败。指纹metadata记录v2及特征契约，域文件记录schema版本与同一契约。旧v1文件按原预处理重载；更换特征需要重新训练指纹参数、重建及校准域文件，不能只替换预处理函数。
