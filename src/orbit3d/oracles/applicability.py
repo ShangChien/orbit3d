@@ -13,14 +13,18 @@ class MorganDomain:
         self.cutoff = float(cutoff)
         self.graph_normalization = graph_normalization
         self.generator = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048, includeChirality=True)
-        molecules = [fingerprint_graph(Chem.MolFromSmiles(s), self.graph_normalization) for s in self.reference_smiles]
+        molecules = [Chem.MolFromSmiles(s) for s in self.reference_smiles]
+        if self.graph_normalization != RAW_GRAPH:
+            molecules = [fingerprint_graph(m, self.graph_normalization) for m in molecules]
         self.references = [self.generator.GetFingerprint(m) for m in molecules]
         self.training_elements = {a.GetSymbol() for m in molecules for a in Chem.AddHs(m).GetAtoms()}
         if not self.references or not 0 <= self.cutoff <= 1:
             raise ValueError('Applicability domain requires reference structures and a similarity cutoff')
 
     def score(self, molecule):
-        fp = self.generator.GetFingerprint(fingerprint_graph(molecule, self.graph_normalization))
+        graph=(Chem.RemoveHs(molecule) if self.graph_normalization==RAW_GRAPH
+               else fingerprint_graph(molecule, self.graph_normalization))
+        fp = self.generator.GetFingerprint(graph)
         return max(DataStructs.BulkTanimotoSimilarity(fp, self.references))
 
     def assess(self, molecule):
