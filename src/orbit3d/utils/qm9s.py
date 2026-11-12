@@ -4,15 +4,15 @@ import importlib
 import io
 import pickle
 from dataclasses import replace
+
 import numpy as np
 from rdkit import Chem
-from ..generator.octree_tokenizer import (
-    rdkit_mol_to_mol3d_instance,
-    encode_mol_to_octree_tokens,
-    decode_tokens_to_mol3d,
+
+from ..generator.molecular_state import (
+    ATOM_TYPES,
     mol3d_to_validated_rdkit_mol,
     mol_to_clean_smiles,
-    ATOM_TYPES,
+    rdkit_mol_to_mol3d_instance,
 )
 
 
@@ -50,7 +50,7 @@ def canonical_record(record):
     return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 
-def adapt_record(record, max_atoms=40, backend="uni3dar_octree", element_table=tuple(ATOM_TYPES), spectrum_size=240):
+def adapt_record(record, max_atoms=40, element_table=tuple(ATOM_TYPES), spectrum_size=240):
     mol = Chem.MolFromSmiles(str(record.get("smi", "")))
     if mol is None:
         raise ValueError("invalid_smiles")
@@ -82,17 +82,8 @@ def adapt_record(record, max_atoms=40, backend="uni3dar_octree", element_table=t
     if mol.GetNumAtoms() > max_atoms:
         raise ValueError("oversized_molecule")
     mol3d_to_validated_rdkit_mol(inst)
-    if backend == "uni3dar_octree":
-        # Preserve source coordinates. Hierarchical tokenization belongs to the
-        # octree dataset, not the unrelated dense-grid baseline representation.
-        inferred = mol3d_to_validated_rdkit_mol(replace(inst, graph=None))
-        if mol_to_clean_smiles(inferred) != mol_to_clean_smiles(mol):
-            raise ValueError("source_graph_or_stereo_mismatch")
-        return inst, None
-    if backend != "dense_grid_v2":
-        raise ValueError(f"Unknown backend: {backend}")
-    tokens = encode_mol_to_octree_tokens(inst, max_atoms)
-    decoded = mol3d_to_validated_rdkit_mol(decode_tokens_to_mol3d(tokens))
-    if mol_to_clean_smiles(decoded) != mol_to_clean_smiles(mol):
-        raise ValueError("quantized_graph_or_stereo_mismatch")
-    return inst, tokens
+    # Preserve source coordinates; hierarchical tokenization belongs to OctreeDataset.
+    inferred = mol3d_to_validated_rdkit_mol(replace(inst, graph=None))
+    if mol_to_clean_smiles(inferred) != mol_to_clean_smiles(mol):
+        raise ValueError("source_graph_or_stereo_mismatch")
+    return inst

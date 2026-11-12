@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the pilot table and LaTeX manuscript from the Markdown source.
+"""Generate result tables and the LaTeX manuscript from the Markdown source.
 
 Install pypandoc-binary for the Pandoc executable. This command does not train or
 evaluate models and does not compile or publish the paper.
@@ -16,7 +16,6 @@ import pypandoc
 
 PAPER = Path(__file__).resolve().parent
 SOURCE = PAPER / "ORBIT3D_arXiv_Paper.md"
-DATA = PAPER / "data/route_b_dpa4_scaling_summary.json"
 
 
 def tex_escape(text):
@@ -86,32 +85,9 @@ def write_bibliography(latex):
     (PAPER / "ORBIT3D_arXiv_Paper.bbl").write_text("\n".join(lines)+"\n")
 
 
-def pilot_table():
-    data = json.loads(DATA.read_text())
-    provenance = json.loads((PAPER / "data/provenance.json").read_text())
-    if hashlib.sha256(DATA.read_bytes()).hexdigest() != provenance["source_sha256"]:
-        raise ValueError("Pilot source changed: update and verify provenance before rendering tables")
-    tasks = [
-        ("Gap", "gap_ood_interval"), ("HOMO", "homo_interval"),
-        ("LUMO", "lumo_interval"), ("Joint", "joint_gap_homo_lumo"),
-    ]
-    lines = [
-        "**Pilot targets (Hartree).** Gap: [0.320, 0.345]; HOMO: [-0.205, -0.190]; LUMO: [0.060, 0.080]. Joint: Gap [0.285, 0.320], HOMO [-0.245, -0.220], LUMO [0.055, 0.085].",
-        "",
-        "| Task | Refinement backend | GVP hit (%) | RMS force (eV/Å) | Wall time (s) |",
-        "| :--- | :--- | ---: | ---: | ---: |",
-    ]
-    for name, task in tasks:
-        for label, key in [("DPA4-Mini", "4_dpa4_mini_omol25"), ("DPA4-Plus", "7_dpa4_plus_omol25")]:
-            row = data[task][key]
-            lines.append(f"| {name} | {label} | {100*row['joint_interval_hit_rate']:.2f} | {row['dpa_rms_force_eV_A']:.4f} | {row['sampling_time_sec']:.2f} |")
-    lines.extend(["", "Table: Archived octree/GVP pilot, 48 retained candidates per task. Forces are evaluated by DPA4-Plus. Values describe selected outputs under the legacy protocol, not independent validation of the target architecture."])
-    return "\n".join(lines)
-
-
 def build():
     text = SOURCE.read_text()
-    evidence = json.loads((PAPER / 'data/unified_evidence.json').read_text())
+    evidence = json.loads((PAPER / 'build/data/unified_evidence.json').read_text())
     current = {}
     for name, source in evidence.items():
         if hashlib.sha256(source['json'].encode()).hexdigest() != source['sha256']:
@@ -124,16 +100,6 @@ def build():
         lines.append(f"| {name.replace('_', ' ')} | {100*row['mean_joint_success_rate']:.2f} | {100*row['seed_std']:.2f} |")
     lines += ['', 'Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.']
     tables['RANKING'] = '\n'.join(lines).strip()
-    lines = []
-    experiment = current['conditioning_factorial_20261112.json']
-    lines += ['', '| Conditioner | Even-electron constraint | Chemical validity (%) | Joint success (%) |',
-              '| :--- | :--- | ---: | ---: |']
-    for row in experiment['aggregate']:
-        valid = row['raw_valid']['mean'] / experiment['budget_per_run']['attempts'] * 100
-        hit = row['joint_success_rate']['mean'] * 100
-        lines.append(f"| {row['variant'].replace('_', ' ')} | {'on' if row['electron_parity'] == 0 else 'off'} | {valid:.2f} | {hit:.2f} |")
-    lines += ['', 'Table: Matched conditioner comparison with domain filtering, 64 attempts per inference seed (three seeds). Both variants use the same structural prior and adaptation labels; v3 jointly changes frequency encoding and interval sampling. The validity gain does not establish improved joint success.']
-    tables['CONDITIONING'] = '\n'.join(lines).strip()
     lines = []
     lines += ['', '| GRPO objective | Valid / 576 | Optimizing joint / 576 | Independent joint / 576 |',
               '| :--- | ---: | ---: | ---: |']
@@ -173,14 +139,6 @@ def build():
     lines += ['', 'Table: Identical 34 selected starting structures from 192 proposals; 30-step budget and production step size 0.004. Selection is fixed, but backtracking changes evaluator cost. The independent fingerprint surrogate favors energy-only refinement.']
     tables['REFINEMENT'] = '\n'.join(lines).strip()
     lines = []
-    matched = current['ocelot8192_evaluation_20261112.json']['evaluation']['matched_previous_test']
-    lines += ['', '| Matched OCELOT test (256 structures) | 4096 training records, MAE (eV) | 8192 training records, MAE (eV) |',
-              '| :--- | ---: | ---: |']
-    for key in ['homo', 'lumo']:
-        lines.append(f"| {key.upper()} | {matched['previous_model_mae_eV'][key]:.4f} | {matched['new_model_mae_eV'][key]:.4f} |")
-    lines += ['', 'Table: Exact same test structures and reconstructed geometries; no overlap with either training set. Expanding training improves HOMO and slightly worsens LUMO on this test.']
-    tables['ORACLE_SCALE'] = '\n'.join(lines).strip()
-    lines = []
     optical = current['optical_matched512_20261112.json']['models']
     lines += ['', '| Shared optical test (512 molecules) | DPA MAE (eV) | HyFF MAE (eV) | Fingerprint MAE (eV) |',
               '| :--- | ---: | ---: | ---: |']
@@ -198,7 +156,7 @@ def build():
         row=generated[key]
         assert row['attempted']==192
         lines.append(f"| {label} | {row['raw_valid']} | {row['domain_eligible']} | {row['qualified']} | {row['independent_joint_successes']} |")
-    lines += ['', 'Table: One four-target generator, three inference seeds per window and unchanged ranking/refinement limits. Inactive targets are masked. This pilot trains and reloads the expanded interface but does not establish useful joint four-property generation.']
+    lines += ['', 'Table: One four-target generator, three inference seeds per window and unchanged ranking/refinement limits. Inactive targets are masked. This experiment trains and reloads the expanded interface but does not establish useful joint four-property generation.']
     tables['OPTICAL_GENERATION'] = '\n'.join(lines).strip()
     baseline = current['brics_comparison_20261112.json']['models']
     lines = ['| Proposal / target window | Valid / 192 | In domain / 192 | DPA joint / 192 | FP joint / 192 | HyFF joint / 192 |',
@@ -245,11 +203,6 @@ def build():
         text, count = re.subn(pattern, lambda _: replacement, text, flags=re.S)
         if count != 1:
             raise ValueError(f'Missing or duplicated generated-table region: {name}')
-    text = re.sub(
-        r"<!-- BEGIN GENERATED PILOT TABLE -->.*?<!-- END GENERATED PILOT TABLE -->",
-        lambda _: "<!-- BEGIN GENERATED PILOT TABLE -->\n"+pilot_table()+"\n<!-- END GENERATED PILOT TABLE -->",
-        text, flags=re.S,
-    )
     SOURCE.write_text(text)
     title = text.splitlines()[0].removeprefix("# ")
     abstract = text.split("## Abstract\n", 1)[1].split("\n## 1.", 1)[0].strip()

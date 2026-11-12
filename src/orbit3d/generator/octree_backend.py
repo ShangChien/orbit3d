@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from rdkit import Chem
 from .octree_model import ConditionalUni3DAR, build_default_uni3dar_args, AtomFeatDict, GridDataset
-from .octree_tokenizer import ATOM_TYPES, Mol3DInstance, mol3d_to_validated_rdkit_mol, mol_to_clean_smiles
+from .molecular_state import ATOM_TYPES, Mol3DInstance, mol3d_to_validated_rdkit_mol, mol_to_clean_smiles
 
 
 class OctreeDataset:

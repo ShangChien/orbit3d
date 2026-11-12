@@ -11,7 +11,7 @@ from pyscf import lib
 from pyscf.geomopt.geometric_solver import kernel
 from rdkit import Chem
 
-from orbit3d.generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
+from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
 from orbit3d.quantum.excited_states import response, response_gradient_scanner, restricted_reference
 from orbit3d.quantum.ocelot import (
     BOHR_ANGSTROM,

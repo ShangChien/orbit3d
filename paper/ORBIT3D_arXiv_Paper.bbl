@@ -1,4 +1,4 @@
-\begin{thebibliography}{19}
+\begin{thebibliography}{18}
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Haowei Lin, Lin Yao, et al.
@@ -111,10 +111,4 @@ RDKit contributors.
 \newblock , 2026.
 \newblock Connectivity and bond-order inference; accessed November 12, 2026.
 \newblock \url{https://www.rdkit.org/docs/source/rdkit.Chem.rdDetermineBonds.html}.
-
-\bibitem{ramakrishnan2014quantum}
-Raghunathan Ramakrishnan, Pavlo O. Dral, Matthias Rupp, O. Anatole von Lilienfeld.
-\newblock Quantum chemistry structures and properties of 134 kilo molecules.
-\newblock Scientific Data, 2014, 1:140022.
-\newblock \url{https://doi.org/10.1038/sdata.2014.22}.
 \end{thebibliography}

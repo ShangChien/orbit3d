@@ -1,46 +1,97 @@
 # ORBIT-3D
 
-Interval-targeted 3D molecular generation with a pretrained octree prior,
-property oracles and constrained force-field refinement.
+面向性质区间的分子生成与三维优化研究。当前可执行主线为：
 
-**Authors:** Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao.
+**预训练 Uni-3DAR octree → 区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
 
-The executable mainline is **Uni-3DAR octree → interval adaptation → candidate
-ranking → DPA4 or HyFF refinement**. GRPO is available for experiments and disabled
-in the recommended configuration: the completed three-training-seed ablation does
-not show a consistent component advantage. The initial
-BF16 comparison is retained as a numerical diagnostic. The dense-grid implementation remains a baseline.
+GRPO 是可选实验阶段，默认关闭。另有显式骨架图增长入口和 BRICS 片段基线。
+下一版拟比较“条件图/片段提案 → 固定图构象生成 → DPA/HyFF 优化”的路线，
+这是待验证方案，尚未替换当前主线。
 
-![Five-stage architecture](paper/figures/fig0_orbit3d_system_architecture.svg)
+![当前五阶段架构](paper/figures/fig0_orbit3d_system_architecture.svg)
 
-## Verified scope
+## 讨论入口
 
-- MIM-Flow QM9s: explicit-H structure adaptation, fixed train/dev/test selection,
-  molecular identity checks and original spectrum preservation.
-- OCELOT: scaffold-separated HOMO/LUMO/vertical-S1/T1 training; DPA and HyFF
-  use the same 8192/512/512 conformers, with an independent fingerprint reference.
-- Real pretrained octree generation, multi-target conditioning, chemical checks,
-  candidate ranking, real DPA4 forces and finite-step property/energy acceptance.
-- HyFF-presto property adapters, calibration and the same octree end-to-end path;
-  see the [verified HyFF workflow](docs/hyff-property-workflow.md).
-- Whole-candidate ledgers, precise SDF export and re-evaluated exported predictions.
+Carbon 与 Opus 建议按以下顺序阅读；当前实现、实验事实和建议方案分别标明：
 
-See the [experiment report](docs/qm9s-ocelot-experiments-2026-11-11.md) for metrics,
-failed experiments and evidence. Oracle interval success is not independent
-quantum-chemical accuracy. The initial generator covers neutral closed-shell
-H/C/N/O/F molecules. The [expanded 15-element adaptation](docs/wide-element-adaptation.md)
-uses official OCELOT labels, but rare-element generation and target success remain
-weak. [Element weighting and temperature experiments](docs/element-balance-experiment.md)
-report their quality tradeoffs. Open-shell generation is not established.
+| 文档 | 内容 |
+| --- | --- |
+| [架构与设计决策](docs/architecture.md) | 当前模块职责、下一版调整、保留与替换边界 |
+| [实验设计](docs/experiments.md) | 已执行实验的控制变量，以及下一轮最小判别实验 |
+| [实验结果](docs/results.md) | 最终指标、负结果、适用范围与机器可读证据 |
+| [必要踩坑说明](docs/pitfalls.md) | 分子身份、物理量定义、数值精度和评测口径 |
+| [运行与模型接口](docs/runtime.md) | 安装、训练/推理、外部 Oracle、可迁移模型包 |
+| [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
+| [论文](paper/ORBIT3D_arXiv_Paper.pdf) | 当前研究稿；[可编辑来源与构建](paper/README.md) |
 
-The [three-seed SFT continuation study](docs/ocelot-duration-experiment.md) completes
-all 36 fixed evaluations: longer training improves B/Si learning, but independent
-joint hits change from 23/1152 to 21/1152. A [preselected quantum check](docs/qualified-design-quantum-check.md)
-preserves all five delivered molecular graphs and retains two orbital-window hits
-under the documented internal DFT protocol; original OCELOT reference fidelity
-remains unresolved.
+关键结果：匹配的 512 分子测试集上，DPA 的 HOMO/LUMO/S1/T1 MAE 为
+0.2895/0.2326/0.2314/0.1381 eV。三组 SFT 续训的 36 次评估中，延长训练
+提高了 B/Si 学习，但独立联合命中从 23/1152 变为 21/1152。BRICS 在中心
+目标窗口显著强于当前 octree 基线，但实际评估调用数不同。五个预选合格设计
+均完成量化优化并保图，其中两个仍命中目标。上述性质误差针对 OCELOT CSV
+标签；原始量子几何和逐分子 ω 缺失，不能据此声称已复现原始 DFT。
 
-## Setup
+## Codemap
+
+```text
+mol_gen/
+├── README.md                    # 项目入口、实验概况与本 codemap
+├── pyproject.toml / uv.lock      # 包定义、可选后端与锁定依赖
+├── Dockerfile                   # 可选部署配方；不等于已验证的平台 GPU 镜像
+├── .github/workflows/           # CPU 正确性与安装包检查
+├── configs/                     # octree 双/四性质与显式骨架工作流配置
+├── src/orbit3d/
+│   ├── cli.py                   # orbit3d --config 的统一入口
+│   ├── pipeline/                # 后端分派、octree/骨架流程、共享评估器加载
+│   ├── generator/
+│   │   ├── molecular_state.py   # 分子图、元素/电子态、坐标与化学验证
+│   │   ├── octree_model.py      # 条件 octree、自排序与完整轨迹概率
+│   │   ├── octree_backend.py    # 数据编码、检查点契约、预训练/适配模型加载
+│   │   ├── octree_alignment.py  # conditioner 的 GRPO 更新
+│   │   ├── scaffold*.py         # 显式连接/环闭合、开放位点、局部 XYZ 支持集
+│   │   └── 其他模块             # 空间窗口、独立随机流、条件与词表迁移
+│   ├── baselines/brics.py       # 训练片段库与显式配对基线
+│   ├── oracles/                 # DPA/HyFF 属性头、指纹、域判断、校准及可选外部模型
+│   ├── physics/                 # DPA/HyFF 势、串行/批量受约束弛豫
+│   ├── quantum/                 # PySCF/GPU4PySCF、ω 调参、激发态与几何检查
+│   ├── utils/                   # 数据、身份比较、指标、运行快照与整批重放
+│   ├── vendor/                  # 固定版本 Uni-3DAR 及其必要依赖
+│   └── compat/hyff/             # 打包的 HyFF 源码、注册表与许可证
+├── scripts/                     # 可重用实验与数据工具，按功能见下表
+├── tests/                       # 当前功能的回归测试，防止清理/改造破坏已验证行为
+├── data/                        # 数据 provenance、划分/目标协议、结构组成统计
+├── docs/
+│   ├── architecture.md          # 当前架构和下一版候选设计
+│   ├── experiments.md           # 实验协议和未实施的研究计划
+│   ├── results.md               # 最终结果与解释
+│   ├── pitfalls.md              # 必要方法与数值注意事项
+│   ├── runtime.md               # 实际运行和模型接口
+│   └── experiments/             # 最终 JSON、必要原始结果/哈希、量化 SDF/NPZ
+├── paper/                       # 文稿、当前图、同步证据和可重建 arXiv 源码包
+├── third_party/                 # 运行依赖的固定版本、来源和许可证
+├── dataset/                     # 本地原始/处理数据，不进入 Git
+├── pretrained/                  # 本地模型权重，不进入 Git
+├── external/                    # 可选上游参考检出，不进入 Git
+├── local_dev/                   # 仅保留私有服务器/模型位置与量化启动配置，不进入 Git
+└── dist/、outputs/、checkpoints/ # 构建及运行时产物，不进入 Git
+```
+
+`scripts/` 保持平面布局，实验编排脚本通过同目录调用共享工具：
+
+| 功能 | 主要入口 |
+| --- | --- |
+| 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_generator_sdf.py` |
+| 性质训练/评价 | `train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
+| 生成训练与迁移 | `train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
+| 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`run_grpo_factorial.py`、`ablate_*.py` |
+| 独立评价/汇总 | `evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
+| 量化验证 | `select_qualified_quantum_cohort.py`、`validate_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
+| 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py` |
+| 打包与重放 | `check_wheel.py`、`pack_pretrained_weights.py`、`export_inference_bundle.py`、`validate_octree_reload.py` |
+
+## 最小运行
+
+本机 macOS 做 CPU 测试和文稿构建；真实 GPU 实验使用远程 Linux/CUDA 环境。
 
 ```bash
 uv sync --frozen --extra octree
@@ -49,119 +100,17 @@ uv build --wheel
 python scripts/check_wheel.py
 ```
 
-For the tested Linux/CUDA DPA4 runtime, use `uv sync --frozen --extra octree
---extra deepmd` and mount the DPA4 weights separately. The lock uses Torch2.7.1
-and official DeepMD3.2.0 source with its Python PyTorch backend: the published
-C++ wheel targets Torch2.11 and is incompatible. `pyproject.toml` fixes the build
-switches and the SeZM dependencies (e3nn and Warp/nvalchemi neighbor lists).
-CUDA still executes model inference. A fresh environment passed 64-molecule
-serial/batch checks; see [installation evidence](docs/experiments/clean_deepmd_native_20261111.json).
-Docker and other optional GPU combinations require separate execution checks.
-The wheel contains pinned Uni-3DAR source and its license; datasets/weights are
-obtained separately. See [data notes](data/README.md).
-
-If PyPI is slow, install the **same exported hashes and versions** through a mirror:
-
-```bash
-uv export --frozen --extra octree --extra deepmd --no-emit-project -o requirements.lock.txt
-DP_ENABLE_TENSORFLOW=0 DP_ENABLE_PYTORCH=0 uv pip install --python .venv/bin/python \
-  --require-hashes --no-binary deepmd-kit \
-  --index-url https://pypi.tuna.tsinghua.edu.cn/simple/ -r requirements.lock.txt
-```
-
-Build and install the project wheel after installing these dependencies. The
-source-build switches follow [DeepMD's documented Python PyTorch mode](https://docs.deepmodeling.com/projects/deepmd/en/latest/install/install-from-source.html).
-Optional same-level quantum diagnostics use `--extra quantum` (CPU) or
-`--extra quantum-gpu` (Linux/CUDA12), described in the
-[quantum protocol](docs/quantum-validation-protocol.md).
-
-## Data and training
-
-```bash
-# Source is the extracted directory containing train.lmdb and valid.lmdb.
-uv run --extra octree python scripts/adapt_qm9s.py \
-  --source /data/mim-flow/qm9s --output dataset/processed/qm9s_octree
-
-python scripts/prepare_ocelot.py --help
-python scripts/train_ocelot_baseline.py --help
-python scripts/train_ocelot_3d.py --help
-```
-
-QM9s spectral vectors are not HOMO/LUMO labels. In the main configuration,
-`label_source: oracle` explicitly predicts adaptation labels with the OCELOT
-model. Original OCELOT DFT geometries are unavailable in the supplied CSV;
-the initial 3D property pilot uses ETKDG/MMFF conformers; the expanded, matched
-DPA/HyFF experiments use ETKDG/UFF conformers.
-
-Edit the mounted paths in [`configs/qm9s_ocelot_octree.json`](configs/qm9s_ocelot_octree.json), then run:
+DPA 后端使用 `uv sync --frozen --extra octree --extra deepmd`；HyFF 使用
+`--extra hyff`，量化依赖单独配置。数据与权重需自行放入相应目录。
+编辑配置中的实际路径后运行：
 
 ```bash
 orbit3d --config configs/qm9s_ocelot_octree.json
+# 四性质：configs/ocelot_optical_octree.json
+# 固定骨架：configs/scaffold_graph_growth.json
 ```
 
-For inference, set `mode` to `predict` and supply `checkpoint_load_path` for the
-saved octree checkpoint. The original pretrained file and training SDF can then
-be omitted. New checkpoints retain target scaling and training identities.
-For GRPO-only updates, set `mode: align`, load an adapted checkpoint and set
-positive `grpo_steps`; supply training data only when replay is enabled. This
-mode saves the updated checkpoint without repeating SFT or generating a final
-inference batch. Supervised modes require positive `sft_steps`. Pure `train` with
-SDF labels and zero GRPO steps needs only the generator and labelled structures;
-forcefield, property-model and applicability-domain paths are not loaded.
-
-[Four-target OCELOT training](docs/ocelot-optical-targets.md) adds vertical S1/T1
-labels, with explicit checkpoint target expansion and unchanged training/test
-geometries. Its paired S1–T1 error is distinct from an adiabatic energy gap.
-The [matched HyFF comparison](docs/hyff-optical-comparison.md) and
-[BRICS generation baseline](docs/brics-baseline.md) retain evaluator disagreements
-and the stronger fragment baseline on the central target window.
-
-Consecutive element/depth migrations retain pending element-supervision
-requirements. Structural-only adaptation cannot clear a property-label
-requirement; pseudo-labels for new elements require observed Oracle training
-coverage. See [expanded-element training](docs/wide-element-adaptation.md).
-
-For fixed-scaffold fragment growth, use
-[`configs/scaffold_graph_growth.json`](configs/scaffold_graph_growth.json) and an
-SDF with `OpenAtomIndices` properties. This explicit graph backend preserves
-float64 fixed world coordinates and uses the same configured evaluators and
-refinement. [Input and output details](docs/scaffold-generation.md) distinguish it
-from learned octree completion.
-
-Each run writes `candidates.csv`, `generated.sdf`, `qualified.sdf`,
-`relaxation_traces.json`, `run_config.json` and `summary.json`. `generated.sdf`
-contains all retained/refined candidates; `qualified.sdf` contains those passing
-both property intervals and the configured raw RMS-force threshold. Failed and
-filtered proposals remain in the original candidate denominator.
-
-[Inference bundles](docs/inference-bundles.md) collect the model, scaler, domain,
-wheel and whole-cohort replay artifacts for relocation to persistent storage.
-The four-target bundle replays 64 candidates and six exports; the fixed 20000-step
-two-target bundle replays 64 candidates and nine exports. Neither needs training data.
-
-## Code map
-
-| Module | Responsibility |
-| --- | --- |
-| `generator/octree_model.py`, `octree_backend.py` | Pretrained hierarchical generator, interval conditioner and structure head |
-| `generator/octree_alignment.py` | Complete-trajectory GRPO, differentiable KL and replay |
-| `oracles/dpa4_oracle.py`, `fingerprint_oracle.py` | Independently bootstrapped 3D adapters and 2D reference predictor |
-| `physics/dpa_forcefield.py`, `conformer_relaxer.py` | Coordinate-connected descriptors, raw forces and accepted refinement |
-| `pipeline/octree_runner.py` | Main training/inference workflow |
-| `utils/qm9s.py` | Spectrum-preserving structural adapter |
-| `vendor/` | Pinned Uni-3DAR source and minimal runtime dependencies |
-
-Every configuration declares `generator_config.backend` explicitly. Missing or
-unknown values fail before model loading; they no longer select the legacy model.
-The archived configurations explicitly name `dense_grid_v2`.
-
-The older `internal_*.json` configurations and `benchmarks/runners/` belong to
-previous baselines or archived experiments. They are not the recommended route
-for the new QM9s/OCELOT workflow. Historical hardcoded comparisons cannot be
-reported as fresh benchmark results.
-
-[Architecture decision](docs/architecture-decision.md) · [Repair TODO](TODO.md) ·
-[Initial regression report](docs/validation-2026-11-11.md) · [Manuscript](paper/README.md)
-
-`dataset/`, `local_dev/`, weights and runtime outputs are ignored by Git. Private
-server details are kept only in `local_dev/`.
+推理设置 `mode: predict` 并提供适配检查点；`mode: train` 执行监督训练，
+`mode: align` 单独执行 GRPO。完整参数、电子态范围和验证边界见
+[运行说明](docs/runtime.md)。历史结果绑定各自的代码与模型哈希，不因当前源码
+整理而改写；构建论文会从保留的证据重新生成表格。

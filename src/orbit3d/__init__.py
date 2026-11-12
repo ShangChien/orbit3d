@@ -1,5 +1,3 @@
-"""
-orbit3d: 3D Autoregressive Molecular Generation with Gated-GRPO & DPA-4 Conformer Relaxation.
-"""
+"""Interval-targeted molecular generation with explicit chemical and physical validation."""
 
 __version__ = "1.0.0"

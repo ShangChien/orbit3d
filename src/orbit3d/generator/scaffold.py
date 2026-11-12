@@ -10,7 +10,7 @@ import json
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from .octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+from .molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 
 
 @dataclass(frozen=True)

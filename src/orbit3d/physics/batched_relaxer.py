@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from .conformer_relaxer import cap_molecular_displacement
 from ..constraints import TargetIntervals
-from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol
+from ..generator.molecular_state import mol3d_to_validated_rdkit_mol
 
 
 def relax_conformers_iso_property(instances, forcefield, oracle, target_interval, n_steps=35,

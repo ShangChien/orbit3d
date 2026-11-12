@@ -9,7 +9,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from orbit3d.generator.scaffold import ScaffoldState
 from orbit3d.generator.scaffold_geometry import propose_attachment
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES, rdkit_mol_to_mol3d_instance
+from orbit3d.generator.molecular_state import ATOM_TYPES, rdkit_mol_to_mol3d_instance
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.oracles.applicability import MorganDomain
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance

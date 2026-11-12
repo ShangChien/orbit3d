@@ -66,7 +66,7 @@ def load_3d_molecular_dataset(
                 mol = Chem.Mol(mol)
                 if not mol.HasProp('GeometryOrigin'):
                     mol.SetProp('GeometryOrigin', 'Source SDF coordinates')
-            from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+            from ..generator.molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
             elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in mol.GetAtoms()))
             inst = rdkit_mol_to_mol3d_instance(mol, y_vals, center=False, element_table=elements)
             mol3d_to_validated_rdkit_mol(inst)

@@ -1,7 +1,0 @@
-{
-  "source_smiles": "C=c1ccc2[b-]([nH+]1)C1=N/C(=C\\[C@H](N)[C@H]3N[C@@H]4C[CH-][C@H]34)OCC1=CC=[N+]=2",
-  "source_graph_compatible": true,
-  "recovered_smiles": "C=C1C=CC2=[B-]3C4=N/C(=C\\[C@H](N)[C@H]5N[C@@H]6C[C@H]([C@H]56)[N@@H+]31)OCC4=CC=N2",
-  "graph_preserved": false,
-  "graph_check_status": "reconstruction_disagrees"
-}

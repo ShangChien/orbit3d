@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
-from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.physics.conformer_relaxer import relax_conformer_energy_only
 from orbit3d.utils.dataset_io import write_precise_sdf

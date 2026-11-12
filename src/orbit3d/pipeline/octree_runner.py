@@ -18,7 +18,7 @@ from ..generator.octree_backend import (
     checkpoint_contract,
     required_condition_elements,
 )
-from ..generator.octree_tokenizer import ATOM_TYPES
+from ..generator.molecular_state import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
 from ..generator.spatial_box import BoxSpec3D
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle

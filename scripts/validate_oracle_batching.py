@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES
+from orbit3d.generator.molecular_state import ATOM_TYPES
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
 from orbit3d.utils.run_evidence import freeze_run

@@ -2,9 +2,15 @@ import numpy as np
 import pytest
 import torch
 from rdkit import Chem
-from rdkit.Chem import AllChem, rdMolDescriptors
-from orbit3d.generator.octree_tokenizer import *
-from orbit3d.generator.uni3dar_model import ConditionalUni3DAR
+from rdkit.Chem import AllChem
+
+from orbit3d.generator.molecular_state import (
+    ATOM_TYPES,
+    Mol3DInstance,
+    mol3d_to_rdkit_mol,
+    mol3d_to_validated_rdkit_mol,
+    rdkit_mol_to_mol3d_instance,
+)
 
 
 def embedded(smi):
@@ -19,27 +25,18 @@ def test_graph_identity(smi):
     inst = rdkit_mol_to_mol3d_instance(mol, np.array([1.0, 2.0]))
     out = mol3d_to_validated_rdkit_mol(inst)
     assert Chem.MolToSmiles(out) == Chem.MolToSmiles(mol)
-    decoded = decode_tokens_to_mol3d(encode_mol_to_octree_tokens(inst))
-    out = mol3d_to_validated_rdkit_mol(decoded)
-    assert rdMolDescriptors.CalcMolFormula(out) == rdMolDescriptors.CalcMolFormula(mol)
-    assert Chem.MolToSmiles(Chem.RemoveHs(out)) == Chem.MolToSmiles(Chem.RemoveHs(mol))
 
 
-def test_no_substitution_or_truncation():
+def test_unsupported_elements_are_not_substituted():
     mol = Chem.MolFromSmiles("[Ir+3]")
     mol.AddConformer(Chem.Conformer(1))
     with pytest.raises(ValueError):
         rdkit_mol_to_mol3d_instance(mol, np.array([1.0]))
-    inst = rdkit_mol_to_mol3d_instance(embedded("C" * 20), np.array([1.0]))
-    with pytest.raises(ValueError):
-        encode_mol_to_octree_tokens(inst)
-    with pytest.raises(ValueError):
-        decode_tokens_to_mol3d([BOS_TOKEN, EOS_TOKEN])
 
 
 def test_disconnected_invalid():
     inst = Mol3DInstance(np.array([[0, 0, 0], [10, 0, 0], [20, 0, 0]]), np.array([0, 0, 0]))
-    assert compute_mol_stability(inst)["mol_stable"] == 0
+    assert mol3d_to_rdkit_mol(inst) is None
 
 
 def test_charge_spin_and_fixed_coordinate_frame_are_preserved():
@@ -58,23 +55,14 @@ def test_charge_spin_and_fixed_coordinate_frame_are_preserved():
     assert mol3d_to_rdkit_mol(replace(inst, multiplicity=1)) is None
 
 
-def test_eos_and_length():
-    model = ConditionalUni3DAR(d_model=16, n_heads=2, n_layers=1)
-    with torch.no_grad():
-        model.lm_head.weight.zero_()
-        model.lm_head.bias.zero_()
-        model.lm_head.bias[EOS_TOKEN] = 1000
-    seq, _, _ = model.sample_autoregressive(torch.zeros(1, 7))
-    assert seq.shape[1] == 6
 
+
+from types import SimpleNamespace
 
 from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.grpo_trainer import policy_objective, gated_reward
-from orbit3d.physics.conformer_relaxer import relax_conformer_iso_property, project_force
 from orbit3d.oracles.base import PropertyOracleBase
 from orbit3d.oracles.uniqsar_oracle import UniQSARTrainedBridge
-from types import SimpleNamespace
-import copy
+from orbit3d.physics.conformer_relaxer import project_force, relax_conformer_iso_property
 
 
 def test_intervals_named_masked_and_joint():
@@ -88,24 +76,9 @@ def test_intervals_named_masked_and_joint():
         TargetIntervals.parse({"bad": (0, 1)}, ["a"])
 
 
-def test_kl_has_gradient_and_no_reference_gradient():
-    torch.manual_seed(7)
-    model = ConditionalUni3DAR(d_model=16, n_heads=2, n_layers=1, max_atoms=2)
-    ref = copy.deepcopy(model)
-    with torch.no_grad():
-        ref.lm_head.bias.add_(torch.linspace(-2, 2, model.vocab_size))
-    seq, old, _ = model.sample_autoregressive(torch.zeros(2, 7), temperature=1, top_p=1)
-    loss, _ = policy_objective(model, ref, seq, torch.zeros(2, 7), old, torch.zeros(2), 1.0)
-    loss.backward()
-    assert torch.isfinite(loss)
-    assert model.lm_head.bias.grad.abs().sum() > 0
-    assert all(p.grad is None for p in ref.parameters())
 
 
-def test_reward_and_projection():
-    assert gated_reward(1, 0.5, 100) < gated_reward(1, 0.5, 1)
-    assert gated_reward(1, 2, 1) < gated_reward(1, 0.5, 1)
-    assert gated_reward(0, 0, float("nan")) == -1
+def test_molecular_force_projection():
     g = torch.tensor([[1.0, 0, 0], [2.0, 0, 0]])
     f = 3 * g
     assert torch.allclose(project_force(f, g), torch.zeros_like(f))
@@ -189,77 +162,14 @@ def test_fold_uncertainty_and_stacking():
         b.forward_differentiable_3d(torch.zeros(2, 3), ["C", "C"], "CC")
 
 
-def test_missing_generator_fails_before_loading_oracle(tmp_path):
-    import json
-    from orbit3d.pipeline.runner import run_from_config
-
-    path = tmp_path / "config.json"
-    path.write_text(
-        json.dumps({"mode": "predict", "generator_config": {"backend": "dense_grid_v2"}, "mount_paths": {"checkpoint_load_dir": str(tmp_path / "missing")}})
-    )
-    with pytest.raises(FileNotFoundError, match="generator"):
-        run_from_config(str(path))
 
 
-def test_pipeline_train_reload_all_records(tmp_path, monkeypatch):
-    import json, pandas as pd
-    import orbit3d.pipeline.runner as runner
-
-    class Oracle(PropertyOracleBase):
-        def __init__(self, **kwargs):
-            super().__init__()
-            self.target_cols = ["a", "b"]
-            self.output_dim = 2
-
-        def fit_from_dataset(self, *a, **kw):
-            return {}
-
-        @classmethod
-        def load_from_dir(cls, *a, **kw):
-            return cls()
-
-        def predict_3d_mols(self, mols):
-            return np.tile([0.5, 99.0], (len(mols), 1)), np.zeros((len(mols), 2))
-
-    monkeypatch.setattr(runner, "InternalDPA4PropertyOracle", Oracle)
-    monkeypatch.setattr(runner, "resolve_dpa4_weight_path", lambda *a, **k: "mock")
-    monkeypatch.setattr(runner, "DPAPotentialGuidance", lambda **k: SimpleNamespace())
-    csv = tmp_path / "train.csv"
-    pd.DataFrame({"SMILES": ["CC", "CO"], "a": [0.1, 0.2], "b": [0.3, 0.4]}).to_csv(csv, index=False)
-    cfg = {
-        "mode": "train_and_predict",
-        "device": "cpu",
-        "mount_paths": {
-            "train_data_path": str(csv),
-            "checkpoint_save_dir": str(tmp_path / "weights"),
-            "output_dir": str(tmp_path / "out"),
-        },
-        "oracle_config": {"oracle_mode": "internal_dpa4", "target_cols": ["a", "b"]},
-        "generator_config": {"backend": "dense_grid_v2", "d_model": 16, "n_layers": 1, "n_heads": 2, "sft_epochs": 1, "grpo_steps": 0},
-        "stage5_relax_config": {"enabled": False},
-        "inference_config": {"num_molecules": 3, "target_interval": {"b": [0, 1], "a": [0, 1]}},
-    }
-    path = tmp_path / "config.json"
-    path.write_text(json.dumps(cfg))
-    # Real tiny generator trains and reloads; failures remain in the attempted denominator.
-    summary = runner.run_from_config(str(path))
-    before = pd.read_csv(summary["output_csv"]).fillna("")
-    cfg["mode"] = "predict"
-    path.write_text(json.dumps(cfg))
-    summary = runner.run_from_config(str(path))
-    pd.testing.assert_frame_equal(before, pd.read_csv(summary["output_csv"]).fillna(""))
-    assert summary["num_molecules"] == 3
-    # Controlled proposals separately exercise successful SDF/multi-target export.
-    inst = rdkit_mol_to_mol3d_instance(embedded("CC"), np.array([0.5, 99.0]))
-    monkeypatch.setattr(runner, "sample_molecule_deterministic_by_id", lambda **kw: (inst, torch.zeros(2)))
-    summary = runner.run_from_config(str(path))
-    assert summary["valid_count"] == 3 and summary["hit_rate"] == 0
-    assert len(list(Chem.SDMolSupplier(summary["output_sdf"], removeHs=False))) == 3
 
 
 def test_sdf_sparse_indices_and_empty_data(tmp_path, monkeypatch):
     import pandas as pd
-    from orbit3d.utils.dataset_io import load_3d_molecular_dataset, PandasTools
+
+    from orbit3d.utils.dataset_io import PandasTools, load_3d_molecular_dataset
 
     monkeypatch.setattr(
         PandasTools,
@@ -277,18 +187,6 @@ def test_sdf_sparse_indices_and_empty_data(tmp_path, monkeypatch):
         load_3d_molecular_dataset(str(tmp_path / "sample.sdf"), target_cols=["y"])
 
 
-@pytest.mark.parametrize("batch", [1, 4])
-def test_incremental_logits_match_prefix(batch):
-    torch.manual_seed(123)
-    model = ConditionalUni3DAR(d_model=32, n_heads=4, n_layers=2).eval()
-    seq = torch.randint(0, model.vocab_size, (batch, 17))
-    cond = torch.randn(batch, 7)
-    cache = None
-    with torch.no_grad():
-        for step in range(seq.shape[1]):
-            full, _ = model(seq[:, : step + 1], cond)
-            incremental, cache = model.forward_step(seq[:, step], cond, cache)
-            torch.testing.assert_close(incremental[:, -1], full[:, -1], atol=2e-6, rtol=1e-5)
 
 
 def test_raw_nan_force_rejected():
@@ -305,15 +203,16 @@ def test_raw_nan_force_rejected():
         relax_conformer_iso_property(inst, BadForce(), BondOracle(), (0, 10))
 
 
-def test_radical_training_is_rejected():
+def test_odd_electron_singlet_training_is_rejected():
     inst = rdkit_mol_to_mol3d_instance(embedded("[CH3]"), np.array([1.0]))
-    with pytest.raises(ValueError, match="chemical validation"):
-        encode_mol_to_octree_tokens(inst)
+    with pytest.raises(ValueError, match="electronic_state"):
+        mol3d_to_validated_rdkit_mol(inst)
 
 
 def test_refinement_freezes_inferred_graph():
     original = rdkit_mol_to_mol3d_instance(embedded("CC"), np.array([1.0]))
-    inst = decode_tokens_to_mol3d(encode_mol_to_octree_tokens(original))
+    from dataclasses import replace
+    inst = replace(original, graph=None)
     d = float(np.linalg.norm(inst.coords[1] - inst.coords[0]))
     result, _ = relax_conformer_iso_property(inst, BondForce(d), BondOracle(), (0, 10), n_steps=0)
     assert result.graph is not None
@@ -369,16 +268,13 @@ def test_displacement_cap_preserves_molecular_tangent_and_batch_independence():
 
 
 @pytest.mark.parametrize('smiles', ['B(O)O', 'C[Si](C)(C)C', 'C[Se]C', 'C[As](C)C', 'C[Te]C'])
-def test_explicit_element_table_preserves_wide_elements_without_changing_dense_vocabulary(smiles):
+def test_explicit_element_table_preserves_wide_elements(smiles):
     mol = embedded(smiles)
     table = tuple(sorted({a.GetSymbol() for a in mol.GetAtoms()}))
     inst = rdkit_mol_to_mol3d_instance(mol, np.zeros(1), element_table=table)
     out = mol3d_to_validated_rdkit_mol(inst)
     assert [a.GetAtomicNum() for a in out.GetAtoms()] == inst.atomic_numbers.tolist()
     assert Chem.MolToSmiles(out) == Chem.MolToSmiles(mol)
-    assert COORD_OFFSET == 13 and VOCAB_SIZE == 269
-    with pytest.raises(ValueError, match='original element table'):
-        encode_mol_to_octree_tokens(inst)
 
 
 def test_forcefield_indices_follow_its_own_element_table():
@@ -479,9 +375,10 @@ def test_refinement_preserves_float64_scaffold_world_coordinates():
     np.testing.assert_array_equal(result.coords[0], mol.GetConformer().GetPositions()[0])
 
 
-@pytest.mark.parametrize("backend", [None, "uni3dar", "unrecognized"])
-def test_generator_identity_is_never_inferred_as_the_legacy_model(tmp_path, backend):
+@pytest.mark.parametrize("backend", [None, "uni3dar", "dense_grid_v2", "unrecognized"])
+def test_generator_backend_must_be_supported_and_explicit(tmp_path, backend):
     import json
+
     from orbit3d.pipeline.runner import run_from_config
     path = tmp_path / "configuration.json"
     path.write_text(json.dumps({"generator_config": {"backend": backend}}))

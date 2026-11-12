@@ -8,7 +8,7 @@ import lmdb
 import numpy as np
 from rdkit import Chem, RDLogger
 from orbit3d.utils.qm9s import read_record, canonical_record, adapt_record
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES, mol3d_to_validated_rdkit_mol
+from orbit3d.generator.molecular_state import ATOM_TYPES, mol3d_to_validated_rdkit_mol
 from orbit3d.generator.octree_backend import OctreeDataset
 from orbit3d.generator.octree_model import build_default_uni3dar_args, AtomFeatDict
 
@@ -18,7 +18,6 @@ p.add_argument("--output", type=Path, required=True)
 p.add_argument("--train", type=int, default=2048)
 p.add_argument("--dev", type=int, default=256)
 p.add_argument("--test", type=int, default=256)
-p.add_argument("--backend", choices=["uni3dar_octree", "dense_grid_v2"], default="uni3dar_octree")
 p.add_argument('--task-name',default='QM9s structural adapter integration subset')
 p.add_argument('--elements',nargs='+',default=ATOM_TYPES)
 p.add_argument('--spectrum-size',type=int,default=240)
@@ -64,7 +63,6 @@ for split, source, limit in [("test", "valid", a.test), ("train", "train", a.tra
     writer = Chem.SDWriter(str(a.output / f"{split}.sdf"))
     selected = []
     spectra = []
-    tokens = []
     seen = set()
     reasons = Counter()
     scanned = 0
@@ -84,10 +82,9 @@ for split, source, limit in [("test", "valid", a.test), ("train", "train", a.tra
                     continue
                 if canonical in seen:
                     raise ValueError("duplicate_structure")
-                inst, tok = adapt_record(record, backend=a.backend, max_atoms=a.max_atoms, element_table=tuple(a.elements), spectrum_size=a.spectrum_size)
+                inst = adapt_record(record, max_atoms=a.max_atoms, element_table=tuple(a.elements), spectrum_size=a.spectrum_size)
                 mol = mol3d_to_validated_rdkit_mol(inst)
-                if a.backend == "uni3dar_octree":
-                    OctreeDataset([mol], representation, training=False).collate([0])
+                OctreeDataset([mol], representation, training=False).collate([0])
                 mol.SetProp("SourceKey", key.decode())
                 mol.SetProp("SourceID", str(record.get("ID", "")))
                 mol.SetProp("SourceSplit", source)
@@ -104,8 +101,6 @@ for split, source, limit in [("test", "valid", a.test), ("train", "train", a.tra
                     }
                 )
                 spectra.append(inst.props)
-                if tok is not None:
-                    tokens.append(tok)
             except (ValueError, RuntimeError, AssertionError) as exc:
                 reason = str(exc)
                 reasons[reason] += 1
@@ -114,11 +109,6 @@ for split, source, limit in [("test", "valid", a.test), ("train", "train", a.tra
     if len(selected) != limit:
         raise RuntimeError(f"Insufficient compatible records in {split}")
     arrays = {"spectrum": np.stack(spectra) if spectra else np.empty((0,a.spectrum_size),dtype=np.float32)}
-    if tokens:
-        packed = np.zeros((len(tokens), max(map(len, tokens))), dtype=np.int16)
-        for i, tok in enumerate(tokens):
-            packed[i, : len(tok)] = tok
-        arrays["tokens"] = packed
     np.savez_compressed(a.output / f"{split}_arrays.npz", **arrays)
     (a.output / f"{split}_index.json").write_text(json.dumps(selected, indent=2) + "\n")
     report[split] = {
@@ -138,7 +128,7 @@ assert not (
 manifest = {
     "task": a.task_name,
     "seed": 42,
-    "backend": a.backend,
+    "backend": "uni3dar_octree",
     "max_atoms": a.max_atoms,
     "allowed_elements": a.elements,
     "merge_level": a.merge_level,

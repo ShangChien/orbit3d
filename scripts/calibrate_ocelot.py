@@ -13,7 +13,7 @@ from orbit3d.oracles.calibration import ResidualCalibration
 from orbit3d.oracles.applicability import MorganDomain
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.physics.factory import build_forcefield
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES
+from orbit3d.generator.molecular_state import ATOM_TYPES
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.conformers import ocelot_conformer
 from orbit3d.utils.run_evidence import freeze_run, record_input_hashes

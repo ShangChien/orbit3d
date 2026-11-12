@@ -4,7 +4,7 @@ from dataclasses import replace
 import numpy as np
 import torch
 from ..constraints import TargetIntervals
-from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, mol_to_clean_smiles
+from ..generator.molecular_state import mol3d_to_validated_rdkit_mol, mol_to_clean_smiles
 
 
 def project_force(force, gradient):

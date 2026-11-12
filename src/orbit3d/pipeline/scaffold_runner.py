@@ -10,7 +10,7 @@ from ..constraints import TargetIntervals
 from ..generator.scaffold import ScaffoldState
 from ..generator.scaffold_geometry import propose_attachment
 from ..generator.random_streams import candidate_seed
-from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance
+from ..generator.molecular_state import rdkit_mol_to_mol3d_instance
 from ..physics.batched_relaxer import relax_conformers_iso_property
 from ..physics.conformer_relaxer import relax_conformer_iso_property
 from ..utils.dataset_io import write_precise_sdf

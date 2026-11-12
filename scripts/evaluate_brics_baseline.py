@@ -8,7 +8,7 @@ import torch
 from rdkit import Chem
 from orbit3d.baselines.brics import build_library,FragmentSampler
 from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
+from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
 from orbit3d.generator.random_streams import candidate_seed
 from orbit3d.pipeline.evaluators import load_evaluators
 from orbit3d.physics.batched_relaxer import relax_conformers_iso_property

@@ -129,7 +129,7 @@ def inspect_optimized_graph(molecule):
 
     from rdkit import Chem
 
-    from ..generator.octree_tokenizer import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
+    from ..generator.molecular_state import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
     from ..utils.molecular_identity import compare_molecular_identity
 
     elements = tuple(dict.fromkeys(atom.GetSymbol() for atom in molecule.GetAtoms()))

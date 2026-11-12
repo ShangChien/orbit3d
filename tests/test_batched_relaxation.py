@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance
+from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance
 from orbit3d.physics.conformer_relaxer import relax_conformer_iso_property
 from orbit3d.physics.batched_relaxer import relax_conformers_iso_property
 

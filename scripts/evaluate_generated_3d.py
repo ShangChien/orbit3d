@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from rdkit import Chem
 from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES
+from orbit3d.generator.molecular_state import ATOM_TYPES
 from orbit3d.pipeline.evaluators import load_evaluators
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
 from orbit3d.utils.reproducibility import lock_deterministic_environment

@@ -1,83 +1,57 @@
 # ORBIT-3D manuscript
 
-`ORBIT3D_arXiv_Paper.md` is the editable manuscript source. `build_manuscript.py`
-generates the synchronized LaTeX, numeric bibliography, and pilot-results table.
-Edit the Markdown and `references.bib`; do not edit the generated TeX or BBL.
+This directory contains the manuscript for the implemented and evaluated system.
+The proposed next architecture and experiments are maintained separately in
+[architecture](../docs/architecture.md) and [experiment designs](../docs/experiments.md).
+They are not presented here as implemented capabilities.
 
-The main results are organized by property prediction, proposal quality, controlled
-ablations, quantum diagnostics and replay. Exploratory adaptation and the archived
-octree/GVP pilot are separated into appendices. Short tables remain unbroken. Current tables include property training, stage/reward controls,
-five GRPO objectives across three training seeds, four-target generation, matched
-DPA/HyFF property prediction, fragment recombination and matched refinement. Independent-surrogate and
-quantum disagreements remain explicit. These experiments establish the stated
-implementation behavior and limited empirical scope, not general superiority.
+## Files
 
-The completed duration table uses all 36 evaluations of three SFT continuations
-from one common 5000-step model. The qualified-design quantum table reports all
-five preselected structures, including three orbital-target misses. Both tables
-are generated from their checksum-bound experiment records.
+| Path | Purpose |
+| --- | --- |
+| `ORBIT3D_arXiv_Paper.md` | Editable manuscript; result tables are regenerated from evidence |
+| `references.bib`, `manuscript_template.tex` | Bibliography and typesetting template |
+| `sync_current_evidence.py` | Select and checksum the evidence used by the manuscript |
+| `build_manuscript.py` | Generate LaTeX, BBL and result tables |
+| `draw_architecture.py`, `draw_grpo_seeds.py` | Editable Figure 0 and measured GRPO seed comparison |
+| `figures/` | Current SVG/PDF/PNG versions of those two figures |
+| `ancillary_readme.txt` | Source description of the bundled research evidence |
+| `build/data/` | Generated, Git-ignored evidence staging; rebuilt from `docs/experiments/` and `data/` |
+| `build_arxiv_submission.py` | Package the typesetting sources and ancillary data |
+| `ORBIT3D_arXiv_Paper.pdf`, `ORBIT3D_arXiv_Submission.tar.gz` | Built manuscript and source archive |
 
-## Figure 0
+The main results include matched property predictors, BRICS comparisons, 36 SFT
+continuation evaluations, 45 GRPO evaluations, fixed-start refinement controls,
+preselected quantum cohorts and full replay. Supplementary experiments retain
+negative adaptation results, spatial/scaffold checks and excited-state diagnostics.
 
-`draw_architecture.py` draws editable SVG and vector PDF from the same primitives.
-PNG is rendered from the PDF with Poppler. The manuscript embeds the vector PDF.
-
-```bash
-uv run --no-project --with reportlab python paper/draw_architecture.py
-```
-
-Install Poppler to provide `pdftoppm`, or pass `--no-png` to generate SVG/PDF only.
-The compatibility entrypoint `generate_orbit3d_figures.py` now generates Figure 0
-by default. Its `--legacy-figures` option reproduces the historical illustrative
-plots; those plots are not used by the revised manuscript and their fixed arrays
-must not be treated as experiment outputs.
-
-## Training-seed figure
-
-`draw_grpo_seeds.py` reads the complete 45-run public matrix and draws the two
-property-evaluator panels. Points represent training-seed aggregates, with means
-shown separately; no uncertainty bars are implied.
-
-```bash
-uv run --no-project --with matplotlib python paper/draw_grpo_seeds.py
-```
-
-## Build the manuscript
+## Build
 
 ```bash
 python paper/sync_current_evidence.py
 uv run --no-project --with pypandoc-binary python paper/build_manuscript.py
-```
-
-The pilot JSON is checked against `data/provenance.json` before table generation.
-The source driver is identified by filename and SHA-256. The archive contains
-aggregate data, not all checkpoints or sample-level records needed for a full
-experiment rerun.
-
-Compile `ORBIT3D_arXiv_Paper.tex` in a LaTeX editor, or use a TeX installation:
-
-```bash
 cd paper
 pdflatex ORBIT3D_arXiv_Paper.tex
 pdflatex ORBIT3D_arXiv_Paper.tex
-```
-
-A synchronized BBL is included directly, so BibTeX is not required. Regenerate
-it from `references.bib` with `build_manuscript.py`; this preserves the numbered
-citation order and primary-source links in the PDF.
-
-## Build the source archive
-
-```bash
+cd ..
 python paper/build_arxiv_submission.py
 ```
 
-This rebuilds the local source archive; it does not submit or publish the paper.
-The archive includes the main TeX, bibliography, vector Figures 0 and 1, the
-original ten-molecule and qualified-design five-molecule quantum input SDFs,
-all three raw gradient arrays, and pilot
-data with provenance, plus the checksum-verified current evidence archive.
-Research data is packaged in the root `anc/` directory, following the
-[arXiv ancillary-file format](https://info.arxiv.org/help/ancillary_files.html).
-The manuscript itself does not depend on those files for typesetting. Superseded
-figures are excluded.
+A synchronized BBL is included directly; BibTeX is not required. Edit the Markdown
+and BibTeX sources rather than the generated TeX/BBL. Table generation fails if a
+required result or checksum is missing. `sync_current_evidence.py` creates
+`build/data/` from a clean checkout; generated data copies are not tracked separately. Tectonic can also compile the generated
+TeX. Rebuild the figures only when their source or experiment data changes:
+
+```bash
+uv run --no-project --with reportlab python paper/draw_architecture.py
+uv run --no-project --with matplotlib python paper/draw_grpo_seeds.py
+```
+
+Figure 0 uses SVG/vector PDF; PNG rendering requires Poppler (`pdftoppm`). Figure 1
+shows actual training-seed aggregates and means, not illustrative performance data.
+
+The source archive includes TeX, bibliography, both vector figures and research
+data under `anc/`. It supports inspection of the reported evidence, not a complete
+training rerun: datasets and model weights remain separate. Building the archive
+does not submit or publish the paper.

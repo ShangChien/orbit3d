@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from rdkit import Chem
 
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES
+from orbit3d.generator.molecular_state import ATOM_TYPES
 from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
 from orbit3d.pipeline.evaluators import load_evaluators
 from orbit3d.utils.property_metrics import paired_energy_difference_metrics

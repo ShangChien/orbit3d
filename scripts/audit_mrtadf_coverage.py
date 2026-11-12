@@ -21,7 +21,7 @@ for group in ['de_novo_gen','local_gen']:
      record=read_record(value);smiles=canonical_record(record);m=Chem.MolFromSmiles(smiles)
      present={atom.GetSymbol() for atom in m.GetAtoms()};raw.update(present)
      if Chem.GetFormalCharge(m) or any(atom.GetNumRadicalElectrons() for atom in m.GetAtoms()):counts['charged_or_radical']+=1;continue
-     inst,_=adapt_record(record,backend='uni3dar_octree',max_atoms=180,element_table=elements,spectrum_size=450)
+     inst=adapt_record(record,max_atoms=180,element_table=elements,spectrum_size=450)
      if smiles in seen:counts['duplicate']+=1;continue
      seen.add(smiles);accepted.update(present);counts['accepted']+=1
      if present-{'H','C','N','O','F','B'}:

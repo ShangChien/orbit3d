@@ -3,7 +3,7 @@
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from ..generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+from ..generator.molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 
 
 def ocelot_conformer(smiles, seed=42, method='mmff94'):

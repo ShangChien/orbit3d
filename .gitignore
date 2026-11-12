@@ -57,3 +57,8 @@ paper/*.fls
 paper/*.log
 paper/*.out
 paper/*.synctex.gz
+
+# Rebuilt manuscript evidence (canonical records live in docs/experiments)
+/paper/build/
+.pytest_cache/
+.ruff_cache/

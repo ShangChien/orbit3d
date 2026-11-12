@@ -6,7 +6,7 @@ from rdkit import Chem
 import numpy as np
 import pandas as pd
 import torch
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES
+from orbit3d.generator.molecular_state import ATOM_TYPES
 from orbit3d.physics.factory import build_forcefield
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 from orbit3d.oracles.validation import compare_oracle_reload

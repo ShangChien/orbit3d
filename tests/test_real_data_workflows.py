@@ -1,12 +1,14 @@
 import pickle
+
 import numpy as np
 import pytest
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.utils.qm9s import adapt_record, read_record
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
+
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
+from orbit3d.utils.qm9s import adapt_record, read_record
 
 
 def mol(smi):
@@ -24,11 +26,8 @@ def test_qm9s_adapter_preserves_spectrum_and_rejects_order_mismatch():
         "target": np.arange(240, dtype=np.float32),
     }
     loaded = read_record(pickle.dumps(record, protocol=5))
-    inst, tokens = adapt_record(loaded)
+    inst = adapt_record(loaded)
     np.testing.assert_array_equal(inst.props, np.arange(240))
-    assert tokens is None  # Octree data must not pass through the dense-grid tokenizer.
-    _, tokens = adapt_record(loaded, backend="dense_grid_v2")
-    assert len(tokens) == 4 * m.GetNumAtoms() + 2
     record["smi"] = "COC"
     with pytest.raises(ValueError, match="atom_order"):
         adapt_record(record)
@@ -64,7 +63,9 @@ class DescriptorForce:
 
 def test_reload_check_separates_native_noise_from_changed_scalers():
     import copy
+
     from sklearn.preprocessing import StandardScaler
+
     from orbit3d.oracles.validation import compare_oracle_reload
 
     class NoisyDescriptor(DescriptorForce):
@@ -128,24 +129,6 @@ def test_disconnected_descriptor_does_not_return_partial_coordinate_gradient():
         oracle.forward_differentiable_3d(coords, [a.GetSymbol() for a in molecule.GetAtoms()])
 
 
-def test_candidate_ranking_keeps_attempt_denominator_and_deduplicates():
-    from orbit3d.generator.candidate_selection import select_candidates
-    from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance
-    from orbit3d.constraints import TargetIntervals
-
-    structures = [mol("CC"), mol("CO"), mol("CO"), mol("CN")]
-    scores = [3.0, 0.5, 0.2, 2.0]
-
-    def sample(**kwargs):
-        i = kwargs["mol_id"]
-        return rdkit_mol_to_mol3d_instance(structures[i], np.array([1.0])), torch.tensor([scores[i]])
-
-    selected, records = select_candidates(
-        sample, None, None, TargetIntervals.parse((0, 1), ["y"]), [0], [1], 2, pool_factor=2, deduplicate=True
-    )
-    assert len(records) == 4 and len(selected) == 2
-    assert selected[0].mol_id == 1
-    assert records[2]["status"] == "duplicate"
 
 
 def test_precise_sdf_roundtrips_coordinates(tmp_path):
@@ -218,7 +201,9 @@ def test_phosphazene_mmff_failure_is_an_explicit_preparation_rejection():
 
 def test_csv_loader_records_geometry_rejection_without_shifting_labels(tmp_path):
     import json
+
     import pandas as pd
+
     from orbit3d.utils.dataset_io import load_3d_molecular_dataset
 
     source = tmp_path / 'molecules.csv'
@@ -250,6 +235,7 @@ def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
     import sys
     import types
     from pathlib import Path
+
     import orbit3d.compat.hyff as bundled
     from orbit3d.compat.hyff import registry
     from orbit3d.compat.hyff.models.factory import build_model, factory_id
@@ -271,7 +257,7 @@ def test_mim_wide_element_adapter_requires_declared_spectrum_and_explicit_atoms(
          'coordinates':[m.GetConformer().GetPositions()],'target':np.arange(450,dtype=np.float32)}
     with pytest.raises(ValueError,match='spectrum'):
         adapt_record(row)
-    instance,_=adapt_record(row,element_table=('H','C','B','O'),spectrum_size=450)
+    instance=adapt_record(row,element_table=('H','C','B','O'),spectrum_size=450)
     np.testing.assert_array_equal(instance.props,row['target'])
     assert 5 in instance.atomic_numbers
     row['smi']='[C]'

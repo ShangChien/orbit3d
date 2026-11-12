@@ -64,11 +64,6 @@ hyff = [
     "warp-lang==1.10.1",
     "nvalchemi-toolkit-ops==0.3.1; sys_platform == 'linux'",
 ]
-baselines = [
-    "lightning>=2.1.0",
-    "einops>=0.7.0",
-    "matplotlib>=3.8.0",
-]
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
@@ -96,14 +91,11 @@ dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
 ]
-baselines = [
-    "matplotlib>=3.8.0",
-]
 
 [tool.ruff]
 line-length = 110
 target-version = "py311"
-src = ["src", "benchmarks", "scripts"]
+src = ["src", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

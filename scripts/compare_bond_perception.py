@@ -10,7 +10,7 @@ import pandas as pd
 from rdkit import Chem, rdBase
 from rdkit.Chem import rdDetermineBonds
 
-from orbit3d.generator.octree_tokenizer import (
+from orbit3d.generator.molecular_state import (
     Mol3DInstance,
     mol3d_to_validated_rdkit_mol,
     rdkit_mol_to_mol3d_instance,

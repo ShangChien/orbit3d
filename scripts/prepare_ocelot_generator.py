@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from rdkit import Chem, RDLogger
-from orbit3d.generator.octree_tokenizer import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.conformers import ocelot_conformer
 

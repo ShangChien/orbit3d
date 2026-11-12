@@ -16,7 +16,7 @@ import argparse
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="orbit3d",
-        description="ORBIT-3D: Octree-Based Reinforced Bidirectional Interval-Targeted 3D Molecular Generation",
+        description="ORBIT-3D: Interval-targeted molecular generation and constrained 3D refinement",
     )
     parser.add_argument(
         "--config",

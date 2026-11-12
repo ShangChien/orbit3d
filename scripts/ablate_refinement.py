@@ -8,7 +8,7 @@ import torch
 from rdkit import Chem
 from orbit3d.constraints import TargetIntervals
 from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.octree_tokenizer import ATOM_TYPES,mol3d_to_validated_rdkit_mol
+from orbit3d.generator.molecular_state import ATOM_TYPES,mol3d_to_validated_rdkit_mol
 from orbit3d.physics.factory import build_forcefield
 from orbit3d.physics.conformer_relaxer import relax_conformer_iso_property,relax_conformer_energy_only,project_force,cap_molecular_displacement
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
