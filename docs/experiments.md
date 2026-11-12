@@ -234,6 +234,8 @@ P_est(x,t) = mean_i 1[ abs(prediction_k(x) + r_i,k - t_k) <= tau_k，对所有 k
 
 ### 固定 SFT 的推理集中度对照（独立于 GRPO）
 
+已完成全部四组及同池筛选对照；结果见 [集中度对照](results.md#oe62-固定-sftcfg温度与筛选的集中度对照)。
+
 冻结 OE62 的 HOMO/LUMO 单目标 SFT（各 5,000 步，训练 seed 42），继续使用修复过分类采样的 `1fcd1bd` 运行时。只在 GPU 2、3 上执行，不改权重、不参与主线程 GRPO。采用 2×2 因子对照：
 
 | 组别 | CFG | tree / atom / xyz 温度 |

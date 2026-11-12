@@ -79,9 +79,9 @@ def main():
         'visible_devices':os.environ.get('CUDA_VISIBLE_DEVICES'),'gpu_name':torch.cuda.get_device_name(),
         'sampling':{'batch_size':8,'precision':'float32','tree_temperature':a.temperatures[0],'atom_temperature':a.temperatures[1],'xyz_temperature':a.temperatures[2],'cfg_scale':a.cfg_scale,'electron_parity':0},
         'scope':'Fresh trajectories per target and seed; common random streams across targets. One frozen trained checkpoint per property, not independent training repetitions.',
-        'timing':'CUDA synchronized stage wall time; model load and warmup excluded. Raw evaluation includes in-domain and OOD valid molecules. Geometry only on up to 8 DPA-ranked in-domain correct-condition candidates.',
-        'off_control':'One independent unconditional pool per seed, rescored against every requested target; no fake new draws per rescoring.',
-        'geometry':'Fixed graph L-BFGS maxstep .025 A, max150 steps; stop RMS<=.1 and maxforce<=.15 eV/A. No target gradient.'}
+        'timing':'CUDA synchronized stage wall time; model load and warmup excluded. Raw evaluation includes in-domain and OOD valid molecules. Geometry, if retain>0, only on up to retain DPA-ranked in-domain correct-condition candidates.',
+        'off_control':('Disabled; no off-condition pools generated.' if a.skip_off else 'One independent unconditional pool per seed, rescored against every requested target; no fake new draws per rescoring.'),
+        'geometry':('Disabled; raw generation only.' if a.retain==0 else 'Fixed graph L-BFGS maxstep .025 A, max150 steps; stop RMS<=.1 and maxforce<=.15 eV/A. No target gradient.')}
     (a.output/'protocol.json').write_text(json.dumps(protocol,indent=2))
     del state
 

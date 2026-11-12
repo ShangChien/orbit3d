@@ -167,6 +167,10 @@ if a.plot:
         ticks=np.arange(limits[0],limits[1]+.01,.5)
         ax.set_xticks(ticks);ax.set_yticks(ticks);ax.set_aspect('equal',adjustable='box')
         ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
+    span=max(ax.get_xlim()[1]-ax.get_xlim()[0] for ax in axes)
+    for ax in axes:
+        lo=ax.get_xlim()[0];ax.set_xlim(lo,lo+span);ax.set_ylim(lo,lo+span)
+        ticks=np.arange(lo,lo+span+.01,.5);ax.set_xticks(ticks);ax.set_yticks(ticks)
     handles,labels=axes[0].get_legend_handles_labels()
     fig.legend(handles,labels,loc='lower center',ncol=2,frameon=False,bbox_to_anchor=(.5,.055))
     fig.suptitle('Fresh point-conditioned generation: target response',fontsize=14)
