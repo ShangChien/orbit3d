@@ -105,6 +105,7 @@ class FingerprintOracle(PropertyOracleBase):
             "units": ["eV"] * self.output_dim,
             "n_bits": self.n_bits,
             "training_elements": self.training_elements,
+            "label_theory": getattr(self, 'label_theory', None),
             "training_mean": self.training_mean.tolist(),
             "training_std": self.training_std.tolist(),
             "uncertainty": "bootstrap disagreement; not calibrated probability",
@@ -124,6 +125,7 @@ class FingerprintOracle(PropertyOracleBase):
         oracle.models = joblib.load(path)
         oracle.target_units = metadata["units"]
         oracle.training_elements = metadata.get("training_elements")
+        oracle.label_theory = metadata.get("label_theory")
         oracle.training_mean = np.array(metadata["training_mean"])
         oracle.training_std = np.array(metadata["training_std"])
         return oracle

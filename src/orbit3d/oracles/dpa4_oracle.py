@@ -417,6 +417,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             "electronic_states": [{'charge': 0, 'multiplicity': 1}],
             "training_elements": sorted({atom.GetSymbol() for mol in train for atom in mol.GetAtoms()}),
             "input_geometry_method": getattr(self, 'geometry_method', None),
+            "label_theory": getattr(self, 'label_theory', None),
             "scaler_sha256": hashlib.sha256(open(os.path.join(save_dir, 'target_scaler.ss'), 'rb').read()).hexdigest(),
             "batch_size": batch_size,
             "train_records": len(train),
@@ -451,6 +452,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         obj.scalers = joblib.load(scaler_path)
         obj.target_units = meta.get('target_units', ['unspecified'] * obj.output_dim)
         obj.geometry_method = meta.get('input_geometry_method')
+        obj.label_theory = meta.get('label_theory')
         obj.training_elements = meta.get('training_elements')
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)["adapter_state_dict"]
         obj.adapter.load_state_dict(state, strict=True)

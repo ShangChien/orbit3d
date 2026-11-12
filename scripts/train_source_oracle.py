@@ -39,12 +39,14 @@ def main():
         ff=build_forcefield('dpa4',a.weight,elements,a.device)
         model=InternalDPA4PropertyOracle(ff,len(a.targets),a.targets,n_ensemble_heads=3)
         model.target_units=['eV']*len(a.targets);model.geometry_method='source_oe62_pbe_vdw'
+        model.label_theory=next(iter(theories))
         model.fit_from_dataset(mols['train'],values['train'],str(a.output/'oracle'),epochs=a.epochs,
                                seed=a.seed,batch_size=a.batch_size,validation_mols=mols['valid'],validation_targets=values['valid'])
         restored=InternalDPA4PropertyOracle.load_from_dir(str(a.output/'oracle'),ff)
     else:
         model=FingerprintOracle(a.targets)
-        model.fit(mols['train'],values['train'],a.output/'oracle',n_models=3,n_trees=128,n_jobs=4)
+        model.label_theory=next(iter(theories))
+        model.fit(mols['train'],values['train'],a.output/'oracle',seed=a.seed,n_models=3,n_trees=128,n_jobs=4)
         restored=FingerprintOracle.load_from_dir(a.output/'oracle')
     results={}
     for split in ['valid','calibration']:
