@@ -16,7 +16,7 @@ def main():
     stats=[next(r for r in data['aggregate'] if r['target']=='all' and r['method']==m) for m in methods]
     for j,(key,label,color) in enumerate([('graph_preserved','Graph preserved','#b4bcc4'),('graph_and_rms_below_0.1','Graph + RMS force <= 0.1','#3465a4'),('joint_success','Graph + force + both property models','#168579')]):
         axes[0,0].bar(x+(j-1)*.25,[r[key] for r in stats],width=.24,label=label,color=color)
-    axes[0,0].set_ylim(0,data['executed_samples']*1.13);axes[0,0].set_ylabel(f'Cases / {data["executed_samples"]} frozen starts');axes[0,0].legend(fontsize=8,loc='upper right')
+    axes[0,0].set_ylim(0,data['executed_samples']*1.13);axes[0,0].set_ylabel(f'Cases / {data["executed_samples"]} frozen starts');axes[0,0].legend(fontsize=8,loc='lower left',bbox_to_anchor=(0,1.01),frameon=False)
     for i,m in enumerate(methods):
         rows=[r for r in records if r['method']==m]
         for valid,marker in [(True,'o'),(False,'x')]:
