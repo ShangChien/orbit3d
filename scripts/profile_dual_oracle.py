@@ -26,16 +26,27 @@ def predict(model,ms,batch=32):
 def load_models(root,selection):
  manifest=json.loads((root/'data/manifest.json').read_text())
  ff=build_forcefield('dpa4','/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt',manifest['splits']['train']['elements'],'cuda:0')
+ model_dir=root/'training'/selection/'oracle'
+ meta=json.loads((model_dir/'oracle_meta.json').read_text())
+ if meta['oracle_type']=='internal_unimol2':
+  from orbit3d.oracles.unimol2_oracle import InternalUniMol2Oracle
+  evaluator=InternalUniMol2Oracle.load_from_dir(model_dir,'cuda:0')
+ else:evaluator=InternalUniMolOracle.load_from_dir(str(model_dir),'cuda:0')
  models={'dpa_common':InternalDPA4PropertyOracle.load_from_dir(str(root/'training/dpa_common/oracle'),ff),
   'dpa_historical':InternalDPA4PropertyOracle.load_from_dir('/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/oracle_dpa/oracle',ff),
-  'unimol':InternalUniMolOracle.load_from_dir(str(root/'training'/selection/'oracle'),'cuda:0')}
+  'unimol':evaluator}
  return ff,models
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();assert os.environ.get('CUDA_VISIBLE_DEVICES') in ['2','3']
+ p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--selection',type=Path,help='Development-only version/precision comparison, frozen before test evaluation');a=p.parse_args();assert os.environ.get('CUDA_VISIBLE_DEVICES') in ['2','3']
  torch.set_num_threads(2);freeze_run(a.output,__file__)
- choices={name:json.loads((a.root/'training'/name/'oracle/oracle_meta.json').read_text()) for name in ['unimol_lr1e4','unimol_lr3e5']}
- choice=min(choices,key=lambda n:choices[n]['best_valid_normalized_mae'])
+ selection=json.loads(a.selection.read_text()) if a.selection else None
+ names=selection['candidates'].keys() if selection else ['unimol_lr1e4','unimol_lr3e5']
+ choices={name:json.loads((a.root/'training'/name/'oracle/oracle_meta.json').read_text()) for name in names}
+ choice=selection['selected_unimol'] if selection else min(choices,key=lambda n:choices[n]['best_valid_normalized_mae'])
+ if selection:
+  checkpoint=a.root/'training'/choice/'oracle/model.pt'
+  assert hashlib.sha256(checkpoint.read_bytes()).hexdigest()==selection['candidates'][choice]['checkpoint_sha256']
  ff,models=load_models(a.root,choice);manifest=json.loads((a.root/'data/manifest.json').read_text())
  train=list(Chem.SDMolSupplier(str(a.root/'data/train.sdf'),removeHs=False));valid=list(Chem.SDMolSupplier(str(a.root/'data/valid.sdf'),removeHs=False))
  target=lambda ms:np.array([[float(m.GetProp(k)) for k in NAMES] for m in ms])
@@ -46,13 +57,13 @@ def main():
   assert np.isfinite(pred).all();dev[name]=metrics(yv,pred);devpred[name]=pred
  b=dev['unimol'];bins=[np.mean(abs(devpred['unimol'][np.searchsorted(cuts[:,k],yv[:,k],side='right')==j,k]-yv[np.searchsorted(cuts[:,k],yv[:,k],side='right')==j,k])) for k in range(2) for j in range(5)]
  passed=bool(max(b['mae'])<=.20 and max(abs(np.array(b['bias'])))<=.10 and all(.75<=s<=1.25 for s in b['slope']) and max(bins)<=.35)
- development={'selected_unimol':choice,'selection_rule':'Minimum normalized development MAE across two predefined learning rates; no calibration/test/candidate B predictions used',
+ development={'selected_unimol':choice,'selection_rule':selection['selection_rule'] if selection else 'Minimum normalized development MAE across two predefined learning rates; no calibration/test/candidate B predictions used',
   'candidates':{n:{'best_epoch':v['best_epoch'],'best_valid_normalized_mae':v['best_valid_normalized_mae']} for n,v in choices.items()},'metrics':dev,'gate':{'passed':passed,'max_mae':.20,'max_abs_bias':.10,'slope_range':[.75,1.25],'max_quintile_mae':.35,'observed_quintile_mae':bins}}
  (a.output/'development.json').write_text(json.dumps(development,indent=2)+'\n');print('DEVELOPMENT',development,flush=True)
  if not passed:raise RuntimeError('Uni-Mol development gate failed; keep locked test closed and improve predictor first')
  inputs={'split_manifest':a.root/'data/manifest.json','dpa_common':a.root/'training/dpa_common/oracle','dpa_historical':Path('/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/oracle_dpa/oracle'),'unimol':a.root/'training'/choice/'oracle'}
  hashes=record_input_hashes(a.output,inputs)
- (a.output/'models_frozen.json').write_text(json.dumps({'selected_unimol':choice,'hashes':hashes,'roles':{'optimization_A':'historical DPA for existing candidates, predictions unchanged','fair_predictor_A':'DPA common-support refit','cross_evaluator_B':'selected Uni-Mol'},'test_unsealed_after_this_lock':True},indent=2)+'\n')
+ (a.output/'models_frozen.json').write_text(json.dumps({'selected_unimol':choice,'hashes':hashes,'roles':{'optimization_A':'historical DPA for existing candidates, predictions unchanged','fair_predictor_A':'DPA common-support refit','cross_evaluator_B':'selected Uni-Mol'},'test_unsealed_after_this_lock':not bool(selection),'test_history':'Previously reported for v1; v2 selection uses development only' if selection else 'First source test profile','development_selection':selection},indent=2)+'\n')
  fpgen=rdFingerprintGenerator.GetMorganGenerator(radius=2,fpSize=2048)
  def scaf(m):return MurckoScaffold.GetScaffoldForMol(Chem.RemoveHs(m))
  train_scaffolds={Chem.MolToSmiles(scaf(m),isomericSmiles=False) for m in train};trainfps=[fpgen.GetFingerprint(Chem.MolFromSmiles(s)) for s in train_scaffolds]

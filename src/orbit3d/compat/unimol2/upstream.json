@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/deepmodeling/Uni-Mol",
+  "commit": "90f52c41299a1a582da0f9765e9f87aa21faa16a",
+  "original_sha256": {
+    "unimol2.py": "dbfdfbabf2a844dbe742828167624e958a5a31d6c094f5a1ca037f115c5ce3cc",
+    "layers.py": "90fbf6939f70c8ad9a9e9995bd4f9ff7c74cfbc0ccf0f1b332256db968a299ea",
+    "transformer_encoder_with_pair.py": "afbdc907f45d74269e474ec169694c1e3f7b2f4a369cd0e7639bbd1e9f3230ca"
+  }
+}

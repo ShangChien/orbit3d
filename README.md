@@ -88,10 +88,12 @@ mol_gen/
 | --- | --- |
 | 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_generator_sdf.py` |
 | 性质训练/评价 | `train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
+| OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_dual_oracle.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |
 | 生成训练与迁移 | `train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`run_grpo_factorial.py`、`run_concentration_scan.py`、`run_response_calibration.py`、`ablate_*.py` |
 | 独立评价/汇总 | `evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
 | 量化验证 | `select_qualified_quantum_cohort.py`、`validate_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
+| OE62 冻结队列量化 | `freeze_dual_quantum_cohort.py`、`prepare_oe62_quantum_reference.py`、`run_oe62_quantum.py`、`summarize_dual_quantum.py` |
 | 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py` |
 | 打包与重放 | `check_wheel.py`、`pack_pretrained_weights.py`、`export_inference_bundle.py`、`validate_octree_reload.py` |
 
