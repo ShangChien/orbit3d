@@ -1,14 +1,14 @@
 # ORBIT-3D
 
-面向性质区间的分子生成与三维优化研究。当前可执行主线为：
+面向性质目标的分子生成与三维优化研究。当前可执行主线为：
 
-**预训练 Uni-3DAR octree → 区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
+**预训练 Uni-3DAR octree → 性质条件监督适配 → 候选排序 → DPA/HyFF 弛豫 → 独立评价。**
 
 GRPO 是可选实验阶段，默认关闭。另有显式骨架图增长入口和 BRICS 片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
 当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
-实验协议和执行状态见[实验设计](docs/experiments.md)。单值条件等下一轮方案尚未落地。
+实验协议和执行状态见[实验设计](docs/experiments.md)。已完成冻结OE62点条件模型的[多点新生成扫描](docs/results.md#oe62-点条件重新生成三轮目标扫描)，其余方案按协议推进。
 下一轮包含 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
 ![当前五阶段架构](paper/figures/fig0_orbit3d_system_architecture.svg)
@@ -71,6 +71,7 @@ mol_gen/
 │   ├── results.md               # 最终结果与解释
 │   ├── pitfalls.md              # 必要方法与数值注意事项
 │   ├── runtime.md               # 实际运行和模型接口
+│   ├── figures/                 # 实验响应曲线
 │   └── experiments/             # 最终 JSON、必要原始结果/哈希、量化 SDF/NPZ
 ├── paper/                       # 文稿、当前图、同步证据和可重建 arXiv 源码包
 ├── third_party/                 # 运行依赖的固定版本、来源和许可证
