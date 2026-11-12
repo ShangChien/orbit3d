@@ -5,6 +5,7 @@ DPA-4 / DeePMD Interatomic Potential Force Field & Native Equivariant Descriptor
 from __future__ import annotations
 
 import copy
+import os
 from typing import Dict, List, Optional, Tuple
 import torch
 import torch.nn as nn
@@ -32,6 +33,19 @@ class DPAPotentialGuidance(nn.Module):
         self.device_str = device
         self.max_force_norm = max_force_norm
         self.batch_separation = batch_separation_angstrom
+
+        # DeePMD binds DEVICE at import, including plain tensor attributes that
+        # nn.Module.to() cannot move. Select the worker device before importing
+        # it; changing GPUs requires a separate worker process.
+        target_device = torch.device(device)
+        if target_device.type == 'cuda':
+            torch.cuda.set_device(target_device)
+            target_device = torch.device('cuda', torch.cuda.current_device())
+            os.environ['LOCAL_RANK'] = str(target_device.index)
+        os.environ['DEVICE'] = target_device.type
+        from deepmd.pt.utils.env import DEVICE as deepmd_device
+        if deepmd_device != target_device:
+            raise ValueError(f'DeePMD worker already bound to {deepmd_device}; start a separate process for {target_device}')
 
         from deepmd.pt.model.model import get_model
         from deepmd.pt.train.wrapper import ModelWrapper
