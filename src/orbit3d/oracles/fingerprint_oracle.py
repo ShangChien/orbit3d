@@ -20,6 +20,8 @@ class FingerprintOracle(PropertyOracleBase):
         self.target_cols = list(target_cols)
         self.output_dim = len(self.target_cols)
         self.n_bits = n_bits
+        if graph_normalization not in {RAW_GRAPH,NORMALIZED_GRAPH}:
+            raise ValueError('Unknown fingerprint graph feature contract')
         self.graph_normalization = graph_normalization
         self.models = []
         self.training_elements = None
@@ -89,6 +91,23 @@ class FingerprintOracle(PropertyOracleBase):
     def predict_3d_mols(self, mols):
         mean, std = self.predict_features(self.features(mols))
         return (mean[:, 0], std[:, 0]) if self.output_dim == 1 else (mean, std)
+
+    def evaluate_graph_mols(self, mols):
+        """Validate each graph, then predict the admitted feature rows once."""
+        mean=np.full((len(mols),self.output_dim),np.nan)
+        std=np.full_like(mean,np.nan)
+        errors=['']*len(mols);indices=[];features=[]
+        for i,mol in enumerate(mols):
+            try:
+                feature=self.features([mol])[0]
+            except ValueError as error:
+                errors[i]=str(error)
+            else:
+                indices.append(i);features.append(feature)
+        if features:
+            predicted,spread=self.predict_features(np.stack(features))
+            mean[indices]=predicted;std[indices]=spread
+        return {'mean':mean,'std':std,'errors':errors,'predicted':len(indices)}
 
     def forward_differentiable_3d(self, *args, **kwargs):
         raise NotImplementedError("Fingerprint oracle is a black-box graph predictor")

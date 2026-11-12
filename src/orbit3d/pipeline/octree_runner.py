@@ -22,6 +22,7 @@ from ..generator.molecular_state import ATOM_TYPES
 from ..generator.random_streams import candidate_seed
 from ..generator.spatial_box import BoxSpec3D
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from ..oracles.fingerprint_oracle import FingerprintOracle
 from .evaluators import load_evaluators
 from ..physics.conformer_relaxer import relax_conformer_iso_property
 from ..physics.batched_relaxer import relax_conformers_iso_property
@@ -452,7 +453,12 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
                 score = points.distance(self_y) if points else float(np.square(intervals.violations(self_y).numpy() / scale).sum())
                 row.update(smiles=inst.smiles, self_score=score, raw_valid=True)
-                assessment = domain.assess(inst.graph) if domain else None
+                try:
+                    assessment = domain.assess(inst.graph) if domain else None
+                except ValueError as error:
+                    row.update(status='domain_failed',reason=str(error))
+                    records.append(row)
+                    continue
                 row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
                 row['unseen_oracle_training_elements'] = assessment['unseen_training_elements'] if assessment else []
                 if assessment and not assessment['in_domain']:
@@ -482,6 +488,9 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             evaluation = oracle.evaluate_3d_mols_batched(ranking_mols)
             predictions, uncertainty = evaluation['mean'], evaluation['std']
             errors = evaluation['errors']
+        elif isinstance(oracle, FingerprintOracle):
+            evaluation=oracle.evaluate_graph_mols(ranking_mols)
+            predictions,uncertainty,errors=evaluation['mean'],evaluation['std'],evaluation['errors']
         else:
             predictions, uncertainty = oracle.predict_3d_mols(ranking_mols)
             errors = [''] * len(ranking_mols)
@@ -618,6 +627,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
         "acceptance_tolerances": acceptance_tolerances,
         "retained_morgan_diversity": float(1 - np.mean(similarities)) if similarities else None,
         "refinement_failed": sum(r["status"] == "refinement_failed" for r in records),
+        "domain_failed": sum(r["status"] == "domain_failed" for r in records),
         "oracle_failed": sum(r['status'] == 'oracle_failed' for r in records),
         "unique_raw_valid": len({r["smiles"] for r in records if r.get("raw_valid")}),
         "retained": len(mols),

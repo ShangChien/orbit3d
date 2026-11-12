@@ -60,17 +60,20 @@ def evaluate_pool(run,output,independent,device='cuda:0',*,prepared_evaluators=N
             row={'candidate_id':i,'valid':False,'evaluated':False,'independent_evaluated':False}
             try:
                 inst=trajectory_to_instance({'atom_symbols':atoms,'positions_np':arrays[f'coordinates_{i}']},element_table=tuple(elements))
-                row.update(valid=True,smiles=inst.smiles,atoms=len(atoms),novel_vs_sft_training=inst.smiles not in training,
-                           domain=domain.assess(inst.graph) if domain else None)
+                row.update(valid=True,smiles=inst.smiles,atoms=len(atoms),novel_vs_sft_training=inst.smiles not in training)
+                try:row['domain']=domain.assess(inst.graph) if domain else None
+                except ValueError as error:row.update(domain=None,domain_error=str(error))
                 mols.append(inst.graph);indices.append(i)
             except ValueError as e:row['reason']=str(e)
             records.append(row)
     if mols:
         ev=oracle.evaluate_3d_mols_batched(mols)
-        fp,_=independent.predict_3d_mols(mols)
+        fp_evaluation=independent.evaluate_graph_mols(mols)
+        fp=fp_evaluation['mean']
         for j,i in enumerate(indices):
             row=records[i]
-            if np.isfinite(fp[j]).all():row.update(independent_evaluated=True,independent_prediction=fp[j].tolist())
+            if fp_evaluation['errors'][j]:row['independent_error']=fp_evaluation['errors'][j]
+            elif np.isfinite(fp[j]).all():row.update(independent_evaluated=True,independent_prediction=fp[j].tolist())
             if ev['errors'][j]:row['evaluation_error']=ev['errors'][j];continue
             pred=ev['mean'][j];force=ev['forces_eV_A'][j]
             row.update(evaluated=True,prediction=np.asarray(pred).tolist(),rms_force=float(np.sqrt(np.square(force).sum(-1).mean())))
@@ -83,6 +86,7 @@ def evaluate_pool(run,output,independent,device='cuda:0',*,prepared_evaluators=N
             'condition_control':cfg['inference_config'].get('condition_control','correct'),
             'valid_atom_quantiles':np.quantile([m.GetNumAtoms() for m in mols],[0,.25,.5,.75,1]).tolist() if mols else None,
             'oracle_calls':len(mols),'independent_calls':len(mols),'elapsed_seconds':time.perf_counter()-started,
+            'independent_prediction_count':sum(r['independent_evaluated'] for r in records),
             'metrics':stats,'records':records}
     (a.output/'summary.json').write_text(json.dumps(report,indent=2)+'\n');print(stats,flush=True)
     return report

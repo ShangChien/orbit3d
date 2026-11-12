@@ -33,13 +33,21 @@ def main():
                 instance=trajectory_to_instance({'atom_symbols':symbols[i],'positions_np':coords[f'coordinates_{i}']},element_table=elements)
                 molecules.append(instance.graph);ids.append(i)
         if molecules:
-            prediction,_=model.predict_3d_mols(molecules)
-            assert np.isfinite(prediction).all()
-            for i,pred,molecule in zip(ids,prediction,molecules):
-                records[i].update(independent_evaluated=True,independent_prediction=pred.tolist(),normalized_domain=domain.assess(molecule))
+            evaluated=model.evaluate_graph_mols(molecules)
+            for i,pred,error,molecule in zip(ids,evaluated['mean'],evaluated['errors'],molecules):
+                if error:
+                    records[i]['independent_evaluated']=False
+                    records[i].pop('independent_prediction',None)
+                    records[i]['independent_error']=error
+                else:
+                    records[i].update(independent_evaluated=True,independent_prediction=pred.tolist())
+                try:records[i]['normalized_domain']=domain.assess(molecule)
+                except ValueError as error:
+                    records[i].update(normalized_domain=None,normalized_domain_error=str(error))
         alternative=[{**r,'domain':r.get('normalized_domain')} for r in records]
         report={**original,'scope':'Independent graph re-evaluation on identical XYZ; original domain mask retained; normalized-domain results are a separate diagnostic',
                 'oracle_calls':0,'independent_calls':len(molecules),'records':records,
+                'independent_prediction_count':sum(r['independent_evaluated'] for r in records),
                 'metrics':summarize_records(records,point),'normalized_domain_metrics':summarize_records(alternative,point),
                 'elapsed_seconds':time.perf_counter()-started,'source_pool':str(source),
                 'graph_normalization':model.graph_normalization}

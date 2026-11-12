@@ -12,7 +12,10 @@ def fingerprint_graph(molecule, normalization=NORMALIZED_GRAPH):
     graph=Chem.RemoveHs(Chem.Mol(molecule))
     Chem.SanitizeMol(graph)
     if normalization == NORMALIZED_GRAPH:
+        charge=Chem.GetFormalCharge(graph)
         graph=rdMolStandardize.Normalize(graph)
+        if Chem.GetFormalCharge(graph)!=charge:
+            raise ValueError('Functional normalization changed total molecular charge')
         # XYZ recovery and SDF/SMILES loading can retain different stereo/H
         # annotations. Fingerprint only the same canonical graph representation.
         canonical=Chem.MolFromSmiles(Chem.MolToSmiles(graph,isomericSmiles=True))
