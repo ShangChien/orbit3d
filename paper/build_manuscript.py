@@ -197,6 +197,37 @@ def build():
                      f"{prediction['homo']:.4f} / {prediction['lumo']:.4f} | {reference} | {outcome} |")
     lines += ['', 'Table: Preselected subset of eight surrogate-qualified designs from 384 attempts. One lowest-ID candidate is selected per nonempty window/inference-seed stratum before quantum calculation. All five preserve the source graph after S0 optimization; the three unselected qualified designs have unknown quantum outcomes. H/L denote HOMO/LUMO.']
     tables['QUALIFIED_QUANTUM'] = '\n'.join(lines)
+    holdout=current['oe62_source_holdout_20261113.json']
+    lines=['| Frozen model | HOMO MAE (eV) | LUMO MAE (eV) | Joint coverage (%) |',
+           '| :--- | ---: | ---: | ---: |']
+    for key,label in [('dpa','DPA'),('fingerprint_v1','Original fingerprint'),('fingerprint_canonical','Canonical fingerprint'),('hyff','HyFF')]:
+        row=holdout['models'][key];assert row['evaluated']==holdout['n']==4762
+        metrics=row['overall']['targets']
+        lines.append(f"| {label} | {metrics['homo']['mae_eV']:.4f} | {metrics['lumo']['mae_eV']:.4f} | {100*row['calibrated_90pct_joint_coverage']:.2f} |")
+    lines += ['', 'Table: Frozen predictors on all 4,762 source-coordinate scaffold-test molecules. The last column is empirical coverage of the previously fitted nominal 90% joint intervals; it is not a guarantee for generated structures.']
+    tables['OE62_HOLDOUT']='\n'.join(lines)
+    lines=['| Target / arm | Domain (%) | FP MAE | HyFF MAE | FP hit (%) | HyFF hit (%) |',
+           '| :------------------- | ----------: | --------: | ---------: | ----------: | -----------: |']
+    for target in ['homo','lumo']:
+        fp=current[f'oe62_formal_{target}_repeats_20261113.json']
+        hyff=current[f'oe62_formal_{target}_hyff_repeats_20261113.json']
+        for report in [fp,hyff]:
+            assert report['training_seeds']==[42,43,44] and report['attempts_per_arm_per_training_seed']==1920
+        for arm,label in [('frozen','Frozen'),('continue400','SFT 400'),('grpo200','GRPO'),('continue_wall','Time SFT')]:
+            f,h=fp['arms'][arm],hyff['arms'][arm]
+            lines.append(f"| {target.upper()} / {label} | {100*f['domain_rate']['mean']:.2f} | {f['independent_target_mae_eV']['mean']:.4f} | {h['independent_target_mae_eV']['mean']:.4f} | {100*f['independent_hit_rate']['mean']:.2f} | {100*h['independent_hit_rate']['mean']:.2f} |")
+    lines += ['', 'Table: Formal OE62 raw-pool comparison, 5,760 attempts per row. MAE (eV) averages eligible structures within each target, then equally weights five targets and three training seeds. Property hits use tolerance 0.25 eV and all attempts as denominator. FP is the original frozen fingerprint model.']
+    tables['OE62_FORMAL']='\n'.join(lines)
+    geometry=current['oe62_geometry_comparison_20261113.json']
+    lines=['| Method | Graph / 48 | Graph + force / 48 | Joint proxy / 48 | E/F calls |',
+           '| :--- | ---: | ---: | ---: | ---: |']
+    for method,label in [('none','None'),('full','Full'),('energy_current','Current energy'),('lbfgs','LBFGS'),('fire','FIRE')]:
+        row=next(r for r in geometry['aggregate'] if r['target']=='all' and r['method']==method)
+        assert row['attempted']==48
+        lines.append(f"| {label} | {row['graph_preserved']} | {row['graph_and_rms_below_0.1']} | {row['joint_success']} | {row['energy_force_calls']} |")
+    full=next(r for r in geometry['aggregate'] if r['target']=='all' and r['method']=='full')
+    lines += ['', f'Table: Identical 48 generated starting structures. Force means DPA RMS force at most 0.1 eV/Angstrom; joint proxy success additionally requires both DPA and HyFF within 0.25 eV of the requested point. Full also uses {full["property_gradient_calls"]} property-gradient calls. Optimizer budgets differ and all graph failures remain in the denominator.']
+    tables['OE62_GEOMETRY']='\n'.join(lines)
     for name, content in tables.items():
         pattern = r'<!-- BEGIN TABLE '+name+r' -->.*?<!-- END TABLE '+name+r' -->'
         replacement = '<!-- BEGIN TABLE '+name+' -->\n'+content+'\n<!-- END TABLE '+name+' -->'
@@ -212,6 +243,7 @@ def build():
                   lambda m: "#"*(len(m[1])-1)+" ", body, flags=re.M)
     body = body.replace("figures/fig0_orbit3d_system_architecture.png", "figures/fig0_orbit3d_system_architecture.pdf")
     body = body.replace("figures/fig1_grpo_training_seeds.png", "figures/fig1_grpo_training_seeds.pdf")
+    body = body.replace("figures/fig2_oe62_paired_effects.png", "figures/fig2_oe62_paired_effects.pdf")
     latex = pypandoc.convert_text(body, "latex", format="markdown+tex_math_dollars+citations", extra_args=[
         "--standalone", "--natbib", f"--template={PAPER / 'manuscript_template.tex'}",
         "--metadata", f"title={title}", "--metadata", f"abstract={abstract}",
@@ -219,6 +251,7 @@ def build():
     # The accessibility alt key emitted by recent Pandoc requires a recent
     # graphicx; keep arXiv's older TeX installations compatible.
     latex = re.sub(r",alt=\{[^}]*\}(?=\])", "", latex)
+    latex = latex.replace(r'\begin{figure}', r'\begin{figure}[!htbp]')
     latex = compact_tables(latex)
     latex = latex.replace(r'\subsection{', '\\FloatBarrier\n' + r'\subsection{')
     (PAPER / "ORBIT3D_arXiv_Paper.tex").write_text(latex)

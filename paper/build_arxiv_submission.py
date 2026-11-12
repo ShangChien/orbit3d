@@ -15,6 +15,7 @@ def build_arxiv_tarball() -> Path:
         "references.bib",
         "figures/fig0_orbit3d_system_architecture.pdf",
         "figures/fig1_grpo_training_seeds.pdf",
+        "figures/fig2_oe62_paired_effects.pdf",
         "build/data/boron_quantum_input_20261112.sdf",
         "build/data/qualified20k_quantum_input_20261112.sdf",
         "build/data/unified_evidence.json",
@@ -22,6 +23,10 @@ def build_arxiv_tarball() -> Path:
         "build/data/boron_quantum_dpa_gradients_20261112.npz",
         "build/data/boron_quantum_hyff_gradients_20261112.npz",
         "build/data/ancillary_readme.txt",
+        "build/data/oe62_geometry_cohort_20261113.json",
+        "build/data/oe62_geometry_initial_20261113.npz",
+        "build/data/oe62_geometry_final_20261113.npz",
+        "build/data/oe62_brics_raw_conformers_20261113.npz",
     ]
 
     with tarfile.open(out_path, "w:gz") as tar:

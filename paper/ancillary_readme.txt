@@ -40,3 +40,10 @@ This archive does not redistribute upstream training datasets or model weights.
 It supports inspection of reported evidence and the gradient counterexample,
 not a complete model-training rerun. No arXiv submission has been performed by
 the local archive builder.
+
+OE62 extension: source-coordinate split and model evidence, a frozen 4762-molecule
+holdout, separate pilot and formal three-generator-seed point-control pools,
+independent HyFF reassessment, paired statistics, final wheel replay, matched
+geometry optimization and unconditional training-fragment controls. Source
+coordinates and weights remain separate; source DFT labels do not become
+quantum labels for generated or optimized geometries.

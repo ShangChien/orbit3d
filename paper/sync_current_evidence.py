@@ -8,6 +8,34 @@ staging = paper / "build" / "data"
 staging.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(paper / "ancillary_readme.txt", staging / "ancillary_readme.txt")
 names = [
+    'oe62_formal_homo_hyff_repeats_20261113.json',
+    'oe62_formal_homo_repeats_20261113.json',
+    'oe62_formal_homo_seed42_20261113.json',
+    'oe62_formal_homo_seed43_20261113.json',
+    'oe62_formal_homo_seed44_20261113.json',
+    'oe62_formal_hyff_seed42_20261113.json',
+    'oe62_formal_hyff_seed43_20261113.json',
+    'oe62_formal_hyff_seed44_20261113.json',
+    'oe62_formal_lumo_hyff_repeats_20261113.json',
+    'oe62_formal_lumo_repeats_20261113.json',
+    'oe62_formal_lumo_seed42_20261113.json',
+    'oe62_formal_lumo_seed43_20261113.json',
+    'oe62_formal_lumo_seed44_20261113.json',
+    'oe62_formal_raw_force_audit_20261113.json',
+    'oe62_wheel_replay_homo_20261113.json',
+    'oe62_wheel_replay_lumo_20261113.json',
+
+    'oe62_source_holdout_20261113.json',
+    'oe62_geometry_comparison_20261113.json',
+    'oe62_hyff_pools_20261113.json',
+    'oe62_brics_point_pools_20261113.json',
+    'oe62_ranking_20261113.json',
+    'oe62_charge_support_20261113.json',
+    'oe62_point_homo_seed42_20261112.json',
+    'oe62_point_lumo_seed42_20261112.json',
+    'oe62_source_properties_20261112.json',
+    'oe62_prior_comparison_20261112.json',
+    'oe62_graph_feature_contract_20261112.json',
     'ranking_ablation_20261111.json',
     'generated_quantum_diagnostic_20261111.json',
     'generated_excited_minima_20261112.json',
@@ -59,7 +87,7 @@ for name in names:
     path = paper.parent/'docs/experiments'/name
     raw = path.read_text()
     records[name] = {'source': 'docs/experiments/'+name, 'sha256': hashlib.sha256(raw.encode()).hexdigest(), 'json': raw}
-for name in ['wide_target_windows.json', 'wide_target_windows_protocol.json', 'optical_target_windows.json']:
+for name in ['wide_target_windows.json', 'wide_target_windows_protocol.json', 'optical_target_windows.json', 'oe62_split_manifest.json', 'oe62_source.json']:
     raw = (paper.parent / 'data' / name).read_text()
     records[name] = {'source': 'data/' + name, 'sha256': hashlib.sha256(raw.encode()).hexdigest(), 'json': raw}
 (staging / 'unified_evidence.json').write_text(json.dumps(records, indent=2)+'\n')
@@ -81,3 +109,13 @@ for name, key in [('boron_excitation_gradients_20261112.npz', 'quantum_gradients
     source = paper.parent / 'docs/experiments' / name
     assert hashlib.sha256(source.read_bytes()).hexdigest() == gradient_inputs[key]
     shutil.copyfile(source, staging / name)
+
+geometry=json.loads(records['oe62_geometry_comparison_20261113.json']['json'])
+for name,digest in geometry['geometry_files_sha256'].items():
+    source=paper.parent/'docs/experiments'/name
+    assert hashlib.sha256(source.read_bytes()).hexdigest()==digest
+    shutil.copyfile(source,staging/name)
+brics=json.loads(records['oe62_brics_point_pools_20261113.json']['json'])
+source=paper.parent/'docs/experiments'/brics['raw_conformers_file']
+assert hashlib.sha256(source.read_bytes()).hexdigest()==brics['replay_audit']['raw_conformers_sha256']
+shutil.copyfile(source,staging/source.name)

@@ -4,7 +4,7 @@
 <rect x="0" y="0" width="1200" height="550" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
 <rect x="24" y="18" width="1112" height="44" rx="9" fill="#F3F6F8" stroke="none" stroke-width="1.5"/>
 <text x="43" y="47" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#526575" text-anchor="start">INPUTS</text>
-<text x="130" y="47" font-family="Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#172A3A" text-anchor="start">3D structures  ·  target property intervals  ·  supported electronic states</text>
+<text x="130" y="47" font-family="Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#172A3A" text-anchor="start">3D structures  ·  target values or intervals  ·  supported electronic states</text>
 <text x="24" y="96" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">POLICY LEARNING</text>
 <polyline points="191,90 906,90" fill="none" stroke="#D7E0E7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="944" y="96" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#B46B35" text-anchor="start">REFINEMENT</text>
@@ -29,7 +29,7 @@
 <text x="120" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Pretrained octree</text>
 <rect x="254" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="270" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">02</text>
-<text x="350" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Interval SFT</text>
+<text x="350" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Target SFT</text>
 <polyline points="295,235 405,235" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <polyline points="323,235 369,235" fill="none" stroke="#ACC3DC" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="343" cy="235" r="5.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
@@ -39,7 +39,7 @@
 <polyline points="295,285 405,285" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <polyline points="313,285 351,285" fill="none" stroke="#ACC3DC" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="332" cy="285" r="5.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<text x="350" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Target conditioning</text>
+<text x="350" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Point / interval</text>
 <rect x="484" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="500" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">03</text>
 <text x="580" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Self-ranking</text>
@@ -53,11 +53,11 @@
 <text x="580" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Select candidates</text>
 <rect x="714" y="150" width="192" height="185" rx="12" fill="#F2F8F6" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="730" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#247C75" text-anchor="start">04</text>
-<text x="810" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Gated GRPO</text>
+<text x="810" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">GRPO</text>
 <polyline points="756,287 866,287" fill="none" stroke="#B6D5D1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<rect x="764" y="264" width="23" height="22" rx="3" fill="#BED9D4" stroke="none" stroke-width="1.5"/>
-<rect x="800" y="245" width="23" height="41" rx="3" fill="#76AFA6" stroke="none" stroke-width="1.5"/>
-<rect x="836" y="224" width="23" height="62" rx="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<rect x="764" y="241" width="23" height="45" rx="3" fill="#BED9D4" stroke="none" stroke-width="1.5"/>
+<rect x="800" y="264" width="23" height="22" rx="3" fill="#76AFA6" stroke="none" stroke-width="1.5"/>
+<rect x="836" y="252" width="23" height="34" rx="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
 <text x="810" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Optional alignment</text>
 <rect x="944" y="150" width="192" height="185" rx="12" fill="#FCF7F2" stroke="#D7E0E7" stroke-width="1.5"/>
 <text x="960" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#B46B35" text-anchor="start">05</text>

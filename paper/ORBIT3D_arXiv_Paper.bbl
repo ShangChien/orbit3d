@@ -1,4 +1,4 @@
-\begin{thebibliography}{18}
+\begin{thebibliography}{19}
 
 \bibitem{lu2025uni3dar}
 Shuqi Lu, Haowei Lin, Lin Yao, et al.
@@ -104,6 +104,12 @@ Rui Li, Qiming Sun, Xing Zhang, Garnet Kin-Lic Chan.
 \newblock Introducing GPU-acceleration into the python-based simulations of chemistry framework.
 \newblock arXiv preprint arXiv:2407.09700, 2024.
 \newblock \url{https://arxiv.org/abs/2407.09700}.
+
+\bibitem{stuke2020oe62}
+Annika Stuke, Christian Kunkel, Dorothea Golze, et al.
+\newblock Atomic structures and orbital energies of 61,489 crystal-forming organic molecules.
+\newblock Scientific Data, 2020, 7:58.
+\newblock \url{https://www.nature.com/articles/s41597-020-0385-y}.
 
 \bibitem{rdkit2026bonds}
 RDKit contributors.

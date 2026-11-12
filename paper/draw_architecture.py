@@ -146,7 +146,7 @@ def rank_icon(f, cx, cy):
 
 def reward_icon(f, cx, cy):
     f.line([(cx-54, cy+27), (cx+56, cy+27)], "#B6D5D1", 1.5)
-    for x, height, fill in [(cx-46, 22, "#BED9D4"), (cx-10, 41, "#76AFA6"), (cx+26, 62, TEAL)]:
+    for x, height, fill in [(cx-46, 45, "#BED9D4"), (cx-10, 22, "#76AFA6"), (cx+26, 34, TEAL)]:
         f.rect(x, cy+26-height, 23, height, fill=fill, stroke=None, radius=3)
 
 
@@ -164,7 +164,7 @@ def draw(output_dir: Path, render_png=True):
     f = Figure(output_dir)
     f.rect(24, 18, 1112, 44, fill="#F3F6F8", stroke=None, radius=9)
     f.text(43, 47, "INPUTS", size=17, bold=True, color=MUTED)
-    f.text(130, 47, "3D structures  ·  target property intervals  ·  supported electronic states", size=21, max_width=980)
+    f.text(130, 47, "3D structures  ·  target values or intervals  ·  supported electronic states", size=21, max_width=980)
 
     f.text(24, 96, "POLICY LEARNING", size=17, bold=True, color=BLUE)
     f.line([(191, 90), (906, 90)], RULE, 1.5)
@@ -177,9 +177,9 @@ def draw(output_dir: Path, render_png=True):
 
     stages = [
         (24, BLUE, "#F7FAFD", "01", "3D prior", "Pretrained octree", octree_icon),
-        (254, BLUE, "#F7FAFD", "02", "Interval SFT", "Target conditioning", interval_icon),
+        (254, BLUE, "#F7FAFD", "02", "Target SFT", "Point / interval", interval_icon),
         (484, BLUE, "#F7FAFD", "03", "Self-ranking", "Select candidates", rank_icon),
-        (714, TEAL, "#F2F8F6", "04", "Gated GRPO", "Optional alignment", reward_icon),
+        (714, TEAL, "#F2F8F6", "04", "GRPO", "Optional alignment", reward_icon),
         (944, AMBER, "#FCF7F2", "05", "Relaxation", "Accept or backtrack", None),
     ]
     for x, color, fill, number, title, subtitle, icon in stages:
