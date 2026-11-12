@@ -1,0 +1,66 @@
+{
+  "before_commit": "54c1770",
+  "fixed_commit": "8373229",
+  "diagnostic": {
+    "scope": "Exact LUMO GRPO group16 failure, finite logits, float32 top_p=1 tail truncation before element mask",
+    "shape": [
+      5,
+      602
+    ],
+    "temperature": 0.3,
+    "allowed_mass_before_filter": [
+      1.0,
+      4.414935261820574e-08,
+      1.0,
+      1.0,
+      0.9999997615814209
+    ],
+    "allowed_mass_after_filter": [
+      1.0,
+      0.0,
+      1.0,
+      1.0,
+      0.9999997615814209
+    ],
+    "max_cumulative_probability": [
+      1.0,
+      1.0000001192092896,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "finite_allowed_classes": [
+      16,
+      16,
+      16,
+      16,
+      16
+    ]
+  },
+  "verification": {
+    "scope": "Exact failed LUMO policy after 15 GRPO groups, same group16 target/random streams; no resampling",
+    "captured_probability_call_passed": true,
+    "group_candidates": 16,
+    "selected_action_log_probs_finite": true,
+    "electron_parity_preserved": true,
+    "atom_counts": [
+      22,
+      16,
+      41,
+      41,
+      26,
+      41,
+      40,
+      28,
+      51,
+      14,
+      32,
+      30,
+      25,
+      40,
+      25,
+      19
+    ]
+  },
+  "failed_policy_snapshot_sha256": "784dd946c180edaf18fc6fce8d3e9ce31b19b223874bfa4a4a53c85759730e6a"
+}
