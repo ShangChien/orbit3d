@@ -51,19 +51,21 @@ def main():
             inputs[name+'/forcefield']=entry['forcefield'];ff=build_forcefield(entry['backend'],entry['forcefield'],elements,'cpu',tier='presto',route='reference')
             models[name]=InternalDPA4PropertyOracle.load_from_dir(entry['oracle'],ff)
     assert all(model.target_cols==['homo','lumo'] for model in models.values())
-    record_input_hashes(a.output,inputs);records=[];pool_costs=[];molecules=[]
+    record_input_hashes(a.output,inputs);records=[];pool_costs=[];molecules=[];raw_coordinates={}
     for seed in [2026,2027,2028]:
         start=time.perf_counter();rows=[];mols=[];indices=[]
         for i in range(64):
             stream=candidate_seed(seed,i);row={'seed':seed,'candidate_id':i,'valid':False,'domain':False};rows.append(row)
             try:
                 smiles,action=sampler.sample(stream);row.update(smiles=smiles,action=action)
-                mol=Chem.AddHs(Chem.MolFromSmiles(smiles))
+                mol=Chem.AddHs(Chem.MolFromSmiles(smiles));row['proposed_atoms']=mol.GetNumAtoms()
                 if mol.GetNumAtoms()>80:raise ValueError('atom_limit')
                 if set(at.GetSymbol() for at in mol.GetAtoms())-set(elements):raise ValueError('element_limit')
                 params=AllChem.ETKDGv3();params.randomSeed=int(stream%(2**31-1));params.maxIterations=300
                 if AllChem.EmbedMolecule(mol,params):raise ValueError('etkdg_failed')
                 xyz=mol.GetConformer().GetPositions()
+                key=f'coordinates_{seed}_{i}';raw_coordinates[key]=xyz.copy()
+                row.update(conformer_coordinates_key=key,conformer_symbols=[at.GetSymbol() for at in mol.GetAtoms()])
                 if np.linalg.norm(xyz[:,None]-xyz[None,:],axis=-1).max()>manifest['rotation_safe_span_A']:raise ValueError('spatial_limit')
                 instance=rdkit_mol_to_mol3d_instance(mol,np.empty(0),element_table=elements)
                 if instance is None:raise ValueError('geometry_admission')
@@ -84,6 +86,7 @@ def main():
         records.extend(rows);pool_costs.append({'seed':seed,'proposal_seconds':proposal_seconds,'evaluation_seconds':time.perf_counter()-evaluation_start,'models':evaluation_costs})
         print(seed,'valid',len(mols),'domain',sum(r['domain'] for r in rows),'proposal_seconds',proposal_seconds,flush=True)
         (a.output/'records.json').write_text(json.dumps(records,indent=2)+'\n')
+        np.savez_compressed(a.output/'raw_conformers.npz',**raw_coordinates)
     scores=[]
     for column,target in enumerate(['homo','lumo']):
         for q,goal in manifest['single_target_points'][target].items():
