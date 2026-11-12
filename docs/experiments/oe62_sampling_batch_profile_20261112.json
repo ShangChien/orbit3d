@@ -1,0 +1,102 @@
+{
+  "scope": "One frozen policy per property, P50, 64 fixed candidate streams, two measured repeats after warm-up; not a universal equality guarantee",
+  "profiles": {
+    "homo": {
+      "config": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/fast_homo_seed42/eval_frozen_p50_s2026/run/run_config.json",
+      "device": "cuda:0",
+      "candidates": 64,
+      "scope": "FP32 sampling and decoding only; fixed candidate streams; no oracle or model selection",
+      "batches": [
+        {
+          "batch_size": 8,
+          "seconds": [
+            44.27473986521363,
+            44.136225908994675
+          ],
+          "median_seconds": 44.205482887104154,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        },
+        {
+          "batch_size": 16,
+          "seconds": [
+            26.965553991496563,
+            26.873519733548164
+          ],
+          "median_seconds": 26.919536862522364,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        },
+        {
+          "batch_size": 32,
+          "seconds": [
+            15.537627395242453,
+            15.500535916537046
+          ],
+          "median_seconds": 15.51908165588975,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        },
+        {
+          "batch_size": 64,
+          "seconds": [
+            8.686078123748302,
+            8.678087387233973
+          ],
+          "median_seconds": 8.682082755491138,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        }
+      ]
+    },
+    "lumo": {
+      "config": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/fast_lumo_seed42/eval_frozen_p50_s2026/run/run_config.json",
+      "device": "cuda:0",
+      "candidates": 64,
+      "scope": "FP32 sampling and decoding only; fixed candidate streams; no oracle or model selection",
+      "batches": [
+        {
+          "batch_size": 8,
+          "seconds": [
+            47.19917943328619,
+            47.18076376616955
+          ],
+          "median_seconds": 47.18997159972787,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        },
+        {
+          "batch_size": 16,
+          "seconds": [
+            27.691416017711163,
+            27.8057200871408
+          ],
+          "median_seconds": 27.74856805242598,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        },
+        {
+          "batch_size": 32,
+          "seconds": [
+            16.40400603413582,
+            16.437663845717907
+          ],
+          "median_seconds": 16.420834939926863,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        },
+        {
+          "batch_size": 64,
+          "seconds": [
+            9.695312887430191,
+            9.665064293891191
+          ],
+          "median_seconds": 9.680188590660691,
+          "bitwise_identical_to_first_batch": 64,
+          "same_batch_repeats_bitwise_equal": true
+        }
+      ]
+    }
+  },
+  "selected_formal_batch_size": 64
+}
