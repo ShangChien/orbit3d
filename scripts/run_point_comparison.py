@@ -19,14 +19,17 @@ def main():
     p.add_argument('--fingerprint', type=Path, required=True)
     p.add_argument('--forcefield', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--frozen-sft', type=Path)
+    p.add_argument('--continued-sft', type=Path)
     p.add_argument('--target', choices=['homo', 'lumo'], required=True)
     p.add_argument('--device', default='cuda:0')
     p.add_argument('--seed', type=int, default=42)
-    p.add_argument('--stage', choices=['sft', 'arms', 'evaluate', 'time-control', 'all'], default='all')
+    p.add_argument('--stage', choices=['sft', 'arms', 'grpo', 'evaluate', 'time-control', 'all'], default='all')
     a = p.parse_args()
     if not (a.output / 'run_manifest.json').exists():
         freeze_run(a.output, __file__)
-        record_input_hashes(a.output, {'data_manifest': a.data / 'manifest.json', 'prior': a.prior})
+        record_input_hashes(a.output, {'data_manifest': a.data / 'manifest.json', 'prior': a.prior,
+                                      'frozen_sft': a.frozen_sft, 'continued_sft': a.continued_sft})
     points = json.loads((a.data / 'manifest.json').read_text())['single_target_points'][a.target]
     configs = a.output / 'configs'
     configs.mkdir(exist_ok=True)
@@ -77,7 +80,8 @@ def main():
         path.write_text(json.dumps(cfg, indent=2)+'\n')
         execute(name, [sys.executable, '-u', '-m', 'orbit3d.cli', '--config', str(path)])
 
-    frozen = a.output/'sft/weights/octree_conditional.pt'
+    frozen = a.frozen_sft or a.output/'sft/weights/octree_conditional.pt'
+    continued = a.continued_sft or a.output/'continue/weights/octree_conditional.pt'
     if a.stage in ['sft', 'all']:
         launch('sft', 'train', a.prior, {'sft_steps': 5000, 'sft_lr': 2e-4,
                'backbone_lr': 1e-5, 'train_backbone': True, 'checkpoint_every': 2500})
@@ -85,6 +89,7 @@ def main():
         launch('continue', 'train', frozen, {'sft_steps': 400, 'sft_lr': 2e-5,
                'train_backbone': False, 'train_property_head': False, 'lr_schedule': 'constant',
                'checkpoint_every': 100})
+    if a.stage in ['arms', 'grpo', 'all']:
         launch('grpo', 'align', frozen, {'grpo_steps': 200, 'group_size': 16, 'grpo_lr': 2e-5,
                'kl_beta': .02, 'physics_weight': 0., 'uncertainty_weight': 0., 'replay_weight': 0.,
                'alignment_checkpoints': [50, 100],
@@ -95,10 +100,10 @@ def main():
                'sft_lr': 2e-5, 'train_backbone': False, 'train_property_head': False,
                'lr_schedule': 'constant'})
     if a.stage in ['evaluate', 'time-control', 'all']:
-        arms = {'frozen': frozen, 'continue400': a.output/'continue/weights/octree_conditional.pt',
+        arms = {'frozen': frozen, 'continue400': continued,
                 'grpo200': a.output/'grpo/weights/octree_aligned.pt',
-                'continue100': a.output/'continue/weights/octree_step_100.pt',
-                'continue200': a.output/'continue/weights/octree_step_200.pt',
+                'continue100': continued.parent/'octree_step_100.pt',
+                'continue200': continued.parent/'octree_step_200.pt',
                 'grpo50': a.output/'grpo/weights/octree_group_50.pt',
                 'grpo100': a.output/'grpo/weights/octree_group_100.pt'}
         if a.stage == 'time-control':
