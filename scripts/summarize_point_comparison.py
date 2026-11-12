@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import numpy as np
+import torch
 from rdkit import Chem, DataStructs
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.Scaffolds import MurckoScaffold
@@ -53,8 +54,32 @@ def main():
         if group in groups:score(group,original,'shuffled',supplied)
     if 'eval_frozen_off' in groups:
         for q in ['25','50','75']:score('eval_frozen_off',q,'off')
+    checkpoint=a.campaign/'grpo/weights/octree_aligned.pt'
+    training=None
+    if checkpoint.exists():
+        state=torch.load(checkpoint,map_location='cpu',weights_only=False,mmap=True)
+        history=state['grpo_history'];saved=state.get('alignment_training_state')
+        training={'groups':len(history),'attempted':sum(r['group_size'] for r in history),
+                  'optimizer_updates':sum(r['optimizer_updates'] for r in history),
+                  'complete':state.get('alignment_complete'),
+                  'reference_sha256':state['alignment_reference_sha256'],
+                  'zero_evaluable_groups':sum(r['evaluated']==0 for r in history),
+                  'one_evaluable_groups':sum(r['evaluated']==1 for r in history),
+                  'two_or_more_evaluable_groups':sum(r['evaluated']>=2 for r in history),
+                  'last_policy_kl':history[-1]['policy_kl_before_last_update'],
+                  'optimizer_state_steps':sorted({int(v['step']) for v in saved['optimizer']['state'].values()}) if saved else None,
+                  'windows':{}}
+        for name,window in [('first50',history[:50]),('last50',history[-50:])]:
+            training['windows'][name]={'groups':len(window),
+                'mean_valid':float(np.mean([r['valid'] for r in window])),
+                'mean_evaluable':float(np.mean([r['evaluated'] for r in window])),
+                'mean_group_reward':float(np.mean([r['reward_mean'] for r in window])),
+                'mean_gradient_norm':float(np.mean([r['gradient_norm'] for r in window]))}
+    costs=json.loads((a.campaign/'costs.json').read_text())
     a.output.write_text(json.dumps({'scope':'Raw pools before ranking/refinement; reused pools are not independent repeats',
-                                   'target':a.target,'sources':sources,'rows':rows},indent=2)+'\n')
+                                   'target':a.target,'sources':sources,'training_signal':training,
+                                   'completed_job_costs':[{'name':r['name'],'wall_seconds':r['wall_seconds']} for r in costs if r['returncode']==0],
+                                   'rows':rows},indent=2)+'\n')
 
 
 if __name__=='__main__':main()
