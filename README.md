@@ -9,6 +9,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
 当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
 实验协议和执行状态见[实验设计](docs/experiments.md)。单值条件等下一轮方案尚未落地。
+下一轮包含 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
 ![当前五阶段架构](paper/figures/fig0_orbit3d_system_architecture.svg)
 
