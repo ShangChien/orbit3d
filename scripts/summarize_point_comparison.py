@@ -58,6 +58,8 @@ def main():
         fps=[generator.GetFingerprint(m) for m in mols]
         similarities=[v for i,fp in enumerate(fps) for v in DataStructs.BulkTanimotoSimilarity(fp,fps[:i])]
         forces=[r['rms_force'] for r in records if r['evaluated'] and r.get('domain') and r['domain']['in_domain']]
+        target_index=['homo','lumo'].index(a.target)
+        common=[r for r in records if r['evaluated'] and r['independent_evaluated'] and r.get('domain') and r['domain']['in_domain']]
         rows.append({'group':group,'condition_control':control,'scoring_quantile':scoring_quantile,
                      'scoring_target_eV':points[scoring_quantile],
                      'input_quantile':input_quantile,'input_target_eV':points[input_quantile] if input_quantile else None,
@@ -71,6 +73,8 @@ def main():
                      'unique_novel_valid':len({r['smiles'] for r in valid if r['novel_vs_sft_training']}),
                      'valid_atom_quantiles':np.quantile([r['atoms'] for r in valid],[0,.25,.5,.75,1]).tolist() if valid else None,
                      'domain_rms_force_p10_p50_p90':np.quantile(forces,[.1,.5,.9]).tolist() if forces else None,
+                     'domain_mean_abs_evaluator_disagreement_eV':float(np.mean([abs(r['prediction'][target_index]-r['independent_prediction'][target_index]) for r in common])) if common else None,
+                     'charge_separated_valid':sum(any(atom.GetFormalCharge()!=0 for atom in m.GetAtoms()) for m in mols),
                      'metrics':summarize_records(records,point),
                      'per_inference_seed_metrics':[summarize_records(pool['records'],point) for pool in pools]})
     for group in sorted(groups):

@@ -16,14 +16,23 @@ def main():
     fig,axes=plt.subplots(2,2,figsize=(10,7.5),layout='constrained')
     def metric(row,backend,key):
         return row['metrics'][backend]['in_domain']['targets'].get(target,{}).get(key,np.nan)
+    def ranges(selected,backend,key,values):
+        limits=[]
+        for row,value in zip(selected,values):
+            seeds=[m[backend]['in_domain']['targets'].get(target,{}).get(key,np.nan)
+                   for m in row['per_inference_seed_metrics']]
+            limits.append([value-np.nanmin(seeds),np.nanmax(seeds)-value])
+        return np.asarray(limits).T
     for arm,color in colors.items():
         selected=sorted([r for r in rows if r['condition_control']=='correct' and
                          r['group'].startswith(f'eval_{arm}_p')],key=lambda r:r['scoring_target_eV'])
         if not selected:continue
         x=[r['scoring_target_eV'] for r in selected]
         for ax,backend in [(axes[0,0],'dpa'),(axes[0,1],'fingerprint')]:
-            ax.plot(x,[metric(r,backend,'mean_prediction_eV') for r in selected],'-o',color=color,label=labels[arm],markersize=4)
-        axes[1,0].plot(x,[metric(r,'fingerprint','mae_eV') for r in selected],'-o',color=color,markersize=4)
+            values=[metric(r,backend,'mean_prediction_eV') for r in selected]
+            ax.errorbar(x,values,yerr=ranges(selected,backend,'mean_prediction_eV',values),fmt='-o',color=color,label=labels[arm],markersize=4,capsize=2,elinewidth=.7)
+        values=[metric(r,'fingerprint','mae_eV') for r in selected]
+        axes[1,0].errorbar(x,values,yerr=ranges(selected,'fingerprint','mae_eV',values),fmt='-o',color=color,markersize=4,capsize=2,elinewidth=.7)
         axes[1,1].plot(x,[r['metrics']['fingerprint']['in_domain']['coverage'] for r in selected],'-o',color=color,markersize=4)
     # Common unconditional pool is scored at each task target; no extra proposals.
     off=sorted([r for r in rows if r['condition_control']=='off'],key=lambda r:r['scoring_target_eV'])
@@ -47,7 +56,7 @@ def main():
         ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
     axes[0,0].legend(fontsize=8,loc='best')
     fig.suptitle(f'{target.upper()} point control — raw pools, before ranking or relaxation\n'
-                 'Pilot: one SFT seed; pooled generation seeds; OOD predictions excluded here',fontsize=11)
+                 'Pilot: one SFT seed; bars show inference-seed ranges, not confidence intervals; OOD excluded',fontsize=10)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     for extension in ['png','pdf','svg']:
         fig.savefig(a.output.with_suffix('.'+extension),dpi=180)
