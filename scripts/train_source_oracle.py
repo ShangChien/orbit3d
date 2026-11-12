@@ -65,7 +65,8 @@ def main():
     domain.save(a.output/'applicability.json')
     (a.output/'summary.json').write_text(json.dumps({'backend':a.backend,'elapsed_seconds':time.perf_counter()-started,'targets':a.targets,'label_theory':theories.pop(),'metrics':results,
                                                    'training_ids':[m.GetProp('SourceID') for m in mols['train']]},indent=2)+'\n')
-    print(results,flush=True)
+    print({split:{k:v for k,v in values.items() if k!='source_ids'}
+           for split,values in results.items()},flush=True)
 
 
 if __name__=='__main__':main()

@@ -82,3 +82,7 @@ verify_bundle.py`。这是可迁移模型/代码包，不是操作系统镜像�
 6/9 个导出结构；每包 23 个文件哈希通过。历史包始终绑定其自带 wheel；不要用
 新源码覆盖后继续沿用旧验证结论。证据见 [四目标包](experiments/relocated_artifact_verification_20261112.json)
 和 [双目标包](experiments/orbital20k_artifact_verification_20261112.json)。
+
+### DeePMD 多卡初始化
+
+DPA 的设备须在 DeePMD 首次导入前确定：库内部分常量张量不属于 PyTorch 注册 buffer，事后 `model.to(device)` 不会移动它们。`DPAPotentialGuidance` 依据显式 device 设置当前 GPU 和 DeePMD 的 `LOCAL_RANK` 后再导入；同一 worker 绑定一个设备，两张卡使用两个进程。也可在进程启动时用 `CUDA_VISIBLE_DEVICES` 选择物理卡并统一使用逻辑 `cuda:0`。
