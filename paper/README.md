@@ -12,6 +12,11 @@ DPA/HyFF property prediction, fragment recombination and matched refinement. Ind
 quantum disagreements remain explicit. These experiments establish the stated
 implementation behavior and limited empirical scope, not general superiority.
 
+The completed duration table uses all 36 evaluations of three SFT continuations
+from one common 5000-step model. The qualified-design quantum table reports all
+five preselected structures, including three orbital-target misses. Both tables
+are generated from their checksum-bound experiment records.
+
 ## Figure 0
 
 `draw_architecture.py` draws editable SVG and vector PDF from the same primitives.

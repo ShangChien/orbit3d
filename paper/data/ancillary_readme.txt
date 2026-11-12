@@ -34,6 +34,13 @@ normalizes explicit hydrogens while retaining specified stereo and isotopes.
 The quantum-identity recheck preserves seven earlier graph decisions, including
 two actual chemical failures; it does not rerun the quantum calculations.
 
+sft_duration_20261112.json contains the complete 36-run matrix: three stochastic
+continuations from a common trained 5000-step checkpoint, two predeclared
+milestones, two target windows and three inference seeds. Per-attempt diagnostics,
+held-out element predictions, input/checkpoint hashes and descriptive seed
+variation remain attached to each model. The original 5000-step training is not
+replicated; no best seed or checkpoint is selected by this report.
+
 This archive does not redistribute upstream training datasets or model weights.
 It supports inspection of reported evidence and the gradient counterexample,
 not a complete model-training rerun. No arXiv submission has been performed by

@@ -7,7 +7,7 @@ November 2026
 
 ## Abstract
 
-Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. A pretrained octree autoregressive prior is adapted to property intervals and paired with a self-ranking head. Optional group-relative policy optimization uses property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out four-property OCELOT training, a five-objective GRPO matrix with three training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation. A training-fragment baseline substantially exceeds the adapted octree on a central target window, identifying proposal quality as a bottleneck. The resulting formulation separates implementation guarantees from molecular-design effectiveness and makes negative results reproducible.
+Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. A pretrained octree autoregressive prior is adapted to property intervals and paired with a self-ranking head. Optional group-relative policy optimization uses property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out four-property OCELOT training, a five-objective GRPO matrix with three training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation. Three supervised continuations learn B/Si but do not consistently improve independent target success. A training-fragment baseline substantially exceeds the adapted octree on a central target window, identifying proposal quality as a bottleneck. The resulting formulation separates implementation guarantees from molecular-design effectiveness and makes negative results reproducible.
 
 ## 1. Introduction
 
@@ -236,6 +236,39 @@ external calls per BRICS window versus 9/13 for octree; the matched caps do not
 imply equal actual compute. Refinement evaluation/gradient calls are 1572/1071
 and 1548/65 for BRICS, versus 235/90 and 462/148 for octree.
 
+The duration experiment continues the common 5000-step model for 15000 further
+full-backbone SFT updates on the same 8188 labelled conformers, using seeds 42–44.
+Both total-10000 and total-20000 checkpoints are evaluated at the original and
+central windows with inference seeds 2026–2028, retaining all 64 attempts per run.
+The optimizer starts fresh; this is not a resumed optimizer trajectory. No
+checkpoint or seed is selected by its evaluation result.
+
+<!-- BEGIN TABLE SFT_DURATION -->
+| Total steps / window | Valid / 576 | In domain / 576 | DPA joint / 576 | FP joint / 576 |
+| :--- | ---: | ---: | ---: | ---: |
+| 10000 / original | 393 | 51 | 9 | 15 |
+| 10000 / central | 376 | 41 | 9 | 8 |
+| 20000 / original | 370 | 54 | 12 | 11 |
+| 20000 / central | 349 | 41 | 10 | 10 |
+
+Table: Three stochastic SFT continuations from one common 5000-step checkpoint, with three inference seeds per window and fixed total-10000/20000 evaluations. Each continuation uses the same 8188 labelled structures and a fresh optimizer. This does not replicate the initial 5000-step training or upstream pretraining.
+<!-- END TABLE SFT_DURATION -->
+
+Across the two windows, validity decreases from 769/1152 at total 10000 steps
+to 719/1152 at total 20000, while DPA joint hits increase from 18 to 22 and
+fingerprint hits decrease from 23 to 21. At 20000 steps, DPA original/central
+joint rates are 2.08%/1.74%, with across-continuation SDs of 0.52/1.08 percentage
+points; fingerprint rates are 1.91%/1.74%, with SDs of 0.60/0.80 points. Three
+continuations provide descriptive variation, not a significance test. The
+original 5000-step control is a single trained model and is not counted as three
+baseline training replicas.
+
+All three final models recover 8/12 B and 27/28 Si teacher-forced decisions on
+the same 511 validation structures, versus zero for both elements at 5000 steps.
+Valid generated B/Si occurrences increase from 16/67 to 67/74 across 1152
+attempts. Thus the longer run learns these elements, but this training budget
+does not produce a consistent improvement in independent design success.
+
 <!-- BEGIN TABLE OPTICAL_GENERATION -->
 | Active targets | Valid / 192 | In domain / 192 | Optimizing joint / 192 | Independent joint / 192 |
 | :--- | ---: | ---: | ---: | ---: |
@@ -431,11 +464,12 @@ Each run must identify the code revision, environment, input/split versions, tok
 
 Tables are generated from checksum-bound evidence. The manuscript source archive includes summaries and selected per-candidate records, but not the model weights needed to rerun the experiments. Current package runs separately save full source snapshots, runtime versions, checkpoint hashes, raw trajectories and per-attempt states. A 32-candidate/8-export batch-path replay passes at 1e-5 prediction/coordinate tolerance. An earlier serial/batch comparison preserved all tokens and decisions. After correcting physical-energy accumulation to float64, strict zero-tolerance acceptance differs for one of eight structures; an explicit 1e-5 eV/property tolerance restores matched decisions within the declared cross-path numerical thresholds. Both outcomes are retained. Removing identity KV-cache row copies preserves all tokens, coordinates and scores in an eight-trajectory test; three shared-GPU repeats change median latency from 8.96 to 7.94 seconds. This is not a general throughput guarantee. Broader scientific effectiveness remains a separate experimental requirement. The historical dense-grid CLI and the octree pilot must not be labeled as the same trained model.
 
-A relocatable inference bundle contains the adapted generator, evaluators, scalers,
-applicability domain, project wheel, dependency lock and original replay cohort.
-After installing that wheel into a fresh import directory and relocating the
-models, all 64 raw proposals and six exports replay under the original 1e-5
-coordinate/property tolerances. All 23 bundled files pass their SHA-256 checks.
+Separate four-target and fixed-20000-step two-target inference bundles contain
+the adapted generator, evaluators, scalers, applicability domain, project wheel,
+dependency lock and original replay cohort. After isolated wheel installation
+and model relocation, all 64 raw proposals in each bundle and six/nine exports,
+respectively, replay under the original 1e-5 coordinate/property tolerances.
+All 23 files in each bundle pass their SHA-256 checks.
 This uses the validated remote dependencies, not a newly built operating-system
 image. An optional geometric-growth KV buffer matches the reference storage on
 24 sampled trajectories, but shows no meaningful timing gain and higher peak
@@ -457,7 +491,7 @@ Finally, autoregressive decoding, candidate selection, ensemble evaluation, and 
 
 ORBIT-3D formulates interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, interval conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
 
-The corrected implementation has matched-budget controls, three GRPO training seeds, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A separate preselected check of five delivered designs preserves every graph and retains two orbital-window hits under the internal quantum protocol. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. These results identify proposal quality and evaluator reliability as the main remaining limitations. Broader quantum validation with reproducible reference settings is needed before claiming general design effectiveness.
+The corrected implementation has matched-budget controls, three GRPO training seeds, three SFT continuations from a common trained initialization, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A separate preselected check of five delivered designs preserves every graph and retains two orbital-window hits under the internal quantum protocol. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. These results identify proposal quality and evaluator reliability as the main remaining limitations. Broader quantum validation with reproducible reference settings is needed before claiming general design effectiveness.
 
 ## Appendix A. Exploratory adaptation and representation
 

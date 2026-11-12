@@ -35,7 +35,9 @@ names = ['ocelot_4096_20261111.json', 'ranking_ablation_20261111.json',
          'qualified20k_same_geometry_20261112.json', 'qualified20k_same_geometry_inputs_20261112.json',
          'qualified20k_label_overlap_20261112.json', 'bond_perception_20261112.json',
          'bond_perception_inputs_20261112.json', 'quantum_identity_wheel_20261112.json',
-         'quantum_identity_recheck_20261112.json']
+         'quantum_identity_recheck_20261112.json', 'sft_duration_20261112.json',
+         'orbital20k_artifact_verification_20261112.json', 'orbital20k_bundle_manifest_20261112.json',
+         'orbital20k_bundle_reload_20261112.json']
 records = {}
 for name in names:
     path = paper.parent/'docs/experiments'/name

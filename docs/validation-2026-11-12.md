@@ -49,3 +49,11 @@ Its public summary is `experiments/latest_mainline_reload_20261112.json`. The
 installed mainline DeepMD wheel, the immutable experiment source snapshots and the
 separate quantum runtime are recorded independently; this CPU wheel check is not
 a fresh-install validation of every optional CUDA combination.
+
+All scheduled current experiments have finished: the 36-cell SFT continuation
+matrix, the five preselected qualified-design quantum calculations, and the
+relocated 20000-step model replay. The final 17-page manuscript is rebuilt from
+70 checksum-verified evidence records. Its 14-file source archive compiles after
+fresh extraction, and the changed result-table pages have been visually checked.
+[Archive hash and build evidence](experiments/manuscript_validation_20261112.json)
+identify the delivered artifact separately from a hosted arXiv submission.

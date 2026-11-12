@@ -210,6 +210,19 @@ def build():
             lines.append(f"| {label} / {window} | {row['raw_valid']} | {row['domain_eligible']} | {row['qualified']} | {row['fingerprint_joint']} | {row['hyff_joint_with_source_force']} |")
     lines += ['', 'Table: Same 8188 adaptation structures, target windows and proposal/ranking/refinement caps. Octree uses the 5000-step control; BRICS uses single-cut training fragments and ETKDG/UFF geometry. FP and HyFF independently rescore unchanged exports; all three joint columns use the source DPA force criterion. Actual evaluator calls and training compute differ.']
     tables['BRICS'] = '\n'.join(lines)
+    duration = current['sft_duration_20261112.json']
+    if not duration['complete_predeclared_three_seed_matrix']:
+        raise ValueError('The manuscript duration table requires all three fixed continuation seeds')
+    lines = ['| Total steps / window | Valid / 576 | In domain / 576 | DPA joint / 576 | FP joint / 576 |',
+             '| :--- | ---: | ---: | ---: | ---: |']
+    for steps in ['10000', '20000']:
+        for window in ['original', 'central']:
+            row = duration['aggregate'][steps][window]
+            assert row['attempted'] == 576
+            lines.append(f"| {steps} / {window} | {row['raw_valid']} | {row['domain_eligible']} | "
+                         f"{row['qualified']} | {row['fingerprint_joint']} |")
+    lines += ['', 'Table: Three stochastic SFT continuations from one common 5000-step checkpoint, with three inference seeds per window and fixed total-10000/20000 evaluations. Each continuation uses the same 8188 labelled structures and a fresh optimizer. This does not replicate the initial 5000-step training or upstream pretraining.']
+    tables['SFT_DURATION'] = '\n'.join(lines)
     qualified = current['qualified20k_quantum_20261112.json']
     lines = ['| Case / window | Source DPA H / L (eV) | Quantum H / L (eV) | Target check |',
              '| :--- | ---: | ---: | :--- |']
