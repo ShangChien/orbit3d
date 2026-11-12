@@ -1,0 +1,14 @@
+{
+  "dataset": "OE62 df_62k",
+  "doi": "10.14459/2019mp1507656",
+  "publisher_page": "https://mediatum.ub.tum.de/1507656",
+  "download_url": "https://dataserv.ub.tum.de/index.php/s/m1507656/download?path=%2F&files=df_62k.json",
+  "license": "CC-BY-SA-4.0 (mediaTUM curated dataset)",
+  "format": "pandas JSON orient=split",
+  "coordinates": "xyz_pbe_relaxed, angstrom; source PBE+vdW geometry",
+  "homo": "energies_occ_pbe0_vac_tier2[-1], eV",
+  "lumo": "energies_unocc_pbe0_vac_tier2[0], eV; positive LUMO is retained",
+  "theory": "gas-phase PBE0, FHI-aims Tier2/tight, evaluated on source PBE+vdW coordinates",
+  "status": "full download in progress; official tutorial and first 20 complete source records inspected",
+  "checked_on": "2026-11-12"
+}
