@@ -45,34 +45,39 @@ def softmax_sampling(
     # Adjust logits by temperature
     logits = logits.float() / temperature
 
-    # Sort logits in descending order
-    sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
-    probs = torch.softmax(sorted_logits, dim=-1)
-    cumulative_probs = torch.cumsum(probs, dim=-1)
+    # top_p=1 means the full categorical distribution. Float32 cumulative
+    # sums can exceed one by an ulp; filtering that tail is not a no-op.
+    filtered_logits = logits
+    if top_p < 1.0 or top_k is not None:
+        # Sort logits in descending order
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+        probs = torch.softmax(sorted_logits, dim=-1)
+        cumulative_probs = torch.cumsum(probs, dim=-1)
 
-    # Apply top_p filter
-    sorted_indices_to_remove_p = cumulative_probs > top_p
-    sorted_indices_to_remove_p[:, 1:] = sorted_indices_to_remove_p[:, :-1].clone()
-    # Ensure at least one token is kept
-    sorted_indices_to_remove_p[:, 0] = False
+        # Apply top_p filter
+        sorted_indices_to_remove_p = (cumulative_probs > top_p if top_p < 1.0
+                                      else torch.zeros_like(probs, dtype=torch.bool))
+        sorted_indices_to_remove_p[:, 1:] = sorted_indices_to_remove_p[:, :-1].clone()
+        # Ensure at least one token is kept
+        sorted_indices_to_remove_p[:, 0] = False
 
-    # Apply top_k filter (if specified)
-    if top_k is not None:
-        sorted_indices_to_remove_k = torch.ones_like(
-            sorted_indices_to_remove_p, dtype=torch.bool
+        # Apply top_k filter (if specified)
+        if top_k is not None:
+            sorted_indices_to_remove_k = torch.ones_like(
+                sorted_indices_to_remove_p, dtype=torch.bool
+            )
+            sorted_indices_to_remove_k[:, :top_k] = False  # Keep only the top_k logits
+            sorted_indices_to_remove = (
+                sorted_indices_to_remove_p | sorted_indices_to_remove_k
+            )
+        else:
+            sorted_indices_to_remove = sorted_indices_to_remove_p
+
+        # Mask logits that do not satisfy top_p and top_k
+        sorted_logits = sorted_logits.masked_fill(sorted_indices_to_remove, float("-inf"))
+        filtered_logits = torch.zeros_like(logits).scatter_(
+            -1, sorted_indices, sorted_logits
         )
-        sorted_indices_to_remove_k[:, :top_k] = False  # Keep only the top_k logits
-        sorted_indices_to_remove = (
-            sorted_indices_to_remove_p | sorted_indices_to_remove_k
-        )
-    else:
-        sorted_indices_to_remove = sorted_indices_to_remove_p
-
-    # Mask logits that do not satisfy top_p and top_k
-    sorted_logits = sorted_logits.masked_fill(sorted_indices_to_remove, float("-inf"))
-    filtered_logits = torch.zeros_like(logits).scatter_(
-        -1, sorted_indices, sorted_logits
-    )
 
     # Compute probabilities from filtered logits
     probs = torch.softmax(filtered_logits, dim=-1)
@@ -602,10 +607,6 @@ class Uni3DARSampler(Uni3DAR):
                 cond_vars["atom_constraint"][:, :, 0] = 0
                 cond_vars["atom_constraint"][:, self.atom_lattice_id, 0] = 8
 
-        def atom_prob_proc(probs):
-            probs[:, atom_type_mask] = 0
-            return probs
-
         def atom_constraint_proc(probs, tree_i, batch_indices):
             cur_atom_mask = cond_vars["atom_constraint"][:, :, tree_i] <= 0
             bsz = probs.shape[0]
@@ -618,18 +619,22 @@ class Uni3DARSampler(Uni3DAR):
             return probs
 
         def atom_sampling_func(logits, batch_indices, tree_i):
+            # Condition the categorical support before exponentiation. Masking
+            # probabilities afterwards can erase every permitted class when a
+            # forbidden logit dominates (especially after terminal parity).
+            logits = logits.masked_fill(atom_type_mask, -torch.inf)
             if atom_logit_mask is not None:
                 logits = atom_logit_mask(logits, batch_indices)
             atom_type, score = softmax_sampling(
                 logits,
                 1.0,
                 self.atom_temperature[tree_i],
-                prob_proc_func=atom_prob_proc,
                 uniforms=sample_uniforms(batch_indices) if sample_uniforms else None,
             )
             return atom_type, score
 
         def atom_constraint_sampling_func(logits, batch_indices, tree_i):
+            logits = logits.masked_fill(atom_type_mask, -torch.inf)
             if atom_logit_mask is not None:
                 logits = atom_logit_mask(logits, batch_indices)
             atom_type, score = softmax_sampling(
