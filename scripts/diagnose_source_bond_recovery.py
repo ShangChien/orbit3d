@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 from rdkit import Chem,RDLogger
+from rdkit.Chem.MolStandardize import rdMolStandardize
 from orbit3d.generator.octree_backend import OctreeDataset
 from orbit3d.generator.octree_model import AtomFeatDict,build_default_uni3dar_args
 from orbit3d.generator.molecular_state import Mol3DInstance,rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
@@ -27,6 +28,7 @@ def main():
     rows=[]
     for i,source in enumerate(mols):
         source_id=source.GetProp('SourceID');print('checking',i,source_id,flush=True)
+        normalized_source=Chem.MolToSmiles(rdMolStandardize.Normalize(Chem.RemoveHs(source)))
         original=rdkit_mol_to_mol3d_instance(source,np.empty(0),center=False,element_table=elements,coordinate_dtype=np.float64)
         variants={'source_xyz':replace(original,graph=None)}
         for epoch in [1,2]:
@@ -41,6 +43,7 @@ def main():
                 parsed=mol3d_to_validated_rdkit_mol(instance)
                 row.update(valid=True,smiles=Chem.MolToSmiles(Chem.RemoveHs(parsed)),
                            charged_atoms=sum(atom.GetFormalCharge()!=0 for atom in parsed.GetAtoms()),
+                           normalized_graph_match=normalized_source==Chem.MolToSmiles(rdMolStandardize.Normalize(Chem.RemoveHs(parsed))),
                            **compare_molecular_identity(source,parsed))
             except ValueError as error:row['reason']=str(error)
             rows.append(row)
@@ -50,6 +53,7 @@ def main():
         group=[r for r in rows if r['geometry']==name]
         aggregate[name]={'attempted':len(group),'valid':sum(r['valid'] for r in group),
             'identity_status':dict(Counter(r.get('identity_status','invalid') for r in group)),
+            'normalized_graph_matches':sum(r.get('normalized_graph_match',False) for r in group),
             'with_formal_charges':sum(r.get('charged_atoms',0)>0 for r in group)}
     (a.output/'summary.json').write_text(json.dumps({'scope':'Fixed validation IDs; source geometry vs exact depth-7 octree encoding; no model sampling or graph replacement',
         'aggregate':aggregate,'records':rows},indent=2)+'\n')

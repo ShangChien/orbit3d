@@ -44,3 +44,14 @@ def test_domain_save_reload_and_legacy_contract(tmp_path):
     legacy=MorganDomain.load(path)
     assert legacy.graph_normalization==RAW_GRAPH
     assert not legacy.assess(equivalent)['in_domain']
+
+
+def test_graph_features_remove_nonphysical_stereo_annotations():
+    source=Chem.MolFromSmiles('CCO')
+    annotated=Chem.Mol(source)
+    annotated.GetAtomWithIdx(1).SetChiralTag(Chem.ChiralType.CHI_TETRAHEDRAL_CW)
+    model=FingerprintOracle()
+    np.testing.assert_array_equal(model.features([source]),model.features([annotated]))
+    domain=MorganDomain(['CCO'],.99)
+    assert domain.score(annotated)==1.
+    assert annotated.GetAtomWithIdx(1).GetChiralTag()==Chem.ChiralType.CHI_TETRAHEDRAL_CW
