@@ -22,7 +22,7 @@ def main():
     p.add_argument('--target', choices=['homo', 'lumo'], required=True)
     p.add_argument('--device', default='cuda:0')
     p.add_argument('--seed', type=int, default=42)
-    p.add_argument('--stage', choices=['sft', 'arms', 'evaluate', 'all'], default='all')
+    p.add_argument('--stage', choices=['sft', 'arms', 'evaluate', 'time-control', 'all'], default='all')
     a = p.parse_args()
     if not (a.output / 'run_manifest.json').exists():
         freeze_run(a.output, __file__)
@@ -89,15 +89,22 @@ def main():
                'kl_beta': .02, 'physics_weight': 0., 'uncertainty_weight': 0., 'replay_weight': 0.,
                'alignment_checkpoints': [50, 100],
                'point_target_pool': [{a.target: points[q]} for q in ['25', '50', '75']]})
-    if a.stage in ['evaluate', 'all']:
+    if a.stage == 'time-control':
+        budget=next(row['wall_seconds'] for row in costs if row['name']=='grpo' and row['returncode']==0)
+        launch('continue_wall', 'train', frozen, {'sft_steps': 1000000, 'sft_wall_seconds': budget,
+               'sft_lr': 2e-5, 'train_backbone': False, 'train_property_head': False,
+               'lr_schedule': 'constant'})
+    if a.stage in ['evaluate', 'time-control', 'all']:
         arms = {'frozen': frozen, 'continue400': a.output/'continue/weights/octree_conditional.pt',
                 'grpo200': a.output/'grpo/weights/octree_aligned.pt',
                 'continue100': a.output/'continue/weights/octree_step_100.pt',
                 'continue200': a.output/'continue/weights/octree_step_200.pt',
                 'grpo50': a.output/'grpo/weights/octree_group_50.pt',
                 'grpo100': a.output/'grpo/weights/octree_group_100.pt'}
+        if a.stage == 'time-control':
+            arms={'continue_wall':a.output/'continue_wall/weights/octree_conditional.pt'}
         for arm, checkpoint in arms.items():
-            quantiles = ['10', '25', '50', '75', '90'] if arm in ['frozen','continue400','grpo200'] else ['25','50','75']
+            quantiles = ['25','50','75'] if arm in ['continue100','continue200','grpo50','grpo100'] else ['10','25','50','75','90']
             for q in quantiles:
                 for seed in [2026, 2027, 2028]:
                     name = f'eval_{arm}_p{q}_s{seed}'
@@ -107,7 +114,7 @@ def main():
                             '--run', str(a.output/name/'run'), '--output', str(a.output/name/'raw'),
                             '--independent', str(a.fingerprint/'oracle'), '--device', a.device])
         # Close the condition on the same frozen policy, with the original task retained.
-        for seed in [2026, 2027, 2028]:
+        for seed in ([2026, 2027, 2028] if a.stage != 'time-control' else []):
             name = f'eval_frozen_off_s{seed}'
             launch(name, 'predict', frozen, inference={'condition_control': 'off', 'base_seed': seed})
             execute(name+'_raw', [sys.executable, '-u', str(scripts/'evaluate_point_pool.py'),

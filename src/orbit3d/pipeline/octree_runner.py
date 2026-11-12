@@ -170,6 +170,10 @@ def run_octree_from_config(cfg, config_path=None):
                     "initial_weights_kind": 'adapted_checkpoint' if initial_state else 'upstream_ema',
                     "optimizer_resumed": False,
                     "history": history,
+                    "optimizer_updates": len(history),
+                    "training_wall_seconds": time.perf_counter() - started,
+                    "requested_sft_steps": steps,
+                    "requested_wall_seconds": settings.get('sft_wall_seconds'),
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
                     "active_targets": settings.get("active_targets", names),
@@ -231,6 +235,8 @@ def run_octree_from_config(cfg, config_path=None):
             every = int(settings.get("checkpoint_every", 0))
             if every and (step + 1) % every == 0 and step + 1 < steps:
                 save_adaptation(checkpoint.parent / f"octree_step_{step + 1}.pt")
+            if settings.get('sft_wall_seconds') is not None and time.perf_counter()-started >= float(settings['sft_wall_seconds']):
+                break
         save_adaptation(checkpoint)
     else:
         checkpoint = Path(paths.get("checkpoint_load_path", checkpoint))

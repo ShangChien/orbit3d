@@ -383,8 +383,8 @@ def test_target_expansion_preserves_old_conditions_and_readout_when_new_targets_
     assert torch.count_nonzero(new_head.net(features)[:,[0,2]]) == 0
 
 
-@pytest.mark.parametrize("version,continued", [(3,False),(4,True)])
-def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatch, version, continued):
+@pytest.mark.parametrize("version,continued,timed", [(3,False,False),(4,True,False),(4,True,True)])
+def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatch, version, continued, timed):
     import json
     from orbit3d.pipeline import octree_runner as runner
     args = build_default_uni3dar_args(2)
@@ -414,8 +414,13 @@ def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatc
         cfg['mount_paths'].pop('generator_pretrained_path')
         cfg['mount_paths']['checkpoint_load_path'] = str(source)
         cfg['generator_config']['active_targets'] = ['homo']
+    if timed:
+        cfg['generator_config']['sft_wall_seconds']=1e-12
+        cfg['generator_config']['lr_schedule']='constant'
     result = runner.run_octree_from_config(cfg)
     state = torch.load(result['checkpoint'], weights_only=False)
-    assert len(state['history']) == 2 and state['label_source'] == 'sdf'
+    assert len(state['history']) == (1 if timed else 2) and state['label_source'] == 'sdf'
+    assert state['optimizer_updates']==len(state['history'])
+    assert state['requested_sft_steps']==2 and state['training_wall_seconds']>0
     manifest = json.loads((tmp_path/'run/input_manifest.json').read_text())
     assert set(manifest) == {'generator', 'adaptation_data'}
