@@ -96,3 +96,13 @@ python scripts/adapt_qm9s.py --source /data/mim-flow/qm9s --output dataset/proce
 
 模型训练和实验运行使用已冻结的具体配置。`configs/` 是可编辑模板，不能用其
 默认值替代原实验快照。性质模型训练、验证和测试的 SourceID 保存在实验结果中。
+
+## OE62 源三维轨道数据
+
+[来源与协议](oe62_source.json)、[冻结划分和目标](oe62_split_manifest.json)。61489 条官方记录中保留 53470 条中性闭壳层、最多 80 个显式原子的源结构；总原子数 min/P25/P50/P75/max 为 2/30/38/48/80。骨架划分 train/valid/calibration/test 为 43951/2447/2310/4762；首轮选 8192/512/512，测试集保留未参与训练或选模。源坐标保持不变，标签为 PBE0/vacuum/Tier2/tight HOMO、LUMO（eV）。
+
+```bash
+PYTHONPATH=src python scripts/prepare_oe62.py --source /data/df_62k.json --output dataset/processed/oe62
+```
+
+排除原因和逐条 ID 保存在运行产物 `records.json`；本仓库清单保存各原因计数。原始数据和 SDF 依其许可另行获取，不加入 Git。

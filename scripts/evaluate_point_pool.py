@@ -11,6 +11,31 @@ from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
 
 
+def summarize_records(records, point):
+    """Keep failed proposals in hit-rate denominators and isolate OOD diagnostics."""
+    stats={}
+    for label,flag,field in [('dpa','evaluated','prediction'),('fingerprint','independent_evaluated','independent_prediction')]:
+        stats[label]={}
+        for subset in ['all_evaluable','in_domain']:
+            eligible=[r for r in records if r[flag] and
+                      (subset=='all_evaluable' or bool(r.get('domain') and r['domain']['in_domain']))]
+            metrics={'evaluated':len(eligible),'coverage':len(eligible)/len(records),
+                     'property_hits':sum(point.intervals().hit(r[field]) for r in eligible)}
+            metrics['property_hit_rate_all_attempts']=metrics['property_hits']/len(records)
+            metrics['mean_distance']=float(np.mean([point.distance(r[field]) for r in eligible])) if eligible else None
+            metrics['targets']={n:{'mae_eV':float(np.mean([abs(r[field][k]-t) for r in eligible])),
+                                   'mean_prediction_eV':float(np.mean([r[field][k] for r in eligible])),
+                                   'prediction_p10_p50_p90_eV':np.quantile([r[field][k] for r in eligible],[.1,.5,.9]).tolist()}
+                                for k,(n,t) in enumerate(zip(point.names,point.values)) if t is not None and eligible}
+            metrics['joint_domain_force_hits']=sum(point.intervals().hit(r[field]) and r.get('evaluated',False)
+                     and r['rms_force']<=.1 and bool(r.get('domain') and r['domain']['in_domain']) for r in eligible)
+            metrics['tolerance_sensitivity']={str(radius):sum(all(abs(r[field][k]-t)<=radius
+                     for k,t in enumerate(point.values) if t is not None) for r in eligible)/len(records)
+                     for radius in [.1,.25,.5]}
+            stats[label][subset]=metrics
+    return stats
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--run',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True);p.add_argument('--independent',type=Path,required=True)
@@ -47,21 +72,14 @@ def main():
             if ev['errors'][j]:row['evaluation_error']=ev['errors'][j];continue
             pred=ev['mean'][j];force=ev['forces_eV_A'][j]
             row.update(evaluated=True,prediction=np.asarray(pred).tolist(),rms_force=float(np.sqrt(np.square(force).sum(-1).mean())))
-    stats={}
-    for label,flag,field in [('dpa','evaluated','prediction'),('fingerprint','independent_evaluated','independent_prediction')]:
-        eligible=[r for r in records if r[flag]]
-        stats[label]={'evaluated':len(eligible),'coverage':len(eligible)/len(records),
-                      'property_hits':sum(point.intervals().hit(r[field]) for r in eligible)}
-        stats[label]['property_hit_rate_all_attempts']=stats[label]['property_hits']/len(records)
-        stats[label]['mean_distance']=float(np.mean([point.distance(r[field]) for r in eligible])) if eligible else None
-        stats[label]['targets']={n:{'mae_eV':float(np.mean([abs(r[field][k]-t) for r in eligible])),
-                                    'mean_prediction_eV':float(np.mean([r[field][k] for r in eligible]))}
-                                  for k,(n,t) in enumerate(zip(names,point.values)) if t is not None and eligible}
-        stats[label]['joint_domain_force_hits']=sum(point.intervals().hit(r[field]) and r.get('evaluated',False)
-                    and r['rms_force']<=.1 and bool(r.get('domain') and r['domain']['in_domain']) for r in eligible)
+    stats=summarize_records(records,point)
     report={'scope':'Raw pool, no ranking or relaxation; all attempts retained; OOD predictions diagnostic only',
             'attempted':len(records),'valid':len(mols),'unique_valid':len({r['smiles'] for r in records if r['valid']}),
             'novel_valid':sum(r.get('novel_vs_sft_training',False) for r in records),
+            'target_point':dict(zip(point.names,point.values)),
+            'target_names':names,'target_tolerance':cfg['inference_config']['target_tolerance'],
+            'condition_control':cfg['inference_config'].get('condition_control','correct'),
+            'valid_atom_quantiles':np.quantile([m.GetNumAtoms() for m in mols],[0,.25,.5,.75,1]).tolist() if mols else None,
             'oracle_calls':len(mols),'independent_calls':len(mols),'elapsed_seconds':time.perf_counter()-started,
             'metrics':stats,'records':records}
     (a.output/'summary.json').write_text(json.dumps(report,indent=2)+'\n');print(stats,flush=True)
