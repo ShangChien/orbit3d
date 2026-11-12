@@ -13,8 +13,10 @@ def main():
         row={'training_seed':run['training_seed'],'arms':{},'paired_grpo_minus_control':{}}
         for arm in arms:
             r=next(r for r in run['arms'] if r['target']==a.target and r['arm']==arm);counts.add(r['attempted'])
+            conditions={v['condition']:v['target_mae_equal_quantile_eV'] for v in run['condition_controls'] if v['target']==a.target and v['arm']==arm}
             row['arms'][arm]={'independent_target_mae_eV':r['target_mae_equal_quantile_eV'],'domain_rate':r['evaluated']/r['attempted'],
-                             'independent_hit_rate':r['property_hits']/r['attempted'],'independent_mean_response_slope':r['mean_response_slope']}
+                             'independent_hit_rate':r['property_hits']/r['attempted'],'independent_mean_response_slope':r['mean_response_slope'],
+                             'independent_condition_specificity_eV':conditions['shuffled']-conditions['correct']}
         for control in ['frozen','continue400','continue_wall']:
             row['paired_grpo_minus_control'][control]={k:row['arms']['grpo200'][k]-v for k,v in row['arms'][control].items()}
         per_seed.append(row)

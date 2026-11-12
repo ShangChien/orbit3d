@@ -23,15 +23,17 @@ def main():
                 'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in per_target])),
                 'mean_response_slope':float(np.polyfit([r['goal_eV'] for r in per_target],[r['mean_prediction_eV'] for r in per_target],1)[0]),
                 'per_quantile':per_target})
-        for mode in ['correct','off','shuffled']:
-            scored=[]
-            for q,supplied in [('25','75'),('50','10'),('75','25')]:
-                pattern='eval_frozen_off_' if mode=='off' else f'eval_frozen_p{supplied if mode=="shuffled" else q}_'
-                pools=[r for r in data['pools'] if r['target']==target and r['name'].startswith(pattern)];assert len(pools)==3
-                rows=sum([r['records'] for r in pools],[]);goal=manifest['single_target_points'][target][q]
-                scored.append({'scoring_quantile':q,**metrics(rows,target,goal,True)})
-            controls.append({'target':target,'condition':mode,'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in scored])),
-                             'per_quantile':scored})
+        for arm in ['frozen','continue400','grpo200','continue_wall']:
+            for mode in ['correct','off','shuffled']:
+                if mode=='off' and not any(p['target']==target and p['name'].startswith(f'eval_{arm}_off_') for p in data['pools']):continue
+                scored=[]
+                for q,supplied in [('25','75'),('50','10'),('75','25')]:
+                    pattern=f'eval_{arm}_off_' if mode=='off' else f'eval_{arm}_p{supplied if mode=="shuffled" else q}_'
+                    pools=[r for r in data['pools'] if r['target']==target and r['name'].startswith(pattern)];assert len(pools)==3
+                    rows=sum([r['records'] for r in pools],[]);goal=manifest['single_target_points'][target][q]
+                    scored.append({'scoring_quantile':q,**metrics(rows,target,goal,True)})
+                controls.append({'target':target,'arm':arm,'condition':mode,'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in scored])),
+                                 'per_quantile':scored})
     output={'training_seed':a.training_seed,'scope':data['scope'],'mae_definition':'Equal target-quantile weighting; original-domain evaluable proposals. Candidate budgets are recorded per arm. Conditions reuse frozen pools and are not new training repeats.',
         'arms':arms,'condition_controls':controls,'wall_seconds':data['wall_seconds'],
         'native_evaluation_attempts':sum(r['native_evaluation_attempts'] for r in data['pools']),
@@ -39,7 +41,7 @@ def main():
         'pools':[{k:v for k,v in r.items() if k!='records'} for r in data['pools']],
         'raw_summary_sha256':hashlib.sha256(a.summary.read_bytes()).hexdigest(),'input_manifest':json.loads(a.inputs.read_text())}
     a.output.write_text(json.dumps(output,indent=2)+'\n')
-    for r in controls:print(r['target'],r['condition'],r['target_mae_equal_quantile_eV'])
+    for r in controls:print(r['target'],r['arm'],r['condition'],r['target_mae_equal_quantile_eV'])
 
 
 if __name__=='__main__':main()

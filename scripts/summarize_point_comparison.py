@@ -91,12 +91,14 @@ def main():
     for group in sorted(groups):
         if '_off' not in group:
             q=group.rsplit('_p',1)[1];score(group,q,'correct',q)
-    # P50 receives P10, so every shifted center lies outside the original ±0.25 window.
-    for original,supplied in [('25','75'),('50','10'),('75','25')]:
-        group=f'eval_frozen_p{supplied}'
-        if group in groups:score(group,original,'shuffled',supplied)
-    if 'eval_frozen_off' in groups:
-        for q in ['25','50','75']:score('eval_frozen_off',q,'off')
+    # Re-score existing pools for every arm; do not create extra proposals.
+    # P50 receives P10, keeping the original predeclared incompatible-goal mapping.
+    for arm in ['frozen','continue400','grpo200','continue_wall']:
+        for original,supplied in [('25','75'),('50','10'),('75','25')]:
+            group=f'eval_{arm}_p{supplied}'
+            if group in groups:score(group,original,'shuffled',supplied)
+        if f'eval_{arm}_off' in groups:
+            for q in ['25','50','75']:score(f'eval_{arm}_off',q,'off')
     arm_summary={}
     for arm in sorted({r['group'][5:].rsplit('_p',1)[0] for r in rows if r['condition_control']=='correct'}):
         selected=[r for r in rows if r['condition_control']=='correct' and r['group'].startswith(f'eval_{arm}_p')]

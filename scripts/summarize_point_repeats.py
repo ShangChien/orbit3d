@@ -24,6 +24,10 @@ def main():
             responses=[r for r in run['rows'] if r['condition_control']=='correct' and r['group'].startswith(f'eval_{arm}_p')]
             x=[r['scoring_target_eV'] for r in responses]
             y=[r['metrics']['fingerprint']['in_domain']['targets'][target]['mean_prediction_eV'] for r in responses]
+            correct=[r for r in responses if r['scoring_quantile'] in ['25','50','75']]
+            shuffled=[r for r in run['rows'] if r['condition_control']=='shuffled' and r['group'].startswith(f'eval_{arm}_p')]
+            assert len(correct)==len(shuffled)==3
+            condition_error=lambda records:float(np.mean([r['metrics']['fingerprint']['in_domain']['targets'][target]['mae_eV'] for r in records]))
             row['arms'][arm]={
                 'independent_target_mae_eV':summary['metrics']['fingerprint']['domain_target_mae_equal_quantile_eV'],
                 'optimization_oracle_target_mae_eV':summary['metrics']['dpa']['domain_target_mae_equal_quantile_eV'],
@@ -31,6 +35,7 @@ def main():
                 'domain_rate':summary['domain_valid']/summary['attempted'],
                 'independent_hit_rate':summary['metrics']['fingerprint']['domain_property_hit_rate_all_attempts'],
                 'independent_mean_response_slope':float(np.polyfit(x,y,1)[0]),
+                'independent_condition_specificity_eV':condition_error(shuffled)-condition_error(correct),
                 'mean_internal_diversity':float(np.mean([r['internal_diversity_valid'] for r in responses])),
                 'mean_unique_valid_fraction':float(np.mean([r['unique_valid']/r['valid'] for r in responses])),
             }
