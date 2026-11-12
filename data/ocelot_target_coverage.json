@@ -1,0 +1,396 @@
+{
+  "scope": "Training-label positions of historical OCELOT intervals; no generation evaluation and no test labels.",
+  "method": "Rebuild with prepare_ocelot.prepare(max_atoms=80, seed=42, manifest.allowed_elements); require train.csv SHA match. Percentile(x)=100*mean(label<=x); inclusive joint bounds. Selected8192 is the property training parent set, not the exact 8188 generator set.",
+  "inputs": {
+    "dataset/raw/ocelot_chromophore_v1/ocelot_chromophore_v1.csv": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985",
+    "docs/experiments/ocelot_optical8192_20261112.json": "972f2bdc9610c750dd8bee4eefaed57d81b0539e5b4fae504eba609aa822de3e",
+    "data/ocelot_wide80_split_manifest.json": "40cf3ded34aa0cb33ebf04d4a9564518c5144d73f8823d72f3b440e7949e8416",
+    "data/wide_target_windows.json": "5014200969da44607942166fb212b356639b538674dd05e207a274cc7451dd58",
+    "data/optical_target_windows.json": "02c0aab71ee145307aef73495d74853e14a836832c3aa19f51a2f04536ad7716",
+    "scripts/prepare_ocelot.py": "624707864440691e7af268d4ebd9dd009aaaa4d70d0857738c836ed4b1e925c1"
+  },
+  "populations": {
+    "full20356": {
+      "n": 20356,
+      "windows": {
+        "original": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -8.2,
+                -7.2
+              ],
+              "center_eV": -7.699999999999999,
+              "percentile_lower_center_upper": [
+                9.638435842012182,
+                24.65612104539202,
+                53.261937512281385
+              ],
+              "marginal_coverage_pct": 43.62350167026921
+            },
+            "lumo": {
+              "bounds_eV": [
+                -0.6,
+                0.8
+              ],
+              "center_eV": 0.10000000000000003,
+              "percentile_lower_center_upper": [
+                51.68009432108469,
+                85.25250540381214,
+                97.32756926704657
+              ],
+              "marginal_coverage_pct": 45.64747494596188
+            }
+          },
+          "joint_count": 3607,
+          "joint_coverage_pct": 17.719591275299663
+        },
+        "central": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -7.75,
+                -6.75
+              ],
+              "center_eV": -7.25,
+              "percentile_lower_center_upper": [
+                22.661623108665747,
+                50.0294753389664,
+                81.12104539202201
+              ],
+              "marginal_coverage_pct": 58.459422283356254
+            },
+            "lumo": {
+              "bounds_eV": [
+                -1.13,
+                -0.13
+              ],
+              "center_eV": -0.6299999999999999,
+              "percentile_lower_center_upper": [
+                21.56612301041462,
+                49.85262330516801,
+                76.83729612890548
+              ],
+              "marginal_coverage_pct": 55.27117311849086
+            }
+          },
+          "joint_count": 7081,
+          "joint_coverage_pct": 34.785812536844176
+        },
+        "lower_gap": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -7.26,
+                -6.46
+              ],
+              "center_eV": -6.859999999999999,
+              "percentile_lower_center_upper": [
+                49.38101788170564,
+                74.926311652584,
+                92.78345450972687
+              ],
+              "marginal_coverage_pct": 43.40243662802122
+            },
+            "lumo": {
+              "bounds_eV": [
+                -1.46,
+                -0.66
+              ],
+              "center_eV": -1.06,
+              "percentile_lower_center_upper": [
+                10.036352918058558,
+                24.916486539595205,
+                48.025152289251324
+              ],
+              "marginal_coverage_pct": 37.98879937119277
+            }
+          },
+          "joint_count": 3555,
+          "joint_coverage_pct": 17.46413833759088
+        },
+        "vertical": {
+          "properties": {
+            "s0s1": {
+              "bounds_eV": [
+                2.5,
+                3.5
+              ],
+              "center_eV": 3.0,
+              "percentile_lower_center_upper": [
+                5.251522892513264,
+                16.447239143250147,
+                44.70426409903714
+              ],
+              "marginal_coverage_pct": 39.452741206523875
+            },
+            "s0t1": {
+              "bounds_eV": [
+                1.5,
+                2.5
+              ],
+              "center_eV": 2.0,
+              "percentile_lower_center_upper": [
+                4.819217921006091,
+                17.577127136962076,
+                48.71782275496168
+              ],
+              "marginal_coverage_pct": 43.89860483395559
+            }
+          },
+          "joint_count": 6009,
+          "joint_coverage_pct": 29.51955197484771
+        },
+        "joint": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -8.2,
+                -7.2
+              ],
+              "center_eV": -7.699999999999999,
+              "percentile_lower_center_upper": [
+                9.638435842012182,
+                24.65612104539202,
+                53.261937512281385
+              ],
+              "marginal_coverage_pct": 43.62350167026921
+            },
+            "lumo": {
+              "bounds_eV": [
+                -0.6,
+                0.8
+              ],
+              "center_eV": 0.10000000000000003,
+              "percentile_lower_center_upper": [
+                51.68009432108469,
+                85.25250540381214,
+                97.32756926704657
+              ],
+              "marginal_coverage_pct": 45.64747494596188
+            },
+            "s0s1": {
+              "bounds_eV": [
+                2.5,
+                3.5
+              ],
+              "center_eV": 3.0,
+              "percentile_lower_center_upper": [
+                5.251522892513264,
+                16.447239143250147,
+                44.70426409903714
+              ],
+              "marginal_coverage_pct": 39.452741206523875
+            },
+            "s0t1": {
+              "bounds_eV": [
+                1.5,
+                2.5
+              ],
+              "center_eV": 2.0,
+              "percentile_lower_center_upper": [
+                4.819217921006091,
+                17.577127136962076,
+                48.71782275496168
+              ],
+              "marginal_coverage_pct": 43.89860483395559
+            }
+          },
+          "joint_count": 116,
+          "joint_coverage_pct": 0.5698565533503636
+        }
+      }
+    },
+    "selected8192": {
+      "n": 8192,
+      "windows": {
+        "original": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -8.2,
+                -7.2
+              ],
+              "center_eV": -7.699999999999999,
+              "percentile_lower_center_upper": [
+                9.3017578125,
+                24.1943359375,
+                52.8076171875
+              ],
+              "marginal_coverage_pct": 43.505859375
+            },
+            "lumo": {
+              "bounds_eV": [
+                -0.6,
+                0.8
+              ],
+              "center_eV": 0.10000000000000003,
+              "percentile_lower_center_upper": [
+                51.52587890625,
+                85.02197265625,
+                97.4609375
+              ],
+              "marginal_coverage_pct": 45.93505859375
+            }
+          },
+          "joint_count": 1444,
+          "joint_coverage_pct": 17.626953125
+        },
+        "central": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -7.75,
+                -6.75
+              ],
+              "center_eV": -7.25,
+              "percentile_lower_center_upper": [
+                22.44873046875,
+                49.54833984375,
+                80.82275390625
+              ],
+              "marginal_coverage_pct": 58.3740234375
+            },
+            "lumo": {
+              "bounds_eV": [
+                -1.13,
+                -0.13
+              ],
+              "center_eV": -0.6299999999999999,
+              "percentile_lower_center_upper": [
+                21.6552734375,
+                49.5361328125,
+                76.4404296875
+              ],
+              "marginal_coverage_pct": 54.78515625
+            }
+          },
+          "joint_count": 2828,
+          "joint_coverage_pct": 34.521484375
+        },
+        "lower_gap": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -7.26,
+                -6.46
+              ],
+              "center_eV": -6.859999999999999,
+              "percentile_lower_center_upper": [
+                48.8525390625,
+                74.7802734375,
+                92.6513671875
+              ],
+              "marginal_coverage_pct": 43.798828125
+            },
+            "lumo": {
+              "bounds_eV": [
+                -1.46,
+                -0.66
+              ],
+              "center_eV": -1.06,
+              "percentile_lower_center_upper": [
+                9.65576171875,
+                24.81689453125,
+                47.42431640625
+              ],
+              "marginal_coverage_pct": 37.7685546875
+            }
+          },
+          "joint_count": 1469,
+          "joint_coverage_pct": 17.93212890625
+        },
+        "vertical": {
+          "properties": {
+            "s0s1": {
+              "bounds_eV": [
+                2.5,
+                3.5
+              ],
+              "center_eV": 3.0,
+              "percentile_lower_center_upper": [
+                4.96826171875,
+                16.40625,
+                44.78759765625
+              ],
+              "marginal_coverage_pct": 39.8193359375
+            },
+            "s0t1": {
+              "bounds_eV": [
+                1.5,
+                2.5
+              ],
+              "center_eV": 2.0,
+              "percentile_lower_center_upper": [
+                4.79736328125,
+                17.5537109375,
+                48.828125
+              ],
+              "marginal_coverage_pct": 44.03076171875
+            }
+          },
+          "joint_count": 2463,
+          "joint_coverage_pct": 30.06591796875
+        },
+        "joint": {
+          "properties": {
+            "homo": {
+              "bounds_eV": [
+                -8.2,
+                -7.2
+              ],
+              "center_eV": -7.699999999999999,
+              "percentile_lower_center_upper": [
+                9.3017578125,
+                24.1943359375,
+                52.8076171875
+              ],
+              "marginal_coverage_pct": 43.505859375
+            },
+            "lumo": {
+              "bounds_eV": [
+                -0.6,
+                0.8
+              ],
+              "center_eV": 0.10000000000000003,
+              "percentile_lower_center_upper": [
+                51.52587890625,
+                85.02197265625,
+                97.4609375
+              ],
+              "marginal_coverage_pct": 45.93505859375
+            },
+            "s0s1": {
+              "bounds_eV": [
+                2.5,
+                3.5
+              ],
+              "center_eV": 3.0,
+              "percentile_lower_center_upper": [
+                4.96826171875,
+                16.40625,
+                44.78759765625
+              ],
+              "marginal_coverage_pct": 39.8193359375
+            },
+            "s0t1": {
+              "bounds_eV": [
+                1.5,
+                2.5
+              ],
+              "center_eV": 2.0,
+              "percentile_lower_center_upper": [
+                4.79736328125,
+                17.5537109375,
+                48.828125
+              ],
+              "marginal_coverage_pct": 44.03076171875
+            }
+          },
+          "joint_count": 46,
+          "joint_coverage_pct": 0.5615234375
+        }
+      }
+    }
+  }
+}
