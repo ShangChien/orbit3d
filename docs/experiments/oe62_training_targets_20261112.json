@@ -1,0 +1,52 @@
+{
+  "training_records": 8192,
+  "pearson_homo_lumo": 0.09387999867237512,
+  "support": {
+    "homo": {
+      "10": {
+        "target_eV": -7.45834,
+        "within_0.25_eV": 1021
+      },
+      "25": {
+        "target_eV": -7.040765,
+        "within_0.25_eV": 1880
+      },
+      "50": {
+        "target_eV": -6.56081,
+        "within_0.25_eV": 2337
+      },
+      "75": {
+        "target_eV": -6.148085,
+        "within_0.25_eV": 2225
+      },
+      "90": {
+        "target_eV": -5.82362,
+        "within_0.25_eV": 1412
+      }
+    },
+    "lumo": {
+      "10": {
+        "target_eV": -2.577495,
+        "within_0.25_eV": 812
+      },
+      "25": {
+        "target_eV": -2.0524325,
+        "within_0.25_eV": 1482
+      },
+      "50": {
+        "target_eV": -1.44879,
+        "within_0.25_eV": 1784
+      },
+      "75": {
+        "target_eV": -0.8437325,
+        "within_0.25_eV": 1524
+      },
+      "90": {
+        "target_eV": -0.390311,
+        "within_0.25_eV": 991
+      }
+    }
+  },
+  "training_table_sha256": "50f34c25984642b2ff2add1681dab7ac24636c22cf5ebd1493b9b859b58add03",
+  "selection_manifest_sha256": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e"
+}
