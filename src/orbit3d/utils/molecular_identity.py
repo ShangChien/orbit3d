@@ -17,7 +17,12 @@ def compare_molecular_identity(source, recovered):
     Chem.RemoveStereochemistry(plain_source)
     Chem.RemoveStereochemistry(plain_recovered)
     constitution = Chem.MolToSmiles(plain_source) == Chem.MolToSmiles(plain_recovered)
-    specified_stereo = constitution and recovered.HasSubstructMatch(source, useChirality=True)
+    # Constitution is checked with all H above. For the subsequent stereo
+    # query, remove ordinary equivalent hydrogens to avoid factorial matches
+    # on methyl groups when a specified E/Z configuration is incompatible.
+    # RDKit retains isotope and double-bond-stereo-defining hydrogens here.
+    specified_stereo = constitution and Chem.RemoveHs(recovered).HasSubstructMatch(
+        Chem.RemoveHs(source), useChirality=True)
     return {
         'identity_match': exact,
         'constitution_match': constitution,

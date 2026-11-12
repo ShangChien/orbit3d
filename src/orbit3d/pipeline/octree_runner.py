@@ -268,6 +268,26 @@ def run_octree_from_config(cfg, config_path=None):
             raise ValueError("GRPO replay requires training molecules")
         y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32) if training else None
         reference_hash = hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
+        def alignment_state(alignment_history):
+            return {
+                "model_state_dict": model.state_dict(),
+                "backend": f"uni3dar_octree_v{model.condition_version}",
+                "target_cols": names,
+                "target_units": units,
+                "contract": checkpoint_contract(model, names, units, mean, scale),
+                "mean": mean,
+                "scale": scale,
+                "grpo_history": alignment_history,
+                "label_theory": state.get("label_theory", []) if mode == "align" else sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
+                "alignment_reference_sha256": reference_hash,
+                "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
+                "training_smiles": sorted(train_smiles),
+            }
+
+        def save_alignment_step(step, aligned_model, alignment_history):
+            if step in settings.get('alignment_checkpoints', [50, 100]):
+                torch.save(alignment_state(alignment_history), Path(paths['checkpoint_save_dir']) / f'octree_group_{step}.pt')
+
         history = align_octree(
             model,
             training,
@@ -290,25 +310,10 @@ def run_octree_from_config(cfg, config_path=None):
             points=points,
             point_pool=[TargetPoints.parse(raw, inference['target_tolerance'], names)
                         for raw in settings.get('point_target_pool', [])] if points else None,
+            checkpoint_callback=save_alignment_step,
         )
         checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_aligned.pt"
-        torch.save(
-            {
-                "model_state_dict": model.state_dict(),
-                "backend": f"uni3dar_octree_v{model.condition_version}",
-                "target_cols": names,
-                "target_units": units,
-                "contract": checkpoint_contract(model, names, units, mean, scale),
-                "mean": mean,
-                "scale": scale,
-                "grpo_history": history,
-                "label_theory": state.get("label_theory", []) if mode == "align" else sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
-                "alignment_reference_sha256": reference_hash,
-                "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
-                "training_smiles": sorted(train_smiles),
-            },
-            checkpoint,
-        )
+        torch.save(alignment_state(history), checkpoint)
     if mode in {"train", "align"}:
         return {"checkpoint": str(checkpoint), "history": history}
     lock_deterministic_environment(int(inference.get("base_seed", 2026)))

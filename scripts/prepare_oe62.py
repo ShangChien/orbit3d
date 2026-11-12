@@ -28,6 +28,10 @@ def prepare(source, output, max_atoms=80, seed=42):
         identifier = row['refcode_csd']
         try:
             mol = adapt_record(row, ELEMENTS, max_atoms)
+            xyz = mol.GetConformer().GetPositions()
+            diameter = float(np.linalg.norm(xyz[:, None] - xyz[None, :], axis=-1).max())
+            if diameter > .24 * 2**7 - .56:
+                raise ValueError('outside_depth7_rotation_safe_span')
             smiles = Chem.MolToSmiles(Chem.RemoveHs(mol))
             # Same constitution stays in one group even when source stereo differs.
             scaffold = MurckoScaffold.MurckoScaffoldSmiles(mol=Chem.RemoveHs(mol), includeChirality=False) or '<ACYCLIC>'
@@ -42,7 +46,7 @@ def prepare(source, output, max_atoms=80, seed=42):
             mol.SetProp('Split', split)
             molecules[identifier] = mol
             records.append({'source_id':identifier,'status':'accepted','split':split,'smiles':smiles,'scaffold':scaffold,
-                            'atoms':mol.GetNumAtoms(),'heavy_atoms':mol.GetNumHeavyAtoms(),
+                            'atoms':mol.GetNumAtoms(),'heavy_atoms':mol.GetNumHeavyAtoms(),'diameter_A':diameter,
                             'homo':float(mol.GetProp('homo')),'lumo':float(mol.GetProp('lumo'))})
         except (ValueError, RuntimeError) as error:
             records.append({'source_id':identifier,'status':'excluded','reason':str(error)})
@@ -61,7 +65,7 @@ def prepare(source, output, max_atoms=80, seed=42):
     train=accepted.set_index('source_id').loc[selection['train']]
     targets={k:{str(q):float(train[k].quantile(q/100)) for q in [10,25,50,75,90]} for k in ['homo','lumo']}
     report={'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_rows':len(frame),
-            'theory':THEORY,'units':'eV','rdkit_version':rdBase.rdkitVersion,'max_atoms':max_atoms,'seed':seed,
+            'theory':THEORY,'units':'eV','generator_merge_level':7,'rotation_safe_span_A':.24*2**7-.56,'rdkit_version':rdBase.rdkitVersion,'max_atoms':max_atoms,'seed':seed,
             'split_counts':accepted.split.value_counts().to_dict(),'selection_ids':selection,'single_target_points':targets,
             'status_counts':dict(Counter(r['status'] for r in records)),
             'exclusion_counts':dict(Counter(r.get('reason') for r in records if r['status']=='excluded')),

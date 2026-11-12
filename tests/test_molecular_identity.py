@@ -31,3 +31,10 @@ def test_explicit_and_implicit_hydrogens_do_not_change_identity():
     before = Chem.MolToMolBlock(source)
     assert compare_molecular_identity(source, explicit)['identity_status'] == 'exact'
     assert Chem.MolToMolBlock(source) == before
+
+
+def test_specified_alkene_flip_with_many_equivalent_methyl_hydrogens():
+    # Topology of OE62 AXAJUF; exercise stereo rejection without enumerating H permutations.
+    source=r'N#C/C(=C(\c1n(CC)nc(c1Cl)C)/OC(=O)C(C)(C)C)/c1ccc(cc1)C(C)(C)C'
+    flipped=source.replace(r'C(\c1',r'C(/c1')
+    assert compare_molecular_identity(Chem.MolFromSmiles(source),Chem.MolFromSmiles(flipped))['identity_status']=='specified_stereo_changed'
