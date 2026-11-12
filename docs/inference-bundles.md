@@ -43,3 +43,23 @@ in `experiments/relocated_bundle_manifest_20261112.json`,
 `experiments/relocated_bundle_reload_20261112.json` and
 `experiments/relocated_artifact_verification_20261112.json`. Private server paths
 and the archive location remain in the Git-ignored `local_dev/` notes.
+
+## Fixed 20000-step orbital model
+
+A second bundle contains the predeclared seed-42 total-20000 HOMO/LUMO model,
+the same model used for the qualified-design quantum selection. The reference
+is its entire original-window/seed-2026 run, not a chosen successful molecule.
+The current wheel is installed into another isolated import directory, and all
+64 raw candidates plus nine exports replay at the same 1e-5 coordinate/property
+tolerances with exact token checks. All 23 input files pass their hashes.
+
+The uncompressed EFS archive is 451,563,520 bytes with SHA-256
+`9799b68df945049290009d493f8e10d487bf95f76aa4dbd68a5085709351f3c8`.
+Its wheel SHA-256 is
+`aea55fc0bf97aba072975ffcaf2abb0bc9187d35db9e59b6edec71e4b7fb3e18`.
+Neither this model choice nor the quantum subset is selected using the best
+score among the three continuation seeds. The original four-target bundle remains
+available separately. [Artifact verification](experiments/orbital20k_artifact_verification_20261112.json),
+[file manifest](experiments/orbital20k_bundle_manifest_20261112.json) and
+[whole-cohort replay](experiments/orbital20k_bundle_reload_20261112.json) identify
+the new two-target artifact.

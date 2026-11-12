@@ -129,7 +129,8 @@ filtered proposals remain in the original candidate denominator.
 
 [Inference bundles](docs/inference-bundles.md) collect the model, scaler, domain,
 wheel and whole-cohort replay artifacts for relocation to persistent storage.
-The verified bundle replays 64 candidates and six exports without training data.
+The four-target bundle replays 64 candidates and six exports; the fixed 20000-step
+two-target bundle replays 64 candidates and nine exports. Neither needs training data.
 
 ## Code map
 

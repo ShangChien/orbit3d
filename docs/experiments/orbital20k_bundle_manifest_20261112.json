@@ -1,0 +1,37 @@
+{
+  "format": "orbit3d_inference_bundle_v1",
+  "source_run_configuration_sha256": "a9ab9347241414d50f96f7f843e6dda032aec9c212dad513dccfa99908edcdde",
+  "source_wheel_sha256": "aea55fc0bf97aba072975ffcaf2abb0bc9187d35db9e59b6edec71e4b7fb3e18",
+  "source_requirement_lock_sha256": "faf809971808b97b20fd2adb763747753cc13a907486ceb3d4bf0150724ef9e4",
+  "relocated_inputs": {
+    "checkpoint_load_path": "models/checkpoint_load_path/octree_conditional.pt",
+    "forcefield_path": "models/forcefield_path/DPA4-Mini-OMol25-100M-v20260820.pt",
+    "property_checkpoint_dir": "models/property_checkpoint_dir/oracle",
+    "applicability_domain_path": "models/applicability_domain_path/applicability.json"
+  },
+  "files": {
+    "README.md": "a50146d2fc858ac4a3f6a28e02b9d4a9840b81894e3ace3a03a866654010a815",
+    "config.json": "0a30b7da3b09a6b011295b11cd226133bdba6bf63d7a7ba2efcf1987b107bd34",
+    "models/applicability_domain_path/applicability.json": "451f758dbfd8857db25a18ea757999039fdec2b8e7d3f608fe289218eb4e596e",
+    "models/checkpoint_load_path/octree_conditional.pt": "95d8dedd0e11fb53a48ae6b278dfeba24df86fa949883f4b4fa8230b7d22eac9",
+    "models/forcefield_path/DPA4-Mini-OMol25-100M-v20260820.pt": "ae8c2574df58b527f84b5eac4631bd2f5722d99dc62c2b826bea365b02df033c",
+    "models/property_checkpoint_dir/oracle/dpa4_prop_adapter.pt": "2701c6e78b0916b5ff286c5900a2dd6ca9303fe8be72efbf06671c6c99f20165",
+    "models/property_checkpoint_dir/oracle/oracle_meta.json": "3e55c2e98607ed99779ec111074da8e7105db3ae8a3dbcc08c5b44cef01d92fc",
+    "models/property_checkpoint_dir/oracle/target_scaler.ss": "e557d6c82e0518cfcc9dc1966f44728d93a8fe847c1335780df690762776ec55",
+    "package/export_inference_bundle.py": "d618e6497cec802243b8075c9c5ae1aabd49e82115cb21104f0c2c1629c0150d",
+    "package/orbit3d-1.0.0-py3-none-any.whl": "aea55fc0bf97aba072975ffcaf2abb0bc9187d35db9e59b6edec71e4b7fb3e18",
+    "package/requirements.lock.txt": "faf809971808b97b20fd2adb763747753cc13a907486ceb3d4bf0150724ef9e4",
+    "reference_run/candidates.csv": "094405c4455939dee8b0d6747dcd9b382216e8a74894a57206da0de35fcbac87",
+    "reference_run/generated.sdf": "961e7b9b7e4cedc47175e20a27344ecf0516420c6852df65a6f99acb1786e858",
+    "reference_run/input_manifest.json": "3b9dcf9ac63e111561495c64485d08cb09886708b4fd6bc01e73fd7566bdc1a4",
+    "reference_run/qualified.sdf": "4b1a37f55f1912d1b6fc8d5935b787e9081857178384537dfa5e30368408b8e4",
+    "reference_run/raw_symbols.json": "72defb2060c26af516c03d0b7cf3ad76197e85a8bab0589eae02ac00b3be2357",
+    "reference_run/raw_trajectories.npz": "f0d7081dd715eec62091ee0940cae97dc752427000a17bc56dcc81e86d64ee2d",
+    "reference_run/relaxation_traces.json": "9494b74f50eb4430fc23cb83000ecb95965eb46d553d1d1290db9115bed72997",
+    "reference_run/run_config.json": "a9ab9347241414d50f96f7f843e6dda032aec9c212dad513dccfa99908edcdde",
+    "reference_run/run_manifest.json": "a46826ffa0e599ddf2df7b6bf67b8276776b3eceb7632b058a388eb9e0bef9c0",
+    "reference_run/source_snapshot.tar.gz": "7b46a694c95e7896839f8bd6cebcb268aff7d0f0c6139d39aed987c634ba1ed5",
+    "reference_run/summary.json": "27f1cd4b8bda7c60f7799f6fb1901454a062bfd24fc1371086da0555166e4dae",
+    "verify_bundle.py": "b6943a57b18f2a913a41736a9437b8979a9a62c043b3ab578865da1f6494eed4"
+  }
+}
