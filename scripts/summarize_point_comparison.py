@@ -135,9 +135,17 @@ def main():
             costs.append({key:row[key] for key in ['name','wall_seconds','reused_from'] if key in row} | {'campaign':str(root)})
     training_config=(a.alignment_campaign or a.campaign)/'configs/grpo.json'
     training_seed=json.loads(training_config.read_text())['seed'] if training_config.exists() else None
+    time_control=None
+    wall_checkpoint=(a.time_control_campaign or a.campaign)/'continue_wall/weights/octree_conditional.pt'
+    if wall_checkpoint.exists():
+        wall_state=torch.load(wall_checkpoint,map_location='cpu',weights_only=False,mmap=True)
+        time_control={key:wall_state[key] for key in ['optimizer_updates','requested_wall_seconds',
+                      'training_wall_seconds','initial_weights_sha256','train_backbone']}
+        with wall_checkpoint.open('rb') as stream:time_control['checkpoint_sha256']=hashlib.file_digest(stream,'sha256').hexdigest()
     a.output.write_text(json.dumps({'scope':'Raw pools before ranking/refinement; reused pools are not independent repeats',
                                    'target':a.target,'training_seed':training_seed,
                                    'sources':sources,'source_sha256':source_hashes,'training_signal':training,
+                                   'time_matched_sft':time_control,
                                    'completed_job_costs':costs,
                                    'arm_summary':arm_summary,
                                    'rows':rows},indent=2)+'\n')
