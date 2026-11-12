@@ -91,6 +91,8 @@ step_direction = F_projected - property_gradient_weight * g
 
 验收使用未裁剪的 RMS 力 `sqrt(mean_i ||F_i||^2)`，并报告最大原子力。步数、初始步长、接受容差和力阈值由配置决定；函数默认值与具体实验配置不能混为一谈。性质可行、低 MLIP 力和 DFT 极小点分别判断。
 
+实验工具另提供ASE LBFGS/FIRE纯能量优化，使用原始力、显式评价调用上限和最大原子力停止判据；输出最后一次实际评价的坐标，保图/连接关系单独验收。该路径尚未替换生产流水线的受约束弛豫。[标准优化器](../src/orbit3d/physics/standard_relaxer.py)
+
 ## 显式图提案路径
 
 **固定骨架生长**选择开放位点、片段和键级，维护氢替换与位点容量；新坐标构建时保留输入世界坐标，弛豫可冻结骨架原子。这是显式图操作后端。[骨架流程](../src/orbit3d/pipeline/scaffold_runner.py)
