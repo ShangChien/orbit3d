@@ -34,3 +34,22 @@ def test_standard_optimizer_converges_with_bounded_steps():
     assert np.square(coords).sum() < .01
     steps = np.diff(np.array(exp.positions), axis=0)
     assert np.linalg.norm(steps, axis=-1).max() <= .025 + 1e-9
+
+
+def test_point_gradient_remains_active_inside_interval(monkeypatch):
+    import importlib
+    from pathlib import Path
+    from orbit3d.constraints import TargetIntervals
+    monkeypatch.syspath_prepend(str(Path(__file__).parents[1] / 'scripts'))
+    PointExperiment = importlib.import_module('experiment_point_refinement').PointExperiment
+    target = [-7.25, -.63]
+    intervals = TargetIntervals.parse({'homo': [-7.5,-7.0], 'lumo': [-.88,-.38]}, ['homo','lumo'])
+    interval = Experiment(None,None,None,intervals,'cpu')
+    point = PointExperiment(None,None,None,intervals,'cpu',point=target)
+    pred = torch.tensor([-7.15,-.53],requires_grad=True)
+    old = interval.guidance_loss(pred)
+    new = point.guidance_loss(pred)
+    assert old.item() == 0
+    assert new.item() > 0
+    assert torch.allclose(torch.autograd.grad(new,pred)[0],torch.tensor([.2,.2]),atol=1e-5)
+    assert point.guidance_value({'prediction': target}) == 0

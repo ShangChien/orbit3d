@@ -32,6 +32,12 @@ class Experiment:
         self.inst, self.ff, self.oracle, self.targets, self.device = inst, ff, oracle, targets, device
         self.evaluations = self.gradients = 0
 
+    def guidance_loss(self, prediction):
+        return self.targets.violations(prediction).square().sum()
+
+    def guidance_value(self, value):
+        return value['interval_loss']
+
     def evaluate(self, coords):
         mol3d_to_validated_rdkit_mol(replace(self.inst, coords=np.asarray(coords)))
         self.evaluations += 1
@@ -75,12 +81,12 @@ class Experiment:
         start = value = self.evaluate(coords)
         history = []
         for step in range(20):
-            if value['property_hit']:
+            if self.guidance_value(value) == 0:
                 break
             self.gradients += 1
             xv = x.detach().requires_grad_(True)
             yp, _ = self.oracle.forward_differentiable_3d(xv, self.inst.symbols)
-            loss = self.targets.violations(yp).square().sum()
+            loss = self.guidance_loss(yp)
             gradient = torch.autograd.grad(loss, xv)[0].detach()
             force = torch.tensor(value['forces'], device=self.device, dtype=x.dtype)
             direction = force - .25 * reverse_project(force, gradient)
@@ -93,7 +99,7 @@ class Experiment:
                     reasons = []
                     if trial['energy_eV'] > start['energy_eV'] + .05: reasons.append('energy_budget')
                     if trial['rms_force_eV_A'] > .2: reasons.append('force_budget')
-                    if trial['interval_loss'] >= value['interval_loss']: reasons.append('no_property_improvement')
+                    if self.guidance_value(trial) >= self.guidance_value(value): reasons.append('no_property_improvement')
                 except (ValueError, FloatingPointError) as exc:
                     reasons = [str(exc)]
                 trials.append({'backtrack': backtrack, 'reasons': reasons})

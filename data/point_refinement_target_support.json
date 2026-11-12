@@ -1,0 +1,53 @@
+{
+  "scope": "Target neighborhood counts in the fixed 8192 property-training graphs, not the exact 8188 encodable generator set; no held-out labels used.",
+  "source_sha256": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985",
+  "selection_file": "docs/experiments/ocelot_optical8192_20261112.json",
+  "selection_sha256": "972f2bdc9610c750dd8bee4eefaed57d81b0539e5b4fae504eba609aa822de3e",
+  "n": 8192,
+  "target_names": [
+    "homo",
+    "lumo"
+  ],
+  "targets": {
+    "central": {
+      "point_eV": [
+        -7.25,
+        -0.63
+      ],
+      "marginal_percentiles": [
+        49.54833984375,
+        49.5361328125
+      ],
+      "joint_neighborhood_counts": {
+        "0.1": 147,
+        "0.25": 885,
+        "0.5": 2828
+      },
+      "nearest_training_id": "csd_FITRIL",
+      "nearest_labels_eV": [
+        -7.253742898,
+        -0.626406428
+      ]
+    },
+    "original_center": {
+      "point_eV": [
+        -7.7,
+        0.1
+      ],
+      "marginal_percentiles": [
+        24.1943359375,
+        85.02197265625
+      ],
+      "joint_neighborhood_counts": {
+        "0.1": 32,
+        "0.25": 239,
+        "0.5": 988
+      },
+      "nearest_training_id": "csd_HICJOU",
+      "nearest_labels_eV": [
+        -7.680145536,
+        0.103947548
+      ]
+    }
+  }
+}
