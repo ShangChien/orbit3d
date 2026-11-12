@@ -47,3 +47,5 @@ Torch、DeepMD、GPU4PySCF 等栈按实际验证的组合运行，分开的环�
 ## 硬约束须在 logits 上实施
 
 先做 softmax/top-p 再把禁止元素的概率清零，会使合法但低概率的支持集消失。实机复现中，合法元素原有 4.4e-8 概率质量，float32 累积达到1.000000119，让 `top_p=1` 错误截断合法尾部，后续元素过滤得到全零。元素与电子态 mask 应在指数运算前组合；`top_p=1` 保留完整分布，采样与 GRPO 的策略概率使用同一支持集。不能用重采样、补 null 或跳过整组掩盖该问题。[真实 logits 与原失败策略重放证据](experiments/oe62_sampling_validation_20261112.json)。
+
+`DetermineBonds(allowChargedFragments=True)` 会按价态分配形式电荷；改为 False 则可能分配自由基，不能当作保持闭壳层的简单修复。RDKit sanitize 通过、净电荷为零，均不证明局部电荷类型处于性质模型的训练支持内。生成评价应另报形式电荷分布；不得在看到结果后删掉异常提案并缩小命中分母。[RDKit 接口定义](https://github.com/rdkit/rdkit/blob/master/Code/GraphMol/DetermineBonds/DetermineBonds.h)

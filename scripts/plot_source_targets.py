@@ -1,11 +1,13 @@
 """Plot frozen training support, selecting the actual SDF IDs from the split table."""
 import argparse,csv,hashlib,json
+from collections import Counter
 from pathlib import Path
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+from rdkit import Chem
 
 
 def main():
@@ -29,6 +31,7 @@ def main():
     plot=axes[2].hexbin(values[:,0],values[:,1],gridsize=35,mincnt=1,norm=LogNorm(),cmap='Blues')
     fig.colorbar(plot,ax=axes[2],label='Training molecules per bin',shrink=.85)
     correlation=float(np.corrcoef(values.T)[0,1])
+    charge_types=[[f'{atom.GetSymbol()}{atom.GetFormalCharge():+}' for atom in Chem.MolFromSmiles(r['canonical_smiles']).GetAtoms() if atom.GetFormalCharge()] for r in rows]
     axes[2].set(xlabel='HOMO (eV)',ylabel='LUMO (eV)',title=f'Observed joint support (r = {correlation:.2f})')
     for ax in axes:ax.spines[['top','right']].set_visible(False)
     fig.suptitle(f'OE62: {len(rows):,} selected training molecules; source geometry / PBE0 vacuum labels',fontsize=12)
@@ -36,6 +39,8 @@ def main():
     for extension in ['png','pdf','svg']:fig.savefig(a.output.with_suffix('.'+extension),dpi=180)
     plt.close(fig)
     a.output.with_suffix('.json').write_text(json.dumps({'training_records':len(rows),'pearson_homo_lumo':correlation,
+        'molecules_with_formal_charges':sum(bool(charges) for charges in charge_types),
+        'charged_atom_counts':dict(Counter(charge for charges in charge_types for charge in charges)),
         'support':support,'training_table_sha256':hashlib.sha256(a.train_csv.read_bytes()).hexdigest(),
         'selection_manifest_sha256':hashlib.sha256(a.manifest.read_bytes()).hexdigest()},indent=2)+'\n')
 

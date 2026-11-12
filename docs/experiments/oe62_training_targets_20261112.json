@@ -48,5 +48,10 @@
     }
   },
   "training_table_sha256": "50f34c25984642b2ff2add1681dab7ac24636c22cf5ebd1493b9b859b58add03",
-  "selection_manifest_sha256": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e"
+  "selection_manifest_sha256": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e",
+  "molecules_with_formal_charges": 574,
+  "charged_atom_counts": {
+    "N+1": 747,
+    "O-1": 747
+  }
 }
