@@ -13,6 +13,8 @@ from evaluate_point_pool import summarize_records
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--campaign',type=Path,required=True)
+    p.add_argument('--alignment-campaign',type=Path)
+    p.add_argument('--sft-campaign',type=Path)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--target',required=True)
     p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     points=json.loads(a.manifest.read_text())['single_target_points'][a.target]
@@ -54,7 +56,7 @@ def main():
         if group in groups:score(group,original,'shuffled',supplied)
     if 'eval_frozen_off' in groups:
         for q in ['25','50','75']:score('eval_frozen_off',q,'off')
-    checkpoint=a.campaign/'grpo/weights/octree_aligned.pt'
+    checkpoint=(a.alignment_campaign or a.campaign)/'grpo/weights/octree_aligned.pt'
     training=None
     if checkpoint.exists():
         state=torch.load(checkpoint,map_location='cpu',weights_only=False,mmap=True)
@@ -75,10 +77,15 @@ def main():
                 'mean_evaluable':float(np.mean([r['evaluated'] for r in window])),
                 'mean_group_reward':float(np.mean([r['reward_mean'] for r in window])),
                 'mean_gradient_norm':float(np.mean([r['gradient_norm'] for r in window]))}
-    costs=json.loads((a.campaign/'costs.json').read_text())
+    costs=[]
+    for root,training_only in [(a.campaign,False),(a.alignment_campaign,True),(a.sft_campaign,True)]:
+        if root is None or (root==a.campaign and training_only):continue
+        for row in json.loads((root/'costs.json').read_text()):
+            if row['returncode'] or (training_only and row['name'] not in ['sft','continue','grpo_part100','grpo']):continue
+            costs.append({key:row[key] for key in ['name','wall_seconds','reused_from'] if key in row} | {'campaign':str(root)})
     a.output.write_text(json.dumps({'scope':'Raw pools before ranking/refinement; reused pools are not independent repeats',
                                    'target':a.target,'sources':sources,'training_signal':training,
-                                   'completed_job_costs':[{'name':r['name'],'wall_seconds':r['wall_seconds']} for r in costs if r['returncode']==0],
+                                   'completed_job_costs':costs,
                                    'rows':rows},indent=2)+'\n')
 
 

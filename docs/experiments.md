@@ -13,8 +13,8 @@
 | E0 源数据与目标冻结 | 已完成 | 源几何/图核验后 53470 条，固定 8192/512/512 训练/调参/校准；同级 FHI-aims 量化仍待验证 | [冻结清单](../data/oe62_split_manifest.json) | 2026-11-12 |
 | E1 性质评价系统 | 已完成 | DPA/指纹训练、完整重载、开发/校准分层评价和32源结构响应诊断完成；测试集未使用 | [性质结果](experiments/oe62_source_properties_20261112.json)、[几何响应](experiments/oe62_geometry_response_20261112.json) | 2026-11-12 |
 | E2 先验小对照 | 已完成 | 相同2000步/192提案，drug 域内有效37、qm9为3；选择drug进入单目标训练 | [先验结果](experiments/oe62_prior_comparison_20261112.json) | 2026-11-12 |
-| E3-S 单目标主实验 | 运行中 | `54c1770`：HOMO-only / LUMO-only 两组5000步SFT均完成，seed42；原始池条件响应评价待执行 | 远程 `point_{homo,lumo}_seed42` | 2026-11-12 |
-| E3-G GRPO 增益验证 | 运行中 | 两组400步继续SFT已完成；扩容后 `1fcd1bd` 从原固定SFT执行100+100组可恢复GRPO，三臂统一用修正采样器评价 | 远程 `resumable_{homo,lumo}_seed42`；`scripts/run_point_comparison.py` | 2026-11-12 |
+| E3-S 单目标主实验 | 运行中 | `54c1770`：HOMO-only / LUMO-only 两组5000步SFT均完成，seed42；原始池条件响应评价运行中 | 远程 `point_{homo,lumo}_seed42` | 2026-11-12 |
+| E3-G GRPO 增益验证 | 运行中 | 两组400步继续SFT已完成；扩容后 `1fcd1bd` 两组100+100组GRPO均完成（各3200提案/400更新）；`559c7e6` 正在复评三臂并执行时间预算匹配SFT | 训练 `resumable_{homo,lumo}_seed42`；评价与时间对照 `fast_{homo,lumo}_seed42` | 2026-11-12 |
 | E3-D 双目标核心扩展 | 暂缓 | 等 E3-S / E3-G 的条件响应与结构质量证据 | — | 2026-11-12 |
 | E3-F 四目标挑战 | 暂缓 | 等同协议四性质源数据及单/双目标证据 | — | 2026-11-12 |
 | E4-R 排序消融 | 待执行 | 等 E3-S 固定候选池；概率组在距离基线后执行 | — | 2026-11-12 |
