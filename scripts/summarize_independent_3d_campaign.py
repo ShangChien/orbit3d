@@ -7,6 +7,7 @@ from evaluate_independent_3d_campaign import metrics
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--summary',type=Path,required=True);p.add_argument('--inputs',type=Path,required=True)
+    p.add_argument('--training-seed',type=int,required=True)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     data=json.loads(a.summary.read_text());manifest=json.loads(a.manifest.read_text());arms=[];controls=[]
     for target in ['homo','lumo']:
@@ -31,7 +32,7 @@ def main():
                 scored.append({'scoring_quantile':q,**metrics(rows,target,goal,True)})
             controls.append({'target':target,'condition':mode,'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in scored])),
                              'per_quantile':scored})
-    output={'scope':data['scope'],'mae_definition':'Equal target-quantile weighting; original-domain evaluable proposals. Each property/arm has 960 attempts. Conditions reuse frozen pools and are not new training repeats.',
+    output={'training_seed':a.training_seed,'scope':data['scope'],'mae_definition':'Equal target-quantile weighting; original-domain evaluable proposals. Candidate budgets are recorded per arm. Conditions reuse frozen pools and are not new training repeats.',
         'arms':arms,'condition_controls':controls,'wall_seconds':data['wall_seconds'],
         'native_evaluation_attempts':sum(r['native_evaluation_attempts'] for r in data['pools']),
         'prediction_failures':sum(sum(r['valid'] and not r['hyff_evaluated'] for r in pool['records']) for pool in data['pools']),

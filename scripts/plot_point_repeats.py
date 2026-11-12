@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--summaries',nargs='+',type=Path,required=True)
-    p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+    p.add_argument('--output',type=Path,required=True);p.add_argument('--evaluator-label',default='fingerprint');a=p.parse_args()
     runs=[json.loads(path.read_text()) for path in a.summaries]
     fig,axes=plt.subplots(len(runs),3,figsize=(11,3.6*len(runs)),squeeze=False,layout='constrained')
     controls=['frozen','continue400','continue_wall']
@@ -32,7 +32,7 @@ def main():
             ax.set_ylabel(ylabel);ax.set_title(f"{run['target'].upper()} — {direction}")
             ax.spines[['top','right']].set_visible(False);ax.grid(axis='y',alpha=.18)
     axes[0,0].legend(fontsize=8)
-    fig.suptitle('GRPO minus each matched control\nOne dot per independent training seed; all proposals retained in rate denominators',fontsize=12)
+    fig.suptitle(f'GRPO minus each matched control — independent {a.evaluator_label}\nOne dot per independent training seed; all proposals retained in rate denominators',fontsize=12)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     for extension in ['png','pdf','svg']:fig.savefig(a.output.with_suffix('.'+extension),dpi=180)
     plt.close(fig)

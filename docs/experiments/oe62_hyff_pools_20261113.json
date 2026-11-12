@@ -1,6 +1,7 @@
 {
+  "training_seed": 42,
   "scope": "HyFF independent source-3D head, same frozen XYZ and original domain masks. No selection/reward/model changes. CPU assessment; primary fingerprint results remain separate.",
-  "mae_definition": "Equal target-quantile weighting; original-domain evaluable proposals. Each property/arm has 960 attempts. Conditions reuse frozen pools and are not new training repeats.",
+  "mae_definition": "Equal target-quantile weighting; original-domain evaluable proposals. Candidate budgets are recorded per arm. Conditions reuse frozen pools and are not new training repeats.",
   "arms": [
     {
       "target": "homo",
