@@ -21,7 +21,7 @@ class Policy(torch.nn.Module):
         return [(logits.log_softmax(-1),torch.arange(len(low))%2,torch.arange(len(low)))]
 
 
-def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch):
+def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path):
     def instance(t,**kwargs):
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
     monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
@@ -40,6 +40,8 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
                                     'alignment_training_state':state}))
     run(partial,stop_after=2,checkpoint_callback=snapshot)
     assert saved['alignment_training_state']['completed_groups']==2
+    torch.save(saved,tmp_path/'resume.pt')
+    saved=torch.load(tmp_path/'resume.pt',weights_only=False)
     torch.rand(100)  # A fresh process/model may have consumed unrelated randomness.
     resumed=copy.deepcopy(base)  # The reference remains the original SFT policy.
     resumed_history=run(resumed,resume_checkpoint=saved)
