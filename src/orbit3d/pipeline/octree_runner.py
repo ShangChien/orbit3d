@@ -68,6 +68,7 @@ def run_octree_from_config(cfg, config_path=None):
     generator_source = paths.get('checkpoint_load_path') or (
         checkpoint if mode in {'predict', 'align'} else paths.get('generator_pretrained_path'))
     record_input_hashes(output, {'generator': generator_source,
+                                'alignment_resume': paths.get('alignment_resume_path'),
                                 'forcefield': paths['forcefield_path'] if uses_evaluators else None,
                                 'property_model': paths['property_checkpoint_dir'] if uses_evaluators else None,
                                 'applicability_domain': domain_path,
@@ -293,6 +294,11 @@ def run_octree_from_config(cfg, config_path=None):
             raise ValueError("GRPO replay requires training molecules")
         y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32) if training else None
         reference_hash = hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
+        resume = (torch.load(paths['alignment_resume_path'],map_location=device,weights_only=False)
+                  if paths.get('alignment_resume_path') else None)
+        if resume is not None and resume['alignment_reference_sha256'] != reference_hash:
+            raise ValueError('GRPO resume must retain the original frozen SFT reference')
+        last_training_state = None
         point_pool = [TargetPoints.parse(raw, inference['target_tolerance'], names)
                       for raw in settings.get('point_target_pool', [])] if points else None
         if points and any([v is not None for v in p.values] != [v is not None for v in points.values] for p in point_pool):
@@ -307,6 +313,9 @@ def run_octree_from_config(cfg, config_path=None):
                 "mean": mean,
                 "scale": scale,
                 "grpo_history": alignment_history,
+                "alignment_training_state": last_training_state,
+                "alignment_requested_groups": int(settings['grpo_steps']),
+                "alignment_complete": len(alignment_history) == int(settings['grpo_steps']),
                 "label_theory": state.get("label_theory", []) if mode == "align" else sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                 "alignment_reference_sha256": reference_hash,
                 "active_targets": ([n for n,v in zip(names,points.values) if v is not None] if points
@@ -315,9 +324,18 @@ def run_octree_from_config(cfg, config_path=None):
                 "training_smiles": sorted(train_smiles),
             }
 
-        def save_alignment_step(step, aligned_model, alignment_history):
+        def save_alignment(path, alignment_history):
+            temporary = path.with_suffix('.pt.tmp')
+            torch.save(alignment_state(alignment_history),temporary)
+            temporary.replace(path)
+
+        def save_alignment_step(step, aligned_model, alignment_history, training_state=None):
+            nonlocal last_training_state
+            last_training_state = training_state
             if step in settings.get('alignment_checkpoints', [50, 100]):
-                torch.save(alignment_state(alignment_history), Path(paths['checkpoint_save_dir']) / f'octree_group_{step}.pt')
+                save_alignment(Path(paths['checkpoint_save_dir']) / f'octree_group_{step}.pt',alignment_history)
+            if step % int(settings.get('alignment_checkpoint_every',25)) == 0:
+                save_alignment(Path(paths['checkpoint_save_dir']) / 'octree_resume_latest.pt',alignment_history)
 
         history = align_octree(
             model,
@@ -341,9 +359,12 @@ def run_octree_from_config(cfg, config_path=None):
             points=points,
             point_pool=point_pool,
             checkpoint_callback=save_alignment_step,
+            resume_checkpoint=resume,
+            stop_after=settings.get('alignment_stop_after'),
         )
-        checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_aligned.pt"
-        torch.save(alignment_state(history), checkpoint)
+        filename = 'octree_aligned.pt' if len(history)==int(settings['grpo_steps']) else f'octree_resume_{len(history)}.pt'
+        checkpoint = Path(paths["checkpoint_save_dir"]) / filename
+        save_alignment(checkpoint,history)
     if mode in {"train", "align"}:
         return {"checkpoint": str(checkpoint), "history": history}
     lock_deterministic_environment(int(inference.get("base_seed", 2026)))

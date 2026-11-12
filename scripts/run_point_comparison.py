@@ -68,12 +68,14 @@ def main():
         'stage5_relax_config': {'enabled': False, 'batch_refinement': True},
     }
 
-    def launch(name, mode, checkpoint, settings=None, inference=None):
+    def launch(name, mode, checkpoint, settings=None, inference=None, resume=None):
         cfg = copy.deepcopy(base)
         cfg['mode'] = mode
         cfg['mount_paths'].update(checkpoint_load_path=str(checkpoint),
                                  checkpoint_save_dir=str(a.output/name/'weights'),
                                  output_dir=str(a.output/name/'run'))
+        if resume is not None:
+            cfg['mount_paths']['alignment_resume_path']=str(resume)
         cfg['generator_config'].update(settings or {})
         cfg['inference_config'].update(inference or {})
         path = configs/f'{name}.json'
@@ -90,12 +92,16 @@ def main():
                'train_backbone': False, 'train_property_head': False, 'lr_schedule': 'constant',
                'checkpoint_every': 100})
     if a.stage in ['arms', 'grpo', 'all']:
-        launch('grpo', 'align', frozen, {'grpo_steps': 200, 'group_size': 16, 'grpo_lr': 2e-5,
+        alignment = {'grpo_steps': 200, 'group_size': 16, 'grpo_lr': 2e-5,
                'kl_beta': .02, 'physics_weight': 0., 'uncertainty_weight': 0., 'replay_weight': 0.,
                'alignment_checkpoints': [50, 100],
-               'point_target_pool': [{a.target: points[q]} for q in ['25', '50', '75']]})
+               'point_target_pool': [{a.target: points[q]} for q in ['25', '50', '75']]}
+        launch('grpo_part100','align',frozen,{**alignment,'alignment_stop_after':100})
+        launch('grpo','align',frozen,alignment,
+               resume=a.output/'grpo_part100/weights/octree_resume_100.pt')
     if a.stage == 'time-control':
-        budget=next(row['wall_seconds'] for row in costs if row['name']=='grpo' and row['returncode']==0)
+        budget=sum(next(row['wall_seconds'] for row in costs if row['name']==name and row['returncode']==0)
+                   for name in ['grpo_part100','grpo'])
         launch('continue_wall', 'train', frozen, {'sft_steps': 1000000, 'sft_wall_seconds': budget,
                'sft_lr': 2e-5, 'train_backbone': False, 'train_property_head': False,
                'lr_schedule': 'constant'})
@@ -104,8 +110,8 @@ def main():
                 'grpo200': a.output/'grpo/weights/octree_aligned.pt',
                 'continue100': continued.parent/'octree_step_100.pt',
                 'continue200': continued.parent/'octree_step_200.pt',
-                'grpo50': a.output/'grpo/weights/octree_group_50.pt',
-                'grpo100': a.output/'grpo/weights/octree_group_100.pt'}
+                'grpo50': a.output/'grpo_part100/weights/octree_group_50.pt',
+                'grpo100': a.output/'grpo_part100/weights/octree_group_100.pt'}
         if a.stage == 'time-control':
             arms={'continue_wall':a.output/'continue_wall/weights/octree_conditional.pt'}
         for arm, checkpoint in arms.items():

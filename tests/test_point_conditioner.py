@@ -42,7 +42,7 @@ def test_alignment_snapshots_do_not_modify_frozen_sft_directory(tmp_path,monkeyp
     monkeypatch.setattr(runner,'load_octree_checkpoint',lambda *a,**k:(model,state))
     monkeypatch.setattr(runner,'load_evaluators',lambda *a,**k:(SimpleNamespace(set_atom_type_map=lambda _:None),object(),None))
     def align(*args,**kwargs):
-        history=[{'step':50}]
+        history=[{'step':i} for i in range(1,51)]
         kwargs['checkpoint_callback'](50,model,history)
         return history
     monkeypatch.setattr(alignment,'align_octree',align)

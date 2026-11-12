@@ -33,7 +33,7 @@ def categorical_policy_loss(current, previous, reference, advantages, beta=0.02,
 def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
-    points=None, point_pool=None, checkpoint_callback=None,
+    points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
 ):
     if points is not None and (physics_weight or uncertainty_weight):
         raise ValueError("Point GRPO primary comparison uses property-only reward")
@@ -50,7 +50,30 @@ def align_octree(
     dataset = OctreeDataset(molecules, model, seed=seed) if replay_weight else None
     rng = np.random.default_rng(seed + 1)
     history = []
-    for step in range(steps):
+    settings = {'seed':seed,'group_size':group_size,'lr':lr,'kl_beta':kl_beta,
+                'physics_weight':physics_weight,'uncertainty_weight':uncertainty_weight,
+                'replay_weight':replay_weight,'electron_parity':electron_parity,
+                'targets':[(p.names,p.values,p.radii) for p in (point_pool or [points])] if points
+                          else (intervals.names,intervals.bounds)}
+    if resume_checkpoint is not None:
+        saved = resume_checkpoint['alignment_training_state']
+        if saved['settings'] != settings:
+            raise ValueError('Resume requires the same GRPO targets, optimizer and reward settings')
+        # Reference was copied from the original SFT model above. Only the
+        # current policy is replaced by the interrupted alignment weights.
+        model.load_state_dict(resume_checkpoint['model_state_dict'],strict=True)
+        optimizer.load_state_dict(saved['optimizer'])
+        rng.bit_generator.state = saved['numpy_rng']
+        torch.set_rng_state(saved['torch_rng'].cpu())
+        if device.type == 'cuda':
+            torch.cuda.set_rng_state(saved['cuda_rng'].cpu(),device)
+        history = list(resume_checkpoint['grpo_history'])
+        if saved['completed_groups'] != len(history):
+            raise ValueError('Resume step and rollout history differ')
+    end = steps if stop_after is None else int(stop_after)
+    if not len(history) < end <= steps:
+        raise ValueError('Alignment segment must advance within the requested total groups')
+    for step in range(len(history), end):
         if point_pool:
             points = point_pool[step % len(point_pool)]
             intervals = points.intervals()
@@ -211,7 +234,11 @@ def align_octree(
         }
         history.append(row)
         if checkpoint_callback is not None:
-            checkpoint_callback(step + 1, model, history)
+            training_state = {'settings':settings,'completed_groups':step+1,
+                              'optimizer':optimizer.state_dict(),'numpy_rng':rng.bit_generator.state,
+                              'torch_rng':torch.get_rng_state(),
+                              'cuda_rng':torch.cuda.get_rng_state(device) if device.type=='cuda' else None}
+            checkpoint_callback(step + 1, model, history, training_state)
         print("octree GRPO", {k: v for k, v in row.items() if k != 'rollout_records'}, flush=True)
     del reference
     return history
