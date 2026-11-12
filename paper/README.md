@@ -2,7 +2,9 @@
 
 This directory contains the manuscript for the implemented and evaluated system.
 The proposed next architecture and experiments are maintained separately in
-[architecture](../docs/architecture.md) and [experiment designs](../docs/experiments.md).
+[design changes and implementation status](../docs/design_changes.md) and
+[experiment designs and execution status](../docs/experiments.md).
+The implemented algorithms are described in [architecture](../docs/architecture.md).
 They are not presented here as implemented capabilities.
 
 ## Files

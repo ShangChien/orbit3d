@@ -6,22 +6,21 @@
 
 GRPO 是可选实验阶段，默认关闭。另有显式骨架图增长入口和 BRICS 片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
-它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#为什么加入-brics)
-下一轮优先接入源三维坐标与对应标签（OE62 主数据、原始 QM9 控制），比较
-“单值条件 → 连续距离排序 → 能量优化 → 容差验收”。先分别验证 HOMO-only、
-LUMO-only，再做双目标扩展及有合适标签的四目标挑战；条件、结构、物理指标分开报告。
-条件片段生成按对照结果决定是否开发；这些方案尚未替换当前主线。
+它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
+当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
+实验协议和执行状态见[实验设计](docs/experiments.md)。单值条件等下一轮方案尚未落地。
 
 ![当前五阶段架构](paper/figures/fig0_orbit3d_system_architecture.svg)
 
-## 讨论入口
+## 文档导航
 
-Carbon 与 Opus 建议按以下顺序阅读；当前实现、实验事实和建议方案分别标明：
+当前算法、拟调整方案、实验协议和结果分别维护：
 
 | 文档 | 内容 |
 | --- | --- |
-| [架构与设计决策](docs/architecture.md) | 两份 review 的核验汇总、BRICS 作用、下一版调整 |
-| [实验设计](docs/experiments.md) | 已执行实验的控制变量，以及下一轮最小判别实验 |
+| [算法架构](docs/architecture.md) | 当前实现的表示、条件生成、性质评价、排序与弛豫 |
+| [方案调整](docs/design_changes.md) | 拟调整内容、理由、实施状态及采用条件 |
+| [实验设计](docs/experiments.md) | 控制变量、预算、判别标准与实验执行状态 |
 | [实验结果](docs/results.md) | 最终指标、负结果、适用范围与机器可读证据 |
 | [必要踩坑说明](docs/pitfalls.md) | 分子身份、物理量定义、数值精度和评测口径 |
 | [运行与模型接口](docs/runtime.md) | 安装、训练/推理、外部 Oracle、可迁移模型包 |
@@ -65,8 +64,9 @@ mol_gen/
 ├── tests/                       # 当前功能的回归测试，防止清理/改造破坏已验证行为
 ├── data/                        # 数据 provenance、划分/目标协议、结构组成统计
 ├── docs/
-│   ├── architecture.md          # 当前架构和下一版候选设计
-│   ├── experiments.md           # 实验协议和未实施的研究计划
+│   ├── architecture.md          # 当前实现的算法架构
+│   ├── design_changes.md        # 方案调整、实施状态和采用条件
+│   ├── experiments.md           # 实验协议、执行状态及证据入口
 │   ├── results.md               # 最终结果与解释
 │   ├── pitfalls.md              # 必要方法与数值注意事项
 │   ├── runtime.md               # 实际运行和模型接口
