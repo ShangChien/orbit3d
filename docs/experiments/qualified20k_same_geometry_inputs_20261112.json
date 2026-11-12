@@ -1,0 +1,44 @@
+{
+  "quantum_results": {
+    "summary.json": "aa62f33f434ab5f85d3e5034fbb0a8def7990a76f93296bb583c7768a7370f1b"
+  },
+  "quantum_protocol": {
+    "manifest.json": "01f02100684449d80521718173f0f074883c4daf04378b04297f92ea86fee808"
+  },
+  "source_structures": {
+    "cohort.sdf": "d7488fb7533161feacf1514a55b0ea8f9cb5e382d6ba15159006dfd9a33bc49d"
+  },
+  "configuration": {
+    "config.json": "91de4eed8ce15c93f72fd7ef6bec7cb7f8aec799598fc17302fb2e1eadcec927"
+  },
+  "property_model": {
+    "dpa4_prop_adapter.pt": "2701c6e78b0916b5ff286c5900a2dd6ca9303fe8be72efbf06671c6c99f20165",
+    "oracle_meta.json": "3e55c2e98607ed99779ec111074da8e7105db3ae8a3dbcc08c5b44cef01d92fc",
+    "target_scaler.ss": "e557d6c82e0518cfcc9dc1966f44728d93a8fe847c1335780df690762776ec55"
+  },
+  "forcefield": {
+    "DPA4-Mini-OMol25-100M-v20260820.pt": "ae8c2574df58b527f84b5eac4631bd2f5722d99dc62c2b826bea365b02df033c"
+  },
+  "domain": {
+    "applicability.json": "451f758dbfd8857db25a18ea757999039fdec2b8e7d3f608fe289218eb4e596e"
+  },
+  "optimized_geometry_0": {
+    "optimized.sdf": "dab8425e182d5f5997cf65844caa1508da001bf0b3b62699cdca6d5f3373dc3e"
+  },
+  "optimized_geometry_1": {
+    "optimized.sdf": "0f7fc4fc5b57edce0c0d6a8808ca2ae1b0a82db09723007d766e763bd5776787"
+  },
+  "optimized_geometry_2": {
+    "optimized.sdf": "d1a4e78b7774fa0326ee97b0aa5b5fb0d2e750b51664674b236fca55c7d86a91"
+  },
+  "optimized_geometry_3": {
+    "optimized.sdf": "ed3a5df5abbb6631983f78899280c1de9c4003b4b43c1d2aa891a28c3111fd56"
+  },
+  "optimized_geometry_4": {
+    "optimized.sdf": "d8e5ce0d3c1c056bfa0380bb33e5e20005e2c745bfc67514649af300b9c9e8bf"
+  },
+  "fingerprint_model": {
+    "ensemble.joblib": "9128b1bcccfe6b333bfb0f6e8524babe80c25a3e2239c351b1119cb4213fc466",
+    "metadata.json": "82c44bcc59af53faec4df3221009a6444f00c1aa78fe70da81eddc4e295f988f"
+  }
+}

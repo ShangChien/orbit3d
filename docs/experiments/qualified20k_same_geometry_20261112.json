@@ -1,0 +1,248 @@
+{
+  "attempted_quantum_cohort": 5,
+  "completed_paired": 5,
+  "failed_quantum_indices": [],
+  "target_names": [
+    "homo",
+    "lumo"
+  ],
+  "quantum_manifest": {
+    "source_sha256": "d7488fb7533161feacf1514a55b0ea8f9cb5e382d6ba15159006dfd9a33bc49d",
+    "theory": {
+      "engine": "gpu",
+      "xc": "HYB_GGA_XC_LC_WPBE",
+      "basis": "def2-svp",
+      "ecp_policy": "matching_def2",
+      "tuning_objective": "Jh",
+      "omega_bounds": [
+        0.05,
+        0.5
+      ],
+      "omega_tolerance": 0.001,
+      "omega_geometry_tolerance": 0.01,
+      "max_outer_cycles": 5,
+      "scf_tolerance": 1e-09,
+      "max_scf_cycles": 100,
+      "radial_grid": 99,
+      "angular_grid": 590,
+      "threads": 2,
+      "memory_mb": 4000,
+      "max_geometry_steps": 80
+    },
+    "sample_count": 5,
+    "selected_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "protocol_status": "Protocol diagnostic; OCELOT production objective and functional mapping unconfirmed",
+    "optimize_geometry": true,
+    "vertical_singlet_triplet_tddft": false
+  },
+  "records": [
+    {
+      "quantum_index": 0,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "58",
+        "PredictedValue": "[-7.576205253601074, -0.07446571439504623]",
+        "JointSuccess": "True",
+        "SourceRun": "original_seed2026",
+        "SourceTargetIntervals": "{\"homo\": [-8.2, -7.2], \"lumo\": [-0.6, 0.8]}",
+        "SourceTargetNames": "[\"homo\", \"lumo\"]",
+        "QuantumSelection": "Lowest original candidate ID among qualified candidates in this source run"
+      },
+      "smiles": "NC(=O)n1ncc2c3ccc(O)cc3ccc21",
+      "omega": 0.2478,
+      "reference_eV": {
+        "homo": -7.8003238954896,
+        "lumo": 0.17496161278561032
+      },
+      "predictions_eV": {
+        "internal_dpa4": {
+          "homo": -7.5162200927734375,
+          "lumo": -0.07753212749958038
+        },
+        "fingerprint": {
+          "homo": -7.711922980917653,
+          "lumo": -0.5283646136900995
+        }
+      },
+      "domain": {
+        "similarity": 0.45714285714285713,
+        "unseen_training_elements": [],
+        "in_domain": true
+      },
+      "surrogate_rms_force_eV_A": 0.4560772776603699,
+      "quantum_rms_force_eV_A": 0.0013216105240184714
+    },
+    {
+      "quantum_index": 1,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "5",
+        "PredictedValue": "[-7.974758148193359, -0.3420015275478363]",
+        "JointSuccess": "True",
+        "SourceRun": "original_seed2027",
+        "SourceTargetIntervals": "{\"homo\": [-8.2, -7.2], \"lumo\": [-0.6, 0.8]}",
+        "SourceTargetNames": "[\"homo\", \"lumo\"]",
+        "QuantumSelection": "Lowest original candidate ID among qualified candidates in this source run"
+      },
+      "smiles": "c1ccc(-c2ccccn2)nc1",
+      "omega": 0.2538,
+      "reference_eV": {
+        "homo": -8.665295210768978,
+        "lumo": 0.19914214891078985
+      },
+      "predictions_eV": {
+        "internal_dpa4": {
+          "homo": -7.877971649169922,
+          "lumo": -0.452991783618927
+        },
+        "fingerprint": {
+          "homo": -7.911539394486334,
+          "lumo": -0.3043492572852524
+        }
+      },
+      "domain": {
+        "similarity": 1.0,
+        "unseen_training_elements": [],
+        "in_domain": true
+      },
+      "surrogate_rms_force_eV_A": 0.38346776366233826,
+      "quantum_rms_force_eV_A": 0.001764266002576987
+    },
+    {
+      "quantum_index": 2,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "15",
+        "PredictedValue": "[-6.948449611663818, -0.5410314798355103]",
+        "JointSuccess": "True",
+        "SourceRun": "central_seed2026",
+        "SourceTargetIntervals": "{\"homo\": [-7.75, -6.75], \"lumo\": [-1.13, -0.13]}",
+        "SourceTargetNames": "[\"homo\", \"lumo\"]",
+        "QuantumSelection": "Lowest original candidate ID among qualified candidates in this source run"
+      },
+      "smiles": "O=c1o/c(=C/O)c2cccc3cccc1c32",
+      "omega": 0.2449,
+      "reference_eV": {
+        "homo": -7.441415334617184,
+        "lumo": -0.4152891314876133
+      },
+      "predictions_eV": {
+        "internal_dpa4": {
+          "homo": -6.902154445648193,
+          "lumo": -0.5526911020278931
+        },
+        "fingerprint": {
+          "homo": -7.588506047869431,
+          "lumo": -0.8578990789154588
+        }
+      },
+      "domain": {
+        "similarity": 0.5555555555555556,
+        "unseen_training_elements": [],
+        "in_domain": true
+      },
+      "surrogate_rms_force_eV_A": 0.4994882047176361,
+      "quantum_rms_force_eV_A": 0.001314628864406088
+    },
+    {
+      "quantum_index": 3,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "5",
+        "PredictedValue": "[-7.739833831787109, -0.6620751023292542]",
+        "JointSuccess": "True",
+        "SourceRun": "central_seed2027",
+        "SourceTargetIntervals": "{\"homo\": [-7.75, -6.75], \"lumo\": [-1.13, -0.13]}",
+        "SourceTargetNames": "[\"homo\", \"lumo\"]",
+        "QuantumSelection": "Lowest original candidate ID among qualified candidates in this source run"
+      },
+      "smiles": "c1ccc2nc3ccccc3cc2c1",
+      "omega": 0.2508,
+      "reference_eV": {
+        "homo": -7.883590831841268,
+        "lumo": -0.6120974291681729
+      },
+      "predictions_eV": {
+        "internal_dpa4": {
+          "homo": -7.657593727111816,
+          "lumo": -0.715572714805603
+        },
+        "fingerprint": {
+          "homo": -7.423172494687446,
+          "lumo": -0.839960448316897
+        }
+      },
+      "domain": {
+        "similarity": 0.5416666666666666,
+        "unseen_training_elements": [],
+        "in_domain": true
+      },
+      "surrogate_rms_force_eV_A": 0.39223822951316833,
+      "quantum_rms_force_eV_A": 0.0011722114074060157
+    },
+    {
+      "quantum_index": 4,
+      "source_properties": {
+        "TotalCharge": "0",
+        "SpinMultiplicity": "1",
+        "CandidateID": "44",
+        "PredictedValue": "[-7.7031569480896, -0.8856438994407654]",
+        "JointSuccess": "True",
+        "SourceRun": "central_seed2028",
+        "SourceTargetIntervals": "{\"homo\": [-7.75, -6.75], \"lumo\": [-1.13, -0.13]}",
+        "SourceTargetNames": "[\"homo\", \"lumo\"]",
+        "QuantumSelection": "Lowest original candidate ID among qualified candidates in this source run"
+      },
+      "smiles": "O=C(O)c1c(F)cc(-c2ccccn2)c2[nH]cnc12",
+      "omega": 0.2344,
+      "reference_eV": {
+        "homo": -8.136350139248407,
+        "lumo": -0.5139832015596839
+      },
+      "predictions_eV": {
+        "internal_dpa4": {
+          "homo": -7.628341197967529,
+          "lumo": -0.7915830612182617
+        },
+        "fingerprint": {
+          "homo": -7.633181034254534,
+          "lumo": -0.6775324259409569
+        }
+      },
+      "domain": {
+        "similarity": 0.3898305084745763,
+        "unseen_training_elements": [],
+        "in_domain": true
+      },
+      "surrogate_rms_force_eV_A": 0.4646085798740387,
+      "quantum_rms_force_eV_A": 0.0016463900717848953
+    }
+  ],
+  "aggregate": {
+    "internal_dpa4": {
+      "paired_molecules": 5,
+      "mean_absolute_disagreement_eV": {
+        "homo": 0.4689388598589076,
+        "lumo": 0.28462095773023904
+      }
+    },
+    "fingerprint": {
+      "paired_molecules": 5,
+      "mean_absolute_disagreement_eV": {
+        "homo": 0.3905669772509066,
+        "lumo": 0.4081679647259189
+      }
+    }
+  },
+  "scope": "Same saved quantum geometries, no optimization or retuning. Conditional disagreement on completed cases, not OCELOT reference MAE. Surrogate and quantum forces are cross-potential diagnostics, not identical-theory force errors."
+}

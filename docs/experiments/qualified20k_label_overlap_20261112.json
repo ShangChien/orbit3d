@@ -1,0 +1,28 @@
+{
+  "scope": "Post-hoc exact stereochemical graph overlap with the common 8188 labelled adaptation conformers. Canonical SMILES after explicit H addition; no quantum rerun or parameter fitting. Original OCELOT quantum coordinates and omega remain unavailable, so a graph match does not establish a matched reference geometry or quantum protocol.",
+  "selected_quantum_cases": 5,
+  "exact_training_graph_matches": 1,
+  "records": [
+    {
+      "quantum_index": 1,
+      "source_id": "csd_RASWEO",
+      "reference_csv_labels_eV": {
+        "homo": -7.790079592,
+        "lumo": -0.401912378
+      },
+      "quantum_values_eV": {
+        "homo": -8.665295210768978,
+        "lumo": 0.19914214891078985
+      },
+      "quantum_minus_csv_eV": {
+        "homo": -0.8752156187689781,
+        "lumo": 0.6010545269107899
+      }
+    }
+  ],
+  "source_sha256": {
+    "source_sdf": "d7488fb7533161feacf1514a55b0ea8f9cb5e382d6ba15159006dfd9a33bc49d",
+    "labelled_training_sdf": "c126b7a0b831a5dbe7f1a5c77e552e046e9f8471e1a286e584220c0e222b9faf",
+    "quantum_results": "aa62f33f434ab5f85d3e5034fbb0a8def7990a76f93296bb583c7768a7370f1b"
+  }
+}

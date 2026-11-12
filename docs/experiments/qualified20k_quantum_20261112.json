@@ -1,0 +1,251 @@
+{
+  "attempted_generation": 384,
+  "source_surrogate_qualified": 8,
+  "quantum_selected": 5,
+  "qualified_but_not_quantum_selected": 3,
+  "quantum_completed": 5,
+  "quantum_failed": 0,
+  "quantum_graph_preserved_and_target_hits": 2,
+  "completed_case_mean_absolute_disagreement_eV": {
+    "homo": 0.39691432372609514,
+    "lumo": 0.26759034460586845
+  },
+  "records": [
+    {
+      "quantum_index": 0,
+      "source_run": "original_seed2026",
+      "source_candidate_id": 58,
+      "source_prediction_eV": {
+        "homo": -7.576205253601074,
+        "lumo": -0.07446571439504623
+      },
+      "target_intervals": {
+        "homo": [
+          -8.2,
+          -7.2
+        ],
+        "lumo": [
+          -0.6,
+          0.8
+        ]
+      },
+      "source_rms_force_eV_A": 0.1512037366628646,
+      "status": "completed",
+      "quantum_graph_preserved_and_target_hit": true,
+      "quantum_values_eV": {
+        "homo": -7.8003238954896,
+        "lumo": 0.17496161278561032
+      },
+      "quantum_target_hits": {
+        "homo": true,
+        "lumo": true
+      },
+      "absolute_disagreement_eV": {
+        "homo": 0.22411864188852615,
+        "lumo": 0.24942732718065655
+      },
+      "omega": 0.2478,
+      "quantum_rms_force_eV_A": 0.0013216105240184714,
+      "quantum_S2": 1.4210854715202004e-14,
+      "energy_Ha": -776.2550342278817
+    },
+    {
+      "quantum_index": 1,
+      "source_run": "original_seed2027",
+      "source_candidate_id": 5,
+      "source_prediction_eV": {
+        "homo": -7.974758148193359,
+        "lumo": -0.3420015275478363
+      },
+      "target_intervals": {
+        "homo": [
+          -8.2,
+          -7.2
+        ],
+        "lumo": [
+          -0.6,
+          0.8
+        ]
+      },
+      "source_rms_force_eV_A": 0.2400803565979004,
+      "status": "completed",
+      "quantum_graph_preserved_and_target_hit": false,
+      "quantum_values_eV": {
+        "homo": -8.665295210768978,
+        "lumo": 0.19914214891078985
+      },
+      "quantum_target_hits": {
+        "homo": false,
+        "lumo": true
+      },
+      "absolute_disagreement_eV": {
+        "homo": 0.6905370625756184,
+        "lumo": 0.5411436764586262
+      },
+      "omega": 0.2538,
+      "quantum_rms_force_eV_A": 0.001764266002576987,
+      "quantum_S2": 0.0,
+      "energy_Ha": -494.614242377476
+    },
+    {
+      "quantum_index": 2,
+      "source_run": "central_seed2026",
+      "source_candidate_id": 15,
+      "source_prediction_eV": {
+        "homo": -6.948449611663818,
+        "lumo": -0.5410314798355103
+      },
+      "target_intervals": {
+        "homo": [
+          -7.75,
+          -6.75
+        ],
+        "lumo": [
+          -1.13,
+          -0.13
+        ]
+      },
+      "source_rms_force_eV_A": 0.1026268079876899,
+      "status": "completed",
+      "quantum_graph_preserved_and_target_hit": true,
+      "quantum_values_eV": {
+        "homo": -7.441415334617184,
+        "lumo": -0.4152891314876133
+      },
+      "quantum_target_hits": {
+        "homo": true,
+        "lumo": true
+      },
+      "absolute_disagreement_eV": {
+        "homo": 0.4929657229533655,
+        "lumo": 0.12574234834789694
+      },
+      "omega": 0.2449,
+      "quantum_rms_force_eV_A": 0.001314628864406088,
+      "quantum_S2": 0.0,
+      "energy_Ha": -724.7618704733977
+    },
+    {
+      "quantum_index": 3,
+      "source_run": "central_seed2027",
+      "source_candidate_id": 5,
+      "source_prediction_eV": {
+        "homo": -7.739833831787109,
+        "lumo": -0.6620751023292542
+      },
+      "target_intervals": {
+        "homo": [
+          -7.75,
+          -6.75
+        ],
+        "lumo": [
+          -1.13,
+          -0.13
+        ]
+      },
+      "source_rms_force_eV_A": 0.1646154671907425,
+      "status": "completed",
+      "quantum_graph_preserved_and_target_hit": false,
+      "quantum_values_eV": {
+        "homo": -7.883590831841268,
+        "lumo": -0.6120974291681729
+      },
+      "quantum_target_hits": {
+        "homo": false,
+        "lumo": true
+      },
+      "absolute_disagreement_eV": {
+        "homo": 0.14375700005415837,
+        "lumo": 0.04997767316108126
+      },
+      "omega": 0.2508,
+      "quantum_rms_force_eV_A": 0.0011722114074060157,
+      "quantum_S2": -5.684341886080802e-14,
+      "energy_Ha": -554.6940296773328
+    },
+    {
+      "quantum_index": 4,
+      "source_run": "central_seed2028",
+      "source_candidate_id": 44,
+      "source_prediction_eV": {
+        "homo": -7.7031569480896,
+        "lumo": -0.8856438994407654
+      },
+      "target_intervals": {
+        "homo": [
+          -7.75,
+          -6.75
+        ],
+        "lumo": [
+          -1.13,
+          -0.13
+        ]
+      },
+      "source_rms_force_eV_A": 0.3014738261699676,
+      "status": "completed",
+      "quantum_graph_preserved_and_target_hit": false,
+      "quantum_values_eV": {
+        "homo": -8.136350139248407,
+        "lumo": -0.5139832015596839
+      },
+      "quantum_target_hits": {
+        "homo": false,
+        "lumo": true
+      },
+      "absolute_disagreement_eV": {
+        "homo": 0.43319319115880717,
+        "lumo": 0.37166069788108147
+      },
+      "omega": 0.2344,
+      "quantum_rms_force_eV_A": 0.0016463900717848953,
+      "quantum_S2": -1.4210854715202004e-14,
+      "energy_Ha": -913.3827971917267
+    }
+  ],
+  "quantum_manifest": {
+    "source_sha256": "d7488fb7533161feacf1514a55b0ea8f9cb5e382d6ba15159006dfd9a33bc49d",
+    "theory": {
+      "engine": "gpu",
+      "xc": "HYB_GGA_XC_LC_WPBE",
+      "basis": "def2-svp",
+      "ecp_policy": "matching_def2",
+      "tuning_objective": "Jh",
+      "omega_bounds": [
+        0.05,
+        0.5
+      ],
+      "omega_tolerance": 0.001,
+      "omega_geometry_tolerance": 0.01,
+      "max_outer_cycles": 5,
+      "scf_tolerance": 1e-09,
+      "max_scf_cycles": 100,
+      "radial_grid": 99,
+      "angular_grid": 590,
+      "threads": 2,
+      "memory_mb": 4000,
+      "max_geometry_steps": 80
+    },
+    "sample_count": 5,
+    "selected_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "protocol_status": "Protocol diagnostic; OCELOT production objective and functional mapping unconfirmed",
+    "optimize_geometry": true,
+    "vertical_singlet_triplet_tddft": false
+  },
+  "source_sha256": {
+    "selection": "1429ef1531749bb7a2c1c17bf20edef7c626421bdb1e10afd725d24e6f6e5a83",
+    "quantum_results": "aa62f33f434ab5f85d3e5034fbb0a8def7990a76f93296bb583c7768a7370f1b",
+    "quantum_manifest": "01f02100684449d80521718173f0f074883c4daf04378b04297f92ea86fee808"
+  },
+  "limitations": [
+    "Selected surrogate-qualified subset from one fixed SFT continuation seed, not a random sample of all generated proposals.",
+    "Unselected qualified designs have unknown quantum outcomes; no all-proposal quantum success rate is inferred.",
+    "The quantum protocol is internally consistent but does not reproduce unavailable OCELOT per-molecule geometries and omega values.",
+    "Geometry convergence and source-graph preservation do not establish vibrational minima; unrestricted S2 diagnostics are retained."
+  ]
+}
