@@ -346,7 +346,7 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
                 cached[i] = (desc.detach(), pos.detach())
             completed += len(ids)
             if completed % 100 < batch_size:
-                print(f"DPA descriptors {completed}/{len(all_mols)}", flush=True)
+                print(f"Frozen MLIP descriptors {completed}/{len(all_mols)}", flush=True)
         training_history = []
         for index in range(self.n_ensemble_heads):
             torch.manual_seed(seed + index)

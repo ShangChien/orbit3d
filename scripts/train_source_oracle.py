@@ -19,10 +19,11 @@ from orbit3d.utils.reproducibility import lock_deterministic_environment
 def main():
     p=argparse.ArgumentParser()
     p.add_argument('--data',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--weight');p.add_argument('--backend',choices=['dpa4','fingerprint'],default='dpa4');p.add_argument('--device',default='cuda:0')
+    p.add_argument('--weight');p.add_argument('--backend',choices=['dpa4','hyff','fingerprint'],default='dpa4');p.add_argument('--device',default='cuda:0')
+    p.add_argument('--hyff-tier',default='presto');p.add_argument('--threads',type=int,default=2)
     p.add_argument('--targets',nargs='+',default=['homo','lumo']);p.add_argument('--epochs',type=int,default=35)
     p.add_argument('--batch-size',type=int,default=16);p.add_argument('--seed',type=int,default=42)
-    a=p.parse_args();started=time.perf_counter();torch.set_num_threads(2);lock_deterministic_environment(a.seed)
+    a=p.parse_args();started=time.perf_counter();torch.set_num_threads(a.threads);lock_deterministic_environment(a.seed)
     freeze_run(a.output,__file__)
     (a.output/'run_config.json').write_text(json.dumps(vars(a),default=str,indent=2)+'\n')
     record_input_hashes(a.output,{'forcefield':a.weight,'source_manifest':a.data/'manifest.json',
@@ -34,9 +35,9 @@ def main():
     if len(theories)!=1:raise ValueError('Mixed label calculation levels')
     values={k:np.array([[float(m.GetProp(n)) for n in a.targets] for m in ms]) for k,ms in mols.items()}
     elements=sorted({atom.GetSymbol() for ms in mols.values() for m in ms for atom in m.GetAtoms()})
-    if a.backend == 'dpa4':
-        if not a.weight:raise ValueError('DPA training requires --weight')
-        ff=build_forcefield('dpa4',a.weight,elements,a.device)
+    if a.backend in {'dpa4','hyff'}:
+        if not a.weight:raise ValueError('MLIP property training requires --weight')
+        ff=build_forcefield(a.backend,a.weight,elements,a.device,tier=a.hyff_tier,route='reference')
         model=InternalDPA4PropertyOracle(ff,len(a.targets),a.targets,n_ensemble_heads=3)
         model.target_units=['eV']*len(a.targets);model.geometry_method='source_oe62_pbe_vdw'
         model.label_theory=next(iter(theories))
@@ -50,7 +51,7 @@ def main():
         restored=FingerprintOracle.load_from_dir(a.output/'oracle')
     results={}
     for split in ['valid','calibration']:
-        if a.backend == 'dpa4':
+        if a.backend in {'dpa4','hyff'}:
             prediction,std,reload=compare_oracle_reload(model,restored,mols[split])
         else:
             prediction,std=model.predict_3d_mols(mols[split]);again,_=restored.predict_3d_mols(mols[split])
