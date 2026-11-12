@@ -18,6 +18,7 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--frozen',type=Path,required=True)
     p.add_argument('--continued',type=Path,required=True)
+    p.add_argument('--continued-wall',type=Path)
     p.add_argument('--independent',type=Path,required=True)
     p.add_argument('--device',default='cuda:0')
     p.add_argument('--batch-size',type=int,default=8)
@@ -40,11 +41,14 @@ def main():
     target=active[0];points=manifest['single_target_points'][target]
     base['inference_config'].update(batch_size=a.batch_size,num_candidates=a.candidates,oracle_candidates=a.candidates)
     checkpoints={'frozen':a.frozen,'continue400':a.continued,
+                 'continue_wall':a.continued_wall,
                  'grpo200':a.campaign/'grpo/weights/octree_aligned.pt',
                  'continue100':a.continued.parent/'octree_step_100.pt',
                  'continue200':a.continued.parent/'octree_step_200.pt',
                  'grpo50':a.campaign/'grpo_part100/weights/octree_group_50.pt',
                  'grpo100':a.campaign/'grpo_part100/weights/octree_group_100.pt'}
+    if 'continue_wall' in a.arms and (a.continued_wall is None or a.time_control):
+        p.error('Evaluate a saved continue_wall arm with --continued-wall; --time-control trains and evaluates it separately')
     inputs=record_input_hashes(a.output,{'source_manifest':data/'manifest.json',
                                  'forcefield':base['mount_paths']['forcefield_path'],
                                  'property_model':base['mount_paths']['property_checkpoint_dir'],

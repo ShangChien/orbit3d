@@ -37,6 +37,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--campaign',type=Path,required=True)
     p.add_argument('--alignment-campaign',type=Path)
     p.add_argument('--sft-campaign',type=Path)
+    p.add_argument('--time-control-campaign',type=Path)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--target',required=True)
     p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     points=json.loads(a.manifest.read_text())['single_target_points'][a.target]
@@ -121,11 +122,12 @@ def main():
                 'mean_group_reward':float(np.mean([r['reward_mean'] for r in window])),
                 'reward_signal':reward_signal(window),
                 'mean_gradient_norm':float(np.mean([r['gradient_norm'] for r in window]))}
-    costs=[]
-    for root,training_only in [(a.campaign,False),(a.alignment_campaign,True),(a.sft_campaign,True)]:
-        if root is None or (root==a.campaign and training_only):continue
+    costs=[];cost_roots=set()
+    for root,training_only in [(a.campaign,False),(a.alignment_campaign,True),(a.sft_campaign,True),(a.time_control_campaign,True)]:
+        if root is None or root.resolve() in cost_roots:continue
+        cost_roots.add(root.resolve())
         for row in json.loads((root/'costs.json').read_text()):
-            if row['returncode'] or (training_only and row['name'] not in ['sft','continue','grpo_part100','grpo']):continue
+            if row['returncode'] or (training_only and row['name'] not in ['sft','continue','grpo_part100','grpo','continue_wall']):continue
             costs.append({key:row[key] for key in ['name','wall_seconds','reused_from'] if key in row} | {'campaign':str(root)})
     training_config=(a.alignment_campaign or a.campaign)/'configs/grpo.json'
     training_seed=json.loads(training_config.read_text())['seed'] if training_config.exists() else None
