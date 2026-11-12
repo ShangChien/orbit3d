@@ -76,10 +76,11 @@ def tokenize_smiles_1d(smi: str, max_len: int = 200) -> List[int]:
 # 2. Pure-PyTorch `UniMolModel` (Supports arbitrary `output_dim = K`)
 # ==============================================================================
 class SelfMultiheadAttention(nn.Module):
-    def __init__(self, embed_dim: int = 512, num_heads: int = 64):
+    def __init__(self, embed_dim: int = 512, num_heads: int = 64, dropout: float = 0.0):
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
+        self.dropout = dropout
         self.head_dim = embed_dim // num_heads
         self.scaling = self.head_dim ** -0.5
         self.in_proj = nn.Linear(embed_dim, 3 * embed_dim, bias=True)
@@ -115,7 +116,7 @@ class SelfMultiheadAttention(nn.Module):
             attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, tgt_len)
 
         attn_probs = F.softmax(attn_weights, dim=-1, dtype=torch.float32).type_as(attn_weights)
-        attn = torch.bmm(attn_probs, v)
+        attn = torch.bmm(F.dropout(attn_probs, p=self.dropout, training=self.training), v)
         attn = attn.view(bsz, self.num_heads, tgt_len, self.head_dim).transpose(1, 2).contiguous()
         attn = attn.view(bsz, tgt_len, embed_dim)
         out = self.out_proj(attn)
@@ -129,11 +130,13 @@ class PureUnicoreTransformerEncoderLayer(nn.Module):
         ffn_embed_dim: int = 2048,
         attention_heads: int = 64,
         post_ln: bool = False,
+        dropout: float = 0.0,
     ):
         super().__init__()
         self.embed_dim = embed_dim
         self.post_ln = post_ln
-        self.self_attn = SelfMultiheadAttention(embed_dim, attention_heads)
+        self.dropout = dropout
+        self.self_attn = SelfMultiheadAttention(embed_dim, attention_heads, dropout)
         self.self_attn_layer_norm = nn.LayerNorm(embed_dim)
         self.fc1 = nn.Linear(embed_dim, ffn_embed_dim)
         self.fc2 = nn.Linear(ffn_embed_dim, embed_dim)
@@ -149,7 +152,7 @@ class PureUnicoreTransformerEncoderLayer(nn.Module):
         if not self.post_ln:
             x = self.self_attn_layer_norm(x)
         x, attn = self.self_attn(query=x, key_padding_mask=padding_mask, attn_bias=attn_bias)
-        x = residual + x
+        x = residual + F.dropout(x, p=self.dropout, training=self.training)
         if self.post_ln:
             x = self.self_attn_layer_norm(x)
 
@@ -158,7 +161,7 @@ class PureUnicoreTransformerEncoderLayer(nn.Module):
             x = self.final_layer_norm(x)
         x = F.gelu(self.fc1(x))
         x = self.fc2(x)
-        x = residual + x
+        x = residual + F.dropout(x, p=self.dropout, training=self.training)
         if self.post_ln:
             x = self.final_layer_norm(x)
         return x, attn
@@ -171,13 +174,15 @@ class PureTransformerEncoderWithPair(nn.Module):
         embed_dim: int = 512,
         ffn_embed_dim: int = 2048,
         attention_heads: int = 64,
+        dropout: float = 0.0,
     ):
         super().__init__()
+        self.dropout = dropout
         self.emb_layer_norm = nn.LayerNorm(embed_dim)
         self.final_layer_norm = nn.LayerNorm(embed_dim)
         self.layers = nn.ModuleList(
             [
-                PureUnicoreTransformerEncoderLayer(embed_dim, ffn_embed_dim, attention_heads)
+                PureUnicoreTransformerEncoderLayer(embed_dim, ffn_embed_dim, attention_heads, dropout=dropout)
                 for _ in range(encoder_layers)
             ]
         )
@@ -189,7 +194,7 @@ class PureTransformerEncoderWithPair(nn.Module):
         padding_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         seq_len = emb.size(1)
-        x = self.emb_layer_norm(emb)
+        x = F.dropout(self.emb_layer_norm(emb), p=self.dropout, training=self.training)
         if padding_mask is not None:
             x = x * (1.0 - padding_mask.unsqueeze(-1).type_as(x))
             attn_mask = attn_mask.view(x.size(0), -1, seq_len, seq_len)
@@ -253,12 +258,12 @@ class ClassificationHead(nn.Module):
 class StandaloneUniMolModel(nn.Module):
     """Standalone state-dict bridge for `qsar.models.unimol.UniMolModel` without `unicore`."""
 
-    def __init__(self, output_dim: int = 1, dict_len: int = 31):
+    def __init__(self, output_dim: int = 1, dict_len: int = 31, dropout: float = 0.0):
         super().__init__()
         self.output_dim = output_dim
         self.padding_idx = UNIMOL_PAD_IDX
         self.embed_tokens = nn.Embedding(dict_len, 512, self.padding_idx)
-        self.encoder = PureTransformerEncoderWithPair(15, 512, 2048, 64)
+        self.encoder = PureTransformerEncoderWithPair(15, 512, 2048, 64, dropout=dropout)
         self.gbf_proj = NonLinearHead(128, 64)
         self.gbf = GaussianLayer(128, dict_len * dict_len)
         self.classification_head = ClassificationHead(512, 512, output_dim)
