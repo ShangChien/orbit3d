@@ -76,3 +76,42 @@ class TargetIntervals:
                 ]
             )
         return np.array(out, dtype=np.float32)
+
+
+@dataclass(frozen=True)
+class TargetPoints:
+    """Point conditioning is separate from the acceptance radius."""
+    names: tuple
+    values: tuple
+    radii: tuple
+
+    @classmethod
+    def parse(cls, raw, radii, names):
+        names = tuple(names)
+        if set(raw) - set(names) or set(radii) - set(names):
+            raise ValueError('Unknown point target name')
+        values = tuple(raw.get(n) for n in names)
+        tolerance = tuple(radii.get(n) for n in names)
+        if not any(v is not None for v in values):
+            raise ValueError('No active point targets')
+        for value, radius in zip(values, tolerance):
+            if value is not None and (not np.isfinite(value) or radius is None or not np.isfinite(radius) or radius <= 0):
+                raise ValueError('Active point targets require finite values and positive radii')
+        return cls(names, values, tolerance)
+
+    def intervals(self):
+        return TargetIntervals.parse({n: [v-r, v+r] for n,v,r in zip(self.names,self.values,self.radii) if v is not None},self.names)
+
+    def arrays(self, mean, scale):
+        mean, scale = np.asarray(mean), np.asarray(scale)
+        if not np.isfinite(mean).all() or not np.isfinite(scale).all() or (scale <= 0).any():
+            raise ValueError('Invalid point normalization')
+        active = np.array([v is not None for v in self.values])
+        values = np.array([(v-mean[i])/scale[i] if v is not None else 0. for i,v in enumerate(self.values)],dtype=np.float32)
+        return values, values.copy(), np.repeat(active[:,None],2,axis=1)
+
+    def distance(self, predictions):
+        y = np.asarray(predictions).reshape(-1)
+        if len(y) != len(self.names):
+            raise ValueError('Point prediction dimension mismatch')
+        return float(np.mean([((y[i]-v)/self.radii[i])**2 for i,v in enumerate(self.values) if v is not None]))

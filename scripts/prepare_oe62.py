@@ -11,6 +11,7 @@ from rdkit.Chem.Scaffolds import MurckoScaffold
 ELEMENTS = ("H", "C", "N", "O", "F", "B", "Si", "P", "S", "Cl", "Br", "I", "Se", "As", "Te")
 from orbit3d.utils.oe62 import adapt_record, THEORY
 from orbit3d.utils.dataset_io import write_precise_sdf
+from orbit3d.utils.run_evidence import freeze_run
 
 
 def rank(value, seed=42):
@@ -19,6 +20,7 @@ def rank(value, seed=42):
 
 def prepare(source, output, max_atoms=80, seed=42):
     output.mkdir(parents=True, exist_ok=False)
+    freeze_run(output,__file__)
     frame = pd.read_json(source, orient='split')
     assert frame.refcode_csd.is_unique
     records, molecules, seen = [], {}, {}
@@ -52,7 +54,7 @@ def prepare(source, output, max_atoms=80, seed=42):
         rows=accepted[accepted.split==split].copy()
         rows['rank']=rows.source_id.map(lambda s:rank('selection:'+s,seed))
         rows=rows.sort_values('rank')
-        rows.to_csv(output/f'{split}.csv',index=False)
+        rows.rename(columns={'source_id':'identifier','smiles':'canonical_smiles'}).to_csv(output/f'{split}.csv',index=False)
         chosen=rows if limit is None else rows.head(limit)
         selection[split]=chosen.source_id.tolist()
         write_precise_sdf(output/f'{split}.sdf',[molecules[s] for s in selection[split]])

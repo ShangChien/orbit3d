@@ -148,6 +148,36 @@ class DynamicIntervalConditioner(nn.Module):
         return h * (1.0 + scale) + shift
 
 
+class PointConditioner(nn.Module):
+    """Normalized scalar values and explicit activation; no interval-width features."""
+    def __init__(self, emb_dim, num_props, num_layers):
+        super().__init__()
+        self.prop_encoders = nn.ModuleList([
+            nn.Sequential(nn.Linear(1, emb_dim), nn.LayerNorm(emb_dim), nn.SiLU(), nn.Linear(emb_dim, emb_dim))
+            for _ in range(num_props)])
+        self.prop_id_emb = nn.Embedding(num_props, emb_dim)
+        self.global_mlp = nn.Sequential(nn.Linear(num_props * emb_dim, emb_dim), nn.LayerNorm(emb_dim),
+                                        nn.SiLU(), nn.Linear(emb_dim, emb_dim), nn.LayerNorm(emb_dim), nn.SiLU())
+        self.root_proj = nn.Linear(emb_dim, emb_dim, bias=False)
+        nn.init.normal_(self.root_proj.weight, std=0.01)
+        self.root_gate = nn.Parameter(torch.tensor(0.0))
+        self.layer_mods = nn.ModuleList([nn.Linear(emb_dim, 2 * emb_dim, bias=False) for _ in range(num_layers)])
+        self.out_mod = nn.Linear(emb_dim, 2 * emb_dim, bias=False)
+        for mod in [*self.layer_mods, self.out_mod]:
+            nn.init.zeros_(mod.weight)
+
+    def forward(self, values, unused_upper, active_mask):
+        active = active_mask.any(-1) if active_mask.ndim == 3 else active_mask
+        values = torch.where(active, values, 0)
+        features = [(encoder(values[:, k:k+1]) + self.prop_id_emb.weight[k]) * active[:, k:k+1]
+                    for k, encoder in enumerate(self.prop_encoders)]
+        return self.global_mlp(torch.cat(features, -1)) * active.any(-1, keepdim=True)
+
+    forward_root_prefix = DynamicIntervalConditioner.forward_root_prefix
+    modulate_layer = DynamicIntervalConditioner.modulate_layer
+    modulate_out = DynamicIntervalConditioner.modulate_out
+
+
 class Suffix3DPropertyHead(nn.Module):
     """
     3D Self-Consistent Property Understanding Head pooling:
@@ -215,13 +245,16 @@ class ConditionalUni3DAR(Uni3DARSampler):
         super().__init__(args, dictionary)
         self.num_props = num_props
         self.condition_version = getattr(args, "condition_version", 1)
-        self.interval_conditioner = DynamicIntervalConditioner(
-            emb_dim=args.emb_dim,
-            num_props=num_props,
-            num_layers=args.layer,
-            bound_masks=self.condition_version >= 2,
-            smooth_frequencies=self.condition_version >= 3,
-        )
+        if self.condition_version == 4:
+            self.interval_conditioner = PointConditioner(args.emb_dim, num_props, args.layer)
+        else:
+            self.interval_conditioner = DynamicIntervalConditioner(
+                emb_dim=args.emb_dim,
+                num_props=num_props,
+                num_layers=args.layer,
+                bound_masks=self.condition_version >= 2,
+                smooth_frequencies=self.condition_version >= 3,
+            )
         self.prop_understanding_head = Suffix3DPropertyHead(
             emb_dim=args.emb_dim,
             num_props=num_props,

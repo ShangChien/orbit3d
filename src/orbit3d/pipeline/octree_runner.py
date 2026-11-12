@@ -8,7 +8,7 @@ import torch
 from rdkit import Chem, RDLogger
 from rdkit import DataStructs
 from rdkit.Chem import rdFingerprintGenerator
-from ..constraints import TargetIntervals
+from ..constraints import TargetIntervals, TargetPoints
 from ..generator.octree_backend import (
     load_pretrained,
     load_octree_checkpoint,
@@ -133,13 +133,14 @@ def run_octree_from_config(cfg, config_path=None):
                     raise ValueError(f'Adaptation data lacks newly enabled elements: {sorted(added-covered)}')
         model.requires_grad_(train_backbone)
         model.interval_conditioner.requires_grad_(True)
-        model.prop_understanding_head.requires_grad_(True)
+        model.prop_understanding_head.requires_grad_(bool(settings.get("train_property_head", True)))
         trainable = [p for p in model.parameters() if p.requires_grad]
         steps = int(settings.get("sft_steps", 100))
         batch = int(settings.get("batch_size", 16))
         adapter_parameters = list(model.interval_conditioner.parameters()) + list(
             model.prop_understanding_head.parameters()
         )
+        adapter_parameters = [p for p in adapter_parameters if p.requires_grad]
         adapter_ids = {id(p) for p in adapter_parameters}
         groups = [{"params": adapter_parameters, "lr": float(settings.get("sft_lr", 2e-4))}]
         if train_backbone:
@@ -151,7 +152,7 @@ def run_octree_from_config(cfg, config_path=None):
             )
         opt = torch.optim.AdamW(groups, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.LambdaLR(
-            opt, lambda step: 0.1 + 0.9 * 0.5 * (1 + np.cos(np.pi * step / steps))
+            opt, lambda step: 1.0 if settings.get("lr_schedule") == "constant" else 0.1 + 0.9 * 0.5 * (1 + np.cos(np.pi * step / steps))
         )
         rng = np.random.default_rng(int(cfg.get("seed", 42)))
         initial_hash = hashlib.sha256(initial_path.read_bytes()).hexdigest()
@@ -171,6 +172,8 @@ def run_octree_from_config(cfg, config_path=None):
                     "history": history,
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
+                    "active_targets": settings.get("active_targets", names),
+                    "label_theory": sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                     "train_backbone": train_backbone,
                     "element_loss_weighting": weighting_metadata,
                     "target_migration": ({**initial_state['target_migration'], 'new_target_predictions_trained': True}
@@ -188,17 +191,26 @@ def run_octree_from_config(cfg, config_path=None):
             indices = rng.integers(0, len(training), size=batch)
             packed = dataset.collate(indices)
             target = torch.tensor(yn[indices], device=device)
-            width = torch.rand_like(target) * 0.25 + 0.15
-            lower, upper = target - width, target + width
-            if model.condition_version >= 3:
-                # Conditions represent a set containing the label, not a narrow
-                # interval whose midpoint always leaks the regression target.
-                span = torch.exp(torch.empty_like(target).uniform_(np.log(.2), np.log(2.0)))
-                offset = torch.rand_like(target) * span
-                lower, upper = target - offset, target + span - offset
-            mask = torch.rand_like(target) > 0.2
-            if model.condition_version >= 2:
-                mask = mask.unsqueeze(-1) & (torch.rand(*target.shape, 2, device=device) > 0.2)
+            if model.condition_version == 4:
+                lower, upper = target, target
+                enabled = settings.get('active_targets', names)
+                if not enabled or set(enabled) - set(names):
+                    raise ValueError('Point SFT requires known active target names')
+                active = torch.tensor([n in enabled for n in names], device=device)
+                keep = torch.rand((len(target), 1), device=device) >= 0.1
+                mask = (active[None, :] & keep).unsqueeze(-1).expand(-1, -1, 2)
+            else:
+                width = torch.rand_like(target) * 0.25 + 0.15
+                lower, upper = target - width, target + width
+                if model.condition_version >= 3:
+                    # Conditions represent a set containing the label, not a narrow
+                    # interval whose midpoint always leaks the regression target.
+                    span = torch.exp(torch.empty_like(target).uniform_(np.log(.2), np.log(2.0)))
+                    offset = torch.rand_like(target) * span
+                    lower, upper = target - offset, target + span - offset
+                mask = torch.rand_like(target) > 0.2
+                if model.condition_version >= 2:
+                    mask = mask.unsqueeze(-1) & (torch.rand(*target.shape, 2, device=device) > 0.2)
             with torch.autocast(
                 device_type=device.split(":")[0], dtype=torch.bfloat16, enabled=device.startswith("cuda")
             ):
@@ -240,8 +252,15 @@ def run_octree_from_config(cfg, config_path=None):
     ff.set_atom_type_map(model.args.allow_atoms.split(','))
     if spatial_box:
         spatial_box.validate_model(model.args)
-    intervals = TargetIntervals.parse(inference["target_interval"], names)
-    lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
+    points = None
+    if model.condition_version == 4:
+        points = TargetPoints.parse(inference['target_point'], inference['target_tolerance'], names)
+        intervals = points.intervals()
+        inference["target_interval"] = dict(zip(names, intervals.bounds))
+        lower, upper, active_bounds = points.arrays(mean, scale)
+    else:
+        intervals = TargetIntervals.parse(inference['target_interval'], names)
+        lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
     if int(settings.get("grpo_steps", 0)):
         from ..generator.octree_alignment import align_octree
 
@@ -268,6 +287,9 @@ def run_octree_from_config(cfg, config_path=None):
             replay_weight=float(settings.get('replay_weight', 0.1)),
             domain=domain,
             electron_parity=inference.get('electron_parity'),
+            points=points,
+            point_pool=[TargetPoints.parse(raw, inference['target_tolerance'], names)
+                        for raw in settings.get('point_target_pool', [])] if points else None,
         )
         checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_aligned.pt"
         torch.save(
@@ -280,6 +302,7 @@ def run_octree_from_config(cfg, config_path=None):
                 "mean": mean,
                 "scale": scale,
                 "grpo_history": history,
+                "label_theory": state.get("label_theory", []) if mode == "align" else sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                 "alignment_reference_sha256": reference_hash,
                 "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
                 "training_smiles": sorted(train_smiles),
@@ -363,7 +386,7 @@ def run_octree_from_config(cfg, config_path=None):
             try:
                 inst = trajectory_to_instance(trajectory, spatial_box, tuple(model.args.allow_atoms.split(',')))
                 self_y = trajectory["self_pred_norm"].float().cpu().numpy() * scale + mean
-                score = float(np.square(intervals.violations(self_y).numpy() / scale).sum())
+                score = points.distance(self_y) if points else float(np.square(intervals.violations(self_y).numpy() / scale).sum())
                 row.update(smiles=inst.smiles, self_score=score, raw_valid=True)
                 assessment = domain.assess(inst.graph) if domain else None
                 row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
@@ -404,7 +427,7 @@ def run_octree_from_config(cfg, config_path=None):
                 records[idx].update(status='oracle_failed', reason=error)
                 continue
             deviation = intervals.violations(prediction).numpy() / scale
-            score = float(np.square(deviation).sum())
+            score = points.distance(prediction) if points else float(np.square(deviation).sum())
             records[idx].update(
                 oracle_rank_prediction=np.asarray(prediction).tolist(), oracle_rank_score=score
             )

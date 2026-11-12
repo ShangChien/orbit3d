@@ -33,14 +33,17 @@ def categorical_policy_loss(current, previous, reference, advantages, beta=0.02,
 def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
+    points=None, point_pool=None, checkpoint_callback=None,
 ):
+    if points is not None and (physics_weight or uncertainty_weight):
+        raise ValueError("Point GRPO primary comparison uses property-only reward")
     device = next(model.parameters()).device
     reference = copy.deepcopy(model).eval().requires_grad_(False) if kl_beta else None
     model.requires_grad_(False)
     model.interval_conditioner.requires_grad_(True)
     parameters = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(parameters, lr=lr, weight_decay=1e-4)
-    lower, upper, active = interval_arrays(intervals, mean, scale, model.condition_version)
+    lower, upper, active = points.arrays(mean, scale) if points else interval_arrays(intervals, mean, scale, model.condition_version)
     low = torch.tensor(lower, device=device).repeat(group_size, 1)
     high = torch.tensor(upper, device=device).repeat(group_size, 1)
     mask = torch.tensor(active, device=device).unsqueeze(0).expand(group_size, *active.shape)
@@ -48,6 +51,13 @@ def align_octree(
     rng = np.random.default_rng(seed + 1)
     history = []
     for step in range(steps):
+        if point_pool:
+            points = point_pool[step % len(point_pool)]
+            intervals = points.intervals()
+            lower, upper, active = points.arrays(mean, scale)
+            low = torch.tensor(lower, device=device).repeat(group_size, 1)
+            high = torch.tensor(upper, device=device).repeat(group_size, 1)
+            mask = torch.tensor(active, device=device).unsqueeze(0).expand(group_size, *active.shape)
         model.eval()
         with (
             torch.no_grad(),
@@ -120,11 +130,14 @@ def align_octree(
                     raise ValueError("Nonfinite evaluation")
                 violation = intervals.violations(prediction).numpy() / scale
                 rms = float(force.square().sum(-1).mean().sqrt())
-                reward = float(
-                    np.exp(
-                        -np.square(violation).sum() - physics_weight * max(0.0, rms - 0.5) - uncertainty_weight * np.mean(std / scale)
+                if points is not None:
+                    reward = 1.0 / (1.0 + points.distance(prediction))
+                else:
+                    reward = float(
+                        np.exp(
+                            -np.square(violation).sum() - physics_weight * max(0.0, rms - 0.5) - uncertainty_weight * np.mean(std / scale)
+                        )
                     )
-                )
                 rewards[i] = reward
                 hits[i] = intervals.hit(prediction)
                 rollout_records[i].update(prediction=prediction.tolist(), std=std.tolist(), rms_force=rms,
@@ -140,28 +153,38 @@ def align_octree(
         # weight decay must not silently move the policy on an all-failed group.
         updates = 2 if bool(adv.any()) or kl_beta or replay_weight else 0
         loss = torch.zeros((), device=device)
+        before = [p.detach().clone() for p in parameters]
+        gradient_norm = 0.0
+        policy_kl = None
         for _ in range(updates):
             with torch.autocast(device_type=device.type, enabled=False):
                 current = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
                 loss = categorical_policy_loss(current, old, ref, adv, beta=kl_beta)
+                if ref is not None:
+                    with torch.no_grad():
+                        kl_terms = []
+                        for (logp, _, _), (ref_logp, _, _) in zip(current, ref):
+                            delta = torch.where(torch.isfinite(logp), logp - ref_logp, torch.zeros_like(logp))
+                            kl_terms.append((logp.exp() * delta).sum(-1))
+                        policy_kl = float(torch.cat(kl_terms).mean())
                 if replay_weight:
                     indices = rng.integers(0, len(molecules), size=4)
                     packed = dataset.collate(indices)
                     y = torch.tensor((labels[indices] - mean) / scale, device=device)
+                    if points is not None:
+                        replay_lower = replay_upper = y
+                        replay_mask = torch.tensor([v is not None for v in points.values], device=device).expand_as(y)
+                    else:
+                        replay_lower, replay_upper = y - 0.2, y + 0.2
+                        replay_mask = torch.ones_like(y, dtype=torch.bool)
                     replay, _ = model.compute_sft_and_understanding_loss(
-                        packed,
-                        y,
-                        y - 0.2,
-                        y + 0.2,
-                        torch.ones_like(y, dtype=torch.bool),
-                        understanding_weight=0.0,
-                    )
+                        packed, y, replay_lower, replay_upper, replay_mask, understanding_weight=0.0)
                     loss = loss + replay_weight * replay
             if not torch.isfinite(loss):
                 raise FloatingPointError("Nonfinite octree policy loss")
             optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(parameters, 1.0, error_if_nonfinite=True)
+            gradient_norm = float(torch.nn.utils.clip_grad_norm_(parameters, 1.0, error_if_nonfinite=True))
             optimizer.step()
         row = {
             "step": step + 1,
@@ -172,13 +195,23 @@ def align_octree(
             "group_size": group_size,
             "property_hits": sum(hits),
             "reward_mean": float(reward.mean()),
+            "reward_std": float(reward.std(unbiased=False)),
+            "evaluated": sum(r.get('evaluation_status') == 'completed' for r in rollout_records),
+            "point_target": dict(zip(points.names, points.values)) if points else None,
+            "reward_type": 'inverse_point_distance' if points else 'exponential_interval_violation',
+            "advantage_max": float(adv.max()),
             "loss": float(loss.detach()),
             "precision": "float32",
             "optimizer_updates": updates,
+            "gradient_norm": gradient_norm,
+            "policy_kl_before_last_update": policy_kl,
+            "parameter_update_l2": float(sum((p.detach()-v).square().sum() for p,v in zip(parameters,before)).sqrt()),
             "weights": {'kl': kl_beta, 'physics': physics_weight, 'uncertainty': uncertainty_weight, 'replay': replay_weight},
             "rollout_records": rollout_records,
         }
         history.append(row)
+        if checkpoint_callback is not None:
+            checkpoint_callback(step + 1, model, history)
         print("octree GRPO", {k: v for k, v in row.items() if k != 'rollout_records'}, flush=True)
     del reference
     return history
