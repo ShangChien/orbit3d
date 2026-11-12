@@ -10,6 +10,9 @@ def compare_molecular_identity(source, recovered):
     source = Chem.AddHs(Chem.Mol(source))
     recovered = Chem.AddHs(Chem.Mol(recovered))
     exact = Chem.MolToSmiles(source) == Chem.MolToSmiles(recovered)
+    if exact:
+        return {"identity_match": True, "constitution_match": True,
+                "source_specified_stereo_preserved": True, "identity_status": "exact"}
     plain_source, plain_recovered = Chem.Mol(source), Chem.Mol(recovered)
     Chem.RemoveStereochemistry(plain_source)
     Chem.RemoveStereochemistry(plain_recovered)

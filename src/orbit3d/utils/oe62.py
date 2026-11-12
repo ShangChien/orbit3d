@@ -7,6 +7,17 @@ from .molecular_identity import compare_molecular_identity
 THEORY = 'OE62:PBE0/vacuum/Tier2/tight//PBE+vdW/vacuum'
 
 
+def connectivity_signature(molecule):
+    graph = Chem.RWMol()
+    for atom in molecule.GetAtoms():
+        bare = Chem.Atom(atom.GetAtomicNum())
+        bare.SetNoImplicit(True)
+        graph.AddAtom(bare)
+    for bond in molecule.GetBonds():
+        graph.AddBond(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), Chem.BondType.SINGLE)
+    return Chem.MolToSmiles(graph.GetMol(), canonical=True)
+
+
 def adapt_record(row, allowed_elements, max_atoms=80):
     """Recover bonds in XYZ order; never embed, optimize, reorder or add atoms."""
     occupied = row['energies_occ_pbe0_vac_tier2']
@@ -41,9 +52,11 @@ def adapt_record(row, allowed_elements, max_atoms=80):
     template = Chem.AddHs(source)
     if mol.GetNumBonds() != template.GetNumBonds():
         raise ValueError('source_connectivity_mismatch')
+    if connectivity_signature(mol) != connectivity_signature(template):
+        raise ValueError('source_connectivity_mismatch')
     query = Chem.RWMol()
     for atom in template.GetAtoms():
-        query.AddAtom(Chem.AtomFromSmarts(f'[#{atom.GetAtomicNum()}]'))
+        query.AddAtom(Chem.AtomFromSmarts(f'[#{atom.GetAtomicNum()};D{atom.GetDegree()}]'))
     for bond in template.GetBonds():
         query.AddBond(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), Chem.BondType.SINGLE)
         query.ReplaceBond(query.GetNumBonds()-1, Chem.BondFromSmarts('~'))
