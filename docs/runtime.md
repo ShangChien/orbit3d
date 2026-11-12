@@ -48,6 +48,47 @@ EFS，私有路径见 Git 忽略的 `local_dev/README.md`。Dockerfile 仅为可
 低层图 API 支持键型、新开放位点和环闭合；这不是已训练的 octree 骨架补全。
 输入实测性质被保留为源属性，不作为新生成分子的真值标签。
 
+## OE62点值与GRPO对照
+
+先完成 `prepare_oe62.py` 源坐标适配、`train_source_oracle.py` 性质头训练，以及 `initialize_point_octree.py` / `train_octree_structural.py` 先验适配。以下路径为已准备好的本机或服务器目录；私有服务器路径不写进配置模板。
+
+```bash
+export CUDA_VISIBLE_DEVICES=0
+export PYTHONPATH=src
+ORBIT_DATA=/path/to/oe62
+ORBIT_PRIOR=/path/to/structural_prior/octree_structural.pt
+ORBIT_DPA=/path/to/oracle_dpa
+ORBIT_FP=/path/to/oracle_fingerprint
+ORBIT_FORCEFIELD=/path/to/DPA4-Mini-OMol25-100M-v20260820.pt
+ORBIT_RUN=/path/to/point_homo_seed42
+ORBIT_EVAL=/path/to/eval_homo_seed42
+
+for stage in sft arms; do
+  python scripts/run_point_comparison.py --stage "$stage" \
+    --data "$ORBIT_DATA" --prior "$ORBIT_PRIOR" --dpa "$ORBIT_DPA" \
+    --forcefield "$ORBIT_FORCEFIELD" --target homo --seed 42 \
+    --device cuda:0 --output "$ORBIT_RUN"
+done
+
+python scripts/evaluate_point_campaign.py --campaign "$ORBIT_RUN" \
+  --output "$ORBIT_EVAL" --device cuda:0 --batch-size 64 --candidates 128 \
+  --frozen "$ORBIT_RUN/sft/weights/octree_conditional.pt" \
+  --continued "$ORBIT_RUN/continue/weights/octree_conditional.pt" \
+  --independent "$ORBIT_FP/oracle" \
+  --arms frozen continue400 grpo200 --time-control
+
+python scripts/summarize_point_comparison.py --campaign "$ORBIT_EVAL" \
+  --alignment-campaign "$ORBIT_RUN" --sft-campaign "$ORBIT_RUN" \
+  --manifest "$ORBIT_DATA/manifest.json" --target homo \
+  --output "$ORBIT_EVAL/comparison.json"
+```
+
+`run_point_comparison.py`仅负责训练，阶段明确为`sft`、`arms`或单独`grpo`；已删除重复的逐池冷启动评价路径。`evaluate_point_campaign.py`统一复用只读模型，`--time-control`按本次GRPO实耗时间训练并评价额外SFT臂。原始池不排序、不弛豫；输出中仍保留失败提案。所有输出目录均为新目录，历史结果绑定当时保存的源码快照。
+
+LUMO使用独立输出目录并改`--target lumo`。正式seed43/44需从共同上游权重重新初始化和适配先验，再分别训练两个性质，不能只换采样seed。两张物理卡各绑定一个进程，内部统一`cuda:0`。本次已验证batch8至64在HOMO/LUMO各64个固定候选上的轨迹一致性；变更其他预算/批大小仍需另验。
+
+GRPO的`octree_resume_*.pt`保存当前策略、原始参考策略标识、AdamW状态、随机流和累计更新进度。对齐配置用`mount_paths.alignment_resume_path`恢复，而非把中途策略当成新的参考模型；已完成的100+100组恢复与400次优化器更新有实际记录。
+
 ## 性质模型合同
 
 主实验使用 DPA/HyFF 描述符加 bootstrap 属性头，以及独立指纹模型。训练的目标
