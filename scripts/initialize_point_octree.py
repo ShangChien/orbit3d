@@ -12,7 +12,7 @@ a=p.parse_args();torch.manual_seed(42)
 ms=list(Chem.SDMolSupplier(str(a.sdf),removeHs=False));assert ms and all(m is not None for m in ms)
 elements=sorted({atom.GetSymbol() for m in ms for atom in m.GetAtoms()})
 names=['homo','lumo'];units=['eV','eV']
-y=np.array([[float(m.GetProp(n)) for n in names] for m in ms]);mean=y.mean(0);scale=y.std(0)
+y=np.array([[float(m.GetProp(n)) for n in names] for m in ms],dtype=np.float32);mean=y.mean(0);scale=y.std(0)
 old=load_pretrained(a.pretrained,'cpu',2,8,condition_version=4)
 config={'merge_level':7,'allowed_elements':elements}
 new=build_octree('cpu',2,8,condition_version=4,representation_config=config)

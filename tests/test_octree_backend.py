@@ -383,12 +383,13 @@ def test_target_expansion_preserves_old_conditions_and_readout_when_new_targets_
     assert torch.count_nonzero(new_head.net(features)[:,[0,2]]) == 0
 
 
-def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatch):
+@pytest.mark.parametrize("version,continued", [(3,False),(4,True)])
+def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatch, version, continued):
     import json
     from orbit3d.pipeline import octree_runner as runner
     args = build_default_uni3dar_args(2)
     args.emb_dim, args.num_head, args.layer = 96, 4, 2
-    args.condition_version = 3
+    args.condition_version = version
     model = ConditionalUni3DAR(args, AtomFeatDict(args), 2)
     monkeypatch.setattr(runner, 'load_pretrained', lambda *a, **kw: model)
     def unavailable(*a, **kw):
@@ -406,6 +407,13 @@ def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatc
            'oracle_config': {'target_cols': ['homo','lumo'], 'target_units': ['eV','eV']},
            'mount_paths': {'output_dir': str(tmp_path/'run'), 'checkpoint_save_dir': str(tmp_path/'save'),
                            'generator_pretrained_path': str(source), 'train_data_path': str(sdf)}}
+    if continued:
+        initial = {'target_cols':['homo','lumo'],'target_units':['eV','eV'],
+                   'mean':np.array([-5.5,-.5],dtype=np.float64),'scale':np.array([.5,.5],dtype=np.float64)}
+        monkeypatch.setattr(runner, 'load_octree_checkpoint', lambda *a, **kw: (model,initial))
+        cfg['mount_paths'].pop('generator_pretrained_path')
+        cfg['mount_paths']['checkpoint_load_path'] = str(source)
+        cfg['generator_config']['active_targets'] = ['homo']
     result = runner.run_octree_from_config(cfg)
     state = torch.load(result['checkpoint'], weights_only=False)
     assert len(state['history']) == 2 and state['label_source'] == 'sdf'

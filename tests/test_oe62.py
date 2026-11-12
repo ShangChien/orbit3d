@@ -26,3 +26,18 @@ def test_source_positions_and_positive_lumo_survive_sdf(tmp_path):
 def test_missing_labels_and_identity_are_not_repaired(field,value):
     r=record();r[field]=value
     with pytest.raises(ValueError):adapt_record(r,['C','H'])
+
+
+def test_use_source_bond_orders_in_xyz_atom_order(monkeypatch):
+    from rdkit.Chem import rdDetermineBonds
+    def forbidden(*a, **kw):
+        raise AssertionError('Known source graph must not trigger bond-order search')
+    monkeypatch.setattr(rdDetermineBonds,'DetermineBonds',forbidden)
+    r=record();lines=r['xyz_pbe_relaxed'].splitlines()
+    lines[2],lines[4]=lines[4],lines[2]
+    r['xyz_pbe_relaxed']='\n'.join(lines)+'\n'
+    m=adapt_record(r,['C','H'])
+    assert [a.GetSymbol() for a in m.GetAtoms()]==['H','H','C','H','H']
+    xyz=Chem.MolFromXYZBlock(r['xyz_pbe_relaxed']).GetConformer().GetPositions()
+    np.testing.assert_array_equal(m.GetConformer().GetPositions(),xyz)
+    assert Chem.MolToSmiles(Chem.RemoveHs(m))=='C'

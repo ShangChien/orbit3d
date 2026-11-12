@@ -35,7 +35,29 @@ def adapt_record(row, allowed_elements, max_atoms=80):
     coords = mol.GetConformer().GetPositions().copy()
     if not np.isfinite(coords).all():
         raise ValueError('nonfinite_coordinates')
-    rdDetermineBonds.DetermineBonds(mol, charge=0, allowChargedFragments=True, embedChiral=True)
+    # The source already supplies bond orders. Match its topology to XYZ
+    # connectivity instead of searching exponentially over possible valences.
+    rdDetermineBonds.DetermineConnectivity(mol)
+    template = Chem.AddHs(source)
+    if mol.GetNumBonds() != template.GetNumBonds():
+        raise ValueError('source_connectivity_mismatch')
+    query = Chem.RWMol()
+    for atom in template.GetAtoms():
+        query.AddAtom(Chem.AtomFromSmarts(f'[#{atom.GetAtomicNum()}]'))
+    for bond in template.GetBonds():
+        query.AddBond(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), Chem.BondType.SINGLE)
+        query.ReplaceBond(query.GetNumBonds()-1, Chem.BondFromSmarts('~'))
+    mapping = mol.GetSubstructMatch(query.GetMol())
+    if len(mapping) != mol.GetNumAtoms():
+        raise ValueError('source_connectivity_mismatch')
+    inverse = [0] * len(mapping)
+    for source_index, xyz_index in enumerate(mapping):
+        inverse[xyz_index] = source_index
+    recovered = Chem.RenumberAtoms(template, inverse)
+    recovered.AddConformer(Chem.Conformer(mol.GetConformer()), assignId=True)
+    Chem.RemoveStereochemistry(recovered)
+    Chem.AssignStereochemistryFrom3D(recovered)
+    mol = recovered
     identity = compare_molecular_identity(source, mol)
     if not identity['source_specified_stereo_preserved']:
         raise ValueError('source_identity:' + identity['identity_status'])

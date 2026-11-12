@@ -9,6 +9,9 @@
   "homo": "energies_occ_pbe0_vac_tier2[-1], eV",
   "lumo": "energies_unocc_pbe0_vac_tier2[0], eV; positive LUMO is retained",
   "theory": "gas-phase PBE0, FHI-aims Tier2/tight, evaluated on source PBE+vdW coordinates",
-  "status": "full download in progress; official tutorial and first 20 complete source records inspected",
-  "checked_on": "2026-11-12"
+  "status": "downloaded; full source adaptation running",
+  "checked_on": "2026-11-12",
+  "bytes": 387454907,
+  "source_rows": 61489,
+  "sha256": "387cf939cf5a48a440fdd9d56a7df04df6a901015cfdb466ebea144bb4ea638f"
 }

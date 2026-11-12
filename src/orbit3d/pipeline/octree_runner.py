@@ -112,7 +112,7 @@ def run_octree_from_config(cfg, config_path=None):
             raise ValueError(f"Unknown label source: {label_source}")
         mean = initial_state['mean'] if initial_state else y.mean(0)
         scale = initial_state['scale'] if initial_state else y.std(0).clip(1e-6)
-        yn = (y - mean) / scale
+        yn = ((y - mean) / scale).astype(np.float32)
         dataset = OctreeDataset(training, model, seed=int(cfg.get("seed", 42)))
         weighting = settings.get('element_loss_weighting', 'none')
         atom_class_weights, weighting_metadata = None, {'scheme': 'none'}
