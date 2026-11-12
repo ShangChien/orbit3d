@@ -33,6 +33,13 @@ uses official OCELOT labels, but rare-element generation and target success rema
 weak. [Element weighting and temperature experiments](docs/element-balance-experiment.md)
 report their quality tradeoffs. Open-shell generation is not established.
 
+The [three-seed SFT continuation study](docs/ocelot-duration-experiment.md) completes
+all 36 fixed evaluations: longer training improves B/Si learning, but independent
+joint hits change from 23/1152 to 21/1152. A [preselected quantum check](docs/qualified-design-quantum-check.md)
+preserves all five delivered molecular graphs and retains two orbital-window hits
+under the documented internal DFT protocol; original OCELOT reference fidelity
+remains unresolved.
+
 ## Setup
 
 ```bash
