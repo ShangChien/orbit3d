@@ -38,3 +38,22 @@ def test_specified_alkene_flip_with_many_equivalent_methyl_hydrogens():
     source=r'N#C/C(=C(\c1n(CC)nc(c1Cl)C)/OC(=O)C(C)(C)C)/c1ccc(cc1)C(C)(C)C'
     flipped=source.replace(r'C(\c1',r'C(/c1')
     assert compare_molecular_identity(Chem.MolFromSmiles(source),Chem.MolFromSmiles(flipped))['identity_status']=='specified_stereo_changed'
+
+
+def test_inferred_graph_stereo_can_be_revalidated_without_changing_geometry():
+    import json
+    from pathlib import Path
+    import numpy as np
+    from orbit3d.generator.octree_backend import trajectory_to_instance
+    from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
+    case=json.loads((Path(__file__).parent/'fixtures/inferred_stereo_cleanup.json').read_text())
+    instance=trajectory_to_instance({'atom_symbols':case['symbols'],'positions_np':case['coordinates']},
+                                    element_table=tuple(case['elements']))
+    # Actual generated P=O case: DetermineBonds left a Z tag which the
+    # canonical graph does not support; the old second validation rejected it.
+    assert compare_molecular_identity(Chem.MolFromSmiles(case['smiles']),instance.graph)['identity_match']
+    before=instance.coords.copy()
+    recovered=mol3d_to_validated_rdkit_mol(instance)
+    np.testing.assert_array_equal(instance.coords,before)
+    assert Chem.MolToSmiles(recovered)==Chem.MolToSmiles(instance.graph)
+    assert all(b.GetStereo()==Chem.BondStereo.STEREONONE for b in recovered.GetBonds())

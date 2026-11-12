@@ -88,6 +88,11 @@ def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
         Chem.SanitizeMol(mol)
     except (ValueError, RuntimeError) as exc:
         raise ValueError(f'valence_or_aromaticity: {exc}') from exc
+    if inst.graph is None:
+        # Bond perception can leave E/Z tags on bonds that RDKit does not
+        # recognize as stereogenic. Clean inferred tags before freezing the graph;
+        # supplied graph stereochemistry must still be checked, never erased.
+        Chem.AssignStereochemistry(mol, cleanIt=True, force=True)
     fragments = len(Chem.GetMolFrags(mol))
     if fragments != 1:
         raise ValueError(f'connectivity: {fragments} disconnected fragments')

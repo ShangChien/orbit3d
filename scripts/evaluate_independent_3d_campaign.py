@@ -3,10 +3,12 @@ import argparse,json,time
 from pathlib import Path
 import numpy as np
 import torch
+from rdkit import Chem
 from orbit3d.generator.octree_backend import trajectory_to_instance
 from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
 from orbit3d.physics.factory import build_forcefield
 from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from orbit3d.utils.molecular_identity import compare_molecular_identity
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
 
 
@@ -41,7 +43,7 @@ def main():
                          'original_in_domain':bool(r.get('domain') and r['domain']['in_domain'])};rows.append(row)
                     if not r['valid']:continue
                     i=r['candidate_id'];instance=trajectory_to_instance({'atom_symbols':symbols[i],'positions_np':coords[f'coordinates_{i}']},element_table=elements)
-                    assert instance.smiles==r['smiles']
+                    assert compare_molecular_identity(Chem.MolFromSmiles(r['smiles']),instance.graph)['identity_match']
                     mols.append(mol3d_to_validated_rdkit_mol(instance));indices.append(len(rows)-1)
             evaluated=model.evaluate_3d_mols_batched(mols)
             for i,pred,std,force,error in zip(indices,evaluated['mean'],evaluated['std'],evaluated['forces_eV_A'],evaluated['errors']):
