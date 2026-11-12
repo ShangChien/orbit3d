@@ -1,0 +1,1078 @@
+{
+  "scope": "Descriptive support diagnostic only; no chemical-validity claim or new admission gate. Element/formal-charge pairs after canonical graph normalization; counts are molecules containing each state.",
+  "training_molecules": 8192,
+  "training_state_counts": {
+    "O:+0": 6779,
+    "S:+0": 1764,
+    "C:+0": 8189,
+    "S:+1": 117,
+    "O:-1": 690,
+    "N:+0": 5191,
+    "Br:+0": 590,
+    "Cl:+0": 947,
+    "N:+1": 574,
+    "F:+0": 603,
+    "Si:+0": 261,
+    "P:+0": 306,
+    "Se:+0": 74,
+    "Te:+0": 22,
+    "I:+0": 116,
+    "B:+0": 70,
+    "H:+0": 10,
+    "As:+0": 11
+  },
+  "unseen_generated_state_counts": {
+    "C:-1": 898,
+    "C:+1": 167,
+    "O:+1": 814,
+    "B:-1": 284,
+    "N:-1": 180,
+    "S:+2": 6,
+    "S:-1": 86,
+    "Cl:+1": 12,
+    "Br:+1": 2,
+    "P:+1": 20,
+    "Si:-3": 1,
+    "Se:+2": 33,
+    "Si:-1": 4,
+    "F:+1": 29,
+    "Se:+1": 21,
+    "As:+1": 3,
+    "I:+1": 6,
+    "P:-1": 5,
+    "I:+3": 1,
+    "C:-2": 5,
+    "N:-2": 1,
+    "I:+2": 1,
+    "Se:-1": 1,
+    "F:+3": 2,
+    "C:-3": 1
+  },
+  "aggregate": [
+    {
+      "target": "homo",
+      "arm": "frozen",
+      "attempted": 960,
+      "valid": 599,
+      "domain": 187,
+      "feature_failures": 1,
+      "strata": {
+        "seen_charge_states": {
+          "n": 150,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.8569562535141452,
+              0.5845515088627258,
+              0.6642126017570495,
+              0.5078191378831863,
+              0.6078660145044327
+            ],
+            "equal_quantile_mae_eV": 0.6442811033043079,
+            "property_hits": 36
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.7405521994059664,
+              0.4423310462524047,
+              0.3699185696520549,
+              0.47400929028389877,
+              0.7989116693130792
+            ],
+            "equal_quantile_mae_eV": 0.5651445549814808,
+            "property_hits": 28
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.7441912490289859,
+              0.4861898587720148,
+              0.5643411276753744,
+              0.4842934672451019,
+              0.6028215201759338
+            ],
+            "equal_quantile_mae_eV": 0.5763674445794822,
+            "property_hits": 45
+          }
+        },
+        "unseen_charge_states": {
+          "n": 36,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              1.0304231155776975,
+              0.632900129132952,
+              0.9007874430999756,
+              0.8446960698852539,
+              0.3854856959075928
+            ],
+            "equal_quantile_mae_eV": 0.7588584907206944,
+            "property_hits": 7
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.4439500014968396,
+              0.6418665214610758,
+              0.3396634532244852,
+              0.7840005871304147,
+              0.7312149975391374
+            ],
+            "equal_quantile_mae_eV": 0.5881391121703906,
+            "property_hits": 12
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.8328289145660399,
+              0.42235191916329534,
+              0.5329036712646484,
+              0.3361067522277832,
+              0.34486904232788085
+            ],
+            "equal_quantile_mae_eV": 0.4938120599099296,
+            "property_hits": 11
+          }
+        }
+      }
+    },
+    {
+      "target": "homo",
+      "arm": "continue400",
+      "attempted": 960,
+      "valid": 623,
+      "domain": 175,
+      "feature_failures": 0,
+      "strata": {
+        "seen_charge_states": {
+          "n": 159,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.6561768196360269,
+              0.5792022367531915,
+              0.49866293811921153,
+              0.5281794793996503,
+              0.5671810483481667
+            ],
+            "equal_quantile_mae_eV": 0.5658805044512494,
+            "property_hits": 48
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.6215795715630867,
+              0.42267924488642655,
+              0.26213442569391293,
+              0.5351889662120324,
+              0.8346332607853126
+            ],
+            "equal_quantile_mae_eV": 0.5352430938281543,
+            "property_hits": 38
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.6063780528640746,
+              0.47452371482849137,
+              0.42808206332299015,
+              0.5402735612881567,
+              0.6090563581200802
+            ],
+            "equal_quantile_mae_eV": 0.5316627500847586,
+            "property_hits": 40
+          }
+        },
+        "unseen_charge_states": {
+          "n": 16,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.8759582746887205,
+              0.7448617941284184,
+              0.795853561340332,
+              0.7654700998229981,
+              0.45268615234375
+            ],
+            "equal_quantile_mae_eV": 0.7269659764648437,
+            "property_hits": 3
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.9028038900727382,
+              0.45847161713351287,
+              0.1711297434950126,
+              0.4085861271638921,
+              1.225807603471579
+            ],
+            "equal_quantile_mae_eV": 0.633359796267347,
+            "property_hits": 6
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.47892625221252416,
+              0.5503249806213381,
+              0.36879480487060545,
+              0.5032632108764649,
+              0.6062234257507324
+            ],
+            "equal_quantile_mae_eV": 0.501506534866333,
+            "property_hits": 6
+          }
+        }
+      }
+    },
+    {
+      "target": "homo",
+      "arm": "grpo200",
+      "attempted": 960,
+      "valid": 669,
+      "domain": 233,
+      "feature_failures": 0,
+      "strata": {
+        "seen_charge_states": {
+          "n": 208,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.7104113689559544,
+              0.6503853698405815,
+              0.5456626408200148,
+              0.6437510887591044,
+              0.8225155513139204
+            ],
+            "equal_quantile_mae_eV": 0.6745452039379151,
+            "property_hits": 59
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.5575119821691735,
+              0.39799384065825566,
+              0.4186028992440631,
+              0.702529019525103,
+              1.0082111457523282
+            ],
+            "equal_quantile_mae_eV": 0.6169697774697848,
+            "property_hits": 55
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.6403810795828011,
+              0.5617409586058273,
+              0.39045234494837316,
+              0.6772968159008026,
+              0.9095540494930383
+            ],
+            "equal_quantile_mae_eV": 0.6358850497061684,
+            "property_hits": 57
+          }
+        },
+        "unseen_charge_states": {
+          "n": 25,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              1.0216531265640256,
+              0.7380805975341801,
+              0.34170363105773927,
+              0.7799153327941895,
+              0.2669823169708252
+            ],
+            "equal_quantile_mae_eV": 0.6296670009841919,
+            "property_hits": 6
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.9151747041242828,
+              0.3919062360104041,
+              0.3917258237496447,
+              0.5894309664761263,
+              0.9159648792186261
+            ],
+            "equal_quantile_mae_eV": 0.6408405219158169,
+            "property_hits": 7
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.9116513241195676,
+              0.41084384979248084,
+              0.2666849716758728,
+              0.4559339682261149,
+              0.835536322479248
+            ],
+            "equal_quantile_mae_eV": 0.5761300872586569,
+            "property_hits": 8
+          }
+        }
+      }
+    },
+    {
+      "target": "homo",
+      "arm": "continue_wall",
+      "attempted": 960,
+      "valid": 631,
+      "domain": 176,
+      "feature_failures": 2,
+      "strata": {
+        "seen_charge_states": {
+          "n": 147,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.7969675020279422,
+              0.715415540754046,
+              0.5121293185958862,
+              0.6359693999074297,
+              0.7097393015117033
+            ],
+            "equal_quantile_mae_eV": 0.6740442125594015,
+            "property_hits": 28
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.5849357694390404,
+              0.392579515739075,
+              0.33812222362131206,
+              0.5007383524785738,
+              0.7989274794864957
+            ],
+            "equal_quantile_mae_eV": 0.5230606681528994,
+            "property_hits": 35
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.6703986371637158,
+              0.567115397103446,
+              0.4087095944595337,
+              0.6613547236938475,
+              0.7027135572814943
+            ],
+            "equal_quantile_mae_eV": 0.6020583819404075,
+            "property_hits": 33
+          }
+        },
+        "unseen_charge_states": {
+          "n": 29,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              1.4261696761169431,
+              0.8225788599395756,
+              0.6725788842337472,
+              0.6490819472885132,
+              0.4533102674255371
+            ],
+            "equal_quantile_mae_eV": 0.8047439270008633,
+            "property_hits": 5
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.6678766372189215,
+              0.2387844553256413,
+              0.19814093416858455,
+              0.4820069495556071,
+              0.7029453060582306
+            ],
+            "equal_quantile_mae_eV": 0.45795085646539696,
+            "property_hits": 8
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.8905159895935058,
+              0.49939095973968506,
+              0.27869325454711913,
+              0.17670714855194092,
+              0.7006802891540527
+            ],
+            "equal_quantile_mae_eV": 0.5091975283172607,
+            "property_hits": 14
+          }
+        }
+      }
+    },
+    {
+      "target": "lumo",
+      "arm": "frozen",
+      "attempted": 960,
+      "valid": 612,
+      "domain": 199,
+      "feature_failures": 0,
+      "strata": {
+        "seen_charge_states": {
+          "n": 168,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.7582113150766194,
+              0.800573099034266,
+              0.7649116279425765,
+              0.9888902721215883,
+              1.4831188060398954
+            ],
+            "equal_quantile_mae_eV": 0.9591410240429891,
+            "property_hits": 29
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.8403463939344136,
+              0.4537571298289669,
+              0.4868548107529081,
+              0.7089560521854398,
+              1.0198587229629628
+            ],
+            "equal_quantile_mae_eV": 0.7019546219329381,
+            "property_hits": 39
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.7604786748628616,
+              0.6916314735850421,
+              0.725073611275644,
+              0.9478108055799801,
+              1.3424535666071573
+            ],
+            "equal_quantile_mae_eV": 0.893489626382137,
+            "property_hits": 28
+          }
+        },
+        "unseen_charge_states": {
+          "n": 31,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.5717199044952392,
+              0.6795120312023162,
+              1.220804243168831,
+              1.7158900261688235,
+              1.7864038971557619
+            ],
+            "equal_quantile_mae_eV": 1.1948660204381945,
+            "property_hits": 3
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.5042646881400001,
+              0.46608826739880693,
+              0.5548198353613542,
+              0.8643505871722762,
+              1.1997021669194465
+            ],
+            "equal_quantile_mae_eV": 0.7178451089983768,
+            "property_hits": 7
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.5441664092330933,
+              0.5977227929544449,
+              0.8786681099843978,
+              1.3938733697700503,
+              1.8279346652323405
+            ],
+            "equal_quantile_mae_eV": 1.0484730694348654,
+            "property_hits": 5
+          }
+        }
+      }
+    },
+    {
+      "target": "lumo",
+      "arm": "continue400",
+      "attempted": 960,
+      "valid": 631,
+      "domain": 183,
+      "feature_failures": 0,
+      "strata": {
+        "seen_charge_states": {
+          "n": 163,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.9707391292276137,
+              0.8194531165952117,
+              0.9184464825778174,
+              0.9709543929372888,
+              0.9409993795673847
+            ],
+            "equal_quantile_mae_eV": 0.9241185001810631,
+            "property_hits": 28
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.9909941592306748,
+              0.6795003220594016,
+              0.6489692503658412,
+              0.7393775827975536,
+              0.8272207345273493
+            ],
+            "equal_quantile_mae_eV": 0.777212409796164,
+            "property_hits": 34
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.9386695782238399,
+              0.8044735213441127,
+              0.905850320682608,
+              0.9179627405618583,
+              0.8530834061399896
+            ],
+            "equal_quantile_mae_eV": 0.8840079133904817,
+            "property_hits": 29
+          }
+        },
+        "unseen_charge_states": {
+          "n": 20,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.19089877183532716,
+              1.0515146553516388,
+              0.9382183689689636,
+              1.2465782881546021,
+              2.1785008934631347
+            ],
+            "equal_quantile_mae_eV": 1.1211421955547334,
+            "property_hits": 4
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.6660535887102728,
+              0.7511653067394017,
+              0.38932436774488816,
+              0.6588424327671794,
+              1.2179206430617586
+            ],
+            "equal_quantile_mae_eV": 0.7366612678047002,
+            "property_hits": 5
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.4207771581878662,
+              1.0083872377872467,
+              1.2655190069293976,
+              0.8369296646575929,
+              1.8358961967124938
+            ],
+            "equal_quantile_mae_eV": 1.0735018528549194,
+            "property_hits": 3
+          }
+        }
+      }
+    },
+    {
+      "target": "lumo",
+      "arm": "grpo200",
+      "attempted": 960,
+      "valid": 690,
+      "domain": 269,
+      "feature_failures": 0,
+      "strata": {
+        "seen_charge_states": {
+          "n": 243,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.792669338481338,
+              0.7404982861416428,
+              1.0011253963770055,
+              1.0465127643621728,
+              1.1054510921590672
+            ],
+            "equal_quantile_mae_eV": 0.9372513755042453,
+            "property_hits": 48
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.8075992621747161,
+              0.4629042435545162,
+              0.546569374944225,
+              0.7520430744294627,
+              0.8684815375236318
+            ],
+            "equal_quantile_mae_eV": 0.6875194985253104,
+            "property_hits": 59
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.7453323728183464,
+              0.6221831218658994,
+              0.858675768981812,
+              0.9732907872753954,
+              0.9862761962905887
+            ],
+            "equal_quantile_mae_eV": 0.8371516494464084,
+            "property_hits": 51
+          }
+        },
+        "unseen_charge_states": {
+          "n": 26,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.6148198632049562,
+              0.7802518994691636,
+              1.4435292024230957,
+              1.6647181511688232,
+              1.9038309879595436
+            ],
+            "equal_quantile_mae_eV": 1.2814300208451166,
+            "property_hits": 1
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.7806921522255843,
+              0.4881264645064863,
+              0.5621723166804644,
+              0.9902866002432866,
+              1.0955492468068875
+            ],
+            "equal_quantile_mae_eV": 0.7833653560925418,
+            "property_hits": 3
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.4309562374369304,
+              0.6111435136667888,
+              1.2963995078023274,
+              1.610716652946472,
+              1.2976855662956235
+            ],
+            "equal_quantile_mae_eV": 1.0493802956296283,
+            "property_hits": 4
+          }
+        }
+      }
+    },
+    {
+      "target": "lumo",
+      "arm": "continue_wall",
+      "attempted": 960,
+      "valid": 642,
+      "domain": 188,
+      "feature_failures": 0,
+      "strata": {
+        "seen_charge_states": {
+          "n": 165,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.774479495478514,
+              0.8544982388864015,
+              0.9317531208626882,
+              1.0369759010066657,
+              1.1410308869989005
+            ],
+            "equal_quantile_mae_eV": 0.947747528646634,
+            "property_hits": 32
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.7579728247573387,
+              0.5360918527011868,
+              0.544411460076813,
+              0.6691489637507877,
+              0.9018880422387038
+            ],
+            "equal_quantile_mae_eV": 0.681902628704966,
+            "property_hits": 35
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.7233356243768254,
+              0.7157984905784195,
+              0.8157652137254988,
+              0.9212094969052281,
+              1.0306778699063726
+            ],
+            "equal_quantile_mae_eV": 0.841357339098469,
+            "property_hits": 34
+          }
+        },
+        "unseen_charge_states": {
+          "n": 23,
+          "dpa": {
+            "per_quantile_mae_eV": [
+              0.45690095002746584,
+              0.5391335475976126,
+              0.9632615768203736,
+              0.760765939950943,
+              1.6384620693817138
+            ],
+            "equal_quantile_mae_eV": 0.8717048167556218,
+            "property_hits": 4
+          },
+          "fingerprint": {
+            "per_quantile_mae_eV": [
+              0.4143457303870749,
+              0.3979444872968822,
+              0.5727534859692076,
+              0.7920843525559749,
+              0.7817075463526691
+            ],
+            "equal_quantile_mae_eV": 0.5917671205123617,
+            "property_hits": 4
+          },
+          "hyff": {
+            "per_quantile_mae_eV": [
+              0.4579077047576904,
+              0.3307407742418561,
+              0.7250169121513368,
+              0.47630277276039124,
+              1.082121032227516
+            ],
+            "equal_quantile_mae_eV": 0.6144178392277582,
+            "property_hits": 8
+          }
+        }
+      }
+    }
+  ],
+  "raw_summary_sha256": "e7bebf9a27883b1aa364e52396260aa8f4b7966a5dac34d6de7434ea84b79b5b",
+  "input_manifest": {
+    "source_training": {
+      "train.sdf": "17d091628ad0120fc49cffcb7d7a8bac22e18dd50c711a34d7186ae4b890ac50"
+    },
+    "hyff": {
+      "summary.json": "d01705c1ff806bcd9233292019b0441b36768b2b22a938d36040318cf9748ac2"
+    },
+    "homo/eval_continue400_p10_s2026": {
+      "summary.json": "ce9a367d61b8b4b49c13a9658d036844b293fd95dc94f665b63eb98cff8f4066"
+    },
+    "homo/eval_continue400_p10_s2027": {
+      "summary.json": "e10c2107e174b890c99ae9dd525b25ac58a7c8c0de9a3e96d22d5c9140fc89ae"
+    },
+    "homo/eval_continue400_p10_s2028": {
+      "summary.json": "f9de6d53e33fc8593d14a71560fafef8617123b99a331ed9f9ad575993adfcf2"
+    },
+    "homo/eval_continue400_p25_s2026": {
+      "summary.json": "d1ad595032b178ed1f2817054e53be46cdf41cf9793525efada8a895acde2ce7"
+    },
+    "homo/eval_continue400_p25_s2027": {
+      "summary.json": "659bdc806d9b87b46ae38ee710e164873219d76aef3cdcbf1064d09c5c903c16"
+    },
+    "homo/eval_continue400_p25_s2028": {
+      "summary.json": "bb06b86d677ff1b1a825b079b5587745a0378ba8acadf4ce3997d1ab6f8bd554"
+    },
+    "homo/eval_continue400_p50_s2026": {
+      "summary.json": "f7b2513494ca2c64845651393ea4e927d9e17ea860cadb35ea27137579164553"
+    },
+    "homo/eval_continue400_p50_s2027": {
+      "summary.json": "29df6bf490d8dff8175712860b85b5bd6e02364c3846ee5a083d7da6f6ee4d63"
+    },
+    "homo/eval_continue400_p50_s2028": {
+      "summary.json": "221848a3db2918aa9e8ec6e2dee2ff072adca89962d1383d075fecf0cf8cdb9d"
+    },
+    "homo/eval_continue400_p75_s2026": {
+      "summary.json": "bab5ecc47b71da862d79566cee7ef5817e9fed46d5482ebcd048c65fc4509359"
+    },
+    "homo/eval_continue400_p75_s2027": {
+      "summary.json": "8d911cccdf92b9c73ffb4b6541d0c7b047c887b4b0fe228feb98f864aac1a883"
+    },
+    "homo/eval_continue400_p75_s2028": {
+      "summary.json": "20434bc69e5a1db2911319c2ba6a2dca6d233b8709625480f23253b48787ff5f"
+    },
+    "homo/eval_continue400_p90_s2026": {
+      "summary.json": "34a66fcc8681786649ada504bcc9b60389e9f8314b9c6f8cd1ecb91a60b3fe6f"
+    },
+    "homo/eval_continue400_p90_s2027": {
+      "summary.json": "5ba88dfda74cbfebc64b522ddda801ecc7d9fbf1a06ee0869002f04c14669405"
+    },
+    "homo/eval_continue400_p90_s2028": {
+      "summary.json": "2e4bddf6992da841bbd1cbb6ee44eaa66da1f67dffb5aaf330e5742beb4f191b"
+    },
+    "homo/eval_continue_wall_p10_s2026": {
+      "summary.json": "a71bb54db3b7abcb27e98f3ca969eae0f4d49b4474244180e7dd97defaf82ca1"
+    },
+    "homo/eval_continue_wall_p10_s2027": {
+      "summary.json": "a5d0ab2c91ec19d0adef1df5c1081533920b616512d2f1d27e816ec3fd53392f"
+    },
+    "homo/eval_continue_wall_p10_s2028": {
+      "summary.json": "fb571757dcd6944ca0bfcb6e773e35e9d1c1b2718df5bf28aaff5da295eac2e3"
+    },
+    "homo/eval_continue_wall_p25_s2026": {
+      "summary.json": "77bb2238c3cc1b93ab40520b7638f8d4cc2b5ebb6cf44dc1cc783c0e2459b467"
+    },
+    "homo/eval_continue_wall_p25_s2027": {
+      "summary.json": "e91735a6447901c13e84434e4dc8a2a40d5146e9ce3fd78f0bcbac997f4051d1"
+    },
+    "homo/eval_continue_wall_p25_s2028": {
+      "summary.json": "542c44c9eecebedd9aff732cf214d1d8e8e98b7c8535359ab507be9fb799da5a"
+    },
+    "homo/eval_continue_wall_p50_s2026": {
+      "summary.json": "6432b1fb02d398053da9c1ac66e7acca01058f0529106030a4ce56f74b9024dd"
+    },
+    "homo/eval_continue_wall_p50_s2027": {
+      "summary.json": "b34d05d326ea03d8ae5ff18d13466e81724dc479c5814cd98156f56f4ba33758"
+    },
+    "homo/eval_continue_wall_p50_s2028": {
+      "summary.json": "7635bf5e19fa8d60a1797a18941efd75230b9a8c327ae200124d2352cbe28250"
+    },
+    "homo/eval_continue_wall_p75_s2026": {
+      "summary.json": "0723ace1b2dc2247551dc165717b32002a46c464c202641829f8470da1020ae9"
+    },
+    "homo/eval_continue_wall_p75_s2027": {
+      "summary.json": "631a1cea99ea16227525d28c70863dee3800b3b2c03f14d23069a8e6531a6a61"
+    },
+    "homo/eval_continue_wall_p75_s2028": {
+      "summary.json": "bfe0383f540876f9301f6750baf6214ddc7311c85be87fc821b7eddf148daa1e"
+    },
+    "homo/eval_continue_wall_p90_s2026": {
+      "summary.json": "ab8c25f87731865b5ee97a8bfb009c2b1d4b716db20a2a70f4ee34a1b2090fda"
+    },
+    "homo/eval_continue_wall_p90_s2027": {
+      "summary.json": "f7312e5bc28a09c27c8fd6d166f374e5b283dd5a876fb3745602037b5d3954ae"
+    },
+    "homo/eval_continue_wall_p90_s2028": {
+      "summary.json": "fb9c7538fc95ec49053c9a3833f179b65d57b3a340cd88fc113dbc6fc0079d7f"
+    },
+    "homo/eval_frozen_p10_s2026": {
+      "summary.json": "dd3c27024d1c051b31f8d0ea3b61d7c28d2ff01b53f7788ae363f8ef7bd0919a"
+    },
+    "homo/eval_frozen_p10_s2027": {
+      "summary.json": "1609d1e1fb7ccad15888714c9b32c9622575e529ee166e65a894cac2f36955f7"
+    },
+    "homo/eval_frozen_p10_s2028": {
+      "summary.json": "7a5b34fb15712a591a46353cbfab1603b86e230ee1f6e5cbf43587c517826e5d"
+    },
+    "homo/eval_frozen_p25_s2026": {
+      "summary.json": "15206ac697df8896510263724e82c287905dc0a4a1221788b2502b8e99c47595"
+    },
+    "homo/eval_frozen_p25_s2027": {
+      "summary.json": "66c8afe0a8a282d7d7e2c7ed2614612b7a400370b68f6e9fa4675ff40b9746d3"
+    },
+    "homo/eval_frozen_p25_s2028": {
+      "summary.json": "a118bc3bdc837cb5e65bd4dd47f96693544b74cc5deba6fd2cb0863b1e858a86"
+    },
+    "homo/eval_frozen_p50_s2026": {
+      "summary.json": "6c4472f2088311a4c31d367dd724990b31c1b4e3c1f1cd3f5564d48fdab1f177"
+    },
+    "homo/eval_frozen_p50_s2027": {
+      "summary.json": "faf0b7af06ab32c3933bb6f19baf7ecb44d01f6cc8708e039e2bd31cb6eb170c"
+    },
+    "homo/eval_frozen_p50_s2028": {
+      "summary.json": "088e08a4dfa52dbeb591f63412b0bc3cb9ad36df45128e065d52912d3901e398"
+    },
+    "homo/eval_frozen_p75_s2026": {
+      "summary.json": "25150f825be42ea11490956425fe62560582d555b4aab4dce469d7d148eef4e5"
+    },
+    "homo/eval_frozen_p75_s2027": {
+      "summary.json": "8bd96bec804cdf9d1b224f6d7397839c5d5d9791ad4059d707612105fd498d3f"
+    },
+    "homo/eval_frozen_p75_s2028": {
+      "summary.json": "2267ccfef9ef8eaee53c438f5edf0bf3012aea3d790dbe3bce0d60139804d813"
+    },
+    "homo/eval_frozen_p90_s2026": {
+      "summary.json": "1191b8be2e5ef369dbe078ce0aa3ab91f04abb3bec95a6ce92a5c1e65fcb2393"
+    },
+    "homo/eval_frozen_p90_s2027": {
+      "summary.json": "8bc276f467adac5b68fd86cd29101282ba0ef178a475b255a8491a234fa8e04d"
+    },
+    "homo/eval_frozen_p90_s2028": {
+      "summary.json": "54c2e3b811c455f46be568417a9b000e2699bf3ac9d2cebe30dbbd028b35d75c"
+    },
+    "homo/eval_grpo200_p10_s2026": {
+      "summary.json": "0cf09b8f5a29a9811493f0140c1fa21b8cfbd37a408e2f5391e3576b51a89b52"
+    },
+    "homo/eval_grpo200_p10_s2027": {
+      "summary.json": "c4be10740fc235fc23ca22e3da9985f23df81b81cf2b23f711f8203b9dec6d45"
+    },
+    "homo/eval_grpo200_p10_s2028": {
+      "summary.json": "1057626ac53495ead01bbe2e36eb7b394415cc276b86d3fa7ffa03a87e038eaa"
+    },
+    "homo/eval_grpo200_p25_s2026": {
+      "summary.json": "08953d5cb43668c3d32b5a6051f9dfc03aa26bbe03924af20aa7a6c4922a41b2"
+    },
+    "homo/eval_grpo200_p25_s2027": {
+      "summary.json": "8ec2b841ddddeaf3eb3bdb0dbdb6218b62e2a3c67894438a89dfef7876fc339a"
+    },
+    "homo/eval_grpo200_p25_s2028": {
+      "summary.json": "18b4794ced33867207647e23a0fb9cd7d4308deb3dc05ae0de66f0ce53b9c3e1"
+    },
+    "homo/eval_grpo200_p50_s2026": {
+      "summary.json": "4fd29854ec1b6f9d0e6b840641d09180f9d82fee83d1202dbef6689378ea1e30"
+    },
+    "homo/eval_grpo200_p50_s2027": {
+      "summary.json": "03d10405d471c4b27974cc35d2b4fd45b51511702731050c3f5126b750f6b911"
+    },
+    "homo/eval_grpo200_p50_s2028": {
+      "summary.json": "2dda494f0e5781569f5a7839d9bb4c63ce87b4da8ce25bc81a35597645478cc8"
+    },
+    "homo/eval_grpo200_p75_s2026": {
+      "summary.json": "9a6a50177780a1bc40dc3907720cda917199331253b3c09b4acbd59c30508b80"
+    },
+    "homo/eval_grpo200_p75_s2027": {
+      "summary.json": "a5117f0218d4492d528f38966be61d49068111cb6f8848a7953bb0f7584b5f13"
+    },
+    "homo/eval_grpo200_p75_s2028": {
+      "summary.json": "3332c6897be82766e0ccd0bcdd3cfb397caa9d3941e16158375ae28cebd3008c"
+    },
+    "homo/eval_grpo200_p90_s2026": {
+      "summary.json": "4cef67283b6f8d379e9131ca26bb423fe188b203bcb8b997ca0c1294f3352f45"
+    },
+    "homo/eval_grpo200_p90_s2027": {
+      "summary.json": "33dd4a0cbbf646a5fef70bccfea277caa74b922d23dd8e0bc15dddf77d22f735"
+    },
+    "homo/eval_grpo200_p90_s2028": {
+      "summary.json": "9520707e1db2852fb23f8ede67f1734b67e17ea823ad147d5e5b8a5f08d2ff0d"
+    },
+    "lumo/eval_continue400_p10_s2026": {
+      "summary.json": "675d84d0d6f5bc1208177d99f7dff66a564c67f765c0c3ad792b4c0b8849b960"
+    },
+    "lumo/eval_continue400_p10_s2027": {
+      "summary.json": "368b2584d5bab30065d29037e14c09efaa55ae1c0d2f89200a7fbfa086255735"
+    },
+    "lumo/eval_continue400_p10_s2028": {
+      "summary.json": "b47cd99866903d895407811f44ce00e06046ed1ae83f3e8f69584dba3a559386"
+    },
+    "lumo/eval_continue400_p25_s2026": {
+      "summary.json": "302168c222bfa8d29f518de28e2d749166d0e024ca9bffe17c25c6b0265a7eac"
+    },
+    "lumo/eval_continue400_p25_s2027": {
+      "summary.json": "46ff764b4ed607af2dd32e430533ba23deacce8e2c5260437af538e5c9576726"
+    },
+    "lumo/eval_continue400_p25_s2028": {
+      "summary.json": "0079bb93f330b360a7fb9dd0684a793cd75acf23e2f78b658b127299bc6255d7"
+    },
+    "lumo/eval_continue400_p50_s2026": {
+      "summary.json": "806f322287a0e57e75ffff58e3f412d021331bd1c166cafff73493b8735f3c1d"
+    },
+    "lumo/eval_continue400_p50_s2027": {
+      "summary.json": "8d4a37bdda0d310925112d4f85bb464f19ce6e20e93b028ba32dc34f2bf29bbd"
+    },
+    "lumo/eval_continue400_p50_s2028": {
+      "summary.json": "263daac16b75f5789387e9bf6486e378fa9786f38f38715010917e30a847ca9c"
+    },
+    "lumo/eval_continue400_p75_s2026": {
+      "summary.json": "0af1c8fea005a427323a7f453dcffdbe321f71bd5aad4f3f64331166c495f57e"
+    },
+    "lumo/eval_continue400_p75_s2027": {
+      "summary.json": "5152047019140c3de824674e17670e5b906c2a9197704cc38e1c56aadf7cdce3"
+    },
+    "lumo/eval_continue400_p75_s2028": {
+      "summary.json": "c922046a0bb5705b5fec0ab7fa7197a209fd0d2116cdb0035ab29c1b1f24b6aa"
+    },
+    "lumo/eval_continue400_p90_s2026": {
+      "summary.json": "ab59ed7a094205012e111868b7134438e596102478ba0317d806694263e80fa7"
+    },
+    "lumo/eval_continue400_p90_s2027": {
+      "summary.json": "ad6cb56f8804c92481d7c4d9396f36a3b1bfd07cd978a44da73c90248e1d0164"
+    },
+    "lumo/eval_continue400_p90_s2028": {
+      "summary.json": "3965ff0389dcf98b247fbe7fa9fff0d123336d77652df316c45c0cec65c1dce3"
+    },
+    "lumo/eval_continue_wall_p10_s2026": {
+      "summary.json": "82ce0f34f66a540d62300339a3e63d179ce4cb59fcd469a5a552aa8b18e7ccc5"
+    },
+    "lumo/eval_continue_wall_p10_s2027": {
+      "summary.json": "26574f152d35c1d05408e7c9b8e5f73969f18b29bd885bad342f0f5141d14b4a"
+    },
+    "lumo/eval_continue_wall_p10_s2028": {
+      "summary.json": "cd42e741133cdfec7add06a62d48f8cb13c9efe3ffaa0dfdf4df1eff8fc24e82"
+    },
+    "lumo/eval_continue_wall_p25_s2026": {
+      "summary.json": "f5a7c5eee55999f245dec7b1891b547df9a5fa43b9e0a49929905a9abeb34e42"
+    },
+    "lumo/eval_continue_wall_p25_s2027": {
+      "summary.json": "36b5069cc794a7eb153b612ee4b0673848f251101efe164868abc93781632292"
+    },
+    "lumo/eval_continue_wall_p25_s2028": {
+      "summary.json": "cb1c711ac7b8762f59e74233aa73ceb3681f2a8be24dd1bbd6258920f5fbc4fa"
+    },
+    "lumo/eval_continue_wall_p50_s2026": {
+      "summary.json": "5ece1e1e43e36ad7bb3f21eb18ffaff821072bfd418b4610b1ff44c9c64e0ebf"
+    },
+    "lumo/eval_continue_wall_p50_s2027": {
+      "summary.json": "179b749d68e3c420567f3ebd1149fc4bcf4bb4822615857371beed2b29067a90"
+    },
+    "lumo/eval_continue_wall_p50_s2028": {
+      "summary.json": "d1171d8424117bbb8df9c3baabbfa1b65888b5355fff5eb0d561aa60801ab3d5"
+    },
+    "lumo/eval_continue_wall_p75_s2026": {
+      "summary.json": "eb5ac5d7c8508ba6e2c84dea7936ca8a319e0d0ce340ae16975475cf16254ea7"
+    },
+    "lumo/eval_continue_wall_p75_s2027": {
+      "summary.json": "b3464e07760f5a8c2ef4aeea53b43108a22e13425b1abbdfb14910255a2cc1ee"
+    },
+    "lumo/eval_continue_wall_p75_s2028": {
+      "summary.json": "407e1a1a930c25922f236407cfe2eae1ad15469d3f20028af6db1a070de10222"
+    },
+    "lumo/eval_continue_wall_p90_s2026": {
+      "summary.json": "58ea4ca67b7328da696119aad5c12da6b23702b0f7ddee0d02ba4663298d003a"
+    },
+    "lumo/eval_continue_wall_p90_s2027": {
+      "summary.json": "969167fa0e02f679fa68261774b26409edf2b7538d87d426a43e3eb55fef3c31"
+    },
+    "lumo/eval_continue_wall_p90_s2028": {
+      "summary.json": "2ecc0b83a893b1822bc4982fb6e7e9883bf71ad1ab73473e5435c9bffe22015f"
+    },
+    "lumo/eval_frozen_p10_s2026": {
+      "summary.json": "8e9da1ed7e8afd9b47f98067315cddb4eaed629d766145e95d0f1949e375634c"
+    },
+    "lumo/eval_frozen_p10_s2027": {
+      "summary.json": "ca1f08b9410a154595b3fc4723d67a3e379914a5b73436c617b45c7e591f1239"
+    },
+    "lumo/eval_frozen_p10_s2028": {
+      "summary.json": "c2bc11341a7824c06e3a1744266631ed3f8f26c5fbaae97c4437b8bd193f7e6d"
+    },
+    "lumo/eval_frozen_p25_s2026": {
+      "summary.json": "ab75658feaf8cd4d07fcfffdaf2bdaf90dbf451731ab900042184d3d506cbb45"
+    },
+    "lumo/eval_frozen_p25_s2027": {
+      "summary.json": "094cb7062e8070f105f2457ad6a4c389a4fbde53c09e6221f54743fe34231b6b"
+    },
+    "lumo/eval_frozen_p25_s2028": {
+      "summary.json": "c1d94b482aec7f907ccb2f37af285923f097b4ea70d31a9212a1b938a2e4ef17"
+    },
+    "lumo/eval_frozen_p50_s2026": {
+      "summary.json": "94cf5350f4d120ee228d248b3814964b7de5d5b1acf9ef8d2b7320df128edd1c"
+    },
+    "lumo/eval_frozen_p50_s2027": {
+      "summary.json": "f61dfab51d56234b5a62862743e7ef16c65ed1f14c6caf2a71f24e70ea654de9"
+    },
+    "lumo/eval_frozen_p50_s2028": {
+      "summary.json": "518dbfa9220eeb7ad9713866272d33a671e8a4eee642e2908d91018b9459950d"
+    },
+    "lumo/eval_frozen_p75_s2026": {
+      "summary.json": "8da9b63080ab19b2d858b1943064517950eaf1ec41e1ab0de500e02df87f8d8a"
+    },
+    "lumo/eval_frozen_p75_s2027": {
+      "summary.json": "4dd16e870b56c7ff825913bd10c91f0c34a9cb61a4d55d8936b12e9d0d1cf771"
+    },
+    "lumo/eval_frozen_p75_s2028": {
+      "summary.json": "a6d8b7c3617ac3041d008f8d6e7541b7cc3c2bd3a5177d36994881233d9e27bd"
+    },
+    "lumo/eval_frozen_p90_s2026": {
+      "summary.json": "b6aa59a376c26b2876b6d19642ddb75439f7e8e4cd0f48e060c4e14fb064a557"
+    },
+    "lumo/eval_frozen_p90_s2027": {
+      "summary.json": "f625b72da7cc5ccc074a7ce1a37a50cd2589cf72a4c53f3d749b49489baad634"
+    },
+    "lumo/eval_frozen_p90_s2028": {
+      "summary.json": "221eb896909f809cf72dfff16dd71e9509bb5249e820d72ddc127c7eaf89c7de"
+    },
+    "lumo/eval_grpo200_p10_s2026": {
+      "summary.json": "779cafc47566bfa9f5001163a9d4fa15f48c85a0672c57e2beee76adf13ce848"
+    },
+    "lumo/eval_grpo200_p10_s2027": {
+      "summary.json": "6b6b206dc473b8274ef7a4751a1ecb50523af4ca67d2915fdd44012143a04e22"
+    },
+    "lumo/eval_grpo200_p10_s2028": {
+      "summary.json": "9befc687326c29032a19c8eb9bad109bfa9e6ac8d5bc6d0e1560ff205504a256"
+    },
+    "lumo/eval_grpo200_p25_s2026": {
+      "summary.json": "4593f5b08dd0805b273d6fd176e90083c3b424932fa7f284120bb680fa0f7b55"
+    },
+    "lumo/eval_grpo200_p25_s2027": {
+      "summary.json": "a02375f2d1838a5d83864dd18779bd9c4e14e8d6a804793b3dd228e51a7a53c5"
+    },
+    "lumo/eval_grpo200_p25_s2028": {
+      "summary.json": "1c92466914a5e076af5292b63b5c8253dca204f8992b1e80d86067c544705eab"
+    },
+    "lumo/eval_grpo200_p50_s2026": {
+      "summary.json": "87864120f960f3f1e503e36eab8b1fad067c9725e0c0bb2af09d3e3567a8b3dd"
+    },
+    "lumo/eval_grpo200_p50_s2027": {
+      "summary.json": "956f3ea0b4fbc7c098f9c05b41b3865a579c4f5c6cab820c0064afbb80676db1"
+    },
+    "lumo/eval_grpo200_p50_s2028": {
+      "summary.json": "827e06c33c197a00686bb1f5a2ddc5010b98bb0a560a10477b48a1fb84bd6504"
+    },
+    "lumo/eval_grpo200_p75_s2026": {
+      "summary.json": "a0e8aeb914770aa0b24194ed571f4eae5f4fbfee44b0573f914516ab3c835708"
+    },
+    "lumo/eval_grpo200_p75_s2027": {
+      "summary.json": "9f30ae19d82536597c9f055ffd6ff8c7e61a1995ed3a59db09691b6680ab4f59"
+    },
+    "lumo/eval_grpo200_p75_s2028": {
+      "summary.json": "c9da9f776a57061e22d6d41a817ac4954143cbfd31baa5d2319cf52719b5c27b"
+    },
+    "lumo/eval_grpo200_p90_s2026": {
+      "summary.json": "9e845d58156018b4ee88c064f4f886e2ef22ab96cc03bc696bd0769f36488f92"
+    },
+    "lumo/eval_grpo200_p90_s2027": {
+      "summary.json": "1c65c660c41fe06a03e4f8134d23d662a96fafbdf4c0fbe8909a4035c17eef57"
+    },
+    "lumo/eval_grpo200_p90_s2028": {
+      "summary.json": "a02c51bf45324f9c848cac1edf6dedbd86228b718536100c9b8b49af0066d9b6"
+    }
+  }
+}
