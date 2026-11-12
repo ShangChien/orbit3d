@@ -111,6 +111,12 @@ def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
         if not 0.6 * radius <= distances[i, j] <= 1.4 * radius:
             raise ValueError(f'bond_geometry: {i}-{j} ({syms[i]}-{syms[j]}) length {distances[i,j]:.6f} A')
     if inst.graph is not None:
+        inferred = Chem.Mol(mol)
+        rdDetermineBonds.DetermineConnectivity(inferred)
+        edges = lambda graph: {tuple(sorted((b.GetBeginAtomIdx(), b.GetEndAtomIdx()))) for b in graph.GetBonds()}
+        expected, observed = edges(mol), edges(inferred)
+        if observed != expected:
+            raise ValueError(f'connectivity_geometry: coordinate edges differ (added={sorted(observed-expected)}, removed={sorted(expected-observed)})')
         chiral_atoms = [(a.GetIdx(), a.GetChiralTag()) for a in mol.GetAtoms()
                        if a.GetChiralTag() in (Chem.ChiralType.CHI_TETRAHEDRAL_CW, Chem.ChiralType.CHI_TETRAHEDRAL_CCW)]
         stereo_bonds = [(b.GetIdx(), b.GetStereo()) for b in mol.GetBonds()

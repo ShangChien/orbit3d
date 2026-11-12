@@ -5,23 +5,18 @@ import torch
 from ase import Atoms
 from ase.calculators.calculator import Calculator,all_changes
 from ase.optimize import FIRE,LBFGS
-from rdkit import Chem
-from rdkit.Chem import rdDetermineBonds
 from ..generator.molecular_state import mol3d_to_validated_rdkit_mol,mol_to_clean_smiles
 
 
 def check_relaxed_geometry(initial_graph,instance):
     """Keep numerical convergence separate from graph/stereo admission."""
     try:
-        graph=mol3d_to_validated_rdkit_mol(instance)
-        inferred=Chem.Mol(graph)
-        rdDetermineBonds.DetermineConnectivity(inferred)
-        edges=lambda m:{tuple(sorted((b.GetBeginAtomIdx(),b.GetEndAtomIdx()))) for b in m.GetBonds()}
-        same=edges(initial_graph)==edges(inferred)
-        return {'geometry_valid':True,'connectivity_preserved':same,
-                'geometry_error':'' if same else 'Coordinate-inferred connectivity changed'}
+        mol3d_to_validated_rdkit_mol(replace(instance,graph=initial_graph))
+        return {'geometry_valid':True,'connectivity_preserved':True,'geometry_error':''}
     except ValueError as error:
-        return {'geometry_valid':False,'connectivity_preserved':None,'geometry_error':str(error)}
+        return {'geometry_valid':False,
+                'connectivity_preserved':False if str(error).startswith('connectivity_geometry:') else None,
+                'geometry_error':str(error)}
 
 
 class _ForcefieldCalculator(Calculator):
