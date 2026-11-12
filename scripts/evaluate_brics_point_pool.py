@@ -16,6 +16,26 @@ from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
 
 
+def summarize_scores(scores):
+    aggregate=[]
+    for target in ['homo','lumo']:
+        for scope in ['raw','top16']:
+            rows=[r for r in scores if r['target']==target and r['scope']==scope]
+            for model in rows[0]['models']:
+                quantiles=[]
+                for q in ['10','25','50','75','90']:
+                    group=[r['models'][model] for r in rows if r['quantile']==q]
+                    n=sum(r['evaluated'] for r in group)
+                    quantiles.append(sum(r['target_absolute_error_sum_eV'] for r in group)/n if n else None)
+                aggregate.append({'target':target,'scope':scope,'model':model,
+                    'task_proposal_count':sum(r['attempted'] for r in rows),
+                    'evaluated_task_pairs':sum(r['models'][model]['evaluated'] for r in rows),
+                    'target_mae_equal_quantile_eV':float(np.mean(quantiles)) if all(v is not None for v in quantiles) else None,
+                    'property_hits':sum(r['models'][model]['property_hits'] for r in rows),
+                    'property_and_dpa_force_hits':sum(r['models'][model]['property_and_dpa_force_hits'] for r in rows)})
+    return aggregate
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--data',type=Path,required=True);p.add_argument('--models',type=Path,required=True)
     p.add_argument('--domain',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
@@ -49,7 +69,7 @@ def main():
                 if instance is None:raise ValueError('geometry_admission')
                 mol=mol3d_to_validated_rdkit_mol(instance);row.update(valid=True,smiles=instance.smiles,atoms=len(instance.coords),novel=instance.smiles not in known)
                 row['domain']=domain.assess(mol)['in_domain'];indices.append(i);mols.append(mol)
-                mol.SetProp('ProposalID',f'{seed}:{i}');mol.SetProp('GeometryOrigin','ETKDGv3 only; no UFF/MMFF or MLIP optimization');molecules.append(mol)
+                mol.SetProp('ProposalID',f'{seed}:{i}');mol.SetProp('GeometryOrigin','ETKDGv3 only; no UFF/MMFF post-optimization or MLIP optimization');molecules.append(mol)
             except (ValueError,RuntimeError) as error:row['proposal_error']=str(error)
         proposal_seconds=time.perf_counter()-start;evaluation_start=time.perf_counter();evaluation_costs={}
         for name,model in models.items():
@@ -82,7 +102,7 @@ def main():
     write_precise_sdf(a.output/'raw_valid.sdf',molecules)
     (a.output/'summary.json').write_text(json.dumps({'scope':'Three unconditional pools, 192 unique attempts reused for ten point tasks. One BRICS pair and one ETKDGv3 attempt per proposal; no UFF/MMFF, force relaxation, resampling or property-conditioned proposal. All property models frozen.',
         'attempted':len(records),'valid':sum(r['valid'] for r in records),'domain':sum(r['domain'] for r in records),
-        'library_fragments':len(library['fragments']),'library_seconds':library_seconds,'pool_costs':pool_costs,'scores':scores,'records':records},indent=2)+'\n')
+        'aggregate':summarize_scores(scores),'library_fragments':len(library['fragments']),'library_seconds':library_seconds,'pool_costs':pool_costs,'scores':scores,'records':records},indent=2)+'\n')
     print('BRICS point baseline complete',flush=True)
 
 
