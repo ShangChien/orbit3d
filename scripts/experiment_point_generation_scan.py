@@ -48,6 +48,9 @@ def main():
     p.add_argument('--seeds',nargs='+',type=int,default=[2026,2027,2028])
     p.add_argument('--quantiles',nargs='+',default=['10','25','50','75','90'])
     p.add_argument('--candidates',type=int,default=64)
+    p.add_argument('--cfg-scale',type=float,default=1.)
+    p.add_argument('--temperatures',nargs=3,type=float,default=[.85,.3,.25])
+    p.add_argument('--skip-off',action='store_true')
     p.add_argument('--retain',type=int,default=8)
     p.add_argument('--speed-replays',type=int,default=2)
     a=p.parse_args();torch.set_num_threads(2);lock_deterministic_environment(42)
@@ -74,7 +77,7 @@ def main():
         'retain':a.retain,'runtime_commit':a.runtime_commit,'trained_steps':len(state.get('history',[])),
         'active_targets':state['active_targets'],'label_theory':state.get('label_theory'),
         'visible_devices':os.environ.get('CUDA_VISIBLE_DEVICES'),'gpu_name':torch.cuda.get_device_name(),
-        'sampling':{'batch_size':8,'precision':'float32','tree_temperature':.85,'atom_temperature':.3,'xyz_temperature':.25,'cfg_scale':1.,'electron_parity':0},
+        'sampling':{'batch_size':8,'precision':'float32','tree_temperature':a.temperatures[0],'atom_temperature':a.temperatures[1],'xyz_temperature':a.temperatures[2],'cfg_scale':a.cfg_scale,'electron_parity':0},
         'scope':'Fresh trajectories per target and seed; common random streams across targets. One frozen trained checkpoint per property, not independent training repetitions.',
         'timing':'CUDA synchronized stage wall time; model load and warmup excluded. Raw evaluation includes in-domain and OOD valid molecules. Geometry only on up to 8 DPA-ranked in-domain correct-condition candidates.',
         'off_control':'One independent unconditional pool per seed, rescored against every requested target; no fake new draws per rescoring.',
@@ -95,7 +98,7 @@ def main():
                 trajectories.extend(model.generate_conditional_trajectories(
                     torch.as_tensor(lo,device='cuda:0').repeat(n,1),torch.as_tensor(hi,device='cuda:0').repeat(n,1),
                     torch.as_tensor(active,device='cuda:0').unsqueeze(0).expand(n,*active.shape),
-                    cfg_scale=1.,tree_temp=.85,atom_temp=.3,xyz_temp=.25,electron_parity=0,
+                    cfg_scale=a.cfg_scale,tree_temp=a.temperatures[0],atom_temp=a.temperatures[1],xyz_temp=a.temperatures[2],electron_parity=0,
                     cache_mode='concat',evaluate_self_consistency=True,
                     row_seeds=[candidate_seed(seed,begin+j) for j in range(n)]))
         torch.cuda.synchronize();return trajectories,time.perf_counter()-start
@@ -106,7 +109,7 @@ def main():
     oracle.evaluate_3d_mols_batched([first]);fp.predict_3d_mols([first]);torch.cuda.synchronize()
     runs=[];speed=[];reference_tokens=None
     for round_index,seed in enumerate(a.seeds):
-        order=list(a.quantiles)+['off']
+        order=list(a.quantiles)+([] if a.skip_off else ['off'])
         order=order[round_index%len(order):]+order[:round_index%len(order)]
         for q in order:
             off=q=='off';value=manifest['single_target_points'][a.target]['50'] if off else points[q]
@@ -146,7 +149,7 @@ def main():
             task=TargetPoints.parse({a.target:value},{a.target:.25},names)
             ranked=sorted([r for r in raw if 'prediction' in r and r['domain']['in_domain']],key=lambda r:(abs(r['prediction'][index]-value),r['candidate_id']))
             selected=[];seen=set()
-            for r in ranked:
+            for r in (ranked if a.retain else []):
                 if r['smiles'] in seen:continue
                 selected.append(r);seen.add(r['smiles'])
                 if len(selected)==a.retain:break
@@ -177,7 +180,7 @@ def main():
             if seed==a.seeds[0] and q=='50':
                 reference_tokens=tokens;speed.append({'kind':'original_p50','seed':seed,'generation_seconds':seconds})
             print(a.target,seed,q,'valid',len(instances),'domain',report['raw_metrics']['dpa/in_domain']['evaluated'],'MAE',report['raw_metrics']['dpa/in_domain']['mae_eV'],flush=True)
-            (a.output/'progress.json').write_text(json.dumps({'completed_pools':len(runs),'expected_pools':len(a.seeds)*(len(a.quantiles)+1)}))
+            (a.output/'progress.json').write_text(json.dumps({'completed_pools':len(runs),'expected_pools':len(a.seeds)*(len(a.quantiles)+(not a.skip_off))}))
     if '50' in points:
         for repeat in range(a.speed_replays):
             tr,seconds=generate(points['50'],a.seeds[0]);hashes=[hashlib.sha256(t['decoder_feat'].detach().cpu().numpy().tobytes()).hexdigest() for t in tr]

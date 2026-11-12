@@ -151,7 +151,7 @@ if a.plot:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    fig,axes=plt.subplots(1,2,figsize=(10,4.8))
+    fig,axes=plt.subplots(1,2,figsize=(10,6.2))
     for ax,prop in zip(axes,['homo','lumo']):
         data=report['properties'][prop];items=list(data['targets'].values())
         x=np.array([r['value_eV'] for r in items])
@@ -162,6 +162,10 @@ if a.plot:
         off=items[0]['metrics']['off_rescored']['dpa']['in_domain']['mean_prediction_eV']
         if off is not None:ax.axhline(off,color='#c45132',linestyle=':',label='Condition off: DPA')
         ax.set(xlabel=f'Requested {prop.upper()} (eV)',ylabel=f'Predicted {prop.upper()} (eV)',title=prop.upper()+'-only policy')
+        limits = (np.floor((min(x.min(), ax.get_ylim()[0])-.1)*2)/2, np.ceil((max(x.max(), ax.get_ylim()[1])+.1)*2)/2)
+        ax.set_xlim(limits);ax.set_ylim(limits)
+        ticks=np.arange(limits[0],limits[1]+.01,.5)
+        ax.set_xticks(ticks);ax.set_yticks(ticks);ax.set_aspect('equal',adjustable='box')
         ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
     handles,labels=axes[0].get_legend_handles_labels()
     fig.legend(handles,labels,loc='lower center',ncol=2,frameon=False,bbox_to_anchor=(.5,.055))
