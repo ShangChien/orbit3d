@@ -56,6 +56,7 @@ def test_alignment_snapshots_do_not_modify_frozen_sft_directory(tmp_path,monkeyp
     assert sorted(p.name for p in source.iterdir())==['sft.pt']
     assert (tmp_path/'new_weights/octree_group_50.pt').is_file()
     assert (tmp_path/'new_weights/octree_aligned.pt').is_file()
+    assert torch.load(tmp_path/'new_weights/octree_aligned.pt',weights_only=False)['active_targets']==['homo']
 
 
 @pytest.mark.parametrize('control,expected', [('correct', -7.), ('shuffled', -5.), ('off', None)])
@@ -68,7 +69,7 @@ def test_condition_controls_keep_the_original_scoring_target(tmp_path, monkeypat
     args=build_default_uni3dar_args(1);args.emb_dim=32;args.num_head=4;args.layer=1;args.condition_version=4
     model=ConditionalUni3DAR(args,AtomFeatDict(args),2)
     source=tmp_path/'sft.pt';source.write_bytes(b'frozen')
-    state={'target_cols':['homo','lumo'],'target_units':['eV','eV'],'mean':np.zeros(2),'scale':np.ones(2)}
+    state={'target_cols':['homo','lumo'],'target_units':['eV','eV'],'mean':np.zeros(2),'scale':np.ones(2),'active_targets':['homo']}
     monkeypatch.setattr(runner,'load_octree_checkpoint',lambda *a,**k:(model,state))
     monkeypatch.setattr(runner,'load_evaluators',lambda *a,**k:(SimpleNamespace(set_atom_type_map=lambda _:None),object(),None))
     class CapturedGeneration(Exception):pass
@@ -89,3 +90,8 @@ def test_condition_controls_keep_the_original_scoring_target(tmp_path, monkeypat
     saved=json.loads((tmp_path/'run/run_config.json').read_text())['inference_config']
     assert saved['target_point']=={'homo':-7}
     assert saved['target_interval']=={'homo':[-7.25,-6.75],'lumo':None}
+    cfg['mount_paths']['output_dir']=str(tmp_path/'wrong_mask')
+    cfg['inference_config']['target_point']={'lumo':-1.}
+    cfg['inference_config']['target_tolerance']={'lumo':.25}
+    with pytest.raises(ValueError,match='property mask trained'):
+        runner.run_octree_from_config(cfg)

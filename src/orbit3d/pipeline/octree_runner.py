@@ -261,6 +261,10 @@ def run_octree_from_config(cfg, config_path=None):
     points = None
     if model.condition_version == 4:
         points = TargetPoints.parse(inference['target_point'], inference['target_tolerance'], names)
+        trained_targets = (settings.get('active_targets', names) if mode in {'train','train_and_predict'}
+                           else state.get('active_targets'))
+        if trained_targets is not None and {n for n,v in zip(names,points.values) if v is not None} != set(trained_targets):
+            raise ValueError('Point inference must use the property mask trained by this checkpoint')
         intervals = points.intervals()
         inference["target_interval"] = dict(zip(names, intervals.bounds))
         lower, upper, active_bounds = points.arrays(mean, scale)
@@ -289,6 +293,10 @@ def run_octree_from_config(cfg, config_path=None):
             raise ValueError("GRPO replay requires training molecules")
         y = np.array([[float(m.GetProp(n)) for n in names] for m in training], dtype=np.float32) if training else None
         reference_hash = hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
+        point_pool = [TargetPoints.parse(raw, inference['target_tolerance'], names)
+                      for raw in settings.get('point_target_pool', [])] if points else None
+        if points and any([v is not None for v in p.values] != [v is not None for v in points.values] for p in point_pool):
+            raise ValueError('Point alignment target pool must preserve the trained property mask')
         def alignment_state(alignment_history):
             return {
                 "model_state_dict": model.state_dict(),
@@ -301,6 +309,8 @@ def run_octree_from_config(cfg, config_path=None):
                 "grpo_history": alignment_history,
                 "label_theory": state.get("label_theory", []) if mode == "align" else sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                 "alignment_reference_sha256": reference_hash,
+                "active_targets": ([n for n,v in zip(names,points.values) if v is not None] if points
+                                   else settings.get('active_targets',names)),
                 "representation_config": {'merge_level': model.args.merge_level, 'allowed_elements': model.args.allow_atoms.split(',')},
                 "training_smiles": sorted(train_smiles),
             }
@@ -329,8 +339,7 @@ def run_octree_from_config(cfg, config_path=None):
             domain=domain,
             electron_parity=inference.get('electron_parity'),
             points=points,
-            point_pool=[TargetPoints.parse(raw, inference['target_tolerance'], names)
-                        for raw in settings.get('point_target_pool', [])] if points else None,
+            point_pool=point_pool,
             checkpoint_callback=save_alignment_step,
         )
         checkpoint = Path(paths["checkpoint_save_dir"]) / "octree_aligned.pt"
