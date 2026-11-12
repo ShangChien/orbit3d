@@ -1,6 +1,8 @@
 """New-target validation and same-pool Gaussian selection with fixed output budget."""
 import argparse
 import hashlib
+import importlib.metadata
+import platform
 import json
 from pathlib import Path
 import numpy as np
@@ -45,6 +47,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--input',type=Path,required=True);p.add_argument('--protocol',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True);p.add_argument('--plot',type=Path,required=True);a=p.parse_args()
     protocol=json.loads(a.protocol.read_text());result={'protocol':protocol,'properties':{},'raw_runs':{},
+        'analysis_environment':{'python':platform.python_version(),**{name:importlib.metadata.version(name) for name in ['numpy','scikit-learn','rdkit','matplotlib']}},
         'scope':'Surrogate evaluation of frozen SFT with new target values and new inference seeds. No geometry optimization, no GRPO. Conditional-error metrics always accompanied by coverage.',
         'selection_scope':'First occurrence per graph retained before ALL selection methods. At most 4 per 64 attempts; no replenishment. 100 selection repetitions do not count as new generated molecules.',
         'remote_artifacts':'/sjtu-combustion/wjw/chensq/orbit_generation_scan_5fe5/response_calibration'}
@@ -63,6 +66,8 @@ def main():
         result['raw_runs'][prop]=[{**r,'raw_records':[{k:v for k,v in row.items() if k!='symbols'} for row in r['raw_records']]} for r in runs]
         out={'arms':{},'input_manifest':json.loads((root/'input_manifest.json').read_text()),
             'source_manifest':json.loads((root/'run_manifest.json').read_text()),'summary_sha256':hashlib.sha256((root/'summary.json').read_bytes()).hexdigest()}
+        calibration=protocol['properties'][prop]['calibration']
+        out['fitted_gp_mean_range']=[min(calibration['gp_mean']),max(calibration['gp_mean'])]
         result['properties'][prop]=out
         plan={r['key']:r for r in protocol['properties'][prop]['experiments']}
         for arm in ARMS:
@@ -72,8 +77,11 @@ def main():
                 t=plan[key]['target_value'];u=plan[key]['input_value']
                 assert all(r['scoring_value']==t and r['input_value']==u and r['arm']==arm for r in cellruns)
                 rows=[v for r in cellruns for v in r['raw_records']]
-                cell=stats(rows,index,t,192);cell.update(target=t,input=u,at_boundary=plan[key]['at_boundary'],diversity=diversity(rows),domain_diversity=pair_div(unique_eligible(rows)),
+                cell=stats(rows,index,t,192);cell.update(target=t,input=u,
+                    fitted_gp_mean=float(np.interp(u,calibration['grid'],calibration['gp_mean'])),
+                    fitted_linear_mean=calibration['linear_slope']*u+calibration['linear_intercept'],at_boundary=plan[key]['at_boundary'],diversity=diversity(rows),domain_diversity=pair_div(unique_eligible(rows)),
                     mean_atoms=float(np.mean([r['atoms'] for r in rows if r['valid']])),
+                    domain_rms_force_p50_p90=np.quantile([r['rms_force'] for r in rows if 'rms_force' in r and r.get('domain',{}).get('in_domain')],[.5,.9]).tolist(),
                     all_evaluable={m:error_metrics(rows,index,t,f,False) for m,f in FIELDS.items()},
                     generation_seconds=sum(r['stage_seconds']['generation'] for r in cellruns),
                     seeds={str(r['seed']):stats(r['raw_records'],index,t,64) for r in cellruns},selection={})
@@ -95,6 +103,8 @@ def main():
             cells=list(out['arms'][arm]['targets'].values())
             for m in FIELDS:
                 agg=out['arms'][arm]['aggregate']['metrics'][m]
+                agg['hits025']=sum(c['metrics'][m]['hits025'] for c in cells)
+                agg['hits010']=sum(c['metrics'][m]['hits010'] for c in cells)
                 agg['mean_abs_bias']=float(np.mean([abs(c['metrics'][m]['bias']) for c in cells]))
                 agg['mean_squared_bias']=float(np.mean([c['metrics'][m]['bias']**2 for c in cells]))
                 agg['mean_variance']=float(np.mean([c['metrics'][m]['std']**2 for c in cells]))
@@ -116,7 +126,7 @@ def plot(result,path):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    fig,axes=plt.subplots(2,3,figsize=(11,8.5));bounds={}
+    fig,axes=plt.subplots(2,3,figsize=(11,10.2));bounds={}
     for ri,(prop,index) in enumerate([('homo',0),('lumo',1)]):
         vals=[]
         for arm in ARMS:
@@ -134,13 +144,15 @@ def plot(result,path):
             for field,color,marker,label in [('prediction','#c45132','o','DPA'),('independent_prediction','#2c6caa','x','Independent FP')]:
                 xy=[(run['scoring_value'],r[field][index]) for run in result['raw_runs'][prop] if run['arm']==arm for r in run['raw_records'] if field in r and r.get('domain',{}).get('in_domain')]
                 ax.scatter(*np.array(xy).T,s=12,alpha=.4,color=color,marker=marker,label=label)
+            means=[(c['target'],c['target']+c['metrics']['dpa']['bias']) for c in result['properties'][prop]['arms'][arm]['targets'].values()]
+            ax.plot(*np.array(means).T,'D-',color='#7c3321',markersize=4,linewidth=1.5,label='DPA mean')
             ax.plot([lo,lo+span],[lo,lo+span],'--',color='gray');ax.set_xlim(lo,lo+span);ax.set_ylim(lo,lo+span)
             ticks=np.arange(np.ceil(lo),lo+span+.01,1);ax.set_xticks(ticks);ax.set_yticks(ticks);ax.set_aspect('equal',adjustable='box')
             m=result['properties'][prop]['arms'][arm]['aggregate'];ax.set_title(f'{prop.upper()} | {arm}\nDPA MAE {m["metrics"]["dpa"]["mae"]:.3f}; AD {m["domain"]}/576',fontsize=10)
             ax.set_xlabel('Desired target (eV)');ax.set_ylabel('Prediction (eV)');ax.grid(alpha=.15)
-    h,l=axes[0,0].get_legend_handles_labels();fig.legend(h,l,loc='upper center',bbox_to_anchor=(.5,.95),ncol=2,frameon=False)
+    h,l=axes[0,0].get_legend_handles_labels();fig.legend(h,l,loc='upper center',bbox_to_anchor=(.5,.95),ncol=3,frameon=False)
     fig.suptitle('Held-out targets and seeds: original vs linear vs GP input correction')
     fig.text(.5,.02,'Raw in-domain proposals; 192 attempts/target/arm; frozen SFT; no geometry optimization.',ha='center',fontsize=9)
-    fig.tight_layout(rect=[0,.04,1,.92]);fig.savefig(path,dpi=180);plt.close(fig)
+    fig.tight_layout(rect=[0,.04,1,.92],h_pad=3.,w_pad=2.); fig.savefig(path,dpi=180);plt.close(fig)
 
 if __name__=='__main__':main()
