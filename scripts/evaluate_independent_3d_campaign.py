@@ -43,7 +43,7 @@ def main():
                          'original_in_domain':bool(r.get('domain') and r['domain']['in_domain'])};rows.append(row)
                     if not r['valid']:continue
                     i=r['candidate_id'];instance=trajectory_to_instance({'atom_symbols':symbols[i],'positions_np':coords[f'coordinates_{i}']},element_table=elements)
-                    assert compare_molecular_identity(Chem.MolFromSmiles(r['smiles']),instance.graph)['identity_match']
+                    assert compare_molecular_identity(Chem.MolFromSmiles(r['smiles']),Chem.MolFromSmiles(instance.smiles))['identity_match']
                     mols.append(mol3d_to_validated_rdkit_mol(instance));indices.append(len(rows)-1)
             evaluated=model.evaluate_3d_mols_batched(mols)
             for i,pred,std,force,error in zip(indices,evaluated['mean'],evaluated['std'],evaluated['forces_eV_A'],evaluated['errors']):
