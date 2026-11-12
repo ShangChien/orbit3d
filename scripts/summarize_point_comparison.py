@@ -1,6 +1,7 @@
 """Summarize raw pools; reuse fixed random streams for shuffled/off comparisons."""
 import argparse
 import json
+import hashlib
 from pathlib import Path
 import numpy as np
 import torch
@@ -39,12 +40,13 @@ def main():
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--target',required=True)
     p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     points=json.loads(a.manifest.read_text())['single_target_points'][a.target]
-    groups={};sources=[]
+    groups={};sources=[];source_hashes={}
     for path in sorted(a.campaign.glob('eval_*/raw/summary.json')):
         name=path.parent.parent.name; data=json.loads(path.read_text())
         group=name.rsplit('_s',1)[0]
         groups.setdefault(group,[]).append(data)
         sources.append(str(path))
+        source_hashes[str(path)]=hashlib.sha256(path.read_bytes()).hexdigest()
     rows=[]
     def score(group,scoring_quantile,control,input_quantile=None):
         pools=groups[group];records=[r for pool in pools for r in pool['records']]
@@ -125,8 +127,11 @@ def main():
         for row in json.loads((root/'costs.json').read_text()):
             if row['returncode'] or (training_only and row['name'] not in ['sft','continue','grpo_part100','grpo']):continue
             costs.append({key:row[key] for key in ['name','wall_seconds','reused_from'] if key in row} | {'campaign':str(root)})
+    training_config=(a.alignment_campaign or a.campaign)/'configs/grpo.json'
+    training_seed=json.loads(training_config.read_text())['seed'] if training_config.exists() else None
     a.output.write_text(json.dumps({'scope':'Raw pools before ranking/refinement; reused pools are not independent repeats',
-                                   'target':a.target,'sources':sources,'training_signal':training,
+                                   'target':a.target,'training_seed':training_seed,
+                                   'sources':sources,'source_sha256':source_hashes,'training_signal':training,
                                    'completed_job_costs':costs,
                                    'arm_summary':arm_summary,
                                    'rows':rows},indent=2)+'\n')
