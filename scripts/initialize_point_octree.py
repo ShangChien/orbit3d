@@ -8,7 +8,8 @@ from orbit3d.generator.octree_backend import load_pretrained,build_octree,checkp
 
 p=argparse.ArgumentParser();p.add_argument('--pretrained',type=Path,required=True)
 p.add_argument('--sdf',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
-a=p.parse_args();torch.manual_seed(42)
+p.add_argument('--seed',type=int,default=42)
+a=p.parse_args();torch.manual_seed(a.seed)
 ms=list(Chem.SDMolSupplier(str(a.sdf),removeHs=False));assert ms and all(m is not None for m in ms)
 elements=sorted({atom.GetSymbol() for m in ms for atom in m.GetAtoms()})
 names=['homo','lumo'];units=['eV','eV']
@@ -24,6 +25,7 @@ a.output.parent.mkdir(parents=True,exist_ok=True)
 if a.output.exists():raise FileExistsError(a.output)
 torch.save({'model_state_dict':new.state_dict(),'backend':'uni3dar_octree_v4','target_cols':names,'target_units':units,
             'mean':mean,'scale':scale,'representation_config':config,
+            'initialization_seed':a.seed,
             'contract':checkpoint_contract(new,names,units,mean,scale),'training_smiles':[],
             'label_theory':sorted({m.GetProp('LabelTheory') for m in ms}),
             'upstream_sha256':hashlib.sha256(a.pretrained.read_bytes()).hexdigest(),
