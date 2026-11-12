@@ -30,7 +30,7 @@ from ..utils.reproducibility import lock_deterministic_environment
 from ..utils.run_evidence import freeze_run, record_input_hashes
 
 
-def run_octree_from_config(cfg, config_path=None):
+def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, prepared_generator=None):
     electronic_state = cfg.get('stage5_relax_config', {})
     if electronic_state.get('charge', 0) != 0 or electronic_state.get('multiplicity', 1) != 1:
         raise ValueError('Current octree/property checkpoints support neutral closed-shell generation only')
@@ -52,6 +52,8 @@ def run_octree_from_config(cfg, config_path=None):
     mode = cfg.get("mode", "train_and_predict")
     if mode not in {"train", "predict", "train_and_predict", "align"}:
         raise ValueError(f"Unknown mode: {mode}")
+    if mode != 'predict' and (prepared_evaluators is not None or prepared_generator is not None):
+        raise ValueError('Read-only prepared resources are for prediction only')
     if mode in {'train', 'train_and_predict'} and int(settings.get('sft_steps', 100)) <= 0:
         raise ValueError('Supervised training requires positive sft_steps; use align for GRPO-only training')
     if mode == 'align' and int(settings.get('grpo_steps', 0)) <= 0:
@@ -60,7 +62,8 @@ def run_octree_from_config(cfg, config_path=None):
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
     uses_evaluators = (mode != 'train' or int(settings.get('grpo_steps', 0)) > 0
                        or settings.get('label_source', 'sdf') == 'oracle')
-    ff, oracle, domain = load_evaluators(cfg, ATOM_TYPES) if uses_evaluators else (None, None, None)
+    ff, oracle, domain = ((prepared_evaluators if prepared_evaluators is not None else load_evaluators(cfg, ATOM_TYPES))
+                         if uses_evaluators else (None, None, None))
     domain_path = cfg['oracle_config'].get('applicability_domain_path') if uses_evaluators else None
     if domain:
         domain.save(output / 'oracle_domain.json')
@@ -241,7 +244,12 @@ def run_octree_from_config(cfg, config_path=None):
         save_adaptation(checkpoint)
     else:
         checkpoint = Path(paths.get("checkpoint_load_path", checkpoint))
-        model, state = load_octree_checkpoint(checkpoint, device, settings.get("batch_size", 16))
+        if prepared_generator is None:
+            model, state = load_octree_checkpoint(checkpoint, device, settings.get("batch_size", 16))
+        else:
+            model,state,source = prepared_generator
+            if Path(source).resolve() != checkpoint.resolve():
+                raise ValueError('Prepared generator does not match the requested checkpoint')
         if state.get('representation_migration', {}).get('requires_adaptation'):
             raise ValueError('Migrated octree depth requires backbone adaptation before inference')
         if state.get('condition_migration', {}).get('requires_condition_adaptation'):

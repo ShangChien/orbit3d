@@ -1,6 +1,7 @@
 """Evaluate every saved raw proposal, before selection or refinement."""
 import argparse,json,hashlib,time
 from pathlib import Path
+from types import SimpleNamespace
 import numpy as np
 import torch
 from rdkit import Chem
@@ -36,18 +37,19 @@ def summarize_records(records, point):
     return stats
 
 
-def main():
-    p=argparse.ArgumentParser();p.add_argument('--run',type=Path,required=True)
-    p.add_argument('--output',type=Path,required=True);p.add_argument('--independent',type=Path,required=True)
-    p.add_argument('--device',default='cuda:0');a=p.parse_args();torch.set_num_threads(2)
+def evaluate_pool(run,output,independent,device='cuda:0',*,prepared_evaluators=None,independent_model=None,checkpoint_state=None):
+    a=SimpleNamespace(run=Path(run),output=Path(output),independent=Path(independent),device=device)
+    torch.set_num_threads(2)
     freeze_run(a.output,__file__);started=time.perf_counter()
     cfg=json.loads((a.run/'run_config.json').read_text());cfg['device']=a.device
     names=cfg['oracle_config']['target_cols']
     point=TargetPoints.parse(cfg['inference_config']['target_point'],cfg['inference_config']['target_tolerance'],names)
     symbols=json.loads((a.run/'raw_symbols.json').read_text())
-    state=torch.load(cfg['mount_paths']['checkpoint_load_path'],map_location='cpu',weights_only=False,mmap=True)
+    state=(checkpoint_state if checkpoint_state is not None else
+           torch.load(cfg['mount_paths']['checkpoint_load_path'],map_location='cpu',weights_only=False,mmap=True))
     elements=state['representation_config']['allowed_elements'];training=set(state['training_smiles']);del state
-    ff,oracle,domain=load_evaluators(cfg,elements);independent=FingerprintOracle.load_from_dir(a.independent)
+    ff,oracle,domain=(prepared_evaluators if prepared_evaluators is not None else load_evaluators(cfg,elements))
+    independent=independent_model if independent_model is not None else FingerprintOracle.load_from_dir(a.independent)
     assert independent.target_cols==names
     record_input_hashes(a.output,{'run_config':a.run/'run_config.json','raw_coordinates':a.run/'raw_trajectories.npz',
                                  'raw_symbols':a.run/'raw_symbols.json','independent':a.independent,
@@ -83,6 +85,14 @@ def main():
             'oracle_calls':len(mols),'independent_calls':len(mols),'elapsed_seconds':time.perf_counter()-started,
             'metrics':stats,'records':records}
     (a.output/'summary.json').write_text(json.dumps(report,indent=2)+'\n');print(stats,flush=True)
+    return report
+
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--run',type=Path,required=True)
+    p.add_argument('--output',type=Path,required=True);p.add_argument('--independent',type=Path,required=True)
+    p.add_argument('--device',default='cuda:0');a=p.parse_args()
+    evaluate_pool(a.run,a.output,a.independent,a.device)
 
 
 if __name__=='__main__':main()
