@@ -11,8 +11,8 @@
 | 实验 | 状态 | 前置条件 / 当前进展 | 结果证据 | 状态核对 |
 | --- | --- | --- | --- | --- |
 | E0 源数据与目标冻结 | 已完成 | 源几何/图核验后 53470 条，固定 8192/512/512 训练/调参/校准；同级 FHI-aims 量化仍待验证 | [冻结清单](../data/oe62_split_manifest.json) | 2026-11-12 |
-| E1 性质评价系统 | 已完成 | DPA/指纹训练、完整重载、开发/校准分层评价和32源结构响应诊断完成；测试集未使用 | [性质结果](experiments/oe62_source_properties_20261112.json)、[几何响应](experiments/oe62_geometry_response_20261112.json) | 2026-11-12 |
-| E1-T 冻结性质模型测试 | 运行中 | 四个已有模型及校准器冻结，一次性完整4762测试源结构评价，不做测试集选模 | 远程 `source_holdout` | 2026-11-13 |
+| E1 性质评价系统 | 已完成 | DPA/指纹训练、完整重载、开发/校准分层评价和32源结构响应诊断完成；最终测试另列E1-T | [性质结果](experiments/oe62_source_properties_20261112.json)、[几何响应](experiments/oe62_geometry_response_20261112.json) | 2026-11-12 |
+| E1-T 冻结性质模型测试 | 已完成 | 四模型各4762/4762可评价，DPA MAE 0.1000/0.1029、HyFF 0.1596/0.1648 eV；不做测试集选模 | [完整测试](experiments/oe62_source_holdout_20261113.json) | 2026-11-13 |
 | E1-N 图特征标准化 | 已完成 | 特征契约、旧模型重载、9216源结构及两个99池独立复评完成；原始主对照保持v1契约 | [修复实算](experiments/oe62_graph_feature_contract_20261112.json) | 2026-11-13 |
 | E2 先验小对照 | 已完成 | 相同2000步/192提案，drug 域内有效37、qm9为3；选择drug进入单目标训练 | [先验结果](experiments/oe62_prior_comparison_20261112.json) | 2026-11-12 |
 | E3-S 单目标主实验 | 运行中 | `54c1770`：HOMO-only / LUMO-only 两组5000步SFT均完成，seed42；99池初试已完成；seed43 HOMO / seed44 LUMO的SFT及400步续训完成，进入GRPO；随后交换性质，正式每池128提案 | 远程 `point_{homo,lumo}_seed42` | 2026-11-13 |
