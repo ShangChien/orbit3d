@@ -11,6 +11,27 @@ from orbit3d.constraints import TargetPoints
 from evaluate_point_pool import summarize_records
 
 
+def reward_signal(history):
+    """Decompose observed group reward variance, without claiming gradient causality."""
+    between=[];within=[];eligible_rewards=[]
+    for row in history:
+        records=row['rollout_records']
+        values=np.array([r['reward'] for r in records],dtype=float)
+        eligible=np.array([r.get('evaluation_status')=='completed' for r in records])
+        p=float(eligible.mean())
+        means=[float(values[mask].mean()) if mask.any() else 0. for mask in [eligible,~eligible]]
+        between.append(p*(1-p)*(means[0]-means[1])**2)
+        within.append(sum(float(mask.mean())*float(values[mask].var()) for mask in [eligible,~eligible] if mask.any()))
+        eligible_rewards.extend(values[eligible].tolist())
+    total=sum(between)+sum(within)
+    return {'definition':'Population reward variance within each rollout group; summed between evaluable/ineligible and within-category components',
+            'between_evaluability_fraction':sum(between)/total if total else None,
+            'within_category_fraction':sum(within)/total if total else None,
+            'evaluable_proposals':len(eligible_rewards),
+            'mean_reward_given_evaluable':float(np.mean(eligible_rewards)) if eligible_rewards else None,
+            'interpretation':'Descriptive reward contrast, not a causal decomposition of policy gradients'}
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--campaign',type=Path,required=True)
     p.add_argument('--alignment-campaign',type=Path)
@@ -33,6 +54,7 @@ def main():
         generator=rdFingerprintGenerator.GetMorganGenerator(radius=2,fpSize=2048,includeChirality=True)
         fps=[generator.GetFingerprint(m) for m in mols]
         similarities=[v for i,fp in enumerate(fps) for v in DataStructs.BulkTanimotoSimilarity(fp,fps[:i])]
+        forces=[r['rms_force'] for r in records if r['evaluated'] and r.get('domain') and r['domain']['in_domain']]
         rows.append({'group':group,'condition_control':control,'scoring_quantile':scoring_quantile,
                      'scoring_target_eV':points[scoring_quantile],
                      'input_quantile':input_quantile,'input_target_eV':points[input_quantile] if input_quantile else None,
@@ -45,6 +67,7 @@ def main():
                      'novel_valid':sum(r.get('novel_vs_sft_training',False) for r in records),
                      'unique_novel_valid':len({r['smiles'] for r in valid if r['novel_vs_sft_training']}),
                      'valid_atom_quantiles':np.quantile([r['atoms'] for r in valid],[0,.25,.5,.75,1]).tolist() if valid else None,
+                     'domain_rms_force_p10_p50_p90':np.quantile(forces,[.1,.5,.9]).tolist() if forces else None,
                      'metrics':summarize_records(records,point),
                      'per_inference_seed_metrics':[summarize_records(pool['records'],point) for pool in pools]})
     for group in sorted(groups):
@@ -56,6 +79,23 @@ def main():
         if group in groups:score(group,original,'shuffled',supplied)
     if 'eval_frozen_off' in groups:
         for q in ['25','50','75']:score('eval_frozen_off',q,'off')
+    arm_summary={}
+    for arm in sorted({r['group'][5:].rsplit('_p',1)[0] for r in rows if r['condition_control']=='correct'}):
+        selected=[r for r in rows if r['condition_control']=='correct' and r['group'].startswith(f'eval_{arm}_p')]
+        count=sum(r['attempted'] for r in selected)
+        summary={'quantiles':[r['scoring_quantile'] for r in selected],
+                 'inference_repeats_per_quantile':[r['inference_repeats'] for r in selected],
+                 'attempted':count,'valid':sum(r['valid'] for r in selected),
+                 'domain_valid':sum(r['domain_valid'] for r in selected),
+                 'metrics':{}}
+        for backend in ['dpa','fingerprint']:
+            values=[r['metrics'][backend]['in_domain'] for r in selected]
+            maes=[r['targets'][a.target]['mae_eV'] for r in values if a.target in r['targets']]
+            summary['metrics'][backend]={'domain_target_mae_equal_quantile_eV':float(np.mean(maes)) if len(maes)==len(values) else None,
+                'domain_property_hits':sum(r['property_hits'] for r in values),
+                'domain_property_hit_rate_all_attempts':sum(r['property_hits'] for r in values)/count,
+                'domain_force_property_hits':sum(r['joint_domain_force_hits'] for r in values)}
+        arm_summary[arm]=summary
     checkpoint=(a.alignment_campaign or a.campaign)/'grpo/weights/octree_aligned.pt'
     training=None
     if checkpoint.exists():
@@ -70,12 +110,14 @@ def main():
                   'two_or_more_evaluable_groups':sum(r['evaluated']>=2 for r in history),
                   'last_policy_kl':history[-1]['policy_kl_before_last_update'],
                   'optimizer_state_steps':sorted({int(v['step']) for v in saved['optimizer']['state'].values()}) if saved else None,
+                  'reward_signal':reward_signal(history),
                   'windows':{}}
         for name,window in [('first50',history[:50]),('last50',history[-50:])]:
             training['windows'][name]={'groups':len(window),
                 'mean_valid':float(np.mean([r['valid'] for r in window])),
                 'mean_evaluable':float(np.mean([r['evaluated'] for r in window])),
                 'mean_group_reward':float(np.mean([r['reward_mean'] for r in window])),
+                'reward_signal':reward_signal(window),
                 'mean_gradient_norm':float(np.mean([r['gradient_norm'] for r in window]))}
     costs=[]
     for root,training_only in [(a.campaign,False),(a.alignment_campaign,True),(a.sft_campaign,True)]:
@@ -86,6 +128,7 @@ def main():
     a.output.write_text(json.dumps({'scope':'Raw pools before ranking/refinement; reused pools are not independent repeats',
                                    'target':a.target,'sources':sources,'training_signal':training,
                                    'completed_job_costs':costs,
+                                   'arm_summary':arm_summary,
                                    'rows':rows},indent=2)+'\n')
 
 
