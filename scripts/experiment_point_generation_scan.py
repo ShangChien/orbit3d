@@ -45,6 +45,7 @@ def main():
     p.add_argument('--target',choices=['homo','lumo'],required=True)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--runtime-commit',required=True)
+    p.add_argument('--condition-plan',type=Path)
     p.add_argument('--seeds',nargs='+',type=int,default=[2026,2027,2028])
     p.add_argument('--quantiles',nargs='+',default=['10','25','50','75','90'])
     p.add_argument('--candidates',type=int,default=64)
@@ -60,7 +61,13 @@ def main():
     cfg=json.loads(cfg_path.read_text());cfg['device']='cuda:0'
     checkpoint=a.root/f'point_{a.target}_seed42/sft/weights/octree_conditional.pt'
     manifest_path=a.root/'data_final/manifest.json';manifest=json.loads(manifest_path.read_text())
-    points={q:manifest['single_target_points'][a.target][q] for q in a.quantiles}
+    plan=json.loads(a.condition_plan.read_text()) if a.condition_plan else None
+    if plan:
+        assert plan['property']==a.target and a.skip_off and a.retain==0 and a.speed_replays==0
+        conditions={r['key']:r for r in plan['experiments']};a.quantiles=list(conditions)
+        points={q:r['target_value'] for q,r in conditions.items()}
+    else:
+        conditions={};points={q:manifest['single_target_points'][a.target][q] for q in a.quantiles}
     model,state=load_octree_checkpoint(checkpoint,'cuda:0',8)
     assert model.condition_version==4 and state['active_targets']==[a.target]
     assert not state.get('representation_migration',{}).get('requires_adaptation',False)
@@ -72,9 +79,9 @@ def main():
     assert fp.target_cols==oracle.target_cols==names
     record_input_hashes(a.output,{'checkpoint':checkpoint,'data_manifest':manifest_path,'sft_config':cfg_path,
         'forcefield':cfg['mount_paths']['forcefield_path'],'oracle':cfg['mount_paths']['property_checkpoint_dir'],
-        'domain':cfg['oracle_config']['applicability_domain_path'],'independent':fp_dir,'optimizer_helper':helper})
+        'domain':cfg['oracle_config']['applicability_domain_path'],'independent':fp_dir,'optimizer_helper':helper,**({'condition_plan':a.condition_plan} if a.condition_plan else {})})
     protocol={'target':a.target,'points_eV':points,'seeds':a.seeds,'candidates_per_pool':a.candidates,
-        'retain':a.retain,'runtime_commit':a.runtime_commit,'trained_steps':len(state.get('history',[])),
+        'condition_inputs':conditions,'retain':a.retain,'runtime_commit':a.runtime_commit,'trained_steps':len(state.get('history',[])),
         'active_targets':state['active_targets'],'label_theory':state.get('label_theory'),
         'visible_devices':os.environ.get('CUDA_VISIBLE_DEVICES'),'gpu_name':torch.cuda.get_device_name(),
         'sampling':{'batch_size':8,'precision':'float32','tree_temperature':a.temperatures[0],'atom_temperature':a.temperatures[1],'xyz_temperature':a.temperatures[2],'cfg_scale':a.cfg_scale,'electron_parity':0},
@@ -114,7 +121,8 @@ def main():
         for q in order:
             off=q=='off';value=manifest['single_target_points'][a.target]['50'] if off else points[q]
             dest=a.output/f'seed{seed}_{q}';dest.mkdir()
-            trajectories,seconds=generate(value,seed,off)
+            input_value=conditions[q]['input_value'] if plan else value
+            trajectories,seconds=generate(input_value,seed,off)
             raw=[];instances={};arrays={};tokens=[]
             validation_start=time.perf_counter()
             for i,traj in enumerate(trajectories):
@@ -168,7 +176,7 @@ def main():
                     except (ValueError,FloatingPointError,RuntimeError) as exc:result.update(status='failed',reason=str(exc))
                     result['evaluation_calls']=exp.evaluations;refined.append(result)
             torch.cuda.synchronize();geometry_seconds=time.perf_counter()-geometry_start
-            report={'seed':seed,'quantile':q,'target_name':a.target,'input_value':None if off else value,
+            report={'seed':seed,'quantile':q,'target_name':a.target,'input_value':None if off else input_value,'arm':conditions[q]['arm'] if plan else 'original',
                 'scoring_value':value,'condition':'off' if off else 'correct','attempted':len(raw),'valid':len(instances),
                 'unique_valid':len({r['smiles'] for r in raw if r['valid']}),'novel_valid':sum(r.get('novel',False) for r in raw),
                 'mean_valid_atoms':float(np.mean([r['atoms'] for r in raw if r['valid']])) if instances else None,
