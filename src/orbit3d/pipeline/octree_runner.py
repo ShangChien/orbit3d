@@ -261,6 +261,21 @@ def run_octree_from_config(cfg, config_path=None):
     else:
         intervals = TargetIntervals.parse(inference['target_interval'], names)
         lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
+    # Preserve the acceptance task separately from optional inference controls.
+    if inference.get('condition_control', 'correct') == 'off':
+        active_bounds = np.zeros_like(active_bounds, dtype=bool)
+    elif inference.get('condition_control', 'correct') == 'shuffled':
+        if points is None:
+            raise ValueError('Shuffled controls require point conditioning')
+        supplied = TargetPoints.parse(inference['input_target_point'], inference['target_tolerance'], names)
+        if [x is not None for x in supplied.values] != [x is not None for x in points.values]:
+            raise ValueError('Shuffled controls must preserve the active property mask')
+        lower, upper, active_bounds = supplied.arrays(mean, scale)
+    elif inference.get('condition_control', 'correct') != 'correct':
+        raise ValueError('Unknown condition control')
+    if int(settings.get('grpo_steps', 0)) and inference.get('condition_control', 'correct') != 'correct':
+        raise ValueError('Condition controls are evaluation-only')
+    (output / "run_config.json").write_text(json.dumps(cfg, indent=2) + "\n")
     if int(settings.get("grpo_steps", 0)):
         from ..generator.octree_alignment import align_octree
 

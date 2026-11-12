@@ -1,4 +1,5 @@
 import torch
+import pytest
 from orbit3d.generator.octree_model import PointConditioner
 
 
@@ -55,3 +56,36 @@ def test_alignment_snapshots_do_not_modify_frozen_sft_directory(tmp_path,monkeyp
     assert sorted(p.name for p in source.iterdir())==['sft.pt']
     assert (tmp_path/'new_weights/octree_group_50.pt').is_file()
     assert (tmp_path/'new_weights/octree_aligned.pt').is_file()
+
+
+@pytest.mark.parametrize('control,expected', [('correct', -7.), ('shuffled', -5.), ('off', None)])
+def test_condition_controls_keep_the_original_scoring_target(tmp_path, monkeypatch, control, expected):
+    import json
+    import numpy as np
+    from types import SimpleNamespace
+    from orbit3d.pipeline import octree_runner as runner
+    from orbit3d.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
+    args=build_default_uni3dar_args(1);args.emb_dim=32;args.num_head=4;args.layer=1;args.condition_version=4
+    model=ConditionalUni3DAR(args,AtomFeatDict(args),2)
+    source=tmp_path/'sft.pt';source.write_bytes(b'frozen')
+    state={'target_cols':['homo','lumo'],'target_units':['eV','eV'],'mean':np.zeros(2),'scale':np.ones(2)}
+    monkeypatch.setattr(runner,'load_octree_checkpoint',lambda *a,**k:(model,state))
+    monkeypatch.setattr(runner,'load_evaluators',lambda *a,**k:(SimpleNamespace(set_atom_type_map=lambda _:None),object(),None))
+    class CapturedGeneration(Exception):pass
+    def generate(low,high,mask,**kwargs):
+        if expected is None:assert not mask.any()
+        else:
+            assert low[0,0]==expected and high[0,0]==expected
+            assert mask[0,0].all() and not mask[0,1].any()
+        raise CapturedGeneration
+    monkeypatch.setattr(model,'generate_conditional_trajectories',generate)
+    cfg={'mode':'predict','device':'cpu','generator_config':{},
+         'mount_paths':{'checkpoint_load_path':str(source),'checkpoint_save_dir':str(tmp_path/'weights'),
+                        'output_dir':str(tmp_path/'run'),'forcefield_path':str(source),'property_checkpoint_dir':str(source)},
+         'oracle_config':{'target_cols':['homo','lumo'],'target_units':['eV','eV']},
+         'inference_config':{'target_point':{'homo':-7},'target_tolerance':{'homo':.25},
+                             'condition_control':control,'input_target_point':{'homo':-5},'num_candidates':1}}
+    with pytest.raises(CapturedGeneration):runner.run_octree_from_config(cfg)
+    saved=json.loads((tmp_path/'run/run_config.json').read_text())['inference_config']
+    assert saved['target_point']=={'homo':-7}
+    assert saved['target_interval']=={'homo':[-7.25,-6.75],'lumo':None}

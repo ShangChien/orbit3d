@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-    A[性质区间与模型检查点] --> B[条件 octree 生成]
+    A[性质点值或区间与模型检查点] --> B[条件 octree 生成]
     B --> C[分子图恢复与化学验证]
     C --> D[适用域与候选排序]
     D --> E[DPA / HyFF 受约束弛豫]
@@ -29,11 +29,17 @@ v_k(y) = max(l_k - y_k, 0) + max(y_k - u_k, 0)
 
 未激活目标的违约为零。归一化使用检查点保存的训练均值/尺度，缺失边界通过 mask 表达。区间命中要求同一个候选的所有激活目标同时满足，不把各目标命中率相乘。[区间语义](../src/orbit3d/constraints.py)
 
+点值模式使用 `TargetPoints`：`target_point` 给出条件，`target_tolerance` 只定义评价尺度与验收半径，未激活性质不参与条件或评分。条件和容差分别保存，不能通过改变容差改变点值输入。
+
+OE62 适配直接读取源 XYZ 和 PBE0 轨道列表，在原 XYZ 原子顺序上匹配源图键级并验证立体身份；训练坐标不经 ETKDG 或弛豫。骨架划分、筛选、训练分位数及文件哈希由 `prepare_oe62.py` 固定。
+
 ## 条件三维生成
 
 生成器采用固定版本 Uni-3DAR，以 octree 空间 token、元素和细坐标决策自回归产生结构。标准模型为12层、宽度768、12个注意力头，叶格0.24 Å、细坐标分箱0.01 Å。当前广元素配置采用深度7，空间边长30.72 Å；元素表和空间映射属于检查点语义，不能仅凭力场支持范围扩展。
 
 区间条件器编码每个目标的中心、半宽、上下界与边界 mask，经性质编码器和全局 MLP 汇合后，通过 root prefix 及逐层 AdaLN 注入。无激活目标时全局条件归零。当前逐层 scale/shift 为 `0.08*tanh`，输出层为 `0.15*tanh`。[条件模型](../src/orbit3d/generator/octree_model.py)
+
+v4 点值条件器对标准化标量和性质 ID 编码，使用显式激活 mask，复用 root prefix/AdaLN。它不编码上下界或宽度；与 v3 区间检查点分别加载。推理支持正确条件、全关闭及替换输入点的打乱对照，后两者仍按原任务目标评价。
 
 结构自评头使用无条件结构表征预测性质，用于生成后的初筛，避免把输入区间直接当成输出性质。自评值从模型归一化空间还原到物理单位后参与排序。
 
@@ -48,9 +54,13 @@ L = L_gen + lambda_property * L_property
 
 该组合不是统一的逐 token NLL。v3 训练区间包含真实标签，但中心不必等于标签；归一化跨度按 LogUniform(0.2,2.0) 抽样，并有性质/边界 mask 随机丢弃。训练策略、目标顺序、单位、scaler、表示配置和迁移状态随检查点保存。[训练编排](../src/orbit3d/pipeline/octree_runner.py)、[检查点与编码](../src/orbit3d/generator/octree_backend.py)
 
+v4 SFT 输入真实激活标签，并以 10% 概率关闭整个条件向量。`active_targets` 指定单目标；继续 SFT 可单独冻结骨干和自评头，只更新 conditioner。
+
 ### 可选 GRPO
 
 GRPO 对树、元素及 XYZ 决策计算策略比率与裁剪目标，可叠加参考策略 KL 和监督 replay。当前冻结骨干，只更新 conditioner；奖励综合归一化区间违约、原始力惩罚和可选不确定性惩罚，组内标准化得到优势。当前配置默认关闭 GRPO，不确定性奖励权重默认为零。[对齐实现](../src/orbit3d/generator/octree_alignment.py)
+
+点值对齐使用 `r=1/(1+D)`，其中 `D=mean_active(((prediction-target)/tolerance)^2)`；无效、域外或评价失败为 -1。每组共享一个目标，组间按固定目标池轮换；该模式要求关闭 physics/uncertainty，replay 由配置控制。记录组内可评价数、奖励标准差、更新次数、KL、梯度与参数变化，并保存对齐中间检查点。
 
 ## 性质模型与候选选择
 
@@ -61,6 +71,8 @@ DPA/HyFF 提供冻结的原子描述符，性质适配器在其上训练；已�
 ```text
 score = sum_k (v_k(prediction) / training_scale_k)^2
 ```
+
+点值模式改按上述连续距离 `D` 排序，命中容差内仍区分距离。
 
 并列时使用归一化 spread 和候选 ID，随后按分子身份去重并限制保留数。`first_valid` 与自评排序用于其他配置/对照。模型 spread、校准区间和完整预测分布是不同对象；现有校准使用归一化残差分位数。[性质模型](../src/orbit3d/oracles/dpa4_oracle.py)、[适用域](../src/orbit3d/oracles/applicability.py)、[校准](../src/orbit3d/oracles/calibration.py)
 

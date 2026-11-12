@@ -28,6 +28,7 @@ p.add_argument("--steps", type=int, default=500)
 p.add_argument("--batch-size", type=int, default=4)
 p.add_argument("--lr", type=float, default=1e-5)
 p.add_argument("--seed", type=int, default=42)
+p.add_argument("--inference-seeds", type=int, nargs='+', default=[2026])
 a = p.parse_args()
 if a.steps <= 0:
     raise ValueError("Structural adaptation needs positive training steps")
@@ -127,14 +128,15 @@ model.eval()
 rows = []
 arrays = {}
 exports = []
-for begin in range(0, 64, 8):
+for begin in range(0, 64 * len(a.inference_seeds), 8):
+    inference_seed = a.inference_seeds[begin // 64]
     zero = torch.zeros((8, n_targets), device="cuda:0")
     trajectories = model.generate_conditional_trajectories(
         zero,
         zero,
         torch.zeros_like(zero, dtype=torch.bool),
         evaluate_self_consistency=False,
-        row_seeds=[candidate_seed(2026, begin + i) for i in range(8)],
+        row_seeds=[candidate_seed(inference_seed, begin % 64 + i) for i in range(8)],
         electron_parity=0,
     )
     for j, traj in enumerate(trajectories):
@@ -145,6 +147,7 @@ for begin in range(0, 64, 8):
         arrays[f"coordinates_{i}"] = traj["positions_np"]
         row = {
             "candidate_id": i,
+            "inference_seed": inference_seed,
             "symbols": symbols,
             "atom_count": len(symbols),
             "valid": False,
@@ -170,6 +173,7 @@ report = {
     "train_records": len(mols),
     "validation_records": len(valid),
     "steps": a.steps,
+    "inference_seeds": a.inference_seeds,
     "initial_validation_mean_batch_loss": initial_validation,
     "final_validation_mean_batch_loss": final_validation,
     "validation_loss_definition": "FP32 mean of the model weighted tree/atom/XYZ generation loss over fixed batches; not unweighted token NLL",
