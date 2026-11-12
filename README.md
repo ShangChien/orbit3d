@@ -8,10 +8,10 @@ GRPO 是可选实验阶段，默认关闭。另有显式骨架图增长入口和
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
 当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
-实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配和 v4 点值条件已实现，HOMO-only/LUMO-only 训练及对照运行中。
-当前执行 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
+实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配和 v4 点值条件已实现，HOMO-only/LUMO-only 的三训练seed四臂对照已完成。
+已完成 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
-![原区间主实验的五阶段概览](paper/figures/fig0_orbit3d_system_architecture.svg)
+![点值与区间条件的五阶段概览](paper/figures/fig0_orbit3d_system_architecture.svg)
 
 ## 文档导航
 
@@ -28,7 +28,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 | [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
 | [论文](paper/ORBIT3D_arXiv_Paper.pdf) | 当前研究稿；[可编辑来源与构建](paper/README.md) |
 
-OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。冻结后的4762个源测试结构上，DPA的HOMO/LUMO MAE为0.1000/0.1029 eV，HyFF为0.1596/0.1648 eV。单训练seed初试中，GRPO提高域内覆盖/代理命中数，目标MAE未优于时间匹配SFT；三个独立训练seed的正式重复正在运行。
+OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。冻结后的4762个源测试结构上，DPA的HOMO/LUMO MAE为0.1000/0.1029 eV，HyFF为0.1596/0.1648 eV。三个独立生成器训练seed共完成48384次评价提案。GRPO相对冻结SFT将HOMO/LUMO域内率从18.42%/19.15%提高到22.95%/26.18%；独立代理命中产率提高，但同等额外训练时间下目标MAE均更差。原始池物理联合命中为零，GRPO继续作为可选阶段。
 
 OCELOT 既有结果：匹配的 512 分子测试集上，DPA 的 HOMO/LUMO/S1/T1 MAE 为
 0.2895/0.2326/0.2314/0.1381 eV。三组 SFT 续训的 36 次评估中，延长训练

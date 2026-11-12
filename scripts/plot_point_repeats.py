@@ -13,10 +13,10 @@ def main():
     runs=[json.loads(path.read_text()) for path in a.summaries]
     fig,axes=plt.subplots(len(runs),3,figsize=(11,3.6*len(runs)),squeeze=False,layout='constrained')
     controls=['frozen','continue400','continue_wall']
-    labels=['Frozen SFT','SFT, 400 updates','SFT, time budget']
-    columns=[('independent_target_mae_eV',1.,'Independent target MAE difference (eV)','Lower is better'),
-             ('domain_rate',100.,'Domain coverage difference (percentage points)','Higher is better'),
-             ('independent_hit_rate',100.,'Independent hit-rate difference (percentage points)','Higher is better')]
+    labels=['Frozen\nSFT','Continue SFT\n400 updates','Continue SFT\ntime budget']
+    columns=[('independent_target_mae_eV',1.,'Target MAE difference (eV)','Lower is better'),
+             ('domain_rate',100.,'Domain coverage difference\n(percentage points)','Higher is better'),
+             ('independent_hit_rate',100.,'Property-hit difference\n(percentage points)','Higher is better')]
     colors=['#3465a4','#168579','#b97b3d']
     for i,run in enumerate(runs):
         for j,(key,scale,ylabel,direction) in enumerate(columns):
@@ -28,7 +28,7 @@ def main():
             ax.scatter(np.arange(3),[run['paired_grpo_minus_control'][control][key]['mean']*scale for control in controls],
                        color='#202c36',marker='_',s=220,linewidths=2,label='Mean paired difference',zorder=4)
             ax.axhline(0.,color='#777777',linewidth=.8,linestyle='--')
-            ax.set_xticks(range(3),labels,rotation=12,ha='right')
+            ax.set_xticks(range(3),labels)
             ax.set_ylabel(ylabel);ax.set_title(f"{run['target'].upper()} — {direction}")
             ax.spines[['top','right']].set_visible(False);ax.grid(axis='y',alpha=.18)
     axes[0,0].legend(fontsize=8)

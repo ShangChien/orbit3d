@@ -1,0 +1,32 @@
+{
+  "scope": "Same full raw pool; package source verified against wheel bytes. Admission/export differences are recorded separately from exact generation replay.",
+  "wheel_sha256": "23aec1e91b700224c8326083b87ffa29dd1867dbc6ea53853e0aba7205acaa6b",
+  "package_path": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/wheel_runtime/site/orbit3d",
+  "package_files_verified": 229,
+  "reference": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_eval_lumo_seed42/eval_frozen_p50_s2026/run",
+  "attempted": 128,
+  "symbols_exact": true,
+  "tokens_exact": 128,
+  "coordinates_exact": 128,
+  "common_retained": 16,
+  "common_property_max_abs_diff_eV": 4.76837158203125e-07,
+  "common_force_max_abs_diff_eVA": 1.1920928955078125e-07,
+  "summaries": {
+    "reference": {
+      "attempted": 128,
+      "raw_valid": 94,
+      "domain_eligible": 32,
+      "retained": 16,
+      "qualified": 0,
+      "export_prediction_recheck_passed": true
+    },
+    "wheel": {
+      "attempted": 128,
+      "raw_valid": 94,
+      "domain_eligible": 32,
+      "retained": 16,
+      "qualified": 0,
+      "export_prediction_recheck_passed": true
+    }
+  }
+}
