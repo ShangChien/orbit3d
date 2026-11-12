@@ -1,17 +1,17 @@
 # ORBIT-3D
 
-面向性质区间的分子生成与三维优化研究。当前可执行主线为：
+面向性质目标的分子生成与三维优化研究。当前可执行主线为：
 
-**预训练 Uni-3DAR octree → 区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
+**预训练 Uni-3DAR octree → 点值/区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
 
 GRPO 是可选实验阶段，默认关闭。另有显式骨架图增长入口和 BRICS 片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
 当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
-实验协议和执行状态见[实验设计](docs/experiments.md)。单值条件等下一轮方案尚未落地。
-下一轮包含 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
+实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配和 v4 点值条件已实现，HOMO-only/LUMO-only 训练及对照运行中。
+当前执行 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
-![当前五阶段架构](paper/figures/fig0_orbit3d_system_architecture.svg)
+![原区间主实验的五阶段概览](paper/figures/fig0_orbit3d_system_architecture.svg)
 
 ## 文档导航
 
@@ -28,7 +28,9 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 | [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
 | [论文](paper/ORBIT3D_arXiv_Paper.pdf) | 当前研究稿；[可编辑来源与构建](paper/README.md) |
 
-关键结果：匹配的 512 分子测试集上，DPA 的 HOMO/LUMO/S1/T1 MAE 为
+OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。测试集尚未评价，点值控制与GRPO收益尚待对照。
+
+OCELOT 既有结果：匹配的 512 分子测试集上，DPA 的 HOMO/LUMO/S1/T1 MAE 为
 0.2895/0.2326/0.2314/0.1381 eV。三组 SFT 续训的 36 次评估中，延长训练
 提高了 B/Si 学习，但独立联合命中从 23/1152 变为 21/1152。BRICS 在中心
 目标窗口显著强于当前 octree 基线，但实际评估调用数不同。五个预选合格设计
