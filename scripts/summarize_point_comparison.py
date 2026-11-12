@@ -81,8 +81,13 @@ def main():
                      'charge_separated_domain':sum(bool(values) for values in domain_charges),
                      'charged_atom_counts':dict(Counter(value for values in charges for value in values)),
                      'domain_charged_atom_counts':dict(Counter(value for values in domain_charges for value in values)),
+                     'independent_feature_failures':sum(bool(r.get('independent_error')) for r in records),
                      'metrics':summarize_records(records,point),
                      'per_inference_seed_metrics':[summarize_records(pool['records'],point) for pool in pools]})
+        if any('normalized_domain_metrics' in pool for pool in pools):
+            alternative=[{**r,'domain':r.get('normalized_domain')} for r in records]
+            rows[-1]['normalized_domain_metrics']=summarize_records(alternative,point)
+            rows[-1]['normalized_domain_valid']=sum(bool(r.get('normalized_domain') and r['normalized_domain']['in_domain']) for r in records)
     for group in sorted(groups):
         if '_off' not in group:
             q=group.rsplit('_p',1)[1];score(group,q,'correct',q)
@@ -100,14 +105,20 @@ def main():
                  'inference_repeats_per_quantile':[r['inference_repeats'] for r in selected],
                  'attempted':count,'valid':sum(r['valid'] for r in selected),
                  'domain_valid':sum(r['domain_valid'] for r in selected),
+                 'independent_feature_failures':sum(r['independent_feature_failures'] for r in selected),
                  'metrics':{}}
-        for backend in ['dpa','fingerprint']:
-            values=[r['metrics'][backend]['in_domain'] for r in selected]
-            maes=[r['targets'][a.target]['mae_eV'] for r in values if a.target in r['targets']]
-            summary['metrics'][backend]={'domain_target_mae_equal_quantile_eV':float(np.mean(maes)) if len(maes)==len(values) else None,
-                'domain_property_hits':sum(r['property_hits'] for r in values),
-                'domain_property_hit_rate_all_attempts':sum(r['property_hits'] for r in values)/count,
-                'domain_force_property_hits':sum(r['joint_domain_force_hits'] for r in values)}
+        for mask in ['metrics','normalized_domain_metrics']:
+            if not all(mask in r for r in selected):continue
+            summary[mask]={}
+            for backend in ['dpa','fingerprint']:
+                values=[r[mask][backend]['in_domain'] for r in selected]
+                maes=[r['targets'][a.target]['mae_eV'] for r in values if a.target in r['targets']]
+                summary[mask][backend]={'domain_target_mae_equal_quantile_eV':float(np.mean(maes)) if len(maes)==len(values) else None,
+                    'domain_property_hits':sum(r['property_hits'] for r in values),
+                    'domain_property_hit_rate_all_attempts':sum(r['property_hits'] for r in values)/count,
+                    'domain_force_property_hits':sum(r['joint_domain_force_hits'] for r in values)}
+        if all('normalized_domain_valid' in r for r in selected):
+            summary['normalized_domain_valid']=sum(r['normalized_domain_valid'] for r in selected)
         arm_summary[arm]=summary
     checkpoint=(a.alignment_campaign or a.campaign)/'grpo/weights/octree_aligned.pt'
     training=None
