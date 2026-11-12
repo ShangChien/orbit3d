@@ -1,0 +1,127 @@
+{
+  "scope": "Local recomputation of retained validation records and source CSV; no model retraining or new generation.",
+  "rdkit_version": "2026.09.1",
+  "source_files": {
+    "dataset/raw/ocelot_chromophore_v1/ocelot_chromophore_v1.csv": {
+      "sha256": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985"
+    },
+    "docs/experiments/ocelot_optical8192_20261112.json": {
+      "sha256": "972f2bdc9610c750dd8bee4eefaed57d81b0539e5b4fae504eba609aa822de3e"
+    },
+    "docs/experiments/condition_contrast_20261112.json": {
+      "sha256": "cb39245dfa784d585e08832b49877940fccc0ed2505d5b672b35ac44a2df5829"
+    },
+    "dataset/processed/ocelot_v1_dense80_seed42/train.csv": {
+      "sha256": "31fe2a9576866e81e5f57b7c2c0d5beb8d89aff06af643efdefca56ba024e723"
+    },
+    "data/ocelot_wide80_split_manifest.json": {
+      "sha256": "40cf3ded34aa0cb33ebf04d4a9564518c5144d73f8823d72f3b440e7949e8416"
+    },
+    "docs/experiments/refinement_matched_20261112.json": {
+      "sha256": "d6fa12ebad769d65c6ca976780cf4c38a094f052a3dc5a0b3615dbe03a17bf01"
+    },
+    "scripts/prepare_ocelot.py": {
+      "sha256": "624707864440691e7af268d4ebd9dd009aaaa4d70d0857738c836ed4b1e925c1"
+    }
+  },
+  "conditioning": {
+    "method": "Means/counts over batch_metrics only; exclude mean summary objects. Each checkpoint evaluates the same 64 molecules, so arms are repeated measurements, not independent replication. loss_gen is tree CE + atom CE + 0.1 * mean(axis CE), not uniform token NLL. Diagnostic shuffle does not enforce incompatible intervals.",
+    "checkpoints": {
+      "initial": {
+        "molecules": 64,
+        "batches": 16,
+        "molecules_per_batch": 4,
+        "mean_loss": {
+          "correct": 1.2730506882071495,
+          "shuffled": 1.281740240752697,
+          "unconditional": 1.3313165679574013
+        },
+        "correct_beats_shuffled_batches": 8,
+        "correct_beats_unconditional_batches": 16,
+        "checkpoint_sha256": "163c2efca8771c49da2c0d59f608a12966241a311ee2bc57e12c3858c4f1923c",
+        "source_sdf_sha256": "97d8fe74febcba597e3d55de1bfa7789e01ca0bf873219674426fdde85c5d7fe"
+      },
+      "control": {
+        "molecules": 64,
+        "batches": 16,
+        "molecules_per_batch": 4,
+        "mean_loss": {
+          "correct": 1.2754150480031967,
+          "shuffled": 1.285949058830738,
+          "unconditional": 1.3313165679574013
+        },
+        "correct_beats_shuffled_batches": 10,
+        "correct_beats_unconditional_batches": 16,
+        "checkpoint_sha256": "bdcf0628426aba13d4cca4e0e4ec3f4d2c327b49d1d04c3ff764d8d811910e73",
+        "source_sdf_sha256": "97d8fe74febcba597e3d55de1bfa7789e01ca0bf873219674426fdde85c5d7fe"
+      },
+      "paired": {
+        "molecules": 64,
+        "batches": 16,
+        "molecules_per_batch": 4,
+        "mean_loss": {
+          "correct": 1.2750051468610764,
+          "shuffled": 1.2855051457881927,
+          "unconditional": 1.3313165679574013
+        },
+        "correct_beats_shuffled_batches": 10,
+        "correct_beats_unconditional_batches": 16,
+        "checkpoint_sha256": "9368bb97b4cacbb73f977d5bf237dd12c4fc875b4da8278d6d242688234968bf",
+        "source_sdf_sha256": "97d8fe74febcba597e3d55de1bfa7789e01ca0bf873219674426fdde85c5d7fe"
+      }
+    }
+  },
+  "brics": {
+    "method": "Chem.MolFromSmiles followed by len(list(BRICS.FindBRICSBonds(mol))). Official selection uses training_ids in the optical8192 result and raw CSV identifier/smiles. No conformer regeneration.",
+    "official_property_training8192": {
+      "molecules": 8192,
+      "zero_cuts": 2463,
+      "one_cut": 2309,
+      "two_or_more_cuts": 3420,
+      "zero_cut_fraction": 0.3006591796875
+    },
+    "legacy_sorted_first2000": {
+      "molecules": 2000,
+      "zero_cuts": 853,
+      "one_cut": 583,
+      "two_or_more_cuts": 564,
+      "zero_cut_fraction": 0.4265
+    },
+    "legacy_csv_total_rows": 19902,
+    "legacy_csv_sorted_by_canonical_smiles": true,
+    "limitations": "8192 property-training graphs are the parent set, not the exact 8188 encodable generator SDF. Zero cuts means no direct single-cut library contribution; it is not a count of absent ring cores, unreachable products, or synthetic infeasibility.",
+    "official_full_training20356": {
+      "molecules": 20356,
+      "zero_cuts": 5971,
+      "one_cut": 5775,
+      "two_or_more_cuts": 8610,
+      "zero_cut_fraction": 0.29332874828060523,
+      "reconstructed_train_csv_sha256": "f316b962d5bd456b387de72274c81e3beb0e9b19737a3ff3badcb9fe69c42f65",
+      "method": "scripts.prepare_ocelot.prepare(source, temporary_output, max_atoms=80, seed=42, elements=manifest.allowed_elements); require train.csv SHA-256 match to frozen manifest before counting cuts."
+    }
+  },
+  "ocelot_ip_residual": {
+    "method": "abs(vie+homo), in eV, over original CSV; descriptive residual, not identification of tuning protocol.",
+    "molecules": 25251,
+    "median_eV": 0.27552557499999963,
+    "p95_eV": 0.6123721350000007,
+    "csd_RASWEO_eV": 0.6673371630000009
+  },
+  "refinement_stalling": {
+    "method": "For full_acceptance and energy_only, count trace.history final accepted=false, no accepted step, and len(history)==30. Logs do not identify which acceptance constraint rejected a step.",
+    "full_acceptance": {
+      "candidates": 34,
+      "last_step_rejected": 22,
+      "zero_accepted_steps": 6,
+      "all_30_steps": 12,
+      "mean_steps": 17.61764705882353
+    },
+    "energy_only": {
+      "candidates": 34,
+      "last_step_rejected": 0,
+      "zero_accepted_steps": 0,
+      "all_30_steps": 34,
+      "mean_steps": 30.0
+    }
+  }
+}
