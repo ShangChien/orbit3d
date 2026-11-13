@@ -46,7 +46,7 @@ def freeze_run(output, entrypoint):
         hashes["scripts/" + entrypoint.name] = hashlib.sha256(entrypoint.read_bytes()).hexdigest()
     versions = {}
     for name in ["torch", "numpy", "rdkit", "scikit-learn", "ase", "deepmd-kit", "lmdb",
-                 "pyscf", "geometric", "gpu4pyscf-cuda12x", "gpu4pyscf-libxc-cuda12x",
+                 "pyscf", "pyscf-dispersion", "geometric", "gpu4pyscf-cuda12x", "gpu4pyscf-libxc-cuda12x",
                  "cupy-cuda12x", "cutensor-cu12"]:
         try:
             versions[name] = importlib.metadata.version(name)

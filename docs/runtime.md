@@ -19,7 +19,7 @@ PyTorch 后端，源码构建设置 `DP_ENABLE_TENSORFLOW=0 DP_ENABLE_PYTORCH=0`
 HyFF 用 `--extra hyff`；其源码、注册表和许可证随 wheel 打包，真实权重单独获取。
 量化 CPU 依赖为 `--extra quantum`；Linux CUDA12 依赖为 `--extra quantum-gpu`。
 实际 GPU 量化使用独立环境，以避免与主模型的二进制依赖混用。GPU4PySCF 1.9.1、
-GPU Libxc 0.9.0、CuPy 13.4.1、cuTENSOR 2.2.0 和 PySCF 2.12.1 的组合已有
+GPU Libxc 0.9.0、CuPy 13.4.1、cuTENSOR 2.2.0、PySCF 2.12.1及pyscf-dispersion 1.3.0的组合已有
 实测；不把它写成所有可选依赖合装或 Docker 镜像的验收结论。
 
 远程为平台容器，Docker daemon/cache 由平台管理。模型包和必要归档保存在
@@ -107,7 +107,7 @@ python scripts/summarize_point_quantum.py --manifest "$ORBIT_QC/manifest.json" \
   --results "$ORBIT_QC_RESULTS" --output "$ORBIT_QC/comparison.json"
 ```
 
-候选选择固定正式GRPO200和等时SFT、三个中央目标及匹配训练/推理seed，量化结果不会改变队列。GPU编号由启动参数指定，一张卡一个进程。`completed.json`表示队列退出，逐结构的SCF收敛、几何收敛和保图结果需要分别查看；失败保留分母。已有源参照直接复用，元素覆盖扩展由`select_point_quantum_references.py`固定源开发结构。
+默认候选选择固定正式GRPO200和等时SFT、三个中央目标及匹配训练/推理seed；其他已冻结协议通过`--arms`、`--campaign-prefix`和`--assignments quantile:training_seed:inference_seed ...`指定。量化结果不会改变队列。GPU编号由启动参数指定，一张卡一个进程。`--engine cpu --cpu-workers 4`可在训练期间异步运行CPU队列，每个worker使用4个PySCF线程；单点与几何优化通过`--optimize`区分。队列将`TMPDIR`设置为输出目录下的`scratch/`，PySCF临时积分文件随实验落盘，避免占满容器根盘。`completed.json`表示队列退出，逐结构的SCF收敛、几何收敛和保图结果需要分别查看；失败保留分母。已有源参照直接复用，元素覆盖扩展由`select_point_quantum_references.py`固定源开发结构。
 
 ## 性质模型合同
 

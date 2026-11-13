@@ -1,5 +1,6 @@
 """CPU/GPU PBE0 approximate reference, optionally followed by PBE-D3BJ relaxation and PBE0 recheck."""
 import argparse,hashlib,json,os,time
+from importlib import metadata
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
@@ -32,8 +33,14 @@ def main():
  lib.num_threads(4);a.output.mkdir(parents=True,exist_ok=False)
  ms=list(Chem.SDMolSupplier(str(a.input),removeHs=False));m=ms[a.index];assert m is not None
  syms=[x.GetSymbol() for x in m.GetAtoms()];coords=m.GetConformer().GetPositions();start=time.perf_counter()
+ packages=['numpy','rdkit','pyscf']+(['pyscf-dispersion','geometric'] if a.optimize else [])
+ if a.engine=='gpu':packages+=['gpu4pyscf-cuda12x','gpu4pyscf-libxc-cuda12x','cupy-cuda12x','cutensor-cu12']
+ versions={}
+ for name in packages:
+  try:versions[name]=metadata.version(name)
+  except metadata.PackageNotFoundError:versions[name]=None
  report={'input_sha256':hashlib.sha256(a.input.read_bytes()).hexdigest(),'index':a.index,'atoms':len(coords),'elements':sorted(set(syms)),
-  'coordinates_A':coords.tolist(),'symbols':syms,'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'engine':a.engine,'visible_gpu':os.environ.get('CUDA_VISIBLE_DEVICES'),'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference','status':'running'}
+  'coordinates_A':coords.tolist(),'symbols':syms,'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'engine':a.engine,'runtime_versions':versions,'scratch_directory':os.environ.get('TMPDIR'),'visible_gpu':os.environ.get('CUDA_VISIBLE_DEVICES'),'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference','status':'running'}
  if m.HasProp('homo'):report['source_labels_eV']=[float(m.GetProp(k)) for k in ['homo','lumo']]
  try:
   mol=make_mol(syms,coords,a.output/'singlepoint.log');sp,mf=single(mol,a.engine);report['singlepoint']=sp

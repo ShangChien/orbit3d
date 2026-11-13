@@ -12,15 +12,17 @@ def main():
     if len(set(a.gpus))!=len(a.gpus):p.error('GPU indices must be distinct')
     if a.cpu_workers<1:p.error('CPU worker count must be positive')
     slots=range(a.cpu_workers) if a.engine=='cpu' else a.gpus
-    a.output.mkdir(parents=True,exist_ok=False);pending=list(range(len(list(Chem.SDMolSupplier(str(a.input),removeHs=False)))))
+    a.output.mkdir(parents=True,exist_ok=False)
+    scratch=a.output/'scratch';scratch.mkdir()
+    pending=list(range(len(list(Chem.SDMolSupplier(str(a.input),removeHs=False)))))
     active={};jobs=[];start=time.time();count=len(pending)
     while pending or active:
         for gpu in slots:
             if gpu in active or not pending:continue
             i=pending.pop(0);cmd=[str(a.python),str(Path(__file__).with_name('oe62_quantum_singlepoint.py')),'--input',str(a.input),'--index',str(i),'--output',str(a.output/f'job{i:02d}'),'--engine',a.engine]
             if a.optimize:cmd.append('--optimize')
-            log=(a.output/f'job{i:02d}.log').open('w');proc=subprocess.Popen(cmd,env=dict(os.environ,CUDA_VISIBLE_DEVICES='' if a.engine=='cpu' else str(gpu)),stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-            job={'index':i,'engine':a.engine,'gpu':gpu if a.engine=='gpu' else None,'worker':gpu,'pid':proc.pid,'command':cmd,'start':time.time()};jobs.append(job);active[gpu]=(proc,log,job)
+            log=(a.output/f'job{i:02d}.log').open('w');proc=subprocess.Popen(cmd,env=dict(os.environ,CUDA_VISIBLE_DEVICES='' if a.engine=='cpu' else str(gpu),TMPDIR=str(scratch.resolve())),stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
+            job={'index':i,'engine':a.engine,'gpu':gpu if a.engine=='gpu' else None,'worker':gpu,'scratch_dir':str(scratch.resolve()),'pid':proc.pid,'command':cmd,'start':time.time()};jobs.append(job);active[gpu]=(proc,log,job)
         for gpu,(proc,log,job) in list(active.items()):
             if proc.poll() is not None:
                 job.update(exit_code=proc.returncode,end=time.time());log.close();del active[gpu]
