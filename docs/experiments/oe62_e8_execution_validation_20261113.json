@@ -186,6 +186,9 @@
   "latest_regression": {
     "passed": 231,
     "skipped_optional_quantum_tests": 5,
-    "real_remote_oe62_basis_tests_passed": 2
+    "real_remote_oe62_basis_tests_passed": 2,
+    "wheel_tests_passed": 11,
+    "wheel_sha256": "6a59e52d79d9b442425ca21372b5112f4aa5cf59d41e2414b6fd1a7b61836a6c",
+    "wheel_metadata_has_pinned_dispersion": true
   }
 }

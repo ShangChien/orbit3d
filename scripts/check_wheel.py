@@ -1,10 +1,14 @@
 """Check resources required by the installed octree and HyFF backends."""
 
 from pathlib import Path
+import argparse
 import zipfile
 
-wheels = list(Path("dist").glob("*.whl"))
-assert len(wheels) == 1, "Expected one wheel in dist/"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("wheel", nargs="?", type=Path, help="Wheel to inspect; defaults to the only wheel in dist/")
+args = parser.parse_args()
+wheels = [args.wheel] if args.wheel else list(Path("dist").glob("*.whl"))
+assert len(wheels) == 1, "Specify a wheel or leave exactly one wheel in dist/"
 with zipfile.ZipFile(wheels[0]) as wheel:
     assert "orbit3d/compat/hyff/checkpoints/index.json" in wheel.namelist()
     assert "orbit3d/compat/hyff/LICENSE.txt" in wheel.namelist()
@@ -14,4 +18,4 @@ with zipfile.ZipFile(wheels[0]) as wheel:
     assert "orbit3d/oracles/unimol2_oracle.py" in wheel.namelist()
     assert "orbit3d/vendor/UNI3DAR_LICENSE.txt" in wheel.namelist()
     assert "orbit3d/vendor/uni3dar/models/uni3dar.py" in wheel.namelist()
-print("Octree, HyFF and Uni-Mol2 source/license resources packaged")
+print(f"{wheels[0]}: Octree, HyFF and Uni-Mol2 source/license resources packaged")

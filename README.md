@@ -96,7 +96,7 @@ mol_gen/
 | OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |
 | 生成训练与迁移 | `initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`evaluate_brics_point_pool.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`analyze_point_ranking.py`、`select_relaxation_cohort.py`、`run_relaxation_comparison.py`、`ablate_*.py` |
-| 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
+| 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_reward_attribution.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
 | 量化验证 | `select_qualified_quantum_cohort.py`、`select_point_quantum_cohort.py`、`run_oe62_quantum.py`、`oe62_quantum_singlepoint.py`、`validate_quantum.py`、`compare_pool_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
 | 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py` |
 | 打包与重放 | `check_wheel.py`、`pack_pretrained_weights.py`、`export_inference_bundle.py`、`validate_octree_reload.py` |

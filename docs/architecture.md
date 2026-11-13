@@ -62,6 +62,8 @@ GRPO 对树、元素及 XYZ 决策计算策略比率与裁剪目标，可叠加�
 
 点值对齐使用 `r=1/(1+D)`，其中 `D=mean_active(((prediction-target)/tolerance)^2)`；无效、域外或评价失败为 -1。每组共享一个目标，组间按固定目标池轮换；该模式要求关闭 physics/uncertainty，replay 由配置控制。`point_reward_type=eligibility_only`提供消融模式：同样执行性质/力评价，但可评价候选统一奖励+1，失败仍为−1；默认保持点值距离奖励。记录组内可评价数、性质距离、逐提案优势、奖励标准差、更新次数、KL、梯度与参数变化，并保存对齐中间检查点；奖励类型写入恢复合同，禁止恢复时切换。
 
+`point_advantage_mode=conditional_property_v1`复用同一标量性质奖励，分开计算两个优势通道。令组大小为`K`、可评价数为`m`：有效性通道为±1二值奖励的组内标准化；性质通道仅在`m>=2`时为`(K/m)*(q-mean_evaluable(q))/max(std_evaluable(q),0.1)`，其余候选为0。两通道等权相加，再除以`max(std_all(sum),1)`，只缩小总尺度、不放大小差异。默认模式为`joint`；分离优势通过上述配置显式启用。模式进入恢复合同，逐候选保存两个优势分量。[优势实现](../src/orbit3d/generator/octree_alignment.py)
+
 对齐训练支持完整断点恢复：当前策略、AdamW 状态、Torch/NumPy 随机状态和累计组序号一起保存；KL 参考仍从原始 SFT 检查点加载并核对哈希。固定预算检查点外，使用原子替换写入一个滚动恢复文件，执行分段不会重新初始化优化器或重复目标/随机流。
 
 ## 性质模型与候选选择
@@ -99,7 +101,6 @@ step_direction = F_projected - property_gradient_weight * g
 
 **固定骨架生长**选择开放位点、片段和键级，维护氢替换与位点容量；新坐标构建时保留输入世界坐标，弛豫可冻结骨架原子。这是显式图操作后端。[骨架流程](../src/orbit3d/pipeline/scaffold_runner.py)
 
-实验性`point_advantage_mode=conditional_property_v1`复用同一标量性质奖励，分开计算两个优势通道。令组大小为`K`、可评价数为`m`：有效性通道为±1二值奖励的组内标准化；性质通道仅在`m>=2`时为`(K/m)*(q-mean_evaluable(q))/max(std_evaluable(q),0.1)`，其余候选为0。两通道等权相加，再除以`max(std_all(sum),1)`，只缩小总尺度、不放大小差异。默认仍为`joint`；新模式已实现但尚未完成训练验证。模式进入恢复合同，逐候选保存两个优势分量。[优势实现](../src/orbit3d/generator/octree_alignment.py)
 
 ### BRICS 的作用与局限
 
