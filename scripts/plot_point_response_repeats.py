@@ -14,7 +14,7 @@ def main():
     p.add_argument('--arms',nargs='+',default=['frozen','continue400','grpo200','continue_wall'])
     p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     primary=[json.loads(p.read_text()) for p in a.primary];independent=[json.loads(p.read_text()) for p in a.independent]
-    arms=a.arms;colors=['#3465a4','#777777','#168579','#c47b26']
+    arms=a.arms;colors={'frozen':'#3465a4','continue400':'#777777','grpo200':'#168579','continue_wall':'#c47b26','eligibility200':'#8c6bb1','conditional200':'#c44e52'}
     names={'frozen':'Frozen SFT','continue400':'Continue SFT (400)','grpo200':'Original point GRPO','continue_wall':'Continue SFT (time budget)','eligibility200':'Eligibility-only GRPO','conditional200':'Separated-advantage GRPO'}
     labels=[names.get(arm,arm) for arm in arms];quantiles=['10','25','50','75','90']
     fig,axes=plt.subplots(2,3,figsize=(12,7.5),sharey='row',layout='constrained')
@@ -25,7 +25,8 @@ def main():
         assert len(run_seeds)==len(runs)==len(independent_runs) and run_seeds=={r['training_seed'] for r in independent_runs}
         for j,backend in enumerate(['dpa','fingerprint','independent']):
             ax=axes[i,j]
-            for arm,color,label in zip(arms,colors,labels):
+            for arm_index,(arm,label) in enumerate(zip(arms,labels)):
+                color=colors.get(arm,f'C{arm_index%10}')
                 responses=[];goals=None
                 for run in (independent_runs if backend=='independent' else runs):
                     if backend=='independent':

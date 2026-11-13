@@ -104,5 +104,59 @@
     "wheel_test_scope": "Copied alignment and advantage tests outside source checkout; conftest asserts imports resolve to extracted wheel. Package resources checked separately.",
     "alignment_source_sha256": "071e9da97b6ef04640bc56c29c660d9a7b910a2c95084ed336e230c4f8e7a82d",
     "wheel_sha256": "f19feb1162599bac3ad5596541c8d1a97a3b09c035da459cdb23ddc7353024c1"
+  },
+  "counterfactual_advantage_check": {
+    "scope": "Counterfactual advantage calculation on already collected original rollouts; no model updates or new proposals. Not a performance result. Fixed v1 weights and floor, no parameter sweep.",
+    "implementation_sha256": "071e9da97b6ef04640bc56c29c660d9a7b910a2c95084ed336e230c4f8e7a82d",
+    "results": {
+      "homo_42": {
+        "checkpoint_sha256": "91af61254924dae15417a45537e715bf0e556501b20fe19ebe55a715929581f3",
+        "eligible": 697,
+        "original_within_category_advantage_fraction": 0.035618205264303586,
+        "counterfactual_property_advantage_fraction": 0.6573731324673371,
+        "counterfactual_negative_eligible": 291,
+        "max_combined_advantage_std": 1.0000001192092896
+      },
+      "homo_43": {
+        "checkpoint_sha256": "f10c9d6a3c23b387ed327ffe60177e4765417e7ef815a4c11286b49a2ac94232",
+        "eligible": 720,
+        "original_within_category_advantage_fraction": 0.04233168979504324,
+        "counterfactual_property_advantage_fraction": 0.6978368272329439,
+        "counterfactual_negative_eligible": 314,
+        "max_combined_advantage_std": 1.0000001192092896
+      },
+      "homo_44": {
+        "checkpoint_sha256": "7148ce8469d6b7e3fdba8e29a3ddacec69a79b4ae08234c70224d0be30eb131b",
+        "eligible": 705,
+        "original_within_category_advantage_fraction": 0.039722426376793296,
+        "counterfactual_property_advantage_fraction": 0.6416786563004134,
+        "counterfactual_negative_eligible": 286,
+        "max_combined_advantage_std": 1.0000001192092896
+      },
+      "lumo_42": {
+        "checkpoint_sha256": "4954c0e90bb8f2b7dce69452e45de065606083c1290221d61663e9b072875def",
+        "eligible": 751,
+        "original_within_category_advantage_fraction": 0.03672469398842762,
+        "counterfactual_property_advantage_fraction": 0.5906257165442554,
+        "counterfactual_negative_eligible": 301,
+        "max_combined_advantage_std": 1.0000001192092896
+      },
+      "lumo_43": {
+        "checkpoint_sha256": "6a9716dba1e2f073ac360596bf0157a30a00ef6c9350909d9b24c43a603ac11e",
+        "eligible": 782,
+        "original_within_category_advantage_fraction": 0.036179243600097805,
+        "counterfactual_property_advantage_fraction": 0.6338557255602936,
+        "counterfactual_negative_eligible": 297,
+        "max_combined_advantage_std": 1.0000001192092896
+      },
+      "lumo_44": {
+        "checkpoint_sha256": "b83bb5632586745140204a206df504d2b314fe33e508ca1c1fb161484e8be43d",
+        "eligible": 733,
+        "original_within_category_advantage_fraction": 0.034124417099904394,
+        "counterfactual_property_advantage_fraction": 0.5653708716906607,
+        "counterfactual_negative_eligible": 271,
+        "max_combined_advantage_std": 1.0000001192092896
+      }
+    }
   }
 }
