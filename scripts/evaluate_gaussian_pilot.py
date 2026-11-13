@@ -34,6 +34,7 @@ def main():
         requests += [('50',.25 if model.condition_version==5 else None,seed,'off') for seed in a.seeds]
         for q,width,seed,control in requests:
             name=f'eval_{arm}_p{q}_w{width}_s{seed}_{control}';cfg=copy.deepcopy(base)
+            cfg['generator_config']['condition_version']=model.condition_version
             cfg['mount_paths'].update(checkpoint_load_path=str(checkpoint),output_dir=str(a.output/name/'run'),checkpoint_save_dir=str(a.output/name/'weights'))
             cfg['inference_config'].update(target_point={target:points[q]},target_tolerance={target:.25},base_seed=seed,condition_control=control)
             if width is not None:cfg['inference_config']['preference_sigma_eV']=width

@@ -319,7 +319,8 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
         lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
     if model.condition_version == 5:
         sigma = inference['preference_sigma_eV']
-        sigma_values = np.array([float(sigma[n]) if isinstance(sigma, dict) else float(sigma) for n in names])
+        sigma_values = np.array([1. if value is None else float(sigma[n]) if isinstance(sigma, dict) else float(sigma)
+                                 for n, value in zip(names, points.values)], dtype=np.float32)
         if not np.isfinite(sigma_values).all() or (sigma_values <= 0).any():
             raise ValueError('Preference width must be finite and positive')
         upper = sigma_values / scale

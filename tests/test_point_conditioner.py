@@ -75,6 +75,7 @@ def test_condition_controls_keep_the_original_scoring_target(tmp_path, monkeypat
     monkeypatch.setattr(runner,'load_evaluators',lambda *a,**k:(SimpleNamespace(set_atom_type_map=lambda _:None),object(),None))
     class CapturedGeneration(Exception):pass
     def generate(low,high,mask,**kwargs):
+        assert low.dtype == high.dtype == torch.float32
         if expected is None:assert not mask.any()
         else:
             assert low[0,0]==expected
