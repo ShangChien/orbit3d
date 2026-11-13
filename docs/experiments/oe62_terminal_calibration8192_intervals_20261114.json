@@ -1,0 +1,210 @@
+{
+  "scope": "Descriptive 90% residual intervals. Fit on the 85 generated validation structures; this validation set also selected warm-start epochs, so these are not independent split-conformal guarantees. Generated test and native source test labels are never used to set interval widths. Compare constant residual width with bootstrap-scaled width (floor 0.05 eV), without treating bootstrap spread as a Gaussian predictive distribution. Source and generated labels retain their distinct basis protocols.",
+  "reports": {
+    "baseline_constant": {
+      "calibration": {
+        "target_cols": [
+          "homo",
+          "lumo"
+        ],
+        "coverage": 0.9,
+        "std_floor": 0.05,
+        "marginal_q": [
+          27.938089245206772,
+          30.404782619425355
+        ],
+        "joint_q": 37.37906210882192,
+        "n_calibration": 85
+      },
+      "evaluation": {
+        "test_generated": {
+          "n": 164,
+          "marginal_coverage": [
+            0.9451219512195121,
+            0.9146341463414634
+          ],
+          "marginal_mean_width_eV": [
+            2.793808966151683,
+            3.0404783072491988
+          ],
+          "simultaneous_coverage": 0.926829268292683,
+          "simultaneous_mean_width_eV": [
+            3.737910270690918,
+            3.737910270690918
+          ]
+        },
+        "source_test": {
+          "n": 4762,
+          "marginal_coverage": [
+            1.0,
+            1.0
+          ],
+          "marginal_mean_width_eV": [
+            2.793808966151547,
+            3.040478307249453
+          ],
+          "simultaneous_coverage": 1.0,
+          "simultaneous_mean_width_eV": [
+            3.738070487976074,
+            3.738070487976074
+          ]
+        }
+      }
+    },
+    "affine_constant": {
+      "calibration": {
+        "target_cols": [
+          "homo",
+          "lumo"
+        ],
+        "coverage": 0.9,
+        "std_floor": 0.05,
+        "marginal_q": [
+          17.565726154379195,
+          21.725505198359254
+        ],
+        "joint_q": 24.149204862017786,
+        "n_calibration": 85
+      },
+      "evaluation": {
+        "test_generated": {
+          "n": 164,
+          "marginal_coverage": [
+            0.9329268292682927,
+            0.9024390243902439
+          ],
+          "marginal_mean_width_eV": [
+            1.7565726154379226,
+            2.1725505198359243
+          ],
+          "simultaneous_coverage": 0.8963414634146342,
+          "simultaneous_mean_width_eV": [
+            2.41492048620177,
+            2.41492048620177
+          ]
+        },
+        "source_test": {
+          "n": 4762,
+          "marginal_coverage": [
+            0.999370012599748,
+            0.999370012599748
+          ],
+          "marginal_mean_width_eV": [
+            1.756572615437985,
+            2.1725505198357373
+          ],
+          "simultaneous_coverage": 0.999790004199916,
+          "simultaneous_mean_width_eV": [
+            2.414920486201872,
+            2.414920486201872
+          ]
+        }
+      }
+    },
+    "adapted_constant": {
+      "calibration": {
+        "target_cols": [
+          "homo",
+          "lumo"
+        ],
+        "coverage": 0.9,
+        "std_floor": 0.05,
+        "marginal_q": [
+          8.806805597442704,
+          10.625504780924686
+        ],
+        "joint_q": 14.59841240710686,
+        "n_calibration": 85
+      },
+      "evaluation": {
+        "test_generated": {
+          "n": 164,
+          "marginal_coverage": [
+            0.9207317073170732,
+            0.9207317073170732
+          ],
+          "marginal_mean_width_eV": [
+            0.8806805728674347,
+            1.0625504939257011
+          ],
+          "simultaneous_coverage": 0.9329268292682927,
+          "simultaneous_mean_width_eV": [
+            1.4598394632339478,
+            1.4598395824432373
+          ]
+        },
+        "source_test": {
+          "n": 4762,
+          "marginal_coverage": [
+            0.9888702225955481,
+            0.9913901721965561
+          ],
+          "marginal_mean_width_eV": [
+            0.8806805728673669,
+            1.062550493925663
+          ],
+          "simultaneous_coverage": 0.997060058798824,
+          "simultaneous_mean_width_eV": [
+            1.4599249362945557,
+            1.4599250555038452
+          ]
+        }
+      }
+    },
+    "adapted_scaled": {
+      "calibration": {
+        "target_cols": [
+          "homo",
+          "lumo"
+        ],
+        "coverage": 0.9,
+        "std_floor": 0.05,
+        "marginal_q": [
+          4.07989200953835,
+          4.7641405693339935
+        ],
+        "joint_q": 6.615935074646444,
+        "n_calibration": 85
+      },
+      "evaluation": {
+        "test_generated": {
+          "n": 164,
+          "marginal_coverage": [
+            0.8780487804878049,
+            0.8841463414634146
+          ],
+          "marginal_mean_width_eV": [
+            0.9364622656884222,
+            1.2595629956381602
+          ],
+          "simultaneous_coverage": 0.8963414634146342,
+          "simultaneous_mean_width_eV": [
+            1.518563151359558,
+            1.7491471767425537
+          ]
+        },
+        "source_test": {
+          "n": 4762,
+          "marginal_coverage": [
+            0.9447711045779085,
+            0.9695506089878202
+          ],
+          "marginal_mean_width_eV": [
+            0.6393841336590703,
+            0.7996124954383436
+          ],
+          "simultaneous_coverage": 0.9819403611927762,
+          "simultaneous_mean_width_eV": [
+            1.036832571029663,
+            1.1104248762130737
+          ]
+        }
+      }
+    }
+  },
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit_e15_calibration_20261114/fit/valid_generated_predictions.npz": "38bb6d84b664a086377bdc840e699bfac3c4ff6edc53e3080bd7859082d7b549",
+    "/sjtu-combustion/wjw/chensq/orbit_e15_calibration_20261114/fit/test_generated_predictions.npz": "bea872a9a942cef4aa80c26b8327d740b930562ba69f3eca465f1394e1b84b33",
+    "/sjtu-combustion/wjw/chensq/orbit_e15_calibration_20261114/fit/source_test_predictions.npz": "a6dd2854b69e6854838e9d5762a2d43d96878608adbb04f358d6fb033e8477fa"
+  }
+}
