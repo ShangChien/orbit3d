@@ -1,0 +1,39 @@
+{
+  "cancelled_utc": "2026-11-13T21:49:08.325182+00:00",
+  "scope": "Resource rescheduling of the entire unchanged 12-candidate cohort, before any geometry optimization completed. CPU partial results and logs retained. Not molecule failures or candidate replacement. GPU rerun uses identical methods, thresholds and original coordinates in a new output directory.",
+  "reason": "Two initial CPU singlepoints took 2295.5 and 1492.8 seconds; GPU originals take seconds.",
+  "cpu_attempts": [
+    {
+      "index": 0,
+      "pid": 312425,
+      "started": 1794602219.0082824,
+      "elapsed_at_cancel_seconds": 4329.315957546234,
+      "completed_initial_singlepoint": {
+        "prediction_eV": [
+          -6.879060634592507,
+          -2.7008388776392955
+        ],
+        "energy_Ha": -2114.9559164146476,
+        "converged": true,
+        "seconds": 2295.51215364784
+      },
+      "partial_result_path": "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/brics_persistence_quantum/job00/result.json"
+    },
+    {
+      "index": 1,
+      "pid": 312427,
+      "started": 1794602219.011472,
+      "elapsed_at_cancel_seconds": 4329.31368637085,
+      "completed_initial_singlepoint": {
+        "prediction_eV": [
+          -7.156596250273119,
+          -1.9113415426478715
+        ],
+        "energy_Ha": -4097.937149485561,
+        "converged": true,
+        "seconds": 1492.7589596435428
+      },
+      "partial_result_path": "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/brics_persistence_quantum/job01/result.json"
+    }
+  ]
+}
