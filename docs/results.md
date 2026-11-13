@@ -47,6 +47,8 @@ seed42/43/44全部完成；每性质/臂共5760次新提案，三推理seed2041/
 
 [HOMO逐次B结果与汇总](experiments/oe62_e8_homo_unimol2_repeats_20261113.json)、[LUMO逐次B结果与汇总](experiments/oe62_e8_lumo_unimol2_repeats_20261113.json)、[HOMO产率分解](experiments/oe62_e8_homo_attribution_20261113.json)、[LUMO产率分解](experiments/oe62_e8_lumo_attribution_20261113.json)。A/指纹及逐种子结果见同目录。
 
+![三seed奖励消融的产率分解；逐目标精确记账，不是因果中介估计](figures/oe62_e8_yield_attribution.png)
+
 ### E8预先冻结的36例量化单点
 
 seed42、三个中央目标，分别对原点值GRPO、仅有效性GRPO、等时SFT选取A排名top1及固定哈希样本。全部36例PBE0/def2-TZVP单点完成，19/36命中±0.25 eV；这是固定导出队列，不是全提案量化命中率。
