@@ -4,7 +4,8 @@
 
 **预训练 Uni-3DAR octree → 点值/区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
 
-GRPO 是可选实验阶段，默认关闭。另有显式骨架图增长入口和 BRICS 片段基线。
+论文研究主线为**点值条件与GRPO目标控制**，优先验证GRPO的性质反馈贡献及其上下游接口价值。[核心研究方案](docs/experiments.md#e8-点值grpo核心实验)
+当前运行配置默认关闭GRPO，以便显式选择SFT或对齐实验；另有显式骨架图增长入口和BRICS片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
 当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
