@@ -22,5 +22,79 @@
       "same_reference": true,
       "eligible_predictions_max_delta": 0.0
     }
+  },
+  "cpu_geometry": {
+    "cpu_status": "completed",
+    "cpu_graph_preserved": true,
+    "cpu_gradient_evaluations": 19,
+    "cpu_seconds": 2010.0839846394956,
+    "gpu_seconds": 38.76431592553854,
+    "final_cpu_minus_gpu_eV": [
+      -5.838419972281628e-05,
+      -0.00015430790185400056
+    ],
+    "max_atom_coordinate_delta_A": 0.00040268616190098126
+  },
+  "inference_batch_validation": {
+    "scope": "Batch-size validation on frozen seed42 P10, 128 fixed candidate streams per property, two repeats. Timings observed while another evaluation worker occupied the same GPU; not isolated throughput benchmarks.",
+    "targets": {
+      "homo": {
+        "config": "../eval_homo_seed42/configs/eval_frozen_p10_s2041.json",
+        "device": "cuda:0",
+        "candidates": 128,
+        "scope": "FP32 sampling and decoding only; fixed candidate streams; no oracle or model selection",
+        "batches": [
+          {
+            "batch_size": 64,
+            "seconds": [
+              25.983686797320843,
+              25.79896928369999
+            ],
+            "median_seconds": 25.891328040510416,
+            "bitwise_identical_to_first_batch": 128,
+            "same_batch_repeats_bitwise_equal": true
+          },
+          {
+            "batch_size": 128,
+            "seconds": [
+              17.736963886767626,
+              17.783875480294228
+            ],
+            "median_seconds": 17.760419683530927,
+            "bitwise_identical_to_first_batch": 128,
+            "same_batch_repeats_bitwise_equal": true
+          }
+        ]
+      },
+      "lumo": {
+        "config": "../eval_lumo_seed42/configs/eval_frozen_p10_s2041.json",
+        "device": "cuda:0",
+        "candidates": 128,
+        "scope": "FP32 sampling and decoding only; fixed candidate streams; no oracle or model selection",
+        "batches": [
+          {
+            "batch_size": 64,
+            "seconds": [
+              28.783116061240435,
+              25.845127284526825
+            ],
+            "median_seconds": 27.31412167288363,
+            "bitwise_identical_to_first_batch": 128,
+            "same_batch_repeats_bitwise_equal": true
+          },
+          {
+            "batch_size": 128,
+            "seconds": [
+              19.52609984949231,
+              18.3252242654562
+            ],
+            "median_seconds": 18.925662057474256,
+            "bitwise_identical_to_first_batch": 128,
+            "same_batch_repeats_bitwise_equal": true
+          }
+        ]
+      }
+    },
+    "used_in_current_ablation": false
   }
 }
