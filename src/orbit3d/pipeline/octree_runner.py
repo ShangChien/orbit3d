@@ -323,7 +323,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                                  for n, value in zip(names, points.values)], dtype=np.float32)
         if not np.isfinite(sigma_values).all() or (sigma_values <= 0).any():
             raise ValueError('Preference width must be finite and positive')
-        upper = sigma_values / scale
+        upper = (sigma_values / scale).astype(np.float32)
         if int(settings.get('grpo_steps', 0)):
             raise ValueError('v5 experiment uses supervised objectives; GRPO remains a separate v4 control')
     # Preserve the acceptance task separately from optional inference controls.
