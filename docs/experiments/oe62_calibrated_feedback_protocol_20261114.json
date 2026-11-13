@@ -1,0 +1,55 @@
+{
+  "source_commit": "d3954074547b9d7bf9d054ddf29bab0e8d4d4eb8",
+  "training_seed": 42,
+  "groups": 48,
+  "group_size": 32,
+  "optimizer_updates_per_grpo_arm": 96,
+  "training_targets_eV": {
+    "25": -7.040765,
+    "50": -6.56081,
+    "75": -6.148085
+  },
+  "evaluation_targets": {
+    "25": {
+      "homo_eV": -7.040765,
+      "fraction_full_train_at_or_below": 0.24779868489909218,
+      "used_in_grpo_rotation": true
+    },
+    "35": {
+      "homo_eV": -6.846018,
+      "fraction_full_train_at_or_below": 0.35353006757525424,
+      "used_in_grpo_rotation": false
+    },
+    "50": {
+      "homo_eV": -6.56081,
+      "fraction_full_train_at_or_below": 0.5109781347409615,
+      "used_in_grpo_rotation": true
+    },
+    "65": {
+      "homo_eV": -6.3162735,
+      "fraction_full_train_at_or_below": 0.6576642169688972,
+      "used_in_grpo_rotation": false
+    },
+    "75": {
+      "homo_eV": -6.148085,
+      "fraction_full_train_at_or_below": 0.7569338581602238,
+      "used_in_grpo_rotation": true
+    }
+  },
+  "inference_seeds": [
+    2111,
+    2112,
+    2113,
+    2114
+  ],
+  "correct_proposals_per_arm": 1280,
+  "shared_off_proposals": 256,
+  "initial_checkpoint_sha256": "6ae16665d59a71232837ae21410898e5d163d2d9e4d8a9ebb4b130a84220df8e",
+  "source_train_sdf_sha256": "ddcad4fb5d962a9d15a4936f97e821e325f0b9a159e4bb88f3e7db409aab01fa",
+  "extra_critic_training_sdf_sha256": "11d541ec317b9c2c13ce3b3ca49b451abeed628fedf5290d507a3821082d4738",
+  "critic_checkpoints": {
+    "native_critic": "9f76815a8c925aabc7e85e0b11cc6bea298e34b5554d4363a3a7846985c7f045",
+    "calibrated_critic": "3a57a5cfabac931a74ba668ac4fcabe013348e41c5e7482ccf17837e86ec6515"
+  },
+  "scope": "Four fixed arms; only conditioner updated, native and terminal-calibrated critics frozen. Main endpoint is full-proposal DFT hit yield; interpolate at two untrained GRPO requests. All terminal-qualified structures undergo DFT, including domain-out and proxy failures. No B/DFT-dependent stopping or checkpoint selection."
+}
