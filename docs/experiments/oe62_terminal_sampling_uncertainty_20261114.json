@@ -1,0 +1,99 @@
+{
+  "scope": "Paired seed-block plus within-target proposal bootstrap, 4000 replicates, RNG1314. Only two inference seeds on ONE trained checkpoint per arm; intervals do not estimate training variance or confirm method superiority. Metrics use all proposals. Frozen B is developer evidence.",
+  "arms": {
+    "point_frozen": {
+      "physical_yield": 0.4609375,
+      "b_hit_yield": 0.1171875,
+      "prediction_std_by_target": {
+        "25": 0.7732595839503631,
+        "50": 0.5455082273590776,
+        "75": 0.5124827382055894
+      }
+    },
+    "terminal_sft": {
+      "physical_yield": 0.4166666666666667,
+      "b_hit_yield": 0.11458333333333333,
+      "prediction_std_by_target": {
+        "25": 0.6564477852359475,
+        "50": 0.5016462788980108,
+        "75": 0.6517883180509705
+      }
+    },
+    "terminal_structure": {
+      "physical_yield": 0.4348958333333333,
+      "b_hit_yield": 0.1171875,
+      "prediction_std_by_target": {
+        "25": 0.6322829214131145,
+        "50": 0.618115084278225,
+        "75": 0.5673245770662886
+      }
+    },
+    "terminal_physical": {
+      "physical_yield": 0.4739583333333333,
+      "b_hit_yield": 0.15104166666666666,
+      "prediction_std_by_target": {
+        "25": 0.5006089808208912,
+        "50": 0.5679966561403812,
+        "75": 0.524603795080305
+      }
+    },
+    "terminal_property": {
+      "physical_yield": 0.421875,
+      "b_hit_yield": 0.11979166666666667,
+      "prediction_std_by_target": {
+        "25": 0.5706167238173303,
+        "50": 0.5975407525817009,
+        "75": 0.5122958092720671
+      }
+    }
+  },
+  "difference_vs_frozen": {
+    "terminal_sft": {
+      "physical_yield_delta_95": [
+        -0.10937499999999994,
+        0.0234375
+      ],
+      "b_hit_yield_delta_95": [
+        -0.05989583333333333,
+        0.0546875
+      ]
+    },
+    "terminal_structure": {
+      "physical_yield_delta_95": [
+        -0.12760416666666663,
+        0.06770833333333331
+      ],
+      "b_hit_yield_delta_95": [
+        -0.05989583333333334,
+        0.05729166666666666
+      ]
+    },
+    "terminal_physical": {
+      "physical_yield_delta_95": [
+        -0.05989583333333337,
+        0.08333333333333331
+      ],
+      "b_hit_yield_delta_95": [
+        -0.015625,
+        0.08072916666666667
+      ]
+    },
+    "terminal_property": {
+      "physical_yield_delta_95": [
+        -0.14322916666666663,
+        0.059895833333333315
+      ],
+      "b_hit_yield_delta_95": [
+        -0.05208333333333333,
+        0.05989583333333334
+      ]
+    }
+  },
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/point_frozen/point_frozen.json": "25f4f62c865c7dcf68aaa33f2b3d1af8cff32b72c23c234023953bc86df56b31",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_sft/terminal_sft.json": "c03d0920ac214991ee6a1e4fb4824dbfcf6126dc2207b2eb6e52846be91183a3",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_structure/terminal_structure.json": "86242ef146db060ffe28532813fdc314f69b3e39f72509bfe373fed77bc5acf9",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_physical/terminal_physical.json": "25326dbe0b091b3689378166a6646ab2652afcb2b7ae6c3920ea0bbfbbbb8b45",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_property/terminal_property.json": "844dd7027898ede5fc46205b078dc4006f69bbd4bf03c3ad4650fe31da2d40a2"
+  }
+}
