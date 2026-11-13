@@ -15,14 +15,17 @@ from orbit3d.utils.run_evidence import record_input_hashes
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--campaign',type=Path,required=True)
     p.add_argument('--data',type=Path,required=True);p.add_argument('--target',choices=['homo','lumo'],required=True)
+    p.add_argument('--exclude-sdfs',nargs='+',type=Path,required=True,help='Frozen quantum validation cohorts excluded by graph')
     p.add_argument('--output',type=Path,required=True);p.add_argument('--limit',type=int,default=512);a=p.parse_args()
     a.output.mkdir(parents=True,exist_ok=False)
     manifest=json.loads((a.data/'manifest.json').read_text());source=json.loads((a.data/'records.json').read_text())
     heldout=[r for r in source if r.get('status')=='accepted' and r['split']!='train']
     forbidden_graphs={r['smiles'] for r in heldout};forbidden_scaffolds={r['scaffold'] for r in heldout}
+    quantum_graphs={Chem.MolToSmiles(Chem.RemoveHs(m)) for path in a.exclude_sdfs for m in Chem.SDMolSupplier(str(path),removeHs=False)}
     train=list(Chem.SDMolSupplier(str(a.data/'train.sdf'),removeHs=False))
     boundaries=np.quantile([float(m.GetProp(a.target)) for m in train],[.1,.25,.5,.75,.9])
     bins=[[] for _ in range(6)];seen=set();counts=Counter();inputs={'source_split':a.data/'records.json','manifest':a.data/'manifest.json','train':a.data/'train.sdf'}
+    inputs.update({str(path):path for path in a.exclude_sdfs})
     for pool in sorted(a.campaign.glob('eval_frozen_p*_s*/raw/summary.json')):
         parent=pool.parent.parent;run=parent/'run';raw=json.loads(pool.read_text())
         inputs[str(parent.name)+'/summary']=pool;inputs[str(parent.name)+'/raw_manifest']=pool.parent/'input_manifest.json'
@@ -37,6 +40,7 @@ def main():
                 mol=inst.graph;graph=Chem.MolToSmiles(Chem.RemoveHs(mol))
                 scaffold=MurckoScaffold.MurckoScaffoldSmiles(mol=Chem.RemoveHs(mol),includeChirality=False) or '<ACYCLIC>'
                 if graph in forbidden_graphs or scaffold in forbidden_scaffolds:counts['heldout_excluded']+=1;continue
+                if graph in quantum_graphs:counts['quantum_validation_excluded']+=1;continue
                 if graph in seen:counts['duplicate_graph']+=1;continue
                 seen.add(graph)
                 prediction=r['prediction'];assert np.isfinite(prediction).all()
