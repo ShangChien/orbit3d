@@ -373,6 +373,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                 "grpo_history": alignment_history,
                 "alignment_training_state": last_training_state,
                 "alignment_requested_groups": int(settings['grpo_steps']),
+                "alignment_invocation_seconds": time.perf_counter()-started,
                 "alignment_complete": len(alignment_history) == int(settings['grpo_steps']),
                 "label_theory": state.get("label_theory", []) if mode == "align" else sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                 "alignment_reference_sha256": reference_hash,

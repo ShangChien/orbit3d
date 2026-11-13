@@ -295,7 +295,7 @@ def align_octree(
             "evaluated": sum(r.get('evaluation_status') == 'completed' for r in rollout_records),
             "point_target": dict(zip(points.names, points.values)) if points else None,
             "reward_type": point_reward_type if points else 'exponential_interval_violation',
-            "advantage_mode": point_advantage_mode,
+            "advantage_mode": "terminal_channels" if terminal_feedback_level else point_advantage_mode,
             "terminal_feedback_level":terminal_feedback_level,
             "advantage_max": float(adv.max()),
             "loss": float(loss.detach()),
