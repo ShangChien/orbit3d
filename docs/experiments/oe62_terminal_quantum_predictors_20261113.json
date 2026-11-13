@@ -1,0 +1,230 @@
+{
+  "scope": "Selected terminal cohort only; same coordinates verified, no independent-score selection. Missing quantum and B evaluations remain explicit.",
+  "models": {
+    "dpa": {
+      "paired": 18,
+      "mae_against_quantum_eV": 0.23493078005826598,
+      "predicted_hits": 12,
+      "confirmed_predicted_hits": 8
+    },
+    "b": {
+      "paired": 18,
+      "mae_against_quantum_eV": 0.33341321905131927,
+      "predicted_hits": 13,
+      "confirmed_predicted_hits": 8
+    }
+  },
+  "records": [
+    {
+      "index": 0,
+      "arm": "terminal_property",
+      "quantile": 25,
+      "selection": "top1",
+      "target_eV": -7.040765,
+      "dpa_eV": -7.0526652336120605,
+      "b_eV": -7.127701828451414,
+      "quantum_eV": -7.269696802915188,
+      "status": "completed"
+    },
+    {
+      "index": 1,
+      "arm": "terminal_property",
+      "quantile": 25,
+      "selection": "fixed_hash",
+      "target_eV": -7.040765,
+      "dpa_eV": -6.892838478088379,
+      "b_eV": -6.986836398673436,
+      "quantum_eV": -6.801283292571498,
+      "status": "completed"
+    },
+    {
+      "index": 2,
+      "arm": "terminal_property",
+      "quantile": 50,
+      "selection": "top1",
+      "target_eV": -6.56081,
+      "dpa_eV": -6.4982099533081055,
+      "b_eV": -6.563986387352922,
+      "quantum_eV": -6.549972642577642,
+      "status": "completed"
+    },
+    {
+      "index": 3,
+      "arm": "terminal_property",
+      "quantile": 50,
+      "selection": "fixed_hash",
+      "target_eV": -6.56081,
+      "dpa_eV": -6.326362609863281,
+      "b_eV": -6.5195242797783175,
+      "quantum_eV": -5.576842285033694,
+      "status": "completed"
+    },
+    {
+      "index": 4,
+      "arm": "terminal_property",
+      "quantile": 75,
+      "selection": "top1",
+      "target_eV": -6.148085,
+      "dpa_eV": -6.224939346313477,
+      "b_eV": -6.264801871901607,
+      "quantum_eV": -6.410366231659966,
+      "status": "completed"
+    },
+    {
+      "index": 5,
+      "arm": "terminal_property",
+      "quantile": 75,
+      "selection": "fixed_hash",
+      "target_eV": -6.148085,
+      "dpa_eV": -7.385074615478516,
+      "b_eV": -7.263577435876602,
+      "quantum_eV": -7.33990423699769,
+      "status": "completed"
+    },
+    {
+      "index": 6,
+      "arm": "terminal_physical",
+      "quantile": 25,
+      "selection": "top1",
+      "target_eV": -7.040765,
+      "dpa_eV": -7.041457653045654,
+      "b_eV": -7.1803210633547785,
+      "quantum_eV": -6.373617798183074,
+      "status": "completed"
+    },
+    {
+      "index": 7,
+      "arm": "terminal_physical",
+      "quantile": 25,
+      "selection": "fixed_hash",
+      "target_eV": -7.040765,
+      "dpa_eV": -5.660643577575684,
+      "b_eV": -5.986085681666513,
+      "quantum_eV": -5.811940132148489,
+      "status": "completed"
+    },
+    {
+      "index": 8,
+      "arm": "terminal_physical",
+      "quantile": 50,
+      "selection": "top1",
+      "target_eV": -6.56081,
+      "dpa_eV": -6.543914794921875,
+      "b_eV": -6.710412796778972,
+      "quantum_eV": -6.521546624717179,
+      "status": "completed"
+    },
+    {
+      "index": 9,
+      "arm": "terminal_physical",
+      "quantile": 50,
+      "selection": "fixed_hash",
+      "target_eV": -6.56081,
+      "dpa_eV": -7.8084540367126465,
+      "b_eV": -7.576477084882896,
+      "quantum_eV": -7.975347117914461,
+      "status": "completed"
+    },
+    {
+      "index": 10,
+      "arm": "terminal_physical",
+      "quantile": 75,
+      "selection": "top1",
+      "target_eV": -6.148085,
+      "dpa_eV": -6.086516857147217,
+      "b_eV": -6.1596908287391265,
+      "quantum_eV": -6.093191200957211,
+      "status": "completed"
+    },
+    {
+      "index": 11,
+      "arm": "terminal_physical",
+      "quantile": 75,
+      "selection": "fixed_hash",
+      "target_eV": -6.148085,
+      "dpa_eV": -6.281551361083984,
+      "b_eV": -6.389036923222665,
+      "quantum_eV": -6.357722914329828,
+      "status": "completed"
+    },
+    {
+      "index": 12,
+      "arm": "terminal_sft",
+      "quantile": 25,
+      "selection": "top1",
+      "target_eV": -7.040765,
+      "dpa_eV": -7.020806789398193,
+      "b_eV": -7.083309260904382,
+      "quantum_eV": -7.05856035265883,
+      "status": "completed"
+    },
+    {
+      "index": 13,
+      "arm": "terminal_sft",
+      "quantile": 25,
+      "selection": "fixed_hash",
+      "target_eV": -7.040765,
+      "dpa_eV": -5.862822532653809,
+      "b_eV": -5.5621974255202815,
+      "quantum_eV": -5.001154958812396,
+      "status": "completed"
+    },
+    {
+      "index": 14,
+      "arm": "terminal_sft",
+      "quantile": 50,
+      "selection": "top1",
+      "target_eV": -6.56081,
+      "dpa_eV": -6.5566725730896,
+      "b_eV": -6.667317642311873,
+      "quantum_eV": -6.533928846609492,
+      "status": "completed"
+    },
+    {
+      "index": 15,
+      "arm": "terminal_sft",
+      "quantile": 50,
+      "selection": "fixed_hash",
+      "target_eV": -6.56081,
+      "dpa_eV": -5.9923553466796875,
+      "b_eV": -6.514267570288321,
+      "quantum_eV": -5.791513666016922,
+      "status": "completed"
+    },
+    {
+      "index": 16,
+      "arm": "terminal_sft",
+      "quantile": 75,
+      "selection": "top1",
+      "target_eV": -6.148085,
+      "dpa_eV": -6.1572160720825195,
+      "b_eV": -6.812391284956227,
+      "quantum_eV": -5.566154850027495,
+      "status": "completed"
+    },
+    {
+      "index": 17,
+      "arm": "terminal_sft",
+      "quantile": 75,
+      "selection": "fixed_hash",
+      "target_eV": -6.148085,
+      "dpa_eV": -5.77565860748291,
+      "b_eV": -5.999368087232465,
+      "quantum_eV": -5.8586342915875695,
+      "status": "completed"
+    }
+  ],
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/quantum_singlepoints_summary.json": "bd73b2170e747dcaa540436d12bc4826d18889a23a6d98ddf79330539229dd40",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/terminals/terminal_property/summary.json": "eba3282a3d192caa92d4fd0cbc8e4dccca2fe08880c97cc590b5e74947154722",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_property/terminal_property.json": "844dd7027898ede5fc46205b078dc4006f69bbd4bf03c3ad4650fe31da2d40a2",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_property/input_manifest.json": "43744be67382da759e1aa2c9e5142a1fa1e7666fe3a6e922f4408afb6f9d030f",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/terminals/terminal_physical/summary.json": "3430bd2af9c03b11c8beb92fe076aaa2e795a23724158b06f7c4e3ea2216670d",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_physical/terminal_physical.json": "25326dbe0b091b3689378166a6646ab2652afcb2b7ae6c3920ea0bbfbbbb8b45",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_physical/input_manifest.json": "d9dae8ac7d0a4cbc03408211ee6ec38100d5dbf3f616ea09fad82cd595085543",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/terminals/terminal_sft/summary.json": "90b8bde12be0412e8e7ece5658ab99dbac234a6a211e192f81fdebae3133b1a2",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_sft/terminal_sft.json": "c03d0920ac214991ee6a1e4fb4824dbfcf6126dc2207b2eb6e52846be91183a3",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/independent/terminal_sft/input_manifest.json": "e1323febd1a004a74afb7cddaa41752b06b2e7f7dfb9e7576ae9e516aa179a29"
+  },
+  "analysis_script_sha256": "5700426abcfb97d42f93708551e628681b302bf1d28e3ccda0db8cb7ed62e62f"
+}

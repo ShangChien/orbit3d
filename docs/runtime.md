@@ -108,7 +108,10 @@ python scripts/summarize_point_quantum.py --manifest "$ORBIT_QC/manifest.json" \
   --results "$ORBIT_QC_RESULTS" --output "$ORBIT_QC/comparison.json"
 ```
 
-默认候选选择固定正式GRPO200和等时SFT、三个中央目标及匹配训练/推理seed；其他已冻结协议通过`--arms`、`--campaign-prefix`和`--assignments quantile:training_seed:inference_seed ...`指定。量化结果不会改变队列。GPU编号由启动参数指定，一张卡一个进程。`--engine cpu --cpu-workers 4`可在训练期间异步运行CPU队列，每个worker使用4个PySCF线程；单点与几何优化通过`--optimize`区分。队列将`TMPDIR`设置为输出目录下的`scratch/`，PySCF临时积分文件随实验落盘，避免占满容器根盘。`completed.json`表示队列退出，逐结构的SCF收敛、几何收敛和保图结果需要分别查看；失败保留分母。已有源参照直接复用，元素覆盖扩展由`select_point_quantum_references.py`固定源开发结构。
+默认候选选择固定正式GRPO200和等时SFT、三个中央目标及匹配训练/推理seed；其他已冻结协议通过`--arms`、`--campaign-prefix`和`--assignments quantile:training_seed:inference_seed ...`指定。量化结果不会改变队列。GPU编号由启动参数指定，一张卡一个进程。`--engine cpu --cpu-workers 4`可在训练期间异步运行CPU队列，每个worker使用4个PySCF线程；单点与几何优化通过`--optimize`区分。队列默认将`TMPDIR`设置为输出目录下的`scratch/`；也可用`--scratch-root`显式指定足够大的本地盘或内存盘，最终结果仍保存在`--output`，避免积分临时文件占满容器根盘或争用共享盘。`completed.json`表示队列退出，逐结构的SCF收敛、几何收敛和保图结果需要分别查看；失败保留分母。已有源参照直接复用，元素覆盖扩展由`select_point_quantum_references.py`固定源开发结构。
+
+GPU空闲时优先直接运行GPU单点/优化；CPU队列用于GPU被训练占用时的并行计算或必要数值抽查。已验证同一软件与计算等级后，无需每轮机械地全量先CPU再GPU。E12的18例CPU/GPU输入轨道能核对最大差异低于0.00023 eV；某些较大候选CPU单点明显更慢，几何优化队列可与其并行，不依赖其完成。此为执行排期，不改变冻结候选或计算协议。
+
 
 ## 性质模型合同
 

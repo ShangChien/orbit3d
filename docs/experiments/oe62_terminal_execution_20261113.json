@@ -34,7 +34,7 @@
     "additional_off_raw_proposals_per_arm": 128,
     "planned_quantum_slots": 18
   },
-  "scope": "Execution validation and predeclared budgets; final model audit and results are added only when complete.",
+  "scope": "Completed execution validation and frozen budgets; performance evidence is in the five-arm and quantum result reports.",
   "formal_training_completed": true,
   "primary_evaluation_completed": true,
   "quantum_execution": {
@@ -46,6 +46,37 @@
       1
     ],
     "scratch_root": "/dev/shm/orbit_e12_quantum",
-    "scope": "Same frozen cohort; CPU input singlepoints and GPU optimization overlap after training/evaluation release GPUs."
+    "scope": "Same frozen cohort; CPU input singlepoints and GPU optimization overlap after training/evaluation release GPUs.",
+    "cpu_singlepoints_completed": 18,
+    "geometry_converged": 18,
+    "graph_preserved": 16,
+    "final_hits_025": 7
+  },
+  "experiment_completed": true,
+  "quantum_numerics": {
+    "scope": "Same 18 frozen terminal coordinates; CPU and GPU PBE0/def2-TZVP input singlepoints. These are numerical repeats, not 36 independent candidates.",
+    "paired": 18,
+    "max_abs_homo_lumo_delta_eV": [
+      0.00022726960460328627,
+      0.00020748979201457018
+    ],
+    "mean_abs_homo_lumo_delta_eV": [
+      7.022278798530913e-05,
+      6.237651410781784e-05
+    ],
+    "cpu_input_hits": {
+      "0.1": 5,
+      "0.25": 8,
+      "0.5": 10
+    },
+    "gpu_input_hits": {
+      "0.1": 5,
+      "0.25": 8,
+      "0.5": 10
+    },
+    "source_sha256": {
+      "quantum_singlepoints_summary.json": "bd73b2170e747dcaa540436d12bc4826d18889a23a6d98ddf79330539229dd40",
+      "quantum_geometry_summary.json": "e65976606cf0e49285d77b1adcabf3e5e73dd55783f239fda130051a4d1aa2c2"
+    }
   }
 }
