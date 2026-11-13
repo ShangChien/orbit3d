@@ -58,7 +58,7 @@ def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
     points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
-    point_reward_type="inverse_point_distance", point_advantage_mode="joint", terminal_feedback_level=None,
+    point_reward_type="inverse_point_distance", point_advantage_mode="joint", terminal_feedback_level=None, terminal_max_atoms=None,
 ):
     if point_reward_type not in {"inverse_point_distance", "eligibility_only"}:
         raise ValueError("Unknown point reward type")
@@ -94,6 +94,7 @@ def align_octree(
     if point_reward_type != "inverse_point_distance":settings["point_reward_type"] = point_reward_type
     if point_advantage_mode != "joint":settings["point_advantage_mode"] = point_advantage_mode
     if terminal_feedback_level is not None:settings['terminal_feedback_level']=terminal_feedback_level
+    if terminal_max_atoms is not None:settings['terminal_max_atoms']=terminal_max_atoms
     if resume_checkpoint is not None:
         saved = resume_checkpoint['alignment_training_state']
         if saved['settings'] != settings:
@@ -169,7 +170,7 @@ def align_octree(
                 if terminal_feedback_level=='structure':
                     rewards[i]=1.;record['evaluation_status']='structural_only'
                     continue
-                _,terminal=evaluate_terminal(inst,forcefield,oracle)
+                _,terminal=evaluate_terminal(inst,forcefield,oracle,max_atoms=terminal_max_atoms)
                 record['terminal']=terminal
                 if terminal['physical_accepted'] and 'final' in terminal:
                     prediction=np.asarray(terminal['final']['prediction_eV'])

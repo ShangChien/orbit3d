@@ -17,7 +17,7 @@ def property_snapshot(oracle, molecule):
         'max_force_eVA':float(norms.max())}
 
 
-def evaluate_terminal(instance, forcefield, oracle):
+def evaluate_terminal(instance, forcefield, oracle, *, max_atoms=None):
     """148 optimization calls plus two endpoint measurements, without target guidance.
 
     Initial molecule validation belongs to the caller. Failed structures are not
@@ -25,6 +25,12 @@ def evaluate_terminal(instance, forcefield, oracle):
     """
     started=time.perf_counter();history=[];row={'physical_accepted':False,'total_dpa_calls':0}
     final=instance
+    if max_atoms is not None:
+        if max_atoms < 1:raise ValueError('Terminal atom limit must be positive')
+        row['scope_supported']=len(instance.coords)<=max_atoms
+        if not row['scope_supported']:
+            row.update(scope_exclusion='atom_limit',coordinates_A=instance.coords.tolist(),seconds=time.perf_counter()-started)
+            return final,row
     try:
         row['total_dpa_calls']+=1
         try:row['initial']=property_snapshot(oracle,mol3d_to_validated_rdkit_mol(instance))

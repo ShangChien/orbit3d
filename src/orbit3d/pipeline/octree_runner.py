@@ -423,6 +423,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             point_reward_type=settings.get('point_reward_type','inverse_point_distance'),
             point_advantage_mode=settings.get('point_advantage_mode','joint'),
             terminal_feedback_level=settings.get('terminal_feedback_level'),
+            terminal_max_atoms=settings.get('terminal_max_atoms'),
         )
         filename = 'octree_aligned.pt' if len(history)==int(settings['grpo_steps']) else f'octree_resume_{len(history)}.pt'
         checkpoint = Path(paths["checkpoint_save_dir"]) / filename
