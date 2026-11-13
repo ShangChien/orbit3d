@@ -22,8 +22,9 @@ class Policy(torch.nn.Module):
         return [(logits.log_softmax(-1),torch.arange(len(low))%2,torch.arange(len(low)))]
 
 
+@pytest.mark.parametrize("advantage_mode",["joint","conditional_property_v1"])
 @pytest.mark.parametrize("reward_type",["inverse_point_distance","eligibility_only"])
-def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path,reward_type):
+def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path,reward_type,advantage_mode):
     def instance(t,**kwargs):
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
     monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
@@ -31,10 +32,10 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     ff=SimpleNamespace(atom_type_map=['C'],compute_energy_and_forces=lambda *a,**k:(0.,torch.zeros(1,3)))
     pool=[TargetPoints.parse({'y':value},{'y':1.},['y']) for value in [0.,.5]]
     torch.manual_seed(21);base=Policy();rng=torch.get_rng_state()
-    def run(model,reward_override=reward_type,**kwargs):
+    def run(model,reward_override=reward_type,advantage_override=advantage_mode,**kwargs):
         return align_octree(model,[],None,np.zeros(1),np.ones(1),pool[0].intervals(),oracle,ff,
                             steps=4,group_size=4,lr=.03,kl_beta=.2,physics_weight=0,replay_weight=0,
-                            points=pool[0],point_pool=pool,point_reward_type=reward_override,**kwargs)
+                            points=pool[0],point_pool=pool,point_reward_type=reward_override,point_advantage_mode=advantage_override,**kwargs)
     full=copy.deepcopy(base);full_history=run(full)
     torch.set_rng_state(rng);partial=copy.deepcopy(base);saved={}
     def snapshot(step,model,history,state):
@@ -53,6 +54,9 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     other='eligibility_only' if reward_type=='inverse_point_distance' else 'inverse_point_distance'
     with pytest.raises(ValueError,match='same GRPO targets, optimizer and reward settings'):
         run(copy.deepcopy(base),reward_override=other,resume_checkpoint=saved)
+    other_mode='joint' if advantage_mode=='conditional_property_v1' else 'conditional_property_v1'
+    with pytest.raises(ValueError,match='same GRPO targets, optimizer and reward settings'):
+        run(copy.deepcopy(base),advantage_override=other_mode,resume_checkpoint=saved)
 
 
 def test_eligibility_reward_ignores_property_value_but_keeps_evaluation(monkeypatch):

@@ -99,6 +99,8 @@ step_direction = F_projected - property_gradient_weight * g
 
 **固定骨架生长**选择开放位点、片段和键级，维护氢替换与位点容量；新坐标构建时保留输入世界坐标，弛豫可冻结骨架原子。这是显式图操作后端。[骨架流程](../src/orbit3d/pipeline/scaffold_runner.py)
 
+实验性`point_advantage_mode=conditional_property_v1`复用同一标量性质奖励，分开计算两个优势通道。令组大小为`K`、可评价数为`m`：有效性通道为±1二值奖励的组内标准化；性质通道仅在`m>=2`时为`(K/m)*(q-mean_evaluable(q))/max(std_evaluable(q),0.1)`，其余候选为0。两通道等权相加，再除以`max(std_all(sum),1)`，只缩小总尺度、不放大小差异。默认仍为`joint`；新模式已实现但尚未完成训练验证。模式进入恢复合同，逐候选保存两个优势分量。[优势实现](../src/orbit3d/generator/octree_alignment.py)
+
 ### BRICS 的作用与局限
 
 BRICS 根据局部化学环境确定可切键和可连接端点。当前实现逐条作单键切分，建立带来源 ID 的单端口片段库，随机选取兼容片段对并连接，再产生构象，进入性质排序和弛豫。提案本身不使用性质标签；目标用于下游选择。[片段实现](../src/orbit3d/baselines/brics.py)、[实验入口](../scripts/evaluate_brics_baseline.py)

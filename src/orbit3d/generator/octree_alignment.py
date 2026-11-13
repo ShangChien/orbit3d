@@ -9,6 +9,30 @@ from .random_streams import candidate_seed
 from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 
 
+def group_relative_advantages(reward, eligible, mode="joint"):
+    """Separate conditional property comparisons from eligibility in experimental v1.
+
+    The property channel averages over eligible candidates (K/m correction),
+    with a fixed 0.1 reward-unit standard-deviation floor. The combined signal
+    is scaled down to unit standard deviation, never amplified at this stage.
+    Zero/one eligible candidates contribute no property comparison.
+    """
+    if mode == "joint":
+        return (reward-reward.mean())/reward.std(unbiased=False).clamp_min(1e-6), None
+    if mode != "conditional_property_v1":
+        raise ValueError("Unknown point advantage mode")
+    binary = torch.where(eligible, torch.ones_like(reward), -torch.ones_like(reward))
+    eligibility = (binary-binary.mean())/binary.std(unbiased=False).clamp_min(1e-6)
+    property_signal = torch.zeros_like(reward)
+    count = int(eligible.sum())
+    if count >= 2:
+        values = reward[eligible]
+        property_signal[eligible] = (len(reward)/count)*(values-values.mean())/values.std(unbiased=False).clamp_min(0.1)
+    combined = eligibility+property_signal
+    normalizer = combined.std(unbiased=False).clamp_min(1.0)
+    return combined/normalizer, (eligibility/normalizer, property_signal/normalizer)
+
+
 def categorical_policy_loss(current, previous, reference, advantages, beta=0.02, clip=0.2):
     if beta and reference is None:
         raise ValueError('A nonzero KL weight requires a reference policy')
@@ -34,12 +58,16 @@ def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
     points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
-    point_reward_type="inverse_point_distance",
+    point_reward_type="inverse_point_distance", point_advantage_mode="joint",
 ):
     if point_reward_type not in {"inverse_point_distance", "eligibility_only"}:
         raise ValueError("Unknown point reward type")
     if points is None and point_reward_type != "inverse_point_distance":
         raise ValueError("Point reward ablations require point conditions")
+    if point_advantage_mode not in {"joint", "conditional_property_v1"}:
+        raise ValueError("Unknown point advantage mode")
+    if points is None and point_advantage_mode != "joint":
+        raise ValueError("Conditional property advantages require point conditions")
     if points is not None and (physics_weight or uncertainty_weight):
         raise ValueError("Point GRPO primary comparison uses property-only reward")
     device = next(model.parameters()).device
@@ -62,6 +90,7 @@ def align_octree(
                           else (intervals.names,intervals.bounds)}
     # Preserve legacy default resume settings; non-default rewards are explicit.
     if point_reward_type != "inverse_point_distance":settings["point_reward_type"] = point_reward_type
+    if point_advantage_mode != "joint":settings["point_advantage_mode"] = point_advantage_mode
     if resume_checkpoint is not None:
         saved = resume_checkpoint['alignment_training_state']
         if saved['settings'] != settings:
@@ -180,8 +209,12 @@ def align_octree(
         for row, value in zip(rollout_records, rewards):
             row['reward'] = value
         reward = torch.tensor(rewards, device=device)
-        adv = (reward - reward.mean()) / reward.std(unbiased=False).clamp_min(1e-6)
+        eligible = torch.tensor([r.get('evaluation_status') == 'completed' for r in rollout_records],device=device)
+        adv, components = group_relative_advantages(reward, eligible, point_advantage_mode)
         for record, advantage in zip(rollout_records, adv.tolist()):record["advantage"] = advantage
+        if components is not None:
+            for record, eligibility_part, property_part in zip(rollout_records,components[0].tolist(),components[1].tolist()):
+                record.update(eligibility_advantage=eligibility_part,property_advantage=property_part)
         # With no ranking signal or auxiliary objective, Adam's momentum and
         # weight decay must not silently move the policy on an all-failed group.
         updates = 2 if bool(adv.any()) or kl_beta or replay_weight else 0
@@ -232,6 +265,7 @@ def align_octree(
             "evaluated": sum(r.get('evaluation_status') == 'completed' for r in rollout_records),
             "point_target": dict(zip(points.names, points.values)) if points else None,
             "reward_type": point_reward_type if points else 'exponential_interval_violation',
+            "advantage_mode": point_advantage_mode,
             "advantage_max": float(adv.max()),
             "loss": float(loss.detach()),
             "precision": "float32",
