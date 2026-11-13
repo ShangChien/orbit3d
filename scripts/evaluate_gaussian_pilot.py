@@ -8,6 +8,7 @@ from orbit3d.pipeline.octree_runner import run_octree_from_config
 from orbit3d.pipeline.evaluators import load_evaluators
 from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from orbit3d.utils.reproducibility import lock_deterministic_environment
 from evaluate_point_pool import evaluate_pool
 
 
@@ -17,7 +18,7 @@ def main():
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--device',default='cuda:0');p.add_argument('--candidates',type=int,default=64)
     p.add_argument('--seeds',nargs='+',type=int,default=[2061,2062]);p.add_argument('--quantiles',nargs='+',default=['10','25','50','75','90'])
-    a=p.parse_args();torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
+    a=p.parse_args();lock_deterministic_environment(42);torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
     checkpoints=json.loads((a.campaign/'checkpoints.json').read_text())
     if a.extra_checkpoints:checkpoints.update(json.loads(a.extra_checkpoints.read_text()))
     base=json.loads((a.campaign/'configs/gaussian.json').read_text());base.update(mode='predict',device=a.device)
