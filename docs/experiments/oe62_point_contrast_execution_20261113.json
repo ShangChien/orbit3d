@@ -91,5 +91,42 @@
         }
       }
     ]
+  },
+  "evaluation_path_correction": {
+    "scope": "Correct evaluation-only resource paths in new experiment input copies. Original configs and completed training checkpoints remain unchanged; HOMO43 failed before its first pool.",
+    "records": [
+      {
+        "source": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_homo_seed43/configs/sft.json",
+        "source_sha256": "af24788fd7a8374a4ed06484d8ff01a6001235efc1a4118b2881b79f26d4823a",
+        "destination": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/base_configs/homo_43.json",
+        "sha256": "7a59559cc7f3b5456e9207d8d33847083a32ea9453e579e31dfcaf3010640015",
+        "old_forcefield_path": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+        "forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"
+      },
+      {
+        "source": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_homo_seed44/configs/sft.json",
+        "source_sha256": "bf38df9f96fcf7b775e8b7309a2909c5931273e4274dbc44a6dfbc4879c2dfe6",
+        "destination": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/base_configs/homo_44.json",
+        "sha256": "bf38df9f96fcf7b775e8b7309a2909c5931273e4274dbc44a6dfbc4879c2dfe6",
+        "old_forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+        "forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"
+      },
+      {
+        "source": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_lumo_seed43/configs/sft.json",
+        "source_sha256": "091c915cb16cb0662e16f23556b97493833a6ea8da15cd890575720ed137dd0f",
+        "destination": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/base_configs/lumo_43.json",
+        "sha256": "091c915cb16cb0662e16f23556b97493833a6ea8da15cd890575720ed137dd0f",
+        "old_forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+        "forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"
+      },
+      {
+        "source": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_lumo_seed44/configs/sft.json",
+        "source_sha256": "a7bb4cd499f6b23595483c1fe041d6b3afe8ca56191ba0063a1f8aa1f79e381f",
+        "destination": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/base_configs/lumo_44.json",
+        "sha256": "565742b24ec043d4ab11a1974afdd3878f2e94273c133e3de383df0d7dcb4603",
+        "old_forcefield_path": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+        "forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"
+      }
+    ]
   }
 }
