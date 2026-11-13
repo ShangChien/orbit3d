@@ -212,5 +212,46 @@
         "lumo_width_column_norm": 0.0
       }
     }
+  },
+  "lumo_formal_parameter_audit": {
+    "target": "lumo",
+    "source_scale_dtype": "float32",
+    "arms": {
+      "gaussian": {
+        "optimizer_updates": 2000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.0,
+        "lumo_width_column_norm": 0.03782520815730095
+      },
+      "sft": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.0,
+        "lumo_width_column_norm": 0.05416877567768097
+      },
+      "contrast": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.0,
+        "lumo_width_column_norm": 0.06609606742858887
+      },
+      "hindsight": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.0,
+        "lumo_width_column_norm": 0.0689089447259903
+      },
+      "both": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.0,
+        "lumo_width_column_norm": 0.06289610266685486
+      }
+    }
+  },
+  "wheel_validation": {
+    "passed": 23,
+    "wheel_sha256": "08b096b5017a19ab102a1d05b5f8c176833a61af252162debbc57a231a6b9223",
+    "scope": "Tests copied outside checkout, imports asserted to extracted wheel; Gaussian/point conditioning and GRPO advantage/resume contracts."
   }
 }
