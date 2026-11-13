@@ -70,11 +70,17 @@ seed42、两性质合计392池/25088提案（含关闭条件池），A、指纹�
 
 对比训练1000步实测管线耗时194.68秒，等时SFT194.72秒（1875步）；普通SFT1000步113.49秒。按此收益固定配方补HOMO/LUMO三训练seed及24例异步量化，不扩高斯或Hindsight。初试使用B作开发证据，量化不按B逐样本分数选样。[初试完整结果](experiments/oe62_point_contrast_homo_seed42_20261113.json)
 
-### E11已完成的HOMO三种子与量化单点
+### E11两性质三种子与量化单点
 
 HOMO三训练seed已完成。在冻结B上，点值对比相对等时SFT的平均目标MAE为0.5789 vs 0.5867 eV，平均绝对响应偏差0.3197 vs 0.3684 eV，命中产率6.30% vs 6.15%。个体MAE在两个seed改善、一个seed变差；seed42的较大命中优势未稳定复现，不能以初试代替三seed结论。[配对重复统计](experiments/oe62_point_contrast_homo_repeats_20261113.json)
 
+LUMO三seed也已完成：点值对比与等时SFT的B目标MAE为0.7119 vs 0.7520 eV，响应偏差0.4079 vs 0.4836 eV，命中产率5.42% vs 5.21%。两性质都出现平均条件响应收益，但个体MAE仍非每个seed都改善；总计288池、18432提案（含关闭条件），不将推理seed和目标格当独立训练重复。[LUMO配对统计](experiments/oe62_point_contrast_lumo_repeats_20261113.json)
+
 固定24例的原始几何量化单点队列已收尾，点值对比命中3/12、等时SFT命中2/12；HOMO分别0/6、1/6，LUMO分别3/6、1/6。该小队列不支持总体成功率估计，末端优化仍在运行，暂不以输入单点替代最终交付结果。[逐例单点](experiments/oe62_point_contrast_quantum_singlepoints_20261113.json)
+
+![三训练种子下的条件响应](figures/oe62_point_contrast_response.png)
+
+![目标误差、响应偏差与命中产率的权衡](figures/oe62_point_contrast_tradeoff.png)
 
 ### E8奖励消融：三训练种子完成
 
