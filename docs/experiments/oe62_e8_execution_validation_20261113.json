@@ -1,0 +1,14 @@
+{
+  "selector_identical": true,
+  "cpu_gpu_delta_eV": [
+    4.175180469268014e-05,
+    5.9300731750422386e-05
+  ],
+  "cpu_seconds": 91.73339807614684,
+  "gpu_seconds": 3.5404734574258327,
+  "historical_reducer_max_delta": 1.2212453270876722e-15,
+  "unit_tests": {
+    "passed": 212,
+    "skipped": 3
+  }
+}

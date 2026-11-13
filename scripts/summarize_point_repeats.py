@@ -8,11 +8,14 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--summaries',nargs='+',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--arms',nargs='+',default=['frozen','continue400','grpo200','continue_wall'])
+    p.add_argument('--reference-arm',default='grpo200')
     a=p.parse_args();runs=[json.loads(path.read_text()) for path in a.summaries]
     targets={run['target'] for run in runs};assert len(targets)==1
     seeds=[run['training_seed'] for run in runs]
     assert None not in seeds and len(set(seeds))==len(seeds),'Require distinct known training seeds'
-    target=next(iter(targets));arms=['frozen','continue400','grpo200','continue_wall']
+    target=next(iter(targets));arms=a.arms;controls=[arm for arm in arms if arm!=a.reference_arm]
+    if a.reference_arm not in arms:p.error('Reference arm must be included in arms')
     per_seed=[];counts=set()
     for run in runs:
         row={'training_seed':run['training_seed'],'arms':{},'paired_grpo_minus_control':{}}
@@ -41,8 +44,8 @@ def main():
                 'mean_internal_diversity':float(np.mean([r['internal_diversity_valid'] for r in responses])),
                 'mean_unique_valid_fraction':float(np.mean([r['unique_valid']/r['valid'] for r in responses])),
             }
-        for control in ['frozen','continue400','continue_wall']:
-            row['paired_grpo_minus_control'][control]={name:row['arms']['grpo200'][name]-value
+        for control in controls:
+            row['paired_grpo_minus_control'][control]={name:row['arms'][a.reference_arm][name]-value
                                                        for name,value in row['arms'][control].items()}
         per_seed.append(row)
     assert len(counts)==1,'Do not combine pilot and larger candidate budgets'
@@ -54,12 +57,16 @@ def main():
                     for name in per_seed[0]['arms'][arm]} for arm in arms}
     differences={control:{name:describe([row['paired_grpo_minus_control'][control][name] for row in per_seed])
                           for name in per_seed[0]['paired_grpo_minus_control'][control]}
-                 for control in ['frozen','continue400','continue_wall']}
-    a.output.write_text(json.dumps({'target':target,'training_seeds':seeds,'attempts_per_arm_per_training_seed':next(iter(counts)),
+                 for control in controls}
+    report={'reference_arm':a.reference_arm,'target':target,'training_seeds':seeds,'attempts_per_arm_per_training_seed':next(iter(counts)),
         'scope':'Independent training seeds are the repeat unit; descriptive paired differences, no significance claim',
         'mae_definition':'Equal weight over five target quantiles; domain-evaluable molecules within each quantile',
         'sources':{str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in a.summaries},
-        'per_training_seed':per_seed,'arms':arm_stats,'paired_grpo_minus_control':differences},indent=2)+'\n')
+        'per_training_seed':per_seed,'arms':arm_stats,'paired_grpo_minus_control':differences}
+    if a.reference_arm!='grpo200':
+        report['paired_reference_minus_control']=report.pop('paired_grpo_minus_control')
+        for row in report['per_training_seed']:row['paired_reference_minus_control']=row.pop('paired_grpo_minus_control')
+    a.output.write_text(json.dumps(report,indent=2)+'\n')
 
 
 if __name__=='__main__':main()

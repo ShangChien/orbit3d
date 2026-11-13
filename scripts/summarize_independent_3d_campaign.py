@@ -8,10 +8,12 @@ from evaluate_independent_3d_campaign import metrics
 def main():
     p=argparse.ArgumentParser();p.add_argument('--summary',type=Path,required=True);p.add_argument('--inputs',type=Path,required=True)
     p.add_argument('--training-seed',type=int,required=True)
+    p.add_argument('--arms',nargs='+',default=['frozen','continue400','grpo200','continue_wall'])
+    p.add_argument('--targets',nargs='+',choices=['homo','lumo'],default=['homo','lumo'])
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     data=json.loads(a.summary.read_text());prefix=data.get('prediction_prefix','hyff');manifest=json.loads(a.manifest.read_text());arms=[];controls=[]
-    for target in ['homo','lumo']:
-        for arm in ['frozen','continue400','grpo200','continue_wall']:
+    for target in a.targets:
+        for arm in a.arms:
             per_target=[]
             for q,goal in manifest['single_target_points'][target].items():
                 pools=[r for r in data['pools'] if r['target']==target and r['name'].startswith(f'eval_{arm}_p{q}_')]
@@ -23,7 +25,7 @@ def main():
                 'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in per_target])),
                 'mean_response_slope':float(np.polyfit([r['goal_eV'] for r in per_target],[r['mean_prediction_eV'] for r in per_target],1)[0]),
                 'per_quantile':per_target})
-        for arm in ['frozen','continue400','grpo200','continue_wall']:
+        for arm in a.arms:
             for mode in ['correct','off','shuffled']:
                 if mode=='off' and not any(p['target']==target and p['name'].startswith(f'eval_{arm}_off_') for p in data['pools']):continue
                 scored=[]

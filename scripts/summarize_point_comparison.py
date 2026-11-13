@@ -93,7 +93,7 @@ def main():
             q=group.rsplit('_p',1)[1];score(group,q,'correct',q)
     # Re-score existing pools for every arm; do not create extra proposals.
     # P50 receives P10, keeping the original predeclared incompatible-goal mapping.
-    for arm in ['frozen','continue400','grpo200','continue_wall']:
+    for arm in sorted({group[5:].rsplit('_p',1)[0] for group in groups if '_off' not in group}):
         for original,supplied in [('25','75'),('50','10'),('75','25')]:
             group=f'eval_{arm}_p{supplied}'
             if group in groups:score(group,original,'shuffled',supplied)
