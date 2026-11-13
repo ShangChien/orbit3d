@@ -15,5 +15,81 @@
     0,
     1
   ],
-  "quantum_selection": "Frozen 24 slots, seed42, no B per-sample score selection; CPU singlepoints asynchronous, GPU geometry after generation evaluations."
+  "quantum_selection": "Frozen 24 slots, seed42, no B per-sample score selection; CPU singlepoints asynchronous, GPU geometry after generation evaluations.",
+  "pilot_parameter_audit": {
+    "scope": "Exact checkpoint tensor comparisons; time budget is pipeline time, process wall reported separately. No evaluation-based checkpoint selection.",
+    "runs": [
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/homo_seed42",
+        "initial_sha256": "4550a6ce412fd34ba35f373d75751dcd3241d6b3c798806f7f8819078ac442c4",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 125.90507951751351,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 113.48676933720708
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 209.11749606207013,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 194.68298292160034
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 208.3644894696772,
+            "returncode": 0,
+            "optimizer_updates": 1875,
+            "pipeline_training_seconds": 194.72358698025346
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "feb56b34c959ef9cca04c5ebdc387e0d08adeadcdc4d3377db1f733ae6bb59d2",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 113.48676933720708,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "b6dd81ca799ead23587d7891b7cb66a9e7064882f1e5d79009fc984cfe4e38f9",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 194.68298292160034,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": 0.012242063435085583,
+            "mean_eligible_pairs_per_batch": 5.226
+          },
+          "point_time": {
+            "checkpoint_sha256": "ed02b249217beba9528414843f431b7e0a40f9fa35cd15accd39bbd23dbb2bbd",
+            "optimizer_updates": 1875,
+            "pipeline_training_seconds": 194.72358698025346,
+            "requested_wall_seconds": 194.68298292160034,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      }
+    ]
+  }
 }
