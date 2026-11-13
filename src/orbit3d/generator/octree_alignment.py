@@ -58,7 +58,7 @@ def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
     points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
-    point_reward_type="inverse_point_distance", point_advantage_mode="joint",
+    point_reward_type="inverse_point_distance", point_advantage_mode="joint", terminal_feedback_level=None,
 ):
     if point_reward_type not in {"inverse_point_distance", "eligibility_only"}:
         raise ValueError("Unknown point reward type")
@@ -70,6 +70,8 @@ def align_octree(
         raise ValueError("Conditional property advantages require point conditions")
     if points is not None and (physics_weight or uncertainty_weight):
         raise ValueError("Point GRPO primary comparison uses property-only reward")
+    if terminal_feedback_level is not None and (points is None or terminal_feedback_level not in {'structure','physical','property'}):
+        raise ValueError('Terminal feedback requires point conditions and a known channel level')
     device = next(model.parameters()).device
     reference = copy.deepcopy(model).eval().requires_grad_(False) if kl_beta else None
     model.requires_grad_(False)
@@ -91,6 +93,7 @@ def align_octree(
     # Preserve legacy default resume settings; non-default rewards are explicit.
     if point_reward_type != "inverse_point_distance":settings["point_reward_type"] = point_reward_type
     if point_advantage_mode != "joint":settings["point_advantage_mode"] = point_advantage_mode
+    if terminal_feedback_level is not None:settings['terminal_feedback_level']=terminal_feedback_level
     if resume_checkpoint is not None:
         saved = resume_checkpoint['alignment_training_state']
         if saved['settings'] != settings:
@@ -149,68 +152,94 @@ def align_octree(
                 inst = trajectory_to_instance(trajectory, element_table=tuple(model.args.allow_atoms.split(',')))
                 row.update(valid=True, smiles=inst.smiles)
                 assessment = domain.assess(inst.graph) if domain else None
+                row['oracle_in_domain'] = assessment['in_domain'] if assessment else True
                 row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
                 row['unseen_oracle_training_elements'] = assessment['unseen_training_elements'] if assessment else []
-                if assessment and not assessment['in_domain']:
+                if assessment and not assessment['in_domain'] and terminal_feedback_level is None:
                     row.update(reason='out_of_oracle_domain', evaluation_status='not_evaluated')
                 else:
                     instances.append((i, inst))
             except ValueError as exc:
                 row['reason'] = str(exc)
             rollout_records.append(row)
-        evaluation = None
-        if instances and isinstance(oracle, InternalDPA4PropertyOracle):
-            evaluation = oracle.evaluate_3d_mols_batched([inst.graph for _, inst in instances])
-        for j, (i, inst) in enumerate(instances):
-            try:
-                if evaluation is not None:
-                    raw_force = evaluation['forces_eV_A'][j]
-                    rollout_records[i].update(energy_eV=float(evaluation['energy_eV'][j]),
-                                              raw_forces_eV_A=raw_force.tolist() if raw_force is not None else None)
-                    if evaluation['errors'][j]:
-                        raise ValueError(evaluation['errors'][j])
-                    prediction, std = evaluation['mean'][j], evaluation['std'][j]
-                    energy = evaluation['energy_eV'][j]
-                    force = torch.as_tensor(evaluation['forces_eV_A'][j])
-                else:
-                    prediction, std = oracle.predict_3d_mols([inst.graph])
-                    prediction = np.asarray(prediction).reshape(-1)
-                    std = np.asarray(std).reshape(-1)
-                    energy, force = forcefield.compute_energy_and_forces(
-                        torch.tensor(inst.coords, device=device), torch.tensor([forcefield.atom_type_map.index(s) for s in inst.symbols], device=device),
-                        clip_forces=False, zero_com_forces=False,
-                    )
-                if (
-                    not np.isfinite(prediction).all()
-                    or not np.isfinite(std).all()
-                    or not np.isfinite(float(energy))
-                    or not torch.isfinite(force).all()
-                ):
-                    raise ValueError("Nonfinite evaluation")
-                violation = intervals.violations(prediction).numpy() / scale
-                rms = float(force.square().sum(-1).mean().sqrt())
-                if points is not None:
-                    distance = points.distance(prediction)
-                    rollout_records[i]["point_distance"] = distance
-                    reward = 1.0 if point_reward_type == "eligibility_only" else 1.0 / (1.0 + distance)
-                else:
-                    reward = float(
-                        np.exp(
-                            -np.square(violation).sum() - physics_weight * max(0.0, rms - 0.5) - uncertainty_weight * np.mean(std / scale)
+        if terminal_feedback_level is not None:
+            from ..physics.terminal_evaluation import evaluate_terminal
+            for i,inst in instances:
+                record=rollout_records[i]
+                if terminal_feedback_level=='structure':
+                    rewards[i]=1.;record['evaluation_status']='structural_only'
+                    continue
+                _,terminal=evaluate_terminal(inst,forcefield,oracle)
+                record['terminal']=terminal
+                if terminal['physical_accepted'] and 'final' in terminal:
+                    prediction=np.asarray(terminal['final']['prediction_eV'])
+                    distance=points.distance(prediction);rewards[i]=1./(1.+distance)
+                    hits[i]=intervals.hit(prediction)
+                    record.update(evaluation_status='completed',prediction=prediction.tolist(),point_distance=distance,property_hit=hits[i])
+                else:record['evaluation_status']='terminal_not_eligible'
+        else:
+            evaluation = None
+            if instances and isinstance(oracle, InternalDPA4PropertyOracle):
+                evaluation = oracle.evaluate_3d_mols_batched([inst.graph for _, inst in instances])
+            for j, (i, inst) in enumerate(instances):
+                try:
+                    if evaluation is not None:
+                        raw_force = evaluation['forces_eV_A'][j]
+                        rollout_records[i].update(energy_eV=float(evaluation['energy_eV'][j]),
+                                                  raw_forces_eV_A=raw_force.tolist() if raw_force is not None else None)
+                        if evaluation['errors'][j]:
+                            raise ValueError(evaluation['errors'][j])
+                        prediction, std = evaluation['mean'][j], evaluation['std'][j]
+                        energy = evaluation['energy_eV'][j]
+                        force = torch.as_tensor(evaluation['forces_eV_A'][j])
+                    else:
+                        prediction, std = oracle.predict_3d_mols([inst.graph])
+                        prediction = np.asarray(prediction).reshape(-1)
+                        std = np.asarray(std).reshape(-1)
+                        energy, force = forcefield.compute_energy_and_forces(
+                            torch.tensor(inst.coords, device=device), torch.tensor([forcefield.atom_type_map.index(s) for s in inst.symbols], device=device),
+                            clip_forces=False, zero_com_forces=False,
                         )
-                    )
-                rewards[i] = reward
-                hits[i] = intervals.hit(prediction)
-                rollout_records[i].update(prediction=prediction.tolist(), std=std.tolist(), rms_force=rms,
-                                          energy_eV=float(energy), raw_forces_eV_A=force.cpu().tolist(), property_hit=hits[i],
-                                          evaluation_status='completed')
-            except (ValueError, FloatingPointError) as exc:
-                rollout_records[i].update(reason=str(exc), evaluation_status='failed')
+                    if (
+                        not np.isfinite(prediction).all()
+                        or not np.isfinite(std).all()
+                        or not np.isfinite(float(energy))
+                        or not torch.isfinite(force).all()
+                    ):
+                        raise ValueError("Nonfinite evaluation")
+                    violation = intervals.violations(prediction).numpy() / scale
+                    rms = float(force.square().sum(-1).mean().sqrt())
+                    if points is not None:
+                        distance = points.distance(prediction)
+                        rollout_records[i]["point_distance"] = distance
+                        reward = 1.0 if point_reward_type == "eligibility_only" else 1.0 / (1.0 + distance)
+                    else:
+                        reward = float(
+                            np.exp(
+                                -np.square(violation).sum() - physics_weight * max(0.0, rms - 0.5) - uncertainty_weight * np.mean(std / scale)
+                            )
+                        )
+                    rewards[i] = reward
+                    hits[i] = intervals.hit(prediction)
+                    rollout_records[i].update(prediction=prediction.tolist(), std=std.tolist(), rms_force=rms,
+                                              energy_eV=float(energy), raw_forces_eV_A=force.cpu().tolist(), property_hit=hits[i],
+                                              evaluation_status='completed')
+                except (ValueError, FloatingPointError) as exc:
+                    rollout_records[i].update(reason=str(exc), evaluation_status='failed')
         for row, value in zip(rollout_records, rewards):
             row['reward'] = value
         reward = torch.tensor(rewards, device=device)
         eligible = torch.tensor([r.get('evaluation_status') == 'completed' for r in rollout_records],device=device)
-        adv, components = group_relative_advantages(reward, eligible, point_advantage_mode)
+        if terminal_feedback_level is not None:
+            from .terminal_feedback import terminal_advantages
+            structural=torch.tensor([r['valid'] for r in rollout_records],device=device)
+            physical=torch.tensor([r.get('terminal',{}).get('physical_accepted',False) for r in rollout_records],device=device)
+            adv,terminal_components=terminal_advantages(structural,physical,eligible,reward,terminal_feedback_level)
+            components=None
+            for k,record in enumerate(rollout_records):
+                record['terminal_advantages']={name:float(value[k]) for name,value in terminal_components.items()}
+        else:
+            adv, components = group_relative_advantages(reward, eligible, point_advantage_mode)
         for record, advantage in zip(rollout_records, adv.tolist()):record["advantage"] = advantage
         if components is not None:
             for record, eligibility_part, property_part in zip(rollout_records,components[0].tolist(),components[1].tolist()):
@@ -255,7 +284,8 @@ def align_octree(
         row = {
             "step": step + 1,
             "valid": sum(row['valid'] for row in rollout_records),
-            "domain_eligible": len(instances),
+            "domain_eligible": sum(r.get("oracle_in_domain",False) for r in rollout_records),
+            "physical_accepted":sum(r.get("terminal",{}).get("physical_accepted",False) for r in rollout_records),
             "domain_cutoff": domain.cutoff if domain else None,
             "electron_parity": electron_parity,
             "group_size": group_size,
@@ -266,6 +296,7 @@ def align_octree(
             "point_target": dict(zip(points.names, points.values)) if points else None,
             "reward_type": point_reward_type if points else 'exponential_interval_violation',
             "advantage_mode": point_advantage_mode,
+            "terminal_feedback_level":terminal_feedback_level,
             "advantage_max": float(adv.max()),
             "loss": float(loss.detach()),
             "precision": "float32",
