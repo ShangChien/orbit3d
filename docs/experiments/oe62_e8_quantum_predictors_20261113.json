@@ -1,0 +1,1011 @@
+{
+  "scope": "Existing frozen predictions reused only after shared trajectory centering, atom-order, coordinate and input-hash checks. Active property only; selected quantum cohort, not a population calibration estimate. No new model inference or policy updates.",
+  "selected": 36,
+  "planned": 36,
+  "b_model_hashes": {
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42": {
+      "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+      "oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e"
+    },
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42": {
+      "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+      "oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e"
+    }
+  },
+  "models": {
+    "dpa": {
+      "selected": 36,
+      "paired": 36,
+      "active_property_mae_eV": 0.3110290871240864,
+      "active_property_bias_eV": -0.134533398685031,
+      "target_hit_agreement_025": {
+        "true_positive": 19,
+        "false_positive": 7,
+        "false_negative": 0,
+        "true_negative": 10
+      }
+    },
+    "fingerprint": {
+      "selected": 36,
+      "paired": 36,
+      "active_property_mae_eV": 0.43315725013301887,
+      "active_property_bias_eV": -0.12331976350679964,
+      "target_hit_agreement_025": {
+        "true_positive": 13,
+        "false_positive": 8,
+        "false_negative": 6,
+        "true_negative": 9
+      }
+    },
+    "unimol2": {
+      "selected": 36,
+      "paired": 36,
+      "active_property_mae_eV": 0.3803497077600879,
+      "active_property_bias_eV": -0.2510559688520863,
+      "target_hit_agreement_025": {
+        "true_positive": 14,
+        "false_positive": 6,
+        "false_negative": 5,
+        "true_negative": 11
+      }
+    }
+  },
+  "by_target_arm": {
+    "homo/grpo200": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.2340163908401894,
+        "active_property_bias_eV": -0.072632009399148,
+        "target_hit_agreement_025": {
+          "true_positive": 4,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 1
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.42134408484248337,
+        "active_property_bias_eV": 0.044948719997764584,
+        "target_hit_agreement_025": {
+          "true_positive": 3,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 1
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.43410551355050336,
+        "active_property_bias_eV": -0.08677219848502338,
+        "target_hit_agreement_025": {
+          "true_positive": 3,
+          "false_positive": 2,
+          "false_negative": 1,
+          "true_negative": 0
+        }
+      }
+    },
+    "homo/eligibility200": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.05829115679841509,
+        "active_property_bias_eV": -0.01600317130377782,
+        "target_hit_agreement_025": {
+          "true_positive": 5,
+          "false_positive": 0,
+          "false_negative": 0,
+          "true_negative": 1
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.15995068473344873,
+        "active_property_bias_eV": -0.0901270957314737,
+        "target_hit_agreement_025": {
+          "true_positive": 4,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 0
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.1415326472233578,
+        "active_property_bias_eV": -0.13583707861207653,
+        "target_hit_agreement_025": {
+          "true_positive": 4,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 0
+        }
+      }
+    },
+    "homo/continue_wall": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.8128852984083007,
+        "active_property_bias_eV": -0.7880339390789173,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 3,
+          "false_negative": 0,
+          "true_negative": 3
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 1.0924148960335145,
+        "active_property_bias_eV": -0.9301011792860606,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 2,
+          "false_negative": 0,
+          "true_negative": 4
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.9097874563900593,
+        "active_property_bias_eV": -0.9097874563900593,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 5
+        }
+      }
+    },
+    "lumo/grpo200": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.12694775149087795,
+        "active_property_bias_eV": -0.10572561837059456,
+        "target_hit_agreement_025": {
+          "true_positive": 4,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 1
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.2894660719063678,
+        "active_property_bias_eV": -0.04409343709534593,
+        "target_hit_agreement_025": {
+          "true_positive": 3,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 1
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.2520811558100166,
+        "active_property_bias_eV": -0.125060571554564,
+        "target_hit_agreement_025": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      }
+    },
+    "lumo/eligibility200": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.16600900294396884,
+        "active_property_bias_eV": 0.0013036407932465188,
+        "target_hit_agreement_025": {
+          "true_positive": 3,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 2
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.15118377692516238,
+        "active_property_bias_eV": -0.06641632015597498,
+        "target_hit_agreement_025": {
+          "true_positive": 2,
+          "false_positive": 2,
+          "false_negative": 1,
+          "true_negative": 1
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.22658596016466145,
+        "active_property_bias_eV": -0.2149114219630408,
+        "target_hit_agreement_025": {
+          "true_positive": 2,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      }
+    },
+    "lumo/continue_wall": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.468024922262766,
+        "active_property_bias_eV": 0.1738907052490051,
+        "target_hit_agreement_025": {
+          "true_positive": 3,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 2
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.48458398635713634,
+        "active_property_bias_eV": 0.3458707312302926,
+        "target_hit_agreement_025": {
+          "true_positive": 1,
+          "false_positive": 1,
+          "false_negative": 2,
+          "true_negative": 2
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.3180055134219286,
+        "active_property_bias_eV": -0.033967086107753196,
+        "target_hit_agreement_025": {
+          "true_positive": 2,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "index": 0,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 35,
+      "predictions_eV": {
+        "dpa": -7.040160179138184,
+        "fingerprint": -6.4779003825400805,
+        "unimol2": -6.874694544361578
+      },
+      "coordinate_match_max_delta_A": 4.921878876684715e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.479496877177622
+    },
+    {
+      "index": 1,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 50,
+      "predictions_eV": {
+        "dpa": -7.241818428039551,
+        "fingerprint": -6.777493394336926,
+        "unimol2": -6.590189464696856
+      },
+      "coordinate_match_max_delta_A": 4.843903056439558e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.027387077077251
+    },
+    {
+      "index": 2,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 9,
+      "predictions_eV": {
+        "dpa": -7.091799736022949,
+        "fingerprint": -7.020119668908063,
+        "unimol2": -7.119344170349219
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.027479484998854
+    },
+    {
+      "index": 3,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 20,
+      "predictions_eV": {
+        "dpa": -6.679027080535889,
+        "fingerprint": -6.846915968819519,
+        "unimol2": -7.0271443055395615
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.6086623935879745
+    },
+    {
+      "index": 4,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 121,
+      "predictions_eV": {
+        "dpa": -7.077917098999023,
+        "fingerprint": -6.522000616936908,
+        "unimol2": -6.746659109509474
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.53657418575104
+    },
+    {
+      "index": 5,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 117,
+      "predictions_eV": {
+        "dpa": -6.345073223114014,
+        "fingerprint": -6.504416092292115,
+        "unimol2": -7.030611495627237
+      },
+      "coordinate_match_max_delta_A": 4.884981308350689e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.829994163962395
+    },
+    {
+      "index": 6,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 68,
+      "predictions_eV": {
+        "dpa": -6.575757026672363,
+        "fingerprint": -6.473185235813172,
+        "unimol2": -6.8061181457456215
+      },
+      "coordinate_match_max_delta_A": 4.882760862301438e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.620573472956049
+    },
+    {
+      "index": 7,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 59,
+      "predictions_eV": {
+        "dpa": -6.276750564575195,
+        "fingerprint": -6.626608699310289,
+        "unimol2": -6.716268255317201
+      },
+      "coordinate_match_max_delta_A": 4.921618668163319e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.769193913629624
+    },
+    {
+      "index": 8,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 98,
+      "predictions_eV": {
+        "dpa": -6.563466548919678,
+        "fingerprint": -6.38287224713314,
+        "unimol2": -6.523502277710338
+      },
+      "coordinate_match_max_delta_A": 4.999889391399392e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.540588983544182
+    },
+    {
+      "index": 9,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 31,
+      "predictions_eV": {
+        "dpa": -6.596121788024902,
+        "fingerprint": -7.0210464737037235,
+        "unimol2": -6.8386663226130295
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.722985744508814
+    },
+    {
+      "index": 10,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 55,
+      "predictions_eV": {
+        "dpa": -6.585648536682129,
+        "fingerprint": -7.047919334020364,
+        "unimol2": -5.968249275296905
+      },
+      "coordinate_match_max_delta_A": 4.882760862301438e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -4.914776837379623
+    },
+    {
+      "index": 11,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 59,
+      "predictions_eV": {
+        "dpa": -7.198403358459473,
+        "fingerprint": -6.8005898550193935,
+        "unimol2": -7.389858481754942
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.272957436447623
+    },
+    {
+      "index": 12,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 114,
+      "predictions_eV": {
+        "dpa": -6.1497650146484375,
+        "fingerprint": -6.118477487666425,
+        "unimol2": -6.112884883845897
+      },
+      "coordinate_match_max_delta_A": 4.882760862301438e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.987408392761852
+    },
+    {
+      "index": 13,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 80,
+      "predictions_eV": {
+        "dpa": -6.00899600982666,
+        "fingerprint": -6.114097646852023,
+        "unimol2": -6.27793306344849
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.9733954329031045
+    },
+    {
+      "index": 14,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 64,
+      "predictions_eV": {
+        "dpa": -6.175087928771973,
+        "fingerprint": -6.346216595022096,
+        "unimol2": -6.313678239464309
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.132297558053782
+    },
+    {
+      "index": 15,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 83,
+      "predictions_eV": {
+        "dpa": -5.991466522216797,
+        "fingerprint": -5.924542197471822,
+        "unimol2": -5.993637732665523
+      },
+      "coordinate_match_max_delta_A": 4.884981308350689e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.968936411975914
+    },
+    {
+      "index": 16,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 11,
+      "predictions_eV": {
+        "dpa": -6.148651123046875,
+        "fingerprint": -6.118865205485921,
+        "unimol2": -5.878493743457582
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.3109683502937575
+    },
+    {
+      "index": 17,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 57,
+      "predictions_eV": {
+        "dpa": -5.531828880310059,
+        "fingerprint": -6.7461345580997305,
+        "unimol2": -6.604171218832284
+      },
+      "coordinate_match_max_delta_A": 4.805045250577678e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -4.29404761230363
+    },
+    {
+      "index": 18,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 62,
+      "predictions_eV": {
+        "dpa": -2.065570831298828,
+        "fingerprint": -1.806942251191048,
+        "unimol2": -1.9015313109860443
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -2.064756717253963
+    },
+    {
+      "index": 19,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 7,
+      "predictions_eV": {
+        "dpa": -2.1217305660247803,
+        "fingerprint": -1.9255926724752135,
+        "unimol2": -2.217853849851167
+      },
+      "coordinate_match_max_delta_A": 4.920508445138694e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.920329621090012
+    },
+    {
+      "index": 20,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 65,
+      "predictions_eV": {
+        "dpa": -2.056375503540039,
+        "fingerprint": -1.8971341128757586,
+        "unimol2": -1.9925132955164742
+      },
+      "coordinate_match_max_delta_A": 4.884981308350689e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.8926740131438988
+    },
+    {
+      "index": 21,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 121,
+      "predictions_eV": {
+        "dpa": -1.7255330085754395,
+        "fingerprint": -1.8441260195128244,
+        "unimol2": -1.928129411761681
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.7406390503485256
+    },
+    {
+      "index": 22,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 102,
+      "predictions_eV": {
+        "dpa": -2.1080799102783203,
+        "fingerprint": -1.637577627675445,
+        "unimol2": -2.039056719596836
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.9291177112340852
+    },
+    {
+      "index": 23,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 71,
+      "predictions_eV": {
+        "dpa": -2.3416388034820557,
+        "fingerprint": -2.233610978719122,
+        "unimol2": -3.323208926422126
+      },
+      "coordinate_match_max_delta_A": 4.999889391399392e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -3.9426980780841276
+    },
+    {
+      "index": 24,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 106,
+      "predictions_eV": {
+        "dpa": -1.4185292720794678,
+        "fingerprint": -1.9065437382418946,
+        "unimol2": -1.3488993045785982
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.4313031443636544
+    },
+    {
+      "index": 25,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 92,
+      "predictions_eV": {
+        "dpa": -1.3366878032684326,
+        "fingerprint": -1.511781972680964,
+        "unimol2": -1.1898010780000554
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.9916070909392645
+    },
+    {
+      "index": 26,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 35,
+      "predictions_eV": {
+        "dpa": -1.4120525121688843,
+        "fingerprint": -1.2770660569076855,
+        "unimol2": -1.169452296548279
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.0923708751856331
+    },
+    {
+      "index": 27,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 3,
+      "predictions_eV": {
+        "dpa": -1.2924118041992188,
+        "fingerprint": -1.7595392753906254,
+        "unimol2": -2.4250860272059356
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.4911532863355277
+    },
+    {
+      "index": 28,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 55,
+      "predictions_eV": {
+        "dpa": -1.4273500442504883,
+        "fingerprint": -1.0759571041666665,
+        "unimol2": -1.438443584900377
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.9556325551062236
+    },
+    {
+      "index": 29,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 83,
+      "predictions_eV": {
+        "dpa": -1.6249721050262451,
+        "fingerprint": -1.1691206930682794,
+        "unimol2": -1.8671277202906005
+      },
+      "coordinate_match_max_delta_A": 4.920508445138694e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.4056386737500264
+    },
+    {
+      "index": 30,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 74,
+      "predictions_eV": {
+        "dpa": -0.9792014956474304,
+        "fingerprint": -0.8181848534226069,
+        "unimol2": -1.4641841236436104
+      },
+      "coordinate_match_max_delta_A": 4.961031585537512e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.8284771573718145
+    },
+    {
+      "index": 31,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 101,
+      "predictions_eV": {
+        "dpa": -1.6718206405639648,
+        "fingerprint": -1.2547020332196852,
+        "unimol2": -1.5872806609272452
+      },
+      "coordinate_match_max_delta_A": 4.922728891187944e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.7227131676406284
+    },
+    {
+      "index": 32,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 10,
+      "predictions_eV": {
+        "dpa": -0.8705856800079346,
+        "fingerprint": -0.6055503506275968,
+        "unimol2": -0.8860010612994813
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.859852720935159
+    },
+    {
+      "index": 33,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 23,
+      "predictions_eV": {
+        "dpa": -1.535683035850525,
+        "fingerprint": -1.9155454947228794,
+        "unimol2": -1.788749828547914
+      },
+      "coordinate_match_max_delta_A": 4.999889391399392e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.823773443152776
+    },
+    {
+      "index": 34,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 14,
+      "predictions_eV": {
+        "dpa": -0.9666008353233337,
+        "fingerprint": -0.6999923145898753,
+        "unimol2": -0.7215851734662451
+      },
+      "coordinate_match_max_delta_A": 4.961031585537512e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.9542113037467695
+    },
+    {
+      "index": 35,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 77,
+      "predictions_eV": {
+        "dpa": -1.2515759468078613,
+        "fingerprint": -1.8720787710611912,
+        "unimol2": -1.57794226863267
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.5762635547411028
+    }
+  ],
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/data_final/manifest.json": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/raw/summary.json": "d5c58e01dece0e0993f343b1056b49cb1707811c407b28e7c5c521701f297bfd",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run/raw_symbols.json": "d76a5bee356989c70a265f18a61501c84b5697d18d0fc204bbf2ae69892aef1d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run/raw_trajectories.npz": "bf0741179d2607c71892fd02e014885c5c85604b8e2241cdaffb9d0b51f25a5a",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_grpo200_p25_s2041/summary.json": "aad493cd4c24f352c5458732aa43249565117d20240d0630574cdc10d3138780",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/input_manifest.json": "200efe78825173442119f17483fc1d6b862bf958b5cc967e4f980c82b0d0d98f",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/raw/summary.json": "6aeb1b668b72e6a07af2b6b3f6e002e619d375fa41aeaac4e31a8f136dd0a035",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run/raw_symbols.json": "15e9e1dd50e079c5af813c197b4a43878e36acdf0f00ebe9fff5bbf27392b7fe",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run/raw_trajectories.npz": "89ddf8439730e80c2f6f9a252f729bfcd6f36d6b2034b89466ca51915e6cdbd5",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_eligibility200_p25_s2041/summary.json": "6a9f15f28a42ab9d7d82fb1d3f3d17741f229f283f14a5db8084d662fca4833d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/raw/summary.json": "710c446c182df406161a35ecfe7730c1f78580859a87a5bbf11cb8e6fd85adb7",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run/raw_symbols.json": "cb0fea7c204ba44f692a39296646f204604b01a86468d8ee6e478ebb5600f434",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run/raw_trajectories.npz": "223d1731cfd8957812350e9e8ad4f16c0bec6e4f62021e36d3b950030db10893",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_continue_wall_p25_s2041/summary.json": "17fcaa49f7abc1cb258d8c2575440234a92f57ac61c8c7f9880765012c0479df",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/raw/summary.json": "9808f861b8e9a4c4140acc24f11af53d49f7a39939953e9e1c47fafdbaaf134e",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run/raw_symbols.json": "91d682129878621a50daf3ef9ddc3a101999bfe82499de6612b1639cc459c2e0",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run/raw_trajectories.npz": "133b866f0c986d90a6edd173e41bf0e01ff05adb15147c1af0eef193d783daba",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_grpo200_p50_s2042/summary.json": "3dcfa68e18d048d4855d798b2a64a5df5ec617638b27e183dca65eb3f0d86576",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/raw/summary.json": "2f0272d163d6ed1d3f8df6cd459e5d9bd3d43b0abcb7f3549c8c6fffe6b5ef98",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run/raw_symbols.json": "cae1b68244b7efac0f5a07147159b72d7fdf733854ad93990605dcda820b498f",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run/raw_trajectories.npz": "4959e64bd997f6e55f418e367808ed65726b3b0be53a8b600033d7b8e7d63cd6",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_eligibility200_p50_s2042/summary.json": "fb15ae65cfea9d4f431fe5bb1407856ff394028e69a48df4ef681c2da71eb0dc",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/raw/summary.json": "9d1d6081d5886b6a690e6865516d84e081e40a530a70e0daf5fd1c3467269f6b",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run/raw_symbols.json": "04d453a1ecc6d0d2c7a38e4628b155c9fe5af958474a3c4742677f9b442446a2",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run/raw_trajectories.npz": "69f3e75657bfbb17a6a1289f85af2da540744411ef78248c14414cc7111b1611",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_continue_wall_p50_s2042/summary.json": "504ccc2348ae3a80e965bea418532d8b6f5d0514705b3e7b4a351ef69c85816a",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/raw/summary.json": "5e0cb358cd0e2a1770f24ee099714e13b6ef50cd7a9f7d50eda085c109b35a2c",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run/raw_symbols.json": "a8a426944dfced638265f06ac464302fbac3d0bd511ae4c5f75eec8bfd8456f1",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run/raw_trajectories.npz": "9a9aa6dad8d16efb6e40d9220620150f9b3fafdfb5f5d0a32beb869f30eccb0b",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_grpo200_p75_s2043/summary.json": "fbd3e1853432822afa9e7ea449ae4b850b656f566bacde6a76ff17dd1a0e3a61",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/raw/summary.json": "bc6a89d620ccddf6d6e1029d34366f6647521de0c37390a04941516f93b9be1d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run/raw_symbols.json": "9567277c4433422c8e98eeecaa1e6bf406922af218691896a2d6b4b5636be978",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run/raw_trajectories.npz": "a59e1d496e5a75e8103b0d58bec0715b48319150423694043147bd64d986004f",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_eligibility200_p75_s2043/summary.json": "f2e8c2dd1b2841f080e1362cee77e9685c8a214556382b761b3f3d4932560b51",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/raw/summary.json": "64bea21307fc1257d0b7a0216e6d154718bb2edcd96275acc277b6a8109eaeae",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run/raw_symbols.json": "35e05d7af04eb9fc4a64876258d1df498333e8dfe084ec77d9a2d5dd1ffbd7f2",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run/raw_trajectories.npz": "5e4b5d83bc45be0c4c3d06d7e712f2013f6b2b7f660648be962700559db2a9b4",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_homo_seed42/homo_eval_continue_wall_p75_s2043/summary.json": "f6b499809329272d00f3ea19b60e58fb54c5070529d11cfeb115f2e2da2a28f6",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/raw/summary.json": "4b78e1ecd8dce91208736f3ba46efe184cacca7c10a977c7678c980164077060",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run/raw_symbols.json": "6e5272e102c5a7f7130f50fb8faf00d6a2bad8050b1ab50ae2735b2cd17587fc",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run/raw_trajectories.npz": "db54fbc4f649e223cccef602e7302f9768e76eab96febb7040df46316b2d0cc0",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_grpo200_p25_s2041/summary.json": "50e6c678c2692a2f038b7192619308d01e7f4a7eef8ebe093450a2d9aafe88ea",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/input_manifest.json": "8d3be047f04dd07193eeecd548e526290cbce0531ffd23ad0d32f3f82107446f",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/raw/summary.json": "24817bb463f8c400440ac35fae96111bfdcf794d52156355fbb6f1be72847fbf",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run/raw_symbols.json": "754744e46315e13707759c287cb01875781be3fe139e6864f19e42c38743844a",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run/raw_trajectories.npz": "b96ffe636c2e503f9acaa9f5dd348a3fb58b190a4f403e42c20716437d25af2c",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_eligibility200_p25_s2041/summary.json": "0aef102e12596fdb8d6e202bd07223c0062e6b541f037b6689c37917b8c4c573",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/raw/summary.json": "fe4671287f3734f6ff3bbf59133022b7c2c69fc033c381a6a1bd717c2a8ffa04",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run/raw_symbols.json": "d49b0a52ba06213164d2c5c78b1b41da4fc910fddfdd898677be1af9c90b4a57",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run/raw_trajectories.npz": "bead50b857753b2415addb9d63c6520226f5c55783a91a67a27f44f3bdaf035e",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_continue_wall_p25_s2041/summary.json": "1908e08ed4a01bd08a5474e57982cf8e7bdba8cfaccb0f1eeb7eed147673e5b2",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/raw/summary.json": "2eedc92bd547df5f28259ea8df79958e859224090a2b6aebe679e3866fbf140e",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run/raw_symbols.json": "19b8736ffe90a3568e8ba0298880f62386b2d4afbfa20680a68a1ca2bbe18df4",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run/raw_trajectories.npz": "8460b9361e7a8ce3e2afea1c83f948f1c0aa82c05fe0821e203022353da5ecc9",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_grpo200_p50_s2042/summary.json": "e1950749f28337b6c55e2c9ccee2e5bea38d346c81862215ec51f72c18f9318d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/raw/summary.json": "b693bb1e8a6a934333dac706f311f54980deb3ec84109470a79412875698752b",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run/raw_symbols.json": "49aaf6a9c97f65b5cf9a48ab69347ab540e094ba144f10e3ddf49c8f7ed4b20c",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run/raw_trajectories.npz": "d4d9fe2dd70b1f47fab60d2a2f64bed5f09fe9a0aaeed04304ce150a0f487e95",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_eligibility200_p50_s2042/summary.json": "620e2a3e95fc796f3f77fd8888efed0ecfe0802064d49561b801999add544a66",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/raw/summary.json": "93be9aff4fdf09245648b721b5d1dab82b29c6b43d879160c95d6653de246624",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run/raw_symbols.json": "e399f5c82bc14d28558e5014fdd2a1494c3c6f70d4f6cce60a5e774d03e258a9",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run/raw_trajectories.npz": "7b7466320eb3dde641903f4e40aeabf7db8c948a8d16bb71262b27002dc9bbf1",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_continue_wall_p50_s2042/summary.json": "3dfdc460f61340247baeeb0b3d64a924f3a971e945b35f66fab74ee9c6108221",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/raw/summary.json": "d9147c5590be23248384db2a060b227769d857e316a888dc87a4fa053d742f74",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run/raw_symbols.json": "c51146b724748b9fb39c8e67fc6e3092c63db4ec567bf4aa9dc9806d4bf49f87",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run/raw_trajectories.npz": "1b260730f3a82ca769f371385b65e1359e049b6aa7ea966adb8ae873fd3e491d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_grpo200_p75_s2043/summary.json": "ca87bfc498f4cf62a513161812eb2840f7118dc3079fedf96d2333713ff1fd25",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/raw/summary.json": "41bf4d4591c6e5482c9f83da4f429639ca7973fb788cf6b62302337d9c7e2179",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run/raw_symbols.json": "8224e610235f280ee6d92151a60850df92abc9a87a40d870968be6ebe3df5cea",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run/raw_trajectories.npz": "91413437972a7b57471693be7f2f2b01ec30d559bf3899fea7f7983835e3bd49",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_eligibility200_p75_s2043/summary.json": "beedb9567752cfdbc5bef9c698f698dd2901f14337f20543c204bcb0b99de2ef",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/raw/summary.json": "2e1efb919402dde37b40b4f385aceb642ce8e90a530412acd00fcbf821186a44",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run/raw_symbols.json": "e9677585afd86762f72729743f823fe3f38dcea176e3ee9ab18ce7027f1d03eb",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run/raw_trajectories.npz": "306c326fc465eae4f06df13026b0260d5c67b7d09aea8bbaeb47883391b07c18",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/unimol2_lumo_seed42/lumo_eval_continue_wall_p75_s2043/summary.json": "b17ef4851d791b77b7d71fc9800baad3139d1aaa41bbf199ec575c242ba78495",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_summary_verified.json": "a4251e1169897c9d70bf897d3e6daa23cb992f5b6cbea285f4cda668d72e5409"
+  }
+}

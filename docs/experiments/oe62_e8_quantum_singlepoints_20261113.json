@@ -1,0 +1,7781 @@
+{
+  "scope": "Pre-frozen exploratory cohort; no candidate replacement, no population quantum success claim. Target/seed assignment is matched across policies but not independently crossed.",
+  "optimization_requested": false,
+  "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid3, SCF1e-8; input-geometry singlepoints only; distinct from source FHI-aims Tier2/PBE-TS.",
+  "selection": {
+    "selection": "Paired fixed policies; top DPA-ranked export and fixed SHA256 draw from remaining exports. No quantum or independent-model score used.",
+    "seed_assignment": [
+      "25:42:2041",
+      "50:42:2042",
+      "75:42:2043"
+    ],
+    "arms": [
+      "grpo200",
+      "eligibility200",
+      "continue_wall"
+    ],
+    "hash_salt": "OE62-E8-attribution-20261113",
+    "planned_per_group": {
+      "homo/grpo200": 6,
+      "homo/eligibility200": 6,
+      "homo/continue_wall": 6,
+      "lumo/grpo200": 6,
+      "lumo/eligibility200": 6,
+      "lumo/continue_wall": 6
+    },
+    "expected": 36,
+    "selected": 36,
+    "missing": [],
+    "source_sha256": {
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run/run_config.json": "23b3323d2da290c1866f3e272b85146e2ef5689734a03dc9f2b77902fe77584e",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run/candidates.csv": "f7268fb7b06e11b98cc12a52c37994156c80b023be523dede5822aa649c2b0b4",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run/generated.sdf": "f24cb93f5ccd4776261e5be1ac2fa5a3fcf73543b20b6118990d15da70e7dab1",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run/run_config.json": "16ed485f6f9abd947b84a8d614c41d776b5b53f02be943ec26d89e39cc842e8b",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run/candidates.csv": "81b7703356300ebbd4ff6b8152624b19ba26affdea2b154c13082315d46d5cc0",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run/generated.sdf": "ef21422ea57e2af03c3d395b47fd298e4cf67645179ccf11ccf80a1e8bc90503",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run/run_config.json": "3302d80c254ca65f50e6637e04d51b57c3de93f6699ee7b8daccb17893ccb98c",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run/candidates.csv": "3ee17575a8f3a81c19bf493fc7858912721beed78142692b65a4925fabc2c167",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run/generated.sdf": "baa60f621d92042c5d08fd4640b1ee08e2582ff0878e75dc9c3f83c5d2a1ffa2",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run/run_config.json": "7dfa01a9cfa8675d035bd5ea236cb9dca2b4af451eac30515318720d67665141",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run/candidates.csv": "870d28a1cf5293fd904b53f35ace7f549f8abbe02aaeba63327db96ce0beccff",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run/generated.sdf": "8491be76c65cc9cca125cfe61bbdf200604aa8927045f70faa899d9b40fd0048",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run/run_config.json": "b7b9de9ba5de80094fd9abdbed52a2af490f57b9779975813324adb25ec1b441",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run/candidates.csv": "3a6161e20d4f013f142369a935ec6eec1c6d5489359b61648a6b699bee6bca17",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run/generated.sdf": "e9e3b8296c0adf153025fef5a355b3cde8cbc216a845f1b00fc4da43a880ca18",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run/run_config.json": "6c7bdcf0cc6e0af641dbe8a48b3e6602ccb15fbc64222ee8ba7a0fee9c753279",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run/candidates.csv": "9ceea43f81fd32b05d215181f61acb16f4e76d1ee47b7c18e7d3e3ade7157ab0",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run/generated.sdf": "10b3b8f3a7a98c45973694b586d97b4ff62c0fe9a8f20975dd2813cdcf51ea37",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run/run_config.json": "9109d3056eef30058a523994208ca66d71f08508027edfd63cc604aa0af417b2",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run/candidates.csv": "fab7d3f7226466258b8cc66b0902e43c1e2870f6eda11036814d24b2e657ce4c",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run/generated.sdf": "f5f0190ee636cd8c432bf364478c4137d2054026aa4789796c7e9a2f7d93974f",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run/run_config.json": "3f44b1174bf2d9a44632306aa706594fe5d628b4a262af25b8fd9f7a8e494e6c",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run/candidates.csv": "ed954da02d664fbd34094d8c987683befcff1189e9eb17705080fbfb6c303eec",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run/generated.sdf": "58c902ffd2ae4af6805693db7dd021b1b29d410bbc98948b2bb05845db83836f",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run/run_config.json": "84f4eeb3a53b032b4c22ff75db8ece3d0e4a6042fcf1396048cc56d6cc84f6ca",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run/candidates.csv": "5ad44ed39283fea4c0f6a1bd6680450d075885babcc40a0370b865c947f7fc20",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run/generated.sdf": "acbd807b792d5f53f6f0e532191556d3d0ff17af336a6ad82f0d9c5b557861d1",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run/run_config.json": "07ca3400b1547c8028371f77c1d4ee548624287c03d8d1ec26bfb1b2cd08fb20",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run/candidates.csv": "a4a3af1b93c35f0818a35c09cc7a7223b88f993df4223437c807953f7a928bda",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run/generated.sdf": "d393f407c6f9fd96f8349eaeaae2eecef7615931fcb5e75f8abdc148457ffd8b",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run/run_config.json": "7ac7ef434ddc6438b98befd2596410ffa9cf6e6826a9fd02061d1ae09e6b4825",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run/candidates.csv": "fbbd1ee1245bc4237656d1dbf7e7b3af311ebafcdec9e6c62d00a01a41c5779b",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run/generated.sdf": "141f4013a0b5e35dd3c412e7b444e4c17a83ffc45558bd06977d758cad1c919c",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run/run_config.json": "23c7af1b0111eb8c5f215abb0228bac773caf1e73f9fe53d67e2015c8ac37056",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run/candidates.csv": "e1289a1edb3d112d2f20df70d6bb2720d9537dcfc2086de55159f7dd22d95b3b",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run/generated.sdf": "02306f2df05ec18e4f9582c9d263afb3ee46decdc359b59fe367c7342b7c17ee",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run/run_config.json": "358e84754fe85ebf9251e6ed656a3d9195553a96277e53f3d54d01914727f924",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run/candidates.csv": "cd57ccd1291a40fd47f5032a796265f1dd3fdb7b180be1b4635e7fc4122be930",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run/generated.sdf": "4f806d926c83b631251d1f4b091bcacf4688e008c6a6b59a832b2119a572eeae",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run/run_config.json": "f6a2df3930e08768d30323b6b94e329d0a193fac164c87f51f0a04d7d4438d62",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run/candidates.csv": "2b6a1773a748febe17da4ea03bcc9d252d9441f0c2e0fc14d82237b6b4acaa96",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run/generated.sdf": "a5fbcd2bc17f38cb8539aac94ccd81958810f22b9a00f0462c5a76afafe752d5",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run/run_config.json": "9825c9ace223e9748c846c248128f42d43c4ba103dbf7da10b69abae86bf48a1",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run/candidates.csv": "bb560de5182e7bdc93d1f0fc89795ad2ac5f53dbe36008641e310cd637bea432",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run/generated.sdf": "7599d674b6f3ec2df8475a9456bbdb738d1ebe1c084095d769ec86a5db152305",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run/run_config.json": "095cfe8c66bfc16898b5fe96ddb38af599cde19f87ce0128e8d13baa6a254798",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run/candidates.csv": "716eda8700a7317919cb5c15d5f12dda1c935cc90398b62ac98b7a185d6d8531",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run/generated.sdf": "ffe694c82d3bbddb51e0f1d6de88ab561a7fd5efe54ab89cd3b6d84a77677a99",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run/run_config.json": "f2e26f6272609c559d1e3b6bcd641df077c0a5a308944a4373319bb508ca9953",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run/candidates.csv": "9e6a8f91e1481ad2b8aa23f61f2918ed1df94223d5f66f393fd7ba98949a7451",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run/generated.sdf": "dd583b56e3f2fe385458e1c475e504c5e428db357a05ed46980be07d60b85c16",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run/run_config.json": "46bfa88c68b045797a2685f59ce5cb13ad0f0bf3d3311a872d0e9065221110e2",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run/candidates.csv": "9033315de867734523aa872a82a5bc1e35da700dd73cde5ab3ef07f459bd41a3",
+      "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run/generated.sdf": "9699aaabefca6493cba1e2d9e8e94273e82e3d2e5b1de34f3a480f201b23c509"
+    },
+    "sdf_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60"
+  },
+  "elapsed_seconds": 3162.011109352112,
+  "execution_metadata": {
+    "attempted": 36,
+    "worker_invocations": 39,
+    "engine": "cpu",
+    "optimization_requested": false,
+    "elapsed_seconds": 3162.011109352112,
+    "timing_scope": "Sum of initial and corrective queue runtimes; excludes development gap.",
+    "configuration_corrections": [
+      {
+        "index": 26,
+        "reason": "Repair invalid ECP alias; same input, method level and SCF settings. No replacement candidate.",
+        "original_result": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/job26/result.json",
+        "original_sha256": "dee215e30962c4df44483d347b00534ad315cc20a5ecd6b265f0ed0a1792155f",
+        "corrected_result": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_ecp_corrections/job26/result.json",
+        "corrected_sha256": "93673b833103e7146bad870b14b06b9348772d1d842245a9677bf468f06a414c",
+        "corrected_status": "completed"
+      },
+      {
+        "index": 30,
+        "reason": "Repair invalid ECP alias; same input, method level and SCF settings. No replacement candidate.",
+        "original_result": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/job30/result.json",
+        "original_sha256": "508cf37349a389a2e08ea8742e78916303228627470e67e0c72f917aaaeeaa00",
+        "corrected_result": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_ecp_corrections/job30/result.json",
+        "corrected_sha256": "ba19be81d0af62f24d996b8faaedf2f6a379c05f2b8f63cb074410c7959b808b",
+        "corrected_status": "completed"
+      },
+      {
+        "index": 31,
+        "reason": "Repair invalid ECP alias; same input, method level and SCF settings. No replacement candidate.",
+        "original_result": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/job31/result.json",
+        "original_sha256": "a8787d5f3f27086bea9144ef8aff3387630ad803c989188473efb582b4b66e4d",
+        "corrected_result": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_ecp_corrections/job31/result.json",
+        "corrected_sha256": "1b82b665e186049d91cf6116362f4d9eff18b12d2b1786b02f142ce6a037cc9d",
+        "corrected_status": "completed"
+      }
+    ]
+  },
+  "all": {
+    "optimization_requested": false,
+    "planned": 36,
+    "selected": 36,
+    "singlepoint_completed": 36,
+    "geometry_converged": null,
+    "graph_preserved": null,
+    "accepted_optimized": null,
+    "input_target": {
+      "evaluated": 36,
+      "planned": 36,
+      "coverage": 1.0,
+      "mae_eV": 0.44440555867289006,
+      "bias_eV": 0.10907648628510332,
+      "hits": {
+        "0.1": 11,
+        "0.25": 19,
+        "0.5": 25
+      },
+      "hit_rate_planned": {
+        "0.1": 0.3055555555555556,
+        "0.25": 0.5277777777777778,
+        "0.5": 0.6944444444444444
+      }
+    },
+    "input_target_same_accepted_subset": null,
+    "optimized_target": null,
+    "dpa_minus_quantum_input": {
+      "evaluated": 36,
+      "planned": 36,
+      "coverage": 1.0,
+      "mae_eV": 0.31102875267580177,
+      "bias_eV": -0.13453340199640015,
+      "hits": {
+        "0.1": 14,
+        "0.25": 23,
+        "0.5": 29
+      },
+      "hit_rate_planned": {
+        "0.1": 0.3888888888888889,
+        "0.25": 0.6388888888888888,
+        "0.5": 0.8055555555555556
+      }
+    },
+    "dpa_target_input": {
+      "evaluated": 36,
+      "planned": 36,
+      "coverage": 1.0,
+      "mae_eV": 0.18867192856258816,
+      "bias_eV": -0.025456915711296838,
+      "hits": {
+        "0.1": 18,
+        "0.25": 26,
+        "0.5": 31
+      },
+      "hit_rate_planned": {
+        "0.1": 0.5,
+        "0.25": 0.7222222222222222,
+        "0.5": 0.8611111111111112
+      }
+    },
+    "failed_or_unaccepted_indices": null,
+    "failed_singlepoint_indices": []
+  },
+  "groups": {
+    "homo/grpo200": {
+      "optimization_requested": false,
+      "planned": 6,
+      "selected": 6,
+      "singlepoint_completed": 6,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.2731425889603066,
+        "bias_eV": 0.10697747224908305,
+        "hits": {
+          "0.1": 2,
+          "0.25": 4,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.3333333333333333,
+          "0.25": 0.6666666666666666,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.2340163908401894,
+        "bias_eV": -0.07263185045342861,
+        "hits": {
+          "0.1": 2,
+          "0.25": 4,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.3333333333333333,
+          "0.25": 0.6666666666666666,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.10690546035766602,
+        "bias_eV": 0.034345621795654445,
+        "hits": {
+          "0.1": 3,
+          "0.25": 5,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.8333333333333334,
+          "0.5": 1.0
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    },
+    "homo/eligibility200": {
+      "optimization_requested": false,
+      "planned": 6,
+      "selected": 6,
+      "singlepoint_completed": 6,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.13712015205801809,
+        "bias_eV": 0.08306157055508005,
+        "hits": {
+          "0.1": 3,
+          "0.25": 5,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.8333333333333334,
+          "0.5": 1.0
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.05829115679841509,
+        "bias_eV": -0.01600348919521662,
+        "hits": {
+          "0.1": 5,
+          "0.25": 6,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.8333333333333334,
+          "0.25": 1.0,
+          "0.5": 1.0
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.10572674860636393,
+        "bias_eV": 0.06705808135986342,
+        "hits": {
+          "0.1": 4,
+          "0.25": 5,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.6666666666666666,
+          "0.25": 0.8333333333333334,
+          "0.5": 1.0
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    },
+    "homo/continue_wall": {
+      "optimization_requested": false,
+      "planned": 6,
+      "selected": 6,
+      "singlepoint_completed": 6,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 1.1273827144595296,
+        "bias_eV": 0.8900002356436554,
+        "hits": {
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0
+        },
+        "hit_rate_planned": {
+          "0.1": 0.0,
+          "0.25": 0.0,
+          "0.5": 0.0
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.8128848215711425,
+        "bias_eV": -0.7880334622417591,
+        "hits": {
+          "0.1": 1,
+          "0.25": 1,
+          "0.5": 1
+        },
+        "hit_rate_planned": {
+          "0.1": 0.16666666666666666,
+          "0.25": 0.16666666666666666,
+          "0.5": 0.16666666666666666
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.3353496689605713,
+        "bias_eV": 0.1019667734018963,
+        "hits": {
+          "0.1": 3,
+          "0.25": 3,
+          "0.5": 3
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.5,
+          "0.5": 0.5
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    },
+    "lumo/grpo200": {
+      "optimization_requested": false,
+      "planned": 6,
+      "selected": 6,
+      "singlepoint_completed": 6,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.2522221451883077,
+        "bias_eV": -0.04487948310988941,
+        "hits": {
+          "0.1": 3,
+          "0.25": 4,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.6666666666666666,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.12694711570800035,
+        "bias_eV": -0.10572593626203336,
+        "hits": {
+          "0.1": 3,
+          "0.25": 5,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.8333333333333334,
+          "0.5": 1.0
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.19805877391497292,
+        "bias_eV": -0.15060541937192276,
+        "hits": {
+          "0.1": 3,
+          "0.25": 5,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.8333333333333334,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    },
+    "lumo/eligibility200": {
+      "optimization_requested": false,
+      "planned": 6,
+      "selected": 6,
+      "singlepoint_completed": 6,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.3110825852909009,
+        "bias_eV": -0.03509223151691998,
+        "hits": {
+          "0.1": 2,
+          "0.25": 3,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.3333333333333333,
+          "0.25": 0.5,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.16600902281218377,
+        "bias_eV": 0.0013036606614614439,
+        "hits": {
+          "0.1": 2,
+          "0.25": 4,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.3333333333333333,
+          "0.25": 0.6666666666666666,
+          "0.5": 1.0
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.20712628702163696,
+        "bias_eV": -0.033788570855458534,
+        "hits": {
+          "0.1": 3,
+          "0.25": 4,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.5,
+          "0.25": 0.6666666666666666,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    },
+    "lumo/continue_wall": {
+      "optimization_requested": false,
+      "planned": 6,
+      "selected": 6,
+      "singlepoint_completed": 6,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.5654831660802775,
+        "bias_eV": -0.3456086461103891,
+        "hits": {
+          "0.1": 1,
+          "0.25": 3,
+          "0.5": 4
+        },
+        "hit_rate_planned": {
+          "0.1": 0.16666666666666666,
+          "0.25": 0.5,
+          "0.5": 0.6666666666666666
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.46802400832487945,
+        "bias_eV": 0.17389066551257526,
+        "hits": {
+          "0.1": 1,
+          "0.25": 3,
+          "0.5": 5
+        },
+        "hit_rate_planned": {
+          "0.1": 0.16666666666666666,
+          "0.25": 0.5,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 6,
+        "planned": 6,
+        "coverage": 1.0,
+        "mae_eV": 0.1788646325143178,
+        "bias_eV": -0.17171798059781387,
+        "hits": {
+          "0.1": 2,
+          "0.25": 4,
+          "0.5": 6
+        },
+        "hit_rate_planned": {
+          "0.1": 0.3333333333333333,
+          "0.25": 0.6666666666666666,
+          "0.5": 1.0
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    }
+  },
+  "by_selection": {
+    "top1": {
+      "optimization_requested": false,
+      "planned": 18,
+      "selected": 18,
+      "singlepoint_completed": 18,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 18,
+        "planned": 18,
+        "coverage": 1.0,
+        "mae_eV": 0.27778454682673126,
+        "bias_eV": 0.20696025881900215,
+        "hits": {
+          "0.1": 8,
+          "0.25": 12,
+          "0.5": 15
+        },
+        "hit_rate_planned": {
+          "0.1": 0.4444444444444444,
+          "0.25": 0.6666666666666666,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 18,
+        "planned": 18,
+        "coverage": 1.0,
+        "mae_eV": 0.2859936697396779,
+        "bias_eV": -0.2307798216928424,
+        "hits": {
+          "0.1": 8,
+          "0.25": 12,
+          "0.5": 15
+        },
+        "hit_rate_planned": {
+          "0.1": 0.4444444444444444,
+          "0.25": 0.6666666666666666,
+          "0.5": 0.8333333333333334
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 18,
+        "planned": 18,
+        "coverage": 1.0,
+        "mae_eV": 0.03371271211836069,
+        "bias_eV": -0.02381956287384024,
+        "hits": {
+          "0.1": 16,
+          "0.25": 18,
+          "0.5": 18
+        },
+        "hit_rate_planned": {
+          "0.1": 0.8888888888888888,
+          "0.25": 1.0,
+          "0.5": 1.0
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    },
+    "fixed_hash": {
+      "optimization_requested": false,
+      "planned": 18,
+      "selected": 18,
+      "singlepoint_completed": 18,
+      "geometry_converged": null,
+      "graph_preserved": null,
+      "accepted_optimized": null,
+      "input_target": {
+        "evaluated": 18,
+        "planned": 18,
+        "coverage": 1.0,
+        "mae_eV": 0.6110265705190489,
+        "bias_eV": 0.011192713751204477,
+        "hits": {
+          "0.1": 3,
+          "0.25": 7,
+          "0.5": 10
+        },
+        "hit_rate_planned": {
+          "0.1": 0.16666666666666666,
+          "0.25": 0.3888888888888889,
+          "0.5": 0.5555555555555556
+        }
+      },
+      "input_target_same_accepted_subset": null,
+      "optimized_target": null,
+      "dpa_minus_quantum_input": {
+        "evaluated": 18,
+        "planned": 18,
+        "coverage": 1.0,
+        "mae_eV": 0.33606383561192554,
+        "bias_eV": -0.03828698229995791,
+        "hits": {
+          "0.1": 6,
+          "0.25": 11,
+          "0.5": 14
+        },
+        "hit_rate_planned": {
+          "0.1": 0.3333333333333333,
+          "0.25": 0.6111111111111112,
+          "0.5": 0.7777777777777778
+        }
+      },
+      "dpa_target_input": {
+        "evaluated": 18,
+        "planned": 18,
+        "coverage": 1.0,
+        "mae_eV": 0.34363114500681563,
+        "bias_eV": -0.027094268548753433,
+        "hits": {
+          "0.1": 2,
+          "0.25": 8,
+          "0.5": 13
+        },
+        "hit_rate_planned": {
+          "0.1": 0.1111111111111111,
+          "0.25": 0.4444444444444444,
+          "0.5": 0.7222222222222222
+        }
+      },
+      "failed_or_unaccepted_indices": null,
+      "failed_singlepoint_indices": []
+    }
+  },
+  "records": [
+    {
+      "index": 0,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 35,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -7.040160655975342,
+        -3.4634642601013184
+      ],
+      "dpa_rms_force_eVA": 1.593118667602539,
+      "symbols": [
+        "Cl",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "O",
+        "C",
+        "H",
+        "C",
+        "H",
+        "O",
+        "C",
+        "H",
+        "H",
+        "O",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "N",
+        "C",
+        "C",
+        "H",
+        "C",
+        "N",
+        "C",
+        "O",
+        "N"
+      ],
+      "smiles": "[H]C1=NC(=O)N([H])C(=O)/C1=C([H])/N=C(\\OC(=O)c1c([H])c([H])c(Cl)c([H])c1[H])C([H])([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 32,
+      "elements": [
+        "C",
+        "Cl",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -6.535624504089,
+          -2.285623550415,
+          -2.012500762939
+        ],
+        [
+          -4.975624084473,
+          -1.655623435974,
+          -1.582499504089
+        ],
+        [
+          -4.185625076294,
+          -1.855623245239,
+          -3.582499504089
+        ],
+        [
+          -3.985625267029,
+          -1.545623779297,
+          -2.5625
+        ],
+        [
+          -1.955624580383,
+          -0.935623168945,
+          -2.962500572205
+        ],
+        [
+          -2.745624542236,
+          -1.035624504089,
+          -2.212500572205
+        ],
+        [
+          -2.495624542236,
+          -0.645623207092,
+          -0.892499923706
+        ],
+        [
+          -1.155625343323,
+          -0.065624237061,
+          -0.582499504089
+        ],
+        [
+          -0.345624923706,
+          0.304375648499,
+          -1.402500152588
+        ],
+        [
+          -4.745624542236,
+          -1.265624046326,
+          -0.262499809265
+        ],
+        [
+          -5.535624504089,
+          -1.355624198914,
+          0.477499961853
+        ],
+        [
+          -3.495624542236,
+          -0.765623092651,
+          0.077499389648
+        ],
+        [
+          1.344374656677,
+          -0.955624580383,
+          0.367499351501
+        ],
+        [
+          3.724375724792,
+          -1.905623435974,
+          -0.392499923706
+        ],
+        [
+          4.044375419617,
+          -0.815623283386,
+          0.037499427795
+        ],
+        [
+          6.034375190735,
+          -1.08562374115,
+          -0.3125
+        ],
+        [
+          -3.305624961853,
+          -0.465623855591,
+          1.10749912262
+        ],
+        [
+          -0.985624313354,
+          -0.055624008179,
+          0.777499198914
+        ],
+        [
+          -0.835624694824,
+          3.034375190735,
+          1.187499046326
+        ],
+        [
+          -2.065625190735,
+          1.884377479553,
+          1.827500343323
+        ],
+        [
+          -0.995624542236,
+          2.134377479553,
+          1.807499885559
+        ],
+        [
+          -0.655624389648,
+          2.36437702179,
+          2.827500343323
+        ],
+        [
+          -0.215624809265,
+          1.004376411438,
+          1.267498970032
+        ],
+        [
+          1.05437374115,
+          1.024374961853,
+          1.187499046326
+        ],
+        [
+          1.76437664032,
+          0.014375686646,
+          0.687499046326
+        ],
+        [
+          3.15437412262,
+          0.204375267029,
+          0.597500801086
+        ],
+        [
+          3.074374198914,
+          2.144375801086,
+          1.40749835968
+        ],
+        [
+          3.714373588562,
+          1.384375572205,
+          1.027499198914
+        ],
+        [
+          5.374373435974,
+          -0.405623435974,
+          0.057499885559
+        ],
+        [
+          5.884375572205,
+          0.824376106262,
+          0.527499198914
+        ],
+        [
+          7.064373970032,
+          1.054375648499,
+          0.477499961853
+        ],
+        [
+          4.984374046326,
+          1.724377632141,
+          1.027499198914
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.479496877177622,
+          -3.517073986124989
+        ],
+        "energy_Ha": -1463.9753790825982,
+        "converged": true,
+        "seconds": 397.7777984328568
+      },
+      "elapsed_seconds": 397.9427931122482
+    },
+    {
+      "index": 1,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 50,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -7.241818428039551,
+        -1.5110024213790894
+      ],
+      "dpa_rms_force_eVA": 6.270932197570801,
+      "symbols": [
+        "H",
+        "C",
+        "Cl",
+        "H",
+        "C",
+        "H",
+        "C",
+        "O",
+        "C",
+        "C",
+        "N",
+        "H"
+      ],
+      "smiles": "[H]Oc1nc([H])c(Cl)c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 12,
+      "elements": [
+        "C",
+        "Cl",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.16083240509,
+          -1.021666526794,
+          -0.882500648499
+        ],
+        [
+          -0.750832557678,
+          0.678334236145,
+          -1.072500228882
+        ],
+        [
+          -1.650833129883,
+          1.438332557678,
+          -2.322501182556
+        ],
+        [
+          0.769166946411,
+          2.218333244324,
+          -1.022500991821
+        ],
+        [
+          -1.220833778381,
+          -0.541666030884,
+          -0.532501220703
+        ],
+        [
+          -0.710832595825,
+          -2.061666488647,
+          0.937499046326
+        ],
+        [
+          -0.430832862854,
+          -1.111666679382,
+          0.487498283386
+        ],
+        [
+          1.669166564941,
+          -0.891666412354,
+          1.817500114441
+        ],
+        [
+          0.419166564941,
+          1.278332710266,
+          -0.602500915527
+        ],
+        [
+          0.739166259766,
+          -0.45166683197,
+          0.877497673035
+        ],
+        [
+          1.189167022705,
+          0.718333244324,
+          0.35749912262
+        ],
+        [
+          2.139165878296,
+          -0.251667022705,
+          1.957499504089
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.027387077077251,
+          -1.5185817219337823
+        ],
+        "energy_Ha": -782.6914452813153,
+        "converged": true,
+        "seconds": 19.057997968047857
+      },
+      "elapsed_seconds": 19.205401591956615
+    },
+    {
+      "index": 2,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 9,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -7.091798305511475,
+        -2.1384482383728027
+      ],
+      "dpa_rms_force_eVA": 1.8109647035598755,
+      "symbols": [
+        "H",
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "C",
+        "N",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C"
+      ],
+      "smiles": "[H]C([H])=C(C#N)c1c([H])c([H])c([H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 17,
+      "elements": [
+        "C",
+        "H",
+        "N"
+      ],
+      "coordinates_A": [
+        [
+          3.078234672546,
+          -0.873530387878,
+          0.103530883789
+        ],
+        [
+          -3.041765213013,
+          0.646469116211,
+          -0.096468925476
+        ],
+        [
+          -1.211765289307,
+          0.976469039917,
+          -1.516469955444
+        ],
+        [
+          0.738234519958,
+          0.966468811035,
+          -3.006468772888
+        ],
+        [
+          0.818234443665,
+          0.546468734741,
+          -1.996469497681
+        ],
+        [
+          2.828234672546,
+          -0.003530502319,
+          -2.246469497681
+        ],
+        [
+          -0.281764984131,
+          0.566469192505,
+          -1.156470298767
+        ],
+        [
+          -0.201765060425,
+          0.036470413208,
+          0.143530845642
+        ],
+        [
+          2.008234977722,
+          0.006469726562,
+          -1.566469192505
+        ],
+        [
+          2.138236045837,
+          -0.483530044556,
+          -0.266469955444
+        ],
+        [
+          -0.781764030457,
+          -1.033530235291,
+          3.413530349731
+        ],
+        [
+          1.138234138489,
+          -0.843529701233,
+          1.573530197144
+        ],
+        [
+          -2.65176486969,
+          0.316469192505,
+          0.863530158997
+        ],
+        [
+          -3.321764945984,
+          0.246469497681,
+          1.743530273438
+        ],
+        [
+          -1.30176448822,
+          -0.043529510498,
+          1.073530197144
+        ],
+        [
+          -1.001764297485,
+          -0.563529968262,
+          2.363529205322
+        ],
+        [
+          1.048233985901,
+          -0.463530540466,
+          0.573530197144
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.027479484998854,
+          -2.31846568139389
+        ],
+        "energy_Ha": -401.53531891570714,
+        "converged": true,
+        "seconds": 32.98063847795129
+      },
+      "elapsed_seconds": 33.12903128191829
+    },
+    {
+      "index": 3,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 20,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -6.679027557373047,
+        -2.078038454055786
+      ],
+      "dpa_rms_force_eVA": 1.1113417148590088,
+      "symbols": [
+        "H",
+        "O",
+        "C",
+        "H",
+        "O",
+        "C",
+        "C",
+        "N",
+        "C",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "C",
+        "H",
+        "O",
+        "H",
+        "C",
+        "F",
+        "F"
+      ],
+      "smiles": "[H]c1c([H])c([H])c(C(=O)On2c(C([H])(F)F)c([H])c([H])c([H])c2=O)c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 28,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          2.621430397034,
+          -1.236071586609,
+          -3.563214302063
+        ],
+        [
+          1.071429252625,
+          -2.206071853638,
+          -1.683214187622
+        ],
+        [
+          1.681429862976,
+          -1.156070709229,
+          -1.643214225769
+        ],
+        [
+          -2.918569564819,
+          0.293928146362,
+          -1.02321434021
+        ],
+        [
+          -0.478569030762,
+          1.113927841187,
+          -0.92321395874
+        ],
+        [
+          2.531430244446,
+          -0.606071472168,
+          -2.67321395874
+        ],
+        [
+          3.171429634094,
+          0.593929290771,
+          -2.543214797974
+        ],
+        [
+          1.571429252625,
+          -0.306071281433,
+          -0.503213882446
+        ],
+        [
+          2.211430549622,
+          0.893928527832,
+          -0.333213806152
+        ],
+        [
+          3.011429786682,
+          1.363927841187,
+          -1.353213310242
+        ],
+        [
+          3.491429328918,
+          2.33392906189,
+          -1.233213424683
+        ],
+        [
+          3.811429023743,
+          0.98392868042,
+          -3.333213806152
+        ],
+        [
+          -4.81856918335,
+          -1.776071548462,
+          2.25678730011
+        ],
+        [
+          -3.938570022583,
+          -1.326071739197,
+          1.806784629822
+        ],
+        [
+          -2.71856880188,
+          -1.326071739197,
+          2.496787071228
+        ],
+        [
+          -2.658569335938,
+          -1.76607131958,
+          3.486784934998
+        ],
+        [
+          -1.588569641113,
+          -0.746070861816,
+          1.936785697937
+        ],
+        [
+          -4.958569526672,
+          -0.726071357727,
+          -0.003213882446
+        ],
+        [
+          -4.018569946289,
+          -0.726071357727,
+          0.536785125732
+        ],
+        [
+          -2.888569831848,
+          -0.166071891785,
+          -0.043213844299
+        ],
+        [
+          -1.668569564819,
+          -0.186071395874,
+          0.65678691864
+        ],
+        [
+          -0.488569259644,
+          0.293928146362,
+          -0.053214073181
+        ],
+        [
+          -0.648569107056,
+          -0.726071357727,
+          2.486786842346
+        ],
+        [
+          0.621430397034,
+          -0.556071281433,
+          0.37678527832
+        ],
+        [
+          1.271430015564,
+          2.543928146362,
+          0.696785926819
+        ],
+        [
+          1.991431236267,
+          1.73392868042,
+          0.896786689758
+        ],
+        [
+          3.171429634094,
+          2.323928833008,
+          1.276785850525
+        ],
+        [
+          1.561429023743,
+          1.063928604126,
+          1.996785163879
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.6086623935879745,
+          -1.9792082024907836
+        ],
+        "energy_Ha": -980.1456871181167,
+        "converged": true,
+        "seconds": 263.39999121055007
+      },
+      "elapsed_seconds": 263.57383209466934
+    },
+    {
+      "index": 4,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 121,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -7.077917098999023,
+        -0.8650011420249939
+      ],
+      "dpa_rms_force_eVA": 0.39680659770965576,
+      "symbols": [
+        "S",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "S",
+        "H"
+      ],
+      "smiles": "[H]C1([H])SC([H])([H])S1",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 8,
+      "elements": [
+        "C",
+        "H",
+        "S"
+      ],
+      "coordinates_A": [
+        [
+          0.418748855591,
+          -0.717499732971,
+          -1.058750152588
+        ],
+        [
+          0.438749313354,
+          1.032499313354,
+          -0.498749732971
+        ],
+        [
+          0.028749465942,
+          1.722499847412,
+          -1.238750457764
+        ],
+        [
+          -1.421251296997,
+          -1.477499961853,
+          0.341249465942
+        ],
+        [
+          -0.441249847412,
+          -1.017499923706,
+          0.501250267029
+        ],
+        [
+          0.148749351501,
+          -1.617500305176,
+          1.20124912262
+        ],
+        [
+          -0.621251106262,
+          0.732500076294,
+          0.961249351501
+        ],
+        [
+          1.448748588562,
+          1.342498779297,
+          -0.208749771118
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.53657418575104,
+          -1.1002898398738177
+        ],
+        "energy_Ha": -874.6556649389311,
+        "converged": true,
+        "seconds": 4.981121242046356
+      },
+      "elapsed_seconds": 5.100269187241793
+    },
+    {
+      "index": 5,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 117,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -6.345071792602539,
+        -1.8020398616790771
+      ],
+      "dpa_rms_force_eVA": 2.7050278186798096,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "F",
+        "C",
+        "H",
+        "O",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "C",
+        "N",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H",
+        "H",
+        "N",
+        "O",
+        "C",
+        "C",
+        "O",
+        "H",
+        "H",
+        "H",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]O[C@]1([H])[C@]([H])(F)[C@]1(O[H])[C@@]([H])(O[H])N([H])C([H])([H])/N=C(\\[H])c1c([H])c([H])c([H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 33,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.133938789368,
+          -1.797574043274,
+          -0.423030853271
+        ],
+        [
+          -2.27393913269,
+          0.812425613403,
+          -1.733030319214
+        ],
+        [
+          -1.573938369751,
+          0.982425689697,
+          -0.903031349182
+        ],
+        [
+          -2.973937988281,
+          3.24242401123,
+          -2.023031234741
+        ],
+        [
+          -2.433938980103,
+          3.412424087524,
+          -0.763030052185
+        ],
+        [
+          -1.863938331604,
+          4.342426300049,
+          -0.703030586243
+        ],
+        [
+          -0.263938903809,
+          1.032424926758,
+          -1.343030929565
+        ],
+        [
+          -1.633938789368,
+          -1.197574615479,
+          0.356969833374
+        ],
+        [
+          -1.853938102722,
+          -1.62757396698,
+          1.346969604492
+        ],
+        [
+          0.136061668396,
+          -2.997574806213,
+          0.556968688965
+        ],
+        [
+          2.176062583923,
+          -4.127574920654,
+          0.456970214844
+        ],
+        [
+          2.716061592102,
+          -3.187574386597,
+          0.276968002319
+        ],
+        [
+          0.586060523987,
+          -2.037574768066,
+          0.266968727112
+        ],
+        [
+          -0.223938941956,
+          -1.037574768066,
+          0.096968650818
+        ],
+        [
+          1.996062278748,
+          -1.987574577332,
+          0.136968612671
+        ],
+        [
+          2.726061820984,
+          -0.797574043274,
+          -0.093030929565
+        ],
+        [
+          4.646061897278,
+          -4.147574424744,
+          0.286968231201
+        ],
+        [
+          4.10606098175,
+          -3.20757484436,
+          0.186968803406
+        ],
+        [
+          4.80606174469,
+          -2.017575263977,
+          -0.033030509949
+        ],
+        [
+          4.10606098175,
+          -0.817574501038,
+          -0.173030853271
+        ],
+        [
+          5.886061668396,
+          -2.027574539185,
+          -0.103031158447
+        ],
+        [
+          -4.833938598633,
+          2.402425765991,
+          -0.113030433655
+        ],
+        [
+          -3.04393863678,
+          0.372425079346,
+          0.666969299316
+        ],
+        [
+          -2.023938179016,
+          0.222424507141,
+          0.316968917847
+        ],
+        [
+          -3.94393825531,
+          1.9524269104,
+          0.206969261169
+        ],
+        [
+          -3.083938598633,
+          2.912425994873,
+          0.58696937561
+        ],
+        [
+          -1.813938140869,
+          2.222425460815,
+          -0.013031005859
+        ],
+        [
+          -0.683938026428,
+          2.612424850464,
+          0.746969223022
+        ],
+        [
+          -0.703938484192,
+          2.062425613403,
+          1.556968688965
+        ],
+        [
+          -3.473938941956,
+          3.662424087524,
+          1.306968688965
+        ],
+        [
+          0.096060752869,
+          0.502426147461,
+          -0.373030662537
+        ],
+        [
+          2.196061134338,
+          0.152424812317,
+          -0.213030815125
+        ],
+        [
+          4.65606212616,
+          0.112424850464,
+          -0.353030204773
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.829994163962395,
+          -2.009145963237377
+        ],
+        "energy_Ha": -900.4282914971711,
+        "converged": true,
+        "seconds": 231.6730432845652
+      },
+      "elapsed_seconds": 231.82703571394086
+    },
+    {
+      "index": 6,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 68,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.575756072998047,
+        -2.430884838104248
+      ],
+      "dpa_rms_force_eVA": 1.3147729635238647,
+      "symbols": [
+        "O",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "N",
+        "N",
+        "H",
+        "C",
+        "O",
+        "O",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "O",
+        "H"
+      ],
+      "smiles": "[H]Oc1c([H])c([H])nn(C(=O)c2c([H])c([H])c([H])c(OC([H])([H])[H])c2[H])c1=O",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 28,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -0.451783180237,
+          -1.463572502136,
+          -2.839642524719
+        ],
+        [
+          -0.361783027649,
+          -0.80357170105,
+          -1.829642295837
+        ],
+        [
+          0.868216514587,
+          -3.093571662903,
+          -1.459643363953
+        ],
+        [
+          0.778216362,
+          -2.523571968079,
+          -0.529643058777
+        ],
+        [
+          0.148216247559,
+          -1.273572921753,
+          -0.539643287659
+        ],
+        [
+          -3.731783866882,
+          1.826427459717,
+          -2.319642066956
+        ],
+        [
+          -2.651783943176,
+          1.886428833008,
+          -2.199642181396
+        ],
+        [
+          -1.911783218384,
+          3.036426544189,
+          -2.269641876221
+        ],
+        [
+          -0.521782875061,
+          2.886426925659,
+          -2.079642295837
+        ],
+        [
+          -2.09178352356,
+          0.69642829895,
+          -1.929642677307
+        ],
+        [
+          -0.791783332825,
+          0.566427230835,
+          -1.81964302063
+        ],
+        [
+          -2.34178352356,
+          4.006427764893,
+          -2.46964263916
+        ],
+        [
+          0.108216285706,
+          1.606428146362,
+          -1.839642524719
+        ],
+        [
+          1.318215370178,
+          1.446426391602,
+          -1.679642677307
+        ],
+        [
+          0.338215827942,
+          3.906427383423,
+          -2.11964225769
+        ],
+        [
+          1.268216133118,
+          3.58642578125,
+          -1.919642448425
+        ],
+        [
+          1.308217048645,
+          -2.993572235107,
+          0.670356750488
+        ],
+        [
+          1.808215141296,
+          -3.963571548462,
+          0.700357437134
+        ],
+        [
+          1.188216209412,
+          -2.243572235107,
+          1.850357055664
+        ],
+        [
+          0.548216819763,
+          -1.003571510315,
+          1.840356826782
+        ],
+        [
+          1.618216514587,
+          -2.623572349548,
+          2.770357131958
+        ],
+        [
+          0.358216285706,
+          -1.673572540283,
+          4.460357666016
+        ],
+        [
+          0.828217506409,
+          -0.713572502136,
+          4.190357208252
+        ],
+        [
+          1.92821598053,
+          -0.833572387695,
+          4.190357208252
+        ],
+        [
+          -0.481782913208,
+          0.44642829895,
+          0.660356521606
+        ],
+        [
+          0.018216133118,
+          -0.513572692871,
+          0.640356063843
+        ],
+        [
+          0.358216285706,
+          -0.223572731018,
+          2.940357208252
+        ],
+        [
+          0.548216819763,
+          0.04642868042,
+          4.93035697937
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.620573472956049,
+          -2.2154951826987332
+        ],
+        "energy_Ha": -873.0043904201243,
+        "converged": true,
+        "seconds": 221.562185972929
+      },
+      "elapsed_seconds": 221.67945624142885
+    },
+    {
+      "index": 7,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 59,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.276750087738037,
+        -3.257335662841797
+      ],
+      "dpa_rms_force_eVA": 1.595227837562561,
+      "symbols": [
+        "O",
+        "C",
+        "H",
+        "C",
+        "H",
+        "O",
+        "C",
+        "O",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "P"
+      ],
+      "smiles": "[H]OC1=C(OC([H])([H])[H])C(=O)P=C1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 14,
+      "elements": [
+        "C",
+        "H",
+        "O",
+        "P"
+      ],
+      "coordinates_A": [
+        [
+          0.934998512268,
+          -0.7321434021,
+          -0.423570632935
+        ],
+        [
+          -0.565000534058,
+          1.057856559753,
+          -0.933570861816
+        ],
+        [
+          -2.115000724792,
+          2.607857704163,
+          -0.983571052551
+        ],
+        [
+          -1.605000495911,
+          1.807856559753,
+          -0.463570594788
+        ],
+        [
+          0.634999275208,
+          0.537858009338,
+          -2.293570518494
+        ],
+        [
+          -0.05500125885,
+          1.237856864929,
+          -2.183570861816
+        ],
+        [
+          -0.095001220703,
+          0.087857246399,
+          -0.033571243286
+        ],
+        [
+          -0.655000686646,
+          -0.622142791748,
+          2.216429710388
+        ],
+        [
+          1.54499912262,
+          -2.652143478394,
+          0.006428718567
+        ],
+        [
+          1.484997749329,
+          -1.672142982483,
+          0.516428947449
+        ],
+        [
+          0.874999046326,
+          -1.772143363953,
+          1.416428565979
+        ],
+        [
+          2.494999885559,
+          -1.352142333984,
+          0.796429634094
+        ],
+        [
+          -0.815001487732,
+          0.087857246399,
+          1.216429710388
+        ],
+        [
+          -2.065001487732,
+          1.377856254578,
+          1.146428108215
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.769193913629624,
+          -3.835771806340647
+        ],
+        "energy_Ha": -760.0572664685633,
+        "converged": true,
+        "seconds": 33.262469582259655
+      },
+      "elapsed_seconds": 33.40817882493138
+    },
+    {
+      "index": 8,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 98,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.563467025756836,
+        -0.7415449023246765
+      ],
+      "dpa_rms_force_eVA": 1.9569170475006104,
+      "symbols": [
+        "H",
+        "C",
+        "Cl",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "O",
+        "H",
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "O",
+        "C",
+        "H"
+      ],
+      "smiles": "[H]O[C@@]([H])(Oc1c([H])c([H])c(Cl)c([H])c1[H])C([H])([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 20,
+      "elements": [
+        "C",
+        "Cl",
+        "H",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -1.657499313354,
+          -0.991000175476,
+          -2.39349937439
+        ],
+        [
+          -0.6875,
+          -0.731000900269,
+          -1.963500022888
+        ],
+        [
+          0.322501182556,
+          -1.131001472473,
+          -4.453499794006
+        ],
+        [
+          0.452500343323,
+          -0.721000671387,
+          -2.763499259949
+        ],
+        [
+          -0.597499847412,
+          -0.401000976562,
+          -0.613499641418
+        ],
+        [
+          2.582499504089,
+          -0.401000976562,
+          -2.833499908447
+        ],
+        [
+          1.692500114441,
+          -0.401000976562,
+          -2.213500022888
+        ],
+        [
+          1.782500267029,
+          -0.081001281738,
+          -0.863500595093
+        ],
+        [
+          2.742499351501,
+          0.168998718262,
+          -0.413499832153
+        ],
+        [
+          -1.007500648499,
+          -0.961000442505,
+          2.266500473022
+        ],
+        [
+          0.042499542236,
+          -1.481000900269,
+          2.45650100708
+        ],
+        [
+          -1.497499465942,
+          -0.441000938416,
+          -0.003499984741
+        ],
+        [
+          -1.477499961853,
+          1.548997879028,
+          0.806499481201
+        ],
+        [
+          -2.137499809265,
+          1.318998336792,
+          2.45650100708
+        ],
+        [
+          -1.217499732971,
+          1.448997497559,
+          1.866500854492
+        ],
+        [
+          -0.697499275208,
+          2.338998794556,
+          2.196500778198
+        ],
+        [
+          0.632500648499,
+          -0.051001548767,
+          -0.053500175476
+        ],
+        [
+          0.832499504089,
+          0.268999099731,
+          1.266500473022
+        ],
+        [
+          -0.297499656677,
+          0.278999328613,
+          2.136501312256
+        ],
+        [
+          0.192500114441,
+          0.418998718262,
+          3.116498947144
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.540588983544182,
+          -0.5621050260649748
+        ],
+        "energy_Ha": -920.3765875799386,
+        "converged": true,
+        "seconds": 56.523083839565516
+      },
+      "elapsed_seconds": 56.64537977799773
+    },
+    {
+      "index": 9,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 31,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.596122741699219,
+        -0.5526019930839539
+      ],
+      "dpa_rms_force_eVA": 0.9875208735466003,
+      "symbols": [
+        "O",
+        "H",
+        "C",
+        "C",
+        "N",
+        "C",
+        "N",
+        "H",
+        "O",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1nn([H])c2c1OC(=O)C([H])([H])C2([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 16,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -1.381251335144,
+          -0.856250762939,
+          -0.661250114441
+        ],
+        [
+          -0.06125164032,
+          -0.936250686646,
+          -3.191248893738
+        ],
+        [
+          0.338748931885,
+          -0.436249732971,
+          -2.321249008179
+        ],
+        [
+          -0.181251525879,
+          -0.376250267029,
+          -1.061249732971
+        ],
+        [
+          1.508749008179,
+          0.253749847412,
+          -2.361248970032
+        ],
+        [
+          0.678749084473,
+          0.363749504089,
+          -0.271248817444
+        ],
+        [
+          1.678749084473,
+          0.733749389648,
+          -1.111248970032
+        ],
+        [
+          2.488748550415,
+          1.313749313354,
+          -0.921249389648
+        ],
+        [
+          -2.971251487732,
+          -0.55624961853,
+          0.888750076294
+        ],
+        [
+          -1.791250228882,
+          -0.576250076294,
+          0.638750076294
+        ],
+        [
+          -0.681250572205,
+          -0.366250038147,
+          1.658750534058
+        ],
+        [
+          -0.231250762939,
+          -1.346249580383,
+          1.838748931885
+        ],
+        [
+          -1.151250839233,
+          -0.036250114441,
+          2.598751068115
+        ],
+        [
+          0.398748397827,
+          0.623750686646,
+          1.178750991821
+        ],
+        [
+          1.308748245239,
+          0.533748626709,
+          1.788749694824
+        ],
+        [
+          0.048748970032,
+          1.663749694824,
+          1.308750152588
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.722985744508814,
+          -0.6985593369836465
+        ],
+        "energy_Ha": -491.81725203359065,
+        "converged": true,
+        "seconds": 33.71689001843333
+      },
+      "elapsed_seconds": 33.83796799182892
+    },
+    {
+      "index": 10,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 55,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.5856475830078125,
+        -3.2147417068481445
+      ],
+      "dpa_rms_force_eVA": 6.244770050048828,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "O",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "N",
+        "C",
+        "H",
+        "H",
+        "C",
+        "O"
+      ],
+      "smiles": "[H]/[O+]=c1\\c([H])c([H])nc([H])c([H])c1C([H])([H])[O-]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 17,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          1.829412460327,
+          -0.480589866638,
+          -2.054117202759
+        ],
+        [
+          1.499410629272,
+          -2.720589637756,
+          -1.374116897583
+        ],
+        [
+          0.919410705566,
+          -1.960589408875,
+          -0.83411693573
+        ],
+        [
+          1.129409790039,
+          -0.630589485168,
+          -1.23411655426
+        ],
+        [
+          1.559410095215,
+          1.469409942627,
+          -2.014117240906
+        ],
+        [
+          0.929410934448,
+          1.709409713745,
+          -1.304116249084
+        ],
+        [
+          0.559410095215,
+          0.529410362244,
+          -0.714117050171
+        ],
+        [
+          -1.250589370728,
+          -2.49059009552,
+          1.525882720947
+        ],
+        [
+          -0.680588722229,
+          -1.810589790344,
+          0.875883102417
+        ],
+        [
+          -1.650588989258,
+          -0.180588722229,
+          1.815881729126
+        ],
+        [
+          -0.920589447021,
+          -0.440588951111,
+          1.045883178711
+        ],
+        [
+          0.139410018921,
+          -2.49059009552,
+          0.075882911682
+        ],
+        [
+          -0.820589065552,
+          1.949409484863,
+          0.875883102417
+        ],
+        [
+          -1.790588378906,
+          2.189409255981,
+          0.385882377625
+        ],
+        [
+          -0.970589637756,
+          1.959409713745,
+          1.955883026123
+        ],
+        [
+          -0.340589523315,
+          0.629409790039,
+          0.375883102417
+        ],
+        [
+          -0.14058971405,
+          2.769411087036,
+          0.595882415771
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -4.914776837379623,
+          -3.275932220992081
+        ],
+        "energy_Ha": -475.54588543707507,
+        "converged": true,
+        "seconds": 47.23978102579713
+      },
+      "elapsed_seconds": 47.38092738762498
+    },
+    {
+      "index": 11,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 59,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -7.198403358459473,
+        -1.0782270431518555
+      ],
+      "dpa_rms_force_eVA": 0.2890888750553131,
+      "symbols": [
+        "H",
+        "C",
+        "C",
+        "H",
+        "Cl",
+        "C",
+        "H",
+        "C",
+        "Cl",
+        "C",
+        "H",
+        "C"
+      ],
+      "smiles": "[H]c1c([H])c(Cl)c([H])c(Cl)c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 12,
+      "elements": [
+        "C",
+        "Cl",
+        "H"
+      ],
+      "coordinates_A": [
+        [
+          1.74666595459,
+          -1.326667785645,
+          -1.064167022705
+        ],
+        [
+          0.966667175293,
+          -0.736667633057,
+          -0.594166755676
+        ],
+        [
+          -0.533332824707,
+          1.183331489563,
+          -0.604166984558
+        ],
+        [
+          -0.913332939148,
+          2.07333278656,
+          -1.094167709351
+        ],
+        [
+          1.09666633606,
+          0.883332252502,
+          -2.754166603088
+        ],
+        [
+          0.466666221619,
+          0.413332939148,
+          -1.204167366028
+        ],
+        [
+          -0.933333396912,
+          -0.666667938232,
+          2.235834121704
+        ],
+        [
+          0.446666717529,
+          -1.10666847229,
+          0.645832061768
+        ],
+        [
+          1.056667327881,
+          -2.536667823792,
+          1.415832519531
+        ],
+        [
+          -0.553332328796,
+          -0.356667518616,
+          1.265832901001
+        ],
+        [
+          -1.813333511353,
+          1.383332252502,
+          1.115833282471
+        ],
+        [
+          -1.033332824707,
+          0.793332099915,
+          0.635833740234
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.272957436447623,
+          -0.9213882441665122
+        ],
+        "energy_Ha": -1150.9792926065304,
+        "converged": true,
+        "seconds": 18.29573432356119
+      },
+      "elapsed_seconds": 18.415680300444365
+    },
+    {
+      "index": 12,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 114,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.1497650146484375,
+        -2.2704765796661377
+      ],
+      "dpa_rms_force_eVA": 0.7533117532730103,
+      "symbols": [
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "N",
+        "C",
+        "C",
+        "C",
+        "H",
+        "O",
+        "H",
+        "C",
+        "H"
+      ],
+      "smiles": "[H]Oc1c([H])c([H])c2c([H])c3c([H])c([H])c([H])c([H])c3nc2c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 24,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -0.41625213623,
+          -4.779583930969,
+          -1.025834083557
+        ],
+        [
+          -0.176251411438,
+          -3.719584465027,
+          -1.06583404541
+        ],
+        [
+          -0.556251525879,
+          -2.879584312439,
+          -0.035833358765
+        ],
+        [
+          -0.246251106262,
+          -1.499583244324,
+          -0.055833816528
+        ],
+        [
+          0.823749542236,
+          -3.879584312439,
+          -2.985834121704
+        ],
+        [
+          0.523748397827,
+          -3.209584236145,
+          -2.175833702087
+        ],
+        [
+          1.373748779297,
+          -1.439583778381,
+          -3.075833320618
+        ],
+        [
+          0.833749771118,
+          -1.869584083557,
+          -2.235834121704
+        ],
+        [
+          0.453748703003,
+          -0.989583969116,
+          -1.185833930969
+        ],
+        [
+          1.303749084473,
+          0.8204164505,
+          -2.045833587646
+        ],
+        [
+          0.753747940063,
+          0.39041519165,
+          -1.205833435059
+        ],
+        [
+          0.343748092651,
+          1.220416069031,
+          -0.155833244324
+        ],
+        [
+          1.123748779297,
+          3.080416679382,
+          -0.935833930969
+        ],
+        [
+          0.58374786377,
+          2.620415687561,
+          -0.105834007263
+        ],
+        [
+          -1.096251487732,
+          -3.269583702087,
+          0.834164619446
+        ],
+        [
+          -0.646251678467,
+          -0.729584693909,
+          0.974165916443
+        ],
+        [
+          -0.366250991821,
+          0.600417137146,
+          0.934166908264
+        ],
+        [
+          -0.806251525879,
+          1.400416374207,
+          2.014164924622
+        ],
+        [
+          -0.556251525879,
+          2.760416984558,
+          2.024165153503
+        ],
+        [
+          -1.346250534058,
+          0.92041683197,
+          2.824166297913
+        ],
+        [
+          -0.956251144409,
+          3.570414543152,
+          3.034165382385
+        ],
+        [
+          -1.43625164032,
+          3.050415992737,
+          3.694165229797
+        ],
+        [
+          0.153748512268,
+          3.380415916443,
+          0.954165458679
+        ],
+        [
+          0.333748817444,
+          4.450415611267,
+          1.004166603088
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.987408392761852,
+          -2.2103746371731168
+        ],
+        "energy_Ha": -630.2847097865231,
+        "converged": true,
+        "seconds": 113.73753778263927
+      },
+      "elapsed_seconds": 113.90789277851582
+    },
+    {
+      "index": 13,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 80,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_grpo200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.00899600982666,
+        0.15909147262573242
+      ],
+      "dpa_rms_force_eVA": 0.6239415407180786,
+      "symbols": [
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "N",
+        "N",
+        "H",
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "O",
+        "C",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1oc(C([H])([H])N(N([H])C([H])([H])[H])C([H])([H])[H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 22,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.318635940552,
+          -1.074091911316,
+          -2.534090995789
+        ],
+        [
+          -2.9586353302,
+          -0.564091682434,
+          -0.944091796875
+        ],
+        [
+          -0.088634490967,
+          -1.714091300964,
+          -1.614090919495
+        ],
+        [
+          0.44136428833,
+          -0.744091033936,
+          -1.614090919495
+        ],
+        [
+          1.39136505127,
+          -0.864090919495,
+          -1.074090957642
+        ],
+        [
+          -3.388635635376,
+          0.345909118652,
+          -2.404090881348
+        ],
+        [
+          -1.158635139465,
+          1.095907211304,
+          -2.574090957642
+        ],
+        [
+          -2.578635215759,
+          -0.194091796875,
+          -1.904091835022
+        ],
+        [
+          -1.488635063171,
+          0.765909194946,
+          -1.664091110229
+        ],
+        [
+          -0.308634757996,
+          0.345909118652,
+          -0.974091529846
+        ],
+        [
+          0.661364555359,
+          -0.464091300964,
+          -2.654090881348
+        ],
+        [
+          -1.038635253906,
+          -0.874091148376,
+          0.665909767151
+        ],
+        [
+          0.851364135742,
+          -1.564091682434,
+          2.465909004211
+        ],
+        [
+          1.19136428833,
+          -0.564091682434,
+          2.225909233093
+        ],
+        [
+          -0.598635673523,
+          0.125907897949,
+          0.45590877533
+        ],
+        [
+          -1.348635673523,
+          0.875907897949,
+          0.745909690857
+        ],
+        [
+          0.611364364624,
+          0.295907974243,
+          1.315907478333
+        ],
+        [
+          1.34136390686,
+          1.455907821655,
+          1.285908699036
+        ],
+        [
+          2.381364822388,
+          1.325908660889,
+          2.175909996033
+        ],
+        [
+          2.331365585327,
+          0.10590839386,
+          2.785908699036
+        ],
+        [
+          3.051364898682,
+          2.155908584595,
+          2.305909156799
+        ],
+        [
+          3.021364212036,
+          -0.274091720581,
+          3.525908470154
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.9733954329031045,
+          0.18753699822049374
+        ],
+        "energy_Ha": -458.24918583253043,
+        "converged": true,
+        "seconds": 47.22853339090943
+      },
+      "elapsed_seconds": 47.37415909394622
+    },
+    {
+      "index": 14,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 64,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.175087928771973,
+        -0.6412893533706665
+      ],
+      "dpa_rms_force_eVA": 0.4593382775783539,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "N",
+        "H",
+        "C",
+        "H",
+        "C",
+        "N",
+        "H"
+      ],
+      "smiles": "[H]c1nc(N([H])[H])c([H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 13,
+      "elements": [
+        "C",
+        "H",
+        "N"
+      ],
+      "coordinates_A": [
+        [
+          -0.549999237061,
+          -0.81615447998,
+          -2.743077278137
+        ],
+        [
+          1.180000305176,
+          -2.066153526306,
+          -1.423076629639
+        ],
+        [
+          -0.319999694824,
+          -0.536154747009,
+          -1.713076591492
+        ],
+        [
+          0.640001296997,
+          -1.226153373718,
+          -0.983077049255
+        ],
+        [
+          -1.719999313354,
+          1.123845100403,
+          -1.633076667786
+        ],
+        [
+          -0.970000267029,
+          0.543845176697,
+          -1.093076705933
+        ],
+        [
+          0.969999313354,
+          -0.93615436554,
+          0.286923408508
+        ],
+        [
+          1.420000076294,
+          -0.146153450012,
+          2.576924324036
+        ],
+        [
+          -0.64999961853,
+          0.873847007751,
+          0.21692276001
+        ],
+        [
+          -1.130000114441,
+          1.703845024109,
+          0.726923942566
+        ],
+        [
+          0.329999923706,
+          0.103845596313,
+          0.876923561096
+        ],
+        [
+          0.700000762939,
+          0.41384601593,
+          2.156924247742
+        ],
+        [
+          0.10000038147,
+          0.963845252991,
+          2.74692440033
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.132297558053782,
+          -0.5302408275914534
+        ],
+        "energy_Ha": -303.40653453255794,
+        "converged": true,
+        "seconds": 13.854459043592215
+      },
+      "elapsed_seconds": 13.974242251366377
+    },
+    {
+      "index": 15,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 83,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_eligibility200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -5.9914679527282715,
+        -1.079005479812622
+      ],
+      "dpa_rms_force_eVA": 0.6947250366210938,
+      "symbols": [
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "C",
+        "H",
+        "F",
+        "N",
+        "C",
+        "H",
+        "H",
+        "O",
+        "C",
+        "H",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1c([H])c([H])c2c(c1[H])c1c([H])c([H])c([H])c(F)c1n2C([H])([H])OC([H])([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 29,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.162755966187,
+          -2.845863342285,
+          -1.558964729309
+        ],
+        [
+          -2.032755851746,
+          -2.125863075256,
+          -0.738965034485
+        ],
+        [
+          -1.002756118774,
+          -1.185863494873,
+          -0.708964347839
+        ],
+        [
+          2.017244338989,
+          -1.225863456726,
+          -4.378964424133
+        ],
+        [
+          -0.022756576538,
+          -2.195863723755,
+          -3.308963775635
+        ],
+        [
+          0.527242660522,
+          -1.385863304138,
+          -2.828964233398
+        ],
+        [
+          1.66724395752,
+          -0.845863342285,
+          -3.418964385986
+        ],
+        [
+          0.087244033813,
+          -0.875864028931,
+          -1.598964691162
+        ],
+        [
+          2.377243041992,
+          0.184136390686,
+          -2.788964271545
+        ],
+        [
+          0.807243347168,
+          0.184136390686,
+          -0.978964805603
+        ],
+        [
+          1.96724319458,
+          0.684136390686,
+          -1.558964729309
+        ],
+        [
+          2.537242889404,
+          1.494135856628,
+          -1.078964233398
+        ],
+        [
+          3.277242660522,
+          0.584136009216,
+          -3.258964538574
+        ],
+        [
+          -3.692756652832,
+          -2.865863800049,
+          0.381034851074
+        ],
+        [
+          -2.892756462097,
+          -2.125863075256,
+          0.331035614014
+        ],
+        [
+          -2.812756538391,
+          -1.235863685608,
+          1.381035804749
+        ],
+        [
+          -0.892756462097,
+          -0.275863647461,
+          0.391035079956
+        ],
+        [
+          -1.802756309509,
+          -0.275863647461,
+          1.441035270691
+        ],
+        [
+          -3.522756576538,
+          -1.265863418579,
+          2.201035499573
+        ],
+        [
+          -1.812756538391,
+          0.574137687683,
+          2.481036186218
+        ],
+        [
+          0.207242965698,
+          0.544137001038,
+          0.211035728455
+        ],
+        [
+          0.61724281311,
+          1.624135017395,
+          1.081034660339
+        ],
+        [
+          -0.162757873535,
+          2.404137611389,
+          1.121035575867
+        ],
+        [
+          1.537244796753,
+          2.064137458801,
+          0.671036720276
+        ],
+        [
+          0.847242355347,
+          1.10413646698,
+          2.381035804749
+        ],
+        [
+          1.047243118286,
+          2.144137382507,
+          3.331034660339
+        ],
+        [
+          0.237243652344,
+          2.884137153625,
+          3.301035881042
+        ],
+        [
+          2.017244338989,
+          2.60413646698,
+          3.181035041809
+        ],
+        [
+          1.037242889404,
+          1.654135704041,
+          4.321036338806
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.968936411975914,
+          -1.0298140843443904
+        ],
+        "energy_Ha": -769.9344373325332,
+        "converged": true,
+        "seconds": 282.4225799180567
+      },
+      "elapsed_seconds": 282.5675994642079
+    },
+    {
+      "index": 16,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 11,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.148650646209717,
+        -2.534633159637451
+      ],
+      "dpa_rms_force_eVA": 4.157706260681152,
+      "symbols": [
+        "H",
+        "Cl",
+        "N",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "N",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "N",
+        "C",
+        "S",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "O"
+      ],
+      "smiles": "[H]c1nc(/[S+]=N/C([H])([H])c2c([H])c([O-])c([H])c(N(Cl)C([H])([H])[H])c2[H])c([H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 31,
+      "elements": [
+        "C",
+        "Cl",
+        "H",
+        "N",
+        "O",
+        "S"
+      ],
+      "coordinates_A": [
+        [
+          -3.088063240051,
+          -0.67064666748,
+          -2.559677124023
+        ],
+        [
+          1.061935424805,
+          -1.77064704895,
+          -2.139678001404
+        ],
+        [
+          1.961936950684,
+          -1.080647468567,
+          -0.86967754364
+        ],
+        [
+          3.651937484741,
+          -1.390646934509,
+          -2.059678077698
+        ],
+        [
+          3.371934890747,
+          -0.840646743774,
+          -1.159677505493
+        ],
+        [
+          3.991937637329,
+          -1.200647354126,
+          -0.319677352905
+        ],
+        [
+          -1.168063163757,
+          0.369352340698,
+          -3.799677848816
+        ],
+        [
+          -1.368063926697,
+          0.639352798462,
+          -2.769678115845
+        ],
+        [
+          -2.698063850403,
+          0.299352645874,
+          -0.789677619934
+        ],
+        [
+          -2.418064117432,
+          0.049352645874,
+          -2.079677581787
+        ],
+        [
+          0.281936645508,
+          2.039352416992,
+          -2.629677772522
+        ],
+        [
+          -0.548063278198,
+          1.559350967407,
+          -2.109677314758
+        ],
+        [
+          -0.768063545227,
+          1.849353790283,
+          -0.779678344727
+        ],
+        [
+          -0.148063659668,
+          2.549352645874,
+          -0.21967792511
+        ],
+        [
+          3.581937789917,
+          0.229351997375,
+          -1.319677352905
+        ],
+        [
+          -2.348063468933,
+          -1.910647392273,
+          1.300321578979
+        ],
+        [
+          -2.068062782288,
+          -1.060647964478,
+          1.940320968628
+        ],
+        [
+          -2.278063774109,
+          -1.320647239685,
+          2.980321884155
+        ],
+        [
+          -0.438063621521,
+          -1.840646743774,
+          -0.059678077698
+        ],
+        [
+          0.061937332153,
+          -1.150647163391,
+          0.620323181152
+        ],
+        [
+          1.361934661865,
+          -0.710646629333,
+          0.310321807861
+        ],
+        [
+          -0.618063926697,
+          -0.700647354126,
+          1.750322341919
+        ],
+        [
+          -3.038063049316,
+          0.099351882935,
+          1.490322113037
+        ],
+        [
+          -1.858063697815,
+          1.199352264404,
+          -0.149677276611
+        ],
+        [
+          -2.20806312561,
+          1.52935218811,
+          1.570322036743
+        ],
+        [
+          2.001935958862,
+          0.149352073669,
+          1.230321884155
+        ],
+        [
+          3.011936187744,
+          0.499353408813,
+          1.040321350098
+        ],
+        [
+          0.031936645508,
+          0.179351806641,
+          2.630323410034
+        ],
+        [
+          -0.488063812256,
+          0.549352645874,
+          3.520320892334
+        ],
+        [
+          1.331935882568,
+          0.589353561401,
+          2.370323181152
+        ],
+        [
+          1.84193611145,
+          1.269351959229,
+          3.060321807861
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.3109683502937575,
+          -4.10739815385403
+        ],
+        "energy_Ha": -1599.3207857777634,
+        "converged": true,
+        "seconds": 562.4126808270812
+      },
+      "elapsed_seconds": 562.5448614656925
+    },
+    {
+      "index": 17,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 57,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_homo_seed42/eval_continue_wall_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -5.531828880310059,
+        -2.839496612548828
+      ],
+      "dpa_rms_force_eVA": 1.8508567810058594,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "C",
+        "N",
+        "C",
+        "O",
+        "C",
+        "O",
+        "O",
+        "N",
+        "H",
+        "N",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "N",
+        "H",
+        "N",
+        "C",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1nc(N([H])[O-])c([H])c(C(=O)C([H])([H])/N=N/c2c([H])c([H])c([H])c([H])c2N([H])C#[O+])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 33,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -3.120909690857,
+          -0.151816368103,
+          -1.953032493591
+        ],
+        [
+          3.299090385437,
+          -3.721816062927,
+          -0.963032722473
+        ],
+        [
+          2.679089546204,
+          -2.981816291809,
+          -0.463031768799
+        ],
+        [
+          3.149090766907,
+          -1.681816101074,
+          -0.223031997681
+        ],
+        [
+          4.129088401794,
+          -1.341815948486,
+          -0.553031921387
+        ],
+        [
+          -4.970910072327,
+          0.818183898926,
+          -0.633031845093
+        ],
+        [
+          -0.900910377502,
+          -0.141816139221,
+          -2.543031692505
+        ],
+        [
+          -2.900910377502,
+          0.558183670044,
+          -1.143032073975
+        ],
+        [
+          -3.950909614563,
+          1.098184585571,
+          -0.403032302856
+        ],
+        [
+          -0.570909500122,
+          0.328183174133,
+          -1.683032989502
+        ],
+        [
+          -1.580909729004,
+          0.898183822632,
+          -0.873032569885
+        ],
+        [
+          1.649088859558,
+          0.478183746338,
+          -2.263031959534
+        ],
+        [
+          0.689089775085,
+          0.768184661865,
+          -1.603033065796
+        ],
+        [
+          3.90908908844,
+          0.898183822632,
+          -0.183032035828
+        ],
+        [
+          -0.900910377502,
+          -4.171815872192,
+          0.526967048645
+        ],
+        [
+          -0.650909423828,
+          -3.041815757751,
+          0.796967506409
+        ],
+        [
+          -1.370909690857,
+          -2.311816215515,
+          1.256966590881
+        ],
+        [
+          1.469090461731,
+          -3.391816139221,
+          -0.123032569885
+        ],
+        [
+          0.689089775085,
+          -2.501815795898,
+          0.516966819763
+        ],
+        [
+          1.049090385437,
+          -1.201815605164,
+          0.856966972351
+        ],
+        [
+          0.339089393616,
+          -0.571815490723,
+          1.386967658997
+        ],
+        [
+          2.309090614319,
+          -0.76181602478,
+          0.42696762085
+        ],
+        [
+          -4.530909538269,
+          2.408184051514,
+          1.216967582703
+        ],
+        [
+          -3.700910568237,
+          1.988182067871,
+          0.646967887878
+        ],
+        [
+          -2.400909423828,
+          2.338184356689,
+          0.966967582703
+        ],
+        [
+          -1.330909729004,
+          1.798183441162,
+          0.206967353821
+        ],
+        [
+          -0.180910110474,
+          2.188184738159,
+          0.706967353821
+        ],
+        [
+          -2.16090965271,
+          3.018184661865,
+          1.776967048645
+        ],
+        [
+          0.829091072083,
+          1.748182296753,
+          0.066967964172
+        ],
+        [
+          2.859089851379,
+          0.63818359375,
+          0.396966934204
+        ],
+        [
+          1.979088783264,
+          1.758182525635,
+          0.956967353821
+        ],
+        [
+          2.539090156555,
+          2.698184967041,
+          0.90696811676
+        ],
+        [
+          1.65908908844,
+          1.548183441162,
+          1.986966133118
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -4.29404761230363,
+          -3.431273032578918
+        ],
+        "energy_Ha": -1038.5048260782514,
+        "converged": true,
+        "seconds": 786.9628934785724
+      },
+      "elapsed_seconds": 787.0920641683042
+    },
+    {
+      "index": 18,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "quantile": 25,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 62,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -6.690884590148926,
+        -2.065570831298828
+      ],
+      "dpa_rms_force_eVA": 0.739668607711792,
+      "symbols": [
+        "H",
+        "O",
+        "C",
+        "C",
+        "H",
+        "Br",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "H",
+        "N",
+        "C",
+        "C",
+        "H",
+        "H",
+        "H",
+        "P",
+        "O",
+        "C",
+        "C",
+        "N",
+        "C",
+        "N",
+        "H",
+        "C",
+        "H",
+        "H",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1nc([P@@](=O)(On2c([H])nc([H])c2[H])c2c([H])c([H])c(Br)c([H])c2[H])c([H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 32,
+      "elements": [
+        "Br",
+        "C",
+        "H",
+        "N",
+        "O",
+        "P"
+      ],
+      "coordinates_A": [
+        [
+          -1.94375038147,
+          -0.823750495911,
+          -2.119062423706
+        ],
+        [
+          -1.013751029968,
+          -2.203750610352,
+          -0.029062271118
+        ],
+        [
+          1.466248512268,
+          -0.723750114441,
+          -0.249062538147
+        ],
+        [
+          3.786248207092,
+          -1.253750801086,
+          -0.029062271118
+        ],
+        [
+          -2.253750801086,
+          0.946248054504,
+          -3.859062194824
+        ],
+        [
+          -1.313750267029,
+          3.766247749329,
+          -4.069062232971
+        ],
+        [
+          -1.713750839233,
+          1.156249046326,
+          -2.93906211853
+        ],
+        [
+          -1.543750762939,
+          0.176248550415,
+          -1.969062805176
+        ],
+        [
+          -1.143750190735,
+          2.406249046326,
+          -2.729063034058
+        ],
+        [
+          -0.833750724792,
+          0.456250190735,
+          -0.7890625
+        ],
+        [
+          -0.453750610352,
+          2.72624874115,
+          -1.559062957764
+        ],
+        [
+          -0.303750038147,
+          1.746249198914,
+          -0.589062690735
+        ],
+        [
+          3.07624912262,
+          0.796248435974,
+          -2.649063110352
+        ],
+        [
+          1.686247825623,
+          0.026248931885,
+          -1.349061965942
+        ],
+        [
+          2.946249961853,
+          0.166248321533,
+          -1.769062995911
+        ],
+        [
+          4.036248207092,
+          -0.44375038147,
+          -1.139061927795
+        ],
+        [
+          5.046248435974,
+          -0.303750991821,
+          -1.519062995911
+        ],
+        [
+          -0.033750534058,
+          3.716248512268,
+          -1.419062614441
+        ],
+        [
+          -4.353750228882,
+          -0.653750419617,
+          3.670936584473
+        ],
+        [
+          -0.293750762939,
+          -0.923749923706,
+          0.180937767029
+        ],
+        [
+          -0.213750839233,
+          -0.683750152588,
+          1.870937347412
+        ],
+        [
+          -2.583750724792,
+          -0.473751068115,
+          2.360939025879
+        ],
+        [
+          -3.303750038147,
+          -0.813750267029,
+          3.490936279297
+        ],
+        [
+          -1.313750267029,
+          -0.903750419617,
+          2.630937576294
+        ],
+        [
+          -1.293750762939,
+          -1.453750610352,
+          3.880937576294
+        ],
+        [
+          -2.493751525879,
+          -1.413750648499,
+          4.420938491821
+        ],
+        [
+          -0.393750190735,
+          -1.853750228882,
+          4.310935974121
+        ],
+        [
+          2.476250648499,
+          -1.393751144409,
+          0.430936813354
+        ],
+        [
+          2.246249198914,
+          -2.003750801086,
+          1.300937652588
+        ],
+        [
+          4.606249809265,
+          -1.753750801086,
+          0.480937004089
+        ],
+        [
+          -2.833750724792,
+          0.016248703003,
+          1.430936813354
+        ],
+        [
+          0.256249427795,
+          1.976250648499,
+          0.310936927795
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.546537910470005,
+          -2.064756717253963
+        ],
+        "energy_Ha": -3769.2080951856924,
+        "converged": true,
+        "seconds": 529.5767629556358
+      },
+      "elapsed_seconds": 529.7473373003304
+    },
+    {
+      "index": 19,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "quantile": 25,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 7,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -5.829564571380615,
+        -2.1217305660247803
+      ],
+      "dpa_rms_force_eVA": 0.8331257700920105,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "H",
+        "F",
+        "C",
+        "F",
+        "C",
+        "F",
+        "C",
+        "C",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "F",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "O",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]Oc1c([H])c([H])c2c(C([H])([H])[H])c([H])c([H])c([H])c2c1/C([H])=C(\\[H])c1c(F)c([H])c(F)c(F)c1F",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 36,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -3.728333473206,
+          -2.156386375427,
+          -0.681391716003
+        ],
+        [
+          -1.598333358765,
+          -1.046384811401,
+          -1.111391067505
+        ],
+        [
+          -1.988333702087,
+          -1.046384811401,
+          -0.101390838623
+        ],
+        [
+          2.6016664505,
+          -1.526385307312,
+          -4.751391410828
+        ],
+        [
+          1.631665229797,
+          -1.446385383606,
+          -2.351390838623
+        ],
+        [
+          2.721667289734,
+          -0.576385498047,
+          -4.241391181946
+        ],
+        [
+          3.791665077209,
+          0.333614349365,
+          -6.141390800476
+        ],
+        [
+          3.371665000916,
+          0.473613739014,
+          -4.871391296387
+        ],
+        [
+          4.281666755676,
+          2.733613967896,
+          -4.761391639709
+        ],
+        [
+          3.591666221619,
+          1.683614730835,
+          -4.191390991211
+        ],
+        [
+          2.231667518616,
+          -0.386385917664,
+          -2.951391220093
+        ],
+        [
+          2.371666908264,
+          0.813613891602,
+          -2.241391181946
+        ],
+        [
+          3.091666221619,
+          1.823614120483,
+          -2.901391029358
+        ],
+        [
+          -0.018333435059,
+          -0.116386413574,
+          -1.401391983032
+        ],
+        [
+          0.55166721344,
+          0.363615036011,
+          -0.591391563416
+        ],
+        [
+          1.751667976379,
+          0.95361328125,
+          -0.921391487122
+        ],
+        [
+          2.281666755676,
+          1.543615341187,
+          -0.181390762329
+        ],
+        [
+          3.321665763855,
+          2.993614196777,
+          -2.261390686035
+        ],
+        [
+          -4.668333053589,
+          -2.21638584137,
+          1.618607521057
+        ],
+        [
+          -3.188333511353,
+          -1.686385154724,
+          0.138608932495
+        ],
+        [
+          -3.718333244324,
+          -1.71638584137,
+          1.43860912323
+        ],
+        [
+          -3.058333396912,
+          -1.126385688782,
+          2.508608818054
+        ],
+        [
+          -3.928334236145,
+          -2.226386070251,
+          4.148608207703
+        ],
+        [
+          -3.69833278656,
+          -1.186386108398,
+          3.888607978821
+        ],
+        [
+          -3.058333396912,
+          -0.776385307312,
+          4.668608665466
+        ],
+        [
+          -4.6483335495,
+          -0.626385688782,
+          3.878607749939
+        ],
+        [
+          -1.268333435059,
+          -0.416385650635,
+          0.93860912323
+        ],
+        [
+          -1.808333396912,
+          -0.46638584137,
+          2.278609275818
+        ],
+        [
+          -1.068333625793,
+          0.143613815308,
+          3.318608283997
+        ],
+        [
+          -1.428333282471,
+          0.103614807129,
+          4.348607063293
+        ],
+        [
+          -0.02833366394,
+          0.283615112305,
+          0.698607444763
+        ],
+        [
+          0.631667137146,
+          0.893613815308,
+          1.778607368469
+        ],
+        [
+          1.791666984558,
+          1.583614349365,
+          1.608609199524
+        ],
+        [
+          0.111665725708,
+          0.80361366272,
+          3.078608512878
+        ],
+        [
+          0.671666145325,
+          1.273612976074,
+          3.878607749939
+        ],
+        [
+          2.1016664505,
+          1.943614959717,
+          2.43860912323
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.727725701882312,
+          -1.920329621090012
+        ],
+        "energy_Ha": -1204.9445802224823,
+        "converged": true,
+        "seconds": 467.022878266871
+      },
+      "elapsed_seconds": 467.17824299633503
+    },
+    {
+      "index": 20,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "quantile": 25,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 65,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -6.362720012664795,
+        -2.056377410888672
+      ],
+      "dpa_rms_force_eVA": 1.222228765487671,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "N",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "O",
+        "N",
+        "H",
+        "C",
+        "C",
+        "C",
+        "C",
+        "N",
+        "O",
+        "H",
+        "C",
+        "C",
+        "H"
+      ],
+      "smiles": "[H]c1nc([H])c(-c2oc3nc([H])n([H])c(=O)c3c2[H])c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 23,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -0.253914833069,
+          -2.411302566528,
+          -1.171305656433
+        ],
+        [
+          1.306084632874,
+          -2.041302680969,
+          -4.981305122375
+        ],
+        [
+          1.086085319519,
+          -1.551301956177,
+          -4.021306037903
+        ],
+        [
+          0.496085166931,
+          -2.32130241394,
+          -3.091305732727
+        ],
+        [
+          0.226084709167,
+          -1.761301994324,
+          -1.901305198669
+        ],
+        [
+          1.88608455658,
+          0.368697166443,
+          -4.611305236816
+        ],
+        [
+          1.406085014343,
+          -0.211302757263,
+          -3.83130645752
+        ],
+        [
+          1.116086006165,
+          0.368697166443,
+          -2.581305503845
+        ],
+        [
+          0.506084442139,
+          -0.42130279541,
+          -1.591305732727
+        ],
+        [
+          1.346085548401,
+          1.408696174622,
+          -2.38130569458
+        ],
+        [
+          -0.523914337158,
+          -0.851302146912,
+          0.478693962097
+        ],
+        [
+          -1.493915557861,
+          -0.921301841736,
+          2.608695030212
+        ],
+        [
+          -2.233914375305,
+          -0.761301994324,
+          4.528695106506
+        ],
+        [
+          -0.803915023804,
+          -0.251302719116,
+          1.68869304657
+        ],
+        [
+          -0.293914794922,
+          1.048697471619,
+          1.738696098328
+        ],
+        [
+          -0.533915519714,
+          1.798697471619,
+          2.988694190979
+        ],
+        [
+          -1.693915367126,
+          -0.241302490234,
+          3.728693962097
+        ],
+        [
+          -1.243914604187,
+          1.018696784973,
+          3.928694725037
+        ],
+        [
+          -0.203914642334,
+          2.928696632385,
+          3.378693580627
+        ],
+        [
+          -1.423913955688,
+          1.488696098328,
+          4.818694114685
+        ],
+        [
+          0.156085014343,
+          0.058696746826,
+          -0.271306037903
+        ],
+        [
+          0.326085090637,
+          1.178696632385,
+          0.4486951828
+        ],
+        [
+          0.846085548401,
+          2.078698158264,
+          0.098693847656
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.377381815315449,
+          -1.8926740131438988
+        ],
+        "energy_Ha": -737.5286072082147,
+        "converged": true,
+        "seconds": 131.8115003593266
+      },
+      "elapsed_seconds": 131.95531430467963
+    },
+    {
+      "index": 21,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "quantile": 25,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 121,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -7.050850868225098,
+        -1.7255324125289917
+      ],
+      "dpa_rms_force_eVA": 0.9711387157440186,
+      "symbols": [
+        "Cl",
+        "Br",
+        "C",
+        "H",
+        "C",
+        "C",
+        "N",
+        "C",
+        "Cl",
+        "C",
+        "O",
+        "H"
+      ],
+      "smiles": "[H]Oc1c(Cl)nc(Cl)c(Br)c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 12,
+      "elements": [
+        "Br",
+        "C",
+        "Cl",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -3.085835456848,
+          -1.005001068115,
+          -0.954999923706
+        ],
+        [
+          -1.045835494995,
+          0.29499912262,
+          -3.165000915527
+        ],
+        [
+          -0.605834960938,
+          0.04499912262,
+          -1.355000495911
+        ],
+        [
+          1.354164123535,
+          0.904999732971,
+          -1.585000038147
+        ],
+        [
+          0.644165039062,
+          0.454998970032,
+          -0.904999732971
+        ],
+        [
+          -1.51583480835,
+          -0.525000572205,
+          -0.45500087738
+        ],
+        [
+          -1.225834846497,
+          -0.694999694824,
+          0.824998855591
+        ],
+        [
+          -0.045835494995,
+          -0.315000534058,
+          1.314998626709
+        ],
+        [
+          0.274164199829,
+          -0.545000076294,
+          3.014999389648
+        ],
+        [
+          0.954164505005,
+          0.274998664856,
+          0.454999923706
+        ],
+        [
+          2.154165267944,
+          0.654999732971,
+          0.924999237061
+        ],
+        [
+          2.144165039062,
+          0.454998970032,
+          1.885000228882
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.04127123993235,
+          -1.7406390503485256
+        ],
+        "energy_Ha": -3815.4500495189986,
+        "converged": true,
+        "seconds": 39.90000198408961
+      },
+      "elapsed_seconds": 40.029720935970545
+    },
+    {
+      "index": 22,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "quantile": 25,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 102,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -7.29067325592041,
+        -2.108078718185425
+      ],
+      "dpa_rms_force_eVA": 0.8355275988578796,
+      "symbols": [
+        "H",
+        "C",
+        "H",
+        "O",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "N",
+        "C",
+        "O",
+        "C",
+        "N",
+        "C",
+        "H",
+        "N",
+        "Br",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1nc(C(=O)OC([H])([H])C([H])([H])N([H])C#N)c(Br)c([H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 23,
+      "elements": [
+        "Br",
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.941305160522,
+          -1.43043422699,
+          -0.690435409546
+        ],
+        [
+          -2.081305503845,
+          -1.040434837341,
+          -1.240435600281
+        ],
+        [
+          -1.63130569458,
+          -1.820434570312,
+          -1.860436439514
+        ],
+        [
+          0.558693885803,
+          -0.850435256958,
+          -1.740436553955
+        ],
+        [
+          0.198694229126,
+          -0.670433998108,
+          -0.600435256958
+        ],
+        [
+          -2.491305351257,
+          -0.140434265137,
+          -3.180436134338
+        ],
+        [
+          -1.191305160522,
+          1.709565162659,
+          -2.660435676575
+        ],
+        [
+          -3.511305809021,
+          0.499566078186,
+          -1.860436439514
+        ],
+        [
+          -2.501305580139,
+          0.149564743042,
+          -2.120435714722
+        ],
+        [
+          -1.501304626465,
+          1.189564704895,
+          -1.84043598175
+        ],
+        [
+          -1.821305274963,
+          2.06956577301,
+          -0.830435752869
+        ],
+        [
+          -1.121305465698,
+          -0.700433731079,
+          -0.21043586731
+        ],
+        [
+          1.148694992065,
+          -0.440434455872,
+          0.549565315247
+        ],
+        [
+          2.418695449829,
+          -0.58043384552,
+          0.149563789368
+        ],
+        [
+          3.41869354248,
+          -0.4104347229,
+          1.019564628601
+        ],
+        [
+          4.418695449829,
+          -0.540433883667,
+          0.609564781189
+        ],
+        [
+          -2.101305007935,
+          2.81956577301,
+          0.019563674927
+        ],
+        [
+          -0.891304969788,
+          0.079565048218,
+          2.579564094543
+        ],
+        [
+          0.838695526123,
+          -0.140434265137,
+          1.879565238953
+        ],
+        [
+          3.198694229126,
+          -0.100434303284,
+          2.359564781189
+        ],
+        [
+          1.888694763184,
+          0.039565086365,
+          2.789565086365
+        ],
+        [
+          4.028694152832,
+          0.029564857483,
+          3.049563407898
+        ],
+        [
+          1.66869354248,
+          0.279564857483,
+          3.829564094543
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.446393625661519,
+          -1.9291177112340852
+        ],
+        "energy_Ha": -3235.776726330697,
+        "converged": true,
+        "seconds": 156.92597803473473
+      },
+      "elapsed_seconds": 157.08517275750637
+    },
+    {
+      "index": 23,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "quantile": 25,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2041,
+      "candidate_id": 71,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p25_s2041/run",
+      "dpa_prediction_eV": [
+        -5.375526428222656,
+        -2.3416404724121094
+      ],
+      "dpa_rms_force_eVA": 1.91408109664917,
+      "symbols": [
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "N",
+        "N",
+        "O",
+        "H",
+        "C",
+        "O",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "N",
+        "O",
+        "C"
+      ],
+      "smiles": "[H]c1c([H])c([H])c(C([H])([H])[H])c(C2=[N+]([H])C(=O)C(=O)N2N([H])[O-])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 25,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -0.670000076294,
+          -1.539199829102,
+          -2.574398994446
+        ],
+        [
+          -0.570000648499,
+          0.140800476074,
+          -2.004398345947
+        ],
+        [
+          -0.659999847412,
+          -3.419199943542,
+          -0.954399108887
+        ],
+        [
+          -0.320000648499,
+          -2.729199409485,
+          -0.184398651123
+        ],
+        [
+          -2.050000190735,
+          -0.809199333191,
+          -1.74439907074
+        ],
+        [
+          -0.949999809265,
+          -0.859199523926,
+          -1.754399299622
+        ],
+        [
+          -0.410000801086,
+          -1.349199295044,
+          -0.434398651123
+        ],
+        [
+          -2.109999656677,
+          1.240800857544,
+          -0.0443983078
+        ],
+        [
+          0.799999237061,
+          1.800800323486,
+          -0.094398498535
+        ],
+        [
+          2.109998703003,
+          1.680799484253,
+          -0.474398612976
+        ],
+        [
+          2.760000228882,
+          0.670800209045,
+          -0.244398117065
+        ],
+        [
+          2.099998474121,
+          2.660800933838,
+          -0.974398612976
+        ],
+        [
+          0.199999809265,
+          3.150800704956,
+          -0.454398155212
+        ],
+        [
+          0.639999389648,
+          4.110799789429,
+          -1.234398841858
+        ],
+        [
+          0.039999961853,
+          -0.469199180603,
+          0.565600395203
+        ],
+        [
+          0.279999732971,
+          -4.289198875427,
+          1.175601005554
+        ],
+        [
+          0.210000038147,
+          -3.219200134277,
+          1.00560092926
+        ],
+        [
+          0.579999923706,
+          -0.959198951721,
+          1.765601158142
+        ],
+        [
+          0.659999847412,
+          -2.329199790955,
+          1.985600471497
+        ],
+        [
+          1.079999923706,
+          -2.709198951721,
+          2.915600776672
+        ],
+        [
+          0.940000534058,
+          -0.25920009613,
+          2.515601158142
+        ],
+        [
+          -0.119999885559,
+          0.97080039978,
+          0.365600585938
+        ],
+        [
+          -1.340000152588,
+          1.640800476074,
+          0.485600471497
+        ],
+        [
+          -2.029999732971,
+          3.850799560547,
+          0.265601158142
+        ],
+        [
+          -1.170000076294,
+          3.020801544189,
+          0.125600814819
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.237384017847706,
+          -3.9426980780841276
+        ],
+        "energy_Ha": -775.6249805215043,
+        "converged": true,
+        "seconds": 271.2976202182472
+      },
+      "elapsed_seconds": 271.45568227767944
+    },
+    {
+      "index": 24,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "quantile": 50,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 106,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.647756099700928,
+        -1.418532133102417
+      ],
+      "dpa_rms_force_eVA": 0.642217218875885,
+      "symbols": [
+        "H",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "O",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "O",
+        "H",
+        "C",
+        "H",
+        "C",
+        "H"
+      ],
+      "smiles": "[H]C(C(=O)Oc1c([H])c([H])c([H])c([H])c1[H])=C(C([H])([H])[H])C([H])([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 25,
+      "elements": [
+        "C",
+        "H",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          1.350799560547,
+          -0.975199699402,
+          -2.829999923706
+        ],
+        [
+          -0.50920009613,
+          1.414800643921,
+          -4.389999389648
+        ],
+        [
+          -0.699200630188,
+          1.834800720215,
+          -5.369998931885
+        ],
+        [
+          -1.159200668335,
+          1.924800872803,
+          -3.269999504089
+        ],
+        [
+          -1.879200935364,
+          2.744800567627,
+          -3.379999160767
+        ],
+        [
+          -0.929200172424,
+          1.394800186157,
+          -2.0
+        ],
+        [
+          -1.449199676514,
+          1.794801712036,
+          -1.129999160767
+        ],
+        [
+          0.920799255371,
+          -0.035200119019,
+          -5.099999427795
+        ],
+        [
+          0.400798797607,
+          0.36480140686,
+          -4.229999542236
+        ],
+        [
+          0.650800704956,
+          -0.165199279785,
+          -2.969999313354
+        ],
+        [
+          -0.019200325012,
+          0.354801177979,
+          -1.859999656677
+        ],
+        [
+          0.29079914093,
+          -0.31519985199,
+          -0.66999912262
+        ],
+        [
+          -0.459199905396,
+          -2.905200004578,
+          3.299999237061
+        ],
+        [
+          0.280798912048,
+          -1.995200157166,
+          1.050001144409
+        ],
+        [
+          0.200798988342,
+          -1.005199432373,
+          1.510000228882
+        ],
+        [
+          1.290800094604,
+          -2.765198707581,
+          3.479999542236
+        ],
+        [
+          0.340799331665,
+          -2.225199699402,
+          3.629999160767
+        ],
+        [
+          0.29079914093,
+          -0.935199737549,
+          2.860000610352
+        ],
+        [
+          0.230799674988,
+          -2.045199394226,
+          4.710000991821
+        ],
+        [
+          -0.609199523926,
+          1.164800643921,
+          0.760000228882
+        ],
+        [
+          -0.479200363159,
+          0.404800415039,
+          4.35000038147
+        ],
+        [
+          -0.079200744629,
+          0.084799766541,
+          0.579999923706
+        ],
+        [
+          0.370799064636,
+          1.224800109863,
+          3.030000686646
+        ],
+        [
+          0.370799064636,
+          0.324800491333,
+          3.659999847412
+        ],
+        [
+          1.280799865723,
+          0.334800720215,
+          4.280000686646
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.766155432935251,
+          -1.4313031443636544
+        ],
+        "energy_Ha": -576.3744120520474,
+        "converged": true,
+        "seconds": 94.19084171205759
+      },
+      "elapsed_seconds": 94.35290379077196
+    },
+    {
+      "index": 25,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "quantile": 50,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 92,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.480762004852295,
+        -1.3366878032684326
+      ],
+      "dpa_rms_force_eVA": 0.6262060403823853,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "N",
+        "H",
+        "O",
+        "S",
+        "C",
+        "H",
+        "C",
+        "N",
+        "H",
+        "C",
+        "C",
+        "H",
+        "N",
+        "H"
+      ],
+      "smiles": "[H]c1c(N([H])[H])n([H])c(=S)n(C([H])([H])[H])c1=O",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 17,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O",
+        "S"
+      ],
+      "coordinates_A": [
+        [
+          -1.297646522522,
+          -1.00176525116,
+          -2.708234786987
+        ],
+        [
+          -0.737646102905,
+          -2.471765518188,
+          -1.858235359192
+        ],
+        [
+          -0.467646598816,
+          -1.441765785217,
+          -2.138235092163
+        ],
+        [
+          -0.18764591217,
+          -0.631765365601,
+          -0.958235740662
+        ],
+        [
+          0.442353248596,
+          -1.461765289307,
+          -2.738235473633
+        ],
+        [
+          2.082353591919,
+          -0.811765670776,
+          -1.328235626221
+        ],
+        [
+          -2.837646484375,
+          -0.491765975952,
+          -0.568235397339
+        ],
+        [
+          1.182353973389,
+          -0.361765861511,
+          -0.618234634399
+        ],
+        [
+          -1.747646331787,
+          0.908234596252,
+          1.391764640808
+        ],
+        [
+          -1.227645874023,
+          -0.181765556335,
+          -0.218235015869
+        ],
+        [
+          -0.927645683289,
+          0.588234901428,
+          0.881764411926
+        ],
+        [
+          -0.307646751404,
+          1.84823513031,
+          2.991765022278
+        ],
+        [
+          1.392353057861,
+          0.438235282898,
+          0.55176448822
+        ],
+        [
+          0.352354049683,
+          0.908234596252,
+          1.291764259338
+        ],
+        [
+          2.422353744507,
+          0.658234596252,
+          0.821764945984
+        ],
+        [
+          0.482353210449,
+          1.74823474884,
+          2.371764183044
+        ],
+        [
+          1.382352828979,
+          1.758234977722,
+          2.831765174866
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.377070146708983,
+          -0.9916070909392645
+        ],
+        "energy_Ha": -832.000997442567,
+        "converged": true,
+        "seconds": 40.30629521608353
+      },
+      "elapsed_seconds": 40.496260568499565
+    },
+    {
+      "index": 26,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "quantile": 50,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 35,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.288020133972168,
+        -1.4120538234710693
+      ],
+      "dpa_rms_force_eVA": 0.9070832133293152,
+      "symbols": [
+        "O",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "N",
+        "N",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "H",
+        "I",
+        "H",
+        "Cl",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1c([H])c([H])c2c(c1[H])N(N([H])[H])C(=O)[C@@]2([H])c1c([H])c([H])c(I)c(Cl)c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 29,
+      "elements": [
+        "C",
+        "Cl",
+        "H",
+        "I",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -1.433100700378,
+          -0.914134979248,
+          -2.6399974823
+        ],
+        [
+          0.746898651123,
+          -1.0241355896,
+          -3.889998435974
+        ],
+        [
+          -0.703102111816,
+          -0.224135398865,
+          -1.959998130798
+        ],
+        [
+          -0.943101882935,
+          0.465865135193,
+          -0.609997749329
+        ],
+        [
+          -1.783102035522,
+          1.175864219666,
+          -0.719997406006
+        ],
+        [
+          1.046897888184,
+          0.565865516663,
+          -4.169998168945
+        ],
+        [
+          1.216897964478,
+          -0.204134941101,
+          -3.519997596741
+        ],
+        [
+          0.746898651123,
+          -0.014135360718,
+          -2.199997901917
+        ],
+        [
+          1.316898345947,
+          0.825865745544,
+          -1.249998092651
+        ],
+        [
+          0.3568983078,
+          1.145865440369,
+          -0.279997825623
+        ],
+        [
+          3.356897354126,
+          1.035864830017,
+          -1.939997673035
+        ],
+        [
+          2.626899719238,
+          1.285864830017,
+          -1.169998168945
+        ],
+        [
+          -2.463101387024,
+          -0.334135055542,
+          1.270001411438
+        ],
+        [
+          -1.333101272583,
+          -0.544135093689,
+          0.470002174377
+        ],
+        [
+          -0.523100852966,
+          -1.654134750366,
+          0.720002174377
+        ],
+        [
+          -1.943101882935,
+          -2.294135093689,
+          2.570002555847
+        ],
+        [
+          -0.823101997375,
+          -2.524134635925,
+          1.760001182556
+        ],
+        [
+          -2.773101806641,
+          -1.204134941101,
+          2.320002555847
+        ],
+        [
+          -3.6431016922,
+          -1.034134864807,
+          2.950001716614
+        ],
+        [
+          -2.373101234436,
+          -3.564134597778,
+          4.150002479553
+        ],
+        [
+          0.3568983078,
+          -1.844135284424,
+          0.110001564026
+        ],
+        [
+          0.216897964478,
+          -3.874135017395,
+          2.050002098083
+        ],
+        [
+          -3.113101005554,
+          0.525864601135,
+          1.090001106262
+        ],
+        [
+          0.686899185181,
+          1.955864906311,
+          0.790001869202
+        ],
+        [
+          -0.053101539612,
+          2.215865135193,
+          1.550002098083
+        ],
+        [
+          2.956897735596,
+          2.095866203308,
+          -0.079998016357
+        ],
+        [
+          2.006898880005,
+          2.425866127014,
+          0.890002250671
+        ],
+        [
+          2.28689956665,
+          3.055865287781,
+          1.730000495911
+        ],
+        [
+          3.976898193359,
+          2.475865364075,
+          0.01000213623
+        ]
+      ],
+      "script_sha256": "aa4622473f9d12a9547bf2f769c8745284c3d61c6173d9c3661cd9c751d3e6ac",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_ecp_corrections/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "ecp_core_electrons": {
+        "I": 28
+      },
+      "singlepoint": {
+        "prediction_eV": [
+          -6.267789558150745,
+          -1.0923708751856331
+        ],
+        "energy_Ha": -1481.4272118727934,
+        "converged": true,
+        "seconds": 537.4917637966573
+      },
+      "elapsed_seconds": 537.6369257457554
+    },
+    {
+      "index": 27,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "quantile": 50,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 3,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -6.232545852661133,
+        -1.2924131155014038
+      ],
+      "dpa_rms_force_eVA": 2.807410478591919,
+      "symbols": [
+        "N",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "N",
+        "H",
+        "H",
+        "C",
+        "H",
+        "F",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]c1c([H])c([H])c(C([H])([H])N([H])c2c([H])c([H])c(C#N)c([H])c2[H])c(F)c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 28,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "N"
+      ],
+      "coordinates_A": [
+        [
+          -1.524998664856,
+          -6.214643478394,
+          -2.813570976257
+        ],
+        [
+          -1.164999008179,
+          -5.224643707275,
+          -2.343571662903
+        ],
+        [
+          -2.04499912262,
+          -2.724643707275,
+          -2.813570976257
+        ],
+        [
+          -1.264998435974,
+          -2.784643173218,
+          -2.063570976257
+        ],
+        [
+          -0.714999198914,
+          -4.02464389801,
+          -1.70357131958
+        ],
+        [
+          -0.804999351501,
+          -1.614643096924,
+          -1.463571548462
+        ],
+        [
+          -1.254999160767,
+          -0.664643287659,
+          -1.773571014404
+        ],
+        [
+          0.705001831055,
+          -5.034643173218,
+          -0.413570404053
+        ],
+        [
+          0.285000801086,
+          -4.084644317627,
+          -0.713570594788
+        ],
+        [
+          0.72500038147,
+          -2.904644012451,
+          -0.1235704422
+        ],
+        [
+          0.195000648499,
+          -1.654643058777,
+          -0.493571281433
+        ],
+        [
+          0.595001220703,
+          -0.484643936157,
+          0.056428909302
+        ],
+        [
+          -1.054999351501,
+          0.735356330872,
+          -0.423571586609
+        ],
+        [
+          0.45500087738,
+          1.155356407166,
+          -1.253570556641
+        ],
+        [
+          0.025000572205,
+          0.855355262756,
+          -0.27357006073
+        ],
+        [
+          1.495000839233,
+          -2.924644470215,
+          0.64642906189
+        ],
+        [
+          -2.034998893738,
+          2.595356941223,
+          0.316429138184
+        ],
+        [
+          -0.824998855591,
+          2.87535572052,
+          0.856429100037
+        ],
+        [
+          -1.594999313354,
+          4.795355796814,
+          1.516428947449
+        ],
+        [
+          -0.724999427795,
+          4.325356483459,
+          1.506428718567
+        ],
+        [
+          1.425001144409,
+          -0.464643478394,
+          1.026429176331
+        ],
+        [
+          0.20500087738,
+          1.995356559753,
+          0.69642829895
+        ],
+        [
+          1.395000457764,
+          2.365357398987,
+          1.3764295578
+        ],
+        [
+          2.255001068115,
+          1.695357322693,
+          1.346428871155
+        ],
+        [
+          1.534999847412,
+          3.575354576111,
+          2.046427726746
+        ],
+        [
+          0.534999847412,
+          4.545355796814,
+          2.106429100037
+        ],
+        [
+          2.485000610352,
+          3.795355796814,
+          2.546429634094
+        ],
+        [
+          0.695001602173,
+          5.495354652405,
+          2.6264295578
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.141082914179753,
+          -1.4911532863355277
+        ],
+        "energy_Ha": -748.770176647416,
+        "converged": true,
+        "seconds": 224.3451834321022
+      },
+      "elapsed_seconds": 224.479327686131
+    },
+    {
+      "index": 28,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "quantile": 50,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 55,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -8.824365615844727,
+        -1.4273500442504883
+      ],
+      "dpa_rms_force_eVA": 1.5409088134765625,
+      "symbols": [
+        "O",
+        "H",
+        "O",
+        "H",
+        "F",
+        "O",
+        "C",
+        "C",
+        "F"
+      ],
+      "smiles": "[H]OC(=O)C(F)(F)O[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 9,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -0.699998855591,
+          -1.35777759552,
+          -0.430000305176
+        ],
+        [
+          0.930000305176,
+          0.632222175598,
+          -1.590000152588
+        ],
+        [
+          1.050001144409,
+          1.212222099304,
+          -0.809999465942
+        ],
+        [
+          -1.529998779297,
+          -1.85777759552,
+          -0.35000038147
+        ],
+        [
+          1.530000686646,
+          -0.60777759552,
+          0.629999160767
+        ],
+        [
+          -1.859999656677,
+          0.342223167419,
+          0.549999237061
+        ],
+        [
+          -0.819999694824,
+          -0.157777786255,
+          0.189999580383
+        ],
+        [
+          0.690000534058,
+          0.502223014832,
+          0.360000610352
+        ],
+        [
+          0.710000991821,
+          1.29222202301,
+          1.449998855591
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -8.754354666437502,
+          -0.9556325551062236
+        ],
+        "energy_Ha": -502.4783134280327,
+        "converged": true,
+        "seconds": 9.903979688882828
+      },
+      "elapsed_seconds": 10.108671493828297
+    },
+    {
+      "index": 29,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "quantile": 50,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2042,
+      "candidate_id": 83,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p50_s2042/run",
+      "dpa_prediction_eV": [
+        -5.527124404907227,
+        -1.6249706745147705
+      ],
+      "dpa_rms_force_eVA": 1.1212341785430908,
+      "symbols": [
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "N",
+        "H",
+        "C",
+        "H",
+        "F",
+        "H",
+        "C",
+        "N",
+        "O",
+        "H",
+        "F",
+        "H",
+        "C",
+        "C",
+        "H",
+        "S",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]Oc1c([H])c([H])c([H])c([H])c1[C@@]([H])(Sc1c([H])c(C([H])([H])C([H])([H])F)c2c([H])c([H])c([H])nn12)C([H])([H])F",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 39,
+      "elements": [
+        "C",
+        "F",
+        "H",
+        "N",
+        "O",
+        "S"
+      ],
+      "coordinates_A": [
+        [
+          -5.111024856567,
+          -1.585898399353,
+          -1.148970603943
+        ],
+        [
+          -0.561024665833,
+          -1.045897483826,
+          -0.088970184326
+        ],
+        [
+          1.748973846436,
+          -2.105898857117,
+          -2.088970184326
+        ],
+        [
+          3.508974075317,
+          -2.015897750854,
+          -1.848970413208
+        ],
+        [
+          2.558975219727,
+          -1.535898208618,
+          -1.60897064209
+        ],
+        [
+          2.418975830078,
+          -1.525897979736,
+          -0.088970184326
+        ],
+        [
+          -4.701024055481,
+          0.614101409912,
+          -0.028970718384
+        ],
+        [
+          -1.42102432251,
+          2.284101486206,
+          -2.268970489502
+        ],
+        [
+          -2.801025390625,
+          -0.365898132324,
+          0.001029014587
+        ],
+        [
+          -2.091025352478,
+          0.514101028442,
+          -0.828970909119
+        ],
+        [
+          -0.711025238037,
+          0.074102401733,
+          -0.868970870972
+        ],
+        [
+          -3.461024284363,
+          1.974102020264,
+          -1.598971366882
+        ],
+        [
+          -2.431024551392,
+          1.634101867676,
+          -1.568970680237
+        ],
+        [
+          -1.621025085449,
+          3.184101104736,
+          -2.848970413208
+        ],
+        [
+          2.618974685669,
+          -0.215898513794,
+          -2.148970603943
+        ],
+        [
+          0.718975067139,
+          2.214101791382,
+          -2.778970718384
+        ],
+        [
+          -0.111024856567,
+          1.764102935791,
+          -2.228970527649
+        ],
+        [
+          0.228974342346,
+          0.684101104736,
+          -1.558971405029
+        ],
+        [
+          3.508974075317,
+          1.384101867676,
+          -0.718971252441
+        ],
+        [
+          3.698974609375,
+          0.664102554321,
+          -1.338970184326
+        ],
+        [
+          -6.341024398804,
+          -1.625898361206,
+          0.431029319763
+        ],
+        [
+          -4.521024703979,
+          -2.465898513794,
+          0.321028709412
+        ],
+        [
+          -5.021024703979,
+          -1.555897712708,
+          0.011029243469
+        ],
+        [
+          -1.841025352478,
+          -1.315897941589,
+          0.451028823853
+        ],
+        [
+          -2.031024932861,
+          -2.135898590088,
+          1.121028900146
+        ],
+        [
+          0.738975524902,
+          -2.095897674561,
+          0.351029396057
+        ],
+        [
+          2.988975524902,
+          -2.385898590088,
+          0.29102897644
+        ],
+        [
+          2.228975296021,
+          -1.655898094177,
+          2.451030731201
+        ],
+        [
+          -4.25102519989,
+          -0.275897979736,
+          0.421029090881
+        ],
+        [
+          -4.341024398804,
+          -0.175898551941,
+          1.511028289795
+        ],
+        [
+          2.708974838257,
+          -0.355897903442,
+          0.831029891968
+        ],
+        [
+          3.158975601196,
+          0.944101333618,
+          0.521028518677
+        ],
+        [
+          3.268974304199,
+          1.914102554321,
+          1.54102897644
+        ],
+        [
+          3.588973999023,
+          2.914100646973,
+          1.24102973938
+        ],
+        [
+          2.508975982666,
+          -0.635897636414,
+          2.201030731201
+        ],
+        [
+          2.638975143433,
+          0.30410194397,
+          3.211029052734
+        ],
+        [
+          2.998975753784,
+          1.604103088379,
+          2.871028900146
+        ],
+        [
+          3.07897567749,
+          2.384101867676,
+          3.631029129028
+        ],
+        [
+          2.448974609375,
+          0.024101257324,
+          4.251028060913
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.358331196902083,
+          -1.4056386737500264
+        ],
+        "energy_Ha": -1439.0438621199164,
+        "converged": true,
+        "seconds": 533.6082878671587
+      },
+      "elapsed_seconds": 533.7401512525976
+    },
+    {
+      "index": 30,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "quantile": 75,
+      "arm": "grpo200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 74,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.67167854309082,
+        -0.979200541973114
+      ],
+      "dpa_rms_force_eVA": 0.7483217716217041,
+      "symbols": [
+        "H",
+        "C",
+        "C",
+        "H",
+        "O",
+        "I",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "N",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "H"
+      ],
+      "smiles": "[H]c1c([H])c([H])c(C([H])([H])C([H])([H])c2c([H])c([H])c([C@]3([H])ON3C([H])([H])c3c([H])c([H])c(I)c([H])c3[H])c([H])c2[H])c(C([H])([H])[H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 48,
+      "elements": [
+        "C",
+        "H",
+        "I",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.206876754761,
+          -8.08083152771,
+          -1.323541641235
+        ],
+        [
+          -1.286876678467,
+          -7.510831832886,
+          -1.183541297913
+        ],
+        [
+          -1.266876220703,
+          -6.380831718445,
+          -0.383542060852
+        ],
+        [
+          -2.186876296997,
+          -6.030832290649,
+          0.096458435059
+        ],
+        [
+          -1.426876068115,
+          -3.500831604004,
+          -1.073541641235
+        ],
+        [
+          -0.106876373291,
+          -9.610832214355,
+          -2.993541717529
+        ],
+        [
+          -0.106876373291,
+          -7.910831928253,
+          -1.813542366028
+        ],
+        [
+          1.993124008179,
+          -7.530832290649,
+          -2.133542060852
+        ],
+        [
+          1.083124160767,
+          -7.200832366943,
+          -1.643542289734
+        ],
+        [
+          -0.086876869202,
+          -5.640831947327,
+          -0.183541297913
+        ],
+        [
+          1.073123931885,
+          -6.060832023621,
+          -0.843542098999
+        ],
+        [
+          2.003124237061,
+          -5.500831604004,
+          -0.713541984558
+        ],
+        [
+          1.423122406006,
+          -0.970832824707,
+          -2.0235414505
+        ],
+        [
+          -0.176876068115,
+          -2.840832710266,
+          -0.863541603088
+        ],
+        [
+          0.663124084473,
+          -3.240832328796,
+          -1.433542251587
+        ],
+        [
+          0.643123626709,
+          -0.550831794739,
+          -1.393542289734
+        ],
+        [
+          -0.216876029968,
+          -1.370832443237,
+          -0.683542251587
+        ],
+        [
+          -1.136876106262,
+          3.169167518616,
+          -1.62354183197
+        ],
+        [
+          -1.606876373291,
+          3.109168052673,
+          0.076457977295
+        ],
+        [
+          -0.776875495911,
+          2.909167289734,
+          -0.613542556763
+        ],
+        [
+          -1.766876220703,
+          5.419167518616,
+          -0.2735414505
+        ],
+        [
+          1.143123626709,
+          1.459166526794,
+          -1.953541755676
+        ],
+        [
+          0.473123550415,
+          0.829167366028,
+          -1.353542327881
+        ],
+        [
+          -0.47687625885,
+          1.419167518616,
+          -0.553542137146
+        ],
+        [
+          0.983123779297,
+          4.08916759491,
+          -1.113541603088
+        ],
+        [
+          0.443124771118,
+          3.769165992737,
+          -0.213541984558
+        ],
+        [
+          -0.646876335144,
+          -4.750831604004,
+          1.676458358765
+        ],
+        [
+          -0.816875457764,
+          -3.380831718445,
+          0.226457595825
+        ],
+        [
+          -1.946876525879,
+          -1.43083190918,
+          0.656457901001
+        ],
+        [
+          -1.236876487732,
+          -0.810832023621,
+          0.116457939148
+        ],
+        [
+          -0.096876144409,
+          -4.490832328796,
+          0.766456604004
+        ],
+        [
+          0.913124084473,
+          -4.170832633972,
+          1.056457519531
+        ],
+        [
+          -1.356876373291,
+          0.579167366028,
+          0.176458358765
+        ],
+        [
+          -2.136876106262,
+          1.019167900085,
+          0.796457290649
+        ],
+        [
+          -1.026876449585,
+          5.749167442322,
+          0.456458091736
+        ],
+        [
+          -1.266876220703,
+          6.909167289734,
+          1.206457138062
+        ],
+        [
+          -2.196876525879,
+          7.459166526794,
+          1.076457977295
+        ],
+        [
+          1.143123626709,
+          3.129166603088,
+          0.336458206177
+        ],
+        [
+          0.153122901917,
+          5.009167671204,
+          0.616457939148
+        ],
+        [
+          2.993124008179,
+          4.58916759491,
+          0.896457672119
+        ],
+        [
+          2.393123626709,
+          4.709168434143,
+          1.806457519531
+        ],
+        [
+          1.113122940063,
+          5.459166526794,
+          1.546457290649
+        ],
+        [
+          2.203125,
+          3.699166297913,
+          2.19645690918
+        ],
+        [
+          3.013122558594,
+          5.229166984558,
+          2.546459197998
+        ],
+        [
+          0.873123168945,
+          6.639168739319,
+          2.276458740234
+        ],
+        [
+          1.623123168945,
+          6.979166984558,
+          2.986457824707
+        ],
+        [
+          -0.306876182556,
+          7.359168052673,
+          2.106456756592
+        ],
+        [
+          -0.47687625885,
+          8.279168128967,
+          2.686458587646
+        ]
+      ],
+      "script_sha256": "aa4622473f9d12a9547bf2f769c8745284c3d61c6173d9c3661cd9c751d3e6ac",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_ecp_corrections/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "ecp_core_electrons": {
+        "I": 28
+      },
+      "singlepoint": {
+        "prediction_eV": [
+          -6.697471906601208,
+          -0.8284771573718145
+        ],
+        "energy_Ha": -1316.435154491941,
+        "converged": true,
+        "seconds": 1217.950723875314
+      },
+      "elapsed_seconds": 1218.0967652723193
+    },
+    {
+      "index": 31,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "quantile": 75,
+      "arm": "grpo200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 101,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_grpo200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.947953224182129,
+        -1.6718206405639648
+      ],
+      "dpa_rms_force_eVA": 1.547703504562378,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "H",
+        "H",
+        "O",
+        "C",
+        "C",
+        "H",
+        "Br",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "I",
+        "O",
+        "C",
+        "C",
+        "N",
+        "C",
+        "Cl",
+        "H",
+        "C",
+        "C",
+        "H"
+      ],
+      "smiles": "[H]c1nc(Cl)c(I)c([H])c1[C@]([H])(C(=O)OC([H])([H])[H])c1c([H])c([H])c([H])c([H])c1Br",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 30,
+      "elements": [
+        "Br",
+        "C",
+        "Cl",
+        "H",
+        "I",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -1.085664749146,
+          -0.365330696106,
+          -1.536666870117
+        ],
+        [
+          0.154335021973,
+          -4.355330467224,
+          -2.136667251587
+        ],
+        [
+          0.134334564209,
+          -3.945331573486,
+          -1.126667022705
+        ],
+        [
+          -0.535665512085,
+          -4.535331726074,
+          -0.486666679382
+        ],
+        [
+          1.134334564209,
+          -3.925331115723,
+          -0.686666488647
+        ],
+        [
+          -0.385665893555,
+          -2.595331192017,
+          -1.246666908264
+        ],
+        [
+          0.124334335327,
+          -1.685331344604,
+          -0.396666526794
+        ],
+        [
+          -0.48566532135,
+          -0.295331001282,
+          -0.616666793823
+        ],
+        [
+          -1.815665245056,
+          2.014667510986,
+          -0.306667327881
+        ],
+        [
+          0.174335479736,
+          0.464668273926,
+          -3.706667900085
+        ],
+        [
+          2.184335708618,
+          1.93466758728,
+          -2.296667098999
+        ],
+        [
+          2.494335174561,
+          2.244667053223,
+          -3.286666870117
+        ],
+        [
+          0.674333572388,
+          0.664668083191,
+          -0.856667518616
+        ],
+        [
+          1.104333877563,
+          1.074668884277,
+          -2.126667022705
+        ],
+        [
+          2.864334106445,
+          2.404668807983,
+          -1.166666984558
+        ],
+        [
+          3.704336166382,
+          3.084669113159,
+          -1.296667098999
+        ],
+        [
+          -1.535665512085,
+          -0.705331802368,
+          1.653331756592
+        ],
+        [
+          -1.15566444397,
+          -1.755331039429,
+          1.663331985474
+        ],
+        [
+          -2.215664863586,
+          -0.095331192017,
+          2.813333511353
+        ],
+        [
+          -2.745665550232,
+          -0.855331420898,
+          4.543333053589
+        ],
+        [
+          0.974334716797,
+          -1.925331115723,
+          0.443332672119
+        ],
+        [
+          -1.345665931702,
+          0.104668617249,
+          0.543333053589
+        ],
+        [
+          -1.895665168762,
+          1.38466835022,
+          0.573333740234
+        ],
+        [
+          -2.505665779114,
+          1.964668273926,
+          1.663331985474
+        ],
+        [
+          -2.63566493988,
+          1.304668426514,
+          2.743333816528
+        ],
+        [
+          -3.345665931702,
+          2.114667892456,
+          4.053331375122
+        ],
+        [
+          1.094333648682,
+          0.804668426514,
+          1.24333190918
+        ],
+        [
+          1.394334793091,
+          1.13466835022,
+          0.253332138062
+        ],
+        [
+          2.474334716797,
+          1.994667053223,
+          0.103332519531
+        ],
+        [
+          3.004333496094,
+          2.344669342041,
+          0.983333587646
+        ]
+      ],
+      "script_sha256": "aa4622473f9d12a9547bf2f769c8745284c3d61c6173d9c3661cd9c751d3e6ac",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_ecp_corrections/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "ecp_core_electrons": {
+        "I": 28
+      },
+      "singlepoint": {
+        "prediction_eV": [
+          -6.762970651435757,
+          -1.7227131676406284
+        ],
+        "energy_Ha": -4075.735297878911,
+        "converged": true,
+        "seconds": 680.2370231337845
+      },
+      "elapsed_seconds": 680.3970086462796
+    },
+    {
+      "index": 32,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "quantile": 75,
+      "arm": "eligibility200",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 10,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -7.309308052062988,
+        -0.8705824613571167
+      ],
+      "dpa_rms_force_eVA": 0.8111056089401245,
+      "symbols": [
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "H",
+        "H",
+        "H",
+        "H",
+        "O",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "O"
+      ],
+      "smiles": "[H]O[C@@]1([H])C(=O)C([H])([H])C([H])([H])C([H])([H])C1([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 18,
+      "elements": [
+        "C",
+        "H",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.014444351196,
+          -0.392221450806,
+          -1.441666603088
+        ],
+        [
+          0.255556106567,
+          -0.672221183777,
+          -2.531665802002
+        ],
+        [
+          0.035554885864,
+          -1.752222061157,
+          -1.151665687561
+        ],
+        [
+          0.145555496216,
+          -0.692220687866,
+          -1.441666603088
+        ],
+        [
+          2.295555114746,
+          -0.702220916748,
+          -0.991665840149
+        ],
+        [
+          -1.114444732666,
+          0.077778816223,
+          -1.02166557312
+        ],
+        [
+          -1.074444770813,
+          1.097779273987,
+          -1.441666603088
+        ],
+        [
+          1.575553894043,
+          0.917778968811,
+          -1.101665496826
+        ],
+        [
+          -1.444444656372,
+          -0.8122215271,
+          0.928333282471
+        ],
+        [
+          0.175556182861,
+          -0.252221107483,
+          2.818332672119
+        ],
+        [
+          1.785556793213,
+          -0.822221755981,
+          1.528335571289
+        ],
+        [
+          -1.254445075989,
+          0.1877784729,
+          0.508333206177
+        ],
+        [
+          -2.104445457458,
+          0.817778587341,
+          0.77833366394
+        ],
+        [
+          1.185554504395,
+          -0.112221717834,
+          0.718334197998
+        ],
+        [
+          0.015554428101,
+          0.747778892517,
+          1.158332824707
+        ],
+        [
+          1.405553817749,
+          -0.112221717834,
+          -0.751666069031
+        ],
+        [
+          0.175556182861,
+          1.787777900696,
+          0.858333587646
+        ],
+        [
+          -0.044445037842,
+          0.687779426575,
+          2.578332901001
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -7.379658969832884,
+          -0.859852720935159
+        ],
+        "energy_Ha": -384.8121530406467,
+        "converged": true,
+        "seconds": 25.49006237462163
+      },
+      "elapsed_seconds": 25.65832606703043
+    },
+    {
+      "index": 33,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "quantile": 75,
+      "arm": "eligibility200",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 23,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_eligibility200_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.723239421844482,
+        -1.535682201385498
+      ],
+      "dpa_rms_force_eVA": 2.128384590148926,
+      "symbols": [
+        "O",
+        "C",
+        "Cl",
+        "N",
+        "H",
+        "C",
+        "S",
+        "C",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "N"
+      ],
+      "smiles": "[H]c1c(C([H])([H])[H])sc(N([H])C(=O)Cl)c1C#N",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 17,
+      "elements": [
+        "C",
+        "Cl",
+        "H",
+        "N",
+        "O",
+        "S"
+      ],
+      "coordinates_A": [
+        [
+          -1.481176376343,
+          -0.275879859924,
+          -2.899998664856
+        ],
+        [
+          -0.481176376343,
+          0.404119491577,
+          -3.089998245239
+        ],
+        [
+          -0.041176795959,
+          0.994119644165,
+          -4.669998168945
+        ],
+        [
+          0.378824234009,
+          0.724119186401,
+          -2.059998512268
+        ],
+        [
+          1.198823928833,
+          1.304119110107,
+          -2.21999835968
+        ],
+        [
+          0.168823242188,
+          0.314119338989,
+          -0.749998092651
+        ],
+        [
+          -1.181176185608,
+          -0.695879936218,
+          -0.289998054504
+        ],
+        [
+          -0.661175727844,
+          -0.645880699158,
+          1.35000038147
+        ],
+        [
+          -2.201176643372,
+          -1.975879669189,
+          2.030002593994
+        ],
+        [
+          -0.731175422668,
+          -1.9558801651,
+          3.040000915527
+        ],
+        [
+          -1.411175727844,
+          -1.335880279541,
+          2.440002441406
+        ],
+        [
+          -1.881176948547,
+          -0.615880012512,
+          3.130001068115
+        ],
+        [
+          0.608823776245,
+          0.104120254517,
+          1.610000610352
+        ],
+        [
+          1.37882232666,
+          -0.535880088806,
+          2.070001602173
+        ],
+        [
+          1.018823623657,
+          0.654119491577,
+          0.270001411438
+        ],
+        [
+          2.178823471069,
+          1.444120407104,
+          0.090001106262
+        ],
+        [
+          3.138822555542,
+          2.094118118286,
+          -0.049998283386
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -6.67024539323877,
+          -1.823773443152776
+        ],
+        "energy_Ha": -1312.2115343645623,
+        "converged": true,
+        "seconds": 90.66928472742438
+      },
+      "elapsed_seconds": 90.84106396883726
+    },
+    {
+      "index": 34,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "quantile": 75,
+      "arm": "continue_wall",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 14,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -6.009930610656738,
+        -0.9666008353233337
+      ],
+      "dpa_rms_force_eVA": 0.9035589694976807,
+      "symbols": [
+        "H",
+        "H",
+        "C",
+        "C",
+        "C",
+        "H",
+        "O",
+        "C",
+        "H",
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "C",
+        "H",
+        "O",
+        "S",
+        "C"
+      ],
+      "smiles": "[H]O[C@@]1(c2sc([H])c([H])c2[H])OC([H])=C([H])C([H])=C([H])C1([H])[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 23,
+      "elements": [
+        "C",
+        "H",
+        "O",
+        "S"
+      ],
+      "coordinates_A": [
+        [
+          -0.144782066345,
+          -2.742609977722,
+          -1.983479499817
+        ],
+        [
+          -2.264781951904,
+          -1.762609481812,
+          -1.57347869873
+        ],
+        [
+          -1.3647813797,
+          -1.162609100342,
+          -1.403478622437
+        ],
+        [
+          -0.134781837463,
+          -1.682609558105,
+          -1.733478546143
+        ],
+        [
+          1.125217437744,
+          -1.022609710693,
+          -1.863479614258
+        ],
+        [
+          1.975217819214,
+          -1.652609825134,
+          -2.143479347229
+        ],
+        [
+          -1.734782218933,
+          0.057390213013,
+          -0.893479347229
+        ],
+        [
+          1.325218200684,
+          0.307390213013,
+          -1.723478317261
+        ],
+        [
+          -0.134781837463,
+          1.71738910675,
+          -2.303479194641
+        ],
+        [
+          0.315217971802,
+          1.327389717102,
+          -1.373478889465
+        ],
+        [
+          2.335218429565,
+          0.707390785217,
+          -1.893479347229
+        ],
+        [
+          0.815217971802,
+          2.197390556335,
+          -0.9234790802
+        ],
+        [
+          -1.824782371521,
+          -0.552609443665,
+          2.046522140503
+        ],
+        [
+          -0.784782409668,
+          -0.242609024048,
+          2.026521682739
+        ],
+        [
+          0.115218162537,
+          -0.512609481812,
+          3.106519699097
+        ],
+        [
+          2.255218505859,
+          -0.112609863281,
+          3.446519851685
+        ],
+        [
+          -0.134781837463,
+          -1.042609214783,
+          4.016521453857
+        ],
+        [
+          -0.754781723022,
+          0.947390556335,
+          -0.363478660583
+        ],
+        [
+          -0.204781532288,
+          0.407389640808,
+          0.966520309448
+        ],
+        [
+          -2.1147813797,
+          1.977389335632,
+          0.586521148682
+        ],
+        [
+          -1.494781494141,
+          2.157391548157,
+          -0.143479347229
+        ],
+        [
+          1.465217590332,
+          0.727391242981,
+          1.296520233154
+        ],
+        [
+          1.365217208862,
+          -0.042609214783,
+          2.8265209198
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -5.881179964433808,
+          -0.9542113037467695
+        ],
+        "energy_Ha": -935.1154337892908,
+        "converged": true,
+        "seconds": 85.08121490851045
+      },
+      "elapsed_seconds": 85.22923209518194
+    },
+    {
+      "index": 35,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "quantile": 75,
+      "arm": "continue_wall",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2043,
+      "candidate_id": 77,
+      "source_run": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/eval_lumo_seed42/eval_continue_wall_p75_s2043/run",
+      "dpa_prediction_eV": [
+        -4.854344844818115,
+        -1.2515771389007568
+      ],
+      "dpa_rms_force_eVA": 1.2897610664367676,
+      "symbols": [
+        "C",
+        "H",
+        "H",
+        "H",
+        "C",
+        "H",
+        "C",
+        "H",
+        "C",
+        "C",
+        "H",
+        "C",
+        "C",
+        "C",
+        "O",
+        "H",
+        "O",
+        "H",
+        "H",
+        "C",
+        "C",
+        "N",
+        "H",
+        "O",
+        "C",
+        "H",
+        "N",
+        "C",
+        "H",
+        "H",
+        "H",
+        "O",
+        "H",
+        "N",
+        "H",
+        "N",
+        "C",
+        "H",
+        "H"
+      ],
+      "smiles": "[H]OC(=O)c1c([H])c([H])c(C([H])([H])C([H])([H])C([H])([H])N2C(=O)N(C([H])([H])[H])N(C([H])([H])[H])N2[H])c(O[H])c1[H]",
+      "input_sha256": "b5d155da7206481e34979a30a7430b1725d887e1637989c1cc84dade7dfb6f60",
+      "atoms": 39,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "coordinates_A": [
+        [
+          -2.53769493103,
+          -0.745639801025,
+          -1.116664886475
+        ],
+        [
+          -2.277695655823,
+          -1.685640335083,
+          -1.6166639328
+        ],
+        [
+          -0.007696151733,
+          -1.275640487671,
+          -2.006665229797
+        ],
+        [
+          -3.377695083618,
+          -0.305640220642,
+          -1.676664352417
+        ],
+        [
+          -1.367695808411,
+          0.194358825684,
+          -1.246665000916
+        ],
+        [
+          -2.717695236206,
+          2.894359588623,
+          -0.336664199829
+        ],
+        [
+          -1.497694969177,
+          1.544359207153,
+          -0.866664886475
+        ],
+        [
+          -0.567695617676,
+          3.494358062744,
+          -0.776664733887
+        ],
+        [
+          -0.127696037292,
+          -0.225640296936,
+          -1.736664772034
+        ],
+        [
+          0.952303886414,
+          0.644359588623,
+          -1.856664657593
+        ],
+        [
+          1.922305107117,
+          0.28436088562,
+          -2.196664810181
+        ],
+        [
+          0.78230381012,
+          1.994359970093,
+          -1.526664733887
+        ],
+        [
+          -0.447695732117,
+          2.444360733032,
+          -1.04666519165
+        ],
+        [
+          1.872305870056,
+          2.994359970093,
+          -1.656663894653
+        ],
+        [
+          3.042304039001,
+          2.464359283447,
+          -2.136664390564
+        ],
+        [
+          3.662302970886,
+          3.204359054565,
+          -2.206665039062
+        ],
+        [
+          1.782305717468,
+          4.174360275269,
+          -1.386664390564
+        ],
+        [
+          -2.167695999146,
+          -2.985640525818,
+          0.68333530426
+        ],
+        [
+          -4.037695884705,
+          -1.475640296936,
+          0.253334999084
+        ],
+        [
+          -3.037695884705,
+          -1.025640487671,
+          0.313334465027
+        ],
+        [
+          -2.147695541382,
+          -1.975640296936,
+          1.123335838318
+        ],
+        [
+          -0.757695198059,
+          -1.575639724731,
+          1.173335075378
+        ],
+        [
+          -2.477695465088,
+          -2.055640220642,
+          2.163336753845
+        ],
+        [
+          0.152304649353,
+          -3.575639724731,
+          0.363334655762
+        ],
+        [
+          0.282305717468,
+          -2.425640106201,
+          0.793335914612
+        ],
+        [
+          2.812304496765,
+          -3.135640144348,
+          0.68333530426
+        ],
+        [
+          1.352303504944,
+          -1.665639877319,
+          1.073334693909
+        ],
+        [
+          2.752305030823,
+          -2.065640449524,
+          0.963335990906
+        ],
+        [
+          3.28230381012,
+          -1.475640296936,
+          0.193334579468
+        ],
+        [
+          3.28230381012,
+          -1.915639877319,
+          1.923336982727
+        ],
+        [
+          -3.157695770264,
+          -0.075640678406,
+          0.853335380554
+        ],
+        [
+          -2.667695045471,
+          1.944360733032,
+          -0.276664733887
+        ],
+        [
+          -0.957695007324,
+          0.424360275269,
+          1.733334541321
+        ],
+        [
+          0.972304344177,
+          -0.39564037323,
+          1.553334236145
+        ],
+        [
+          2.382304191589,
+          1.074359893799,
+          1.063334465027
+        ],
+        [
+          -0.397695541382,
+          -0.435640335083,
+          1.813334465027
+        ],
+        [
+          1.79230594635,
+          0.724359512329,
+          1.93333530426
+        ],
+        [
+          2.502305030823,
+          0.464359283447,
+          2.733334541321
+        ],
+        [
+          1.152304649353,
+          1.534358978271,
+          2.28333568573
+        ]
+      ],
+      "script_sha256": "3c07d84c35d90390f1ccd4a88bdaa5a73301b5630af08dc8d19d92283a6a6426",
+      "engine": "cpu",
+      "runtime_versions": {
+        "numpy": "2.2.6",
+        "rdkit": "2025.3.6",
+        "pyscf": "2.12.1"
+      },
+      "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results/scratch",
+      "visible_gpu": "",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "singlepoint": {
+        "prediction_eV": [
+          -3.581182315178682,
+          -1.5762635547411028
+        ],
+        "energy_Ha": -1025.2273375021493,
+        "converged": true,
+        "seconds": 500.33229553699493
+      },
+      "elapsed_seconds": 500.4779100753367
+    }
+  ],
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_cohort/manifest.json": "df727ceb0fc81a5e4b0fafb0329d3c68c8f376276f2f7b2f37410d024e715ae7",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/completed.json": "9657bbb00ad85001c9ff216d0640fbad05e5e4ff98193426886656a88aa76918",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job00/result.json": "2857361740ad62ac91cbcaf5d17419188e80efba7ee029ceb8143417f60cdb4c",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job01/result.json": "a8992726f5d72a4308c96818fe3f328b67b57374f231a67da8f186e9fedbafb5",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job02/result.json": "bc2682e2c9c16e32140474dc61154da9e066f3cd9cbdf15c0872c98885f49cc1",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job03/result.json": "0d618cb1c93537754d7f1a7bc0d3a2c60906f6184845365272e270af2e07111d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job04/result.json": "6e874949c60d085d8af84f645acef01627f041c6f0d254f02f21297325469081",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job05/result.json": "e026a23c90adb5d9b7b5bc05d036fbf26b25c9f6dc5a0dab5f3bb99da6da9e70",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job06/result.json": "77903e738c98e98dceca1d358dc32507acd905019a94983ebe41a3aa3b7e2fdb",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job07/result.json": "6719f4582916f0578a9bc7aa26aa2d8e6a21532cb1aa5dd54a2f94ba6b1b06c9",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job08/result.json": "eff5def15cfa4d58310abe9e4616422a430c9a6e92389bf3357c86c6353e95a5",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job09/result.json": "45060691bf838b75d7bafa013bbcde4fac8dbcd2855830c0ce5cadae8e7e89df",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job10/result.json": "8ab733cc1d8bb02b88ffec55ec95ccba74ca424d83bc2511a1c6b0d76259abff",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job11/result.json": "fbe579ffb0d5e7a97921c32f30b097acfffd87ce2f77ede8ec3805e0f596353d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job12/result.json": "20ec7d0498653381bf28e5ea19255533eba887afc3ee011bb8b03da0d4b29ab0",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job13/result.json": "572e929f1ba96a4fa3d35bcfb42f4527426275529dbd3a1ee217024cbb1874a2",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job14/result.json": "1a87bc1efc90a9723ec4f86ab38cfad0cc109deeea901d6c14ca5ba3cb5d083a",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job15/result.json": "d8b78e0618561fb0244fc1f9d961ae92db604753ca6b5725c78dd00867190498",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job16/result.json": "0634eca565708633202af580311f1586fad03a4217934ae6227bac22dfb6fcc2",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job17/result.json": "374f0436a0448327ddd790a27d7cec0de3b68488fe409fecc3aca06e74050cbe",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job18/result.json": "85cc3bbd0a02fb571cafe94f16ec39bc9fe7e012539b72cd58bd83b5fc8da733",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job19/result.json": "3eaa89bff2504db6f927d2cdb9bcb792b8a374982d220ee10051f6a792186ff0",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job20/result.json": "1e129c537a97926f5bd976af94f54988dfc954f4b886143d5ba12abdc8390ead",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job21/result.json": "c91ed6314886d7d9763dbee2eab5d00c12202bfbdaa7a92240b6b3a352cd51f5",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job22/result.json": "c595f1ac024517be65a018622f2eee420d956e5c7f37d70131422c8e8e3360df",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job23/result.json": "698fac254e21c499e3b204257905f178efe624a01a1f518c1491f2452ae342d2",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job24/result.json": "579439c24d81e7031c275fa7bee82886b0250dbe87357c649a806a0bd463b7ac",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job25/result.json": "1946c6fa2f5a47d75a30ec20351f20035f5227926bb8be762d902e51061424b9",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job26/result.json": "93673b833103e7146bad870b14b06b9348772d1d842245a9677bf468f06a414c",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job27/result.json": "43638522c6b000b5184f4704d2a572146c74098e9d375821a2ed11019aafa86f",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job28/result.json": "63b65e69883b295e7c5e86fbaaded123766b85fb98a884f99259e72487963f13",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job29/result.json": "6f8a05ba9a8b671ec56c387ec29b5703308c33d52ff085261ec766395223db52",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job30/result.json": "ba19be81d0af62f24d996b8faaedf2f6a379c05f2b8f63cb074410c7959b808b",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job31/result.json": "1b82b665e186049d91cf6116362f4d9eff18b12d2b1786b02f142ce6a037cc9d",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job32/result.json": "6feac28880110c80f510886c94ba2c8148dfb08ee60343eddead28b672897cdf",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job33/result.json": "d3de2b223a7d0d318462f584f002c25dbc52edf53b46a073cf2efb57b03bf109",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job34/result.json": "71ce12a37c609092726c3a05261ae933f9ee9fb8e01d192328ca16ab7782b5fc",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/quantum_results_verified/job35/result.json": "87c741c0c38b756d13713023a750311d4c890d1d5730fa85b1db9e4c962ccf85"
+  }
+}
