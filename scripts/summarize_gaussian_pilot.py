@@ -54,6 +54,7 @@ def main():
                     sims=[v for i,f in enumerate(fingerprints) for v in DataStructs.BulkTanimotoSimilarity(f,fingerprints[:i])]
                     cell={'arm':arm,'preference_sigma_eV':width,'control':control,'quantile':q,'goal_eV':goals[q],
                           'attempted':len(records),'valid':len(mols),'unique_valid':len({r['smiles'] for r in records if r['valid']}),
+                          'unimol2_support_exclusions':sum(b[r['pool']]['support_exclusions'] for r in matching),
                           'valid_atom_median':float(np.median([r['atoms'] for r in records if r['valid']])) if mols else None,
                           'internal_diversity':1-float(np.mean(sims)) if sims else None,
                           'metrics':{name:statistics(v,goals[q],len(records),width) for name,v in values.items()}}
@@ -71,6 +72,10 @@ def main():
     report={'target':target,'training_seed':42,'actual_pools':len(matrix),'actual_proposals':sum(r['attempted'] for r in matrix),
         'scope':'Single training seed pilot; equal target-quantile means. Off/shuffled are rescoring of frozen pools, not additional proposals. Point-policy widths are absent; tolerance changes do not retrain or regenerate them. Frozen Uni-Mol2 is cross-model evidence, not quantum truth.',
         'aggregates':aggregates,'cells':cells,'raw_source_sha256':hashes,
+        'generation_and_raw_evaluation_seconds':sum(r['wall_seconds'] for r in matrix),
+        'independent_evaluation_seconds':independent['wall_seconds'],
+        'cost_scope':'Generation/raw timers cover per-pool calls, not initial model loading and hashing; training and source-pool acquisition costs are separate campaign artifacts.',
+        'analysis_script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'independent_summary_sha256':hashlib.sha256((a.unimol2/'summary.json').read_bytes()).hexdigest()}
     a.output.write_text(json.dumps(report,indent=2)+'\n')
 
