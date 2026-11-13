@@ -23,8 +23,12 @@ def metric(rows, denominator, target, property_index=0, known_graphs=None):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--manifest',type=Path,required=True);p.add_argument('--results',type=Path,required=True);p.add_argument('--targets',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument("--target",choices=["homo","lumo"],default="homo");p.add_argument("--quantiles",type=int,nargs="+",default=[25,50,75]);p.add_argument("--training-sdf",type=Path);a=p.parse_args();property_index=["homo","lumo"].index(a.target)
+    p=argparse.ArgumentParser();p.add_argument('--manifest',type=Path,required=True);p.add_argument('--results',type=Path,required=True);p.add_argument('--targets',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument("--target",choices=["homo","lumo"],default="homo");p.add_argument("--quantiles",type=int,nargs="+",default=[25,50,75]);p.add_argument("--training-sdf",type=Path);p.add_argument("--extra-training-sdf",type=Path,nargs="+",default=[]);a=p.parse_args();property_index=["homo","lumo"].index(a.target)
     known_graphs={Chem.MolToSmiles(Chem.RemoveHs(m)) for m in Chem.SDMolSupplier(str(a.training_sdf),removeHs=False)} if a.training_sdf else None
+    native_graphs=None if known_graphs is None else known_graphs.copy()
+    if a.extra_training_sdf and known_graphs is None:raise ValueError('Extra fitting structures require the native reference')
+    for path in a.extra_training_sdf:
+        known_graphs.update(Chem.MolToSmiles(Chem.RemoveHs(m)) for m in Chem.SDMolSupplier(str(path),removeHs=False))
     manifest=json.loads(a.manifest.read_text());points=json.loads(a.targets.read_text())['single_target_points'][a.target]
     completed=json.loads((a.results/'completed.json').read_text());assert completed['attempted']==manifest['selected']
     rows=[];hashes={}
@@ -91,13 +95,14 @@ def main():
         arms[arm]=dict(proposals=n,terminal_selected=len(records),cells=cells,domain=strata,size_strata=size_strata,correct_vs_mismatched=mismatched,
             unique_hits_across_requests=len(unique),
             unique_novel_hits_across_requests=len(unique-known_graphs) if known_graphs is not None else None,
+            unique_novel_native_hits_across_requests=len(unique-native_graphs) if native_graphs is not None else None,
             quantum_task_wall_seconds=task_seconds,
             response_slope=float(np.polyfit([points[str(q)] for q in a.quantiles],[cells[str(q)]['prediction_mean_eV'] for q in a.quantiles],1)[0]) if len(a.quantiles)>1 and all(v['prediction_mean_eV'] is not None for v in cells.values()) else None,
             mean_absolute_response_bias_eV=float(np.mean([abs(v['bias_eV']) for v in cells.values()])) if all(v['bias_eV'] is not None for v in cells.values()) else None,
             yield_equal_target=float(np.mean([v['yield_all_proposals'] for v in cells.values()])),
             mae_equal_target_eV=float(np.mean([v['mae_eV'] for v in cells.values()])) if all(v['mae_eV'] is not None for v in cells.values()) else None)
     report=dict(scope='Single trained seed; Wilson intervals describe proposal sampling only. Off proposals rescored at three goals are not independent repeats. Across-request unique counts are system pool counts, not single-goal success rates. Quantum task times exclude upstream generation/relaxation/training. DFT singlepoints do not certify optimized identity.',
-        target=a.target,novelty_reference_sha256=hashlib.sha256(a.training_sdf.read_bytes()).hexdigest() if a.training_sdf else None,control=manifest.get('control','correct'),arms=arms,records=rows,source_sha256=hashes,
+        target=a.target,extra_fitting_reference_sha256={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in a.extra_training_sdf},novelty_reference_sha256=hashlib.sha256(a.training_sdf.read_bytes()).hexdigest() if a.training_sdf else None,control=manifest.get('control','correct'),arms=arms,records=rows,source_sha256=hashes,
         manifest_sha256=hashlib.sha256(a.manifest.read_bytes()).hexdigest(),elapsed_seconds=completed['elapsed_seconds'])
     a.output.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(arms,indent=2))

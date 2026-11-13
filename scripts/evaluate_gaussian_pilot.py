@@ -17,6 +17,7 @@ def main():
     p.add_argument('--base-config',type=Path);p.add_argument('--extra-checkpoints',type=Path);p.add_argument('--independent',type=Path,required=True)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--device',default='cuda:0');p.add_argument('--candidates',type=int,default=64)
+    p.add_argument('--controls',nargs='+',choices=['correct','off'],default=['correct','off'])
     p.add_argument('--seeds',nargs='+',type=int,default=[2061,2062]);p.add_argument('--quantiles',nargs='+',default=['10','25','50','75','90'])
     a=p.parse_args();lock_deterministic_environment(42);torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
     checkpoints=json.loads((a.campaign/'checkpoints.json').read_text())
@@ -32,8 +33,9 @@ def main():
     matrix=[]
     for arm,checkpoint in checkpoints.items():
         model,state=load_octree_checkpoint(checkpoint,a.device,a.candidates);prepared=(model,state,checkpoint)
-        requests=[(q,width,seed,'correct') for width in ([.1,.25,.5] if model.condition_version==5 else [None]) for q in a.quantiles for seed in a.seeds]
-        requests += [('50',.25 if model.condition_version==5 else None,seed,'off') for seed in a.seeds]
+        requests=[(q,width,seed,'correct') for width in ([.1,.25,.5] if model.condition_version==5 else [None]) for q in a.quantiles for seed in a.seeds] if 'correct' in a.controls else []
+        if 'off' in a.controls:
+            requests += [('50',.25 if model.condition_version==5 else None,seed,'off') for seed in a.seeds]
         for q,width,seed,control in requests:
             name=f'eval_{arm}_p{q}_w{width}_s{seed}_{control}';cfg=copy.deepcopy(base)
             cfg['generator_config']['condition_version']=model.condition_version
