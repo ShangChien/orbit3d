@@ -1,5 +1,5 @@
 {
-  "evaluator": "Uni-Mol v1 baseline; v2 adaptation ongoing",
+  "evaluator": "Uni-Mol v1 baseline",
   "scope": "Fixed exploratory cohort, not population success estimation. Geometry failures remain in all 24 planned denominators. No candidate replacement or evaluator-based selection.",
   "protocol": "GPU4PySCF PBE0/def2-TZVP/DF single points; PBE-D3BJ/def2-TZVP/DF geometry optimization. Approximate OE62 comparison, not identical Tier2/PBE-TS protocol.",
   "selection": {
@@ -20,6 +20,7 @@
   "all": {
     "planned": 24,
     "singlepoints": 24,
+    "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
     "optimized_singlepoints": 23,
     "graph_preserved": 19,
     "models": {
@@ -247,12 +248,42 @@
       "hits025": 6,
       "hit_fraction_planned": 0.25
     },
-    "quantum_geometry_mean_absolute_change_eV": 0.4280871288514882
+    "quantum_optimized_equal_target": {
+      "planned_target_cells": 6,
+      "observed_target_cells": 6,
+      "mae_eV_observed_cells": 0.44491223809021635,
+      "missing_target_cells": [],
+      "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+    },
+    "quantum_geometry_mean_absolute_change_eV": 0.4280871288514882,
+    "joint_proxy_diagnostic": {
+      "input": {
+        "evaluated": 24,
+        "planned": 24,
+        "A_hits": 17,
+        "B_hits": 11,
+        "quantum_hits": 8,
+        "both_proxy_hits": 9,
+        "quantum_hits_among_both": 6,
+        "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+      },
+      "optimized": {
+        "evaluated": 19,
+        "planned": 24,
+        "A_hits": 8,
+        "B_hits": 10,
+        "quantum_hits": 6,
+        "both_proxy_hits": 7,
+        "quantum_hits_among_both": 4,
+        "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+      }
+    }
   },
   "groups": {
     "homo/frozen": {
       "planned": 6,
       "singlepoints": 6,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 5,
       "graph_preserved": 3,
       "models": {
@@ -478,11 +509,737 @@
         "hits025": 1,
         "hit_fraction_planned": 0.16666666666666666
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.3181838122564529
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 2,
+        "mae_eV_observed_cells": 0.3988120393147314,
+        "missing_target_cells": [
+          {
+            "property": "homo",
+            "target": -7.040765
+          }
+        ],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.3181838122564529,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 6,
+          "planned": 6,
+          "A_hits": 4,
+          "B_hits": 2,
+          "quantum_hits": 2,
+          "both_proxy_hits": 2,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 3,
+          "planned": 6,
+          "A_hits": 1,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "homo/frozen/target=-7.040765": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 0,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.7281589508056641,
+              "rmse_eV": 1.0157928956742188,
+              "bias_eV": 0.7082511907958988,
+              "std_eV": 0.7281589508056641,
+              "absolute_error_p90_eV": 1.2947599034423831,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.23717109545172166,
+              "rmse_eV": 0.25721739047827286,
+              "bias_eV": 0.23717109545172166,
+              "std_eV": 0.09955228498976121,
+              "absolute_error_p90_eV": 0.3168129234435306,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 0
+            },
+            "error_against_quantum": {
+              "n": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 0
+            },
+            "error_against_quantum": {
+              "n": 0
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.8038358688354492,
+              "rmse_eV": 1.0179867766008324,
+              "bias_eV": 0.6246158605957035,
+              "std_eV": 0.8038358688354492,
+              "absolute_error_p90_eV": 1.3035285573120121,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.17522920301954636,
+              "rmse_eV": 0.23297747702779598,
+              "bias_eV": 0.15353576525152635,
+              "std_eV": 0.17522920301954636,
+              "absolute_error_p90_eV": 0.29805781522076746,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 0
+            },
+            "error_against_quantum": {
+              "n": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 0
+            },
+            "error_against_quantum": {
+              "n": 0
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6885206699371338,
+              "rmse_eV": 0.7273728489952888,
+              "bias_eV": 0.23454327644348183,
+              "std_eV": 0.6885206699371338,
+              "absolute_error_p90_eV": 0.8761552910919193,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.23653681890069533,
+              "rmse_eV": 0.24400687405378402,
+              "bias_eV": -0.23653681890069533,
+              "std_eV": 0.059914004121230935,
+              "absolute_error_p90_eV": 0.2844680221976801,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 0
+            },
+            "error_against_quantum": {
+              "n": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 0
+            },
+            "error_against_quantum": {
+              "n": 0
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [
+        "q00",
+        "q01"
+      ],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.6286066658159029,
+        "rmse_eV": 0.7855334471158216,
+        "bias_eV": 0.47108009534417716,
+        "std_eV": 0.6286066658159029,
+        "absolute_error_p90_eV": 1.0054707420912445,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 0
+      },
+      "quantum_optimized_preserved": {
+        "n": 0,
+        "hit_fraction_planned": 0.0
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 0,
+        "mae_eV_observed_cells": null,
+        "missing_target_cells": [
+          {
+            "property": "homo",
+            "target": -7.040765
+          }
+        ],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": null,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 0,
+          "quantum_hits": 1,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 0,
+          "planned": 2,
+          "A_hits": 0,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "homo/frozen/target=-6.56081": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 1,
+      "graph_preserved": 1,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.09337997436523438,
+              "rmse_eV": 0.13177199285506383,
+              "bias_eV": -0.0929733213806152,
+              "std_eV": 0.09337997436523438,
+              "absolute_error_p90_eV": 0.16775863146972653,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.4232464415903805,
+              "rmse_eV": 0.503785936091893,
+              "bias_eV": -0.4232464415903805,
+              "std_eV": 0.27324479699541504,
+              "absolute_error_p90_eV": 0.6418422791867125,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.18635329574584958,
+              "rmse_eV": 0.18635329574584958,
+              "bias_eV": -0.18635329574584958,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.18635329574584958,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.15000164459496546,
+              "rmse_eV": 0.15000164459496546,
+              "bias_eV": -0.15000164459496546,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.15000164459496546,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.1858821806335449,
+              "rmse_eV": 0.1858821806335449,
+              "bias_eV": -0.1858821806335449,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.1858821806335449,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.13231861439347448,
+              "rmse_eV": 0.13231861439347448,
+              "bias_eV": -0.13231861439347448,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.13231861439347448,
+              "hits025": 1
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.10506367683410645,
+              "rmse_eV": 0.1345284167391251,
+              "bias_eV": -0.08402094215393063,
+              "std_eV": 0.10506367683410645,
+              "absolute_error_p90_eV": 0.17228043055725095,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.4142940623636959,
+              "rmse_eV": 0.4899528306681543,
+              "bias_eV": -0.4142940623636959,
+              "std_eV": 0.26156109452654297,
+              "absolute_error_p90_eV": 0.6235429379849303,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.18908461898803708,
+              "rmse_eV": 0.18908461898803708,
+              "bias_eV": -0.18908461898803708,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.18908461898803708,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.15273296783715296,
+              "rmse_eV": 0.15273296783715296,
+              "bias_eV": -0.15273296783715296,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.15273296783715296,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.17785224288940427,
+              "rmse_eV": 0.17785224288940427,
+              "bias_eV": -0.17785224288940427,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.17785224288940427,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.12428867664933385,
+              "rmse_eV": 0.12428867664933385,
+              "bias_eV": -0.12428867664933385,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.12428867664933385,
+              "hits025": 1
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.20785030693054196,
+              "rmse_eV": 0.23688273773848958,
+              "bias_eV": -0.20785030693054196,
+              "std_eV": 0.11362957954406738,
+              "absolute_error_p90_eV": 0.2987539705657959,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.5381234271403073,
+              "rmse_eV": 0.7212635193881224,
+              "bias_eV": -0.5381234271403073,
+              "std_eV": 0.4802543509047168,
+              "absolute_error_p90_eV": 0.9223269078640807,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.09422072738647458,
+              "rmse_eV": 0.09422072738647458,
+              "bias_eV": -0.09422072738647458,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.09422072738647458,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.057869076235590455,
+              "rmse_eV": 0.057869076235590455,
+              "bias_eV": -0.057869076235590455,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.057869076235590455,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.05731639236450192,
+              "rmse_eV": 0.05731639236450192,
+              "bias_eV": -0.05731639236450192,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.05731639236450192,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.0037528261244315075,
+              "rmse_eV": 0.0037528261244315075,
+              "bias_eV": -0.0037528261244315075,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.0037528261244315075,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [
+        "q04"
+      ],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.3666247713606494,
+        "rmse_eV": 0.49345116973044306,
+        "bias_eV": 0.3302731202097653,
+        "std_eV": 0.3666247713606494,
+        "absolute_error_p90_eV": 0.6308432675284616,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 1,
+        "mae_eV": 0.03635165115088412,
+        "rmse_eV": 0.03635165115088412,
+        "bias_eV": -0.03635165115088412,
+        "std_eV": 0.0,
+        "absolute_error_p90_eV": 0.03635165115088412,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 1,
+        "mae_eV": 0.053563566240070415,
+        "rmse_eV": 0.053563566240070415,
+        "bias_eV": -0.053563566240070415,
+        "std_eV": 0.0,
+        "absolute_error_p90_eV": 0.053563566240070415,
+        "hits025": 1,
+        "hit_fraction_planned": 0.5
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.053563566240070415,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.01721191508918629,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 2,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 1,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "homo/frozen/target=-6.148085": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.470578670501709,
+              "rmse_eV": 0.6595053745142619,
+              "bias_eV": -0.46206390670776365,
+              "std_eV": 0.470578670501709,
+              "absolute_error_p90_eV": 0.8402297958679199,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.21869686774402997,
+              "rmse_eV": 0.28753293171020133,
+              "bias_eV": -0.1866731551584575,
+              "std_eV": 0.21869686774402997,
+              "absolute_error_p90_eV": 0.368035391870796,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.470578670501709,
+              "rmse_eV": 0.6595053745142619,
+              "bias_eV": -0.46206390670776365,
+              "std_eV": 0.470578670501709,
+              "absolute_error_p90_eV": 0.8402297958679199,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.21869686774402997,
+              "rmse_eV": 0.28753293171020133,
+              "bias_eV": -0.1866731551584575,
+              "std_eV": 0.21869686774402997,
+              "absolute_error_p90_eV": 0.368035391870796,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6825898867034912,
+              "rmse_eV": 0.7356990550377078,
+              "bias_eV": -0.6825898867034912,
+              "std_eV": 0.27445244789123535,
+              "absolute_error_p90_eV": 0.9021518450164795,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.061470625685901226,
+              "rmse_eV": 0.07114591929127206,
+              "bias_eV": 0.061470625685901226,
+              "std_eV": 0.035820441225423494,
+              "absolute_error_p90_eV": 0.09012697866624002,
+              "hits025": 2
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.4747394304656982,
+              "rmse_eV": 0.6571491662860275,
+              "bias_eV": -0.4747394304656982,
+              "std_eV": 0.45438694953918457,
+              "absolute_error_p90_eV": 0.8382489900970459,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.23488858870655438,
+              "rmse_eV": 0.30807879656066506,
+              "bias_eV": -0.19934867891639207,
+              "std_eV": 0.23488858870655438,
+              "absolute_error_p90_eV": 0.39436753183966805,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.4747394304656982,
+              "rmse_eV": 0.6571491662860275,
+              "bias_eV": -0.4747394304656982,
+              "std_eV": 0.45438694953918457,
+              "absolute_error_p90_eV": 0.8382489900970459,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.23488858870655438,
+              "rmse_eV": 0.30807879656066506,
+              "bias_eV": -0.19934867891639207,
+              "std_eV": 0.23488858870655438,
+              "absolute_error_p90_eV": 0.39436753183966805,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6420303564453125,
+              "rmse_eV": 0.7158683040123716,
+              "bias_eV": -0.6420303564453125,
+              "std_eV": 0.31664562225341797,
+              "absolute_error_p90_eV": 0.8953468542480468,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.10203015594407994,
+              "rmse_eV": 0.10222898047816782,
+              "bias_eV": 0.10203015594407994,
+              "std_eV": 0.006372733136759123,
+              "absolute_error_p90_eV": 0.10712834245348724,
+              "hits025": 2
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.500514030456543,
+              "rmse_eV": 0.6206030633949864,
+              "bias_eV": -0.36692488006591795,
+              "std_eV": 0.500514030456543,
+              "absolute_error_p90_eV": 0.7940539345092773,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.18876150778919598,
+              "rmse_eV": 0.20978418316485706,
+              "bias_eV": -0.0915341285166118,
+              "std_eV": 0.18876150778919598,
+              "absolute_error_p90_eV": 0.2619888106024854,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.500514030456543,
+              "rmse_eV": 0.6206030633949864,
+              "bias_eV": -0.36692488006591795,
+              "std_eV": 0.500514030456543,
+              "absolute_error_p90_eV": 0.7940539345092773,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.18876150778919598,
+              "rmse_eV": 0.20978418316485706,
+              "bias_eV": -0.0915341285166118,
+              "std_eV": 0.18876150778919598,
+              "absolute_error_p90_eV": 0.2619888106024854,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.5066491346740722,
+              "rmse_eV": 0.6197734307357323,
+              "bias_eV": -0.5066491346740722,
+              "std_eV": 0.3569674491882324,
+              "absolute_error_p90_eV": 0.7922230940246582,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.23741137771532017,
+              "rmse_eV": 0.2419597987455028,
+              "bias_eV": 0.23741137771532017,
+              "std_eV": 0.046694560071573576,
+              "absolute_error_p90_eV": 0.27476702577257905,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.689275538245739,
+        "rmse_eV": 0.7422538876037261,
+        "bias_eV": -0.27539075154930615,
+        "std_eV": 0.689275538245739,
+        "absolute_error_p90_eV": 0.9095881394851839,
+        "hits025": 0
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.689275538245739,
+        "rmse_eV": 0.7422538876037261,
+        "bias_eV": -0.27539075154930615,
+        "std_eV": 0.689275538245739,
+        "absolute_error_p90_eV": 0.9095881394851839,
+        "hits025": 0
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.7440605123893924,
+        "rmse_eV": 0.806160847361098,
+        "bias_eV": -0.7440605123893924,
+        "std_eV": 0.31027288911665885,
+        "absolute_error_p90_eV": 0.9922788236827195,
+        "hits025": 0,
+        "hit_fraction_planned": 0.0
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.7440605123893924,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.46866976084008627,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 0,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 0,
+          "B_hits": 1,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "homo/frozen/A_top1": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 2,
       "graph_preserved": 1,
       "models": {
@@ -707,11 +1464,50 @@
         "hits025": 0,
         "hit_fraction_planned": 0.0
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.8476724099691664
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.43378762327273357,
+        "missing_target_cells": [
+          {
+            "property": "homo",
+            "target": -7.040765
+          },
+          {
+            "property": "homo",
+            "target": -6.56081
+          }
+        ],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.8476724099691664,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 3,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 1,
+          "planned": 3,
+          "A_hits": 0,
+          "B_hits": 1,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "homo/frozen/fixed_random": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 2,
       "models": {
@@ -934,11 +1730,46 @@
         "hits025": 1,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.05343951340009623
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 2,
+        "mae_eV_observed_cells": 0.5539484838730608,
+        "missing_target_cells": [
+          {
+            "property": "homo",
+            "target": -7.040765
+          }
+        ],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.05343951340009623,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 3,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "homo/grpo50": {
       "planned": 6,
       "singlepoints": 6,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 6,
       "graph_preserved": 5,
       "models": {
@@ -1161,11 +1992,808 @@
         "hits025": 2,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.2349993355718194
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.46396844859061065,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.2349993355718194,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 6,
+          "planned": 6,
+          "A_hits": 4,
+          "B_hits": 2,
+          "quantum_hits": 2,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 5,
+          "planned": 6,
+          "A_hits": 2,
+          "B_hits": 2,
+          "quantum_hits": 2,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "homo/grpo50/target=-7.040765": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.23632912574768028,
+              "rmse_eV": 0.311102215783706,
+              "bias_eV": -0.23632912574768028,
+              "std_eV": 0.20231938362121582,
+              "absolute_error_p90_eV": 0.3981846326446529,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.047296534529156276,
+              "rmse_eV": 0.05005281926929081,
+              "bias_eV": 0.047296534529156276,
+              "std_eV": 0.01638055366392166,
+              "absolute_error_p90_eV": 0.0604009774602936,
+              "hits025": 2
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.23632912574768028,
+              "rmse_eV": 0.311102215783706,
+              "bias_eV": -0.23632912574768028,
+              "std_eV": 0.20231938362121582,
+              "absolute_error_p90_eV": 0.3981846326446529,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.047296534529156276,
+              "rmse_eV": 0.05005281926929081,
+              "bias_eV": 0.047296534529156276,
+              "std_eV": 0.01638055366392166,
+              "absolute_error_p90_eV": 0.0604009774602936,
+              "hits025": 2
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.29410748420715294,
+              "rmse_eV": 0.3877015008319156,
+              "bias_eV": -0.29410748420715294,
+              "std_eV": 0.252612829208374,
+              "absolute_error_p90_eV": 0.49619774757385215,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.07668541299458642,
+              "rmse_eV": 0.10506640247328124,
+              "bias_eV": 0.07668541299458642,
+              "std_eV": 0.0718212807079297,
+              "absolute_error_p90_eV": 0.1341424375609302,
+              "hits025": 2
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3008649819946285,
+              "rmse_eV": 0.3613067291549744,
+              "bias_eV": -0.3008649819946285,
+              "std_eV": 0.2000570297241211,
+              "absolute_error_p90_eV": 0.4609106057739254,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.018642907561016386,
+              "rmse_eV": 0.025391971479547148,
+              "bias_eV": -0.017239321717791967,
+              "std_eV": 0.018642907561016386,
+              "absolute_error_p90_eV": 0.03243436493524996,
+              "hits025": 2
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3008649819946285,
+              "rmse_eV": 0.3613067291549744,
+              "bias_eV": -0.3008649819946285,
+              "std_eV": 0.2000570297241211,
+              "absolute_error_p90_eV": 0.4609106057739254,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.018642907561016386,
+              "rmse_eV": 0.025391971479547148,
+              "bias_eV": -0.017239321717791967,
+              "std_eV": 0.018642907561016386,
+              "absolute_error_p90_eV": 0.03243436493524996,
+              "hits025": 2
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3533998006439205,
+              "rmse_eV": 0.43523603612592576,
+              "bias_eV": -0.3533998006439205,
+              "std_eV": 0.2540452480316162,
+              "absolute_error_p90_eV": 0.5566359990692135,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.07038886188468751,
+              "rmse_eV": 0.0725059424136479,
+              "bias_eV": 0.017393096557818843,
+              "std_eV": 0.07038886188468751,
+              "absolute_error_p90_eV": 0.0843033391309426,
+              "hits025": 2
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3661346906280514,
+              "rmse_eV": 0.496751539133486,
+              "bias_eV": -0.3661346906280514,
+              "std_eV": 0.33571934700012207,
+              "absolute_error_p90_eV": 0.6347101682281491,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.11701940971498459,
+              "rmse_eV": 0.14318268868666045,
+              "bias_eV": -0.08250903035121482,
+              "std_eV": 0.11701940971498459,
+              "absolute_error_p90_eV": 0.18302663399595645,
+              "hits025": 2
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3661346906280514,
+              "rmse_eV": 0.496751539133486,
+              "bias_eV": -0.3661346906280514,
+              "std_eV": 0.33571934700012207,
+              "absolute_error_p90_eV": 0.6347101682281491,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.11701940971498459,
+              "rmse_eV": 0.14318268868666045,
+              "bias_eV": -0.08250903035121482,
+              "std_eV": 0.11701940971498459,
+              "absolute_error_p90_eV": 0.18302663399595645,
+              "hits025": 2
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.35566525398254356,
+              "rmse_eV": 0.4639043210959336,
+              "bias_eV": -0.35566525398254356,
+              "std_eV": 0.29784131050109863,
+              "absolute_error_p90_eV": 0.5939383023834225,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.026592799415205093,
+              "rmse_eV": 0.030594485942806966,
+              "bias_eV": 0.015127643219195797,
+              "std_eV": 0.026592799415205093,
+              "absolute_error_p90_eV": 0.03869491399056173,
+              "hits025": 2
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.28362566027683656,
+        "rmse_eV": 0.3581524504118247,
+        "bias_eV": -0.28362566027683656,
+        "std_eV": 0.21869993728513748,
+        "absolute_error_p90_eV": 0.45858561010494653,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.28362566027683656,
+        "rmse_eV": 0.3581524504118247,
+        "bias_eV": -0.28362566027683656,
+        "std_eV": 0.21869993728513748,
+        "absolute_error_p90_eV": 0.45858561010494653,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.37079289720173936,
+        "rmse_eV": 0.4926914493802829,
+        "bias_eV": -0.37079289720173936,
+        "std_eV": 0.3244341099163037,
+        "absolute_error_p90_eV": 0.6303401851347823,
+        "hits025": 1,
+        "hit_fraction_planned": 0.5
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.37079289720173936,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.10573417263116625,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "homo/grpo50/target=-6.56081": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3024578094482422,
+              "rmse_eV": 0.3776846079552534,
+              "bias_eV": 0.2261966767883301,
+              "std_eV": 0.3024578094482422,
+              "absolute_error_p90_eV": 0.4834151508789063,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.0767473194709174,
+              "rmse_eV": 0.1019323403461211,
+              "bias_eV": -0.06708241917571556,
+              "std_eV": 0.0767473194709174,
+              "absolute_error_p90_eV": 0.13041325481148985,
+              "hits025": 2
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3024578094482422,
+              "rmse_eV": 0.3776846079552534,
+              "bias_eV": 0.2261966767883301,
+              "std_eV": 0.3024578094482422,
+              "absolute_error_p90_eV": 0.4834151508789063,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.0767473194709174,
+              "rmse_eV": 0.1019323403461211,
+              "bias_eV": -0.06708241917571556,
+              "std_eV": 0.0767473194709174,
+              "absolute_error_p90_eV": 0.13041325481148985,
+              "hits025": 2
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.39984869956970215,
+              "rmse_eV": 0.41371202513586364,
+              "bias_eV": -0.10620102256774899,
+              "std_eV": 0.39984869956970215,
+              "absolute_error_p90_eV": 0.48480951762390134,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.08131085097858826,
+              "rmse_eV": 0.08562510437360982,
+              "bias_eV": 0.08131085097858826,
+              "std_eV": 0.026836617002323315,
+              "absolute_error_p90_eV": 0.1027801445804469,
+              "hits025": 2
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2686599794006348,
+              "rmse_eV": 0.35002960531049954,
+              "bias_eV": 0.2686599794006348,
+              "std_eV": 0.22437143325805664,
+              "absolute_error_p90_eV": 0.44815712600708013,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.15483369566110294,
+              "rmse_eV": 0.15677874285896623,
+              "bias_eV": -0.02461911656341087,
+              "std_eV": 0.15483369566110294,
+              "absolute_error_p90_eV": 0.17452898891183163,
+              "hits025": 2
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2686599794006348,
+              "rmse_eV": 0.35002960531049954,
+              "bias_eV": 0.2686599794006348,
+              "std_eV": 0.22437143325805664,
+              "absolute_error_p90_eV": 0.44815712600708013,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.15483369566110294,
+              "rmse_eV": 0.15677874285896623,
+              "bias_eV": -0.02461911656341087,
+              "std_eV": 0.15483369566110294,
+              "absolute_error_p90_eV": 0.17452898891183163,
+              "hits025": 2
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3368208408355713,
+              "rmse_eV": 0.3537299474642049,
+              "bias_eV": -0.10805830329895016,
+              "std_eV": 0.3368208408355713,
+              "absolute_error_p90_eV": 0.4232674834747314,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.07945357024738708,
+              "rmse_eV": 0.08730793665610591,
+              "bias_eV": 0.07945357024738708,
+              "std_eV": 0.036191241731807544,
+              "absolute_error_p90_eV": 0.10840656363283312,
+              "hits025": 2
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2911510467529297,
+              "rmse_eV": 0.29736040803222186,
+              "bias_eV": -0.06045064300537106,
+              "std_eV": 0.2911510467529297,
+              "absolute_error_p90_eV": 0.3395115611572265,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.35372973896941673,
+              "rmse_eV": 0.36452468999713705,
+              "bias_eV": -0.35372973896941673,
+              "std_eV": 0.0880540821662299,
+              "absolute_error_p90_eV": 0.42417300470240066,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2911510467529297,
+              "rmse_eV": 0.29736040803222186,
+              "bias_eV": -0.06045064300537106,
+              "std_eV": 0.2911510467529297,
+              "absolute_error_p90_eV": 0.3395115611572265,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.35372973896941673,
+              "rmse_eV": 0.36452468999713705,
+              "bias_eV": -0.35372973896941673,
+              "std_eV": 0.0880540821662299,
+              "absolute_error_p90_eV": 0.42417300470240066,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.29587388038635254,
+              "rmse_eV": 0.3270778527142906,
+              "bias_eV": -0.1394222673797607,
+              "std_eV": 0.29587388038635254,
+              "absolute_error_p90_eV": 0.4074116942901611,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.0771382021810263,
+              "rmse_eV": 0.09090056356798523,
+              "bias_eV": 0.04808960616657654,
+              "std_eV": 0.0771382021810263,
+              "absolute_error_p90_eV": 0.11560988711428752,
+              "hits025": 2
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.3792051289191596,
+        "rmse_eV": 0.4793841444270809,
+        "bias_eV": 0.29327909596404567,
+        "std_eV": 0.3792051289191596,
+        "absolute_error_p90_eV": 0.6138284056903961,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.3792051289191596,
+        "rmse_eV": 0.4793841444270809,
+        "bias_eV": 0.29327909596404567,
+        "std_eV": 0.3792051289191596,
+        "absolute_error_p90_eV": 0.6138284056903961,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.37301208256737883,
+        "rmse_eV": 0.4174909777014476,
+        "bias_eV": -0.18751187354633725,
+        "std_eV": 0.37301208256737883,
+        "absolute_error_p90_eV": 0.5230215814044487,
+        "hits025": 1,
+        "hit_fraction_planned": 0.5
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.37301208256737883,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.4807909695103829,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 0,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "homo/grpo50/target=-6.148085": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 1,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.03171586990356445,
+              "rmse_eV": 0.03974160431959029,
+              "bias_eV": -0.023947833099365212,
+              "std_eV": 0.03171586990356445,
+              "absolute_error_p90_eV": 0.05087413638305662,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.7387931198030642,
+              "rmse_eV": 0.7397178227912024,
+              "bias_eV": -0.7387931198030642,
+              "std_eV": 0.036975444373419375,
+              "absolute_error_p90_eV": 0.7683734753017997,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.055663703002929665,
+              "rmse_eV": 0.055663703002929665,
+              "bias_eV": -0.055663703002929665,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.055663703002929665,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.7018176754296448,
+              "rmse_eV": 0.7018176754296448,
+              "bias_eV": -0.7018176754296448,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.7018176754296448,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.21126806549072263,
+              "rmse_eV": 0.21126806549072263,
+              "bias_eV": -0.21126806549072263,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.21126806549072263,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.8593684314934364,
+              "rmse_eV": 0.8593684314934364,
+              "bias_eV": -0.8593684314934364,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.8593684314934364,
+              "hits025": 0
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.07160198501586912,
+              "rmse_eV": 0.084133813708552,
+              "bias_eV": -0.07160198501586912,
+              "std_eV": 0.04417753219604492,
+              "absolute_error_p90_eV": 0.10694401077270506,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.7864472717195681,
+              "rmse_eV": 0.7945053100510432,
+              "bias_eV": -0.7864472717195681,
+              "std_eV": 0.11286884647302875,
+              "absolute_error_p90_eV": 0.8767423488979911,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.027424452819824197,
+              "rmse_eV": 0.027424452819824197,
+              "bias_eV": -0.027424452819824197,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.027424452819824197,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.6735784252465393,
+              "rmse_eV": 0.6735784252465393,
+              "bias_eV": -0.6735784252465393,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.6735784252465393,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.24964296630859373,
+              "rmse_eV": 0.24964296630859373,
+              "bias_eV": -0.24964296630859373,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.24964296630859373,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.8977433323113075,
+              "rmse_eV": 0.8977433323113075,
+              "bias_eV": -0.8977433323113075,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.8977433323113075,
+              "hits025": 0
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6658207159423828,
+              "rmse_eV": 0.6762682490472958,
+              "bias_eV": -0.6658207159423828,
+              "std_eV": 0.11841249465942383,
+              "absolute_error_p90_eV": 0.7605507116699218,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 1.3806660026460817,
+              "rmse_eV": 1.393286203972903,
+              "bias_eV": -1.3806660026460817,
+              "std_eV": 0.18710380893640766,
+              "absolute_error_p90_eV": 1.530349049795208,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.547408221282959,
+              "rmse_eV": 0.547408221282959,
+              "bias_eV": -0.547408221282959,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.547408221282959,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 1.193562193709674,
+              "rmse_eV": 1.193562193709674,
+              "bias_eV": -1.193562193709674,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 1.193562193709674,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.7254978399658203,
+              "rmse_eV": 0.7254978399658203,
+              "bias_eV": -0.7254978399658203,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.7254978399658203,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 1.373598205968534,
+              "rmse_eV": 1.373598205968534,
+              "bias_eV": -1.373598205968534,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 1.373598205968534,
+              "hits025": 0
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [
+        "q10"
+      ],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.714845286703699,
+        "rmse_eV": 0.7181380651236869,
+        "bias_eV": 0.714845286703699,
+        "std_eV": 0.06869131427698383,
+        "absolute_error_p90_eV": 0.769798338125286,
+        "hits025": 0
+      },
+      "quantum_input_preserved_subset": {
+        "n": 1,
+        "mae_eV": 0.6461539724267151,
+        "rmse_eV": 0.6461539724267151,
+        "bias_eV": 0.6461539724267151,
+        "std_eV": 0.0,
+        "absolute_error_p90_eV": 0.6461539724267151,
+        "hits025": 0
+      },
+      "quantum_optimized_preserved": {
+        "n": 1,
+        "mae_eV": 0.6481003660027138,
+        "rmse_eV": 0.6481003660027138,
+        "bias_eV": 0.6481003660027138,
+        "std_eV": 0.0,
+        "absolute_error_p90_eV": 0.6481003660027138,
+        "hits025": 0,
+        "hit_fraction_planned": 0.0
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.6481003660027138,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.001946393575998684,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 2,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 1,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "homo/grpo50/A_top1": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 2,
       "models": {
@@ -1388,11 +3016,46 @@
         "hits025": 1,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.2465824294324328
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 2,
+        "mae_eV_observed_cells": 0.30344137169957586,
+        "missing_target_cells": [
+          {
+            "property": "homo",
+            "target": -6.148085
+          }
+        ],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.2465824294324328,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 3,
+          "B_hits": 1,
+          "quantum_hits": 2,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 3,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "homo/grpo50/fixed_random": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 3,
       "models": {
@@ -1613,11 +3276,41 @@
         "hits025": 1,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.22727727299807712
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.5096091940472661,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.22727727299807712,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "lumo/frozen": {
       "planned": 6,
       "singlepoints": 6,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 6,
       "graph_preserved": 6,
       "models": {
@@ -1838,11 +3531,806 @@
         "hits025": 2,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.3148809293561476
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.3002869522279293,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.3148809293561476,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 6,
+          "planned": 6,
+          "A_hits": 4,
+          "B_hits": 5,
+          "quantum_hits": 3,
+          "both_proxy_hits": 4,
+          "quantum_hits_among_both": 3,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 6,
+          "planned": 6,
+          "A_hits": 3,
+          "B_hits": 4,
+          "quantum_hits": 2,
+          "both_proxy_hits": 3,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "lumo/frozen/target=-2.0524325": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2293980492401122,
+              "rmse_eV": 0.3087422600175699,
+              "bias_eV": -0.2293980492401122,
+              "std_eV": 0.2066357135772705,
+              "absolute_error_p90_eV": 0.39470662010192864,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.25492135520930215,
+              "rmse_eV": 0.25498537772993346,
+              "bias_eV": -0.005713625322827154,
+              "std_eV": 0.25492135520930215,
+              "absolute_error_p90_eV": 0.2594922554675639,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2293980492401122,
+              "rmse_eV": 0.3087422600175699,
+              "bias_eV": -0.2293980492401122,
+              "std_eV": 0.2066357135772705,
+              "absolute_error_p90_eV": 0.39470662010192864,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.25492135520930215,
+              "rmse_eV": 0.25498537772993346,
+              "bias_eV": -0.005713625322827154,
+              "std_eV": 0.25492135520930215,
+              "absolute_error_p90_eV": 0.2594922554675639,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2700355052947998,
+              "rmse_eV": 0.35056155399433825,
+              "bias_eV": -0.22354916465759267,
+              "std_eV": 0.2700355052947998,
+              "absolute_error_p90_eV": 0.44887483702087394,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.22966360858716406,
+              "rmse_eV": 0.26466660374513645,
+              "bias_eV": 0.13154101272495577,
+              "std_eV": 0.22966360858716406,
+              "absolute_error_p90_eV": 0.33489641876712867,
+              "hits025": 1
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.25524190795898427,
+              "rmse_eV": 0.29463605965523065,
+              "bias_eV": -0.25524190795898427,
+              "std_eV": 0.14718008041381836,
+              "absolute_error_p90_eV": 0.37298597229003894,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.3143769883727543,
+              "rmse_eV": 0.3159569046837954,
+              "bias_eV": -0.031557484041699224,
+              "std_eV": 0.3143769883727543,
+              "absolute_error_p90_eV": 0.33962297560611365,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.25524190795898427,
+              "rmse_eV": 0.29463605965523065,
+              "bias_eV": -0.25524190795898427,
+              "std_eV": 0.14718008041381836,
+              "absolute_error_p90_eV": 0.37298597229003894,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.3143769883727543,
+              "rmse_eV": 0.3159569046837954,
+              "bias_eV": -0.031557484041699224,
+              "std_eV": 0.3143769883727543,
+              "absolute_error_p90_eV": 0.33962297560611365,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3133552445220946,
+              "rmse_eV": 0.35173445658967784,
+              "bias_eV": -0.3133552445220946,
+              "std_eV": 0.15976738929748535,
+              "absolute_error_p90_eV": 0.4411691559600829,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.3399317245844785,
+              "rmse_eV": 0.3424841339388503,
+              "bias_eV": 0.04173493286045382,
+              "std_eV": 0.3399317245844785,
+              "absolute_error_p90_eV": 0.37331967087284157,
+              "hits025": 0
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.24937641620635986,
+              "rmse_eV": 0.3214174321118974,
+              "bias_eV": -0.20278207195281972,
+              "std_eV": 0.24937641620635986,
+              "absolute_error_p90_eV": 0.41160207376861563,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2121806525802128,
+              "rmse_eV": 0.21320773355347913,
+              "bias_eV": 0.020902351964465327,
+              "std_eV": 0.2121806525802128,
+              "absolute_error_p90_eV": 0.22890253415178505,
+              "hits025": 2
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.24937641620635986,
+              "rmse_eV": 0.3214174321118974,
+              "bias_eV": -0.20278207195281972,
+              "std_eV": 0.24937641620635986,
+              "absolute_error_p90_eV": 0.41160207376861563,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2121806525802128,
+              "rmse_eV": 0.21320773355347913,
+              "bias_eV": 0.020902351964465327,
+              "std_eV": 0.2121806525802128,
+              "absolute_error_p90_eV": 0.22890253415178505,
+              "hits025": 2
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2887751234817504,
+              "rmse_eV": 0.3890809215452223,
+              "bias_eV": -0.2887751234817504,
+              "std_eV": 0.26075446605682373,
+              "absolute_error_p90_eV": 0.4973786963272094,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.23894464782514013,
+              "rmse_eV": 0.24797627124010474,
+              "bias_eV": 0.06631505390079806,
+              "std_eV": 0.23894464782514013,
+              "absolute_error_p90_eV": 0.29199669094577857,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.46155706878657266,
+        "rmse_eV": 0.5129031577696326,
+        "bias_eV": -0.22368442391728505,
+        "std_eV": 0.46155706878657266,
+        "absolute_error_p90_eV": 0.6405046079204006,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.46155706878657266,
+        "rmse_eV": 0.5129031577696326,
+        "bias_eV": -0.22368442391728505,
+        "std_eV": 0.46155706878657266,
+        "absolute_error_p90_eV": 0.6405046079204006,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.49969911388196386,
+        "rmse_eV": 0.6130156918774508,
+        "bias_eV": -0.35509017738254844,
+        "std_eV": 0.49969911388196386,
+        "absolute_error_p90_eV": 0.7837712557880027,
+        "hits025": 1,
+        "hit_fraction_planned": 0.5
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.49969911388196386,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.1314057534652634,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "lumo/frozen/target=-1.44879": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.1835789818382263,
+              "rmse_eV": 0.2492562889496147,
+              "bias_eV": -0.1835789818382263,
+              "std_eV": 0.16860443353652954,
+              "absolute_error_p90_eV": 0.31846252866744995,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.15841755217901432,
+              "rmse_eV": 0.1908907595952822,
+              "bias_eV": -0.15841755217901432,
+              "std_eV": 0.10650427813225671,
+              "absolute_error_p90_eV": 0.2436209746848197,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.1835789818382263,
+              "rmse_eV": 0.2492562889496147,
+              "bias_eV": -0.1835789818382263,
+              "std_eV": 0.16860443353652954,
+              "absolute_error_p90_eV": 0.31846252866744995,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.15841755217901432,
+              "rmse_eV": 0.1908907595952822,
+              "bias_eV": -0.15841755217901432,
+              "std_eV": 0.10650427813225671,
+              "absolute_error_p90_eV": 0.2436209746848197,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2371751070022583,
+              "rmse_eV": 0.2665341194009331,
+              "bias_eV": 0.12160758785247805,
+              "std_eV": 0.2371751070022583,
+              "absolute_error_p90_eV": 0.33446117728424074,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.226881082042509,
+              "rmse_eV": 0.27028091134215376,
+              "bias_eV": -0.14689025034754855,
+              "std_eV": 0.226881082042509,
+              "absolute_error_p90_eV": 0.34439328232054783,
+              "hits025": 1
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.22123320289611814,
+              "rmse_eV": 0.27548633046808957,
+              "bias_eV": -0.22123320289611814,
+              "std_eV": 0.16416025161743164,
+              "absolute_error_p90_eV": 0.35256140419006343,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.19607177323690617,
+              "rmse_eV": 0.22528582078779788,
+              "bias_eV": -0.19607177323690617,
+              "std_eV": 0.11094846005135461,
+              "absolute_error_p90_eV": 0.28483054127798985,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.22123320289611814,
+              "rmse_eV": 0.27548633046808957,
+              "bias_eV": -0.22123320289611814,
+              "std_eV": 0.16416025161743164,
+              "absolute_error_p90_eV": 0.35256140419006343,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.19607177323690617,
+              "rmse_eV": 0.22528582078779788,
+              "bias_eV": -0.19607177323690617,
+              "std_eV": 0.11094846005135461,
+              "absolute_error_p90_eV": 0.28483054127798985,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.21752095222473145,
+              "rmse_eV": 0.2471674859848598,
+              "bias_eV": 0.11737291625976565,
+              "std_eV": 0.21752095222473145,
+              "absolute_error_p90_eV": 0.311419285232544,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.20722692726498215,
+              "rmse_eV": 0.25647951461108187,
+              "bias_eV": -0.15112492194026095,
+              "std_eV": 0.20722692726498215,
+              "absolute_error_p90_eV": 0.3281268648171909,
+              "hits025": 1
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.058185458183288574,
+              "rmse_eV": 0.06081439367900034,
+              "bias_eV": 0.017687366523742698,
+              "std_eV": 0.058185458183288574,
+              "absolute_error_p90_eV": 0.07233535140228273,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.33329416985207483,
+              "rmse_eV": 0.33603723453169904,
+              "bias_eV": 0.042848796182954674,
+              "std_eV": 0.33329416985207483,
+              "absolute_error_p90_eV": 0.3675732067984386,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.058185458183288574,
+              "rmse_eV": 0.06081439367900034,
+              "bias_eV": 0.017687366523742698,
+              "std_eV": 0.058185458183288574,
+              "absolute_error_p90_eV": 0.07233535140228273,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.33329416985207483,
+              "rmse_eV": 0.33603723453169904,
+              "bias_eV": 0.042848796182954674,
+              "std_eV": 0.33329416985207483,
+              "absolute_error_p90_eV": 0.3675732067984386,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.060295820236206055,
+              "rmse_eV": 0.08221240419122933,
+              "bias_eV": 0.05588643363952639,
+              "std_eV": 0.060295820236206055,
+              "absolute_error_p90_eV": 0.10500496714782717,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2126114045605002,
+              "rmse_eV": 0.218411970551198,
+              "bias_eV": -0.2126114045605002,
+              "std_eV": 0.05000179527645676,
+              "absolute_error_p90_eV": 0.2526128407816656,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.27510871166878625,
+        "rmse_eV": 0.276256947023156,
+        "bias_eV": -0.025161429659211976,
+        "std_eV": 0.27510871166878625,
+        "absolute_error_p90_eV": 0.2952378553961558,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.27510871166878625,
+        "rmse_eV": 0.276256947023156,
+        "bias_eV": -0.025161429659211976,
+        "std_eV": 0.27510871166878625,
+        "absolute_error_p90_eV": 0.2952378553961558,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.2684978382000266,
+        "rmse_eV": 0.2686950987047579,
+        "bias_eV": 0.2684978382000266,
+        "std_eV": 0.010294024959749293,
+        "absolute_error_p90_eV": 0.276733058167826,
+        "hits025": 0,
+        "hit_fraction_planned": 0.0
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.2684978382000266,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.29365926785923857,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 2,
+          "quantum_hits": 0,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "lumo/frozen/target=-0.8437325": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.05891227118492126,
+              "rmse_eV": 0.060636916520025425,
+              "bias_eV": 0.05891227118492126,
+              "std_eV": 0.014358967542648315,
+              "absolute_error_p90_eV": 0.07039944521903992,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.6425887498269564,
+              "rmse_eV": 0.7575884009456656,
+              "bias_eV": 0.6425887498269564,
+              "std_eV": 0.4012728296847917,
+              "absolute_error_p90_eV": 0.9636070135747897,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.05891227118492126,
+              "rmse_eV": 0.060636916520025425,
+              "bias_eV": 0.05891227118492126,
+              "std_eV": 0.014358967542648315,
+              "absolute_error_p90_eV": 0.07039944521903992,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.6425887498269564,
+              "rmse_eV": 0.7575884009456656,
+              "bias_eV": 0.6425887498269564,
+              "std_eV": 0.4012728296847917,
+              "absolute_error_p90_eV": 0.9636070135747897,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.24231596291065216,
+              "rmse_eV": 0.27092585368664607,
+              "bias_eV": 0.12117669872760772,
+              "std_eV": 0.24231596291065216,
+              "absolute_error_p90_eV": 0.33925732189273833,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.24952227317647824,
+              "rmse_eV": 0.2725526347378163,
+              "bias_eV": 0.24952227317647824,
+              "std_eV": 0.10965205830885483,
+              "absolute_error_p90_eV": 0.3372439198235621,
+              "hits025": 1
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.14343694456100464,
+              "rmse_eV": 0.17985844310124807,
+              "bias_eV": -0.14343694456100464,
+              "std_eV": 0.10851222276687622,
+              "absolute_error_p90_eV": 0.2302467227745056,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.44023953408103045,
+              "rmse_eV": 0.5208822517371071,
+              "bias_eV": 0.44023953408103045,
+              "std_eV": 0.2784016393752672,
+              "absolute_error_p90_eV": 0.6629608455812442,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.14343694456100464,
+              "rmse_eV": 0.17985844310124807,
+              "bias_eV": -0.14343694456100464,
+              "std_eV": 0.10851222276687622,
+              "absolute_error_p90_eV": 0.2302467227745056,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.44023953408103045,
+              "rmse_eV": 0.5208822517371071,
+              "bias_eV": 0.44023953408103045,
+              "std_eV": 0.2784016393752672,
+              "absolute_error_p90_eV": 0.6629608455812442,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.11408096551895142,
+              "rmse_eV": 0.12437549951479633,
+              "bias_eV": -0.04954591997146607,
+              "std_eV": 0.11408096551895142,
+              "absolute_error_p90_eV": 0.15371770149612426,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.07879965447740445,
+              "rmse_eV": 0.08096117075929107,
+              "bias_eV": 0.07879965447740445,
+              "std_eV": 0.018582939082845917,
+              "absolute_error_p90_eV": 0.09366600574368118,
+              "hits025": 2
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.11242503531455994,
+              "rmse_eV": 0.1419087660202037,
+              "bias_eV": -0.11242503531455994,
+              "std_eV": 0.0865950882434845,
+              "absolute_error_p90_eV": 0.18170110590934754,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.47125144332747515,
+              "rmse_eV": 0.5588106018985524,
+              "bias_eV": 0.47125144332747515,
+              "std_eV": 0.3003187738986589,
+              "absolute_error_p90_eV": 0.7115064624464023,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.11242503531455994,
+              "rmse_eV": 0.1419087660202037,
+              "bias_eV": -0.11242503531455994,
+              "std_eV": 0.0865950882434845,
+              "absolute_error_p90_eV": 0.18170110590934754,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.47125144332747515,
+              "rmse_eV": 0.5588106018985524,
+              "bias_eV": 0.47125144332747515,
+              "std_eV": 0.3003187738986589,
+              "absolute_error_p90_eV": 0.7115064624464023,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.14536527402877808,
+              "rmse_eV": 0.19188602964115647,
+              "bias_eV": -0.14536527402877808,
+              "std_eV": 0.1252564787864685,
+              "absolute_error_p90_eV": 0.24557045705795288,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.25792038338826584,
+              "rmse_eV": 0.25848132300214716,
+              "bias_eV": -0.017019699579907566,
+              "std_eV": 0.25792038338826584,
+              "absolute_error_p90_eV": 0.27153614305219187,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.5836764786420351,
+        "rmse_eV": 0.7002717818373918,
+        "bias_eV": -0.5836764786420351,
+        "std_eV": 0.3869138621421434,
+        "absolute_error_p90_eV": 0.8932075683557499,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.5836764786420351,
+        "rmse_eV": 0.7002717818373918,
+        "bias_eV": -0.5836764786420351,
+        "std_eV": 0.3869138621421434,
+        "absolute_error_p90_eV": 0.8932075683557499,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.13266390460179733,
+        "rmse_eV": 0.18458683069169737,
+        "bias_eV": -0.12834557444887051,
+        "std_eV": 0.13266390460179733,
+        "absolute_error_p90_eV": 0.23534036416089374,
+        "hits025": 1,
+        "hit_fraction_planned": 0.5
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.13266390460179733,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.5195777667439407,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 2,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 2,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "lumo/frozen/A_top1": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 3,
       "models": {
@@ -2063,11 +4551,41 @@
         "hits025": 1,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.05525570071711713
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.22127407626345352,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.05525570071711713,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 3,
+          "B_hits": 3,
+          "quantum_hits": 3,
+          "both_proxy_hits": 3,
+          "quantum_hits_among_both": 3,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 3,
+          "B_hits": 3,
+          "quantum_hits": 1,
+          "both_proxy_hits": 3,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "lumo/frozen/fixed_random": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 3,
       "models": {
@@ -2288,11 +4806,41 @@
         "hits025": 1,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.574506157995178
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.379299828192405,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.574506157995178,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 1,
+          "B_hits": 2,
+          "quantum_hits": 0,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 0,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "lumo/grpo50": {
       "planned": 6,
       "singlepoints": 6,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 6,
       "graph_preserved": 5,
       "models": {
@@ -2515,11 +5063,808 @@
         "hits025": 1,
         "hit_fraction_planned": 0.16666666666666666
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.8229643514825872
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.580382919755173,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.8229643514825872,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 6,
+          "planned": 6,
+          "A_hits": 5,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 2,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 5,
+          "planned": 6,
+          "A_hits": 2,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 2,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "lumo/grpo50/target=-2.0524325": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 1,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.1147351861000061,
+              "rmse_eV": 0.16204505535143457,
+              "bias_eV": 0.11443092691421519,
+              "std_eV": 0.1147351861000061,
+              "absolute_error_p90_eV": 0.20627992763137826,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 1.069365962314379,
+              "rmse_eV": 1.241882881336723,
+              "bias_eV": 1.069365962314379,
+              "std_eV": 0.6314503381902996,
+              "absolute_error_p90_eV": 1.5745262328666187,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.2291661130142213,
+              "rmse_eV": 0.2291661130142213,
+              "bias_eV": 0.2291661130142213,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.2291661130142213,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 1.7008163005046786,
+              "rmse_eV": 1.7008163005046786,
+              "bias_eV": 1.7008163005046786,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 1.7008163005046786,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.8416428195190431,
+              "rmse_eV": 0.8416428195190431,
+              "bias_eV": 0.8416428195190431,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.8416428195190431,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.3363798015138564,
+              "rmse_eV": 0.3363798015138564,
+              "bias_eV": 0.3363798015138564,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.3363798015138564,
+              "hits025": 0
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.1869095934677123,
+              "rmse_eV": 0.19466333326853685,
+              "bias_eV": -0.1869095934677123,
+              "std_eV": 0.05439317226409912,
+              "absolute_error_p90_eV": 0.23042413127899158,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.7680254419324515,
+              "rmse_eV": 0.8964400105338615,
+              "bias_eV": 0.7680254419324515,
+              "std_eV": 0.4623219798261944,
+              "absolute_error_p90_eV": 1.137883025793407,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.24130276573181142,
+              "rmse_eV": 0.24130276573181142,
+              "bias_eV": -0.24130276573181142,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.24130276573181142,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 1.2303474217586459,
+              "rmse_eV": 1.2303474217586459,
+              "bias_eV": 1.2303474217586459,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 1.2303474217586459,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.8225174771499635,
+              "rmse_eV": 0.8225174771499635,
+              "bias_eV": 0.8225174771499635,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.8225174771499635,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.3172544591447768,
+              "rmse_eV": 0.3172544591447768,
+              "bias_eV": 0.3172544591447768,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.3172544591447768,
+              "hits025": 0
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.4346676098060609,
+              "rmse_eV": 0.4480822781790681,
+              "bias_eV": 0.4346676098060609,
+              "std_eV": 0.10882002115249634,
+              "absolute_error_p90_eV": 0.5217236267280579,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 1.3896026452062247,
+              "rmse_eV": 1.5239060878308819,
+              "bias_eV": 1.3896026452062247,
+              "std_eV": 0.6255351732427898,
+              "absolute_error_p90_eV": 1.8900307838004566,
+              "hits025": 0
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.5434876309585572,
+              "rmse_eV": 0.5434876309585572,
+              "bias_eV": 0.5434876309585572,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.5434876309585572,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 2.0151378184490145,
+              "rmse_eV": 2.0151378184490145,
+              "bias_eV": 2.0151378184490145,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 2.0151378184490145,
+              "hits025": 0
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 1,
+              "mae_eV": 0.5888529645156861,
+              "rmse_eV": 0.5888529645156861,
+              "bias_eV": 0.5888529645156861,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.5888529645156861,
+              "hits025": 0
+            },
+            "error_against_quantum": {
+              "n": 1,
+              "mae_eV": 0.08358994651049945,
+              "rmse_eV": 0.08358994651049945,
+              "bias_eV": 0.08358994651049945,
+              "std_eV": 0.0,
+              "absolute_error_p90_eV": 0.08358994651049945,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [
+        "q14"
+      ],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.9549350354001638,
+        "rmse_eV": 1.0857695290596467,
+        "bias_eV": -0.9549350354001638,
+        "std_eV": 0.5167151520902935,
+        "absolute_error_p90_eV": 1.3683071570723986,
+        "hits025": 0
+      },
+      "quantum_input_preserved_subset": {
+        "n": 1,
+        "mae_eV": 1.4716501874904573,
+        "rmse_eV": 1.4716501874904573,
+        "bias_eV": -1.4716501874904573,
+        "std_eV": 0.0,
+        "absolute_error_p90_eV": 1.4716501874904573,
+        "hits025": 0
+      },
+      "quantum_optimized_preserved": {
+        "n": 1,
+        "mae_eV": 0.5052630180051867,
+        "rmse_eV": 0.5052630180051867,
+        "bias_eV": 0.5052630180051867,
+        "std_eV": 0.0,
+        "absolute_error_p90_eV": 0.5052630180051867,
+        "hits025": 0,
+        "hit_fraction_planned": 0.0
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.5052630180051867,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 1.976913205495644,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 2,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 1,
+          "planned": 2,
+          "A_hits": 0,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "lumo/grpo50/target=-1.44879": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.11407452821731567,
+              "rmse_eV": 0.14291588579972114,
+              "bias_eV": 0.08609269670486452,
+              "std_eV": 0.11407452821731567,
+              "absolute_error_p90_eV": 0.1829486855812073,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2620939491395128,
+              "rmse_eV": 0.27245693684433925,
+              "bias_eV": -0.07442811470845367,
+              "std_eV": 0.2620939491395128,
+              "absolute_error_p90_eV": 0.32163644090627574,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.11407452821731567,
+              "rmse_eV": 0.14291588579972114,
+              "bias_eV": 0.08609269670486452,
+              "std_eV": 0.11407452821731567,
+              "absolute_error_p90_eV": 0.1829486855812073,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2620939491395128,
+              "rmse_eV": 0.27245693684433925,
+              "bias_eV": -0.07442811470845367,
+              "std_eV": 0.2620939491395128,
+              "absolute_error_p90_eV": 0.32163644090627574,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.5843856792831421,
+              "rmse_eV": 0.725326711011382,
+              "bias_eV": 0.5843856792831421,
+              "std_eV": 0.4296419620513916,
+              "absolute_error_p90_eV": 0.9280992489242554,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.29566922729862793,
+              "rmse_eV": 0.35126563091430585,
+              "bias_eV": -0.29566922729862793,
+              "std_eV": 0.1896503400741945,
+              "absolute_error_p90_eV": 0.44738949935798356,
+              "hits025": 1
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.13951945304870605,
+              "rmse_eV": 0.1426502134804414,
+              "bias_eV": 0.02972214035034182,
+              "std_eV": 0.13951945304870605,
+              "absolute_error_p90_eV": 0.1632971653289795,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2366490243081224,
+              "rmse_eV": 0.27039055652486643,
+              "bias_eV": -0.13079867106297638,
+              "std_eV": 0.2366490243081224,
+              "absolute_error_p90_eV": 0.3412879611585035,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.13951945304870605,
+              "rmse_eV": 0.1426502134804414,
+              "bias_eV": 0.02972214035034182,
+              "std_eV": 0.13951945304870605,
+              "absolute_error_p90_eV": 0.1632971653289795,
+              "hits025": 2
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2366490243081224,
+              "rmse_eV": 0.27039055652486643,
+              "bias_eV": -0.13079867106297638,
+              "std_eV": 0.2366490243081224,
+              "absolute_error_p90_eV": 0.3412879611585035,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.516560004272461,
+              "rmse_eV": 0.6399782832917621,
+              "bias_eV": 0.516560004272461,
+              "std_eV": 0.37780678272247314,
+              "absolute_error_p90_eV": 0.8188054304504395,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.3634949023093091,
+              "rmse_eV": 0.4363986710408791,
+              "bias_eV": -0.3634949023093091,
+              "std_eV": 0.24148551940311297,
+              "absolute_error_p90_eV": 0.5566833178317995,
+              "hits025": 1
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6410209994697571,
+              "rmse_eV": 0.8960732125112846,
+              "bias_eV": 0.6410209994697571,
+              "std_eV": 0.6261304020881653,
+              "absolute_error_p90_eV": 1.1419253211402893,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.4805001880564389,
+              "rmse_eV": 0.5416284654056391,
+              "bias_eV": 0.4805001880564389,
+              "std_eV": 0.24996192473133683,
+              "absolute_error_p90_eV": 0.6804697278415084,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6410209994697571,
+              "rmse_eV": 0.8960732125112846,
+              "bias_eV": 0.6410209994697571,
+              "std_eV": 0.6261304020881653,
+              "absolute_error_p90_eV": 1.1419253211402893,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.4805001880564389,
+              "rmse_eV": 0.5416284654056391,
+              "bias_eV": 0.4805001880564389,
+              "std_eV": 0.24996192473133683,
+              "absolute_error_p90_eV": 0.6804697278415084,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.6681013565444947,
+              "rmse_eV": 0.8687630013931275,
+              "bias_eV": 0.6681013565444947,
+              "std_eV": 0.5553284883499146,
+              "absolute_error_p90_eV": 1.1123641472244263,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.2119535500372754,
+              "rmse_eV": 0.22139484376591204,
+              "bias_eV": -0.2119535500372754,
+              "std_eV": 0.06396381377567156,
+              "absolute_error_p90_eV": 0.26312460105781266,
+              "hits025": 1
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.37616847735682846,
+        "rmse_eV": 0.40898612965936243,
+        "bias_eV": 0.1605208114133182,
+        "std_eV": 0.37616847735682846,
+        "absolute_error_p90_eV": 0.504585126487483,
+        "hits025": 1
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.37616847735682846,
+        "rmse_eV": 0.40898612965936243,
+        "bias_eV": 0.1605208114133182,
+        "std_eV": 0.37616847735682846,
+        "absolute_error_p90_eV": 0.504585126487483,
+        "hits025": 1
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.88005490658177,
+        "rmse_eV": 1.0761131883174075,
+        "bias_eV": 0.88005490658177,
+        "std_eV": 0.6192923021255861,
+        "absolute_error_p90_eV": 1.3754887482822389,
+        "hits025": 0,
+        "hit_fraction_planned": 0.0
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.88005490658177,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.7195340951684519,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 2,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 0,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
+    },
+    "lumo/grpo50/target=-0.8437325": {
+      "planned": 2,
+      "singlepoints": 2,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
+      "optimized_singlepoints": 2,
+      "graph_preserved": 2,
+      "models": {
+        "dpa_historical": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.41811496019363403,
+              "rmse_eV": 0.5668272209530393,
+              "bias_eV": -0.3827178836631775,
+              "std_eV": 0.41811496019363403,
+              "absolute_error_p90_eV": 0.7242892671241761,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.32253313180557874,
+              "rmse_eV": 0.34847113054167417,
+              "bias_eV": 0.32253313180557874,
+              "std_eV": 0.13192614490190213,
+              "absolute_error_p90_eV": 0.42807404772710045,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.41811496019363403,
+              "rmse_eV": 0.5668272209530393,
+              "bias_eV": -0.3827178836631775,
+              "std_eV": 0.41811496019363403,
+              "absolute_error_p90_eV": 0.7242892671241761,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.32253313180557874,
+              "rmse_eV": 0.34847113054167417,
+              "bias_eV": 0.32253313180557874,
+              "std_eV": 0.13192614490190213,
+              "absolute_error_p90_eV": 0.42807404772710045,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.27817147970199585,
+              "rmse_eV": 0.3257120489817257,
+              "bias_eV": -0.16943720586776734,
+              "std_eV": 0.27817147970199585,
+              "absolute_error_p90_eV": 0.4137212443962097,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.18639362881079502,
+              "rmse_eV": 0.19388780500326064,
+              "bias_eV": 0.18639362881079502,
+              "std_eV": 0.05338441783634984,
+              "absolute_error_p90_eV": 0.22910116307987488,
+              "hits025": 2
+            }
+          }
+        },
+        "dpa_common": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.5303522050380707,
+              "rmse_eV": 0.6397081375113257,
+              "bias_eV": -0.35770524151802063,
+              "std_eV": 0.5303522050380707,
+              "absolute_error_p90_eV": 0.8165163982524872,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.3475457739507356,
+              "rmse_eV": 0.4247397154534037,
+              "bias_eV": 0.3475457739507356,
+              "std_eV": 0.24416338974633878,
+              "absolute_error_p90_eV": 0.5428764857478067,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.5303522050380707,
+              "rmse_eV": 0.6397081375113257,
+              "bias_eV": -0.35770524151802063,
+              "std_eV": 0.5303522050380707,
+              "absolute_error_p90_eV": 0.8165163982524872,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.3475457739507356,
+              "rmse_eV": 0.4247397154534037,
+              "bias_eV": 0.3475457739507356,
+              "std_eV": 0.24416338974633878,
+              "absolute_error_p90_eV": 0.5428764857478067,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.2721835970878601,
+              "rmse_eV": 0.35578016574663524,
+              "bias_eV": -0.22911921747207642,
+              "std_eV": 0.2721835970878601,
+              "absolute_error_p90_eV": 0.45547897106552127,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.12671161720648594,
+              "rmse_eV": 0.1352858658033189,
+              "bias_eV": 0.12671161720648594,
+              "std_eV": 0.0473965352222141,
+              "absolute_error_p90_eV": 0.1646288453842572,
+              "hits025": 2
+            }
+          }
+        },
+        "unimol": {
+          "input": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.4953289330005646,
+              "rmse_eV": 0.5713288990907907,
+              "bias_eV": -0.2847208441066742,
+              "std_eV": 0.4953289330005646,
+              "absolute_error_p90_eV": 0.723105608285904,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.42053017136208204,
+              "rmse_eV": 0.469665001741759,
+              "bias_eV": 0.42053017136208204,
+              "std_eV": 0.20914011770883267,
+              "absolute_error_p90_eV": 0.5878422655291482,
+              "hits025": 1
+            }
+          },
+          "input_preserved_subset": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.4953289330005646,
+              "rmse_eV": 0.5713288990907907,
+              "bias_eV": -0.2847208441066742,
+              "std_eV": 0.4953289330005646,
+              "absolute_error_p90_eV": 0.723105608285904,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.42053017136208204,
+              "rmse_eV": 0.469665001741759,
+              "bias_eV": 0.42053017136208204,
+              "std_eV": 0.20914011770883267,
+              "absolute_error_p90_eV": 0.5878422655291482,
+              "hits025": 1
+            }
+          },
+          "optimized_preserved": {
+            "target_error": {
+              "n": 2,
+              "mae_eV": 0.3178592026233673,
+              "rmse_eV": 0.42010725393530496,
+              "bias_eV": -0.2746918857860565,
+              "std_eV": 0.3178592026233673,
+              "absolute_error_p90_eV": 0.5376127112522125,
+              "hits025": 1
+            },
+            "error_against_quantum": {
+              "n": 2,
+              "mae_eV": 0.0930721407577213,
+              "rmse_eV": 0.12347450106238843,
+              "bias_eV": 0.08113894889250584,
+              "std_eV": 0.0930721407577213,
+              "absolute_error_p90_eV": 0.15798329987172596,
+              "hits025": 2
+            }
+          }
+        }
+      },
+      "failed_ids": [],
+      "changed_identity_ids": [],
+      "quantum_input": {
+        "n": 2,
+        "mae_eV": 0.7052510154687562,
+        "rmse_eV": 0.7611064530128469,
+        "bias_eV": -0.7052510154687562,
+        "std_eV": 0.2861888152917319,
+        "absolute_error_p90_eV": 0.9342020677021418,
+        "hits025": 0
+      },
+      "quantum_input_preserved_subset": {
+        "n": 2,
+        "mae_eV": 0.7052510154687562,
+        "rmse_eV": 0.7611064530128469,
+        "bias_eV": -0.7052510154687562,
+        "std_eV": 0.2861888152917319,
+        "absolute_error_p90_eV": 0.9342020677021418,
+        "hits025": 0
+      },
+      "quantum_optimized_preserved": {
+        "n": 2,
+        "mae_eV": 0.35583083467856236,
+        "rmse_eV": 0.42088573994640416,
+        "bias_eV": -0.35583083467856236,
+        "std_eV": 0.224787061865646,
+        "absolute_error_p90_eV": 0.5356604841710791,
+        "hits025": 1,
+        "hit_fraction_planned": 0.5
+      },
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 1,
+        "observed_target_cells": 1,
+        "mae_eV_observed_cells": 0.35583083467856236,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.3494201807901939,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 0,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 2,
+          "A_hits": 1,
+          "B_hits": 1,
+          "quantum_hits": 1,
+          "both_proxy_hits": 1,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "lumo/grpo50/A_top1": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 2,
       "models": {
@@ -2742,11 +6087,46 @@
         "hits025": 1,
         "hit_fraction_planned": 0.3333333333333333
       },
-      "quantum_geometry_mean_absolute_change_eV": 0.3822143488819011
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 2,
+        "mae_eV_observed_cells": 0.19590318863455014,
+        "missing_target_cells": [
+          {
+            "property": "lumo",
+            "target": -2.0524325
+          }
+        ],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 0.3822143488819011,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 3,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 2,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 2,
+          "planned": 3,
+          "A_hits": 2,
+          "B_hits": 2,
+          "quantum_hits": 1,
+          "both_proxy_hits": 2,
+          "quantum_hits_among_both": 1,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     },
     "lumo/grpo50/fixed_random": {
       "planned": 3,
       "singlepoints": 3,
+      "error_pooling": "Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.",
       "optimized_singlepoints": 3,
       "graph_preserved": 3,
       "models": {
@@ -2967,7 +6347,36 @@
         "hits025": 0,
         "hit_fraction_planned": 0.0
       },
-      "quantum_geometry_mean_absolute_change_eV": 1.1167976865497111
+      "quantum_optimized_equal_target": {
+        "planned_target_cells": 3,
+        "observed_target_cells": 3,
+        "mae_eV_observed_cells": 0.8617427077522503,
+        "missing_target_cells": [],
+        "scope": "Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error."
+      },
+      "quantum_geometry_mean_absolute_change_eV": 1.1167976865497111,
+      "joint_proxy_diagnostic": {
+        "input": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 2,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        },
+        "optimized": {
+          "evaluated": 3,
+          "planned": 3,
+          "A_hits": 0,
+          "B_hits": 0,
+          "quantum_hits": 0,
+          "both_proxy_hits": 0,
+          "quantum_hits_among_both": 0,
+          "scope": "Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector."
+        }
+      }
     }
   },
   "records": [

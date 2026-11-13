@@ -93,9 +93,10 @@
           },
           "valid": 180,
           "raw_matched_domain": 47,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 18.88888888888889,
-          "mean_morgan_distance": 0.9236896282001914,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 18.88888888888889,
+          "raw_mean_morgan_distance": 0.9236896282001914,
           "mean_raw_A_B_disagreement": 0.40034171159936005
         },
         "treatment": {
@@ -131,9 +132,10 @@
           },
           "valid": 147,
           "raw_matched_domain": 38,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 16.0,
-          "mean_morgan_distance": 0.9295672425774923,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 16.0,
+          "raw_mean_morgan_distance": 0.9295672425774923,
           "mean_raw_A_B_disagreement": 0.4813253332067419
         },
         "selections": {
@@ -171,9 +173,10 @@
               },
               "valid": 180,
               "raw_matched_domain": 47,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 18.88888888888889,
-              "mean_morgan_distance": 0.9236896282001914,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 18.88888888888889,
+              "raw_mean_morgan_distance": 0.9236896282001914,
               "mean_raw_A_B_disagreement": 0.40034171159936005
             },
             "treatment": {
@@ -209,12 +212,110 @@
               },
               "valid": 147,
               "raw_matched_domain": 38,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 16.0,
-              "mean_morgan_distance": 0.9295672425774923,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 16.0,
+              "raw_mean_morgan_distance": 0.9295672425774923,
               "mean_raw_A_B_disagreement": 0.4813253332067419
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.2920219804077149,
+              "A_common": 0.24186262142944348,
+              "B_unimol": 0.1374137784271241
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.2359763247190203,
+              "A_common": -0.15043494015829906,
+              "B_unimol": -0.23395118027823314
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.14348966594441726,
+              "A_common": 0.10363739645385739,
+              "B_unimol": 0.05925425500996889
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.3132339270401001,
+              "A_common": -0.2967786343383789,
+              "B_unimol": 0.34433865547180176
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.28545998700823105,
+              "A_common": 0.27324787224905833,
+              "B_unimol": -0.42107033695765905
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.18375448842366537,
+              "A_common": 0.2263827131144206,
+              "B_unimol": -0.6107831396280924
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.32733861231485994,
+              "A_common": 0.23242075864156087,
+              "B_unimol": 0.39501023043314615
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.07705520418802891,
+              "A_common": 0.04413314816157021,
+              "B_unimol": -0.15691925926208494
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.17529425546264643,
+              "A_common": 0.18713736459350588,
+              "B_unimol": 0.49681315347290034
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 3,
+          "A_common": 2,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -250,9 +351,10 @@
             },
             "valid": 180,
             "raw_matched_domain": 47,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 18.88888888888889,
-            "mean_morgan_distance": 0.9236896282001914,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 18.88888888888889,
+            "raw_mean_morgan_distance": 0.9236896282001914,
             "mean_raw_A_B_disagreement": 0.40034171159936005
           },
           "treatment": {
@@ -288,9 +390,10 @@
             },
             "valid": 147,
             "raw_matched_domain": 38,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 16.0,
-            "mean_morgan_distance": 0.9295672425774923,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 16.0,
+            "raw_mean_morgan_distance": 0.9295672425774923,
             "mean_raw_A_B_disagreement": 0.4813253332067419
           }
         }
@@ -330,9 +433,10 @@
           },
           "valid": 180,
           "raw_matched_domain": 47,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 18.88888888888889,
-          "mean_morgan_distance": 0.9236896282001914,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 18.88888888888889,
+          "raw_mean_morgan_distance": 0.9236896282001914,
           "mean_raw_A_B_disagreement": 0.40034171159936005
         },
         "treatment": {
@@ -368,9 +472,10 @@
           },
           "valid": 209,
           "raw_matched_domain": 89,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 20.333333333333332,
-          "mean_morgan_distance": 0.9344819253799476,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 20.333333333333332,
+          "raw_mean_morgan_distance": 0.9344819253799476,
           "mean_raw_A_B_disagreement": 0.36036986512517133
         },
         "selections": {
@@ -408,9 +513,10 @@
               },
               "valid": 180,
               "raw_matched_domain": 47,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 18.88888888888889,
-              "mean_morgan_distance": 0.9236896282001914,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 18.88888888888889,
+              "raw_mean_morgan_distance": 0.9236896282001914,
               "mean_raw_A_B_disagreement": 0.40034171159936005
             },
             "treatment": {
@@ -446,12 +552,110 @@
               },
               "valid": 209,
               "raw_matched_domain": 89,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 20.333333333333332,
-              "mean_morgan_distance": 0.9344819253799476,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 20.333333333333332,
+              "raw_mean_morgan_distance": 0.9344819253799476,
               "mean_raw_A_B_disagreement": 0.36036986512517133
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.3323202530543009,
+              "A_common": 0.3540647427241007,
+              "B_unimol": 0.30159828642527253
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.10605348575969342,
+              "A_common": -0.08970069601708741,
+              "B_unimol": -0.2484849387938114
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.03826804792858274,
+              "A_common": 0.03289117327008917,
+              "B_unimol": 0.059049013275872864
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.4114827583174272,
+              "A_common": -0.4529099913198298,
+              "B_unimol": 0.16867146960865365
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.12997074449811663,
+              "A_common": -0.03711234106881278,
+              "B_unimol": -0.06795994433206232
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.09965830398168307,
+              "A_common": -0.06935505804599862,
+              "B_unimol": -0.2640421648074418
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.06464238073439821,
+              "A_common": 0.009540872548421175,
+              "B_unimol": 0.36426513339814687
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.1645964904632568,
+              "A_common": -0.12388293537521361,
+              "B_unimol": -0.1657826298828125
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.1671401023864746,
+              "A_common": 0.09091801718139653,
+              "B_unimol": 0.24471435546874998
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -487,9 +691,10 @@
             },
             "valid": 180,
             "raw_matched_domain": 47,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 18.88888888888889,
-            "mean_morgan_distance": 0.9236896282001914,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 18.88888888888889,
+            "raw_mean_morgan_distance": 0.9236896282001914,
             "mean_raw_A_B_disagreement": 0.40034171159936005
           },
           "treatment": {
@@ -525,9 +730,10 @@
             },
             "valid": 209,
             "raw_matched_domain": 89,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 20.333333333333332,
-            "mean_morgan_distance": 0.9344819253799476,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 20.333333333333332,
+            "raw_mean_morgan_distance": 0.9344819253799476,
             "mean_raw_A_B_disagreement": 0.36036986512517133
           }
         }
@@ -567,9 +773,10 @@
           },
           "valid": 180,
           "raw_matched_domain": 47,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 18.88888888888889,
-          "mean_morgan_distance": 0.9236896282001914,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 18.88888888888889,
+          "raw_mean_morgan_distance": 0.9236896282001914,
           "mean_raw_A_B_disagreement": 0.40034171159936005
         },
         "treatment": {
@@ -605,9 +812,10 @@
           },
           "valid": 215,
           "raw_matched_domain": 105,
-          "mean_unique_fraction": 0.9957264957264957,
-          "mean_scaffolds_per_pool": 20.333333333333332,
-          "mean_morgan_distance": 0.9346023415331128,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 0.9957264957264957,
+          "raw_mean_scaffolds_per_pool": 20.333333333333332,
+          "raw_mean_morgan_distance": 0.9346023415331128,
           "mean_raw_A_B_disagreement": 0.3058523496938865
         },
         "selections": {
@@ -645,9 +853,10 @@
               },
               "valid": 180,
               "raw_matched_domain": 47,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 18.88888888888889,
-              "mean_morgan_distance": 0.9236896282001914,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 18.88888888888889,
+              "raw_mean_morgan_distance": 0.9236896282001914,
               "mean_raw_A_B_disagreement": 0.40034171159936005
             },
             "treatment": {
@@ -683,12 +892,110 @@
               },
               "valid": 215,
               "raw_matched_domain": 105,
-              "mean_unique_fraction": 0.9957264957264957,
-              "mean_scaffolds_per_pool": 20.333333333333332,
-              "mean_morgan_distance": 0.9346023415331128,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 0.9957264957264957,
+              "raw_mean_scaffolds_per_pool": 20.333333333333332,
+              "raw_mean_morgan_distance": 0.9346023415331128,
               "mean_raw_A_B_disagreement": 0.3058523496938865
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.17446622119610133,
+              "A_common": 0.19021252123319188,
+              "B_unimol": 0.31518811083867004
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.13297105736723425,
+              "A_common": -0.11103409124319918,
+              "B_unimol": -0.08865525882539327
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.20340302778455943,
+              "A_common": 0.22464914315117734,
+              "B_unimol": -0.0381514074452719
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.3275835366266424,
+              "A_common": -0.26561951242967086,
+              "B_unimol": 0.32485405691667035
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.3223008300999233,
+              "A_common": -0.27511084001087005,
+              "B_unimol": -0.1209518381512355
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.3738714911753336,
+              "A_common": -0.40687149944051104,
+              "B_unimol": -0.3330811240488688
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.46145554804484046,
+              "A_common": 0.48673360768636076,
+              "B_unimol": 0.7697777011667888
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.10209250228034128,
+              "A_common": 0.12204982330534198,
+              "B_unimol": -0.01500078631930879
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.7501736618499755,
+              "A_common": 0.732931803161621,
+              "B_unimol": 0.7409504882965088
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 4,
+          "B_unimol": 5
         },
         "retained_geometry": {
           "baseline": {
@@ -724,9 +1031,10 @@
             },
             "valid": 180,
             "raw_matched_domain": 47,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 18.88888888888889,
-            "mean_morgan_distance": 0.9236896282001914,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 18.88888888888889,
+            "raw_mean_morgan_distance": 0.9236896282001914,
             "mean_raw_A_B_disagreement": 0.40034171159936005
           },
           "treatment": {
@@ -762,9 +1070,10 @@
             },
             "valid": 215,
             "raw_matched_domain": 105,
-            "mean_unique_fraction": 0.9957264957264957,
-            "mean_scaffolds_per_pool": 20.333333333333332,
-            "mean_morgan_distance": 0.9346023415331128,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 0.9957264957264957,
+            "raw_mean_scaffolds_per_pool": 20.333333333333332,
+            "raw_mean_morgan_distance": 0.9346023415331128,
             "mean_raw_A_B_disagreement": 0.3058523496938865
           }
         }
@@ -806,9 +1115,10 @@
           },
           "valid": 190,
           "raw_matched_domain": 61,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 20.77777777777778,
-          "mean_morgan_distance": 0.9262382111472787,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 20.77777777777778,
+          "raw_mean_morgan_distance": 0.9262382111472787,
           "mean_raw_A_B_disagreement": 0.40678981131640635
         },
         "treatment": {
@@ -844,9 +1154,10 @@
           },
           "valid": 141,
           "raw_matched_domain": 35,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 15.333333333333334,
-          "mean_morgan_distance": 0.9272636237452484,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 15.333333333333334,
+          "raw_mean_morgan_distance": 0.9272636237452484,
           "mean_raw_A_B_disagreement": 0.3190548559029897
         },
         "selections": {
@@ -884,9 +1195,10 @@
               },
               "valid": 190,
               "raw_matched_domain": 61,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 20.77777777777778,
-              "mean_morgan_distance": 0.9262382111472787,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 20.77777777777778,
+              "raw_mean_morgan_distance": 0.9262382111472787,
               "mean_raw_A_B_disagreement": 0.40678981131640635
             },
             "treatment": {
@@ -922,12 +1234,110 @@
               },
               "valid": 141,
               "raw_matched_domain": 35,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 15.333333333333334,
-              "mean_morgan_distance": 0.9272636237452484,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 15.333333333333334,
+              "raw_mean_morgan_distance": 0.9272636237452484,
               "mean_raw_A_B_disagreement": 0.3190548559029897
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.11696047821894551,
+              "A_common": -0.14680808036509418,
+              "B_unimol": -0.15629479229805687
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.18526874529457094,
+              "A_common": -0.26202885853385927,
+              "B_unimol": 0.16288290268039696
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.05860214233398442,
+              "A_common": -0.14682480494181327,
+              "B_unimol": -0.14215614000956212
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.2618125979576109,
+              "A_common": 0.20914860412216174,
+              "B_unimol": 0.5166666094932555
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.6102894999479115,
+              "A_common": 0.6576545317295622,
+              "B_unimol": 0.2514727404131206
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.11867292004458152,
+              "A_common": 0.1989406494064334,
+              "B_unimol": -0.20766021303876248
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.2844418280208112,
+              "A_common": -0.5256328926062586,
+              "B_unimol": -0.06138240847826015
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.1922161538887024,
+              "A_common": 0.12606308052698767,
+              "B_unimol": 0.23180700530370074
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.18748290262948908,
+              "A_common": -0.2743257991413841,
+              "B_unimol": 0.16685407153719933
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -963,9 +1373,10 @@
             },
             "valid": 190,
             "raw_matched_domain": 61,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 20.77777777777778,
-            "mean_morgan_distance": 0.9262382111472787,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 20.77777777777778,
+            "raw_mean_morgan_distance": 0.9262382111472787,
             "mean_raw_A_B_disagreement": 0.40678981131640635
           },
           "treatment": {
@@ -1001,9 +1412,10 @@
             },
             "valid": 141,
             "raw_matched_domain": 35,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 15.333333333333334,
-            "mean_morgan_distance": 0.9272636237452484,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 15.333333333333334,
+            "raw_mean_morgan_distance": 0.9272636237452484,
             "mean_raw_A_B_disagreement": 0.3190548559029897
           }
         }
@@ -1043,9 +1455,10 @@
           },
           "valid": 190,
           "raw_matched_domain": 61,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 20.77777777777778,
-          "mean_morgan_distance": 0.9262382111472787,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 20.77777777777778,
+          "raw_mean_morgan_distance": 0.9262382111472787,
           "mean_raw_A_B_disagreement": 0.40678981131640635
         },
         "treatment": {
@@ -1081,9 +1494,10 @@
           },
           "valid": 218,
           "raw_matched_domain": 84,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 22.0,
-          "mean_morgan_distance": 0.9364818774757738,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 22.0,
+          "raw_mean_morgan_distance": 0.9364818774757738,
           "mean_raw_A_B_disagreement": 0.24467587850961628
         },
         "selections": {
@@ -1121,9 +1535,10 @@
               },
               "valid": 190,
               "raw_matched_domain": 61,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 20.77777777777778,
-              "mean_morgan_distance": 0.9262382111472787,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 20.77777777777778,
+              "raw_mean_morgan_distance": 0.9262382111472787,
               "mean_raw_A_B_disagreement": 0.40678981131640635
             },
             "treatment": {
@@ -1159,12 +1574,110 @@
               },
               "valid": 218,
               "raw_matched_domain": 84,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 22.0,
-              "mean_morgan_distance": 0.9364818774757738,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 22.0,
+              "raw_mean_morgan_distance": 0.9364818774757738,
               "mean_raw_A_B_disagreement": 0.24467587850961628
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.3799446429032026,
+              "A_common": 0.3379481780806455,
+              "B_unimol": 0.4602530892886538
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.07003189169359203,
+              "A_common": -0.1409953310389518,
+              "B_unimol": 0.3496469661941529
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.30780269894166423,
+              "A_common": -0.44460600625818425,
+              "B_unimol": -0.01955619628212657
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.012380534134778243,
+              "A_common": -0.07909177894418884,
+              "B_unimol": 0.27358380819667477
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.14884366935979765,
+              "A_common": -0.1872481670924595,
+              "B_unimol": -0.10557912274224424
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.26618802942641573,
+              "A_common": -0.31957140246200566,
+              "B_unimol": -0.07008422866725939
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.12538405887438198,
+              "A_common": -0.16369005678335835,
+              "B_unimol": 0.07453358021391754
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.4789298450081688,
+              "A_common": 0.29690159420626494,
+              "B_unimol": 0.3677553800001598
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.28670150461128785,
+              "A_common": -0.42956329078666744,
+              "B_unimol": 0.21108935401129325
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 6,
+          "A_common": 7,
+          "B_unimol": 3
         },
         "retained_geometry": {
           "baseline": {
@@ -1200,9 +1713,10 @@
             },
             "valid": 190,
             "raw_matched_domain": 61,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 20.77777777777778,
-            "mean_morgan_distance": 0.9262382111472787,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 20.77777777777778,
+            "raw_mean_morgan_distance": 0.9262382111472787,
             "mean_raw_A_B_disagreement": 0.40678981131640635
           },
           "treatment": {
@@ -1238,9 +1752,10 @@
             },
             "valid": 218,
             "raw_matched_domain": 84,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 22.0,
-            "mean_morgan_distance": 0.9364818774757738,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 22.0,
+            "raw_mean_morgan_distance": 0.9364818774757738,
             "mean_raw_A_B_disagreement": 0.24467587850961628
           }
         }
@@ -1280,9 +1795,10 @@
           },
           "valid": 190,
           "raw_matched_domain": 61,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 20.77777777777778,
-          "mean_morgan_distance": 0.9262382111472787,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 20.77777777777778,
+          "raw_mean_morgan_distance": 0.9262382111472787,
           "mean_raw_A_B_disagreement": 0.40678981131640635
         },
         "treatment": {
@@ -1318,9 +1834,10 @@
           },
           "valid": 244,
           "raw_matched_domain": 126,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 23.666666666666668,
-          "mean_morgan_distance": 0.9357523882184388,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 23.666666666666668,
+          "raw_mean_morgan_distance": 0.9357523882184388,
           "mean_raw_A_B_disagreement": 0.29931394818734125
         },
         "selections": {
@@ -1358,9 +1875,10 @@
               },
               "valid": 190,
               "raw_matched_domain": 61,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 20.77777777777778,
-              "mean_morgan_distance": 0.9262382111472787,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 20.77777777777778,
+              "raw_mean_morgan_distance": 0.9262382111472787,
               "mean_raw_A_B_disagreement": 0.40678981131640635
             },
             "treatment": {
@@ -1396,12 +1914,110 @@
               },
               "valid": 244,
               "raw_matched_domain": 126,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 23.666666666666668,
-              "mean_morgan_distance": 0.9357523882184388,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 23.666666666666668,
+              "raw_mean_morgan_distance": 0.9357523882184388,
               "mean_raw_A_B_disagreement": 0.29931394818734125
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.49239085767404955,
+              "A_common": 0.5087294494213335,
+              "B_unimol": 0.6218749698199648
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.1874482424067856,
+              "A_common": 0.1381466613934339,
+              "B_unimol": 0.6784374017355442
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.18837766929718192,
+              "A_common": 0.03687789470360836,
+              "B_unimol": 0.22778211649821367
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.3949433429367202,
+              "A_common": 0.30199274558544165,
+              "B_unimol": 0.5200525642449514
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.6467939674679893,
+              "A_common": 0.6650785646093916,
+              "B_unimol": 0.43236912924394166
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.33470232407942657,
+              "A_common": -0.33762401263609776,
+              "B_unimol": -0.17551983607847044
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.6273406608316303,
+              "A_common": -0.7287749603772165,
+              "B_unimol": -0.36396898183107385
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": 0.3623774059483409,
+              "A_common": 0.3175045799727738,
+              "B_unimol": 0.3856901448794206
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 32,
+            "mae_change": {
+              "A_historical": -0.6576299826128822,
+              "A_common": -0.7147055248462131,
+              "B_unimol": -0.16644628770174308
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 3,
+          "A_common": 3,
+          "B_unimol": 3
         },
         "retained_geometry": {
           "baseline": {
@@ -1437,9 +2053,10 @@
             },
             "valid": 190,
             "raw_matched_domain": 61,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 20.77777777777778,
-            "mean_morgan_distance": 0.9262382111472787,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 20.77777777777778,
+            "raw_mean_morgan_distance": 0.9262382111472787,
             "mean_raw_A_B_disagreement": 0.40678981131640635
           },
           "treatment": {
@@ -1475,9 +2092,10 @@
             },
             "valid": 244,
             "raw_matched_domain": 126,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 23.666666666666668,
-            "mean_morgan_distance": 0.9357523882184388,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 23.666666666666668,
+            "raw_mean_morgan_distance": 0.9357523882184388,
             "mean_raw_A_B_disagreement": 0.29931394818734125
           }
         }
@@ -1519,9 +2137,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -1557,9 +2176,10 @@
           },
           "valid": 361,
           "raw_matched_domain": 103,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.888888888888886,
-          "mean_morgan_distance": 0.9265236417225281,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.888888888888886,
+          "raw_mean_morgan_distance": 0.9265236417225281,
           "mean_raw_A_B_disagreement": 0.48029174420726684
         },
         "selections": {
@@ -1597,9 +2217,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -1635,12 +2256,110 @@
               },
               "valid": 361,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.888888888888886,
-              "mean_morgan_distance": 0.9265236417225281,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.888888888888886,
+              "raw_mean_morgan_distance": 0.9265236417225281,
               "mean_raw_A_B_disagreement": 0.48029174420726684
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.32162008360226957,
+              "A_common": 0.2842265673764548,
+              "B_unimol": 0.28861179956330196
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.3862200262778148,
+              "A_common": 0.3661101751708986,
+              "B_unimol": -0.038663720735822193
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.10120912292084139,
+              "A_common": 0.10863309662360654,
+              "B_unimol": 0.09388009318066898
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.11160771373324918,
+              "A_common": -0.15387335283915193,
+              "B_unimol": -0.11542380784606932
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.13239999974725192,
+              "A_common": -0.1268935261598244,
+              "B_unimol": -0.1546693134256999
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.0010831316959156734,
+              "A_common": 0.004505259552001983,
+              "B_unimol": -0.1339680390642951
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.23018598556518555,
+              "A_common": 0.19731569290161133,
+              "B_unimol": 0.559134870300293
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.26740497616004943,
+              "A_common": -0.2529444033260345,
+              "B_unimol": -0.09691429431533816
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.2358795335943049,
+              "A_common": 0.24916246010200127,
+              "B_unimol": -0.08773209878988203
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 3,
+          "B_unimol": 6
         },
         "retained_geometry": {
           "baseline": {
@@ -1676,9 +2395,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -1714,9 +2434,10 @@
             },
             "valid": 361,
             "raw_matched_domain": 103,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.888888888888886,
-            "mean_morgan_distance": 0.9265236417225281,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.888888888888886,
+            "raw_mean_morgan_distance": 0.9265236417225281,
             "mean_raw_A_B_disagreement": 0.48029174420726684
           }
         }
@@ -1756,9 +2477,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -1794,9 +2516,10 @@
           },
           "valid": 376,
           "raw_matched_domain": 121,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.888888888888886,
-          "mean_morgan_distance": 0.9213670604346453,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.888888888888886,
+          "raw_mean_morgan_distance": 0.9213670604346453,
           "mean_raw_A_B_disagreement": 0.36969901576287856
         },
         "selections": {
@@ -1834,9 +2557,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -1872,12 +2596,110 @@
               },
               "valid": 376,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.888888888888886,
-              "mean_morgan_distance": 0.9213670604346453,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.888888888888886,
+              "raw_mean_morgan_distance": 0.9213670604346453,
               "mean_raw_A_B_disagreement": 0.36969901576287856
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.20584658275604262,
+              "A_common": 0.1620798855082196,
+              "B_unimol": 0.0443400304879083
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.11803259612145367,
+              "A_common": 0.18846994748400414,
+              "B_unimol": 0.11086415086919621
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.01775389406597805,
+              "A_common": -0.004666122480119994,
+              "B_unimol": 0.08806737189277769
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.24958949414956444,
+              "A_common": -0.19613972319631856,
+              "B_unimol": -0.2608518983875621
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.19166246247355145,
+              "A_common": -0.13814959124755855,
+              "B_unimol": -0.05148770014444992
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.03378530544026692,
+              "A_common": -0.008190447072346951,
+              "B_unimol": -0.14929965337117507
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.4674979438972473,
+              "A_common": 0.4764368818092346,
+              "B_unimol": 0.7424480905723572
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.10803898460251948,
+              "A_common": -0.10095711624281745,
+              "B_unimol": -0.03618452209200179
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.1429779627003389,
+              "A_common": 0.18754196012125834,
+              "B_unimol": 0.15974106437096225
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -1913,9 +2735,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -1951,9 +2774,10 @@
             },
             "valid": 376,
             "raw_matched_domain": 121,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.888888888888886,
-            "mean_morgan_distance": 0.9213670604346453,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.888888888888886,
+            "raw_mean_morgan_distance": 0.9213670604346453,
             "mean_raw_A_B_disagreement": 0.36969901576287856
           }
         }
@@ -1993,9 +2817,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -2031,9 +2856,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 103,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.44444444444444,
-          "mean_morgan_distance": 0.9214375284953795,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.44444444444444,
+          "raw_mean_morgan_distance": 0.9214375284953795,
           "mean_raw_A_B_disagreement": 0.3715878579487851
         },
         "selections": {
@@ -2071,9 +2897,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -2109,12 +2936,110 @@
               },
               "valid": 365,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.44444444444444,
-              "mean_morgan_distance": 0.9214375284953795,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.44444444444444,
+              "raw_mean_morgan_distance": 0.9214375284953795,
               "mean_raw_A_B_disagreement": 0.3715878579487851
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.19791615172877486,
+              "A_common": 0.18530558619643733,
+              "B_unimol": 0.09468887512361163
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.19324011293956211,
+              "A_common": -0.160380053781782,
+              "B_unimol": -0.07535992528915414
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.08125782916841051,
+              "A_common": -0.0876212551044282,
+              "B_unimol": 0.032714792805626336
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.21814599288940428,
+              "A_common": -0.16782615588717986,
+              "B_unimol": 0.07845268666585292
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.43859417623392744,
+              "A_common": -0.4039030531056722,
+              "B_unimol": -0.35101854584757486
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.07083898128733923,
+              "A_common": 0.062468497664507794,
+              "B_unimol": -0.24339464599429855
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.08308926382064818,
+              "A_common": 0.12900516519399785,
+              "B_unimol": 0.2145658320969802
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.18072473113441467,
+              "A_common": -0.16597602982139587,
+              "B_unimol": -0.17161312471389772
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.13735457538311302,
+              "A_common": 0.09188331119243909,
+              "B_unimol": 0.17607325716458833
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -2150,9 +3075,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -2188,9 +3114,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 103,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.44444444444444,
-            "mean_morgan_distance": 0.9214375284953795,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.44444444444444,
+            "raw_mean_morgan_distance": 0.9214375284953795,
             "mean_raw_A_B_disagreement": 0.3715878579487851
           }
         }
@@ -2230,9 +3157,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -2268,9 +3196,10 @@
           },
           "valid": 373,
           "raw_matched_domain": 104,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 38.77777777777778,
-          "mean_morgan_distance": 0.9241883865456386,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 38.77777777777778,
+          "raw_mean_morgan_distance": 0.9241883865456386,
           "mean_raw_A_B_disagreement": 0.38260248032791944
         },
         "selections": {
@@ -2308,9 +3237,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -2346,12 +3276,110 @@
               },
               "valid": 373,
               "raw_matched_domain": 104,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.77777777777778,
-              "mean_morgan_distance": 0.9241883865456386,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.77777777777778,
+              "raw_mean_morgan_distance": 0.9241883865456386,
               "mean_raw_A_B_disagreement": 0.38260248032791944
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.04270714771155171,
+              "A_common": 0.0405687064523409,
+              "B_unimol": 0.052312096781104545
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.08070364929925844,
+              "A_common": 0.17733399087815072,
+              "B_unimol": 0.03948390856424988
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.1645120299975903,
+              "A_common": 0.1570277073441544,
+              "B_unimol": 0.14394640800277902
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.18730354437594943,
+              "A_common": -0.15770538915506993,
+              "B_unimol": -0.15680402253723147
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.5019349297281901,
+              "A_common": -0.41910303032430013,
+              "B_unimol": -0.3539103546549479
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.07123697598775236,
+              "A_common": 0.07681035305023198,
+              "B_unimol": -0.10204707773590083
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.20125063121942377,
+              "A_common": 0.22816811172485352,
+              "B_unimol": 0.22564534491905797
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.013251336994904772,
+              "A_common": 0.022004429471676135,
+              "B_unimol": 0.008499722229884266
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.08295333459218346,
+              "A_common": 0.16077058568807745,
+              "B_unimol": -0.04972932757646614
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 2,
+          "A_common": 2,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -2387,9 +3415,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -2425,9 +3454,10 @@
             },
             "valid": 373,
             "raw_matched_domain": 104,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 38.77777777777778,
-            "mean_morgan_distance": 0.9241883865456386,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 38.77777777777778,
+            "raw_mean_morgan_distance": 0.9241883865456386,
             "mean_raw_A_B_disagreement": 0.38260248032791944
           }
         }
@@ -2467,9 +3497,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -2505,9 +3536,10 @@
           },
           "valid": 369,
           "raw_matched_domain": 123,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.666666666666664,
-          "mean_morgan_distance": 0.9276375321636886,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.666666666666664,
+          "raw_mean_morgan_distance": 0.9276375321636886,
           "mean_raw_A_B_disagreement": 0.4060657555414614
         },
         "selections": {
@@ -2545,9 +3577,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -2583,12 +3616,110 @@
               },
               "valid": 369,
               "raw_matched_domain": 123,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.666666666666664,
-              "mean_morgan_distance": 0.9276375321636886,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.666666666666664,
+              "raw_mean_morgan_distance": 0.9276375321636886,
               "mean_raw_A_B_disagreement": 0.4060657555414614
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0488269593980577,
+              "A_common": 0.009303728739420647,
+              "B_unimol": 0.08793741848415787
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.23467807795933338,
+              "A_common": 0.26856165630885553,
+              "B_unimol": -0.01108024443490152
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.3951006164187477,
+              "A_common": 0.37954392901829326,
+              "B_unimol": 0.03840522419702436
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.3510407935926649,
+              "A_common": -0.3423731341807047,
+              "B_unimol": -0.2617800365575154
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.25401189022318527,
+              "A_common": -0.20407916801198323,
+              "B_unimol": -0.14631076846567792
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.01112190288289383,
+              "A_common": -0.014399248341878224,
+              "B_unimol": -0.10559406666056309
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.24790573720084297,
+              "A_common": 0.2826455160946316,
+              "B_unimol": 0.49281939481099446
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.007985918286187332,
+              "A_common": 0.06756938023022241,
+              "B_unimol": 0.18776615426472254
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.005767607834759936,
+              "A_common": 0.017400333534344226,
+              "B_unimol": 0.009744167497039324
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 3,
+          "A_common": 3,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -2624,9 +3755,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -2662,9 +3794,10 @@
             },
             "valid": 369,
             "raw_matched_domain": 123,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.666666666666664,
-            "mean_morgan_distance": 0.9276375321636886,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.666666666666664,
+            "raw_mean_morgan_distance": 0.9276375321636886,
             "mean_raw_A_B_disagreement": 0.4060657555414614
           }
         }
@@ -2704,9 +3837,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -2742,9 +3876,10 @@
           },
           "valid": 407,
           "raw_matched_domain": 155,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 41.0,
-          "mean_morgan_distance": 0.9268424224811687,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 41.0,
+          "raw_mean_morgan_distance": 0.9268424224811687,
           "mean_raw_A_B_disagreement": 0.3545211720066241
         },
         "selections": {
@@ -2782,9 +3917,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -2820,12 +3956,110 @@
               },
               "valid": 407,
               "raw_matched_domain": 155,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 41.0,
-              "mean_morgan_distance": 0.9268424224811687,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 41.0,
+              "raw_mean_morgan_distance": 0.9268424224811687,
               "mean_raw_A_B_disagreement": 0.3545211720066241
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.09886103950818392,
+              "A_common": 0.13261896454175326,
+              "B_unimol": 0.1878348648632897
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.14020394367762973,
+              "A_common": -0.10035050179254434,
+              "B_unimol": -0.12620408712599007
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.20393581542726547,
+              "A_common": 0.15072435728163947,
+              "B_unimol": 0.16815817002917088
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.2772297165138701,
+              "A_common": -0.2808085959644806,
+              "B_unimol": -0.0970297786419208
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.22945405782136463,
+              "A_common": -0.19407636411685036,
+              "B_unimol": -0.032304117208571737
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.08308641580061477,
+              "A_common": -0.0705749971493807,
+              "B_unimol": -0.24518853245683142
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.15370593603134153,
+              "A_common": 0.1311793249511719,
+              "B_unimol": 0.46625761725930603
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.04496731649549379,
+              "A_common": 0.07711745117338076,
+              "B_unimol": 0.1407542425627457
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.16039533810933426,
+              "A_common": 0.17481187030433587,
+              "B_unimol": 0.19791053306840423
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 4,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -2861,9 +4095,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -2899,9 +4134,10 @@
             },
             "valid": 407,
             "raw_matched_domain": 155,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 41.0,
-            "mean_morgan_distance": 0.9268424224811687,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 41.0,
+            "raw_mean_morgan_distance": 0.9268424224811687,
             "mean_raw_A_B_disagreement": 0.3545211720066241
           }
         }
@@ -2941,9 +4177,10 @@
           },
           "valid": 365,
           "raw_matched_domain": 108,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.44444444444444,
-          "mean_morgan_distance": 0.9237316424306348,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.44444444444444,
+          "raw_mean_morgan_distance": 0.9237316424306348,
           "mean_raw_A_B_disagreement": 0.37548043207193293
         },
         "treatment": {
@@ -2979,9 +4216,10 @@
           },
           "valid": 383,
           "raw_matched_domain": 133,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.666666666666664,
-          "mean_morgan_distance": 0.9225607747826865,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.666666666666664,
+          "raw_mean_morgan_distance": 0.9225607747826865,
           "mean_raw_A_B_disagreement": 0.3855547793780717
         },
         "selections": {
@@ -3019,9 +4257,10 @@
               },
               "valid": 365,
               "raw_matched_domain": 108,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.44444444444444,
-              "mean_morgan_distance": 0.9237316424306348,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.44444444444444,
+              "raw_mean_morgan_distance": 0.9237316424306348,
               "mean_raw_A_B_disagreement": 0.37548043207193293
             },
             "treatment": {
@@ -3057,12 +4296,110 @@
               },
               "valid": 383,
               "raw_matched_domain": 133,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9225607747826865,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9225607747826865,
               "mean_raw_A_B_disagreement": 0.3855547793780717
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -7.040765,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.15632457895188112,
+              "A_common": 0.1602064421372188,
+              "B_unimol": 0.1970477375115287
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.41261145891534723,
+              "A_common": 0.4084409206978936,
+              "B_unimol": 0.15850639234924335
+            }
+          },
+          {
+            "target": -7.040765,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.06070187231517998,
+              "A_common": -0.05720804104396293,
+              "B_unimol": 0.08042935194106332
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.1988639469983381,
+              "A_common": -0.15594840788689213,
+              "B_unimol": -0.14390924114061437
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.25894870946321036,
+              "A_common": -0.23467314719354537,
+              "B_unimol": -0.14731440007382351
+            }
+          },
+          {
+            "target": -6.56081,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.22003803461710614,
+              "A_common": 0.2182416466861301,
+              "B_unimol": -0.11096937969801157
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.1778687656429836,
+              "A_common": 0.2109370902143206,
+              "B_unimol": 0.5516041252463204
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.15493349914810872,
+              "A_common": -0.1383524878250469,
+              "B_unimol": -0.15477711268858474
+            }
+          },
+          {
+            "target": -6.148085,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.12769772504170734,
+              "A_common": -0.128428825869438,
+              "B_unimol": -0.053605278237171705
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 5
         },
         "retained_geometry": {
           "baseline": {
@@ -3098,9 +4435,10 @@
             },
             "valid": 365,
             "raw_matched_domain": 108,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.44444444444444,
-            "mean_morgan_distance": 0.9237316424306348,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.44444444444444,
+            "raw_mean_morgan_distance": 0.9237316424306348,
             "mean_raw_A_B_disagreement": 0.37548043207193293
           },
           "treatment": {
@@ -3136,9 +4474,10 @@
             },
             "valid": 383,
             "raw_matched_domain": 133,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.666666666666664,
-            "mean_morgan_distance": 0.9225607747826865,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.666666666666664,
+            "raw_mean_morgan_distance": 0.9225607747826865,
             "mean_raw_A_B_disagreement": 0.3855547793780717
           }
         }
@@ -3180,9 +4519,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -3218,9 +4558,10 @@
           },
           "valid": 381,
           "raw_matched_domain": 125,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 38.333333333333336,
-          "mean_morgan_distance": 0.9252870690584756,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 38.333333333333336,
+          "raw_mean_morgan_distance": 0.9252870690584756,
           "mean_raw_A_B_disagreement": 0.38147875231985334
         },
         "selections": {
@@ -3258,9 +4599,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -3296,12 +4638,110 @@
               },
               "valid": 381,
               "raw_matched_domain": 125,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.333333333333336,
-              "mean_morgan_distance": 0.9252870690584756,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.333333333333336,
+              "raw_mean_morgan_distance": 0.9252870690584756,
               "mean_raw_A_B_disagreement": 0.38147875231985334
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.08743123499215599,
+              "A_common": 0.06755668708733154,
+              "B_unimol": 0.1847793981736804
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.2129053964816673,
+              "A_common": -0.2385106153658033,
+              "B_unimol": -0.1813448652306625
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.005743791005321852,
+              "A_common": -0.030277810034888053,
+              "B_unimol": 0.1847483880056654
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.03868362107153045,
+              "A_common": -0.09048908554981261,
+              "B_unimol": -0.1960168179446381
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0029212080649174688,
+              "A_common": 0.036153174036632874,
+              "B_unimol": 0.13704019795721223
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.12731814221916915,
+              "A_common": -0.10284863806361755,
+              "B_unimol": -0.07990546659439712
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.42723523607979563,
+              "A_common": -0.3976830594134234,
+              "B_unimol": -0.4005309321887449
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.3258275141681325,
+              "A_common": 0.2886855750265027,
+              "B_unimol": 0.3029024599840183
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0046965801361102955,
+              "A_common": -0.00811688263473953,
+              "B_unimol": -0.0912676441565714
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 6,
+          "B_unimol": 5
         },
         "retained_geometry": {
           "baseline": {
@@ -3337,9 +4777,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -3375,9 +4816,10 @@
             },
             "valid": 381,
             "raw_matched_domain": 125,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 38.333333333333336,
-            "mean_morgan_distance": 0.9252870690584756,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 38.333333333333336,
+            "raw_mean_morgan_distance": 0.9252870690584756,
             "mean_raw_A_B_disagreement": 0.38147875231985334
           }
         }
@@ -3417,9 +4859,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -3455,9 +4898,10 @@
           },
           "valid": 373,
           "raw_matched_domain": 119,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 38.666666666666664,
-          "mean_morgan_distance": 0.9256267375159353,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 38.666666666666664,
+          "raw_mean_morgan_distance": 0.9256267375159353,
           "mean_raw_A_B_disagreement": 0.2922210856894943
         },
         "selections": {
@@ -3495,9 +4939,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -3533,12 +4978,110 @@
               },
               "valid": 373,
               "raw_matched_domain": 119,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.666666666666664,
-              "mean_morgan_distance": 0.9256267375159353,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.666666666666664,
+              "raw_mean_morgan_distance": 0.9256267375159353,
               "mean_raw_A_B_disagreement": 0.2922210856894943
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.16782961506154803,
+              "A_common": 0.18791978778839113,
+              "B_unimol": 0.2268372131535742
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.01106518596628736,
+              "A_common": -0.001476144409656599,
+              "B_unimol": -0.062167807671410724
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.10002987877946412,
+              "A_common": -0.1606232613824604,
+              "B_unimol": 0.18341968369589923
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.39498583499090995,
+              "A_common": -0.4247869993455068,
+              "B_unimol": -0.1970271399538857
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.24640647986308106,
+              "A_common": 0.24159305194561287,
+              "B_unimol": 0.24512116682309337
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.1866538669154948,
+              "A_common": -0.178776149461795,
+              "B_unimol": 0.047467511539067586
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.021393227753396138,
+              "A_common": 0.09630117844372199,
+              "B_unimol": -0.07086172940325286
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.3306899460037549,
+              "A_common": 0.3529525121095446,
+              "B_unimol": 0.17090429497665827
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.33762994206978736,
+              "A_common": -0.3290051910180313,
+              "B_unimol": -0.02168152058381312
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -3574,9 +5117,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -3612,9 +5156,10 @@
             },
             "valid": 373,
             "raw_matched_domain": 119,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 38.666666666666664,
-            "mean_morgan_distance": 0.9256267375159353,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 38.666666666666664,
+            "raw_mean_morgan_distance": 0.9256267375159353,
             "mean_raw_A_B_disagreement": 0.2922210856894943
           }
         }
@@ -3654,9 +5199,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -3692,9 +5238,10 @@
           },
           "valid": 390,
           "raw_matched_domain": 112,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 40.111111111111114,
-          "mean_morgan_distance": 0.9279796544755408,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 40.111111111111114,
+          "raw_mean_morgan_distance": 0.9279796544755408,
           "mean_raw_A_B_disagreement": 0.26614749759631834
         },
         "selections": {
@@ -3732,9 +5279,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -3770,12 +5318,110 @@
               },
               "valid": 390,
               "raw_matched_domain": 112,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.111111111111114,
-              "mean_morgan_distance": 0.9279796544755408,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.111111111111114,
+              "raw_mean_morgan_distance": 0.9279796544755408,
               "mean_raw_A_B_disagreement": 0.26614749759631834
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.00885231546121168,
+              "A_common": 0.028723621740937233,
+              "B_unimol": 0.09506071502516
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.022825629345689546,
+              "A_common": -0.10781242649888989,
+              "B_unimol": 0.19072847898020062
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.2203106100318284,
+              "A_common": 0.15967929275904602,
+              "B_unimol": 0.37867179463624956
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.235612792855331,
+              "A_common": 0.2513675550053234,
+              "B_unimol": 0.4359359999304726
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.018998951826209032,
+              "A_common": 0.0008396051011766437,
+              "B_unimol": 0.031230907026699395
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.020959658756438015,
+              "A_common": 0.05085661373565331,
+              "B_unimol": 0.13307340530649803
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.3103096789768651,
+              "A_common": -0.27194155318602387,
+              "B_unimol": -0.11559197864659643
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.5831247468219485,
+              "A_common": 0.5428563387354594,
+              "B_unimol": 0.45847456813781995
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.3316093562321053,
+              "A_common": -0.3049181998473437,
+              "B_unimol": -0.2168738104817317
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 3,
+          "B_unimol": 2
         },
         "retained_geometry": {
           "baseline": {
@@ -3811,9 +5457,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -3849,9 +5496,10 @@
             },
             "valid": 390,
             "raw_matched_domain": 112,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 40.111111111111114,
-            "mean_morgan_distance": 0.9279796544755408,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 40.111111111111114,
+            "raw_mean_morgan_distance": 0.9279796544755408,
             "mean_raw_A_B_disagreement": 0.26614749759631834
           }
         }
@@ -3891,9 +5539,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -3929,9 +5578,10 @@
           },
           "valid": 383,
           "raw_matched_domain": 115,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 40.22222222222222,
-          "mean_morgan_distance": 0.9233260703069378,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 40.22222222222222,
+          "raw_mean_morgan_distance": 0.9233260703069378,
           "mean_raw_A_B_disagreement": 0.41957014261068803
         },
         "selections": {
@@ -3969,9 +5619,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -4007,12 +5658,110 @@
               },
               "valid": 383,
               "raw_matched_domain": 115,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.22222222222222,
-              "mean_morgan_distance": 0.9233260703069378,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.22222222222222,
+              "raw_mean_morgan_distance": 0.9233260703069378,
               "mean_raw_A_B_disagreement": 0.41957014261068803
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.01964943162304722,
+              "A_common": -0.02172121207420641,
+              "B_unimol": 0.0022580554792616114
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.03165349005952722,
+              "A_common": -0.006313678483433227,
+              "B_unimol": 0.11113698400436889
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.05409995880366458,
+              "A_common": 0.03656027250152849,
+              "B_unimol": 0.19473855158719156
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.06718994344217466,
+              "A_common": 0.030792979654244323,
+              "B_unimol": 0.11571823015230043
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.1987498450414339,
+              "A_common": 0.20132647187868735,
+              "B_unimol": 0.030450375816027275
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0033643254890441954,
+              "A_common": 0.07763604247474676,
+              "B_unimol": -0.06260253586832709
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.5798426313901742,
+              "A_common": -0.5494714790887829,
+              "B_unimol": -0.3201999362513226
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.8246213184293112,
+              "A_common": 0.7283822436788349,
+              "B_unimol": 0.40556268425411657
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.1587304420548219,
+              "A_common": -0.18098052146398103,
+              "B_unimol": -0.1476705193871719
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 3,
+          "A_common": 4,
+          "B_unimol": 3
         },
         "retained_geometry": {
           "baseline": {
@@ -4048,9 +5797,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -4086,9 +5836,10 @@
             },
             "valid": 383,
             "raw_matched_domain": 115,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 40.22222222222222,
-            "mean_morgan_distance": 0.9233260703069378,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 40.22222222222222,
+            "raw_mean_morgan_distance": 0.9233260703069378,
             "mean_raw_A_B_disagreement": 0.41957014261068803
           }
         }
@@ -4128,9 +5879,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -4166,9 +5918,10 @@
           },
           "valid": 407,
           "raw_matched_domain": 149,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 42.0,
-          "mean_morgan_distance": 0.925556053700038,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 42.0,
+          "raw_mean_morgan_distance": 0.925556053700038,
           "mean_raw_A_B_disagreement": 0.30650508250600744
         },
         "selections": {
@@ -4206,9 +5959,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -4244,12 +5998,110 @@
               },
               "valid": 407,
               "raw_matched_domain": 149,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 42.0,
-              "mean_morgan_distance": 0.925556053700038,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 42.0,
+              "raw_mean_morgan_distance": 0.925556053700038,
               "mean_raw_A_B_disagreement": 0.30650508250600744
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.07219492907426206,
+              "A_common": 0.04630543645174601,
+              "B_unimol": 0.04145207679048257
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.2870951869409425,
+              "A_common": -0.357403060839971,
+              "B_unimol": -0.1448858178833553
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0792027324560951,
+              "A_common": 0.07170673802847016,
+              "B_unimol": 0.19372398900424737
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.024579061071411723,
+              "A_common": -0.031441758933668296,
+              "B_unimol": 0.05561495896307356
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.13720801732126886,
+              "A_common": -0.1208410536118747,
+              "B_unimol": -0.061657328555107194
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.10460061120906072,
+              "A_common": 0.12213648271403932,
+              "B_unimol": 0.1406948722986162
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.1824177285035451,
+              "A_common": -0.12705362122281372,
+              "B_unimol": 0.07357708215713488
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.23557065814607647,
+              "A_common": 0.19658112143891437,
+              "B_unimol": 0.26812815511673227
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.004858590719638789,
+              "A_common": -0.01937323722586659,
+              "B_unimol": 0.0980160083591427
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 2
         },
         "retained_geometry": {
           "baseline": {
@@ -4285,9 +6137,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -4323,9 +6176,10 @@
             },
             "valid": 407,
             "raw_matched_domain": 149,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 42.0,
-            "mean_morgan_distance": 0.925556053700038,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 42.0,
+            "raw_mean_morgan_distance": 0.925556053700038,
             "mean_raw_A_B_disagreement": 0.30650508250600744
           }
         }
@@ -4365,9 +6219,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -4403,9 +6258,10 @@
           },
           "valid": 424,
           "raw_matched_domain": 171,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 43.0,
-          "mean_morgan_distance": 0.9257018271214571,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 43.0,
+          "raw_mean_morgan_distance": 0.9257018271214571,
           "mean_raw_A_B_disagreement": 0.3220950054216338
         },
         "selections": {
@@ -4443,9 +6299,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -4481,12 +6338,110 @@
               },
               "valid": 424,
               "raw_matched_domain": 171,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 43.0,
-              "mean_morgan_distance": 0.9257018271214571,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 43.0,
+              "raw_mean_morgan_distance": 0.9257018271214571,
               "mean_raw_A_B_disagreement": 0.3220950054216338
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.03463177558183672,
+              "A_common": 0.00655749451796217,
+              "B_unimol": 0.05967464800516764
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.04039270087889246,
+              "A_common": -0.038982821011421254,
+              "B_unimol": 0.08378663506495487
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.13628627988126996,
+              "A_common": -0.19601270449157382,
+              "B_unimol": -0.034779503261732014
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.16933823482101162,
+              "A_common": 0.10082611753600035,
+              "B_unimol": 0.11912540241076519
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.13163687078968678,
+              "A_common": 0.14512011497036614,
+              "B_unimol": -0.056732854083697104
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.18453232116011464,
+              "A_common": 0.17981490125401856,
+              "B_unimol": 0.1273435898580837
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.17943026666677575,
+              "A_common": -0.1520399002532502,
+              "B_unimol": -0.043699020592735116
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.5601879797101021,
+              "A_common": 0.5513148861510225,
+              "B_unimol": 0.47499376246200686
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.20444224607844497,
+              "A_common": -0.17724762605693845,
+              "B_unimol": -0.08193015864412301
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 4,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -4522,9 +6477,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -4560,9 +6516,10 @@
             },
             "valid": 424,
             "raw_matched_domain": 171,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 43.0,
-            "mean_morgan_distance": 0.9257018271214571,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 43.0,
+            "raw_mean_morgan_distance": 0.9257018271214571,
             "mean_raw_A_B_disagreement": 0.3220950054216338
           }
         }
@@ -4602,9 +6559,10 @@
           },
           "valid": 380,
           "raw_matched_domain": 130,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.111111111111114,
-          "mean_morgan_distance": 0.9252297111998489,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.111111111111114,
+          "raw_mean_morgan_distance": 0.9252297111998489,
           "mean_raw_A_B_disagreement": 0.3861267214578053
         },
         "treatment": {
@@ -4640,9 +6598,10 @@
           },
           "valid": 384,
           "raw_matched_domain": 131,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.888888888888886,
-          "mean_morgan_distance": 0.9242015734707242,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.888888888888886,
+          "raw_mean_morgan_distance": 0.9242015734707242,
           "mean_raw_A_B_disagreement": 0.3476094548926192
         },
         "selections": {
@@ -4680,9 +6639,10 @@
               },
               "valid": 380,
               "raw_matched_domain": 130,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.111111111111114,
-              "mean_morgan_distance": 0.9252297111998489,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.111111111111114,
+              "raw_mean_morgan_distance": 0.9252297111998489,
               "mean_raw_A_B_disagreement": 0.3861267214578053
             },
             "treatment": {
@@ -4718,12 +6678,110 @@
               },
               "valid": 384,
               "raw_matched_domain": 131,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.888888888888886,
-              "mean_morgan_distance": 0.9242015734707242,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.888888888888886,
+              "raw_mean_morgan_distance": 0.9242015734707242,
               "mean_raw_A_B_disagreement": 0.3476094548926192
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.0524325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.17664705033037398,
+              "A_common": -0.19692686045646668,
+              "B_unimol": -0.16917034058597358
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.15295888857248852,
+              "A_common": -0.17735774170494079,
+              "B_unimol": 0.06953773884691516
+            }
+          },
+          {
+            "target": -2.0524325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.02206555536896826,
+              "A_common": -0.09825981705520259,
+              "B_unimol": 0.1334298244267419
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.27514779012910606,
+              "A_common": 0.2884296549084422,
+              "B_unimol": 0.3245105552188119
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.12274046389722837,
+              "A_common": 0.11526859584999094,
+              "B_unimol": 0.07431898093318934
+            }
+          },
+          {
+            "target": -1.44879,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.03663267385048308,
+              "A_common": -0.05019710398557431,
+              "B_unimol": -0.021592669611613102
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2026,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.2518163045553026,
+              "A_common": -0.18290627710692053,
+              "B_unimol": 0.0016018752235229528
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2027,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.17700322338104246,
+              "A_common": 0.15003171215242816,
+              "B_unimol": 0.21248892330037228
+            }
+          },
+          {
+            "target": -0.8437325,
+            "seed": 2028,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0009456207685287765,
+              "A_common": 0.0401834036317239,
+              "B_unimol": 0.003304271519000479
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 2
         },
         "retained_geometry": {
           "baseline": {
@@ -4759,9 +6817,10 @@
             },
             "valid": 380,
             "raw_matched_domain": 130,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.111111111111114,
-            "mean_morgan_distance": 0.9252297111998489,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.111111111111114,
+            "raw_mean_morgan_distance": 0.9252297111998489,
             "mean_raw_A_B_disagreement": 0.3861267214578053
           },
           "treatment": {
@@ -4797,9 +6856,10 @@
             },
             "valid": 384,
             "raw_matched_domain": 131,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.888888888888886,
-            "mean_morgan_distance": 0.9242015734707242,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.888888888888886,
+            "raw_mean_morgan_distance": 0.9242015734707242,
             "mean_raw_A_B_disagreement": 0.3476094548926192
           }
         }
@@ -4841,9 +6901,10 @@
           },
           "valid": 374,
           "raw_matched_domain": 103,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 40.0,
-          "mean_morgan_distance": 0.9244101522840766,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 40.0,
+          "raw_mean_morgan_distance": 0.9244101522840766,
           "mean_raw_A_B_disagreement": 0.35495213926462593
         },
         "treatment": {
@@ -4879,9 +6940,10 @@
           },
           "valid": 382,
           "raw_matched_domain": 95,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 40.44444444444444,
-          "mean_morgan_distance": 0.9258736974836275,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 40.44444444444444,
+          "raw_mean_morgan_distance": 0.9258736974836275,
           "mean_raw_A_B_disagreement": 0.30479782204375044
         },
         "selections": {
@@ -4919,9 +6981,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -4957,9 +7020,10 @@
               },
               "valid": 382,
               "raw_matched_domain": 95,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.44444444444444,
-              "mean_morgan_distance": 0.9258736974836275,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.44444444444444,
+              "raw_mean_morgan_distance": 0.9258736974836275,
               "mean_raw_A_B_disagreement": 0.30479782204375044
             }
           },
@@ -4997,9 +7061,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5035,9 +7100,10 @@
               },
               "valid": 382,
               "raw_matched_domain": 95,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.44444444444444,
-              "mean_morgan_distance": 0.9258736974836275,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.44444444444444,
+              "raw_mean_morgan_distance": 0.9258736974836275,
               "mean_raw_A_B_disagreement": 0.30479782204375044
             }
           },
@@ -5075,9 +7141,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5113,9 +7180,10 @@
               },
               "valid": 382,
               "raw_matched_domain": 95,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.44444444444444,
-              "mean_morgan_distance": 0.9258736974836275,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.44444444444444,
+              "raw_mean_morgan_distance": 0.9258736974836275,
               "mean_raw_A_B_disagreement": 0.30479782204375044
             }
           },
@@ -5153,9 +7221,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5191,12 +7260,110 @@
               },
               "valid": 382,
               "raw_matched_domain": 95,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.44444444444444,
-              "mean_morgan_distance": 0.9258736974836275,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.44444444444444,
+              "raw_mean_morgan_distance": 0.9258736974836275,
               "mean_raw_A_B_disagreement": 0.30479782204375044
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -6.8,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.5780330354517156,
+              "A_common": -0.49453614408319646,
+              "B_unimol": -0.34390860687602653
+            }
+          },
+          {
+            "target": -6.8,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.005481904347737543,
+              "A_common": 0.03645297050476071,
+              "B_unimol": 0.04426847457885735
+            }
+          },
+          {
+            "target": -6.8,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.15035913051703065,
+              "A_common": -0.07743981862679516,
+              "B_unimol": 0.00987958785815124
+            }
+          },
+          {
+            "target": -6.4,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.0029648025830587565,
+              "A_common": -0.00887551705042533,
+              "B_unimol": 0.00037641127904253224
+            }
+          },
+          {
+            "target": -6.4,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.02782715493506127,
+              "A_common": 0.01828581369840182,
+              "B_unimol": 0.019750150219424778
+            }
+          },
+          {
+            "target": -6.4,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.06569721393096145,
+              "A_common": -0.07052700030498021,
+              "B_unimol": -0.1400871509160751
+            }
+          },
+          {
+            "target": -6.1,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.10071532605874417,
+              "A_common": 0.15864936944210167,
+              "B_unimol": -0.19577838531648284
+            }
+          },
+          {
+            "target": -6.1,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.21640842982700897,
+              "A_common": 0.2137772355760847,
+              "B_unimol": 0.30946227482387
+            }
+          },
+          {
+            "target": -6.1,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.2120799286024912,
+              "A_common": -0.12193343809672774,
+              "B_unimol": -0.010270866325923333
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 5,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -5232,9 +7399,10 @@
             },
             "valid": 374,
             "raw_matched_domain": 103,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 40.0,
-            "mean_morgan_distance": 0.9244101522840766,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 40.0,
+            "raw_mean_morgan_distance": 0.9244101522840766,
             "mean_raw_A_B_disagreement": 0.35495213926462593
           },
           "treatment": {
@@ -5270,9 +7438,10 @@
             },
             "valid": 382,
             "raw_matched_domain": 95,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 40.44444444444444,
-            "mean_morgan_distance": 0.9258736974836275,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 40.44444444444444,
+            "raw_mean_morgan_distance": 0.9258736974836275,
             "mean_raw_A_B_disagreement": 0.30479782204375044
           }
         }
@@ -5312,9 +7481,10 @@
           },
           "valid": 374,
           "raw_matched_domain": 103,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 40.0,
-          "mean_morgan_distance": 0.9244101522840766,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 40.0,
+          "raw_mean_morgan_distance": 0.9244101522840766,
           "mean_raw_A_B_disagreement": 0.35495213926462593
         },
         "treatment": {
@@ -5350,9 +7520,10 @@
           },
           "valid": 374,
           "raw_matched_domain": 111,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 38.44444444444444,
-          "mean_morgan_distance": 0.926048341773762,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 38.44444444444444,
+          "raw_mean_morgan_distance": 0.926048341773762,
           "mean_raw_A_B_disagreement": 0.3686521003785183
         },
         "selections": {
@@ -5390,9 +7561,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5428,9 +7600,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 111,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.44444444444444,
-              "mean_morgan_distance": 0.926048341773762,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.44444444444444,
+              "raw_mean_morgan_distance": 0.926048341773762,
               "mean_raw_A_B_disagreement": 0.3686521003785183
             }
           },
@@ -5468,9 +7641,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5506,9 +7680,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 111,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.44444444444444,
-              "mean_morgan_distance": 0.926048341773762,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.44444444444444,
+              "raw_mean_morgan_distance": 0.926048341773762,
               "mean_raw_A_B_disagreement": 0.3686521003785183
             }
           },
@@ -5546,9 +7721,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5584,9 +7760,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 111,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.44444444444444,
-              "mean_morgan_distance": 0.926048341773762,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.44444444444444,
+              "raw_mean_morgan_distance": 0.926048341773762,
               "mean_raw_A_B_disagreement": 0.3686521003785183
             }
           },
@@ -5624,9 +7801,10 @@
               },
               "valid": 374,
               "raw_matched_domain": 103,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 40.0,
-              "mean_morgan_distance": 0.9244101522840766,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 40.0,
+              "raw_mean_morgan_distance": 0.9244101522840766,
               "mean_raw_A_B_disagreement": 0.35495213926462593
             },
             "treatment": {
@@ -5662,12 +7840,110 @@
               },
               "valid": 374,
               "raw_matched_domain": 111,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 38.44444444444444,
-              "mean_morgan_distance": 0.926048341773762,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 38.44444444444444,
+              "raw_mean_morgan_distance": 0.926048341773762,
               "mean_raw_A_B_disagreement": 0.3686521003785183
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -6.8,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.2688248235529118,
+              "A_common": -0.22928988630121394,
+              "B_unimol": -0.2989593375812876
+            }
+          },
+          {
+            "target": -6.8,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.27424762248992934,
+              "A_common": -0.2088182131449382,
+              "B_unimol": 0.0812025229136149
+            }
+          },
+          {
+            "target": -6.8,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.132702372868856,
+              "A_common": -0.05173756122589124,
+              "B_unimol": 0.08628406842549652
+            }
+          },
+          {
+            "target": -6.4,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.08501539429028837,
+              "A_common": -0.05910301009813956,
+              "B_unimol": -0.03709289232889823
+            }
+          },
+          {
+            "target": -6.4,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.17780176676236664,
+              "A_common": 0.13753471649610077,
+              "B_unimol": 0.054838628035325354
+            }
+          },
+          {
+            "target": -6.4,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.0158530106911291,
+              "A_common": -0.0337620606789224,
+              "B_unimol": -0.09131311911803042
+            }
+          },
+          {
+            "target": -6.1,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.15249351010178086,
+              "A_common": 0.1628794077670936,
+              "B_unimol": -0.07584528345050223
+            }
+          },
+          {
+            "target": -6.1,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.1945380588154217,
+              "A_common": 0.17692049047449138,
+              "B_unimol": 0.20260736130096102
+            }
+          },
+          {
+            "target": -6.1,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.2577106436093646,
+              "A_common": 0.2837745494312708,
+              "B_unimol": 0.11643672386805215
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 5,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -5703,9 +7979,10 @@
             },
             "valid": 374,
             "raw_matched_domain": 103,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 40.0,
-            "mean_morgan_distance": 0.9244101522840766,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 40.0,
+            "raw_mean_morgan_distance": 0.9244101522840766,
             "mean_raw_A_B_disagreement": 0.35495213926462593
           },
           "treatment": {
@@ -5741,9 +8018,10 @@
             },
             "valid": 374,
             "raw_matched_domain": 111,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 38.44444444444444,
-            "mean_morgan_distance": 0.926048341773762,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 38.44444444444444,
+            "raw_mean_morgan_distance": 0.926048341773762,
             "mean_raw_A_B_disagreement": 0.3686521003785183
           }
         }
@@ -5785,9 +8063,10 @@
           },
           "valid": 377,
           "raw_matched_domain": 121,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.666666666666664,
-          "mean_morgan_distance": 0.9235443033400217,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.666666666666664,
+          "raw_mean_morgan_distance": 0.9235443033400217,
           "mean_raw_A_B_disagreement": 0.3571464389751442
         },
         "treatment": {
@@ -5823,9 +8102,10 @@
           },
           "valid": 360,
           "raw_matched_domain": 104,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 37.666666666666664,
-          "mean_morgan_distance": 0.9287982137178923,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 37.666666666666664,
+          "raw_mean_morgan_distance": 0.9287982137178923,
           "mean_raw_A_B_disagreement": 0.35903969459511614
         },
         "selections": {
@@ -5863,9 +8143,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -5901,9 +8182,10 @@
               },
               "valid": 360,
               "raw_matched_domain": 104,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.666666666666664,
-              "mean_morgan_distance": 0.9287982137178923,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.666666666666664,
+              "raw_mean_morgan_distance": 0.9287982137178923,
               "mean_raw_A_B_disagreement": 0.35903969459511614
             }
           },
@@ -5941,9 +8223,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -5979,9 +8262,10 @@
               },
               "valid": 360,
               "raw_matched_domain": 104,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.666666666666664,
-              "mean_morgan_distance": 0.9287982137178923,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.666666666666664,
+              "raw_mean_morgan_distance": 0.9287982137178923,
               "mean_raw_A_B_disagreement": 0.35903969459511614
             }
           },
@@ -6019,9 +8303,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -6057,9 +8342,10 @@
               },
               "valid": 360,
               "raw_matched_domain": 104,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.666666666666664,
-              "mean_morgan_distance": 0.9287982137178923,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.666666666666664,
+              "raw_mean_morgan_distance": 0.9287982137178923,
               "mean_raw_A_B_disagreement": 0.35903969459511614
             }
           },
@@ -6097,9 +8383,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -6135,12 +8422,110 @@
               },
               "valid": 360,
               "raw_matched_domain": 104,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 37.666666666666664,
-              "mean_morgan_distance": 0.9287982137178923,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 37.666666666666664,
+              "raw_mean_morgan_distance": 0.9287982137178923,
               "mean_raw_A_B_disagreement": 0.35903969459511614
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.15,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.24251051923585332,
+              "A_common": 0.18977873036785742,
+              "B_unimol": 0.17116150326198998
+            }
+          },
+          {
+            "target": -2.15,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.22211017832159996,
+              "A_common": -0.24652280658483505,
+              "B_unimol": -0.19314147979021073
+            }
+          },
+          {
+            "target": -2.15,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.20173965945839878,
+              "A_common": 0.17391158387064942,
+              "B_unimol": 0.23817147533098854
+            }
+          },
+          {
+            "target": -1.95,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.4576232959330082,
+              "A_common": 0.25835286830480275,
+              "B_unimol": 0.5803169138614948
+            }
+          },
+          {
+            "target": -1.95,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.39208549538044013,
+              "A_common": -0.4094871987598111,
+              "B_unimol": -0.2305871729898934
+            }
+          },
+          {
+            "target": -1.95,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.05803730123572903,
+              "A_common": -0.08464348163041824,
+              "B_unimol": -0.17718690236409518
+            }
+          },
+          {
+            "target": -1.75,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.07562392618921077,
+              "A_common": -0.10458194567925405,
+              "B_unimol": 0.05950608187251616
+            }
+          },
+          {
+            "target": -1.75,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.20941962000697556,
+              "A_common": 0.19213173854531673,
+              "B_unimol": 0.5393369438672307
+            }
+          },
+          {
+            "target": -1.75,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.03647456487471412,
+              "A_common": 0.04379476268183102,
+              "B_unimol": -0.10857036912983109
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 4,
+          "B_unimol": 4
         },
         "retained_geometry": {
           "baseline": {
@@ -6176,9 +8561,10 @@
             },
             "valid": 377,
             "raw_matched_domain": 121,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.666666666666664,
-            "mean_morgan_distance": 0.9235443033400217,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.666666666666664,
+            "raw_mean_morgan_distance": 0.9235443033400217,
             "mean_raw_A_B_disagreement": 0.3571464389751442
           },
           "treatment": {
@@ -6214,9 +8600,10 @@
             },
             "valid": 360,
             "raw_matched_domain": 104,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 37.666666666666664,
-            "mean_morgan_distance": 0.9287982137178923,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 37.666666666666664,
+            "raw_mean_morgan_distance": 0.9287982137178923,
             "mean_raw_A_B_disagreement": 0.35903969459511614
           }
         }
@@ -6256,9 +8643,10 @@
           },
           "valid": 377,
           "raw_matched_domain": 121,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.666666666666664,
-          "mean_morgan_distance": 0.9235443033400217,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.666666666666664,
+          "raw_mean_morgan_distance": 0.9235443033400217,
           "mean_raw_A_B_disagreement": 0.3571464389751442
         },
         "treatment": {
@@ -6294,9 +8682,10 @@
           },
           "valid": 378,
           "raw_matched_domain": 106,
-          "mean_unique_fraction": 1.0,
-          "mean_scaffolds_per_pool": 39.55555555555556,
-          "mean_morgan_distance": 0.9268667730817595,
+          "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+          "raw_mean_unique_fraction": 1.0,
+          "raw_mean_scaffolds_per_pool": 39.55555555555556,
+          "raw_mean_morgan_distance": 0.9268667730817595,
           "mean_raw_A_B_disagreement": 0.37052625024645874
         },
         "selections": {
@@ -6334,9 +8723,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -6372,9 +8762,10 @@
               },
               "valid": 378,
               "raw_matched_domain": 106,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.55555555555556,
-              "mean_morgan_distance": 0.9268667730817595,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.55555555555556,
+              "raw_mean_morgan_distance": 0.9268667730817595,
               "mean_raw_A_B_disagreement": 0.37052625024645874
             }
           },
@@ -6412,9 +8803,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -6450,9 +8842,10 @@
               },
               "valid": 378,
               "raw_matched_domain": 106,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.55555555555556,
-              "mean_morgan_distance": 0.9268667730817595,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.55555555555556,
+              "raw_mean_morgan_distance": 0.9268667730817595,
               "mean_raw_A_B_disagreement": 0.37052625024645874
             }
           },
@@ -6490,9 +8883,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -6528,9 +8922,10 @@
               },
               "valid": 378,
               "raw_matched_domain": 106,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.55555555555556,
-              "mean_morgan_distance": 0.9268667730817595,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.55555555555556,
+              "raw_mean_morgan_distance": 0.9268667730817595,
               "mean_raw_A_B_disagreement": 0.37052625024645874
             }
           },
@@ -6568,9 +8963,10 @@
               },
               "valid": 377,
               "raw_matched_domain": 121,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.666666666666664,
-              "mean_morgan_distance": 0.9235443033400217,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.666666666666664,
+              "raw_mean_morgan_distance": 0.9235443033400217,
               "mean_raw_A_B_disagreement": 0.3571464389751442
             },
             "treatment": {
@@ -6606,12 +9002,110 @@
               },
               "valid": 378,
               "raw_matched_domain": 106,
-              "mean_unique_fraction": 1.0,
-              "mean_scaffolds_per_pool": 39.55555555555556,
-              "mean_morgan_distance": 0.9268667730817595,
+              "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+              "raw_mean_unique_fraction": 1.0,
+              "raw_mean_scaffolds_per_pool": 39.55555555555556,
+              "raw_mean_morgan_distance": 0.9268667730817595,
               "mean_raw_A_B_disagreement": 0.37052625024645874
             }
           }
+        },
+        "paired_raw_cells": [
+          {
+            "target": -2.15,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.002226689621642297,
+              "A_common": 0.047555283366978895,
+              "B_unimol": -0.12037264337906461
+            }
+          },
+          {
+            "target": -2.15,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.33758187233047043,
+              "A_common": 0.36288675977425133,
+              "B_unimol": 0.40778872763568713
+            }
+          },
+          {
+            "target": -2.15,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.15685353888405684,
+              "A_common": 0.1406744101312425,
+              "B_unimol": 0.22780901246600688
+            }
+          },
+          {
+            "target": -1.95,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.16136280695597338,
+              "A_common": 0.025689705618872183,
+              "B_unimol": 0.2635083581392582
+            }
+          },
+          {
+            "target": -1.95,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.04702021909426102,
+              "A_common": -0.029748966183626324,
+              "B_unimol": 0.04972780563614598
+            }
+          },
+          {
+            "target": -1.95,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.12393715514077086,
+              "A_common": -0.07733987569808976,
+              "B_unimol": -0.2698395993974474
+            }
+          },
+          {
+            "target": -1.75,
+            "seed": 2031,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.07084799533089003,
+              "A_common": -0.07508142714699118,
+              "B_unimol": 0.16793338656425472
+            }
+          },
+          {
+            "target": -1.75,
+            "seed": 2032,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": -0.1180063015358015,
+              "A_common": -0.1736929186365821,
+              "B_unimol": 0.2783075381409038
+            }
+          },
+          {
+            "target": -1.75,
+            "seed": 2033,
+            "attempted": 64,
+            "mae_change": {
+              "A_historical": 0.13649865533366357,
+              "A_common": 0.1748986268284345,
+              "B_unimol": -0.012642729161965627
+            }
+          }
+        ],
+        "raw_improved_cells": {
+          "A_historical": 4,
+          "A_common": 4,
+          "B_unimol": 3
         },
         "retained_geometry": {
           "baseline": {
@@ -6647,9 +9141,10 @@
             },
             "valid": 377,
             "raw_matched_domain": 121,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.666666666666664,
-            "mean_morgan_distance": 0.9235443033400217,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.666666666666664,
+            "raw_mean_morgan_distance": 0.9235443033400217,
             "mean_raw_A_B_disagreement": 0.3571464389751442
           },
           "treatment": {
@@ -6685,9 +9180,10 @@
             },
             "valid": 378,
             "raw_matched_domain": 106,
-            "mean_unique_fraction": 1.0,
-            "mean_scaffolds_per_pool": 39.55555555555556,
-            "mean_morgan_distance": 0.9268667730817595,
+            "diversity_scope": "Original raw pool, regardless of scoring view; selection diversity is reported separately",
+            "raw_mean_unique_fraction": 1.0,
+            "raw_mean_scaffolds_per_pool": 39.55555555555556,
+            "raw_mean_morgan_distance": 0.9268667730817595,
             "mean_raw_A_B_disagreement": 0.37052625024645874
           }
         }
@@ -8748,7 +11244,7 @@
   },
   "per_pool_evidence": {
     "file": "oe62_dual_cross_evaluation_20261112.pools.json.gz",
-    "sha256": "6b33e99229eb2d7e7ad6bb06a4603cc0e33c095f79d77efe012a681afe4d3b76",
+    "sha256": "a77e4aaac0e901d44dca386944f583c77f73e7327e1ee57a47bfe453b852c8c8",
     "includes": "Per-target/seed metrics, retained geometry predictions and selection statistics"
   }
 }

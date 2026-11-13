@@ -22,6 +22,7 @@ def summarize(rows):
     original = [r for r in rows if 'quantum_input' in r]
     preserved = [r for r in rows if r['graph_preserved'] and 'quantum_optimized' in r]
     report = {'planned': len(rows), 'singlepoints': len(original),
+              'error_pooling': 'Descriptive pooled candidate errors; optimized survivors have unequal target counts. Consult per-target groups for method comparisons.',
               'optimized_singlepoints': sum('quantum_optimized' in r for r in rows),
               'graph_preserved': len(preserved), 'models': {},
               'failed_ids': [r['id'] for r in rows if r['status'] != 'completed'],
@@ -33,9 +34,38 @@ def summarize(rows):
     report['quantum_optimized_preserved'] = error_stats(target_errors(preserved, 'quantum_optimized'))
     report['quantum_optimized_preserved']['hit_fraction_planned'] = (
         report['quantum_optimized_preserved'].get('hits025', 0)/len(rows) if rows else None)
+    cells = sorted({(r['property'], r['target']) for r in rows})
+    cell_maes = []
+    missing = []
+    for prop, target in cells:
+        subset = [r for r in preserved if r['property'] == prop and r['target'] == target]
+        if subset:
+            cell_maes.append(float(np.mean(abs(np.asarray(target_errors(subset, 'quantum_optimized'))))))
+        else:
+            missing.append({'property': prop, 'target': target})
+    report['quantum_optimized_equal_target'] = {
+        'planned_target_cells': len(cells), 'observed_target_cells': len(cell_maes),
+        'mae_eV_observed_cells': float(np.mean(cell_maes)) if cell_maes else None,
+        'missing_target_cells': missing,
+        'scope': 'Equal weight to observed task/target cells; missing cells are not imputed or treated as zero error.',
+    }
     report['quantum_geometry_mean_absolute_change_eV'] = float(np.mean([
         abs(r['quantum_optimized'][r['property_index']]-r['quantum_input'][r['property_index']])
         for r in preserved])) if preserved else None
+    report['joint_proxy_diagnostic'] = {}
+    for stage, records in [('input', original), ('optimized', preserved)]:
+        flags = np.array([[abs(r[f'{stage}_models'][model][r['property_index']]-r['target']) <= .25
+                           for model in ['dpa_historical', 'unimol']]
+                          + [abs(r[f'quantum_{stage}'][r['property_index']]-r['target']) <= .25]
+                          for r in records], dtype=bool).reshape(-1, 3)
+        report['joint_proxy_diagnostic'][stage] = {
+            'evaluated': len(records), 'planned': len(rows),
+            'A_hits': int(flags[:, 0].sum()), 'B_hits': int(flags[:, 1].sum()),
+            'quantum_hits': int(flags[:, 2].sum()),
+            'both_proxy_hits': int((flags[:, 0] & flags[:, 1]).sum()),
+            'quantum_hits_among_both': int(flags.all(axis=1).sum()),
+            'scope': 'Post-hoc diagnostic of the frozen cohort; never used to replace candidates or define a new selector.',
+        }
     for model in ['dpa_historical', 'dpa_common', 'unimol']:
         per_model = {}
         for stage, records, qkey in [('input', original, 'quantum_input'),
@@ -89,6 +119,9 @@ def main():
         for method in sorted({r['method'] for r in rows}):
             chosen = [r for r in rows if r['property'] == prop and r['method'] == method]
             groups[f'{prop}/{method}'] = summarize(chosen)
+            for target in sorted({r['target'] for r in chosen}):
+                groups[f'{prop}/{method}/target={target}'] = summarize([
+                    r for r in chosen if r['target'] == target])
             for rule in ['A_top1', 'fixed_random']:
                 subset = [r for r in chosen if r['rule'] == rule]
                 if subset:

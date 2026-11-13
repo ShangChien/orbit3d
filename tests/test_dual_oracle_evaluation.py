@@ -33,3 +33,25 @@ def test_target_macro_is_not_biased_by_number_of_seeds(monkeypatch):
     assert out['attempted']==192
     assert out['models']['B_unimol']['mae']==5
     assert out['models']['B_unimol']['mean_abs_bias']==5
+    assert out['raw_mean_unique_fraction']==1.
+    assert 'mean_unique_fraction' not in out
+
+
+def test_quantum_failures_keep_planned_denominator_and_missing_targets(monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(__file__).parents[1]/'scripts'))
+    m=importlib.import_module('summarize_dual_quantum')
+    models={name:[.1,0.] for name in ['dpa_historical','dpa_common','unimol']}
+    common={'property':'homo','property_index':0,'target':0.,'quantum_input':[.1,0.],
+            'input_models':models,'optimized_models':models}
+    rows=[{**common,'id':'q0','status':'completed','graph_preserved':True,'quantum_optimized':[.1,0.]},
+          {**common,'id':'q1','status':'failed','graph_preserved':False},
+          {**common,'id':'q2','status':'completed','target':2.,'graph_preserved':False,'quantum_optimized':[2.,0.]}]
+    out=m.summarize(rows)
+    assert out['planned']==3 and out['singlepoints']==3 and out['optimized_singlepoints']==2
+    assert out['graph_preserved']==1
+    assert out['quantum_optimized_preserved']['hit_fraction_planned']==1/3
+    assert out['failed_ids']==['q1'] and out['changed_identity_ids']==['q2']
+    assert out['quantum_optimized_equal_target']['missing_target_cells']==[{'property':'homo','target':2.}]
+    assert out['joint_proxy_diagnostic']['optimized']['both_proxy_hits']==1
+    assert out['joint_proxy_diagnostic']['optimized']['quantum_hits_among_both']==1
+    assert out['joint_proxy_diagnostic']['optimized']['planned']==3
