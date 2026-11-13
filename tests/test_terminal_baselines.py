@@ -15,3 +15,18 @@ def test_identical_pools_have_zero_delta_and_do_not_multiply_off_proposals():
     assert result['shared_off_unique_proposals'] == 4
     assert result['arms']['a']['correct_minus_off_yield'] == 0
     assert result['arms']['a']['sampling_delta95'] == [0,0]
+
+
+def test_distinct_backbones_use_their_own_off_pool():
+    correct_rows=[];off_rows=[]
+    for arm,value in [('a',-6.),('b',-9.)]:
+        row=dict(arm=arm,status='completed',quantile=50,target_eV=-6.,inference_seed=1,candidate_id=0,singlepoint={'prediction_eV':[value,0.]})
+        off_rows.append(row)
+        correct_rows.extend([{**row,'quantile':q,'target_eV':goal} for q,goal in [(25,-6.),(75,-5.)]])
+    correct=dict(control='correct',target='homo',records=correct_rows,arms={k:dict(proposals=2,yield_equal_target=.5 if k=='a' else 0,mae_equal_target_eV=1) for k in ['a','b']})
+    off=dict(control='off',target='homo',records=off_rows,arms={k:dict(proposals=1,yield_equal_target=.5 if k=='a' else 0,mae_equal_target_eV=1) for k in ['a','b']})
+    result=module.compare(correct,off,repeats=100)
+    assert result['shared_off_unique_proposals'] is None
+    for arm in ['a','b']:
+        assert result['arms'][arm]['off_arm']==arm
+        assert result['arms'][arm]['correct_minus_off_yield']==0

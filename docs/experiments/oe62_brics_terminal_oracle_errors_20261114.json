@@ -34,6 +34,13 @@
       "false_positive": 13,
       "false_negative": 12,
       "quantum_missing": 0
+    },
+    "paired_residual_correlation": {
+      "n": 141,
+      "homo_lumo": [
+        0.5603653604829271,
+        0.37309271773759245
+      ]
     }
   },
   "domain": {
@@ -67,6 +74,13 @@
         "false_positive": 13,
         "false_negative": 12,
         "quantum_missing": 0
+      },
+      "paired_residual_correlation": {
+        "n": 141,
+        "homo_lumo": [
+          0.5603653604829271,
+          0.37309271773759245
+        ]
       }
     },
     "False": {
@@ -109,6 +123,13 @@
         "false_positive": 13,
         "false_negative": 12,
         "quantum_missing": 0
+      },
+      "paired_residual_correlation": {
+        "n": 141,
+        "homo_lumo": [
+          0.5603653604829271,
+          0.37309271773759245
+        ]
       }
     }
   },
@@ -3363,5 +3384,6 @@
     "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/brics_terminals/brics/graph_preserved.sdf": "c6355b0cb0588a7c91e2e222d4d5a548c7dd4d792746021455149c56cae2ad9f",
     "../brics_independent/brics.json": "c64a9f430643d1329f8a1e920c13969ac1f513c349d9f8baa3fb5542adb8fb4e",
     "../brics_independent/input_manifest.json": "5b77cb5d36c3bb0ad0ab1db2eed085f78e0af2214b749e594e225c412fccd84c"
-  }
+  },
+  "analysis_script_sha256": "8ed6ab15668fcc76cd71ef6c2dd2af47c8cfcdb171773502031896dd41a60206"
 }

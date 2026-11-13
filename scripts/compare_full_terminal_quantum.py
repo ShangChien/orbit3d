@@ -14,6 +14,10 @@ def summarize(rows):
             j=['homo','lumo'].index(r['target']);truth=abs(r['truth_eV'][j]-r['target_eV'])<=.25;pred=abs(r[model][j]-r['target_eV'])<=.25
             tp+=int(truth and pred);fp+=int(pred and not truth);fn+=int(truth and not pred)
         output[model]={'paired':len(paired),'surrogate_vs_dft_mae_eV':abs(error).mean(0).tolist(),'surrogate_minus_dft_bias_eV':error.mean(0).tolist(),'true_positive':tp,'false_positive':fp,'false_negative':fn,'quantum_missing':sum(r['truth_eV'] is None for r in rows)}
+    common=[r for r in rows if r['truth_eV'] is not None and all(r[m] is not None for m in ['dpa','unimol2'])]
+    if len(common)>1:
+        errors=[np.asarray([np.asarray(r[m])-r['truth_eV'] for r in common]) for m in ['dpa','unimol2']]
+        output['paired_residual_correlation']={'n':len(common),'homo_lumo':[float(np.corrcoef(errors[0][:,j],errors[1][:,j])[0,1]) if all(np.std(e[:,j])>0 for e in errors) else None for j in range(2)]}
     return output
 
 

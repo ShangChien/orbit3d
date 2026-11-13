@@ -34,6 +34,13 @@
       "false_positive": 8,
       "false_negative": 7,
       "quantum_missing": 0
+    },
+    "paired_residual_correlation": {
+      "n": 60,
+      "homo_lumo": [
+        0.8392668573679782,
+        0.8695989534828977
+      ]
     }
   },
   "domain": {
@@ -67,6 +74,13 @@
         "false_positive": 3,
         "false_negative": 4,
         "quantum_missing": 0
+      },
+      "paired_residual_correlation": {
+        "n": 29,
+        "homo_lumo": [
+          0.8432533658890459,
+          0.8938810769485631
+        ]
       }
     },
     "False": {
@@ -99,6 +113,13 @@
         "false_positive": 5,
         "false_negative": 3,
         "quantum_missing": 0
+      },
+      "paired_residual_correlation": {
+        "n": 31,
+        "homo_lumo": [
+          0.8428485907438715,
+          0.8612900638818562
+        ]
       }
     }
   },
@@ -133,6 +154,13 @@
         "false_positive": 8,
         "false_negative": 7,
         "quantum_missing": 0
+      },
+      "paired_residual_correlation": {
+        "n": 60,
+        "homo_lumo": [
+          0.8392668573679782,
+          0.8695989534828977
+        ]
       }
     }
   },
@@ -1524,5 +1552,6 @@
     "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/off_terminals/shared_off/graph_preserved.sdf": "132b3855138d78acd1edaa1655cac4ad9c5c94f6fda85e001728dac2168e6386",
     "../off_independent/shared_off/shared_off.json": "ad63c63e0e7af77dd29692ae5aaef4dfbe2beda6e39c7fe72f86591531aeaf2b",
     "../off_independent/shared_off/input_manifest.json": "dab680eebdda7c2a086b5c634d577b5c9dc1658c2c8c663ed2faa38c97498e2a"
-  }
+  },
+  "analysis_script_sha256": "8ed6ab15668fcc76cd71ef6c2dd2af47c8cfcdb171773502031896dd41a60206"
 }
