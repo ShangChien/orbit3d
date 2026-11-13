@@ -9,7 +9,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--summary',type=Path,required=True);p.add_argument('--inputs',type=Path,required=True)
     p.add_argument('--training-seed',type=int,required=True)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    data=json.loads(a.summary.read_text());manifest=json.loads(a.manifest.read_text());arms=[];controls=[]
+    data=json.loads(a.summary.read_text());prefix=data.get('prediction_prefix','hyff');manifest=json.loads(a.manifest.read_text());arms=[];controls=[]
     for target in ['homo','lumo']:
         for arm in ['frozen','continue400','grpo200','continue_wall']:
             per_target=[]
@@ -17,7 +17,7 @@ def main():
                 pools=[r for r in data['pools'] if r['target']==target and r['name'].startswith(f'eval_{arm}_p{q}_')]
                 assert len(pools)==3
                 rows=sum([r['records'] for r in pools],[])
-                per_target.append({'quantile':q,'goal_eV':goal,**metrics(rows,target,goal,True)})
+                per_target.append({'quantile':q,'goal_eV':goal,**metrics(rows,target,goal,True,prefix=prefix)})
             arms.append({'target':target,'arm':arm,'attempted':sum(r['attempted'] for r in per_target),
                 'evaluated':sum(r['evaluated'] for r in per_target),'property_hits':sum(r['property_hits'] for r in per_target),
                 'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in per_target])),
@@ -31,13 +31,13 @@ def main():
                     pattern=f'eval_{arm}_off_' if mode=='off' else f'eval_{arm}_p{supplied if mode=="shuffled" else q}_'
                     pools=[r for r in data['pools'] if r['target']==target and r['name'].startswith(pattern)];assert len(pools)==3
                     rows=sum([r['records'] for r in pools],[]);goal=manifest['single_target_points'][target][q]
-                    scored.append({'scoring_quantile':q,**metrics(rows,target,goal,True)})
+                    scored.append({'scoring_quantile':q,**metrics(rows,target,goal,True,prefix=prefix)})
                 controls.append({'target':target,'arm':arm,'condition':mode,'target_mae_equal_quantile_eV':float(np.mean([r['target_mae_eV'] for r in scored])),
                                  'per_quantile':scored})
-    output={'training_seed':a.training_seed,'scope':data['scope'],'mae_definition':'Equal target-quantile weighting; original-domain evaluable proposals. Candidate budgets are recorded per arm. Conditions reuse frozen pools and are not new training repeats.',
+    output={'training_seed':a.training_seed,'evaluator':data.get('evaluator','HyFF source-3D property head'),'scope':data['scope'],'mae_definition':'Equal target-quantile weighting; original-domain evaluable proposals. Candidate budgets are recorded per arm. Conditions reuse frozen pools and are not new training repeats.',
         'arms':arms,'condition_controls':controls,'wall_seconds':data['wall_seconds'],
         'native_evaluation_attempts':sum(r['native_evaluation_attempts'] for r in data['pools']),
-        'prediction_failures':sum(sum(r['valid'] and not r['hyff_evaluated'] for r in pool['records']) for pool in data['pools']),
+        'prediction_failures':sum(sum(r.get('prediction_attempted',r['valid']) and not r[prefix+'_evaluated'] for r in pool['records']) for pool in data['pools']),
         'pools':[{k:v for k,v in r.items() if k!='records'} for r in data['pools']],
         'raw_summary_sha256':hashlib.sha256(a.summary.read_bytes()).hexdigest(),'input_manifest':json.loads(a.inputs.read_text())}
     a.output.write_text(json.dumps(output,indent=2)+'\n')

@@ -12,13 +12,13 @@ from orbit3d.utils.molecular_identity import compare_molecular_identity
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
 
 
-def metrics(rows,target,goal,domain):
+def metrics(rows,target,goal,domain,prefix="hyff"):
     column=['homo','lumo'].index(target)
-    selected=[r for r in rows if r.get('hyff_evaluated') and (not domain or r['original_in_domain'])]
-    errors=[abs(r['hyff_prediction_eV'][column]-goal) for r in selected]
+    selected=[r for r in rows if r.get(prefix+'_evaluated') and (not domain or r['original_in_domain'])]
+    errors=[abs(r[prefix+'_prediction_eV'][column]-goal) for r in selected]
     return {'attempted':len(rows),'evaluated':len(selected),'coverage':len(selected)/len(rows),
             'target_mae_eV':float(np.mean(errors)) if errors else None,
-            'mean_prediction_eV':float(np.mean([r['hyff_prediction_eV'][column] for r in selected])) if selected else None,
+            'mean_prediction_eV':float(np.mean([r[prefix+'_prediction_eV'][column] for r in selected])) if selected else None,
             'property_hits':sum(e<=.25 for e in errors),'property_hit_rate_all_attempts':sum(e<=.25 for e in errors)/len(rows)}
 
 
