@@ -36,6 +36,7 @@ def main():
                                  'per_quantile':scored})
     output={'training_seed':a.training_seed,'evaluator':data.get('evaluator','HyFF source-3D property head'),'scope':data['scope'],'mae_definition':'Equal target-quantile weighting; original-domain evaluable proposals. Candidate budgets are recorded per arm. Conditions reuse frozen pools and are not new training repeats.',
         'arms':arms,'condition_controls':controls,'wall_seconds':data['wall_seconds'],
+        'timing_scope':data.get('timing_scope','Native evaluation interval; model loading and provenance hashing are outside this timer.'),
         'native_evaluation_attempts':sum(r['native_evaluation_attempts'] for r in data['pools']),
         'prediction_failures':sum(sum(r.get('prediction_attempted',r['valid']) and not r[prefix+'_evaluated'] for r in pool['records']) for pool in data['pools']),
         'pools':[{k:v for k,v in r.items() if k!='records'} for r in data['pools']],

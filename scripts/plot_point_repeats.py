@@ -15,7 +15,7 @@ def main():
     controls=['frozen','continue400','continue_wall']
     labels=['Frozen\nSFT','Continue SFT\n400 updates','Continue SFT\ntime budget']
     columns=[('independent_target_mae_eV',1.,'Target MAE difference (eV)','Lower is better'),
-             ('domain_rate',100.,'Domain coverage difference\n(percentage points)','Higher is better'),
+             ('domain_rate',100.,'Evaluable-domain coverage difference\n(percentage points)','Higher is better'),
              ('independent_hit_rate',100.,'Property-hit difference\n(percentage points)','Higher is better')]
     colors=['#3465a4','#168579','#b97b3d']
     for i,run in enumerate(runs):

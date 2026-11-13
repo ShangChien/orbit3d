@@ -155,3 +155,16 @@ DPA 的设备须在 DeePMD 首次导入前确定：库内部分常量张量不�
 ## 图特征模型版本
 
 新训练的指纹模型及Morgan域使用 `rdkit_normalize_canonical_v1`：在图副本上进行官能团标准化和规范异构SMILES转换，原图与三维坐标不被改写。转换必须保持总电荷；无法构建特征的候选保留为评价失败。指纹metadata记录v2及特征契约，域文件记录schema版本与同一契约。旧v1文件按原预处理重载；更换特征需要重新训练指纹参数、重建及校准域文件，不能只替换预处理函数。
+
+## 已冻结Uni-Mol2的主线复评
+
+`evaluate_formal_unimol2.py`接受同一训练seed的HOMO/LUMO正式campaign路径、模型目录和开发集选型清单；先核对权重及scaler元数据哈希，再评价保存的原始轨迹。示例：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=src python scripts/evaluate_formal_unimol2.py \
+  --sources /path/to/formal_eval_homo_seed42 /path/to/formal_eval_lumo_seed42 \
+  --oracle /path/to/unimol2_11b/oracle --selection /path/to/selection.json \
+  --manifest /path/to/oe62/manifest.json --output /path/to/new_reevaluation
+```
+
+`summarize_independent_3d_campaign.py`和`summarize_independent_3d_repeats.py`按报告中的评价器身份汇总；不能把Uni-Mol2结果标为HyFF。正式与初试预算分别统计。`bridge_quantum_unimol2.py`复用既有量化队列和对应输入SDF，在完全相同坐标重评，不新增量化样本。

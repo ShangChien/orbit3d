@@ -28,5 +28,19 @@
     "pool": "eval_frozen_p75_s2026",
     "candidate_id": 39,
     "atoms": 82
+  },
+  "formal_bridge": {
+    "pools": 378,
+    "attempted": 48384,
+    "chemically_valid": 32258,
+    "evaluated_by_B": 32214,
+    "excluded_Te": 43,
+    "excluded_size": 1,
+    "prediction_failures": 0
+  },
+  "quantum_joint_proxy_diagnostic": {
+    "input_evaluable": 24,
+    "both_proxy_hits": 11,
+    "quantum_hits_among_both": 8
   }
 }
