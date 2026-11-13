@@ -1,0 +1,1178 @@
+{
+  "reference_arm": "grpo200",
+  "target": "lumo",
+  "training_seeds": [
+    42,
+    43,
+    44
+  ],
+  "attempts_per_arm_per_training_seed": 1920,
+  "scope": "Independent training seeds are the repeat unit; descriptive paired differences, no significance claim",
+  "mae_definition": "Equal weight over five target quantiles; domain-evaluable molecules within each quantile",
+  "sources": {
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/analysis/lumo_42.json": "328ed7bb808cc2be59d30cce2d883fdd0fe4388ead2a72465216554b5fabbaf5",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/analysis/lumo_43.json": "9705678bc0c1623547771c3985e683b90266affa160b86bd435b949cf412e0ef",
+    "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/analysis/lumo_44.json": "cf6b3f79ad3961ddf0ca5ef932eb679579952db3638ed20333bf9e041228579d"
+  },
+  "per_training_seed": [
+    {
+      "training_seed": 42,
+      "arms": {
+        "frozen": {
+          "independent_target_mae_eV": 0.6925268392901514,
+          "optimization_oracle_target_mae_eV": 0.9167897691490257,
+          "valid_rate": 0.6427083333333333,
+          "domain_rate": 0.190625,
+          "independent_hit_rate": 0.04375,
+          "independent_mean_response_slope": 0.2781649243951846,
+          "independent_condition_specificity_eV": 0.17660605621747283,
+          "independent_alignment_target_mae_eV": 0.5920276915468086,
+          "independent_other_target_mae_eV": 0.8432755609051652,
+          "mean_internal_diversity": 0.9289863053899398,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "grpo200": {
+          "independent_target_mae_eV": 0.7542104429300929,
+          "optimization_oracle_target_mae_eV": 0.9988173331116789,
+          "valid_rate": 0.7317708333333334,
+          "domain_rate": 0.2859375,
+          "independent_hit_rate": 0.0578125,
+          "independent_mean_response_slope": 0.16702297207356998,
+          "independent_condition_specificity_eV": 0.14492502102793037,
+          "independent_alignment_target_mae_eV": 0.6030187793960863,
+          "independent_other_target_mae_eV": 0.9809979382311028,
+          "mean_internal_diversity": 0.9278731968828005,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "eligibility200": {
+          "independent_target_mae_eV": 0.7505043295908511,
+          "optimization_oracle_target_mae_eV": 1.0365217422616337,
+          "valid_rate": 0.7442708333333333,
+          "domain_rate": 0.3223958333333333,
+          "independent_hit_rate": 0.071875,
+          "independent_mean_response_slope": 0.1791185498701694,
+          "independent_condition_specificity_eV": 0.1453390956905709,
+          "independent_alignment_target_mae_eV": 0.6252815571382085,
+          "independent_other_target_mae_eV": 0.9383384882698147,
+          "mean_internal_diversity": 0.9256807946742738,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "continue_wall": {
+          "independent_target_mae_eV": 0.6392913192706455,
+          "optimization_oracle_target_mae_eV": 0.9135225666983334,
+          "valid_rate": 0.6744791666666666,
+          "domain_rate": 0.20833333333333334,
+          "independent_hit_rate": 0.0515625,
+          "independent_mean_response_slope": 0.3453659416750462,
+          "independent_condition_specificity_eV": 0.25815697607238997,
+          "independent_alignment_target_mae_eV": 0.5351880786975516,
+          "independent_other_target_mae_eV": 0.7954461801302863,
+          "mean_internal_diversity": 0.9275005010308224,
+          "mean_unique_valid_fraction": 1.0
+        }
+      },
+      "paired_grpo_minus_control": {
+        "frozen": {
+          "independent_target_mae_eV": 0.06168360363994152,
+          "optimization_oracle_target_mae_eV": 0.0820275639626532,
+          "valid_rate": 0.08906250000000004,
+          "domain_rate": 0.09531250000000002,
+          "independent_hit_rate": 0.014062500000000006,
+          "independent_mean_response_slope": -0.11114195232161461,
+          "independent_condition_specificity_eV": -0.03168103518954246,
+          "independent_alignment_target_mae_eV": 0.010991087849277714,
+          "independent_other_target_mae_eV": 0.13772237732593762,
+          "mean_internal_diversity": -0.0011131085071393043,
+          "mean_unique_valid_fraction": 0.0
+        },
+        "eligibility200": {
+          "independent_target_mae_eV": 0.0037061133392417567,
+          "optimization_oracle_target_mae_eV": -0.037704409149954876,
+          "valid_rate": -0.012499999999999956,
+          "domain_rate": -0.036458333333333315,
+          "independent_hit_rate": -0.014062499999999992,
+          "independent_mean_response_slope": -0.012095577796599422,
+          "independent_condition_specificity_eV": -0.00041407466264054005,
+          "independent_alignment_target_mae_eV": -0.022262777742122264,
+          "independent_other_target_mae_eV": 0.04265944996128812,
+          "mean_internal_diversity": 0.002192402208526678,
+          "mean_unique_valid_fraction": 0.0
+        },
+        "continue_wall": {
+          "independent_target_mae_eV": 0.11491912365944734,
+          "optimization_oracle_target_mae_eV": 0.08529476641334544,
+          "valid_rate": 0.05729166666666674,
+          "domain_rate": 0.07760416666666667,
+          "independent_hit_rate": 0.0062500000000000056,
+          "independent_mean_response_slope": -0.17834296960147622,
+          "independent_condition_specificity_eV": -0.1132319550444596,
+          "independent_alignment_target_mae_eV": 0.0678307006985347,
+          "independent_other_target_mae_eV": 0.18555175810081648,
+          "mean_internal_diversity": 0.00037269585197807764,
+          "mean_unique_valid_fraction": 0.0
+        }
+      }
+    },
+    {
+      "training_seed": 43,
+      "arms": {
+        "frozen": {
+          "independent_target_mae_eV": 0.6830516739481698,
+          "optimization_oracle_target_mae_eV": 0.90329692875422,
+          "valid_rate": 0.6557291666666667,
+          "domain_rate": 0.190625,
+          "independent_hit_rate": 0.03958333333333333,
+          "independent_mean_response_slope": 0.32013158585135915,
+          "independent_condition_specificity_eV": 0.07491998771220876,
+          "independent_alignment_target_mae_eV": 0.6462178104787238,
+          "independent_other_target_mae_eV": 0.738302469152339,
+          "mean_internal_diversity": 0.9277970904499894,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "grpo200": {
+          "independent_target_mae_eV": 0.7065652403190821,
+          "optimization_oracle_target_mae_eV": 0.9327154427498818,
+          "valid_rate": 0.7359375,
+          "domain_rate": 0.2864583333333333,
+          "independent_hit_rate": 0.05572916666666667,
+          "independent_mean_response_slope": 0.27041728724488545,
+          "independent_condition_specificity_eV": 0.119336927366673,
+          "independent_alignment_target_mae_eV": 0.6268007743592102,
+          "independent_other_target_mae_eV": 0.82621193925889,
+          "mean_internal_diversity": 0.927633582969617,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "eligibility200": {
+          "independent_target_mae_eV": 0.7005789001696815,
+          "optimization_oracle_target_mae_eV": 0.9630072078642234,
+          "valid_rate": 0.7265625,
+          "domain_rate": 0.2604166666666667,
+          "independent_hit_rate": 0.071875,
+          "independent_mean_response_slope": 0.24872819334091142,
+          "independent_condition_specificity_eV": 0.15787162221140782,
+          "independent_alignment_target_mae_eV": 0.5833150938921005,
+          "independent_other_target_mae_eV": 0.8764746095860532,
+          "mean_internal_diversity": 0.9296437128340902,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "continue_wall": {
+          "independent_target_mae_eV": 0.7081869965956542,
+          "optimization_oracle_target_mae_eV": 0.9216805595138176,
+          "valid_rate": 0.6671875,
+          "domain_rate": 0.19635416666666666,
+          "independent_hit_rate": 0.043229166666666666,
+          "independent_mean_response_slope": 0.26806430699724254,
+          "independent_condition_specificity_eV": 0.1313140479585666,
+          "independent_alignment_target_mae_eV": 0.6067368376072144,
+          "independent_other_target_mae_eV": 0.8603622350783141,
+          "mean_internal_diversity": 0.9255257814943378,
+          "mean_unique_valid_fraction": 1.0
+        }
+      },
+      "paired_grpo_minus_control": {
+        "frozen": {
+          "independent_target_mae_eV": 0.023513566370912287,
+          "optimization_oracle_target_mae_eV": 0.029418513995661866,
+          "valid_rate": 0.08020833333333333,
+          "domain_rate": 0.09583333333333333,
+          "independent_hit_rate": 0.01614583333333334,
+          "independent_mean_response_slope": -0.049714298606473695,
+          "independent_condition_specificity_eV": 0.04441693965446425,
+          "independent_alignment_target_mae_eV": -0.01941703611951362,
+          "independent_other_target_mae_eV": 0.08790947010655104,
+          "mean_internal_diversity": -0.0001635074803724157,
+          "mean_unique_valid_fraction": 0.0
+        },
+        "eligibility200": {
+          "independent_target_mae_eV": 0.005986340149400582,
+          "optimization_oracle_target_mae_eV": -0.030291765114341618,
+          "valid_rate": 0.009375000000000022,
+          "domain_rate": 0.02604166666666663,
+          "independent_hit_rate": -0.016145833333333325,
+          "independent_mean_response_slope": 0.021689093903974027,
+          "independent_condition_specificity_eV": -0.03853469484473482,
+          "independent_alignment_target_mae_eV": 0.043485680467109766,
+          "independent_other_target_mae_eV": -0.05026267032716314,
+          "mean_internal_diversity": -0.0020101298644732424,
+          "mean_unique_valid_fraction": 0.0
+        },
+        "continue_wall": {
+          "independent_target_mae_eV": -0.0016217562765721283,
+          "optimization_oracle_target_mae_eV": 0.011034883236064275,
+          "valid_rate": 0.06874999999999998,
+          "domain_rate": 0.09010416666666665,
+          "independent_hit_rate": 0.012500000000000004,
+          "independent_mean_response_slope": 0.0023529802476429107,
+          "independent_condition_specificity_eV": -0.011977120591893597,
+          "independent_alignment_target_mae_eV": 0.020063936751995803,
+          "independent_other_target_mae_eV": -0.03415029581942408,
+          "mean_internal_diversity": 0.002107801475279114,
+          "mean_unique_valid_fraction": 0.0
+        }
+      }
+    },
+    {
+      "training_seed": 44,
+      "arms": {
+        "frozen": {
+          "independent_target_mae_eV": 0.6592074242226941,
+          "optimization_oracle_target_mae_eV": 0.9378354416273262,
+          "valid_rate": 0.6619791666666667,
+          "domain_rate": 0.20208333333333334,
+          "independent_hit_rate": 0.04895833333333333,
+          "independent_mean_response_slope": 0.29852979168013377,
+          "independent_condition_specificity_eV": 0.21091162115399742,
+          "independent_alignment_target_mae_eV": 0.5500558371549471,
+          "independent_other_target_mae_eV": 0.8229348048243146,
+          "mean_internal_diversity": 0.928064256723595,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "grpo200": {
+          "independent_target_mae_eV": 0.688795117063566,
+          "optimization_oracle_target_mae_eV": 0.9671179499889728,
+          "valid_rate": 0.7140625,
+          "domain_rate": 0.2609375,
+          "independent_hit_rate": 0.06302083333333333,
+          "independent_mean_response_slope": 0.2877268581760057,
+          "independent_condition_specificity_eV": 0.1365143287999725,
+          "independent_alignment_target_mae_eV": 0.59722876940375,
+          "independent_other_target_mae_eV": 0.82614463855329,
+          "mean_internal_diversity": 0.9272185559217295,
+          "mean_unique_valid_fraction": 0.9992857142857143
+        },
+        "eligibility200": {
+          "independent_target_mae_eV": 0.7237316493764421,
+          "optimization_oracle_target_mae_eV": 1.0747459674651039,
+          "valid_rate": 0.7369791666666666,
+          "domain_rate": 0.2786458333333333,
+          "independent_hit_rate": 0.06510416666666667,
+          "independent_mean_response_slope": 0.21511686150242443,
+          "independent_condition_specificity_eV": 0.16978996633172272,
+          "independent_alignment_target_mae_eV": 0.5904893201590413,
+          "independent_other_target_mae_eV": 0.9235951432025433,
+          "mean_internal_diversity": 0.9266938669570675,
+          "mean_unique_valid_fraction": 1.0
+        },
+        "continue_wall": {
+          "independent_target_mae_eV": 0.6971130243512689,
+          "optimization_oracle_target_mae_eV": 0.9158996263141972,
+          "valid_rate": 0.65625,
+          "domain_rate": 0.2046875,
+          "independent_hit_rate": 0.044270833333333336,
+          "independent_mean_response_slope": 0.25758996482680424,
+          "independent_condition_specificity_eV": 0.10737980369280986,
+          "independent_alignment_target_mae_eV": 0.59899269056681,
+          "independent_other_target_mae_eV": 0.8442935250279571,
+          "mean_internal_diversity": 0.9268973199458319,
+          "mean_unique_valid_fraction": 0.999163179916318
+        }
+      },
+      "paired_grpo_minus_control": {
+        "frozen": {
+          "independent_target_mae_eV": 0.029587692840871926,
+          "optimization_oracle_target_mae_eV": 0.029282508361646586,
+          "valid_rate": 0.05208333333333337,
+          "domain_rate": 0.05885416666666665,
+          "independent_hit_rate": 0.014062499999999999,
+          "independent_mean_response_slope": -0.010802933504128087,
+          "independent_condition_specificity_eV": -0.07439729235402492,
+          "independent_alignment_target_mae_eV": 0.04717293224880292,
+          "independent_other_target_mae_eV": 0.003209833728975431,
+          "mean_internal_diversity": -0.0008457008018655232,
+          "mean_unique_valid_fraction": -0.0007142857142856673
+        },
+        "eligibility200": {
+          "independent_target_mae_eV": -0.03493653231287608,
+          "optimization_oracle_target_mae_eV": -0.10762801747613104,
+          "valid_rate": -0.022916666666666585,
+          "domain_rate": -0.017708333333333326,
+          "independent_hit_rate": -0.00208333333333334,
+          "independent_mean_response_slope": 0.07260999667358126,
+          "independent_condition_specificity_eV": -0.033275637531750224,
+          "independent_alignment_target_mae_eV": 0.006739449244708706,
+          "independent_other_target_mae_eV": -0.09745050464925331,
+          "mean_internal_diversity": 0.0005246889646620678,
+          "mean_unique_valid_fraction": -0.0007142857142856673
+        },
+        "continue_wall": {
+          "independent_target_mae_eV": -0.008317907287702875,
+          "optimization_oracle_target_mae_eV": 0.051218323674775634,
+          "valid_rate": 0.057812500000000044,
+          "domain_rate": 0.056249999999999994,
+          "independent_hit_rate": 0.018749999999999996,
+          "independent_mean_response_slope": 0.030136893349201443,
+          "independent_condition_specificity_eV": 0.029134525107162634,
+          "independent_alignment_target_mae_eV": -0.0017639211630600116,
+          "independent_other_target_mae_eV": -0.01814888647466706,
+          "mean_internal_diversity": 0.00032123597589761577,
+          "mean_unique_valid_fraction": 0.00012253436939635431
+        }
+      }
+    }
+  ],
+  "arms": {
+    "frozen": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.6925268392901514,
+          0.6830516739481698,
+          0.6592074242226941
+        ],
+        "mean": 0.6782619791536718,
+        "sample_sd": 0.017168335308867487,
+        "min": 0.6592074242226941,
+        "max": 0.6925268392901514
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          0.9167897691490257,
+          0.90329692875422,
+          0.9378354416273262
+        ],
+        "mean": 0.919307379843524,
+        "sample_sd": 0.01740634914559113,
+        "min": 0.90329692875422,
+        "max": 0.9378354416273262
+      },
+      "valid_rate": {
+        "values": [
+          0.6427083333333333,
+          0.6557291666666667,
+          0.6619791666666667
+        ],
+        "mean": 0.6534722222222222,
+        "sample_sd": 0.009831663288033183,
+        "min": 0.6427083333333333,
+        "max": 0.6619791666666667
+      },
+      "domain_rate": {
+        "values": [
+          0.190625,
+          0.190625,
+          0.20208333333333334
+        ],
+        "mean": 0.19444444444444442,
+        "sample_sd": 0.006615471834464471,
+        "min": 0.190625,
+        "max": 0.20208333333333334
+      },
+      "independent_hit_rate": {
+        "values": [
+          0.04375,
+          0.03958333333333333,
+          0.04895833333333333
+        ],
+        "mean": 0.044097222222222225,
+        "sample_sd": 0.004697135159190516,
+        "min": 0.03958333333333333,
+        "max": 0.04895833333333333
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          0.2781649243951846,
+          0.32013158585135915,
+          0.29852979168013377
+        ],
+        "mean": 0.29894210064222587,
+        "sample_sd": 0.020986368610468507,
+        "min": 0.2781649243951846,
+        "max": 0.32013158585135915
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          0.17660605621747283,
+          0.07491998771220876,
+          0.21091162115399742
+        ],
+        "mean": 0.15414588836122634,
+        "sample_sd": 0.07072323130796224,
+        "min": 0.07491998771220876,
+        "max": 0.21091162115399742
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          0.5920276915468086,
+          0.6462178104787238,
+          0.5500558371549471
+        ],
+        "mean": 0.5961004463934931,
+        "sample_sd": 0.04821018333725336,
+        "min": 0.5500558371549471,
+        "max": 0.6462178104787238
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.8432755609051652,
+          0.738302469152339,
+          0.8229348048243146
+        ],
+        "mean": 0.8015042782939396,
+        "sample_sd": 0.055671250197598825,
+        "min": 0.738302469152339,
+        "max": 0.8432755609051652
+      },
+      "mean_internal_diversity": {
+        "values": [
+          0.9289863053899398,
+          0.9277970904499894,
+          0.928064256723595
+        ],
+        "mean": 0.9282825508545081,
+        "sample_sd": 0.0006239369271357497,
+        "min": 0.9277970904499894,
+        "max": 0.9289863053899398
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "sample_sd": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "grpo200": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.7542104429300929,
+          0.7065652403190821,
+          0.688795117063566
+        ],
+        "mean": 0.7165236001042471,
+        "sample_sd": 0.0338255511671882,
+        "min": 0.688795117063566,
+        "max": 0.7542104429300929
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          0.9988173331116789,
+          0.9327154427498818,
+          0.9671179499889728
+        ],
+        "mean": 0.9662169086168445,
+        "sample_sd": 0.03306015553527348,
+        "min": 0.9327154427498818,
+        "max": 0.9988173331116789
+      },
+      "valid_rate": {
+        "values": [
+          0.7317708333333334,
+          0.7359375,
+          0.7140625
+        ],
+        "mean": 0.7272569444444444,
+        "sample_sd": 0.011615089363665081,
+        "min": 0.7140625,
+        "max": 0.7359375
+      },
+      "domain_rate": {
+        "values": [
+          0.2859375,
+          0.2864583333333333,
+          0.2609375
+        ],
+        "mean": 0.27777777777777773,
+        "sample_sd": 0.014586433202288177,
+        "min": 0.2609375,
+        "max": 0.2864583333333333
+      },
+      "independent_hit_rate": {
+        "values": [
+          0.0578125,
+          0.05572916666666667,
+          0.06302083333333333
+        ],
+        "mean": 0.05885416666666667,
+        "sample_sd": 0.0037557825786083193,
+        "min": 0.05572916666666667,
+        "max": 0.06302083333333333
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          0.16702297207356998,
+          0.27041728724488545,
+          0.2877268581760057
+        ],
+        "mean": 0.24172237249815373,
+        "sample_sd": 0.06526795254410157,
+        "min": 0.16702297207356998,
+        "max": 0.2877268581760057
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          0.14492502102793037,
+          0.119336927366673,
+          0.1365143287999725
+        ],
+        "mean": 0.13359209239819195,
+        "sample_sd": 0.01304194132386886,
+        "min": 0.119336927366673,
+        "max": 0.14492502102793037
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          0.6030187793960863,
+          0.6268007743592102,
+          0.59722876940375
+        ],
+        "mean": 0.6090161077196822,
+        "sample_sd": 0.015671688790210032,
+        "min": 0.59722876940375,
+        "max": 0.6268007743592102
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.9809979382311028,
+          0.82621193925889,
+          0.82614463855329
+        ],
+        "mean": 0.8777848386810944,
+        "sample_sd": 0.08938517254772305,
+        "min": 0.82614463855329,
+        "max": 0.9809979382311028
+      },
+      "mean_internal_diversity": {
+        "values": [
+          0.9278731968828005,
+          0.927633582969617,
+          0.9272185559217295
+        ],
+        "mean": 0.9275751119247156,
+        "sample_sd": 0.00033121419700377525,
+        "min": 0.9272185559217295,
+        "max": 0.9278731968828005
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          1.0,
+          1.0,
+          0.9992857142857143
+        ],
+        "mean": 0.9997619047619049,
+        "sample_sd": 0.00041239304942113417,
+        "min": 0.9992857142857143,
+        "max": 1.0
+      }
+    },
+    "eligibility200": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.7505043295908511,
+          0.7005789001696815,
+          0.7237316493764421
+        ],
+        "mean": 0.7249382930456582,
+        "sample_sd": 0.02498457759159422,
+        "min": 0.7005789001696815,
+        "max": 0.7505043295908511
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          1.0365217422616337,
+          0.9630072078642234,
+          1.0747459674651039
+        ],
+        "mean": 1.0247583058636538,
+        "sample_sd": 0.05679059276150257,
+        "min": 0.9630072078642234,
+        "max": 1.0747459674651039
+      },
+      "valid_rate": {
+        "values": [
+          0.7442708333333333,
+          0.7265625,
+          0.7369791666666666
+        ],
+        "mean": 0.7359374999999999,
+        "sample_sd": 0.008900003901372423,
+        "min": 0.7265625,
+        "max": 0.7442708333333333
+      },
+      "domain_rate": {
+        "values": [
+          0.3223958333333333,
+          0.2604166666666667,
+          0.2786458333333333
+        ],
+        "mean": 0.28715277777777776,
+        "sample_sd": 0.031853262831447245,
+        "min": 0.2604166666666667,
+        "max": 0.3223958333333333
+      },
+      "independent_hit_rate": {
+        "values": [
+          0.071875,
+          0.071875,
+          0.06510416666666667
+        ],
+        "mean": 0.06961805555555556,
+        "sample_sd": 0.003909142447638085,
+        "min": 0.06510416666666667,
+        "max": 0.071875
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          0.1791185498701694,
+          0.24872819334091142,
+          0.21511686150242443
+        ],
+        "mean": 0.2143212015711684,
+        "sample_sd": 0.03481164204796449,
+        "min": 0.1791185498701694,
+        "max": 0.24872819334091142
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          0.1453390956905709,
+          0.15787162221140782,
+          0.16978996633172272
+        ],
+        "mean": 0.15766689474456716,
+        "sample_sd": 0.012226720892346572,
+        "min": 0.1453390956905709,
+        "max": 0.16978996633172272
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          0.6252815571382085,
+          0.5833150938921005,
+          0.5904893201590413
+        ],
+        "mean": 0.5996953237297834,
+        "sample_sd": 0.022446801234365727,
+        "min": 0.5833150938921005,
+        "max": 0.6252815571382085
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.9383384882698147,
+          0.8764746095860532,
+          0.9235951432025433
+        ],
+        "mean": 0.9128027470194704,
+        "sample_sd": 0.032313182031163325,
+        "min": 0.8764746095860532,
+        "max": 0.9383384882698147
+      },
+      "mean_internal_diversity": {
+        "values": [
+          0.9256807946742738,
+          0.9296437128340902,
+          0.9266938669570675
+        ],
+        "mean": 0.9273394581551438,
+        "sample_sd": 0.0020588275988110165,
+        "min": 0.9256807946742738,
+        "max": 0.9296437128340902
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "sample_sd": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "continue_wall": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.6392913192706455,
+          0.7081869965956542,
+          0.6971130243512689
+        ],
+        "mean": 0.6815304467391895,
+        "sample_sd": 0.036996839490627924,
+        "min": 0.6392913192706455,
+        "max": 0.7081869965956542
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          0.9135225666983334,
+          0.9216805595138176,
+          0.9158996263141972
+        ],
+        "mean": 0.9170342508421161,
+        "sample_sd": 0.004195681268743969,
+        "min": 0.9135225666983334,
+        "max": 0.9216805595138176
+      },
+      "valid_rate": {
+        "values": [
+          0.6744791666666666,
+          0.6671875,
+          0.65625
+        ],
+        "mean": 0.6659722222222223,
+        "sample_sd": 0.009175146015085966,
+        "min": 0.65625,
+        "max": 0.6744791666666666
+      },
+      "domain_rate": {
+        "values": [
+          0.20833333333333334,
+          0.19635416666666666,
+          0.2046875
+        ],
+        "mean": 0.203125,
+        "sample_sd": 0.0061405344388289615,
+        "min": 0.19635416666666666,
+        "max": 0.20833333333333334
+      },
+      "independent_hit_rate": {
+        "values": [
+          0.0515625,
+          0.043229166666666666,
+          0.044270833333333336
+        ],
+        "mean": 0.04635416666666667,
+        "sample_sd": 0.004540519732854867,
+        "min": 0.043229166666666666,
+        "max": 0.0515625
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          0.3453659416750462,
+          0.26806430699724254,
+          0.25758996482680424
+        ],
+        "mean": 0.29034007116636434,
+        "sample_sd": 0.04794072152048324,
+        "min": 0.25758996482680424,
+        "max": 0.3453659416750462
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          0.25815697607238997,
+          0.1313140479585666,
+          0.10737980369280986
+        ],
+        "mean": 0.1656169425745888,
+        "sample_sd": 0.08103058288062506,
+        "min": 0.10737980369280986,
+        "max": 0.25815697607238997
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          0.5351880786975516,
+          0.6067368376072144,
+          0.59899269056681
+        ],
+        "mean": 0.580305868957192,
+        "sample_sd": 0.039264541278111596,
+        "min": 0.5351880786975516,
+        "max": 0.6067368376072144
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.7954461801302863,
+          0.8603622350783141,
+          0.8442935250279571
+        ],
+        "mean": 0.8333673134121858,
+        "sample_sd": 0.0338091721683377,
+        "min": 0.7954461801302863,
+        "max": 0.8603622350783141
+      },
+      "mean_internal_diversity": {
+        "values": [
+          0.9275005010308224,
+          0.9255257814943378,
+          0.9268973199458319
+        ],
+        "mean": 0.9266412008236641,
+        "sample_sd": 0.001011966929053739,
+        "min": 0.9255257814943378,
+        "max": 0.9275005010308224
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          1.0,
+          1.0,
+          0.999163179916318
+        ],
+        "mean": 0.999721059972106,
+        "sample_sd": 0.00048313830057710035,
+        "min": 0.999163179916318,
+        "max": 1.0
+      }
+    }
+  },
+  "paired_grpo_minus_control": {
+    "frozen": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.06168360363994152,
+          0.023513566370912287,
+          0.029587692840871926
+        ],
+        "mean": 0.03826162095057525,
+        "sample_sd": 0.02051013671136778,
+        "min": 0.023513566370912287,
+        "max": 0.06168360363994152
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          0.0820275639626532,
+          0.029418513995661866,
+          0.029282508361646586
+        ],
+        "mean": 0.04690952877332055,
+        "sample_sd": 0.030413186631008032,
+        "min": 0.029282508361646586,
+        "max": 0.0820275639626532
+      },
+      "valid_rate": {
+        "values": [
+          0.08906250000000004,
+          0.08020833333333333,
+          0.05208333333333337
+        ],
+        "mean": 0.07378472222222225,
+        "sample_sd": 0.019308334382343036,
+        "min": 0.05208333333333337,
+        "max": 0.08906250000000004
+      },
+      "domain_rate": {
+        "values": [
+          0.09531250000000002,
+          0.09583333333333333,
+          0.05885416666666665
+        ],
+        "mean": 0.08333333333333333,
+        "sample_sd": 0.021201179621924617,
+        "min": 0.05885416666666665,
+        "max": 0.09583333333333333
+      },
+      "independent_hit_rate": {
+        "values": [
+          0.014062500000000006,
+          0.01614583333333334,
+          0.014062499999999999
+        ],
+        "mean": 0.014756944444444448,
+        "sample_sd": 0.001202813060811722,
+        "min": 0.014062499999999999,
+        "max": 0.01614583333333334
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          -0.11114195232161461,
+          -0.049714298606473695,
+          -0.010802933504128087
+        ],
+        "mean": -0.057219728144072134,
+        "sample_sd": 0.05058881574737513,
+        "min": -0.11114195232161461,
+        "max": -0.010802933504128087
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          -0.03168103518954246,
+          0.04441693965446425,
+          -0.07439729235402492
+        ],
+        "mean": -0.020553795963034378,
+        "sample_sd": 0.06018361090483628,
+        "min": -0.07439729235402492,
+        "max": 0.04441693965446425
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          0.010991087849277714,
+          -0.01941703611951362,
+          0.04717293224880292
+        ],
+        "mean": 0.012915661326189007,
+        "sample_sd": 0.033336675885942385,
+        "min": -0.01941703611951362,
+        "max": 0.04717293224880292
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.13772237732593762,
+          0.08790947010655104,
+          0.003209833728975431
+        ],
+        "mean": 0.0762805603871547,
+        "sample_sd": 0.06800610084527392,
+        "min": 0.003209833728975431,
+        "max": 0.13772237732593762
+      },
+      "mean_internal_diversity": {
+        "values": [
+          -0.0011131085071393043,
+          -0.0001635074803724157,
+          -0.0008457008018655232
+        ],
+        "mean": -0.0007074389297924144,
+        "sample_sd": 0.000489665994797528,
+        "min": -0.0011131085071393043,
+        "max": -0.0001635074803724157
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          0.0,
+          0.0,
+          -0.0007142857142856673
+        ],
+        "mean": -0.00023809523809522246,
+        "sample_sd": 0.00041239304942113417,
+        "min": -0.0007142857142856673,
+        "max": 0.0
+      }
+    },
+    "eligibility200": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.0037061133392417567,
+          0.005986340149400582,
+          -0.03493653231287608
+        ],
+        "mean": -0.008414692941411247,
+        "sample_sd": 0.02299686568449662,
+        "min": -0.03493653231287608,
+        "max": 0.005986340149400582
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          -0.037704409149954876,
+          -0.030291765114341618,
+          -0.10762801747613104
+        ],
+        "mean": -0.05854139724680918,
+        "sample_sd": 0.0426715248972067,
+        "min": -0.10762801747613104,
+        "max": -0.030291765114341618
+      },
+      "valid_rate": {
+        "values": [
+          -0.012499999999999956,
+          0.009375000000000022,
+          -0.022916666666666585
+        ],
+        "mean": -0.008680555555555506,
+        "sample_sd": 0.016481172619869162,
+        "min": -0.022916666666666585,
+        "max": 0.009375000000000022
+      },
+      "domain_rate": {
+        "values": [
+          -0.036458333333333315,
+          0.02604166666666663,
+          -0.017708333333333326
+        ],
+        "mean": -0.009375000000000003,
+        "sample_sd": 0.032072508996543,
+        "min": -0.036458333333333315,
+        "max": 0.02604166666666663
+      },
+      "independent_hit_rate": {
+        "values": [
+          -0.014062499999999992,
+          -0.016145833333333325,
+          -0.00208333333333334
+        ],
+        "mean": -0.010763888888888885,
+        "sample_sd": 0.007589407289720266,
+        "min": -0.016145833333333325,
+        "max": -0.00208333333333334
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          -0.012095577796599422,
+          0.021689093903974027,
+          0.07260999667358126
+        ],
+        "mean": 0.027401170926985286,
+        "sample_sd": 0.042640701853023495,
+        "min": -0.012095577796599422,
+        "max": 0.07260999667358126
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          -0.00041407466264054005,
+          -0.03853469484473482,
+          -0.033275637531750224
+        ],
+        "mean": -0.024074802346375195,
+        "sample_sd": 0.020658822494232332,
+        "min": -0.03853469484473482,
+        "max": -0.00041407466264054005
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          -0.022262777742122264,
+          0.043485680467109766,
+          0.006739449244708706
+        ],
+        "mean": 0.009320783989898737,
+        "sample_sd": 0.032950150318668145,
+        "min": -0.022262777742122264,
+        "max": 0.043485680467109766
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.04265944996128812,
+          -0.05026267032716314,
+          -0.09745050464925331
+        ],
+        "mean": -0.03501790833837611,
+        "sample_sd": 0.07128816115816897,
+        "min": -0.09745050464925331,
+        "max": 0.04265944996128812
+      },
+      "mean_internal_diversity": {
+        "values": [
+          0.002192402208526678,
+          -0.0020101298644732424,
+          0.0005246889646620678
+        ],
+        "mean": 0.0002356537695718345,
+        "sample_sd": 0.002116122625026463,
+        "min": -0.0020101298644732424,
+        "max": 0.002192402208526678
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          0.0,
+          0.0,
+          -0.0007142857142856673
+        ],
+        "mean": -0.00023809523809522246,
+        "sample_sd": 0.00041239304942113417,
+        "min": -0.0007142857142856673,
+        "max": 0.0
+      }
+    },
+    "continue_wall": {
+      "independent_target_mae_eV": {
+        "values": [
+          0.11491912365944734,
+          -0.0016217562765721283,
+          -0.008317907287702875
+        ],
+        "mean": 0.03499315336505745,
+        "sample_sd": 0.06929884670913174,
+        "min": -0.008317907287702875,
+        "max": 0.11491912365944734
+      },
+      "optimization_oracle_target_mae_eV": {
+        "values": [
+          0.08529476641334544,
+          0.011034883236064275,
+          0.051218323674775634
+        ],
+        "mean": 0.049182657774728446,
+        "sample_sd": 0.0371717703925751,
+        "min": 0.011034883236064275,
+        "max": 0.08529476641334544
+      },
+      "valid_rate": {
+        "values": [
+          0.05729166666666674,
+          0.06874999999999998,
+          0.057812500000000044
+        ],
+        "mean": 0.061284722222222254,
+        "sample_sd": 0.00647036290055003,
+        "min": 0.05729166666666674,
+        "max": 0.06874999999999998
+      },
+      "domain_rate": {
+        "values": [
+          0.07760416666666667,
+          0.09010416666666665,
+          0.056249999999999994
+        ],
+        "mean": 0.07465277777777778,
+        "sample_sd": 0.01711897112719405,
+        "min": 0.056249999999999994,
+        "max": 0.09010416666666665
+      },
+      "independent_hit_rate": {
+        "values": [
+          0.0062500000000000056,
+          0.012500000000000004,
+          0.018749999999999996
+        ],
+        "mean": 0.012500000000000002,
+        "sample_sd": 0.006249999999999995,
+        "min": 0.0062500000000000056,
+        "max": 0.018749999999999996
+      },
+      "independent_mean_response_slope": {
+        "values": [
+          -0.17834296960147622,
+          0.0023529802476429107,
+          0.030136893349201443
+        ],
+        "mean": -0.04861769866821062,
+        "sample_sd": 0.11320101985335915,
+        "min": -0.17834296960147622,
+        "max": 0.030136893349201443
+      },
+      "independent_condition_specificity_eV": {
+        "values": [
+          -0.1132319550444596,
+          -0.011977120591893597,
+          0.029134525107162634
+        ],
+        "mean": -0.032024850176396856,
+        "sample_sd": 0.07326996153820872,
+        "min": -0.1132319550444596,
+        "max": 0.029134525107162634
+      },
+      "independent_alignment_target_mae_eV": {
+        "values": [
+          0.0678307006985347,
+          0.020063936751995803,
+          -0.0017639211630600116
+        ],
+        "mean": 0.028710238762490164,
+        "sample_sd": 0.03559384429725311,
+        "min": -0.0017639211630600116,
+        "max": 0.0678307006985347
+      },
+      "independent_other_target_mae_eV": {
+        "values": [
+          0.18555175810081648,
+          -0.03415029581942408,
+          -0.01814888647466706
+        ],
+        "mean": 0.044417525268908443,
+        "sample_sd": 0.12248740765092157,
+        "min": -0.03415029581942408,
+        "max": 0.18555175810081648
+      },
+      "mean_internal_diversity": {
+        "values": [
+          0.00037269585197807764,
+          0.002107801475279114,
+          0.00032123597589761577
+        ],
+        "mean": 0.0009339111010516025,
+        "sample_sd": 0.00101694443689887,
+        "min": 0.00032123597589761577,
+        "max": 0.002107801475279114
+      },
+      "mean_unique_valid_fraction": {
+        "values": [
+          0.0,
+          0.0,
+          0.00012253436939635431
+        ],
+        "mean": 4.0844789798784774e-05,
+        "sample_sd": 7.07452511559662e-05,
+        "min": 0.0,
+        "max": 0.00012253436939635431
+      }
+    }
+  }
+}
