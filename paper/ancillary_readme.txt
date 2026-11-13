@@ -47,3 +47,13 @@ independent HyFF reassessment, paired statistics, final wheel replay, matched
 geometry optimization and unconditional training-fragment controls. Source
 coordinates and weights remain separate; source DFT labels do not become
 quantum labels for generated or optimized geometries.
+
+OE62 quantum extension: two source-reference SDFs contain 13 reused and six
+additional fixed source geometries. The point-quantum input SDF contains the
+24 preselected formal GRPO200/time-SFT candidates. Corresponding JSON entries
+retain source labels, input and optimized coordinates, gradient traces where
+available, all failures, and fixed-model comparisons at identical geometries.
+The primary protocol is PBE0/def2-TZVP with PBE-D3BJ/def2-TZVP optimization;
+source FHI-aims Tier2/PBE-TS settings differ. The two-case QZVP/TZVPD diagnostic
+is post-hoc and does not replace primary values. The original worker's geometry
+"steps" field counts gradient callback evaluations, including the initial one.

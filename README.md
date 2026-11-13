@@ -28,7 +28,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 | [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
 | [论文](paper/ORBIT3D_arXiv_Paper.pdf) | 当前研究稿；[可编辑来源与构建](paper/README.md) |
 
-OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。冻结后的4762个源测试结构上，DPA的HOMO/LUMO MAE为0.1000/0.1029 eV，HyFF为0.1596/0.1648 eV。三个独立生成器训练seed共完成48384次评价提案。GRPO相对冻结SFT将HOMO/LUMO域内率从18.42%/19.15%提高到22.95%/26.18%；独立代理命中产率提高，但同等额外训练时间下目标MAE均更差。原始池物理联合命中为零，GRPO继续作为可选阶段。
+OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。冻结后的4762个源测试结构上，DPA的HOMO/LUMO MAE为0.1000/0.1029 eV，HyFF为0.1596/0.1648 eV。三个独立生成器训练seed共完成48384次评价提案。GRPO相对冻结SFT将HOMO/LUMO域内率从18.42%/19.15%提高到22.95%/26.18%；独立代理命中产率提高，但同等额外训练时间下目标MAE均更差。原始池MLIP物理联合命中为零，GRPO继续作为可选阶段。新增24候选PySCF裁决有20例优化收敛且保图、12例命中目标；这些DFT几何仍全部未过DPA/HyFF的0.1力阈值，两个判据不能混同。
 
 OCELOT 既有结果：匹配的 512 分子测试集上，DPA 的 HOMO/LUMO/S1/T1 MAE 为
 0.2895/0.2326/0.2314/0.1381 eV。三组 SFT 续训的 36 次评估中，延长训练
@@ -92,7 +92,7 @@ mol_gen/
 | 生成训练与迁移 | `initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`evaluate_brics_point_pool.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`analyze_point_ranking.py`、`select_relaxation_cohort.py`、`run_relaxation_comparison.py`、`ablate_*.py` |
 | 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |
-| 量化验证 | `select_qualified_quantum_cohort.py`、`validate_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
+| 量化验证 | `select_qualified_quantum_cohort.py`、`select_point_quantum_cohort.py`、`run_oe62_quantum.py`、`oe62_quantum_singlepoint.py`、`validate_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
 | 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py` |
 | 打包与重放 | `check_wheel.py`、`pack_pretrained_weights.py`、`export_inference_bundle.py`、`validate_octree_reload.py` |
 

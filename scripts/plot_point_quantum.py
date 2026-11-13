@@ -14,16 +14,16 @@ def main():
         k=['homo','lumo'].index(target)
         for col,arm in enumerate(['continue_wall','grpo200']):
             ax=axes[row,col];data=[v for v in r['records'] if v['target']==target and v['arm']==arm]
-            for v in data:
+            for j,v in enumerate(data):
                 if 'singlepoint' not in v:continue
                 e0=abs(v['singlepoint']['prediction_eV'][k]-v['target_eV'])
                 color='#3465a4' if v['selection']=='top1' else '#b97b3d'
-                ax.scatter(0,e0,color=color,s=20)
+                offset=(j-2.5)*.015;ax.scatter(offset,e0,color=color,s=20,zorder=3)
                 if 'optimized_singlepoint' in v:
                     e1=abs(v['optimized_singlepoint']['prediction_eV'][k]-v['target_eV'])
                     accepted=v['geometry']['converged'] and v['geometry']['graph_preserved']
-                    ax.plot([0,1],[e0,e1],color=color,alpha=.45,lw=.9)
-                    ax.scatter(1,e1,color=color,marker='o' if accepted else 'x',s=30)
+                    ax.plot([offset,1+offset],[e0,e1],color=color,alpha=.45,lw=.9)
+                    ax.scatter(1+offset,e1,color=color,marker='o' if accepted else 'x',s=24 if accepted else 55,zorder=3 if accepted else 4)
             ax.axhline(.25,color='#777',ls='--',lw=.8);ax.set_xticks([0,1],['Export geometry','DFT optimized'])
             ax.set_xlim(-.15,1.15);ax.set_ylabel('Absolute target error (eV)');ax.grid(axis='y',alpha=.15)
             ax.set_title(target.upper()+' / '+('Time-matched SFT' if arm=='continue_wall' else 'GRPO 200'))

@@ -8,6 +8,12 @@ staging = paper / "build" / "data"
 staging.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(paper / "ancillary_readme.txt", staging / "ancillary_readme.txt")
 names = [
+    'oe62_pyscf_source_reference_20261113.json',
+    'oe62_pyscf_extra_reference_20261113.json',
+    'oe62_pyscf_basis_diagnostic_20261113.json',
+    'oe62_point_quantum_cohort_20261113.json',
+    'oe62_point_quantum_20261113.json',
+    'oe62_point_quantum_oracles_20261113.json',
     'oe62_formal_homo_hyff_repeats_20261113.json',
     'oe62_formal_homo_repeats_20261113.json',
     'oe62_formal_homo_seed42_20261113.json',
@@ -119,3 +125,13 @@ brics=json.loads(records['oe62_brics_point_pools_20261113.json']['json'])
 source=paper.parent/'docs/experiments'/brics['raw_conformers_file']
 assert hashlib.sha256(source.read_bytes()).hexdigest()==brics['replay_audit']['raw_conformers_sha256']
 shutil.copyfile(source,staging/source.name)
+
+for stem,manifest_name,key in [
+    ('oe62_pyscf_source_reference_20261113','oe62_pyscf_source_reference_20261113.json','manifest'),
+    ('oe62_pyscf_extra_reference_20261113','oe62_pyscf_extra_reference_20261113.json','manifest'),
+    ('oe62_point_quantum_input_20261113','oe62_point_quantum_20261113.json','selection'),
+]:
+    source=paper.parent/'docs/experiments'/(stem+'.sdf')
+    bound=json.loads(records[manifest_name]['json'])[key]['sdf_sha256']
+    assert hashlib.sha256(source.read_bytes()).hexdigest()==bound
+    shutil.copyfile(source,staging/source.name)

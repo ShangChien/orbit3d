@@ -646,8 +646,70 @@ from 0.8583 to 0.4039 for LUMO. All raw force-qualified joint counts remain zero
 Its atom-count median is 58 and proposal distribution differs from the octree;
 this is a strong search baseline, not an isolated representation comparison.
 
-OE62 quantum adjudication requires the source FHI-aims calculation level. The
-existing LC-wPBE/def2-SVP calculations are not relabelled as OE62 validation.
+**Independent quantum adjudication.** We reuse a checked GPU4PySCF 1.9.1 /
+PySCF 2.12.1 protocol: PBE0/def2-TZVP, density fitting with
+def2-universal-jkfit, grid level 3 and SCF tolerance $10^{-8}$ Hartree.
+Thirteen fixed source-coordinate references converge, with HOMO/LUMO MAE
+0.0282/0.0433 eV against published labels and maxima 0.0414/0.0706 eV.
+No empirical shift is fitted. This supports practical independent computation
+without requiring FHI-aims, while retaining basis/relativistic differences from
+the source protocol. Additional source references cover elements present in the
+frozen generated cohort but absent from the original reference set.
+
+Before quantum outcomes are inspected, we freeze 24 exported candidates from
+formal GRPO200 and time-matched SFT: two properties, three central goals and
+two selections per cell (DPA top1 and a fixed hash draw from remaining exports).
+P25/P50/P75 use training seeds 42/43/44 and inference seeds 2026/2027/2028,
+respectively, identically for the two arms. This is an exploratory matched
+cohort, not independently crossed target/seed replication or a population
+success estimate. We evaluate exported-geometry PBE0 single points, then
+PBE-D3BJ/def2-TZVP geometry optimization (at most 80 steps) and PBE0 rechecks.
+The D3BJ geometry protocol differs from source PBE-TS; original source labels
+are never attached to optimized structures. SCF, geometry and graph failures
+remain in the preselected denominator.
+
+<!-- BEGIN TABLE OE62_QUANTUM -->
+| Target / arm | Input MAE | Input hits / 6 | Accepted / 6 | Final MAE | Final hits / 6 |
+| :------------------- | --------: | ---------: | ---------: | --------: | ---------: |
+| HOMO / Time SFT | 0.2628 | 3 | 6 | 0.1521 | 5 |
+| HOMO / GRPO | 0.3352 | 4 | 4 | 0.1484 | 3 |
+| LUMO / Time SFT | 0.6710 | 3 | 6 | 0.5542 | 2 |
+| LUMO / GRPO | 0.7787 | 1 | 4 | 0.4507 | 2 |
+
+Table: Frozen formal-policy quantum cohort. MAE is in eV; hits use a 0.25 eV tolerance. Accepted endpoints require geometry convergence and graph preservation. Final MAE uses accepted endpoints only; all hit denominators retain six selected candidates per row.
+<!-- END TABLE OE62_QUANTUM -->
+
+All 24 input single points converge. Twenty-one optimizations converge, and
+20 also preserve the graph. Two optimizations encounter SCF failure; one
+reaches the 80-step budget with an elongated bond; one converged endpoint
+fails coordinate-connectivity admission. All four belong to the selected GRPO
+subset. Input target hits are 11/24; converged, graph-preserving endpoint hits
+are 12/24. On the same 20 accepted structures, target MAE changes from 0.4128
+to 0.3317 eV. The time-SFT and GRPO endpoint hit counts are 7/12 and 5/12,
+respectively. This cohort does not support a quantum GRPO advantage; its small,
+selected sample cannot estimate population yield.
+
+The six additional source references cover Br/Cl/F/S/Se/Si. All converge;
+the combined 19-reference HOMO/LUMO MAE is 0.0251/0.0524 eV. A near-zero LUMO
+outlier, FOPCAO01, differs by 0.2847 eV under TZVP. In a post-hoc unchanged-geometry
+basis diagnostic, its absolute difference decreases to 0.0781 eV with QZVP and
+0.1009 eV with TZVPD; the QZVP difference for a sulfur-containing control is
+0.0015 eV. The original TZVP values remain the primary protocol. Mean source
+agreement is therefore not a uniform error bound, particularly for weakly bound
+virtual orbitals.
+
+**Force criteria are model-specific.** The 20 accepted DFT endpoints have
+PBE-D3BJ atomic RMS force at most 0.00365 eV/Angstrom (median 0.00215).
+At identical coordinates, DPA and HyFF RMS-force medians are 0.5171 and
+0.5198 eV/Angstrom; neither potential admits any of the 20 at the 0.1 threshold.
+Thus zero MLIP force-qualified yield does not establish failure of DFT geometry
+convergence. Independent DFT acceptance uses its own gradients and graph checks;
+MLIP residual forces measure agreement with a different potential surface.
+On the paired 20-structure subset, DPA prediction MAE against the quantum value
+changes from 0.2212 to 0.1561 eV, HyFF from 0.3608 to 0.2710 eV, and fingerprint
+from 0.5217 to 0.4103 eV. These are geometry-specific diagnostics, not source-test
+accuracy or universal uncertainty guarantees.
+
 
 ## 5. Limitations and scope
 
@@ -663,7 +725,7 @@ Finally, autoregressive decoding, candidate selection, ensemble evaluation, and 
 
 ORBIT-3D formulates point- and interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, target conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
 
-The corrected implementation has matched-budget controls, three GRPO training seeds, three SFT continuations from a common trained initialization, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A separate preselected check of five delivered designs preserves every graph and retains two orbital-window hits under the internal quantum protocol. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. The separate native-coordinate OE62 study replicates all adaptation stages across three seeds: GRPO increases independent proxy hit yield but worsens target MAE relative to time-matched SFT, while raw force-qualified yield remains zero. These results identify proposal quality, objective choice, geometry convergence and evaluator reliability as remaining limitations. Broader quantum validation with reproducible reference settings is needed before claiming general design effectiveness.
+The corrected implementation has matched-budget controls, three GRPO training seeds, three SFT continuations from a common trained initialization, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A separate preselected check of five delivered designs preserves every graph and retains two orbital-window hits under the internal quantum protocol. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. The separate native-coordinate OE62 study replicates all adaptation stages across three seeds: GRPO increases independent proxy hit yield but worsens target MAE relative to time-matched SFT, while raw MLIP force-qualified yield remains zero. A preselected 24-candidate OE62 quantum cohort gives twelve converged, graph-preserving point hits after refinement, without supporting a GRPO advantage; MLIP and DFT force criteria disagree even on independently converged geometries. These results identify proposal quality, objective choice, geometry convergence and evaluator reliability as remaining limitations. Broader quantum validation with reproducible reference settings is needed before claiming general design effectiveness.
 
 ## Appendix A. Supplementary experiments
 

@@ -1,0 +1,103 @@
+{
+  "scope": "Post-hoc fixed-geometry basis check; primary TZVP results retained.",
+  "records": [
+    {
+      "scope": "Post-hoc basis sensitivity for the LUMO reference outlier and a sulfur-containing control; no offset fitting or replacement of primary values.",
+      "index": 3,
+      "source_id": "FOPCAO01",
+      "input_sha256": "6e18b4b683674e40d369b361f887c552319c8345f2071657a82066949f9fa893",
+      "script_sha256": "9d527cf44062b9fe6d337fb22e8d1fcf22e09148048ad635d725dabb3587cb96",
+      "visible_gpu": "0",
+      "source_labels_eV": [
+        -6.45852,
+        -0.13355
+      ],
+      "records": [
+        {
+          "basis": "def2-tzvpd",
+          "nao": 624,
+          "result": {
+            "prediction_eV": [
+              -6.486516071919686,
+              -0.23443570143961634
+            ],
+            "energy_Ha": -1906.4837720542084,
+            "converged": true,
+            "seconds": 3.6945904046297073
+          }
+        },
+        {
+          "basis": "def2-qzvp",
+          "nao": 1216,
+          "result": {
+            "prediction_eV": [
+              -6.478887219338496,
+              -0.055417387963396396
+            ],
+            "energy_Ha": -1906.551881154893,
+            "converged": true,
+            "seconds": 2.749295599758625
+          }
+        }
+      ],
+      "primary_tzvp": {
+        "prediction_eV": [
+          -6.441097165167502,
+          0.15113716642543
+        ],
+        "energy_Ha": -1906.4801307316513,
+        "converged": true,
+        "seconds": 2.4952977038919926
+      }
+    },
+    {
+      "scope": "Post-hoc basis sensitivity for the LUMO reference outlier and a sulfur-containing control; no offset fitting or replacement of primary values.",
+      "index": 1,
+      "source_id": "FOWVOD",
+      "input_sha256": "6e18b4b683674e40d369b361f887c552319c8345f2071657a82066949f9fa893",
+      "script_sha256": "9d527cf44062b9fe6d337fb22e8d1fcf22e09148048ad635d725dabb3587cb96",
+      "visible_gpu": "1",
+      "source_labels_eV": [
+        -6.72483,
+        -2.32961
+      ],
+      "records": [
+        {
+          "basis": "def2-tzvpd",
+          "nao": 814,
+          "result": {
+            "prediction_eV": [
+              -6.739797847284793,
+              -2.337445751380059
+            ],
+            "energy_Ha": -1598.4669088618436,
+            "converged": true,
+            "seconds": 4.44776863232255
+          }
+        },
+        {
+          "basis": "def2-qzvp",
+          "nao": 1409,
+          "result": {
+            "prediction_eV": [
+              -6.732440809205257,
+              -2.331078672215092
+            ],
+            "energy_Ha": -1598.5303954241465,
+            "converged": true,
+            "seconds": 4.304204352200031
+          }
+        }
+      ],
+      "primary_tzvp": {
+        "prediction_eV": [
+          -6.702462594918565,
+          -2.2968092859158014
+        ],
+        "energy_Ha": -1598.463061588917,
+        "converged": true,
+        "seconds": 3.544850639998913
+      }
+    }
+  ]
+}

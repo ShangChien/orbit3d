@@ -27,7 +27,10 @@ continuation evaluations, 45 GRPO evaluations, fixed-start refinement controls,
 preselected quantum cohorts and full replay. The native-coordinate OE62 extension
 adds frozen-model evaluation on 4,762 held-out structures, 48,384 proposals across three independent generator training seeds,
 independent HyFF assessment, 48-start geometry comparisons and a 256-proposal
-wheel replay. GRPO improves property-hit yield but not time-matched target MAE. Supplementary experiments retain
+wheel replay. GRPO improves property-hit yield but not time-matched target MAE.
+An independent PBE0/def2-TZVP study adds 19 source references and 24 frozen policy
+candidates: 20 converge with graph preservation and 12 retain the target.
+Same-coordinate force checks distinguish MLIP and DFT convergence. Supplementary experiments retain
 negative adaptation results, spatial/scaffold checks and excited-state diagnostics.
 
 ## Build

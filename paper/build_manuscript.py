@@ -218,6 +218,15 @@ def build():
             lines.append(f"| {target.upper()} / {label} | {100*f['domain_rate']['mean']:.2f} | {f['independent_target_mae_eV']['mean']:.4f} | {h['independent_target_mae_eV']['mean']:.4f} | {100*f['independent_hit_rate']['mean']:.2f} | {100*h['independent_hit_rate']['mean']:.2f} |")
     lines += ['', 'Table: Formal OE62 raw-pool comparison, 5,760 attempts per row. MAE (eV) averages eligible structures within each target, then equally weights five targets and three training seeds. Property hits use tolerance 0.25 eV and all attempts as denominator. FP is the original frozen fingerprint model.']
     tables['OE62_FORMAL']='\n'.join(lines)
+    quantum=current['oe62_point_quantum_20261113.json']
+    lines=['| Target / arm | Input MAE | Input hits / 6 | Accepted / 6 | Final MAE | Final hits / 6 |',
+           '| :------------------- | --------: | ---------: | ---------: | --------: | ---------: |']
+    for target in ['homo','lumo']:
+        for arm,label in [('continue_wall','Time SFT'),('grpo200','GRPO')]:
+            row=quantum['groups'][target+'/'+arm];assert row['planned']==6
+            lines.append(f"| {target.upper()} / {label} | {row['input_target']['mae_eV']:.4f} | {row['input_target']['hits']['0.25']} | {row['accepted_optimized']} | {row['optimized_target']['mae_eV']:.4f} | {row['optimized_target']['hits']['0.25']} |")
+    lines += ['', 'Table: Frozen formal-policy quantum cohort. MAE is in eV; hits use a 0.25 eV tolerance. Accepted endpoints require geometry convergence and graph preservation. Final MAE uses accepted endpoints only; all hit denominators retain six selected candidates per row.']
+    tables['OE62_QUANTUM']='\n'.join(lines)
     geometry=current['oe62_geometry_comparison_20261113.json']
     lines=['| Method | Graph / 48 | Graph + force / 48 | Joint proxy / 48 | E/F calls |',
            '| :--- | ---: | ---: | ---: | ---: |']

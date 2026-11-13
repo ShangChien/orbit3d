@@ -1,0 +1,1440 @@
+{
+  "scope": "Same coordinates as PySCF input/endpoints; original frozen models, no fitting or selection; graph failures excluded only from endpoint prediction and retained in cohort denominator.",
+  "models": {
+    "dpa": [
+      {
+        "index": 0,
+        "stage": "input",
+        "prediction_eV": [
+          -7.085533142089844,
+          -2.3006744384765625
+        ],
+        "error": "",
+        "rms_force_eVA": 1.371861457824707
+      },
+      {
+        "index": 0,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.381002902984619,
+          -2.1867101192474365
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5547659397125244
+      },
+      {
+        "index": 1,
+        "stage": "input",
+        "prediction_eV": [
+          -7.2415289878845215,
+          -3.2336299419403076
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8775278329849243
+      },
+      {
+        "index": 1,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.23314905166626,
+          -3.160737991333008
+        ],
+        "error": "",
+        "rms_force_eVA": 0.672179102897644
+      },
+      {
+        "index": 2,
+        "stage": "input",
+        "prediction_eV": [
+          -7.0276970863342285,
+          -1.857803225517273
+        ],
+        "error": "",
+        "rms_force_eVA": 1.1320198774337769
+      },
+      {
+        "index": 2,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.03573751449585,
+          -0.8484465479850769
+        ],
+        "error": "",
+        "rms_force_eVA": 0.41655799746513367
+      },
+      {
+        "index": 3,
+        "stage": "input",
+        "prediction_eV": [
+          -6.641119480133057,
+          -0.3185400068759918
+        ],
+        "error": "",
+        "rms_force_eVA": 0.836660623550415
+      },
+      {
+        "index": 3,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.94805908203125,
+          -1.3078536987304688
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6086287498474121
+      },
+      {
+        "index": 4,
+        "stage": "input",
+        "prediction_eV": [
+          -6.7304229736328125,
+          -1.4984594583511353
+        ],
+        "error": "",
+        "rms_force_eVA": 1.278574824333191
+      },
+      {
+        "index": 4,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.686530590057373,
+          -1.4867658615112305
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5085492134094238
+      },
+      {
+        "index": 5,
+        "stage": "input",
+        "prediction_eV": [
+          -6.247438430786133,
+          -1.6178964376449585
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5546913146972656
+      },
+      {
+        "index": 5,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.465061664581299,
+          -1.667779564857483
+        ],
+        "error": "",
+        "rms_force_eVA": 0.40409353375434875
+      },
+      {
+        "index": 6,
+        "stage": "input",
+        "prediction_eV": [
+          -6.557044982910156,
+          -0.6568250060081482
+        ],
+        "error": "",
+        "rms_force_eVA": 0.7467859983444214
+      },
+      {
+        "index": 6,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.625679016113281,
+          -0.6766549944877625
+        ],
+        "error": "",
+        "rms_force_eVA": 0.4170551896095276
+      },
+      {
+        "index": 7,
+        "stage": "input",
+        "prediction_eV": [
+          -6.22679328918457,
+          -3.2703857421875
+        ],
+        "error": "",
+        "rms_force_eVA": 11.714627265930176
+      },
+      {
+        "index": 8,
+        "stage": "input",
+        "prediction_eV": [
+          -6.1946330070495605,
+          -2.2865140438079834
+        ],
+        "error": "",
+        "rms_force_eVA": 1.7195638418197632
+      },
+      {
+        "index": 8,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.214225769042969,
+          -2.244382619857788
+        ],
+        "error": "",
+        "rms_force_eVA": 0.671869158744812
+      },
+      {
+        "index": 9,
+        "stage": "input",
+        "prediction_eV": [
+          -6.078380584716797,
+          -1.2420445680618286
+        ],
+        "error": "",
+        "rms_force_eVA": 1.5232560634613037
+      },
+      {
+        "index": 9,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.688396453857422,
+          -1.1181960105895996
+        ],
+        "error": "",
+        "rms_force_eVA": 0.523001492023468
+      },
+      {
+        "index": 10,
+        "stage": "input",
+        "prediction_eV": [
+          -6.127596378326416,
+          -2.8991477489471436
+        ],
+        "error": "",
+        "rms_force_eVA": 4.41011381149292
+      },
+      {
+        "index": 11,
+        "stage": "input",
+        "prediction_eV": [
+          -6.174201965332031,
+          -0.9833776354789734
+        ],
+        "error": "",
+        "rms_force_eVA": 1.430011510848999
+      },
+      {
+        "index": 11,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.102694034576416,
+          -1.2063989639282227
+        ],
+        "error": "",
+        "rms_force_eVA": 0.369192898273468
+      },
+      {
+        "index": 12,
+        "stage": "input",
+        "prediction_eV": [
+          -5.577651500701904,
+          -2.079460859298706
+        ],
+        "error": "",
+        "rms_force_eVA": 2.3769917488098145
+      },
+      {
+        "index": 12,
+        "stage": "optimized",
+        "prediction_eV": [
+          -5.721297740936279,
+          -2.461914539337158
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8476746082305908
+      },
+      {
+        "index": 13,
+        "stage": "input",
+        "prediction_eV": [
+          -6.999391555786133,
+          -1.7844637632369995
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5390825867652893
+      },
+      {
+        "index": 13,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.133087635040283,
+          -1.9181160926818848
+        ],
+        "error": "",
+        "rms_force_eVA": 0.40147069096565247
+      },
+      {
+        "index": 14,
+        "stage": "input",
+        "prediction_eV": [
+          -6.217800140380859,
+          -2.103754997253418
+        ],
+        "error": "",
+        "rms_force_eVA": 9.954633712768555
+      },
+      {
+        "index": 15,
+        "stage": "input",
+        "prediction_eV": [
+          -7.360575199127197,
+          -1.6130046844482422
+        ],
+        "error": "",
+        "rms_force_eVA": 0.7109675407409668
+      },
+      {
+        "index": 15,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.347049713134766,
+          -2.068141460418701
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5112894177436829
+      },
+      {
+        "index": 16,
+        "stage": "input",
+        "prediction_eV": [
+          -6.619842529296875,
+          -1.6856082677841187
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8566451072692871
+      },
+      {
+        "index": 16,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.665116786956787,
+          -1.7313438653945923
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8760102987289429
+      },
+      {
+        "index": 17,
+        "stage": "input",
+        "prediction_eV": [
+          -5.562290668487549,
+          -1.8042378425598145
+        ],
+        "error": "",
+        "rms_force_eVA": 1.903099536895752
+      },
+      {
+        "index": 17,
+        "stage": "optimized",
+        "prediction_eV": [
+          -5.598203182220459,
+          -2.417875051498413
+        ],
+        "error": "",
+        "rms_force_eVA": 0.618745744228363
+      },
+      {
+        "index": 18,
+        "stage": "input",
+        "prediction_eV": [
+          -5.739538192749023,
+          -1.5373321771621704
+        ],
+        "error": "",
+        "rms_force_eVA": 1.7999764680862427
+      },
+      {
+        "index": 19,
+        "stage": "input",
+        "prediction_eV": [
+          -6.873154163360596,
+          -2.043815851211548
+        ],
+        "error": "",
+        "rms_force_eVA": 0.9613505005836487
+      },
+      {
+        "index": 19,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.981662750244141,
+          -2.1076343059539795
+        ],
+        "error": "",
+        "rms_force_eVA": 0.4690376818180084
+      },
+      {
+        "index": 20,
+        "stage": "input",
+        "prediction_eV": [
+          -6.629213809967041,
+          -0.8825845122337341
+        ],
+        "error": "",
+        "rms_force_eVA": 0.7414666414260864
+      },
+      {
+        "index": 20,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.519218921661377,
+          -0.5959983468055725
+        ],
+        "error": "",
+        "rms_force_eVA": 0.4468425512313843
+      },
+      {
+        "index": 21,
+        "stage": "input",
+        "prediction_eV": [
+          -5.053282737731934,
+          -1.9607425928115845
+        ],
+        "error": "",
+        "rms_force_eVA": 1.5509785413742065
+      },
+      {
+        "index": 21,
+        "stage": "optimized",
+        "prediction_eV": [
+          -5.088053226470947,
+          -1.4866266250610352
+        ],
+        "error": "",
+        "rms_force_eVA": 0.607088029384613
+      },
+      {
+        "index": 22,
+        "stage": "input",
+        "prediction_eV": [
+          -7.338771343231201,
+          -0.8155671954154968
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6817617416381836
+      },
+      {
+        "index": 22,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.4533562660217285,
+          -0.9542214274406433
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6836855411529541
+      },
+      {
+        "index": 23,
+        "stage": "input",
+        "prediction_eV": [
+          -6.6219801902771,
+          -0.047450143843889236
+        ],
+        "error": "",
+        "rms_force_eVA": 0.859078049659729
+      },
+      {
+        "index": 23,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.67016077041626,
+          -0.040798187255859375
+        ],
+        "error": "",
+        "rms_force_eVA": 0.44727322459220886
+      }
+    ],
+    "fingerprint_v1": [
+      {
+        "index": 0,
+        "stage": "input",
+        "prediction_eV": [
+          -7.00356129296411,
+          -0.8899266607663967
+        ],
+        "error": ""
+      },
+      {
+        "index": 0,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.00356129296411,
+          -0.8899266607663967
+        ],
+        "error": ""
+      },
+      {
+        "index": 1,
+        "stage": "input",
+        "prediction_eV": [
+          -6.939550777141229,
+          -2.78234204723298
+        ],
+        "error": ""
+      },
+      {
+        "index": 1,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.939550777141229,
+          -2.78234204723298
+        ],
+        "error": ""
+      },
+      {
+        "index": 2,
+        "stage": "input",
+        "prediction_eV": [
+          -7.296725129321666,
+          -0.2642029799319916
+        ],
+        "error": ""
+      },
+      {
+        "index": 2,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.296725129321666,
+          -0.2642029799319916
+        ],
+        "error": ""
+      },
+      {
+        "index": 3,
+        "stage": "input",
+        "prediction_eV": [
+          -7.2593344626058665,
+          -0.7105988595714497
+        ],
+        "error": ""
+      },
+      {
+        "index": 3,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.2593344626058665,
+          -0.7105988595714497
+        ],
+        "error": ""
+      },
+      {
+        "index": 4,
+        "stage": "input",
+        "prediction_eV": [
+          -6.534194504099513,
+          -1.5042737973500746
+        ],
+        "error": ""
+      },
+      {
+        "index": 4,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.534194504099513,
+          -1.5042737973500746
+        ],
+        "error": ""
+      },
+      {
+        "index": 5,
+        "stage": "input",
+        "prediction_eV": [
+          -6.497299312989487,
+          -1.2095119771530334
+        ],
+        "error": ""
+      },
+      {
+        "index": 5,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.497299312989487,
+          -1.2095119771530334
+        ],
+        "error": ""
+      },
+      {
+        "index": 6,
+        "stage": "input",
+        "prediction_eV": [
+          -6.534209183610937,
+          -1.1970545644445554
+        ],
+        "error": ""
+      },
+      {
+        "index": 6,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.534209183610937,
+          -1.1970545644445554
+        ],
+        "error": ""
+      },
+      {
+        "index": 7,
+        "stage": "input",
+        "prediction_eV": [
+          -6.801669121965934,
+          -2.132882139858681
+        ],
+        "error": ""
+      },
+      {
+        "index": 8,
+        "stage": "input",
+        "prediction_eV": [
+          -6.61050148164139,
+          -1.9320018786209665
+        ],
+        "error": ""
+      },
+      {
+        "index": 8,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.61050148164139,
+          -1.9320018786209665
+        ],
+        "error": ""
+      },
+      {
+        "index": 9,
+        "stage": "input",
+        "prediction_eV": [
+          -6.8343968609850405,
+          -1.3354441352120177
+        ],
+        "error": ""
+      },
+      {
+        "index": 9,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.8343968609850405,
+          -1.3354441352120177
+        ],
+        "error": ""
+      },
+      {
+        "index": 10,
+        "stage": "input",
+        "prediction_eV": [
+          -6.786843800373731,
+          -1.2660978506613083
+        ],
+        "error": ""
+      },
+      {
+        "index": 11,
+        "stage": "input",
+        "prediction_eV": [
+          -6.585059242665072,
+          -1.3287472927558248
+        ],
+        "error": ""
+      },
+      {
+        "index": 11,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.585059242665072,
+          -1.3287472927558248
+        ],
+        "error": ""
+      },
+      {
+        "index": 12,
+        "stage": "input",
+        "prediction_eV": [
+          -6.05040320828283,
+          -1.4886499850260428
+        ],
+        "error": ""
+      },
+      {
+        "index": 12,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.05040320828283,
+          -1.4886499850260428
+        ],
+        "error": ""
+      },
+      {
+        "index": 13,
+        "stage": "input",
+        "prediction_eV": [
+          -6.876182022045465,
+          -2.131826138732332
+        ],
+        "error": ""
+      },
+      {
+        "index": 13,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.876182022045465,
+          -2.131826138732332
+        ],
+        "error": ""
+      },
+      {
+        "index": 14,
+        "stage": "input",
+        "prediction_eV": [
+          -6.54549671173353,
+          -1.9527531148513353
+        ],
+        "error": ""
+      },
+      {
+        "index": 15,
+        "stage": "input",
+        "prediction_eV": [
+          -7.115252256874286,
+          -1.88028127068585
+        ],
+        "error": ""
+      },
+      {
+        "index": 15,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.115252256874286,
+          -1.88028127068585
+        ],
+        "error": ""
+      },
+      {
+        "index": 16,
+        "stage": "input",
+        "prediction_eV": [
+          -6.7675684428742855,
+          -2.127799060470282
+        ],
+        "error": ""
+      },
+      {
+        "index": 16,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.7675684428742855,
+          -2.127799060470282
+        ],
+        "error": ""
+      },
+      {
+        "index": 17,
+        "stage": "input",
+        "prediction_eV": [
+          -6.6816247723149,
+          -1.500696067100538
+        ],
+        "error": ""
+      },
+      {
+        "index": 17,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.6816247723149,
+          -1.500696067100538
+        ],
+        "error": ""
+      },
+      {
+        "index": 18,
+        "stage": "input",
+        "prediction_eV": [
+          -6.7592237046538,
+          -1.5918243462703117
+        ],
+        "error": ""
+      },
+      {
+        "index": 19,
+        "stage": "input",
+        "prediction_eV": [
+          -6.809912484055597,
+          -1.7755724409466265
+        ],
+        "error": ""
+      },
+      {
+        "index": 19,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.809912484055597,
+          -1.7755724409466265
+        ],
+        "error": ""
+      },
+      {
+        "index": 20,
+        "stage": "input",
+        "prediction_eV": [
+          -7.055836028609611,
+          -1.2858434696739423
+        ],
+        "error": ""
+      },
+      {
+        "index": 20,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.055836028609611,
+          -1.2858434696739423
+        ],
+        "error": ""
+      },
+      {
+        "index": 21,
+        "stage": "input",
+        "prediction_eV": [
+          -6.65891763763777,
+          -1.7051435361511202
+        ],
+        "error": ""
+      },
+      {
+        "index": 21,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.65891763763777,
+          -1.7051435361511202
+        ],
+        "error": ""
+      },
+      {
+        "index": 22,
+        "stage": "input",
+        "prediction_eV": [
+          -6.992437145027693,
+          -0.8990444669626468
+        ],
+        "error": ""
+      },
+      {
+        "index": 22,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.992437145027693,
+          -0.8990444669626468
+        ],
+        "error": ""
+      },
+      {
+        "index": 23,
+        "stage": "input",
+        "prediction_eV": [
+          -7.061792967353462,
+          -0.8296431874324646
+        ],
+        "error": ""
+      },
+      {
+        "index": 23,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.061792967353462,
+          -0.8296431874324646
+        ],
+        "error": ""
+      }
+    ],
+    "hyff": [
+      {
+        "index": 0,
+        "stage": "input",
+        "prediction_eV": [
+          -7.017568111419678,
+          -1.7517000436782837
+        ],
+        "error": "",
+        "rms_force_eVA": 1.3405741453170776
+      },
+      {
+        "index": 0,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.305925369262695,
+          -1.7450555562973022
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5343532562255859
+      },
+      {
+        "index": 1,
+        "stage": "input",
+        "prediction_eV": [
+          -7.451654434204102,
+          -3.1601040363311768
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8523531556129456
+      },
+      {
+        "index": 1,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.420141696929932,
+          -3.049851417541504
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6414246559143066
+      },
+      {
+        "index": 2,
+        "stage": "input",
+        "prediction_eV": [
+          -6.885778427124023,
+          -1.109372854232788
+        ],
+        "error": "",
+        "rms_force_eVA": 1.084133505821228
+      },
+      {
+        "index": 2,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.810749530792236,
+          -0.675468385219574
+        ],
+        "error": "",
+        "rms_force_eVA": 0.41176944971084595
+      },
+      {
+        "index": 3,
+        "stage": "input",
+        "prediction_eV": [
+          -7.1579813957214355,
+          -0.20956170558929443
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8164581656455994
+      },
+      {
+        "index": 3,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.284586429595947,
+          -0.6078785061836243
+        ],
+        "error": "",
+        "rms_force_eVA": 0.511671781539917
+      },
+      {
+        "index": 4,
+        "stage": "input",
+        "prediction_eV": [
+          -6.9130377769470215,
+          -1.2463808059692383
+        ],
+        "error": "",
+        "rms_force_eVA": 1.3874903917312622
+      },
+      {
+        "index": 4,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.852299213409424,
+          -1.2012015581130981
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5028800368309021
+      },
+      {
+        "index": 5,
+        "stage": "input",
+        "prediction_eV": [
+          -6.4059367179870605,
+          -1.5800896883010864
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5567356944084167
+      },
+      {
+        "index": 5,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.489852428436279,
+          -1.614175796508789
+        ],
+        "error": "",
+        "rms_force_eVA": 0.4186679422855377
+      },
+      {
+        "index": 6,
+        "stage": "input",
+        "prediction_eV": [
+          -6.7036967277526855,
+          -0.5403185486793518
+        ],
+        "error": "",
+        "rms_force_eVA": 0.7397018671035767
+      },
+      {
+        "index": 6,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.832879543304443,
+          -0.550085186958313
+        ],
+        "error": "",
+        "rms_force_eVA": 0.4045754671096802
+      },
+      {
+        "index": 7,
+        "stage": "input",
+        "prediction_eV": [
+          -6.726539611816406,
+          -3.0255661010742188
+        ],
+        "error": "",
+        "rms_force_eVA": 12.087636947631836
+      },
+      {
+        "index": 8,
+        "stage": "input",
+        "prediction_eV": [
+          -6.763598918914795,
+          -2.2966203689575195
+        ],
+        "error": "",
+        "rms_force_eVA": 1.6842879056930542
+      },
+      {
+        "index": 8,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.789018154144287,
+          -2.3290956020355225
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6792343854904175
+      },
+      {
+        "index": 9,
+        "stage": "input",
+        "prediction_eV": [
+          -5.838877201080322,
+          -1.220574975013733
+        ],
+        "error": "",
+        "rms_force_eVA": 1.4028143882751465
+      },
+      {
+        "index": 9,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.526731491088867,
+          -1.2590805292129517
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5359874367713928
+      },
+      {
+        "index": 10,
+        "stage": "input",
+        "prediction_eV": [
+          -5.897680759429932,
+          -1.7164033651351929
+        ],
+        "error": "",
+        "rms_force_eVA": 4.040665626525879
+      },
+      {
+        "index": 11,
+        "stage": "input",
+        "prediction_eV": [
+          -6.197778701782227,
+          -1.1681522130966187
+        ],
+        "error": "",
+        "rms_force_eVA": 1.4236959218978882
+      },
+      {
+        "index": 11,
+        "stage": "optimized",
+        "prediction_eV": [
+          -5.935540676116943,
+          -1.1510357856750488
+        ],
+        "error": "",
+        "rms_force_eVA": 0.4034970700740814
+      },
+      {
+        "index": 12,
+        "stage": "input",
+        "prediction_eV": [
+          -5.780680179595947,
+          -1.411129355430603
+        ],
+        "error": "",
+        "rms_force_eVA": 2.0108749866485596
+      },
+      {
+        "index": 12,
+        "stage": "optimized",
+        "prediction_eV": [
+          -5.903285503387451,
+          -1.6395889520645142
+        ],
+        "error": "",
+        "rms_force_eVA": 0.717659056186676
+      },
+      {
+        "index": 13,
+        "stage": "input",
+        "prediction_eV": [
+          -7.109905242919922,
+          -2.013068914413452
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5358543395996094
+      },
+      {
+        "index": 13,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.100032806396484,
+          -2.0304415225982666
+        ],
+        "error": "",
+        "rms_force_eVA": 0.40025845170021057
+      },
+      {
+        "index": 14,
+        "stage": "input",
+        "prediction_eV": [
+          -6.331888198852539,
+          -1.7269868850708008
+        ],
+        "error": "",
+        "rms_force_eVA": 9.654694557189941
+      },
+      {
+        "index": 15,
+        "stage": "input",
+        "prediction_eV": [
+          -7.234241008758545,
+          -1.8236955404281616
+        ],
+        "error": "",
+        "rms_force_eVA": 0.7720425128936768
+      },
+      {
+        "index": 15,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.275112152099609,
+          -2.061114549636841
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5278653502464294
+      },
+      {
+        "index": 16,
+        "stage": "input",
+        "prediction_eV": [
+          -6.6810126304626465,
+          -1.571001648902893
+        ],
+        "error": "",
+        "rms_force_eVA": 0.866212785243988
+      },
+      {
+        "index": 16,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.718982696533203,
+          -1.5594052076339722
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8886966109275818
+      },
+      {
+        "index": 17,
+        "stage": "input",
+        "prediction_eV": [
+          -6.222314357757568,
+          -1.615761160850525
+        ],
+        "error": "",
+        "rms_force_eVA": 1.6743388175964355
+      },
+      {
+        "index": 17,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.483238220214844,
+          -1.8691569566726685
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6003521680831909
+      },
+      {
+        "index": 18,
+        "stage": "input",
+        "prediction_eV": [
+          -6.307119846343994,
+          -1.902330756187439
+        ],
+        "error": "",
+        "rms_force_eVA": 1.8680135011672974
+      },
+      {
+        "index": 19,
+        "stage": "input",
+        "prediction_eV": [
+          -6.919928073883057,
+          -2.2246296405792236
+        ],
+        "error": "",
+        "rms_force_eVA": 0.9402116537094116
+      },
+      {
+        "index": 19,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.9554443359375,
+          -2.254596710205078
+        ],
+        "error": "",
+        "rms_force_eVA": 0.48360076546669006
+      },
+      {
+        "index": 20,
+        "stage": "input",
+        "prediction_eV": [
+          -6.7223334312438965,
+          -0.5653903484344482
+        ],
+        "error": "",
+        "rms_force_eVA": 0.7198859453201294
+      },
+      {
+        "index": 20,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.738929271697998,
+          -0.44823768734931946
+        ],
+        "error": "",
+        "rms_force_eVA": 0.41309380531311035
+      },
+      {
+        "index": 21,
+        "stage": "input",
+        "prediction_eV": [
+          -6.133876800537109,
+          -1.86164128780365
+        ],
+        "error": "",
+        "rms_force_eVA": 1.2613651752471924
+      },
+      {
+        "index": 21,
+        "stage": "optimized",
+        "prediction_eV": [
+          -5.770575046539307,
+          -1.5099167823791504
+        ],
+        "error": "",
+        "rms_force_eVA": 0.5333938598632812
+      },
+      {
+        "index": 22,
+        "stage": "input",
+        "prediction_eV": [
+          -7.298330307006836,
+          -0.8537227511405945
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6848059892654419
+      },
+      {
+        "index": 22,
+        "stage": "optimized",
+        "prediction_eV": [
+          -7.3394455909729,
+          -0.917647123336792
+        ],
+        "error": "",
+        "rms_force_eVA": 0.6873807907104492
+      },
+      {
+        "index": 23,
+        "stage": "input",
+        "prediction_eV": [
+          -6.551399230957031,
+          -0.24577288329601288
+        ],
+        "error": "",
+        "rms_force_eVA": 0.8584372997283936
+      },
+      {
+        "index": 23,
+        "stage": "optimized",
+        "prediction_eV": [
+          -6.576140880584717,
+          -0.24701623618602753
+        ],
+        "error": "",
+        "rms_force_eVA": 0.44419682025909424
+      }
+    ]
+  },
+  "excluded": [
+    {
+      "index": 7,
+      "stage": "optimized",
+      "reason": "bond_geometry: 22-20 (N-C) length 3.911562 A"
+    },
+    {
+      "index": 18,
+      "stage": "optimized",
+      "reason": "connectivity_geometry: coordinate edges differ (added=[(15, 17)], removed=[])"
+    }
+  ],
+  "input_manifest": {
+    "cohort": {
+      "cohort.sdf": "09087faa05ed60dd23c29f9f78b527ea0fdbe9e214affeb0cee0bb5303667203"
+    },
+    "quantum": {
+      "quantum_point_summary_20261113.json": "5b0599117d3a635f6213bbdc72516bc8bd0a08e83cc305715c19e3f0b3f2922e"
+    },
+    "models": {
+      "holdout_models.json": "fbb011ccc8268822877aa88f67b3f1afc0cad6c3662cadf7364fc232087509b1"
+    },
+    "data_manifest": {
+      "manifest.json": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e"
+    },
+    "dpa/oracle": {
+      "dpa4_prop_adapter.pt": "03aeff6cbb80c3e7bb5c76ddec5836c564ade44d14dda88dcf9cbcf2877c6955",
+      "oracle_meta.json": "73ac1816e76551a3507867d790eb726f0f2e7890f2ea3cf125e07e643daf8790",
+      "target_scaler.ss": "62003255d9e5a5e830f798e6adb7b2b98130ebd155e12f44501f38beaabe9f1d"
+    },
+    "dpa/forcefield": {
+      "DPA4-Mini-OMol25-100M-v20260820.pt": "ae8c2574df58b527f84b5eac4631bd2f5722d99dc62c2b826bea365b02df033c"
+    },
+    "fingerprint_v1/oracle": {
+      "ensemble.joblib": "24169108b6c470f241f99fdf45d8d4677a1ac015f1ff00e483e1e047ff09c3fa",
+      "metadata.json": "384e7b9237ba4c72aa0c3a90e5b0ad132a688a2f1399bc82ee28b7c8167be4f1"
+    },
+    "hyff/oracle": {
+      "dpa4_prop_adapter.pt": "e8a0b6392b1b7e5089250f5395bf384a143d6b31588e2eefc2d3bf803dd286b7",
+      "oracle_meta.json": "f89927d588c152c501202e95f7b4b10b59ef2936c5ba3c8e52bcd978b24a3d70",
+      "target_scaler.ss": "62003255d9e5a5e830f798e6adb7b2b98130ebd155e12f44501f38beaabe9f1d"
+    },
+    "hyff/forcefield": {
+      ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weights.json": "3f974d30ff10ca89253721ece23e11175c83e73572eaaff1d51d77463381d26e",
+      "weights.safetensors": "353d6b3cdf3934cb71c9f0f18b65c184a39121644a1d93327b6f60dea93cc257"
+    }
+  },
+  "comparison": {
+    "dpa": {
+      "input": {
+        "n": 24,
+        "mae_against_quantum_eV": 0.3316820196530391,
+        "rms_force_p10_p50_p90_eVA": [
+          0.6905234813690185,
+          1.2052973508834839,
+          3.800177192687987
+        ],
+        "rms_force_le_0_1": 0
+      },
+      "input_same_accepted_subset": {
+        "n": 20,
+        "mae_against_quantum_eV": 0.22121085463699458,
+        "rms_force_p10_p50_p90_eVA": [
+          0.6690546989440919,
+          0.9194391667842865,
+          1.7379174113273623
+        ],
+        "rms_force_le_0_1": 0
+      },
+      "optimized": {
+        "n": 20,
+        "mae_against_quantum_eV": 0.1561261766736653,
+        "rms_force_p10_p50_p90_eVA": [
+          0.4038312494754791,
+          0.5171454548835754,
+          0.700084447860718
+        ],
+        "rms_force_le_0_1": 0
+      }
+    },
+    "fingerprint_v1": {
+      "input": {
+        "n": 24,
+        "mae_against_quantum_eV": 0.6374982439747344
+      },
+      "input_same_accepted_subset": {
+        "n": 20,
+        "mae_against_quantum_eV": 0.5216586754168979
+      },
+      "optimized": {
+        "n": 20,
+        "mae_against_quantum_eV": 0.41031756817829657
+      }
+    },
+    "hyff": {
+      "input": {
+        "n": 24,
+        "mae_against_quantum_eV": 0.45971580411980567,
+        "rms_force_p10_p50_p90_eVA": [
+          0.6953299760818481,
+          1.1727493405342102,
+          3.4317284345626815
+        ],
+        "rms_force_le_0_1": 0
+      },
+      "input_same_accepted_subset": {
+        "n": 20,
+        "mae_against_quantum_eV": 0.36077138415247945,
+        "rms_force_p10_p50_p90_eVA": [
+          0.6719989597797394,
+          0.9032122194766998,
+          1.6753337264060975
+        ],
+        "rms_force_le_0_1": 0
+      },
+      "optimized": {
+        "n": 20,
+        "mae_against_quantum_eV": 0.2710125087625458,
+        "rms_force_p10_p50_p90_eVA": [
+          0.4044676274061203,
+          0.5197685658931732,
+          0.6904086172580719
+        ],
+        "rms_force_le_0_1": 0
+      }
+    }
+  },
+  "quantum_geometry_force": {
+    "scope": "Final PBE-D3BJ gradients on converged and graph-preserved endpoints; RMS per atom, not per Cartesian component.",
+    "n": 20,
+    "rms_force_p10_p50_p90_eVA": [
+      0.001669683578941654,
+      0.002147429030926732,
+      0.00341895012684484
+    ],
+    "maximum_rms_force_eVA": 0.0036515390023453722,
+    "rms_force_le_0_1": 20
+  },
+  "source_sha256": {
+    "docs/experiments/oe62_point_quantum_20261113.json": "5b0599117d3a635f6213bbdc72516bc8bd0a08e83cc305715c19e3f0b3f2922e",
+    "/tmp/oe62_point_quantum_oracles_raw.json": "e8a337f85ad0c0acd640b02fc79a04ac45478450530f0e8b96b8ea76929e97cb",
+    "/tmp/oe62_point_quantum_oracles_inputs.json": "a324a30213d8beb61e607038d296b71ae3585b5a0a28cdf3e4ebaccd1a9b8ae3"
+  },
+  "failure_recording_regression": {
+    "scope": "Separate replay; primary failure is retained unchanged.",
+    "index": 10,
+    "status": "failed",
+    "completed_gradient_records": 1,
+    "max_singlepoint_difference_eV": 1.3589129821411916e-13,
+    "input_sha256": "09087faa05ed60dd23c29f9f78b527ea0fdbe9e214affeb0cee0bb5303667203",
+    "script_sha256": "89f404f429a84bcbac11352dc70ba0db3078610fcbe89ac2ea6013c39c65e409"
+  }
+}
