@@ -31,10 +31,10 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     ff=SimpleNamespace(atom_type_map=['C'],compute_energy_and_forces=lambda *a,**k:(0.,torch.zeros(1,3)))
     pool=[TargetPoints.parse({'y':value},{'y':1.},['y']) for value in [0.,.5]]
     torch.manual_seed(21);base=Policy();rng=torch.get_rng_state()
-    def run(model,**kwargs):
+    def run(model,reward_override=reward_type,**kwargs):
         return align_octree(model,[],None,np.zeros(1),np.ones(1),pool[0].intervals(),oracle,ff,
                             steps=4,group_size=4,lr=.03,kl_beta=.2,physics_weight=0,replay_weight=0,
-                            points=pool[0],point_pool=pool,point_reward_type=reward_type,**kwargs)
+                            points=pool[0],point_pool=pool,point_reward_type=reward_override,**kwargs)
     full=copy.deepcopy(base);full_history=run(full)
     torch.set_rng_state(rng);partial=copy.deepcopy(base);saved={}
     def snapshot(step,model,history,state):
@@ -50,6 +50,9 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     for key,value in full.state_dict().items():
         torch.testing.assert_close(value,resumed.state_dict()[key],atol=0,rtol=0)
     assert full_history==resumed_history
+    other='eligibility_only' if reward_type=='inverse_point_distance' else 'inverse_point_distance'
+    with pytest.raises(ValueError,match='same GRPO targets, optimizer and reward settings'):
+        run(copy.deepcopy(base),reward_override=other,resume_checkpoint=saved)
 
 
 def test_eligibility_reward_ignores_property_value_but_keeps_evaluation(monkeypatch):
