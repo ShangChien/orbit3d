@@ -153,5 +153,64 @@
     "elapsed_seconds": 18.431673761457205,
     "checkpoint_sha256": "fce4166f9917dc258a1be4ec23861babb2506921c1c2f3e70df6d1bbb48d9286"
   },
-  "scope": "Implementation and short-run validation only; not evidence of control improvements. Formal pilot uses final quantum-excluded hindsight datasets."
+  "scope": "Implementation and short-run validation only; not evidence of control improvements. Formal pilot uses final quantum-excluded hindsight datasets.",
+  "hindsight_acquisition_costs": {
+    "homo": {
+      "frozen_source_pool_attempts": 1920,
+      "source_pool_generation_and_raw_evaluation_seconds": 453.89633349329233,
+      "reused_cost_records": 30,
+      "cost_file_sha256": "38a48e24353c4a5ebe0794e2fbb2ab8dfe7e3c3944963d7fce24ebcfc9082d16",
+      "new_generation_calls_for_hindsight": 0,
+      "new_oracle_calls_for_hindsight": 0,
+      "new_quantum_calls_for_hindsight": 0,
+      "preparation_wall_seconds": null
+    },
+    "lumo": {
+      "frozen_source_pool_attempts": 1920,
+      "source_pool_generation_and_raw_evaluation_seconds": 452.7817038446665,
+      "reused_cost_records": 30,
+      "cost_file_sha256": "31d7ffae2a8e8ca1fe4623bb384c762f08045cbe192e270c2eb3b7c0f6853176",
+      "new_generation_calls_for_hindsight": 0,
+      "new_oracle_calls_for_hindsight": 0,
+      "new_quantum_calls_for_hindsight": 0,
+      "preparation_wall_seconds": null
+    }
+  },
+  "hindsight_cost_scope": "Existing frozen pools are reused without new calls. Their original generation and raw evaluation time is retained as acquisition cost; first preprocessing wall time was not recorded.",
+  "homo_formal_parameter_audit": {
+    "target": "homo",
+    "source_scale_dtype": "float32",
+    "arms": {
+      "gaussian": {
+        "optimizer_updates": 2000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.054505355656147,
+        "lumo_width_column_norm": 0.0
+      },
+      "sft": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.08227646350860596,
+        "lumo_width_column_norm": 0.0
+      },
+      "contrast": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.0916929543018341,
+        "lumo_width_column_norm": 0.0
+      },
+      "hindsight": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.07202742248773575,
+        "lumo_width_column_norm": 0.0
+      },
+      "both": {
+        "optimizer_updates": 1000,
+        "nonconditioner_tensors_unchanged": true,
+        "homo_width_column_norm": 0.07054097205400467,
+        "lumo_width_column_norm": 0.0
+      }
+    }
+  }
 }
