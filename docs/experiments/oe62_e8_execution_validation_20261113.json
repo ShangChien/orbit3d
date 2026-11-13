@@ -96,5 +96,13 @@
       }
     },
     "used_in_current_ablation": false
+  },
+  "candidate_advantage_validation": {
+    "full_suite_passed": 228,
+    "full_suite_skipped": 3,
+    "wheel_tests_passed": 11,
+    "wheel_test_scope": "Copied alignment and advantage tests outside source checkout; conftest asserts imports resolve to extracted wheel. Package resources checked separately.",
+    "alignment_source_sha256": "071e9da97b6ef04640bc56c29c660d9a7b910a2c95084ed336e230c4f8e7a82d",
+    "wheel_sha256": "f19feb1162599bac3ad5596541c8d1a97a3b09c035da459cdb23ddc7353024c1"
   }
 }

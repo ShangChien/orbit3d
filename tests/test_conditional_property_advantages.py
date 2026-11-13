@@ -42,3 +42,20 @@ def test_permutation_does_not_change_candidate_advantages():
     permutation=torch.tensor([3,0,4,1,2])
     actual,_=group_relative_advantages(reward[permutation],mask[permutation],'conditional_property_v1')
     torch.testing.assert_close(actual,expected[permutation])
+
+
+def test_separated_signal_changes_the_actual_policy_gradient_direction():
+    from orbit3d.generator.octree_alignment import categorical_policy_loss
+    reward=torch.tensor([.9,.1,-1.,-1.]);mask=reward>=0
+    joint,_=group_relative_advantages(reward,mask)
+    separated,_=group_relative_advantages(reward,mask,'conditional_property_v1')
+    gradients=[]
+    for advantage in [joint,separated]:
+        logits=torch.zeros((4,2),requires_grad=True)
+        current=[(logits.log_softmax(-1),torch.zeros(4,dtype=torch.long),torch.arange(4))]
+        previous=[(current[0][0].detach(),current[0][1],current[0][2])]
+        categorical_policy_loss(current,previous,None,advantage,beta=0).backward()
+        gradients.append(logits.grad[:,0])
+    assert gradients[0][1]<0  # Original reward reinforces the poor eligible trajectory.
+    assert gradients[1][1]>0  # Separated property comparison suppresses it.
+    assert gradients[1][0]<0  # The better eligible trajectory is reinforced.
