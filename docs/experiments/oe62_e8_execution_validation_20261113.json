@@ -10,5 +10,17 @@
   "unit_tests": {
     "passed": 212,
     "skipped": 3
+  },
+  "matched_first_group": {
+    "homo": {
+      "first_group_tokens_identical": true,
+      "same_reference": true,
+      "eligible_predictions_max_delta": 0.0
+    },
+    "lumo": {
+      "first_group_tokens_identical": true,
+      "same_reference": true,
+      "eligible_predictions_max_delta": 0.0
+    }
   }
 }

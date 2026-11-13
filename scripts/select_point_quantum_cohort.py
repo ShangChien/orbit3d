@@ -44,6 +44,7 @@ def main():
     write_precise_sdf(a.output/'cohort.sdf',molecules)
     report={'selection':'Paired fixed policies; top DPA-ranked export and fixed SHA256 draw from remaining exports. No quantum or independent-model score used.',
         'seed_assignment':a.assignments,'arms':a.arms,'hash_salt':a.hash_salt,
+        'planned_per_group':{f'{target}/{arm}':2*len(assignments) for target in ['homo','lumo'] for arm in a.arms},
         'expected':expected,'selected':len(records),'missing':missing,'records':records,'source_sha256':hashes,
         'sdf_sha256':hashlib.sha256((a.output/'cohort.sdf').read_bytes()).hexdigest()}
     (a.output/'manifest.json').write_text(json.dumps(report,indent=2)+'\n');print('Frozen',len(records),'of',expected)
