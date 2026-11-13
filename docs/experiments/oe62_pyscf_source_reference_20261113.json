@@ -1,0 +1,720 @@
+{
+  "manifest": {
+    "source": "Common development source 3D coordinates, unchanged; no locked-test labels used",
+    "selection": "12 property/size stratified references plus missing B/P diagnostics to cover the frozen cohort; not a random full-OE62 accuracy estimate",
+    "records": [
+      {
+        "id": "r00",
+        "source_id": "AFURPO10",
+        "atoms": 22,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -7.03115,
+          -2.11041
+        ],
+        "rule": {
+          "property": "homo",
+          "quantile": 0.25,
+          "atom_bin": [
+            10,
+            30
+          ]
+        }
+      },
+      {
+        "id": "r01",
+        "source_id": "CAZSIH",
+        "atoms": 47,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -7.04473,
+          -0.9371800000000001
+        ],
+        "rule": {
+          "property": "homo",
+          "quantile": 0.25,
+          "atom_bin": [
+            31,
+            55
+          ]
+        }
+      },
+      {
+        "id": "r02",
+        "source_id": "ROKBUP",
+        "atoms": 19,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -6.5671,
+          -1.02192
+        ],
+        "rule": {
+          "property": "homo",
+          "quantile": 0.5,
+          "atom_bin": [
+            10,
+            30
+          ]
+        }
+      },
+      {
+        "id": "r03",
+        "source_id": "FUJTEJ",
+        "atoms": 38,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -6.56523,
+          -1.68324
+        ],
+        "rule": {
+          "property": "homo",
+          "quantile": 0.5,
+          "atom_bin": [
+            31,
+            55
+          ]
+        }
+      },
+      {
+        "id": "r04",
+        "source_id": "MEBXZP",
+        "atoms": 30,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O",
+          "P"
+        ],
+        "source_labels": [
+          -6.15001,
+          -0.35391
+        ],
+        "rule": {
+          "property": "homo",
+          "quantile": 0.75,
+          "atom_bin": [
+            10,
+            30
+          ]
+        }
+      },
+      {
+        "id": "r05",
+        "source_id": "PUYNOM",
+        "atoms": 32,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -6.15994,
+          -0.7994800000000001
+        ],
+        "rule": {
+          "property": "homo",
+          "quantile": 0.75,
+          "atom_bin": [
+            31,
+            55
+          ]
+        }
+      },
+      {
+        "id": "r06",
+        "source_id": "XICFAR",
+        "atoms": 23,
+        "elements": [
+          "C",
+          "H",
+          "O"
+        ],
+        "source_labels": [
+          -6.76064,
+          -2.05381
+        ],
+        "rule": {
+          "property": "lumo",
+          "quantile": 0.25,
+          "atom_bin": [
+            10,
+            30
+          ]
+        }
+      },
+      {
+        "id": "r07",
+        "source_id": "SIZLAO",
+        "atoms": 34,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -5.50383,
+          -2.05481
+        ],
+        "rule": {
+          "property": "lumo",
+          "quantile": 0.25,
+          "atom_bin": [
+            31,
+            55
+          ]
+        }
+      },
+      {
+        "id": "r08",
+        "source_id": "ADOJEI",
+        "atoms": 27,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -7.10867,
+          -1.44081
+        ],
+        "rule": {
+          "property": "lumo",
+          "quantile": 0.5,
+          "atom_bin": [
+            10,
+            30
+          ]
+        }
+      },
+      {
+        "id": "r09",
+        "source_id": "HAKPAM",
+        "atoms": 47,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O"
+        ],
+        "source_labels": [
+          -6.29694,
+          -1.44451
+        ],
+        "rule": {
+          "property": "lumo",
+          "quantile": 0.5,
+          "atom_bin": [
+            31,
+            55
+          ]
+        }
+      },
+      {
+        "id": "r10",
+        "source_id": "POHSEK",
+        "atoms": 29,
+        "elements": [
+          "C",
+          "H",
+          "N",
+          "O",
+          "P"
+        ],
+        "source_labels": [
+          -6.6332,
+          -0.8129400000000001
+        ],
+        "rule": {
+          "property": "lumo",
+          "quantile": 0.75,
+          "atom_bin": [
+            10,
+            30
+          ]
+        }
+      },
+      {
+        "id": "r11",
+        "source_id": "NAKFIP",
+        "atoms": 46,
+        "elements": [
+          "C",
+          "H",
+          "N"
+        ],
+        "source_labels": [
+          -7.07595,
+          -0.82825
+        ],
+        "rule": {
+          "property": "lumo",
+          "quantile": 0.75,
+          "atom_bin": [
+            31,
+            55
+          ]
+        }
+      },
+      {
+        "id": "r12",
+        "source_id": "NUGHOM",
+        "atoms": 52,
+        "elements": [
+          "B",
+          "C",
+          "H",
+          "N"
+        ],
+        "source_labels": [
+          -5.97246,
+          -0.74563
+        ],
+        "rule": {
+          "diagnostic_element": "B"
+        }
+      }
+    ],
+    "sdf_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+    "protocol": {
+      "engine": "GPU4PySCF 1.9.1 / PySCF 2.12.1",
+      "single_point": "PBE0/def2-TZVP, density fitting def2-universal-jkfit",
+      "grid_level": 3,
+      "scf_tolerance": 1e-08,
+      "charge": 0,
+      "multiplicity": 1,
+      "geometry": "unchanged OE62 PBE+TS source coordinates",
+      "scope": "Approximate basis/protocol comparison, not FHI-aims Tier2 equivalence"
+    }
+  },
+  "source_manifest_sha256": "3c17f2a18ca811491f88a68a5d9cff2b1c4b6848e57157595c713eb5f708ed73",
+  "records": [
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 0,
+      "atoms": 22,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -7.03115,
+        -2.11041
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -7.001037766911854,
+          -2.0684628590246428
+        ],
+        "energy_Ha": -628.3368318981719,
+        "converged": true,
+        "seconds": 3.532741278409958
+      },
+      "elapsed_seconds": 3.832463562488556,
+      "source_result_sha256": "3e7e54b28f5b17b05e975d5b4361cf7286522a45627a83d0cfd65788e8dbe202",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job00/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 1,
+      "atoms": 47,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "3",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -7.04473,
+        -0.9371800000000001
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -7.026361545280201,
+          -0.8975338368315678
+        ],
+        "energy_Ha": -1092.6746159158265,
+        "converged": true,
+        "seconds": 5.172842483967543
+      },
+      "elapsed_seconds": 5.472109045833349,
+      "source_result_sha256": "799b1f6a77bdccdb4f76588e1fab1680ea2ea68dfcae12e24f45c34c5f808e12",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job01/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 2,
+      "atoms": 19,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.5671,
+        -1.02192
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.525731881795425,
+          -0.9512780634005422
+        ],
+        "energy_Ha": -473.19049947057795,
+        "converged": true,
+        "seconds": 2.4785391464829445
+      },
+      "elapsed_seconds": 2.6248984038829803,
+      "source_result_sha256": "01f4a7821c9ab98eb118b2cb44806621bd077b04d99af6a5acf6a761bffa518b",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job02/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 3,
+      "atoms": 38,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "3",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.56523,
+        -1.68324
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.54070754306342,
+          -1.649115623439533
+        ],
+        "energy_Ha": -974.8051204769156,
+        "converged": true,
+        "seconds": 3.836542896926403
+      },
+      "elapsed_seconds": 3.983016863465309,
+      "source_result_sha256": "521954642e0d84fcf1db67cc04079f659228a3d834ffe40cc89f1ac7a18b3148",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job03/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 4,
+      "atoms": 30,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O",
+        "P"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.15001,
+        -0.35391
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.123498891226603,
+          -0.30226334519062464
+        ],
+        "energy_Ha": -1123.7367799390997,
+        "converged": true,
+        "seconds": 3.3421602621674538
+      },
+      "elapsed_seconds": 3.485659897327423,
+      "source_result_sha256": "1c76cb21f35d2a3c4b7ebfd6957ffeaed6e87380e8b57204dfdc6510335b0059",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job04/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 5,
+      "atoms": 32,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "3",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.15994,
+        -0.7994800000000001
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.134708297796375,
+          -0.7544931172238704
+        ],
+        "energy_Ha": -689.2094593340562,
+        "converged": true,
+        "seconds": 3.1004999428987503
+      },
+      "elapsed_seconds": 3.2398046031594276,
+      "source_result_sha256": "302cba8eb07bd65cc1ac0bfeb72d3b05a73cd4ac151b34e081ac3639723f5df3",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job05/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 6,
+      "atoms": 23,
+      "elements": [
+        "C",
+        "H",
+        "O"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.76064,
+        -2.05381
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.724071215139516,
+          -2.0111942957773055
+        ],
+        "energy_Ha": -612.316401942561,
+        "converged": true,
+        "seconds": 3.661848533898592
+      },
+      "elapsed_seconds": 3.799230173230171,
+      "source_result_sha256": "7c36f1287eb6896382291aeeed005bb7f211ba2604bfbe3fd05faf81a416f1d8",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job06/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 7,
+      "atoms": 34,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "3",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -5.50383,
+        -2.05481
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -5.475877854375013,
+          -2.0181026049555695
+        ],
+        "energy_Ha": -935.3070254467034,
+        "converged": true,
+        "seconds": 4.808764852583408
+      },
+      "elapsed_seconds": 5.1295993104577065,
+      "source_result_sha256": "8ab1602a2aebc3a328451d6d685b87f963b1fade0775dc0da520f89bd1f56a23",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job07/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 8,
+      "atoms": 27,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -7.10867,
+        -1.44081
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -7.073620668339934,
+          -1.3966157850465757
+        ],
+        "energy_Ha": -627.8018555421174,
+        "converged": true,
+        "seconds": 2.5717440955340862
+      },
+      "elapsed_seconds": 2.736817095428705,
+      "source_result_sha256": "f74a96cc4e0845e6f148e50b587ce592f149fedd9eccfee4e5be68b11f80e09d",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job08/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 9,
+      "atoms": 47,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O"
+      ],
+      "visible_gpu": "3",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.29694,
+        -1.44451
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.268086015649372,
+          -1.4083369970514308
+        ],
+        "energy_Ha": -1205.508078371166,
+        "converged": true,
+        "seconds": 5.176583651453257
+      },
+      "elapsed_seconds": 5.318894397467375,
+      "source_result_sha256": "0742016b3f2510be05688f11d37b17e485eea0264f031ce5e1289c760e7b80f0",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job09/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 10,
+      "atoms": 29,
+      "elements": [
+        "C",
+        "H",
+        "N",
+        "O",
+        "P"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -6.6332,
+        -0.8129400000000001
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -6.6116659228282435,
+          -0.7603432445258093
+        ],
+        "energy_Ha": -1326.7115192591723,
+        "converged": true,
+        "seconds": 2.8885466679930687
+      },
+      "elapsed_seconds": 3.02851839363575,
+      "source_result_sha256": "3e17e7defa136779b95a5b94fc6acead4d3e24696bd3698e2d856ae3e5c0fd9d",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job10/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 11,
+      "atoms": 46,
+      "elements": [
+        "C",
+        "H",
+        "N"
+      ],
+      "visible_gpu": "3",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -7.07595,
+        -0.82825
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -7.046567603923599,
+          -0.7905584929339393
+        ],
+        "energy_Ha": -1209.922266916039,
+        "converged": true,
+        "seconds": 4.86978754401207
+      },
+      "elapsed_seconds": 5.008068572729826,
+      "source_result_sha256": "4fc96997b901cbac7a327b0872af930f144f49755f1a9a9552917610ad852822",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job11/result.json"
+    },
+    {
+      "input_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+      "index": 12,
+      "atoms": 52,
+      "elements": [
+        "B",
+        "C",
+        "H",
+        "N"
+      ],
+      "visible_gpu": "2",
+      "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+      "status": "completed",
+      "source_labels_eV": [
+        -5.97246,
+        -0.74563
+      ],
+      "singlepoint": {
+        "prediction_eV": [
+          -5.951318502439873,
+          -0.7162503132063528
+        ],
+        "energy_Ha": -1012.3841072689379,
+        "converged": true,
+        "seconds": 4.8908117190003395
+      },
+      "elapsed_seconds": 5.028413739055395,
+      "source_result_sha256": "da00e92d161970332e5892891e1aa817059000993ff5e514fba1952b70c2df9e",
+      "source_result": "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/quantum_reference/results/job12/result.json"
+    }
+  ],
+  "summary": {
+    "homo": {
+      "n": 13,
+      "mae_eV": 0.02819971471004397,
+      "bias_eV": 0.02819971471004397,
+      "max_abs_error_eV": 0.04136811820457531
+    },
+    "lumo": {
+      "n": 13,
+      "mae_eV": 0.043257801645556634,
+      "bias_eV": 0.043257801645556634,
+      "max_abs_error_eV": 0.07064193659945772
+    }
+  }
+}
