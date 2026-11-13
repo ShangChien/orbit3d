@@ -22,7 +22,7 @@ def select(rows, model, property_index, goal, k):
                 selected_indices=[r['index'] for r in chosen],quantum_failed_selected=[r['index'] for r in chosen if r['truth'] is None])
 
 
-def aggregate(cells):
+def aggregate(cells, proposals_per_pool=64):
     names=['requested','selected','quantum_verified','hits'];s={n:sum(c[n] for c in cells) for n in names}
     target_maes=[]
     for q in sorted({c['quantile'] for c in cells}):
@@ -30,7 +30,7 @@ def aggregate(cells):
         target_maes.append(sum(c['error_sum_eV'] for c in local)/n if n else None)
     s.update(delivery_coverage=s['selected']/s['requested'],hit_rate_requested_slots=s['hits']/s['requested'],
              quantum_coverage_selected=s['quantum_verified']/s['selected'] if s['selected'] else None,
-             retained_hit_yield_all_proposals_equal_goal=s['hits']/(len(cells)*64),
+             retained_hit_yield_all_proposals_equal_goal=s['hits']/(len(cells)*proposals_per_pool),
              mae_equal_goal_eV=float(np.mean(target_maes)) if all(v is not None for v in target_maes) else None,
              mae_quantum_verified_selected_eV=sum(c['error_sum_eV'] for c in cells)/s['quantum_verified'] if s['quantum_verified'] else None,
              unique_selected_endpoints=len({i for c in cells for i in c['selected_indices']}))
@@ -41,28 +41,30 @@ def aggregate(cells):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--transfer',type=Path,required=True);p.add_argument('--root',type=Path,required=True);p.add_argument('--targets',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    transfer=json.loads(a.transfer.read_text());goals=json.loads(a.targets.read_text())['single_target_points'];hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [a.transfer,a.targets]};indexed={};arms={};seeds=[2091,2092];quantiles=[10,25,50,75,90]
-    for target in ['homo','lumo']:
-        for control in ['correct','off']:
-            path=a.root/f'e14_cohort_{target}_{control}/manifest.json';manifest=json.loads(path.read_text());hashes[str(path)]=hashlib.sha256(path.read_bytes()).hexdigest();arms[target]=manifest['arms']
-            for r in manifest['records']:indexed[(target,control,r['index'])]=r
-    rows=[{**r,**{k:indexed[(r['target'],r['control'],r['index'])][k] for k in ['quantile','inference_seed','candidate_id']}} for r in transfer['records']]
-    reports=[]
-    for target in ['homo','lumo']:
-        j=['homo','lumo'].index(target)
-        for arm in arms[target]:
+    p=argparse.ArgumentParser();p.add_argument('--transfer',type=Path,required=True);p.add_argument('--root',type=Path,help='Legacy E14 manifest root; omit when transfer records contain pool identities');p.add_argument('--targets',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--quantiles',type=int,nargs='+',default=[10,25,50,75,90]);p.add_argument('--seeds',type=int,nargs='+',default=[2091,2092]);p.add_argument('--proposals-per-pool',type=int,default=64);a=p.parse_args()
+    transfer=json.loads(a.transfer.read_text());goals=json.loads(a.targets.read_text())['single_target_points'];hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [a.transfer,a.targets]};seeds=a.seeds;quantiles=a.quantiles
+    rows=transfer['records']
+    if a.root:
+        indexed={}
+        for target in ['homo','lumo']:
             for control in ['correct','off']:
-                candidates=[r for r in rows if r['target']==target and r['arm']==arm and r['control']==control]
-                for model in ['baseline','affine','adapted']:
-                    for k in [4,8]:
-                        cells=[]
-                        for q in quantiles:
-                            for seed in seeds:
-                                pool=[r for r in candidates if r['inference_seed']==seed and (control=='off' or r['quantile']==q)]
-                                cells.append(dict(quantile=q,inference_seed=seed,**select(pool,model,j,goals[target][str(q)],k)))
-                        reports.append(dict(target=target,arm=arm,control=control,model=model,k=k,unique_raw_proposal_budget=640 if control=='correct' else 128,metrics=aggregate(cells),cells=cells))
-    report={'scope':'E15 prespecified top-4/top-8 by predicted point distance, ties by original candidate ID. Only physically accepted rankable endpoints; no replacement of SCF failures or missing slots. Off pools reused across five requests, not 640 unique proposals. Counts over request cells are occurrences; unique endpoint count reported separately. DFT labels never rank or fit here. Does not change original whole-pool generation yields.','reports':reports,'source_sha256':hashes}
+                path=a.root/f'e14_cohort_{target}_{control}/manifest.json';manifest=json.loads(path.read_text());hashes[str(path)]=hashlib.sha256(path.read_bytes()).hexdigest()
+                for r in manifest['records']:indexed[(target,control,r['index'])]=r
+        rows=[{**r,**{k:indexed[(r['target'],r['control'],r['index'])][k] for k in ['quantile','inference_seed','candidate_id']}} for r in rows]
+    reports=[]
+    for target in sorted({r['target'] for r in rows}):
+        j=['homo','lumo'].index(target)
+        for arm,control in sorted({(r['arm'],r['control']) for r in rows if r['target']==target}):
+            candidates=[r for r in rows if r['target']==target and r['arm']==arm and r['control']==control]
+            for model in ['baseline','affine','adapted']:
+                for k in [4,8]:
+                    cells=[]
+                    for q in quantiles:
+                        for seed in seeds:
+                            pool=[r for r in candidates if r['inference_seed']==seed and (control=='off' or r['quantile']==q)]
+                            cells.append(dict(quantile=q,inference_seed=seed,**select(pool,model,j,goals[target][str(q)],k)))
+                    reports.append(dict(target=target,arm=arm,control=control,model=model,k=k,unique_raw_proposal_budget=a.proposals_per_pool*len(seeds)*(len(quantiles) if control=='correct' else 1),metrics=aggregate(cells,a.proposals_per_pool),cells=cells))
+    report={'scope':'Fixed top-4/top-8 by predicted point distance, ties by original candidate ID. Only physically accepted rankable endpoints; no replacement of SCF failures or missing slots. Off pools reused across requests; unique proposal budget counts each original pool once. Counts over request cells are occurrences; unique endpoint count reported separately. DFT labels never rank or fit here. Does not change original whole-pool generation yields.','reports':reports,'source_sha256':hashes}
     a.output.write_text(json.dumps(report,indent=2)+'\n')
 
 if __name__=='__main__':main()

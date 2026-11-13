@@ -24,3 +24,11 @@ def test_point_distance_rank_fidelity_uses_all_eligible_endpoints():
     assert r['preselection_rank_pairs']==3
     assert r['preselection_distance_spearman']==-1
     assert r['hits']==0
+
+
+def test_aggregate_uses_declared_proposal_budget():
+    cell = dict(quantile=50, requested=4, selected=2, quantum_verified=1, hits=1,
+                error_sum_eV=.1, selected_indices=[0, 1], preselection_distance_spearman=None)
+    result = module.aggregate([cell], proposals_per_pool=32)
+    assert result['retained_hit_yield_all_proposals_equal_goal'] == 1 / 32
+    assert result['hit_rate_requested_slots'] == 1 / 4
