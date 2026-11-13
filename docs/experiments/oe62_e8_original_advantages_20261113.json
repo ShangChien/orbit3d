@@ -2615,7 +2615,8 @@
           "parameter_update_l2": 0.06004193425178528,
           "policy_kl": 0.006859324872493744
         }
-      ]
+      ],
+      "at_most_half_eligible_groups": 200
     },
     "homo_43": {
       "checkpoint": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_align_homo_seed43/grpo/weights/octree_aligned.pt",
@@ -5231,7 +5232,8 @@
           "parameter_update_l2": 0.052833378314971924,
           "policy_kl": 0.010000311769545078
         }
-      ]
+      ],
+      "at_most_half_eligible_groups": 200
     },
     "homo_44": {
       "checkpoint": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_homo_seed44/grpo/weights/octree_aligned.pt",
@@ -7847,7 +7849,8 @@
           "parameter_update_l2": 0.05513295158743858,
           "policy_kl": 0.012981828302145004
         }
-      ]
+      ],
+      "at_most_half_eligible_groups": 199
     },
     "lumo_42": {
       "checkpoint": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/resumable_lumo_seed42/grpo/weights/octree_aligned.pt",
@@ -10463,7 +10466,8 @@
           "parameter_update_l2": 0.049592524766922,
           "policy_kl": 0.009007442742586136
         }
-      ]
+      ],
+      "at_most_half_eligible_groups": 198
     },
     "lumo_43": {
       "checkpoint": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_lumo_seed43/grpo/weights/octree_aligned.pt",
@@ -13079,7 +13083,8 @@
           "parameter_update_l2": 0.05609028786420822,
           "policy_kl": 0.025635896250605583
         }
-      ]
+      ],
+      "at_most_half_eligible_groups": 197
     },
     "lumo_44": {
       "checkpoint": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/formal_align_lumo_seed44/grpo/weights/octree_aligned.pt",
@@ -15695,7 +15700,8 @@
           "parameter_update_l2": 0.05064192786812782,
           "policy_kl": 0.007354097440838814
         }
-      ]
+      ],
+      "at_most_half_eligible_groups": 199
     }
   }
 }

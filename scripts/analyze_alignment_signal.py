@@ -32,6 +32,7 @@ def analyze(history):
         'zero_eligible_groups':sum(r['eligible']==0 for r in groups),
         'one_eligible_groups':sum(r['eligible']==1 for r in groups),
         'two_plus_eligible_groups':sum(r['eligible']>=2 for r in groups),
+        'at_most_half_eligible_groups':sum(2*r['eligible']<=r['attempted'] for r in groups),
         'within_category_advantage_fraction':within/(between+within) if between+within else None,
         'eligible_negative_advantages':sum(r['eligible_negative_advantages'] for r in groups),
         'per_group':groups}
