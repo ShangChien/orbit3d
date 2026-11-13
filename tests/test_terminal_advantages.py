@@ -47,3 +47,10 @@ def test_terminal_alignment_updates_original_rollout_not_relaxed_coordinates(mon
     assert all(r['terminal']['coordinates_A']==[[9.,9.,9.]] for r in rows)
     assert all(r['coordinates_A']==[[0.,0.,0.]] for r in rows)
     assert any(r['terminal_advantages']['property']<0 for r in rows)
+
+
+def test_physical_only_ignores_terminal_property_values():
+    s=torch.tensor([True,True,True,False]);p=torch.tensor([True,True,False,False])
+    a,_=terminal_advantages(s,p,p,torch.tensor([.1,.9,0.,0.]),'physical')
+    b,_=terminal_advantages(s,p,p,torch.tensor([.9,.1,0.,0.]),'physical')
+    torch.testing.assert_close(a,b)

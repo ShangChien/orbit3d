@@ -53,7 +53,7 @@ def main():
         'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid3, SCF1e-8'+('; PBE-D3BJ/def2-TZVP optimization max80' if optimize else '; input-geometry singlepoints only')+'; distinct from source FHI-aims Tier2/PBE-TS.',
         'selection':{k:v for k,v in manifest.items() if k!='records'},'elapsed_seconds':completed['elapsed_seconds'],
         'execution_metadata':{k:v for k,v in completed.items() if k!='jobs'},
-        'all':summarize(rows,manifest['expected'],optimize),'groups':{f'{target}/{arm}':summarize([r for r in rows if r['target']==target and r['arm']==arm],manifest.get('planned_per_group',{}).get(f'{target}/{arm}'),optimize) for target in ['homo','lumo'] for arm in manifest.get('arms',['continue_wall','grpo200'])},
+        'all':summarize(rows,manifest['expected'],optimize),'groups':{f'{target}/{arm}':summarize([r for r in rows if r['target']==target and r['arm']==arm],manifest.get('planned_per_group',{}).get(f'{target}/{arm}'),optimize) for target in manifest.get('targets',['homo','lumo']) for arm in manifest.get('arms',['continue_wall','grpo200'])},
         'by_selection':{rule:summarize([r for r in rows if r['selection']==rule],manifest['expected']//2,optimize) for rule in ['top1','fixed_hash']},
         'records':rows,'source_sha256':hashes}
     a.output.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report['groups'],indent=2))
