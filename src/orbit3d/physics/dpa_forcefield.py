@@ -294,19 +294,22 @@ class DPAPotentialGuidance(nn.Module):
         batch_size = int(node_batch_idx.max().item()) + 1 if n_total > 0 else 0
 
         with torch.enable_grad():
-            mol_counts = torch.bincount(node_batch_idx, minlength=batch_size).clamp(min=1).to(coords.dtype)
-            mol_sums = torch.zeros((batch_size, 3), dtype=coords.dtype, device=device)
-            mol_sums.index_add_(0, node_batch_idx, coords.detach())
+            # Pack in the model coordinate precision. Adding large separation
+            # offsets in float32 first irreversibly rounds intramolecular geometry.
+            packing_coords = coords.detach().to(self.coord_dtype)
+            mol_counts = torch.bincount(node_batch_idx, minlength=batch_size).clamp(min=1).to(self.coord_dtype)
+            mol_sums = torch.zeros((batch_size, 3), dtype=self.coord_dtype, device=device)
+            mol_sums.index_add_(0, node_batch_idx, packing_coords)
             mol_coms = mol_sums / mol_counts.unsqueeze(-1)
 
-            grid_offsets = torch.zeros((batch_size, 3), dtype=coords.dtype, device=device)
+            grid_offsets = torch.zeros((batch_size, 3), dtype=self.coord_dtype, device=device)
             grid_offsets[:, 0] = (
-                torch.arange(batch_size, dtype=coords.dtype, device=device) * self.batch_separation
+                torch.arange(batch_size, dtype=self.coord_dtype, device=device) * self.batch_separation
             )
 
             atom_shifts = (grid_offsets - mol_coms)[node_batch_idx].detach()
             coords_packed = (
-                (coords.detach() + atom_shifts).to(self.coord_dtype).unsqueeze(0).requires_grad_(True)
+                (packing_coords + atom_shifts).unsqueeze(0).requires_grad_(True)
             )
             dpa_atypes = self.map_atom_types(dataset_atom_indices).unsqueeze(0)
 

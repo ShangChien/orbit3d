@@ -384,3 +384,30 @@ def test_generator_backend_must_be_supported_and_explicit(tmp_path, backend):
     path.write_text(json.dumps({"generator_config": {"backend": backend}}))
     with pytest.raises(ValueError, match="Declare generator_config.backend"):
         run_from_config(str(path))
+
+
+def test_packed_molecular_translations_preserve_float32_input_geometry():
+    from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+
+    class IndependentHarmonicPairs(torch.nn.Module):
+        def forward(self, coords, atom_types):
+            pairs=coords.reshape(-1,2,3)
+            delta=pairs[:,1]-pairs[:,0]
+            atom_energy=(.25*delta.square().sum(-1)).repeat_interleave(2)[None]
+            forces=torch.stack([delta,-delta],dim=1).reshape_as(coords)
+            return [{'atom_energy':atom_energy,'energy':atom_energy.sum(-1),'force':forces}]
+
+    ff=DPAPotentialGuidance.__new__(DPAPotentialGuidance)
+    torch.nn.Module.__init__(ff)
+    ff.wrapper=IndependentHarmonicPairs();ff.coord_dtype=torch.float64
+    ff.device_str='cpu';ff.batch_separation=60.;ff.atom_type_map=['C']
+    ff.register_buffer('dataset_to_dpa_idx',torch.zeros(1,dtype=torch.long))
+    pair=torch.tensor([[.017123,.15123,.61789],[1.123456,.76234,-.12345]],dtype=torch.float32)
+    coords=pair.repeat(32,1);types=torch.zeros(64,dtype=torch.long)
+    groups=torch.arange(32).repeat_interleave(2)
+    energy,force=ff.compute_energy_and_forces(coords,types,node_batch_idx=groups,
+                                            clip_forces=False,zero_com_forces=False)
+    delta=pair[1].double()-pair[0].double()
+    expected_force=torch.stack([delta,-delta]).float().repeat(32,1)
+    torch.testing.assert_close(force,expected_force,atol=1e-7,rtol=0)
+    torch.testing.assert_close(energy,torch.full((32,),.5*delta.square().sum(),dtype=torch.float64),atol=1e-10,rtol=0)
