@@ -1,0 +1,211 @@
+{
+  "scope": "One fixed iodine-bearing source validation geometry; method-level check after repairing the OE62 ECP alias, not a generated-policy comparison.",
+  "selection": {
+    "selection": "First iodine-bearing molecule in the frozen source validation SDF; independent method-level control, not a generated candidate.",
+    "source": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/data_final/valid.sdf",
+    "source_index": 15,
+    "source_sha256": "3bd4432e9d706393c7f496a2369ac56d671dcfae415d3b4f16b5577f6b563e82",
+    "properties": {
+      "SourceID": "KUZFAN",
+      "SourceSMILES": "Ic1cccc2c1cc1c(c2)cccc1I",
+      "SourceInChI": "InChI=1S/C14H8I2/c15-13-5-1-3-9-7-10-4-2-6-14(16)12(10)8-11(9)13/h1-8H",
+      "GeometryOrigin": "OE62 xyz_pbe_relaxed; unchanged source coordinates",
+      "LabelTheory": "OE62:PBE0/vacuum/Tier2/tight//PBE+vdW/vacuum",
+      "TargetUnits": "eV",
+      "homo": -6.01492,
+      "lumo": -2.3568,
+      "Split": "valid"
+    },
+    "input_sha256": "e5f9cdee09d58488987784251bf03c7eebe8fdaadcc458e0d178199379ccb466"
+  },
+  "result": {
+    "input_sha256": "e5f9cdee09d58488987784251bf03c7eebe8fdaadcc458e0d178199379ccb466",
+    "index": 0,
+    "atoms": 24,
+    "elements": [
+      "C",
+      "H",
+      "I"
+    ],
+    "coordinates_A": [
+      [
+        17.45528133,
+        21.19234206,
+        24.78576232
+      ],
+      [
+        22.25427711,
+        21.19133619,
+        26.90176068
+      ],
+      [
+        20.09542413,
+        23.71501848,
+        22.25905159
+      ],
+      [
+        21.4348973,
+        24.11891713,
+        22.26188051
+      ],
+      [
+        21.7877412,
+        24.7728058,
+        21.46193292
+      ],
+      [
+        19.19103275,
+        24.13600637,
+        21.24231928
+      ],
+      [
+        19.56096586,
+        24.78856557,
+        20.45090017
+      ],
+      [
+        17.40366563,
+        22.87850745,
+        22.29252869
+      ],
+      [
+        16.36112862,
+        22.56628669,
+        22.28875734
+      ],
+      [
+        17.88268623,
+        23.72850252,
+        21.25974531
+      ],
+      [
+        17.19152377,
+        24.05114137,
+        20.48147301
+      ],
+      [
+        22.8238272,
+        22.45686965,
+        25.30737351
+      ],
+      [
+        20.53136188,
+        22.44464215,
+        24.31037124
+      ],
+      [
+        20.17924421,
+        21.79208878,
+        25.10869892
+      ],
+      [
+        21.87015038,
+        22.84858114,
+        24.31236825
+      ],
+      [
+        24.12879751,
+        22.88361939,
+        25.26318597
+      ],
+      [
+        24.83424202,
+        22.57237443,
+        26.03121202
+      ],
+      [
+        23.69935858,
+        24.14084395,
+        23.23485372
+      ],
+      [
+        24.03436764,
+        24.79399063,
+        22.42850514
+      ],
+      [
+        24.56810512,
+        23.73501552,
+        24.21402126
+      ],
+      [
+        22.33951483,
+        23.71719348,
+        23.25062603
+      ],
+      [
+        19.62760754,
+        22.84711452,
+        23.32205543
+      ],
+      [
+        18.25007461,
+        22.45440367,
+        23.28790287
+      ],
+      [
+        25.60821116,
+        24.05986625,
+        24.20121764
+      ]
+    ],
+    "symbols": [
+      "I",
+      "I",
+      "C",
+      "C",
+      "H",
+      "C",
+      "H",
+      "C",
+      "H",
+      "C",
+      "H",
+      "C",
+      "C",
+      "H",
+      "C",
+      "C",
+      "H",
+      "C",
+      "H",
+      "C",
+      "C",
+      "C",
+      "C",
+      "H"
+    ],
+    "script_sha256": "aa4622473f9d12a9547bf2f769c8745284c3d61c6173d9c3661cd9c751d3e6ac",
+    "engine": "cpu",
+    "runtime_versions": {
+      "numpy": "2.2.6",
+      "rdkit": "2025.3.6",
+      "pyscf": "2.12.1"
+    },
+    "scratch_directory": "/sjtu-combustion/wjw/chensq/orbit_grpo_ablation_20261113/iodine_reference/scratch",
+    "visible_gpu": "",
+    "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+    "status": "completed",
+    "source_labels_eV": [
+      -6.01492,
+      -2.3568
+    ],
+    "ecp_core_electrons": {
+      "I": 28
+    },
+    "singlepoint": {
+      "prediction_eV": [
+        -6.003340418543914,
+        -2.3379851188112246
+      ],
+      "energy_Ha": -1133.3080651547552,
+      "converged": true,
+      "seconds": 230.0067375972867
+    },
+    "elapsed_seconds": 230.1510027833283
+  },
+  "absolute_errors_eV": [
+    0.011579581456086174,
+    0.018814881188775168
+  ]
+}
