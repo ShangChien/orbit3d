@@ -22,6 +22,7 @@ def statistics(values, goal, attempted, requested_width):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--evaluation',type=Path,required=True)
+    p.add_argument('--training-seed',type=int,default=42)
     p.add_argument('--control-arm',default='sft');p.add_argument('--treatment-arms',nargs='+',default=['contrast','hindsight','both'])
     p.add_argument('--unimol2',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     matrix=json.loads((a.evaluation/'matrix.json').read_text());complete=json.loads((a.evaluation/'completed.json').read_text());assert complete['pools']==len(matrix)
@@ -69,6 +70,7 @@ def main():
                     predictions=[r['mean_prediction_eV'] for r in metrics]
                     aggregates.append({'arm':arm,'preference_sigma_eV':width,'control':control,'evaluator':evaluator,
                         'target_mae_eV':mean('target_mae_eV'),'coverage':mean('coverage'),
+                        'mean_absolute_response_bias_eV':float(np.mean([abs(r['bias_eV']) for r in metrics])) if all(r['bias_eV'] is not None for r in metrics) else None,
                         'mean_prediction_std_eV':mean('prediction_std_eV'),
                         'response_slope':float(np.polyfit([goals[q] for q in quantiles],predictions,1)[0]) if all(v is not None for v in predictions) else None,
                         'hit_rate_fixed_025':float(np.mean([r['hit_rate_all_attempts']['0.25'] for r in metrics])),
@@ -92,7 +94,7 @@ def main():
                     'evaluator':evaluator,'per_quantile':differences,
                     'mean':{key:float(np.mean([r[key] for r in differences]))
                             if all(r[key] is not None for r in differences) else None for key in keys}})
-    report={'target':target,'training_seed':42,'actual_pools':len(matrix),'actual_proposals':sum(r['attempted'] for r in matrix),
+    report={'target':target,'training_seed':a.training_seed,'actual_pools':len(matrix),'actual_proposals':sum(r['attempted'] for r in matrix),
         'scope':'Single training seed pilot; equal target-quantile means. Off/shuffled are rescoring of frozen pools, not additional proposals. Point-policy widths are absent; tolerance changes do not retrain or regenerate them. Frozen Uni-Mol2 is cross-model evidence, not quantum truth.',
         'aggregates':aggregates,'cells':cells,'raw_source_sha256':hashes,
         'yield_attribution':attribution,

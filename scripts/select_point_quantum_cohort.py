@@ -10,6 +10,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--arms',nargs='+',default=['continue_wall','grpo200'])
     p.add_argument('--campaign-prefix',default='formal_eval')
+    p.add_argument('--pool-template',default='eval_{arm}_p{quantile}_s{inference_seed}')
     p.add_argument('--assignments',nargs='+',default=['25:42:2026','50:43:2027','75:44:2028'],help='quantile:training_seed:inference_seed')
     p.add_argument('--hash-salt',default='OE62-E5-20261113');a=p.parse_args()
     assignments=[tuple(map(int,value.split(':'))) for value in a.assignments]
@@ -20,7 +21,8 @@ def main():
     for target in ['homo','lumo']:
         for quantile,training_seed,inference_seed in assignments:
             for arm in a.arms:
-                run=a.root/f'{a.campaign_prefix}_{target}_seed{training_seed}'/f'eval_{arm}_p{quantile}_s{inference_seed}'/'run'
+                pool=a.pool_template.format(arm=arm,quantile=quantile,inference_seed=inference_seed)
+                run=a.root/f'{a.campaign_prefix}_{target}_seed{training_seed}'/pool/'run'
                 cfg=json.loads((run/'run_config.json').read_text());goal=cfg['inference_config']['target_point'][target]
                 with (run/'candidates.csv').open() as stream:rows=[r for r in csv.DictReader(stream) if r['status']=='refined']
                 rows.sort(key=lambda r:(float(r['oracle_rank_score']),int(r['candidate_id'])))
@@ -43,7 +45,7 @@ def main():
                     molecules.append(mol)
     write_precise_sdf(a.output/'cohort.sdf',molecules)
     report={'selection':'Paired fixed policies; top DPA-ranked export and fixed SHA256 draw from remaining exports. No quantum or independent-model score used.',
-        'seed_assignment':a.assignments,'arms':a.arms,'hash_salt':a.hash_salt,
+        'seed_assignment':a.assignments,'arms':a.arms,'hash_salt':a.hash_salt,'pool_template':a.pool_template,
         'planned_per_group':{f'{target}/{arm}':2*len(assignments) for target in ['homo','lumo'] for arm in a.arms},
         'expected':expected,'selected':len(records),'missing':missing,'records':records,'source_sha256':hashes,
         'sdf_sha256':hashlib.sha256((a.output/'cohort.sdf').read_bytes()).hexdigest()}
