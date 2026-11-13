@@ -5,7 +5,7 @@ The proposed next architecture and experiments are maintained separately in
 [design changes and implementation status](../docs/design_changes.md) and
 [experiment designs and execution status](../docs/experiments.md).
 The implemented algorithms are described in [architecture](../docs/architecture.md).
-Unfinished experiments are not reported as completed results.
+Unfinished experiments are not reported as completed results. The current research direction selects methods by measured target-control gains; GRPO is a comparison method, not a required paper centerpiece. The mean/width SFT, reciprocal condition contrast and hindsight pilot is tracked as E10 in the experiment plan; it is not yet a manuscript performance claim.
 
 ## Files
 

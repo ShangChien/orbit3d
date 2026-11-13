@@ -1,0 +1,157 @@
+{
+  "training_source_commit": "a7befa6",
+  "tests": {
+    "passed": 242,
+    "skipped_optional": 5
+  },
+  "smoke_training": [
+    {
+      "name": "migrate",
+      "seconds": 10.564811814576387,
+      "returncode": 0,
+      "command": [
+        "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/source/scripts/migrate_gaussian_conditioner.py",
+        "--checkpoint",
+        "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/point_homo_seed42/sft/weights/octree_conditional.pt",
+        "--output",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/smoke_homo/initial_gaussian.pt"
+      ]
+    },
+    {
+      "name": "gaussian",
+      "seconds": 34.112787034362555,
+      "returncode": 0,
+      "command": [
+        "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+        "-u",
+        "-m",
+        "orbit3d.cli",
+        "--config",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/smoke_homo/configs/gaussian.json"
+      ]
+    },
+    {
+      "name": "sft",
+      "seconds": 35.71577424556017,
+      "returncode": 0,
+      "command": [
+        "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+        "-u",
+        "-m",
+        "orbit3d.cli",
+        "--config",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/smoke_homo/configs/sft.json"
+      ]
+    },
+    {
+      "name": "contrast",
+      "seconds": 36.05539419874549,
+      "returncode": 0,
+      "command": [
+        "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+        "-u",
+        "-m",
+        "orbit3d.cli",
+        "--config",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/smoke_homo/configs/contrast.json"
+      ]
+    },
+    {
+      "name": "hindsight",
+      "seconds": 35.51842916384339,
+      "returncode": 0,
+      "command": [
+        "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+        "-u",
+        "-m",
+        "orbit3d.cli",
+        "--config",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/smoke_homo/configs/hindsight.json"
+      ]
+    },
+    {
+      "name": "both",
+      "seconds": 36.371900126338005,
+      "returncode": 0,
+      "command": [
+        "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+        "-u",
+        "-m",
+        "orbit3d.cli",
+        "--config",
+        "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/smoke_homo/configs/both.json"
+      ]
+    }
+  ],
+  "hindsight": {
+    "homo": {
+      "label_origin": "surrogate_hindsight_not_DFT",
+      "target": "homo",
+      "counts": {
+        "attempted": 1920,
+        "heldout_excluded": 26,
+        "duplicate_graph": 13,
+        "quantum_validation_excluded": 1
+      },
+      "selected": 336,
+      "bin_boundaries_eV": [
+        -7.45834,
+        -7.040765,
+        -6.56081,
+        -6.148085,
+        -5.82362
+      ],
+      "selected_bins": {
+        "0": 46,
+        "1": 34,
+        "2": 69,
+        "3": 75,
+        "4": 46,
+        "5": 66
+      },
+      "selection": "Round-robin source-property bins; hash order within bins, graph unique, no B or DFT selection",
+      "coordinates": "Production trajectory_to_instance transform; same native coordinates used by original A prediction",
+      "sdf_sha256": "3e6e525b57e78fff5d886a21c2a90468da9c9460f624585dbab66b2bc65b8733",
+      "summary_sha256": "f518b596e598401d83e177a6dd570359a67f5331d62e0952b0f46592b58582af"
+    },
+    "lumo": {
+      "label_origin": "surrogate_hindsight_not_DFT",
+      "target": "lumo",
+      "counts": {
+        "attempted": 1920,
+        "heldout_excluded": 21,
+        "quantum_validation_excluded": 1,
+        "duplicate_graph": 2
+      },
+      "selected": 342,
+      "bin_boundaries_eV": [
+        -2.577495,
+        -2.0524325,
+        -1.44879,
+        -0.8437325,
+        -0.390311
+      ],
+      "selected_bins": {
+        "0": 110,
+        "1": 57,
+        "2": 65,
+        "3": 66,
+        "4": 17,
+        "5": 27
+      },
+      "selection": "Round-robin source-property bins; hash order within bins, graph unique, no B or DFT selection",
+      "coordinates": "Production trajectory_to_instance transform; same native coordinates used by original A prediction",
+      "sdf_sha256": "f384c65a90275c46a72763f14b9bb5690604e81b2a79531b7540e14bf326917c",
+      "summary_sha256": "a57f69a1af0bf882d4dbf0681623acb1a30df5f90c4c62808a7f74bfa8d0a183"
+    }
+  },
+  "inference_smoke": {
+    "backend": "uni3dar_octree_v5",
+    "attempted": 4,
+    "qualified": 0,
+    "elapsed_seconds": 18.431673761457205,
+    "checkpoint_sha256": "fce4166f9917dc258a1be4ec23861babb2506921c1c2f3e70df6d1bbb48d9286"
+  },
+  "scope": "Implementation and short-run validation only; not evidence of control improvements. Formal pilot uses final quantum-excluded hindsight datasets."
+}
