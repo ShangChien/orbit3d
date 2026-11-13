@@ -36,6 +36,9 @@ def main():
             hashes[str(path)]=hashlib.sha256(path.read_bytes()).hexdigest()
         rows.append({**item,**result})
     arms={};off=manifest.get('control')=='off'
+    def size_bin(r):
+        n=r.get('atoms')
+        return 'unknown' if n is None else '0-25' if n<=25 else '26-40' if n<=40 else '41-80' if n<=80 else '>80'
     for arm in manifest['arms']:
         records=[r for r in rows if r['arm']==arm];n=manifest['proposal_denominators'][arm]
         cells={}
@@ -46,7 +49,18 @@ def main():
         strata={}
         for name,predicate in [('in_domain',lambda r:bool(r.get('domain') and r['domain']['in_domain'])),('out_domain',lambda r:bool(r.get('domain') and not r['domain']['in_domain'])),('domain_unavailable',lambda r:not r.get('domain'))]:
             strata[name]={str(q):metric([r for r in records if predicate(r) and (off or r['quantile']==q)],n if off else n//len(a.quantiles),points[str(q)],property_index,known_graphs) for q in a.quantiles}
-        arms[arm]=dict(proposals=n,terminal_selected=len(records),cells=cells,domain=strata,
+        size_strata={}
+        if records:
+            source=Path(records[0]['source_terminal'])/'summary.json'
+            raw=source.read_bytes();hashes[str(source)]=hashlib.sha256(raw).hexdigest()
+            proposals=json.loads(raw)['records'];assert len(proposals)==n
+            for label in ['0-25','26-40','41-80','>80','unknown']:
+                size_strata[label]={}
+                for q in a.quantiles:
+                    den=sum(size_bin(r)==label and (off or r['quantile']==q) for r in proposals)
+                    chosen=[r for r in records if size_bin(r)==label and (off or r['quantile']==q)]
+                    size_strata[label][str(q)]=metric(chosen,den,points[str(q)],property_index,known_graphs) if den else None
+        arms[arm]=dict(proposals=n,terminal_selected=len(records),cells=cells,domain=strata,size_strata=size_strata,
             yield_equal_target=float(np.mean([v['yield_all_proposals'] for v in cells.values()])),
             mae_equal_target_eV=float(np.mean([v['mae_eV'] for v in cells.values()])) if all(v['mae_eV'] is not None for v in cells.values()) else None)
     report=dict(scope='Single trained seed; Wilson intervals describe proposal sampling only. Off proposals rescored at three goals are not independent repeats. DFT singlepoints do not certify optimized identity.',
