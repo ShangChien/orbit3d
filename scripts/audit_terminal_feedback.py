@@ -17,7 +17,9 @@ def main():
         assert state['initial_weights_sha256' if arm=='sft' else 'alignment_reference_sha256']==initial_hash
         changed=[k for k,v in base['model_state_dict'].items() if not torch.equal(v,state['model_state_dict'][k])]
         assert changed and all(k.startswith('interval_conditioner.') for k in changed)
-        row={'nonconditioner_tensors_unchanged':True,'changed_conditioner_tensors':len(changed)}
+        assert np.array_equal(state['mean'],base['mean']) and np.array_equal(state['scale'],base['scale'])
+        assert state['target_cols']==base['target_cols'] and state['target_units']==base['target_units']
+        row={'nonconditioner_tensors_unchanged':True,'target_contract_and_scaler_unchanged':True,'changed_conditioner_tensors':len(changed)}
         with path.open('rb') as f:row['checkpoint_sha256']=hashlib.file_digest(f,'sha256').hexdigest()
         if arm!='sft':
             history=state['grpo_history'];assert len(history)==24 and all(r['group_size']==32 for r in history)
