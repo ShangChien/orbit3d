@@ -289,6 +289,8 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         validation_mols=None,
         validation_targets=None,
         batch_size=1,
+        warm_start=False,
+        validation_weights=None,
     ):
         from sklearn.model_selection import GroupShuffleSplit
 
@@ -315,7 +317,14 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
                 raise ValueError("Train/validation molecular overlap")
         if not valid or not np.isfinite(yt).all() or not np.isfinite(yv).all():
             raise ValueError("Invalid training/validation labels")
-        self.scalers = fit_target_scalers(yt, mode=scaler_mode)
+        if warm_start:
+            if len(self.scalers) != self.output_dim:
+                raise ValueError("Warm-start requires a loaded fitted oracle")
+        else:
+            self.scalers = fit_target_scalers(yt, mode=scaler_mode)
+        val_weights = np.ones(len(valid)) if validation_weights is None else np.asarray(validation_weights, dtype=float)
+        if val_weights.shape != (len(valid),) or not np.isfinite(val_weights).all() or (val_weights < 0).any() or val_weights.sum() <= 0:
+            raise ValueError("Invalid validation weights")
         norm_train = transform_with_scalers(yt, self.scalers)
         norm_valid = transform_with_scalers(yv, self.scalers)
         all_mols = train + valid
@@ -350,8 +359,12 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
         training_history = []
         for index in range(self.n_ensemble_heads):
             torch.manual_seed(seed + index)
-            member = _DPA4EquivariantPropertyAdapter(self.desc_dim, 128, self.output_dim, 1).to(self.device)
-            self.adapter.members[index] = member
+            if warm_start:
+                member = self.adapter.members[index]
+                member.requires_grad_(True)
+            else:
+                member = _DPA4EquivariantPropertyAdapter(self.desc_dim, 128, self.output_dim, 1).to(self.device)
+                self.adapter.members[index] = member
             rng = np.random.default_rng(seed + index)
             bootstrap = rng.integers(0, len(train), size=len(train))
             opt = torch.optim.AdamW(member.parameters(), lr=lr, weight_decay=1e-4)
@@ -378,8 +391,9 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
                         desc = torch.stack([cached[i][0] for i in ids])
                         pos = torch.stack([cached[i][1] for i in ids])
                         target = torch.tensor(norm_valid[np.array(ids) - len(train)], device=self.device)
-                        errors.extend((member(desc, pos)[0] - target).abs().mean(-1).tolist())
-                score = float(np.mean(errors))
+                        error = (member(desc, pos)[0] - target).abs().mean(-1).cpu().numpy()
+                        errors.extend((error * val_weights[np.array(ids) - len(train)]).tolist())
+                score = float(np.sum(errors) / val_weights.sum())
                 history.append(score)
                 if score < best:
                     best = score
@@ -415,11 +429,13 @@ class InternalDPA4PropertyOracle(PropertyOracleBase):
             "target_cols": self.target_cols,
             "target_units": getattr(self, 'target_units', ['unspecified'] * self.output_dim),
             "electronic_states": [{'charge': 0, 'multiplicity': 1}],
-            "training_elements": sorted({atom.GetSymbol() for mol in train for atom in mol.GetAtoms()}),
+            "training_elements": sorted({atom.GetSymbol() for mol in train for atom in mol.GetAtoms()} | (set(getattr(self, "training_elements", []) or []) if warm_start else set())),
             "input_geometry_method": getattr(self, 'geometry_method', None),
             "label_theory": getattr(self, 'label_theory', None),
             "scaler_sha256": hashlib.sha256(open(os.path.join(save_dir, 'target_scaler.ss'), 'rb').read()).hexdigest(),
             "batch_size": batch_size,
+            "warm_start": warm_start,
+            "validation_weights": val_weights.tolist(),
             "train_records": len(train),
             "validation_records": len(valid),
             "history": training_history,

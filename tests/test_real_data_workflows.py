@@ -275,3 +275,24 @@ def test_fingerprint_similarity_does_not_certify_an_unseen_element(tmp_path):
     assert domain.assess(Chem.AddHs(Chem.MolFromSmiles('Oc1ccccc1')))['in_domain']
     domain.save(tmp_path/'domain.json')
     assert MorganDomain.load(tmp_path/'domain.json').assess(molecule)==assessment
+
+
+def test_oracle_warm_start_preserves_scalers_and_weights_at_zero_lr(tmp_path):
+    import json
+    from sklearn.preprocessing import StandardScaler
+    import copy
+    oracle=InternalDPA4PropertyOracle(DescriptorForce(),2,['homo','lumo'],2)
+    oracle.scalers=[StandardScaler().fit(np.array([[-7.],[-5.]])),StandardScaler().fit(np.array([[-2.],[0.]]))]
+    oracle.adapter.requires_grad_(False)
+    oracle.training_elements=['H','C','O','N','F']
+    weights=copy.deepcopy(oracle.adapter.state_dict())
+    means=[s.mean_.copy() for s in oracle.scalers]
+    train=[mol('CC'),mol('CO')];valid=[mol('CCC'),mol('CCO')]
+    oracle.fit_from_dataset(train,np.array([[-3.,1.],[-4.,2.]]),str(tmp_path/'warm'),epochs=1,lr=0,
+        validation_mols=valid,validation_targets=np.array([[-3.,0.],[-2.,1.]]),warm_start=True,validation_weights=[.25,.75])
+    assert 'F' in json.loads((tmp_path/'warm/oracle_meta.json').read_text())['training_elements']
+    for k,v in weights.items():torch.testing.assert_close(oracle.adapter.state_dict()[k],v,rtol=0,atol=0)
+    for old,scaler in zip(means,oracle.scalers):np.testing.assert_array_equal(old,scaler.mean_)
+    oracle.fit_from_dataset(train,np.array([[-3.,1.],[-4.,2.]]),str(tmp_path/'updated'),epochs=1,lr=1e-3,
+        validation_mols=valid,validation_targets=np.array([[-3.,0.],[-2.,1.]]),warm_start=True)
+    assert any(not torch.equal(v,oracle.adapter.state_dict()[k]) for k,v in weights.items())

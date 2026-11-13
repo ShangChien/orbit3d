@@ -62,6 +62,10 @@ def main():
                     graph=mol3d_to_validated_rdkit_mol(inst);row.update(initial_valid=True,smiles=inst.smiles)
                     try:row['domain']=domain.assess(graph) if domain else None
                     except ValueError as error:row['domain_error']=str(error)
+                    row['scope_supported']=len(inst.coords)<=source['max_atoms']
+                    if not row['scope_supported']:
+                        row['scope_exclusion']='atom_limit'
+                        raise ValueError('scope_atom_limit')
                     final,terminal=evaluate_terminal(inst,field,oracle);row.update(terminal)
                     key=f'p{q}_s{seed}_{i}';coordinates[key]=final.coords;row['coordinates_key']=key
                     info=row.get('optimization',{})
