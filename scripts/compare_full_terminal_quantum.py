@@ -18,10 +18,10 @@ def summarize(rows):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--quantum',type=Path,required=True);p.add_argument('--legacy',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--quantum',type=Path,required=True);group=p.add_mutually_exclusive_group(required=True);group.add_argument('--legacy',type=Path);group.add_argument('--flat-independent',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     quantum=json.loads(a.quantum.read_text());rows=[];cache={};hashes={str(a.quantum):hashlib.sha256(a.quantum.read_bytes()).hexdigest()};lock=None
     for source in quantum['records']:
-        arm=source['arm'];terminal=Path(source['source_terminal']);broot=a.legacy/'independent'/arm
+        arm=source['arm'];terminal=Path(source['source_terminal']);broot=a.flat_independent if a.flat_independent else a.legacy/'independent'/arm
         if arm not in cache:
             paths=[terminal/'summary.json',terminal/'graph_preserved.sdf',broot/(arm+'.json'),broot/'input_manifest.json']
             for path in paths:hashes[str(path)]=hashlib.sha256(path.read_bytes()).hexdigest()
@@ -36,7 +36,7 @@ def main():
         np.testing.assert_allclose(raw['coordinates_A'],source['coordinates_A'],atol=1e-10,rtol=0)
         np.testing.assert_array_equal(raw['final']['prediction_eV'],source['dpa_prediction_eV'])
         rows.append(dict(index=source['index'],arm=arm,target=source['target'],target_eV=source['target_eV'],quantile=source['quantile'],inference_seed=source['inference_seed'],candidate_id=source['candidate_id'],in_domain=bool(raw.get('domain') and raw['domain']['in_domain']),dpa=source['dpa_prediction_eV'],unimol2=b['prediction_eV'] if b['evaluated'] else None,quantum_status=source['status'],truth_eV=source['singlepoint']['prediction_eV'] if source['status']=='completed' else None))
-    report={'scope':'Frozen models, exact terminal coordinate pairing, all 848 selected endpoints. Property errors and confusion use only successful quantum pairs; SCF failures remain explicit, not labelled property negatives. No new inference or score selection.','b_model_lock':lock,'all':summarize(rows),'domain':{str(flag):summarize([r for r in rows if r['in_domain']==flag]) for flag in [True,False]},'arms':{arm:summarize([r for r in rows if r['arm']==arm]) for arm in cache},'records':rows,'source_sha256':hashes}
+    report={'scope':'Frozen models, exact terminal coordinate pairing, all selected endpoints. Property errors and confusion use only successful quantum pairs; SCF failures remain explicit, not labelled property negatives. Off confusion uses the stored P50 request, without duplicating endpoints across targets. No new inference or score selection.','b_model_lock':lock,'all':summarize(rows),'domain':{str(flag):summarize([r for r in rows if r['in_domain']==flag]) for flag in [True,False]},'arms':{arm:summarize([r for r in rows if r['arm']==arm]) for arm in cache},'records':rows,'source_sha256':hashes}
     a.output.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report['all'],indent=2))
 
 if __name__=='__main__':main()

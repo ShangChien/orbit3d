@@ -1,0 +1,70 @@
+{
+  "scope": "Fixed training seed; paired inference-seed block and candidate-slot bootstrap (4000, seed1521). The same off proposals are shared across targets and arms in every replicate. Does not estimate training variance. MAE conditions on successful quantum endpoints.",
+  "goals_eV": {
+    "25": -7.040765,
+    "50": -6.56081,
+    "75": -6.148085
+  },
+  "shared_off_unique_proposals": 128,
+  "arms": {
+    "point_frozen": {
+      "correct_yield": 0.07291666666666667,
+      "shared_off_yield": 0.109375,
+      "correct_minus_off_yield": -0.036458333333333336,
+      "sampling_delta95": [
+        -0.08854166666666667,
+        0.020833333333333332
+      ],
+      "correct_mae_eV": 0.9290949708888702,
+      "off_mae_eV": 0.7658859937712549
+    },
+    "terminal_sft": {
+      "correct_yield": 0.08854166666666667,
+      "shared_off_yield": 0.109375,
+      "correct_minus_off_yield": -0.020833333333333332,
+      "sampling_delta95": [
+        -0.0625,
+        0.0234375
+      ],
+      "correct_mae_eV": 0.9627584067028195,
+      "off_mae_eV": 0.7658859937712549
+    },
+    "terminal_structure": {
+      "correct_yield": 0.078125,
+      "shared_off_yield": 0.109375,
+      "correct_minus_off_yield": -0.03125,
+      "sampling_delta95": [
+        -0.0859375,
+        0.026041666666666668
+      ],
+      "correct_mae_eV": 0.9964172083689121,
+      "off_mae_eV": 0.7658859937712549
+    },
+    "terminal_physical": {
+      "correct_yield": 0.10677083333333333,
+      "shared_off_yield": 0.109375,
+      "correct_minus_off_yield": -0.0026041666666666665,
+      "sampling_delta95": [
+        -0.046875,
+        0.041666666666666664
+      ],
+      "correct_mae_eV": 0.9041249706752909,
+      "off_mae_eV": 0.7658859937712549
+    },
+    "terminal_property": {
+      "correct_yield": 0.09635416666666667,
+      "shared_off_yield": 0.109375,
+      "correct_minus_off_yield": -0.013020833333333334,
+      "sampling_delta95": [
+        -0.0546875,
+        0.03125
+      ],
+      "correct_mae_eV": 0.8526957602304487,
+      "off_mae_eV": 0.7658859937712549
+    }
+  },
+  "source_sha256": {
+    "docs/experiments/oe62_terminal_full_quantum_20261114.json": "906efe8375125d213f2d6e4f5e344a67789e1d883972cb3b47facae64acc582c",
+    "docs/experiments/oe62_terminal_shared_off_quantum_20261114.json": "1e52ffa4c1d96d04b1417672f92d0ef330acd43c2c21cc6e82ab2c3cacd6f8c8"
+  }
+}

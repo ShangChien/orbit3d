@@ -1,0 +1,1528 @@
+{
+  "scope": "Frozen models, exact terminal coordinate pairing, all selected endpoints. Property errors and confusion use only successful quantum pairs; SCF failures remain explicit, not labelled property negatives. Off confusion uses the stored P50 request, without duplicating endpoints across targets. No new inference or score selection.",
+  "b_model_lock": {
+    "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+    "oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e"
+  },
+  "all": {
+    "dpa": {
+      "paired": 60,
+      "surrogate_vs_dft_mae_eV": [
+        0.27208538420591827,
+        0.33765874078061675
+      ],
+      "surrogate_minus_dft_bias_eV": [
+        -0.22880979222975403,
+        0.10078630225245684
+      ],
+      "true_positive": 14,
+      "false_positive": 2,
+      "false_negative": 4,
+      "quantum_missing": 0
+    },
+    "unimol2": {
+      "paired": 60,
+      "surrogate_vs_dft_mae_eV": [
+        0.45855632273985925,
+        0.5314321709470836
+      ],
+      "surrogate_minus_dft_bias_eV": [
+        -0.35915332186955,
+        0.23015848645638676
+      ],
+      "true_positive": 11,
+      "false_positive": 8,
+      "false_negative": 7,
+      "quantum_missing": 0
+    }
+  },
+  "domain": {
+    "True": {
+      "dpa": {
+        "paired": 29,
+        "surrogate_vs_dft_mae_eV": [
+          0.22326008094584618,
+          0.2535419788295153
+        ],
+        "surrogate_minus_dft_bias_eV": [
+          -0.18150848992442464,
+          0.12931696922224822
+        ],
+        "true_positive": 6,
+        "false_positive": 0,
+        "false_negative": 3,
+        "quantum_missing": 0
+      },
+      "unimol2": {
+        "paired": 29,
+        "surrogate_vs_dft_mae_eV": [
+          0.3288312828508225,
+          0.40965925470284076
+        ],
+        "surrogate_minus_dft_bias_eV": [
+          -0.1844897639736941,
+          0.23759472130468653
+        ],
+        "true_positive": 5,
+        "false_positive": 3,
+        "false_negative": 4,
+        "quantum_missing": 0
+      }
+    },
+    "False": {
+      "dpa": {
+        "paired": 31,
+        "surrogate_vs_dft_mae_eV": [
+          0.3177606679008242,
+          0.4163486148639052
+        ],
+        "surrogate_minus_dft_bias_eV": [
+          -0.27305939761215886,
+          0.07409632347426492
+        ],
+        "true_positive": 8,
+        "false_positive": 2,
+        "false_negative": 1,
+        "quantum_missing": 0
+      },
+      "unimol2": {
+        "paired": 31,
+        "surrogate_vs_dft_mae_eV": [
+          0.5799120052166999,
+          0.6453487700142786
+        ],
+        "surrogate_minus_dft_bias_eV": [
+          -0.5225482631269638,
+          0.22320200869507406
+        ],
+        "true_positive": 6,
+        "false_positive": 5,
+        "false_negative": 3,
+        "quantum_missing": 0
+      }
+    }
+  },
+  "arms": {
+    "shared_off": {
+      "dpa": {
+        "paired": 60,
+        "surrogate_vs_dft_mae_eV": [
+          0.27208538420591827,
+          0.33765874078061675
+        ],
+        "surrogate_minus_dft_bias_eV": [
+          -0.22880979222975403,
+          0.10078630225245684
+        ],
+        "true_positive": 14,
+        "false_positive": 2,
+        "false_negative": 4,
+        "quantum_missing": 0
+      },
+      "unimol2": {
+        "paired": 60,
+        "surrogate_vs_dft_mae_eV": [
+          0.45855632273985925,
+          0.5314321709470836
+        ],
+        "surrogate_minus_dft_bias_eV": [
+          -0.35915332186955,
+          0.23015848645638676
+        ],
+        "true_positive": 11,
+        "false_positive": 8,
+        "false_negative": 7,
+        "quantum_missing": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "index": 0,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 0,
+      "in_domain": false,
+      "dpa": [
+        -5.999750137329102,
+        -2.506615161895752
+      ],
+      "unimol2": [
+        -6.060665589199008,
+        -2.830158308214777
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.200837082172948,
+        -2.7571418738126954
+      ]
+    },
+    {
+      "index": 1,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 1,
+      "in_domain": false,
+      "dpa": [
+        -6.609239101409912,
+        -1.1401996612548828
+      ],
+      "unimol2": [
+        -6.40566257624149,
+        -1.0400894251325283
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.636536051135277,
+        -1.2577222197509241
+      ]
+    },
+    {
+      "index": 2,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 2,
+      "in_domain": false,
+      "dpa": [
+        -6.458954811096191,
+        -3.446685314178467
+      ],
+      "unimol2": [
+        -6.578409157765647,
+        -1.6046954866971497
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.875868123405863,
+        -5.254251559897946
+      ]
+    },
+    {
+      "index": 3,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 3,
+      "in_domain": false,
+      "dpa": [
+        -7.864015102386475,
+        -2.356417655944824
+      ],
+      "unimol2": [
+        -7.9154540640215885,
+        -2.5104106068269374
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.971322067017748,
+        -2.4574738433107206
+      ]
+    },
+    {
+      "index": 4,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 4,
+      "in_domain": false,
+      "dpa": [
+        -5.926048278808594,
+        -0.7545247077941895
+      ],
+      "unimol2": [
+        -6.222070456029638,
+        -0.8782010211411375
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.7601015750947875,
+        -0.8991610587467189
+      ]
+    },
+    {
+      "index": 5,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 5,
+      "in_domain": false,
+      "dpa": [
+        -4.9453935623168945,
+        -2.4844157695770264
+      ],
+      "unimol2": [
+        -6.776337223470972,
+        -2.5163872622788688
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -3.928944486745428,
+        -3.024831302777901
+      ]
+    },
+    {
+      "index": 6,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 10,
+      "in_domain": false,
+      "dpa": [
+        -7.401944160461426,
+        -2.0364739894866943
+      ],
+      "unimol2": [
+        -7.394938247615897,
+        -2.2936297944214132
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.424935534049452,
+        -2.2110091091139874
+      ]
+    },
+    {
+      "index": 7,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 11,
+      "in_domain": true,
+      "dpa": [
+        -7.011628150939941,
+        -1.0214269161224365
+      ],
+      "unimol2": [
+        -6.892704830834681,
+        -1.307294394062545
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.094396140875998,
+        -1.174394293419354
+      ]
+    },
+    {
+      "index": 8,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 12,
+      "in_domain": true,
+      "dpa": [
+        -7.420793056488037,
+        -1.9227092266082764
+      ],
+      "unimol2": [
+        -7.33656675293679,
+        -1.7854373781424684
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.268797730601892,
+        -1.943160201640186
+      ]
+    },
+    {
+      "index": 9,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 14,
+      "in_domain": true,
+      "dpa": [
+        -6.677098751068115,
+        -3.1884381771087646
+      ],
+      "unimol2": [
+        -6.877336424671974,
+        -1.0627868026339655
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.4738082448224,
+        -4.7416416941697435
+      ]
+    },
+    {
+      "index": 10,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 15,
+      "in_domain": true,
+      "dpa": [
+        -7.044071197509766,
+        -2.902275800704956
+      ],
+      "unimol2": [
+        -6.97258047276755,
+        -3.1962275756517897
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.086968037394002,
+        -3.2079724171290644
+      ]
+    },
+    {
+      "index": 11,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 20,
+      "in_domain": false,
+      "dpa": [
+        -6.338212966918945,
+        -2.3392434120178223
+      ],
+      "unimol2": [
+        -6.587003398129802,
+        -2.6557512747455974
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.203033039928246,
+        -2.4786010417495157
+      ]
+    },
+    {
+      "index": 12,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 22,
+      "in_domain": true,
+      "dpa": [
+        -6.377309322357178,
+        -1.817896842956543
+      ],
+      "unimol2": [
+        -6.346210718266178,
+        -1.7180937465167574
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.3166442806164484,
+        -1.5086580347484784
+      ]
+    },
+    {
+      "index": 13,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 24,
+      "in_domain": false,
+      "dpa": [
+        -5.881624221801758,
+        -0.10480877012014389
+      ],
+      "unimol2": [
+        -6.027490210539579,
+        -0.06781857829128057
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.731066134841587,
+        0.2510647812739448
+      ]
+    },
+    {
+      "index": 14,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 25,
+      "in_domain": false,
+      "dpa": [
+        -6.1992998123168945,
+        -0.24462556838989258
+      ],
+      "unimol2": [
+        -7.187046002502658,
+        -0.7430635623874409
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.5253844038257505,
+        -0.4963037009254539
+      ]
+    },
+    {
+      "index": 15,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 30,
+      "in_domain": true,
+      "dpa": [
+        -6.293557643890381,
+        -0.7448723316192627
+      ],
+      "unimol2": [
+        -6.4749550289018005,
+        -0.7358816808865214
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.399165640951651,
+        -0.9129278655633807
+      ]
+    },
+    {
+      "index": 16,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 31,
+      "in_domain": false,
+      "dpa": [
+        -6.622471809387207,
+        -1.2606823444366455
+      ],
+      "unimol2": [
+        -6.6738151897744284,
+        -1.4865529991929631
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.507404993346005,
+        -1.111822851834626
+      ]
+    },
+    {
+      "index": 17,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 32,
+      "in_domain": true,
+      "dpa": [
+        -6.954263687133789,
+        -1.4388270378112793
+      ],
+      "unimol2": [
+        -7.029347961535688,
+        -1.9197649571373034
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.843172771082278,
+        -1.7414188729103188
+      ]
+    },
+    {
+      "index": 18,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 35,
+      "in_domain": false,
+      "dpa": [
+        -5.931205749511719,
+        -2.1576480865478516
+      ],
+      "unimol2": [
+        -6.582384119703806,
+        -1.8375373488740223
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.60869680478355,
+        -2.1992126852139133
+      ]
+    },
+    {
+      "index": 19,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 36,
+      "in_domain": false,
+      "dpa": [
+        -6.702503204345703,
+        0.07934550940990448
+      ],
+      "unimol2": [
+        -6.83430298122272,
+        -0.314884142088971
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.764249187291435,
+        0.5183973932779883
+      ]
+    },
+    {
+      "index": 20,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 39,
+      "in_domain": false,
+      "dpa": [
+        -6.672710418701172,
+        -0.3411308228969574
+      ],
+      "unimol2": [
+        -6.686025131134554,
+        -0.2472099585720997
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.514463900055169,
+        0.201329875467131
+      ]
+    },
+    {
+      "index": 21,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 40,
+      "in_domain": false,
+      "dpa": [
+        -5.307546138763428,
+        -1.0405939817428589
+      ],
+      "unimol2": [
+        -6.223125750476282,
+        -0.23828792051909886
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -4.232998817739677,
+        -1.8332509013176153
+      ]
+    },
+    {
+      "index": 22,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 41,
+      "in_domain": true,
+      "dpa": [
+        -6.588958740234375,
+        -1.0061192512512207
+      ],
+      "unimol2": [
+        -6.707557350694292,
+        -1.120103174536247
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.464655688193114,
+        -1.0477827988624189
+      ]
+    },
+    {
+      "index": 23,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 45,
+      "in_domain": false,
+      "dpa": [
+        -5.384730339050293,
+        -2.4092166423797607
+      ],
+      "unimol2": [
+        -6.031219542303322,
+        -2.2574867754830237
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -4.462573520460123,
+        -3.5126866419037968
+      ]
+    },
+    {
+      "index": 24,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 46,
+      "in_domain": true,
+      "dpa": [
+        -6.367603302001953,
+        -2.2507846355438232
+      ],
+      "unimol2": [
+        -6.915799888929435,
+        -2.3419000645765493
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.31577016267535,
+        -2.3835748110437045
+      ]
+    },
+    {
+      "index": 25,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 49,
+      "in_domain": false,
+      "dpa": [
+        -5.71151876449585,
+        -2.144286632537842
+      ],
+      "unimol2": [
+        -5.283081335074797,
+        -0.5941023944130563
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.234654336097391,
+        -1.8808071524664491
+      ]
+    },
+    {
+      "index": 26,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 50,
+      "in_domain": false,
+      "dpa": [
+        -5.688981056213379,
+        -0.8232097625732422
+      ],
+      "unimol2": [
+        -5.686854963043984,
+        -0.8515062812774303
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.61981617111245,
+        -0.6093919574621908
+      ]
+    },
+    {
+      "index": 27,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 51,
+      "in_domain": true,
+      "dpa": [
+        -7.974605560302734,
+        -3.541663646697998
+      ],
+      "unimol2": [
+        -7.825481081937681,
+        -3.475273042911965
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.804677088522189,
+        -3.4039324952807646
+      ]
+    },
+    {
+      "index": 28,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 57,
+      "in_domain": false,
+      "dpa": [
+        -6.449192047119141,
+        -1.2030518054962158
+      ],
+      "unimol2": [
+        -6.498410141351813,
+        -0.9230033845615253
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.316321515147479,
+        -1.0016360181040007
+      ]
+    },
+    {
+      "index": 29,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 59,
+      "in_domain": true,
+      "dpa": [
+        -6.045474052429199,
+        -3.3701834678649902
+      ],
+      "unimol2": [
+        -6.670035429977445,
+        -2.6264137772837444
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.936999461306011,
+        -3.893727675266223
+      ]
+    },
+    {
+      "index": 30,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 60,
+      "in_domain": true,
+      "dpa": [
+        -7.282400131225586,
+        -3.0139293670654297
+      ],
+      "unimol2": [
+        -7.161439734474687,
+        -3.009537734180128
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.0110136028117065,
+        -2.980369318485082
+      ]
+    },
+    {
+      "index": 31,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2081,
+      "candidate_id": 62,
+      "in_domain": false,
+      "dpa": [
+        -7.077043056488037,
+        0.35181349515914917
+      ],
+      "unimol2": [
+        -7.460919699933733,
+        0.003898775721083325
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.922512300163876,
+        1.247077499000245
+      ]
+    },
+    {
+      "index": 32,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 1,
+      "in_domain": true,
+      "dpa": [
+        -7.1092963218688965,
+        -2.792102813720703
+      ],
+      "unimol2": [
+        -6.548288832401486,
+        -2.0399041198332384
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.887612179288925,
+        -2.9428518828153662
+      ]
+    },
+    {
+      "index": 33,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 2,
+      "in_domain": true,
+      "dpa": [
+        -6.141909599304199,
+        -1.0373451709747314
+      ],
+      "unimol2": [
+        -5.5391552282584655,
+        -0.861381449962046
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.8540624022578465,
+        -1.1087329654567826
+      ]
+    },
+    {
+      "index": 34,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 4,
+      "in_domain": false,
+      "dpa": [
+        -5.6638641357421875,
+        -3.1316161155700684
+      ],
+      "unimol2": [
+        -6.633895336986008,
+        -2.695068214669007
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.449077617431739,
+        -3.3913272444648523
+      ]
+    },
+    {
+      "index": 35,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 10,
+      "in_domain": true,
+      "dpa": [
+        -7.557772636413574,
+        -3.195117473602295
+      ],
+      "unimol2": [
+        -7.252700198209308,
+        -3.2048644178929067
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.6851757693598115,
+        -3.042252536637988
+      ]
+    },
+    {
+      "index": 36,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 12,
+      "in_domain": true,
+      "dpa": [
+        -6.841853618621826,
+        -1.3504767417907715
+      ],
+      "unimol2": [
+        -6.66305398564004,
+        -1.3829568165855326
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.742826509154988,
+        -1.248407233668425
+      ]
+    },
+    {
+      "index": 37,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 13,
+      "in_domain": false,
+      "dpa": [
+        -7.0646467208862305,
+        -2.483586549758911
+      ],
+      "unimol2": [
+        -7.013390797823096,
+        -2.4876693800927114
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.9504784054117925,
+        -2.511135965545953
+      ]
+    },
+    {
+      "index": 38,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 14,
+      "in_domain": true,
+      "dpa": [
+        -5.368049144744873,
+        -1.2831529378890991
+      ],
+      "unimol2": [
+        -6.263696840216699,
+        -0.4388531058177563
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -3.740729502329723,
+        -2.760041970872393
+      ]
+    },
+    {
+      "index": 39,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 15,
+      "in_domain": true,
+      "dpa": [
+        -6.375845909118652,
+        -1.4333736896514893
+      ],
+      "unimol2": [
+        -6.452465247367225,
+        -1.7285266493146452
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.459765681491274,
+        -1.3785558692428583
+      ]
+    },
+    {
+      "index": 40,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 16,
+      "in_domain": true,
+      "dpa": [
+        -6.528652191162109,
+        -2.9454193115234375
+      ],
+      "unimol2": [
+        -6.104386704029476,
+        -2.7271711772613116
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.393849883067814,
+        -2.945053227380866
+      ]
+    },
+    {
+      "index": 41,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 18,
+      "in_domain": false,
+      "dpa": [
+        -6.545558929443359,
+        0.09799981117248535
+      ],
+      "unimol2": [
+        -6.859380881197829,
+        -0.07231219543012912
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.3587285354119425,
+        0.8761845498934794
+      ]
+    },
+    {
+      "index": 42,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 22,
+      "in_domain": true,
+      "dpa": [
+        -7.227752685546875,
+        -3.090181350708008
+      ],
+      "unimol2": [
+        -6.699444554382246,
+        -2.9636056377197804
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.953658318672469,
+        -2.913959338307525
+      ]
+    },
+    {
+      "index": 43,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 25,
+      "in_domain": true,
+      "dpa": [
+        -6.835803031921387,
+        -2.763486385345459
+      ],
+      "unimol2": [
+        -7.043805399344105,
+        -2.4251870863770364
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.736523296629275,
+        -2.5348418017776084
+      ]
+    },
+    {
+      "index": 44,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 26,
+      "in_domain": false,
+      "dpa": [
+        -7.436295986175537,
+        -2.2229604721069336
+      ],
+      "unimol2": [
+        -7.580616088101905,
+        -2.0156130512583132
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.363420630484595,
+        -2.1054248400205737
+      ]
+    },
+    {
+      "index": 45,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 27,
+      "in_domain": false,
+      "dpa": [
+        -5.7627668380737305,
+        -2.4236650466918945
+      ],
+      "unimol2": [
+        -6.242193614022906,
+        -2.4695038434026912
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -4.222326700571093,
+        -3.5513910323546254
+      ]
+    },
+    {
+      "index": 46,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 30,
+      "in_domain": true,
+      "dpa": [
+        -7.484933376312256,
+        -2.7494659423828125
+      ],
+      "unimol2": [
+        -7.628536996109261,
+        -2.688593898050442
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.475176009357962,
+        -2.7402018574625795
+      ]
+    },
+    {
+      "index": 47,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 32,
+      "in_domain": true,
+      "dpa": [
+        -6.156861782073975,
+        -1.9192173480987549
+      ],
+      "unimol2": [
+        -6.118311769176476,
+        -2.4454563816765926
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.932478936076298,
+        -2.318744898084738
+      ]
+    },
+    {
+      "index": 48,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 35,
+      "in_domain": true,
+      "dpa": [
+        -5.896751403808594,
+        -0.3986302316188812
+      ],
+      "unimol2": [
+        -5.731733650023614,
+        -0.5046435303122792
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.712244415588637,
+        -0.25123152323361414
+      ]
+    },
+    {
+      "index": 49,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 43,
+      "in_domain": true,
+      "dpa": [
+        -7.740588188171387,
+        -1.68552565574646
+      ],
+      "unimol2": [
+        -7.78328420121575,
+        -1.7868835991730379
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.458758620262243,
+        -1.3039570094426585
+      ]
+    },
+    {
+      "index": 50,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 46,
+      "in_domain": false,
+      "dpa": [
+        -6.905215740203857,
+        -1.1628532409667969
+      ],
+      "unimol2": [
+        -7.218143549966786,
+        -1.349374764873648
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.102667978663542,
+        -1.271324740826914
+      ]
+    },
+    {
+      "index": 51,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 48,
+      "in_domain": true,
+      "dpa": [
+        -7.034942150115967,
+        -1.6805970668792725
+      ],
+      "unimol2": [
+        -7.065701317452888,
+        -1.4855281552255932
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.951296437471757,
+        -1.613080820995037
+      ]
+    },
+    {
+      "index": 52,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 52,
+      "in_domain": false,
+      "dpa": [
+        -7.117588043212891,
+        -0.10561724752187729
+      ],
+      "unimol2": [
+        -7.421204475133877,
+        -0.22224020633916552
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.910605299874137,
+        0.6546936354498314
+      ]
+    },
+    {
+      "index": 53,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 53,
+      "in_domain": true,
+      "dpa": [
+        -7.04481315612793,
+        -1.460972785949707
+      ],
+      "unimol2": [
+        -6.9084578796491805,
+        -1.4200095878122756
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.950851719716311,
+        -1.4926493200509465
+      ]
+    },
+    {
+      "index": 54,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 54,
+      "in_domain": true,
+      "dpa": [
+        -6.926108360290527,
+        -1.9461803436279297
+      ],
+      "unimol2": [
+        -7.237336597576867,
+        -2.213599871532061
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -5.9320700751872035,
+        -2.0379593072075184
+      ]
+    },
+    {
+      "index": 55,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 56,
+      "in_domain": true,
+      "dpa": [
+        -6.840872764587402,
+        -2.040349006652832
+      ],
+      "unimol2": [
+        -6.98665178621901,
+        -2.234786334060395
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -7.003675102197593,
+        -2.1688310238072
+      ]
+    },
+    {
+      "index": 56,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 57,
+      "in_domain": false,
+      "dpa": [
+        -7.256361961364746,
+        -3.093729019165039
+      ],
+      "unimol2": [
+        -6.537550474558909,
+        -2.000172897582175
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.721669337541049,
+        -3.5037250272455687
+      ]
+    },
+    {
+      "index": 57,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 58,
+      "in_domain": false,
+      "dpa": [
+        -8.277732849121094,
+        -1.7978668212890625
+      ],
+      "unimol2": [
+        -8.299933007415547,
+        -1.3268419350086553
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -8.202247583650184,
+        -1.707415976955373
+      ]
+    },
+    {
+      "index": 58,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 60,
+      "in_domain": false,
+      "dpa": [
+        -6.578049659729004,
+        -0.2636476755142212
+      ],
+      "unimol2": [
+        -6.7662160759220695,
+        -0.3120242479119639
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.51769290816313,
+        0.23455804026841653
+      ]
+    },
+    {
+      "index": 59,
+      "arm": "shared_off",
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "inference_seed": 2082,
+      "candidate_id": 61,
+      "in_domain": false,
+      "dpa": [
+        -6.4237799644470215,
+        -2.342677116394043
+      ],
+      "unimol2": [
+        -6.250660317616077,
+        -1.832915850696594
+      ],
+      "quantum_status": "completed",
+      "truth_eV": [
+        -6.498769199727407,
+        -2.5461336350393116
+      ]
+    }
+  ],
+  "source_sha256": {
+    "../uniform_statistics/e12_off.json": "1e52ffa4c1d96d04b1417672f92d0ef330acd43c2c21cc6e82ab2c3cacd6f8c8",
+    "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/off_terminals/shared_off/summary.json": "f7ffaf182631f91adc20b2b55d588e537f869e61675ee113d80e3751daa54126",
+    "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/off_terminals/shared_off/graph_preserved.sdf": "132b3855138d78acd1edaa1655cac4ad9c5c94f6fda85e001728dac2168e6386",
+    "../off_independent/shared_off/shared_off.json": "ad63c63e0e7af77dd29692ae5aaef4dfbe2beda6e39c7fe72f86591531aeaf2b",
+    "../off_independent/shared_off/input_manifest.json": "dab680eebdda7c2a086b5c634d577b5c9dc1658c2c8c663ed2faa38c97498e2a"
+  }
+}
