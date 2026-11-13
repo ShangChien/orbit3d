@@ -4,14 +4,20 @@ import hashlib
 import json
 from pathlib import Path
 import numpy as np
+from scipy.stats import spearmanr
 
 
 def select(rows, model, property_index, goal, k):
     eligible=[r for r in rows if r.get(model) is not None]
+    complete=[r for r in eligible if r['truth'] is not None]
+    predicted_distance=np.array([abs(r[model][property_index]-goal) for r in complete])
+    true_distance=np.array([abs(r['truth'][property_index]-goal) for r in complete])
+    correlation=float(spearmanr(predicted_distance,true_distance).statistic) if len(complete)>=3 and np.ptp(predicted_distance)>0 and np.ptp(true_distance)>0 else None
     chosen=sorted(eligible,key=lambda r:(abs(r[model][property_index]-goal),r['candidate_id']))[:k]
     paired=[r for r in chosen if r['truth'] is not None]
     errors=[abs(r['truth'][property_index]-goal) for r in paired]
     return dict(requested=k,selected=len(chosen),quantum_verified=len(paired),hits=sum(e<=.25 for e in errors),
+                preselection_rank_pairs=len(complete),preselection_distance_spearman=correlation,
                 error_sum_eV=float(sum(errors)),mae_eV=float(np.mean(errors)) if errors else None,
                 selected_indices=[r['index'] for r in chosen],quantum_failed_selected=[r['index'] for r in chosen if r['truth'] is None])
 
@@ -28,6 +34,9 @@ def aggregate(cells):
              mae_equal_goal_eV=float(np.mean(target_maes)) if all(v is not None for v in target_maes) else None,
              mae_quantum_verified_selected_eV=sum(c['error_sum_eV'] for c in cells)/s['quantum_verified'] if s['quantum_verified'] else None,
              unique_selected_endpoints=len({i for c in cells for i in c['selected_indices']}))
+    correlations=[c['preselection_distance_spearman'] for c in cells if c['preselection_distance_spearman'] is not None]
+    s['preselection_rank_groups']=len(correlations)
+    s['preselection_mean_distance_spearman']=float(np.mean(correlations)) if correlations else None
     return s
 
 
