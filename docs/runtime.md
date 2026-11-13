@@ -169,3 +169,14 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=src python scripts/evaluate_formal_unimol2.py 
 ```
 
 `summarize_independent_3d_campaign.py`和`summarize_independent_3d_repeats.py`按报告中的评价器身份汇总；不能把Uni-Mol2结果标为HyFF。正式与初试预算分别统计。`bridge_quantum_unimol2.py`复用既有量化队列和对应输入SDF，在完全相同坐标重评，不新增量化样本。
+
+
+已有原始池预测可直接与异步量化单点配对，不重复占用GPU。`compare_pool_quantum.py`复用正式轨迹转换，核对中心化后的原子顺序/坐标以及B冻结输入哈希，再统计活跃性质误差和目标命中一致性：
+
+```bash
+CUDA_VISIBLE_DEVICES= PYTHONPATH=src python scripts/compare_pool_quantum.py \
+  --quantum /path/to/quantum_summary.json --campaign-root /path/to/campaign_root \
+  --manifest /path/to/oe62/manifest.json --output /path/to/quantum_predictor_comparison.json
+```
+
+该入口针对`eval_{target}_seed{seed}`及`unimol2_{target}_seed{seed}`布局的点值实验；优化后的新坐标仍需重新做性质预测。
