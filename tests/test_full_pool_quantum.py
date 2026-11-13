@@ -70,3 +70,19 @@ def test_target_reassignment_rejects_value_insensitive_control(tmp_path, monkeyp
     module.main();report=json.loads(output.read_text())['arms']['model']
     assert report['correct_vs_mismatched']['correct_minus_wrong_hit_yield']==1
     assert report['correct_vs_mismatched']['wrong_value_hit_yield']==0
+
+
+def test_custom_quantum_cohort_keeps_declared_selection_budget(tmp_path,monkeypatch):
+    import json,sys
+    spec=importlib.util.spec_from_file_location('point_summary',Path(__file__).parents[1]/'scripts/summarize_point_quantum.py');summary=importlib.util.module_from_spec(spec);spec.loader.exec_module(summary)
+    records=[dict(index=i,target='homo',target_eV=-6.,arm='brics',selection='singlepoint_hit_fixed_hash',dpa_prediction_eV=None) for i in range(2)]
+    manifest=tmp_path/'manifest.json';manifest.write_text(json.dumps(dict(expected=4,selected=2,sdf_sha256='fixture',arms=['brics'],targets=['homo'],planned_by_selection={'singlepoint_hit_fixed_hash':4},planned_per_group={'homo/brics':4},evaluation_scope='Conditional geometry-persistence cohort',records=records)))
+    results=tmp_path/'results';results.mkdir();(results/'completed.json').write_text(json.dumps(dict(attempted=2,optimization_requested=False,elapsed_seconds=1,jobs=[])))
+    for i in range(2):
+        folder=results/f'job{i:02d}';folder.mkdir();r=dict(index=i,input_sha256='fixture',status='completed' if i==0 else 'failed')
+        if i==0:r['singlepoint']={'prediction_eV':[-6.,0.]}
+        (folder/'result.json').write_text(json.dumps(r))
+    output=tmp_path/'report.json';monkeypatch.setattr(sys,'argv',['summary','--manifest',str(manifest),'--results',str(results),'--output',str(output)]);summary.main()
+    r=json.loads(output.read_text());assert r['scope']=='Conditional geometry-persistence cohort'
+    assert r['by_selection']['singlepoint_hit_fixed_hash']['input_target']['planned']==4
+    assert r['by_selection']['singlepoint_hit_fixed_hash']['input_target']['hit_rate_planned']['0.25']==.25

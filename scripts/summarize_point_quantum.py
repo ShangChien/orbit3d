@@ -49,14 +49,14 @@ def main():
             result['geometry']['gradient_evaluations']=result['geometry'].pop('steps')
         rows.append({**source,**result})
     full_pool='proposal_denominators' in manifest
-    selection_rules=['all_terminal_accepted'] if full_pool else ['top1','fixed_hash']
-    report={'scope':('Entire physically accepted pool; these rates condition on terminal selection. Use the full-proposal report for original proposal yields.' if full_pool else 'Pre-frozen exploratory cohort; no candidate replacement, no population quantum success claim. Target/seed assignment is matched across policies but not independently crossed.'),
+    selection_counts=manifest.get('planned_by_selection',{'all_terminal_accepted':manifest['expected']} if full_pool else {'top1':manifest['expected']//2,'fixed_hash':manifest['expected']//2})
+    report={'scope':manifest.get('evaluation_scope',('Entire physically accepted pool; these rates condition on terminal selection. Use the full-proposal report for original proposal yields.' if full_pool else 'Pre-frozen exploratory cohort; no candidate replacement, no population quantum success claim. Target/seed assignment is matched across policies but not independently crossed.')),
         'optimization_requested':optimize,
         'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid3, SCF1e-8'+('; PBE-D3BJ/def2-TZVP optimization max80' if optimize else '; input-geometry singlepoints only')+'; distinct from source FHI-aims Tier2/PBE-TS.',
         'selection':{k:v for k,v in manifest.items() if k!='records'},'elapsed_seconds':completed['elapsed_seconds'],
         'execution_metadata':{k:v for k,v in completed.items() if k!='jobs'},
         'all':summarize(rows,manifest['expected'],optimize),'groups':{f'{target}/{arm}':summarize([r for r in rows if r['target']==target and r['arm']==arm],manifest.get('planned_per_group',{}).get(f'{target}/{arm}'),optimize) for target in manifest.get('targets',['homo','lumo']) for arm in manifest.get('arms',['continue_wall','grpo200'])},
-        'by_selection':{rule:summarize([r for r in rows if r['selection']==rule],manifest['expected'] if full_pool else manifest['expected']//2,optimize) for rule in selection_rules},
+        'by_selection':{rule:summarize([r for r in rows if r['selection']==rule],count,optimize) for rule,count in selection_counts.items()},
         'records':rows,'source_sha256':hashes}
     a.output.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report['groups'],indent=2))
 
