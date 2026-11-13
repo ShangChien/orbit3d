@@ -33,6 +33,9 @@ def main():
             model=InternalDPA4PropertyOracle.load_from_dir(entry['oracle'],ff);evaluated=model.evaluate_3d_mols_batched(mols)
         assert model.target_cols==['homo','lumo']
         models[name]=[{'index':i,'stage':stage,'prediction_eV':np.asarray(pred).tolist() if not error else None,'error':error} for (i,stage),pred,error in zip(keys,evaluated['mean'],evaluated['errors'])]
+        if 'forces_eV_A' in evaluated:
+            for row,force in zip(models[name],evaluated['forces_eV_A']):
+                if not row['error']:row['rms_force_eVA']=float(np.sqrt(np.mean(np.sum(np.asarray(force)**2,axis=-1))))
         print(name,len(mols),sum(bool(e) for e in evaluated['errors']),flush=True)
     record_input_hashes(a.output,inputs)
     (a.output/'summary.json').write_text(json.dumps({'scope':'Same coordinates as PySCF input/endpoints; original frozen models, no fitting or selection; graph failures excluded only from endpoint prediction and retained in cohort denominator.',
