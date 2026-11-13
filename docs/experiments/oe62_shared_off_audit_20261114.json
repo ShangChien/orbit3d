@@ -1,0 +1,76 @@
+{
+  "scope": "Five conditioner-only arms have identical off trajectories and evaluator settings. Use one shared 128-slot baseline, not 640 independent attempts. Coincident outputs within those 128 slots remain attempts and are reported separately.",
+  "archived_run_slots": 640,
+  "shared_proposal_slots": 128,
+  "distinct_coordinate_records": 128,
+  "geometry_hashes": {
+    "2081": {
+      "point_frozen": "fd3276406e36d847a2b745d0c60973d52b297134c77ff2bbce54c1bfb9c963b1",
+      "terminal_sft": "fd3276406e36d847a2b745d0c60973d52b297134c77ff2bbce54c1bfb9c963b1",
+      "terminal_structure": "fd3276406e36d847a2b745d0c60973d52b297134c77ff2bbce54c1bfb9c963b1",
+      "terminal_physical": "fd3276406e36d847a2b745d0c60973d52b297134c77ff2bbce54c1bfb9c963b1",
+      "terminal_property": "fd3276406e36d847a2b745d0c60973d52b297134c77ff2bbce54c1bfb9c963b1"
+    },
+    "2082": {
+      "point_frozen": "d12cbf2f8bcfe2237991e6305caa4dba76a7f3e3cef164f54dc9adba9a0bf174",
+      "terminal_sft": "d12cbf2f8bcfe2237991e6305caa4dba76a7f3e3cef164f54dc9adba9a0bf174",
+      "terminal_structure": "d12cbf2f8bcfe2237991e6305caa4dba76a7f3e3cef164f54dc9adba9a0bf174",
+      "terminal_physical": "d12cbf2f8bcfe2237991e6305caa4dba76a7f3e3cef164f54dc9adba9a0bf174",
+      "terminal_property": "d12cbf2f8bcfe2237991e6305caa4dba76a7f3e3cef164f54dc9adba9a0bf174"
+    }
+  },
+  "evaluator_specification": {
+    "oracle": {
+      "oracle_mode": "internal_dpa4",
+      "target_cols": [
+        "homo",
+        "lumo"
+      ],
+      "target_units": [
+        "eV",
+        "eV"
+      ],
+      "applicability_domain_path": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/oracle_dpa/applicability.json"
+    },
+    "relaxation": {
+      "enabled": false,
+      "batch_refinement": true
+    },
+    "weights": {
+      "forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt",
+      "property_checkpoint_dir": "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/oracle_dpa/oracle"
+    }
+  },
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_point_frozen_p50_wNone_s2081_off/run/run_config.json": "c002ce0bfa08e3b7a364da23f9844bbacaf55850d3ebffada71f440f5c86fbe5",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_point_frozen_p50_wNone_s2081_off/run/raw_symbols.json": "25f4dcfeaef59b5d9edad68189c916d05a8ebaeace48cf27ca1a56b297d1ab93",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_point_frozen_p50_wNone_s2081_off/run/raw_trajectories.npz": "2f47060598d638c477eceab216b9b8686929d5030923d6d1c342f27fabc5afdd",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_sft_p50_wNone_s2081_off/run/run_config.json": "173546615fce5e889380ecf28badd853d2270d7aabc70cd7fc522b04d187a489",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_sft_p50_wNone_s2081_off/run/raw_symbols.json": "25f4dcfeaef59b5d9edad68189c916d05a8ebaeace48cf27ca1a56b297d1ab93",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_sft_p50_wNone_s2081_off/run/raw_trajectories.npz": "2f47060598d638c477eceab216b9b8686929d5030923d6d1c342f27fabc5afdd",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_structure_p50_wNone_s2081_off/run/run_config.json": "9d68ab1a740eb52af9b568fa8c96e5a7eaad0cb818f5890fc4326ffe35157e1e",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_structure_p50_wNone_s2081_off/run/raw_symbols.json": "25f4dcfeaef59b5d9edad68189c916d05a8ebaeace48cf27ca1a56b297d1ab93",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_structure_p50_wNone_s2081_off/run/raw_trajectories.npz": "2f47060598d638c477eceab216b9b8686929d5030923d6d1c342f27fabc5afdd",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_physical_p50_wNone_s2081_off/run/run_config.json": "0294df5443ed1f7b6f7f4e31dee066b17129f6656e515decd8e28a174e81f9be",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_physical_p50_wNone_s2081_off/run/raw_symbols.json": "25f4dcfeaef59b5d9edad68189c916d05a8ebaeace48cf27ca1a56b297d1ab93",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_physical_p50_wNone_s2081_off/run/raw_trajectories.npz": "2f47060598d638c477eceab216b9b8686929d5030923d6d1c342f27fabc5afdd",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_property_p50_wNone_s2081_off/run/run_config.json": "89ef377cbc819bc84c4aedc9a0ab42d470c728aca3d58e6ea2115e0854ce46aa",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_property_p50_wNone_s2081_off/run/raw_symbols.json": "25f4dcfeaef59b5d9edad68189c916d05a8ebaeace48cf27ca1a56b297d1ab93",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_property_p50_wNone_s2081_off/run/raw_trajectories.npz": "2f47060598d638c477eceab216b9b8686929d5030923d6d1c342f27fabc5afdd",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_point_frozen_p50_wNone_s2082_off/run/run_config.json": "7c1f44dc7b65b32f31edb3646859629a33903197b72efa95b80cc47e3bf9544a",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_point_frozen_p50_wNone_s2082_off/run/raw_symbols.json": "50b6f606de75563554ba263166cecbb0d1bd458313a1b97a8ac802b863a1c0af",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_point_frozen_p50_wNone_s2082_off/run/raw_trajectories.npz": "d3e36427663d1902ae838125d49074fb78dbc8d8885a07a19c5349418337e521",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_sft_p50_wNone_s2082_off/run/run_config.json": "0738bbd4a353001a3fa3bd4b7723f1a6a3af356e4223c3e7219d4058bf032bbb",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_sft_p50_wNone_s2082_off/run/raw_symbols.json": "50b6f606de75563554ba263166cecbb0d1bd458313a1b97a8ac802b863a1c0af",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_sft_p50_wNone_s2082_off/run/raw_trajectories.npz": "d3e36427663d1902ae838125d49074fb78dbc8d8885a07a19c5349418337e521",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_structure_p50_wNone_s2082_off/run/run_config.json": "a18b7526905c5923af6944bee6bf2291d3144fa8b2738ce84a644aae1624eebb",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_structure_p50_wNone_s2082_off/run/raw_symbols.json": "50b6f606de75563554ba263166cecbb0d1bd458313a1b97a8ac802b863a1c0af",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_structure_p50_wNone_s2082_off/run/raw_trajectories.npz": "d3e36427663d1902ae838125d49074fb78dbc8d8885a07a19c5349418337e521",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_physical_p50_wNone_s2082_off/run/run_config.json": "261c7d821cfb6875e6dc8b6ca8392ff09e5e3b26433309df9304fd93b6421cac",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_physical_p50_wNone_s2082_off/run/raw_symbols.json": "50b6f606de75563554ba263166cecbb0d1bd458313a1b97a8ac802b863a1c0af",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane1/eval_homo_seed42/eval_terminal_physical_p50_wNone_s2082_off/run/raw_trajectories.npz": "d3e36427663d1902ae838125d49074fb78dbc8d8885a07a19c5349418337e521",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_property_p50_wNone_s2082_off/run/run_config.json": "519d656ce19ce2c155d0755fb027931b6ad692984c0c7d10ae477d756aff7764",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_property_p50_wNone_s2082_off/run/raw_symbols.json": "50b6f606de75563554ba263166cecbb0d1bd458313a1b97a8ac802b863a1c0af",
+    "/sjtu-combustion/wjw/chensq/orbit_terminal_feedback_20261113/evaluation_lane0/eval_homo_seed42/eval_terminal_property_p50_wNone_s2082_off/run/raw_trajectories.npz": "d3e36427663d1902ae838125d49074fb78dbc8d8885a07a19c5349418337e521"
+  }
+}
