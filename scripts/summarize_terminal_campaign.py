@@ -75,7 +75,7 @@ def main():
         record['independent_seconds']=independent['seconds']
         if arm!='point_frozen':record['training_costs']=read(a.root/arm.removeprefix('terminal_')/'costs.json')
         reports[arm]=record
-    result={'scope':'Single training seed pilot. Primary terminal denominators retain 384 proposals per arm. Three targets equally weighted for MAE; no claim of quantum truth from DPA or frozen B. Domain subsets use the same full proposal denominators.','arms':reports,'source_sha256':inputs}
+    result={'scope':'Single training seed pilot. Primary terminal denominators retain 384 proposals per arm. Three targets equally weighted for MAE; no claim of quantum truth from DPA or frozen B. Domain subsets use the same full proposal denominators.','arms':reports,'source_sha256':inputs,'analysis_script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'cost_scope':'Training pipeline and process time separately. Terminal row timers and generation/raw pool timers exclude model initialization; off-pool generation is included only in raw cost and count.'}
     a.output.write_text(json.dumps(result,indent=2)+'\n')
 
 

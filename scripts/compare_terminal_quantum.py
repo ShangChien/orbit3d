@@ -29,7 +29,7 @@ def main():
         summary[model]={'paired':len(paired),'mae_against_quantum_eV':float(np.mean([abs(r[model+'_eV']-r['quantum_eV']) for r in paired])) if paired else None,
                         'predicted_hits':sum(abs(r[model+'_eV']-r['target_eV'])<=.25 for r in paired),
                         'confirmed_predicted_hits':sum(abs(r[model+'_eV']-r['target_eV'])<=.25 and abs(r['quantum_eV']-r['target_eV'])<=.25 for r in paired)}
-    a.output.write_text(json.dumps({'scope':'Selected terminal cohort only; same coordinates verified, no independent-score selection. Missing quantum and B evaluations remain explicit.','models':summary,'records':rows,'source_sha256':hashes},indent=2)+'\n')
+    a.output.write_text(json.dumps({'scope':'Selected terminal cohort only; same coordinates verified, no independent-score selection. Missing quantum and B evaluations remain explicit.','models':summary,'records':rows,'source_sha256':hashes,'analysis_script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},indent=2)+'\n')
 
 
 if __name__=='__main__':main()
