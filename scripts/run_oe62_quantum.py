@@ -8,12 +8,14 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--input',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--python',type=Path,required=True,help='Python executable or runtime wrapper')
     p.add_argument('--engine',choices=['cpu','gpu'],default='gpu');p.add_argument('--cpu-workers',type=int,default=4)
+    p.add_argument('--scratch-root',type=Path,help='Optional local or RAM-backed temporary root; results stay under --output')
     p.add_argument('--gpus',nargs='+',type=int,default=[0,1]);p.add_argument('--optimize',action='store_true');a=p.parse_args()
     if len(set(a.gpus))!=len(a.gpus):p.error('GPU indices must be distinct')
     if a.cpu_workers<1:p.error('CPU worker count must be positive')
     slots=range(a.cpu_workers) if a.engine=='cpu' else a.gpus
     a.output.mkdir(parents=True,exist_ok=False)
-    scratch=a.output/'scratch';scratch.mkdir()
+    scratch=(a.scratch_root/a.output.name if a.scratch_root else a.output/'scratch')
+    scratch.mkdir(parents=True,exist_ok=False)
     pending=list(range(len(list(Chem.SDMolSupplier(str(a.input),removeHs=False)))))
     active={};jobs=[];start=time.time();count=len(pending)
     while pending or active:
