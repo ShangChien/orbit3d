@@ -53,7 +53,8 @@ def main():
                     fingerprints=[fp.GetFingerprint(m) for m in mols]
                     sims=[v for i,f in enumerate(fingerprints) for v in DataStructs.BulkTanimotoSimilarity(f,fingerprints[:i])]
                     cell={'arm':arm,'preference_sigma_eV':width,'control':control,'quantile':q,'goal_eV':goals[q],
-                          'attempted':len(records),'valid':len(mols),'unique_valid':len({r['smiles'] for r in records if r['valid']}),
+                          'attempted':len(records),'valid':len(mols),
+                          'novel_valid':sum(r['novel_vs_sft_training'] for r in records if r['valid']),'unique_valid':len({r['smiles'] for r in records if r['valid']}),
                           'unimol2_support_exclusions':sum(b[r['pool']]['support_exclusions'] for r in matching),
                           'valid_atom_median':float(np.median([r['atoms'] for r in records if r['valid']])) if mols else None,
                           'internal_diversity':1-float(np.mean(sims)) if sims else None,
@@ -74,6 +75,7 @@ def main():
         'aggregates':aggregates,'cells':cells,'raw_source_sha256':hashes,
         'generation_and_raw_evaluation_seconds':sum(r['wall_seconds'] for r in matrix),
         'independent_evaluation_seconds':independent['wall_seconds'],
+        'novelty_scope':'Relative to each checkpoint training_smiles, including hindsight graphs when used.',
         'cost_scope':'Generation/raw timers cover per-pool calls, not initial model loading and hashing; training and source-pool acquisition costs are separate campaign artifacts.',
         'analysis_script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'independent_summary_sha256':hashlib.sha256((a.unimol2/'summary.json').read_bytes()).hexdigest()}
