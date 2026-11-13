@@ -76,7 +76,11 @@ HOMO三训练seed已完成。在冻结B上，点值对比相对等时SFT的平�
 
 LUMO三seed也已完成：点值对比与等时SFT的B目标MAE为0.7119 vs 0.7520 eV，响应偏差0.4079 vs 0.4836 eV，命中产率5.42% vs 5.21%。两性质都出现平均条件响应收益，但个体MAE仍非每个seed都改善；总计288池、18432提案（含关闭条件），不将推理seed和目标格当独立训练重复。[LUMO配对统计](experiments/oe62_point_contrast_lumo_repeats_20261113.json)
 
-固定24例的原始几何量化单点队列已收尾，点值对比命中3/12、等时SFT命中2/12；HOMO分别0/6、1/6，LUMO分别3/6、1/6。该小队列不支持总体成功率估计，末端优化仍在运行，暂不以输入单点替代最终交付结果。[逐例单点](experiments/oe62_point_contrast_quantum_singlepoints_20261113.json)
+固定24例的原始几何量化单点队列已收尾，点值对比命中3/12、等时SFT命中2/12；HOMO分别0/6、1/6，LUMO分别3/6、1/6。该小队列不支持总体成功率估计，末端优化已完成，结果如下。[逐例单点](experiments/oe62_point_contrast_quantum_singlepoints_20261113.json)
+
+24例DFT几何优化全部收敛，23例保图；唯一不保图是LUMO等时SFT的预定索引22，保留失败分母。末端命中7/24：对比4/12（HOMO 1/6、LUMO 3/6），等时SFT 3/12（HOMO 1/6、LUMO 2/6）。对比的末端MAE为HOMO 0.5476、LUMO 0.5218 eV；等时SFT为0.4795、1.2097 eV，后者LUMO只在5个保图末端上计算。小队列没有确立普遍优势。
+
+同一24个输入坐标上，DPA/指纹/B相对量化的活跃性质MAE为0.3040/0.6078/0.4731 eV；B的9个预测命中只有3个量化命中，因此跨模型改善也不能直接替代量化裁决。[末端逐例结果](experiments/oe62_point_contrast_quantum_geometry_20261113.json)、[同坐标预测对照](experiments/oe62_point_contrast_quantum_predictors_20261113.json)
 
 ![三训练种子下的条件响应](figures/oe62_point_contrast_response.png)
 

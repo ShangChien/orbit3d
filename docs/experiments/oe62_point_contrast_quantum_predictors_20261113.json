@@ -1,0 +1,695 @@
+{
+  "scope": "Existing frozen predictions reused only after shared trajectory centering, atom-order, coordinate and input-hash checks. Active property only; selected quantum cohort, not a population calibration estimate. No new model inference or policy updates.",
+  "selected": 24,
+  "planned": 24,
+  "b_model_hashes": {
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42": {
+      "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+      "oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e"
+    },
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42": {
+      "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+      "oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e"
+    }
+  },
+  "models": {
+    "dpa": {
+      "selected": 24,
+      "paired": 24,
+      "active_property_mae_eV": 0.30395617999203633,
+      "active_property_bias_eV": 0.09303646078186412,
+      "target_hit_agreement_025": {
+        "true_positive": 4,
+        "false_positive": 9,
+        "false_negative": 1,
+        "true_negative": 10
+      }
+    },
+    "fingerprint": {
+      "selected": 24,
+      "paired": 24,
+      "active_property_mae_eV": 0.6078269107836863,
+      "active_property_bias_eV": 0.0612428430754148,
+      "target_hit_agreement_025": {
+        "true_positive": 0,
+        "false_positive": 8,
+        "false_negative": 5,
+        "true_negative": 11
+      }
+    },
+    "unimol2": {
+      "selected": 24,
+      "paired": 24,
+      "active_property_mae_eV": 0.4731063497532184,
+      "active_property_bias_eV": 0.14385971570519418,
+      "target_hit_agreement_025": {
+        "true_positive": 3,
+        "false_positive": 6,
+        "false_negative": 2,
+        "true_negative": 13
+      }
+    }
+  },
+  "by_target_arm": {
+    "homo/point_contrast": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.2076271204737338,
+        "active_property_bias_eV": -0.17260699014355785,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 3,
+          "false_negative": 0,
+          "true_negative": 3
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.5318614922724149,
+        "active_property_bias_eV": -0.0994550258071641,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 3,
+          "false_negative": 0,
+          "true_negative": 3
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.30328537405819117,
+        "active_property_bias_eV": -0.26943665477559814,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 5
+        }
+      }
+    },
+    "homo/point_time": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.22423933688525807,
+        "active_property_bias_eV": -0.15674998340148175,
+        "target_hit_agreement_025": {
+          "true_positive": 1,
+          "false_positive": 3,
+          "false_negative": 0,
+          "true_negative": 2
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.34821684675193065,
+        "active_property_bias_eV": -0.22066969168421777,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 3,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.30961317474426436,
+        "active_property_bias_eV": -0.22503451159241403,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 3,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      }
+    },
+    "lumo/point_contrast": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.2761622970753648,
+        "active_property_bias_eV": 0.19370685113870745,
+        "target_hit_agreement_025": {
+          "true_positive": 2,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.6107514500630994,
+        "active_property_bias_eV": 0.062306737827240714,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 3,
+          "true_negative": 3
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.38546035907056814,
+        "active_property_bias_eV": 0.21731134075954114,
+        "target_hit_agreement_025": {
+          "true_positive": 2,
+          "false_positive": 1,
+          "false_negative": 1,
+          "true_negative": 2
+        }
+      }
+    },
+    "lumo/point_time": {
+      "dpa": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.5077959655337887,
+        "active_property_bias_eV": 0.5077959655337887,
+        "target_hit_agreement_025": {
+          "true_positive": 1,
+          "false_positive": 2,
+          "false_negative": 0,
+          "true_negative": 3
+        }
+      },
+      "fingerprint": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.9404778540473006,
+        "active_property_bias_eV": 0.5027893519658003,
+        "target_hit_agreement_025": {
+          "true_positive": 0,
+          "false_positive": 2,
+          "false_negative": 1,
+          "true_negative": 3
+        }
+      },
+      "unimol2": {
+        "selected": 6,
+        "paired": 6,
+        "active_property_mae_eV": 0.8940664911398502,
+        "active_property_bias_eV": 0.8525986884292477,
+        "target_hit_agreement_025": {
+          "true_positive": 1,
+          "false_positive": 1,
+          "false_negative": 0,
+          "true_negative": 4
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "index": 0,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "point_contrast",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 46,
+      "predictions_eV": {
+        "dpa": -7.213305473327637,
+        "fingerprint": -6.924266878610434,
+        "unimol2": -7.216819706470385
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.318365864318165
+    },
+    {
+      "index": 1,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "point_contrast",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 22,
+      "predictions_eV": {
+        "dpa": -7.9018378257751465,
+        "fingerprint": -6.985885147917766,
+        "unimol2": -7.9307792204118925
+      },
+      "coordinate_match_max_delta_A": 4.845013279464183e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.630283777262443
+    },
+    {
+      "index": 2,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "point_time",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 62,
+      "predictions_eV": {
+        "dpa": -6.91469144821167,
+        "fingerprint": -6.853155636925552,
+        "unimol2": -6.90188695774636
+      },
+      "coordinate_match_max_delta_A": 4.921618668163319e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.610649857787561
+    },
+    {
+      "index": 3,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "arm": "point_time",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 28,
+      "predictions_eV": {
+        "dpa": -6.852107524871826,
+        "fingerprint": -6.717703478277978,
+        "unimol2": -6.834254405320937
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.650647704285432
+    },
+    {
+      "index": 4,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "point_contrast",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 1,
+      "predictions_eV": {
+        "dpa": -6.326004981994629,
+        "fingerprint": -6.302360100401788,
+        "unimol2": -6.237100632953716
+      },
+      "coordinate_match_max_delta_A": 4.689582056016661e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.13261188068905
+    },
+    {
+      "index": 5,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "point_contrast",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 26,
+      "predictions_eV": {
+        "dpa": -5.988425254821777,
+        "fingerprint": -6.45928878966119,
+        "unimol2": -6.103286718151349
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.600782988549267
+    },
+    {
+      "index": 6,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "point_time",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 42,
+      "predictions_eV": {
+        "dpa": -6.379130840301514,
+        "fingerprint": -6.688798648574391,
+        "unimol2": -6.48432000624014
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.068179181371649
+    },
+    {
+      "index": 7,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "arm": "point_time",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 43,
+      "predictions_eV": {
+        "dpa": -6.987482070922852,
+        "fingerprint": -6.807308666171042,
+        "unimol2": -6.936214141918629
+      },
+      "coordinate_match_max_delta_A": 4.920508445138694e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.1899501313741805
+    },
+    {
+      "index": 8,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "point_contrast",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 13,
+      "predictions_eV": {
+        "dpa": -6.108968257904053,
+        "fingerprint": -6.686990759225395,
+        "unimol2": -6.433555595893122
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -5.821295225811319
+    },
+    {
+      "index": 9,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "point_contrast",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 35,
+      "predictions_eV": {
+        "dpa": -6.830134391784668,
+        "fingerprint": -6.570972723772974,
+        "unimol2": -7.028112299519687
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.829694508116319
+    },
+    {
+      "index": 10,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "point_time",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 28,
+      "predictions_eV": {
+        "dpa": -6.249817848205566,
+        "fingerprint": -6.625987780932941,
+        "unimol2": -6.447674704347696
+      },
+      "coordinate_match_max_delta_A": 4.842792833414933e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -6.2083583710003225
+    },
+    {
+      "index": 11,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "arm": "point_time",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 53,
+      "predictions_eV": {
+        "dpa": -7.3690948486328125,
+        "fingerprint": -7.442888619960752,
+        "unimol2": -7.557681534718071
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -7.084039434918204
+    },
+    {
+      "index": 12,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "point_contrast",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 5,
+      "predictions_eV": {
+        "dpa": -1.9724442958831787,
+        "fingerprint": -1.7531776480511958,
+        "unimol2": -1.6771993266766554
+      },
+      "coordinate_match_max_delta_A": 4.9649173661237e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -2.0604907854885854
+    },
+    {
+      "index": 13,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "point_contrast",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 43,
+      "predictions_eV": {
+        "dpa": -0.8685814738273621,
+        "fingerprint": -1.056475662104061,
+        "unimol2": -0.5786437567533369
+      },
+      "coordinate_match_max_delta_A": 4.920508445138694e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.7418106525354923
+    },
+    {
+      "index": 14,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "point_time",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 58,
+      "predictions_eV": {
+        "dpa": -2.2407150268554688,
+        "fingerprint": -2.1221081210937505,
+        "unimol2": -2.358231065896149
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -2.3150207180336726
+    },
+    {
+      "index": 15,
+      "target": "lumo",
+      "target_eV": -2.0524325,
+      "arm": "point_time",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 37,
+      "predictions_eV": {
+        "dpa": -0.8806371688842773,
+        "fingerprint": -1.1948357869543653,
+        "unimol2": -0.8959277641339725
+      },
+      "coordinate_match_max_delta_A": 4.882760862301438e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.273407404435526
+    },
+    {
+      "index": 16,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "point_contrast",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 16,
+      "predictions_eV": {
+        "dpa": -1.0245336294174194,
+        "fingerprint": -2.136464727364227,
+        "unimol2": -1.2008850640511213
+      },
+      "coordinate_match_max_delta_A": 4.884981308350689e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.5200607745835117
+    },
+    {
+      "index": 17,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "point_contrast",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 1,
+      "predictions_eV": {
+        "dpa": -2.8605356216430664,
+        "fingerprint": -2.1313346361982437,
+        "unimol2": -2.6395173143397983
+      },
+      "coordinate_match_max_delta_A": 4.884981308350689e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -3.5821983487036504
+    },
+    {
+      "index": 18,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "point_time",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 52,
+      "predictions_eV": {
+        "dpa": -1.5729807615280151,
+        "fingerprint": -1.7554800171545872,
+        "unimol2": -1.5384950429948274
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.685437214685632
+    },
+    {
+      "index": 19,
+      "target": "lumo",
+      "target_eV": -1.44879,
+      "arm": "point_time",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2072,
+      "candidate_id": 41,
+      "predictions_eV": {
+        "dpa": -3.198596477508545,
+        "fingerprint": -1.4498288792926088,
+        "unimol2": -1.2559343100705043
+      },
+      "coordinate_match_max_delta_A": 4.960476474025199e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -4.834360919010859
+    },
+    {
+      "index": 20,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "point_contrast",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 53,
+      "predictions_eV": {
+        "dpa": -0.6241229772567749,
+        "fingerprint": -1.2177926350969643,
+        "unimol2": -0.7387735704372815
+      },
+      "coordinate_match_max_delta_A": 4.961031585537512e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.5035274607386725
+    },
+    {
+      "index": 21,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "point_contrast",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 35,
+      "predictions_eV": {
+        "dpa": -0.62078857421875,
+        "fingerprint": -0.4641619433006599,
+        "unimol2": -0.994360602263356
+      },
+      "coordinate_match_max_delta_A": 4.805045250577678e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -0.7251596570288839
+    },
+    {
+      "index": 22,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "point_time",
+      "selection": "top1",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 31,
+      "predictions_eV": {
+        "dpa": -0.9302756190299988,
+        "fingerprint": -2.5280936837660595,
+        "unimol2": -1.3662640402598445
+      },
+      "coordinate_match_max_delta_A": 5.000444502911705e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -1.285070979990514
+    },
+    {
+      "index": 23,
+      "target": "lumo",
+      "target_eV": -0.8437325,
+      "arm": "point_time",
+      "selection": "fixed_hash",
+      "training_seed": 42,
+      "inference_seed": 2071,
+      "candidate_id": 47,
+      "predictions_eV": {
+        "dpa": -2.3905391693115234,
+        "fingerprint": -2.1934374162643873,
+        "unimol2": -1.7300756623897762
+      },
+      "coordinate_match_max_delta_A": 4.884981308350689e-13,
+      "quantum_status": "completed",
+      "quantum_eV": -2.867222780164357
+    }
+  ],
+  "source_sha256": {
+    "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/data_final/manifest.json": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2071_correct/raw/summary.json": "e23fba823a188f91f82ed964ee8d84b43d89bea61dc5f3081fa3de0941c7c396",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2071_correct/run/raw_symbols.json": "976adf9994dbce5fc038e2618b58537a1eb72960a8d56b30e642c6004699e2fe",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2071_correct/run/raw_trajectories.npz": "403f617bb20020a231a16c37902c78edca2e964630651e3f33c08571034f763b",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/homo_eval_point_contrast_p25_wNone_s2071_correct/summary.json": "1ca590912cb0988e8735f425e8e4f20a3d08107a62af3481d26491efe885d41e",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/input_manifest.json": "756636b751f3cee5c01e4293f4909c27177a021dc3ccb23db53aff27f9573db9",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2071_correct/raw/summary.json": "3a1ed1b8d5c72b5e7b7286bb11c5bd134807d50df0d8053c8e0ba9e2853911a1",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2071_correct/run/raw_symbols.json": "daadf7b2c6a19717955092b2d0d8a7295d39bb4aa112dbbe8cb6f452c6b0c9dc",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2071_correct/run/raw_trajectories.npz": "017da6db21f9369d5f48072389e5bb9d205e06bc6ddec0ff93312827e6d46673",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/homo_eval_point_time_p25_wNone_s2071_correct/summary.json": "7ad214da6d941c5ff43d816fb849cdc53c83ad6b2461f101df1a822b4057e3db",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_correct/raw/summary.json": "ce85df3e6e965d1ad8022b02d248ea2ea58ba64ed7fc1823f3969352711dc519",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_correct/run/raw_symbols.json": "dd6218b333bed97ba51b11427d5af9af800e9adfba2b031f41ad40b3cafd1d52",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_correct/run/raw_trajectories.npz": "579a77e2c81960e88958a9481e870c272fe048d88e76d0c670690fba99b894d0",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/homo_eval_point_contrast_p50_wNone_s2072_correct/summary.json": "b35741da6f32cca6ddec01530fe1ab2692abd5c46165987604e64a15ecddf4d5",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_correct/raw/summary.json": "3e6862ad4d3277f059aa229311255eca640fba3f6cfb3877b83503e353d0c853",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_correct/run/raw_symbols.json": "e80a9a8e19377ba273f6cd94e22791f035a2a021f2384dd5abce6a8c385c89a0",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_correct/run/raw_trajectories.npz": "c391507ddf69aa8144e6e75c1e6e7137e29763fe8a917c65c8ed27b8cdc93170",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/homo_eval_point_time_p50_wNone_s2072_correct/summary.json": "5aa6b2decae3f8d6747fcafdd27ab7eaa2b8c1a22058748dd3d707a853ca4d19",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2071_correct/raw/summary.json": "97386d7d7464612452363ddf27f79c77f175bddcda85aee0660008e2b56373c1",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2071_correct/run/raw_symbols.json": "2217f33c6853414dc83e4da89db2897ec97b29e343c7ab495a9e5bc413d2a9d2",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2071_correct/run/raw_trajectories.npz": "96cede7b1a8b9a435fe2caea5e4013167591afa45e6b2f7b5a53e56aca2e8a6f",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/homo_eval_point_contrast_p75_wNone_s2071_correct/summary.json": "1cdb964e53c6bcfde4510ced85686f70a744706eb80e00d715c5e66c410de156",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2071_correct/raw/summary.json": "8b5a89d8d4fd38d793a1622f1952b1f7b23a56b20cc39fe3091761e02456650f",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2071_correct/run/raw_symbols.json": "2a8f96ad5bc91b3aea22234d7f41bd116d9a724bd4389b70f26a5a79e01c5760",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2071_correct/run/raw_trajectories.npz": "59b89856aafc84a2c98b1c0da9b99589d6bd4317737745cb639125a02345d26c",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_homo_seed42/homo_eval_point_time_p75_wNone_s2071_correct/summary.json": "edc0673e052be94876a4b961dcd655b645341a90678a208fb6e6999666f5a5ea",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p25_wNone_s2071_correct/raw/summary.json": "a87e266b29c0c69b49af505350df15b7f00a95fb8275507ab47de321c307bbed",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p25_wNone_s2071_correct/run/raw_symbols.json": "4885e345e438b99463699a63e86d4f8bf4aa6c96549e8729690a799768af0f65",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p25_wNone_s2071_correct/run/raw_trajectories.npz": "2dcf6cecc8c0915950fdc300d26006640129783210c9f52f70e03d5f1837aa6e",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/lumo_eval_point_contrast_p25_wNone_s2071_correct/summary.json": "192f61ce188831a03517732dc1cba17b9ede4d315881a9c518bb3e8224f151bd",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/input_manifest.json": "969c939be300d60e3837d5a54b45f2c365a59ed157c23cce65410f6f33078ae9",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p25_wNone_s2071_correct/raw/summary.json": "3411cae97cb06e61db8430f380a7a91fd846f30cee12b4e55d278af4689b1bf5",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p25_wNone_s2071_correct/run/raw_symbols.json": "412b35b9a8d5b474df179d709102b532f268633f06e250436b83ffe870e955ee",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p25_wNone_s2071_correct/run/raw_trajectories.npz": "32c8f5c63a0b5d46653e4bd1ee58ff497da8da125fed520957b8ee0be6836a23",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/lumo_eval_point_time_p25_wNone_s2071_correct/summary.json": "078befe84ea8fd920d7ef252d5363f02d144b155be83713b6e6059bba543e941",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p50_wNone_s2072_correct/raw/summary.json": "7425be8496b865494fcac6f7c5f4a396bd59afed17ef110cfd746a835b856332",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p50_wNone_s2072_correct/run/raw_symbols.json": "0d3153fb741834767111a051825f52f48c74c6cbf3c8ad63384a254839074652",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p50_wNone_s2072_correct/run/raw_trajectories.npz": "3240dc24c5b090f626e7831365e91eec2d68945e96b8abee9346e3a3463e989b",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/lumo_eval_point_contrast_p50_wNone_s2072_correct/summary.json": "c9089acc96ea0e1343011306a0b58c847bce72058dc626dcff289ac166aad672",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p50_wNone_s2072_correct/raw/summary.json": "e97979f3b793c1dd524e32a8c6aedf1b7ffe05b330868b0e678949659480517e",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p50_wNone_s2072_correct/run/raw_symbols.json": "6269165c5758921e7cae2f8fffa35fa68ccf3e13d5e4b0e5f8dc52fdd15d8ecd",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p50_wNone_s2072_correct/run/raw_trajectories.npz": "01179aaa46cbc62e4b8eeef215b11dca47797549845b7a697bae20f9e2a6c616",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/lumo_eval_point_time_p50_wNone_s2072_correct/summary.json": "a94e37cbd753ba3f389b4babab3643b879a33d2983668a9aea8815fadf403671",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p75_wNone_s2071_correct/raw/summary.json": "77ae4f3a0ca7c1d8b40b986879b0f7422854f481a2a9603a631120a8664260e8",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p75_wNone_s2071_correct/run/raw_symbols.json": "021982fcb3f91f52d7698e040a85e4628606ea46c22e9172d8ab65bdb2ddacce",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_contrast_p75_wNone_s2071_correct/run/raw_trajectories.npz": "e05aaca556758bb0c2e993788d587cd352a0e561167deacccc6cd73cfd25ee29",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/lumo_eval_point_contrast_p75_wNone_s2071_correct/summary.json": "d5bdc39bde15129ff2db58d2f634a143f2968e08c9f1bb79e464a865a265b548",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p75_wNone_s2071_correct/raw/summary.json": "f34307a40b5b1369cf852d127b4f1f7537b14a4870f88d0fa7746533a8ca0a23",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p75_wNone_s2071_correct/run/raw_symbols.json": "9314b4bebd3f00879c81dd39cbb511a1ceeab9c7c797b324a05eabbaa310ae50",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_lumo_seed42/eval_point_time_p75_wNone_s2071_correct/run/raw_trajectories.npz": "f1ea98c8bbd717f8cd6456025a1134d9ad7f341b87edffa89952cb173bbe1281",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/unimol2_lumo_seed42/lumo_eval_point_time_p75_wNone_s2071_correct/summary.json": "334362c8a398413d042ab3f65b914822b9968d28dd6926181b41195b889141ba",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/quantum_singlepoints_summary.json": "b266d884ca9a858559a3529726ded91bbdf97669176da36578b79743ed062e4d"
+  }
+}
