@@ -80,6 +80,8 @@ seed42、三个中央目标，分别对原点值GRPO、仅有效性GRPO、等时
 
 [完整优化结果与失败记录](experiments/oe62_e8_quantum_geometry_20261113.json)。CPU/GPU在全部36个相同输入几何上的最大HOMO/LUMO差均低于0.001 eV，复算不是新增36个独立样本。[引擎核对](experiments/oe62_e8_execution_validation_20261113.json)
 
+![冻结36例在DFT优化前后的配对误差；输入端叉号表示优化未得到可验收末态](figures/oe62_e8_quantum_geometry.png)
+
 ### 既有GRPO结果的奖励与产率归因诊断
 
 对原6个训练检查点分解组内优势，4388个可评价候选的优势全部为正；可评价候选之间的差异只占优势平方和3.41%–4.23%。其余主要来自可评价/不可评价类别差异。0/1个可评价候选的组无法提供组内性质比较。这是实际优势幅度的诊断，不是梯度因果归因。[逐组诊断](experiments/oe62_e8_original_advantages_20261113.json)

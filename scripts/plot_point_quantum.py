@@ -20,7 +20,9 @@ def main():
                 if 'singlepoint' not in v:continue
                 e0=abs(v['singlepoint']['prediction_eV'][k]-v['target_eV'])
                 color='#3465a4' if v['selection']=='top1' else '#b97b3d'
-                offset=(j-(len(data)-1)/2)*min(.015,.20/max(len(data)-1,1));ax.scatter(offset,e0,color=color,s=20,zorder=3)
+                offset=(j-(len(data)-1)/2)*min(.015,.20/max(len(data)-1,1))
+                missing_endpoint=optimize and 'optimized_singlepoint' not in v
+                ax.scatter(offset,e0,color=color,marker='x' if missing_endpoint else 'o',s=55 if missing_endpoint else 20,zorder=3)
                 if 'optimized_singlepoint' in v:
                     e1=abs(v['optimized_singlepoint']['prediction_eV'][k]-v['target_eV'])
                     accepted=v['geometry']['converged'] and v['geometry']['graph_preserved']
@@ -35,7 +37,7 @@ def main():
             ax.spines[['top','right']].set_visible(False)
     for label,c in [('DPA top1','#3465a4'),('Fixed hash sample','#b97b3d')]:axes[0,0].plot([],[],color=c,label=label)
     axes[0,0].legend(fontsize=8,frameon=False)
-    detail='PBE-D3BJ geometry; crosses = nonconverged or changed graph' if optimize else 'Input-geometry singlepoints; optimization not requested'
+    detail='PBE-D3BJ geometry; cross = no accepted endpoint (at input when optimization failed)' if optimize else 'Input-geometry singlepoints; optimization not requested'
     fig.suptitle(f"Frozen {r['selection']['expected']}-slot cohort: PBE0/def2-TZVP target error\n{detail}; not a population success estimate",fontsize=10)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     for ext in ['png','pdf','svg']:fig.savefig(a.output.with_suffix('.'+ext),dpi=180)
