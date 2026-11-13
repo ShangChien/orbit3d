@@ -58,7 +58,7 @@ L = L_gen + lambda_property * L_property
 
 v4 SFT 输入真实激活标签，并以 10% 概率关闭整个条件向量。`active_targets` 指定单目标；继续 SFT 可单独冻结骨干和自评头，只更新 conditioner。
 
-v5 SFT按源标签`y`构造`mu=y+sigma*epsilon`，批内共用从声明范围对数均匀抽取的物理宽度，10%整请求关闭。可启用双向条件margin：按激活标签反序配对，只对两个方向的高斯兼容性都更高的配对，比较同一结构在自身/交叉请求下的逐分子生成损失；逐分子损失仍按树、元素、坐标决策分别归一化。保留普通SFT项，记录配对覆盖。[条件采样](../src/orbit3d/generator/gaussian_conditions.py)
+v5 SFT按源标签`y`构造`mu=y+sigma*epsilon`，批内共用从声明范围对数均匀抽取的物理宽度，10%整请求关闭。v4/v5均可启用双向条件margin：按激活标签反序配对，只对两个方向的高斯兼容性都更高的配对，比较同一结构在自身/交叉请求下的逐分子生成损失；逐分子损失仍按树、元素、坐标决策分别归一化。v4使用精确标签作为请求，配对尺度通过`contrast_pairing_sigma_eV`指定，仅决定负例间距，不进入点值条件器。保留普通SFT项，记录配对覆盖。[条件采样](../src/orbit3d/generator/gaussian_conditions.py)
 
 纯高斯加噪SFT的经验条件标签分布为`p_train(y | mu,sigma) ∝ p_train(y)*exp(-(y-mu)^2/(2*sigma^2))`；源标签密度因此影响其均值和宽度。对比项或Hindsight会改变目标或经验数据分布，不能直接沿用这一分布作为它们的预测结论。
 

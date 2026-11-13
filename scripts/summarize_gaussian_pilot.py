@@ -22,6 +22,7 @@ def statistics(values, goal, attempted, requested_width):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--evaluation',type=Path,required=True)
+    p.add_argument('--control-arm',default='sft');p.add_argument('--treatment-arms',nargs='+',default=['contrast','hindsight','both'])
     p.add_argument('--unimol2',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     matrix=json.loads((a.evaluation/'matrix.json').read_text());complete=json.loads((a.evaluation/'completed.json').read_text());assert complete['pools']==len(matrix)
     independent=json.loads((a.unimol2/'summary.json').read_text());bound=json.loads((a.unimol2/'input_manifest.json').read_text())
@@ -73,9 +74,11 @@ def main():
                         'hit_rate_fixed_025':float(np.mean([r['hit_rate_all_attempts']['0.25'] for r in metrics])),
                         'hit_rate_requested_width':float(np.mean([r['hit_rate_all_attempts'][str(width)] for r in metrics])) if width else None})
     attribution=[]
-    for width in [.1,.25,.5]:
+    control_widths=list(dict.fromkeys(r['preference_sigma_eV'] for r in cells if r['arm']==a.control_arm and r['control']=='correct'))
+    assert control_widths, 'Missing requested control arm'
+    for width in control_widths:
         for evaluator in ['dpa','fingerprint','unimol2']:
-            for arm in ['contrast','hindsight','both']:
+            for arm in a.treatment_arms:
                 differences=[]
                 for q in quantiles:
                     def score(name):
@@ -83,9 +86,9 @@ def main():
                                  and r['preference_sigma_eV']==width and r['quantile']==q)['metrics'][evaluator]
                         return {'attempted':row['attempted'],'evaluated':row['evaluated'],
                                 'hits':row['property_hits_fixed_025'],'mae':row['target_mae_eV']}
-                    differences.append({'quantile':q,**decompose(score('sft'),score(arm))})
+                    differences.append({'quantile':q,**decompose(score(a.control_arm),score(arm))})
                 keys=['yield_delta','supply_component','conditional_hit_component','target_mae_delta_eV']
-                attribution.append({'treatment':arm,'control':'sft','preference_sigma_eV':width,
+                attribution.append({'treatment':arm,'control':a.control_arm,'preference_sigma_eV':width,
                     'evaluator':evaluator,'per_quantile':differences,
                     'mean':{key:float(np.mean([r[key] for r in differences]))
                             if all(r[key] is not None for r in differences) else None for key in keys}})
@@ -93,7 +96,7 @@ def main():
         'scope':'Single training seed pilot; equal target-quantile means. Off/shuffled are rescoring of frozen pools, not additional proposals. Point-policy widths are absent; tolerance changes do not retrain or regenerate them. Frozen Uni-Mol2 is cross-model evidence, not quantum truth.',
         'aggregates':aggregates,'cells':cells,'raw_source_sha256':hashes,
         'yield_attribution':attribution,
-        'attribution_scope':'Exact per-target hit-yield accounting against continued Gaussian SFT; not causal mediation.',
+        'attribution_scope':'Exact per-target hit-yield accounting against the declared continued SFT control; not causal mediation.',
         'generation_and_raw_evaluation_seconds':sum(r['wall_seconds'] for r in matrix),
         'independent_evaluation_seconds':independent['wall_seconds'],
         'novelty_scope':'Relative to each checkpoint training_smiles, including hindsight graphs when used.',

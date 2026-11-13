@@ -14,19 +14,20 @@ from evaluate_point_pool import evaluate_pool
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--campaign',type=Path,required=True)
-    p.add_argument('--extra-checkpoints',type=Path);p.add_argument('--independent',type=Path,required=True)
+    p.add_argument('--base-config',type=Path);p.add_argument('--extra-checkpoints',type=Path);p.add_argument('--independent',type=Path,required=True)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--device',default='cuda:0');p.add_argument('--candidates',type=int,default=64)
     p.add_argument('--seeds',nargs='+',type=int,default=[2061,2062]);p.add_argument('--quantiles',nargs='+',default=['10','25','50','75','90'])
     a=p.parse_args();lock_deterministic_environment(42);torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
     checkpoints=json.loads((a.campaign/'checkpoints.json').read_text())
     if a.extra_checkpoints:checkpoints.update(json.loads(a.extra_checkpoints.read_text()))
-    base=json.loads((a.campaign/'configs/gaussian.json').read_text());base.update(mode='predict',device=a.device)
+    base_path=a.base_config or a.campaign/'configs/gaussian.json'
+    base=json.loads(base_path.read_text());base.update(mode='predict',device=a.device)
     base['generator_config'].update(grpo_steps=0,batch_size=a.candidates)
     base['mount_paths'].pop('hindsight_data_path',None)
     base['inference_config'].update(num_candidates=a.candidates,oracle_candidates=a.candidates,batch_size=a.candidates)
     target=base['generator_config']['active_targets'][0];manifest=json.loads(a.manifest.read_text());points=manifest['single_target_points'][target]
-    record_input_hashes(a.output,{'manifest':a.manifest,'fingerprint':a.independent,**checkpoints})
+    record_input_hashes(a.output,{'manifest':a.manifest,'base_config':base_path,'fingerprint':a.independent,**checkpoints})
     evaluators=load_evaluators(base,manifest['elements']);fp=FingerprintOracle.load_from_dir(a.independent)
     matrix=[]
     for arm,checkpoint in checkpoints.items():

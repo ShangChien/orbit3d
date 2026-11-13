@@ -190,7 +190,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
                     "active_targets": settings.get("active_targets", names),
-                    "conditional_training": {k: settings.get(k) for k in ["preference_sigma_range_eV", "condition_contrast_weight"]},
+                    "conditional_training": {k: settings.get(k) for k in ["preference_sigma_range_eV", "condition_contrast_weight", "contrast_pairing_sigma_eV"]},
                     "hindsight_data_path": paths.get("hindsight_data_path"),
                     "label_theory": sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                     "train_backbone": train_backbone,
@@ -246,11 +246,14 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                     atom_class_weights=atom_class_weights
                 )
             if settings.get('condition_contrast_weight', 0):
-                if model.condition_version != 5:
-                    raise ValueError('Reciprocal Gaussian contrast requires v5 conditions')
+                if model.condition_version not in {4, 5}:
+                    raise ValueError('Reciprocal contrast requires point or mean-width conditions')
                 from ..generator.gaussian_conditions import reciprocal_pairs
                 from ..generator.condition_contrast import condition_margin_loss
-                partner, eligible = reciprocal_pairs(target, lower, upper, mask)
+                pairing_width = (upper if model.condition_version == 5 else
+                    torch.full_like(target, float(settings.get('contrast_pairing_sigma_eV', .25))) /
+                    torch.as_tensor(scale, device=device, dtype=target.dtype))
+                partner, eligible = reciprocal_pairs(target, lower, pairing_width, mask)
                 positive = metrics.pop('per_molecule_generation_loss')
                 contrast = positive.sum() * 0
                 if eligible.any():

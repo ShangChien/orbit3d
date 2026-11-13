@@ -49,3 +49,36 @@ def test_reciprocal_preferences_reject_overlapping_or_reversed_requests():
     positive=torch.tensor([.5,.6],requires_grad=True);negative=torch.tensor([.4,.5],requires_grad=True)
     condition_margin_loss(positive,negative,eligible).backward()
     assert (positive.grad>0).all() and (negative.grad<0).all()
+
+
+def test_point_contrast_runs_through_sft_with_frozen_backbone(tmp_path,monkeypatch):
+    import numpy as np
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+    from orbit3d.pipeline import octree_runner as runner
+    from orbit3d.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
+    from orbit3d.utils.dataset_io import write_precise_sdf
+    args=build_default_uni3dar_args(8);args.emb_dim=32;args.num_head=4;args.layer=1;args.condition_version=4
+    model=ConditionalUni3DAR(args,AtomFeatDict(args),2)
+    with torch.no_grad():
+        for parameter in list(model.tree_heads.parameters())+list(model.atom_heads.parameters()):
+            if parameter.ndim>1:parameter.normal_(0,.02)
+    unchanged={k:v.clone() for k,v in model.state_dict().items() if not k.startswith('interval_conditioner.')}
+    molecules=[]
+    for i,smi in enumerate(['CO','CC']):
+        mol=Chem.AddHs(Chem.MolFromSmiles(smi));AllChem.EmbedMolecule(mol,randomSeed=42)
+        mol.SetProp('homo',str(-7.+i));mol.SetProp('lumo',str(-1.+i));molecules.append(mol)
+    sdf=tmp_path/'source.sdf';write_precise_sdf(sdf,molecules)
+    initial=tmp_path/'initial.pt';initial.write_bytes(b'unit-test model supplied by loader')
+    state={'target_cols':['homo','lumo'],'target_units':['eV','eV'],'mean':np.array([-6.5,-.5],dtype=np.float32),'scale':np.ones(2,dtype=np.float32)}
+    monkeypatch.setattr(runner,'load_octree_checkpoint',lambda *a,**k:(model,state))
+    cfg={'mode':'train','device':'cpu','seed':42,
+         'mount_paths':{'checkpoint_load_path':str(initial),'train_data_path':str(sdf),'checkpoint_save_dir':str(tmp_path/'weights'),'output_dir':str(tmp_path/'run')},
+         'oracle_config':{'target_cols':['homo','lumo'],'target_units':['eV','eV']},
+         'generator_config':{'sft_steps':3,'sft_lr':2e-5,'batch_size':8,'active_targets':['homo'],
+             'train_backbone':False,'train_property_head':False,'understanding_weight':0,'condition_contrast_weight':1}}
+    result=runner.run_octree_from_config(cfg)
+    assert result['history'][0]['contrast_eligible']>0
+    assert result['history'][0]['loss_contrast']>0
+    assert all(np.isfinite(r['loss_total']) for r in result['history'])
+    for key,value in unchanged.items():torch.testing.assert_close(model.state_dict()[key],value,rtol=0,atol=0)
