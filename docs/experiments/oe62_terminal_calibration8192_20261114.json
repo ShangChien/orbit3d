@@ -5648,5 +5648,37 @@
     "e15_fit_inputs.json": "5510f8796faf080cf4a1b45342d3412b07fb74f3832a185c63db9b1b0203b40e",
     "e15_test_generated.npz": "bea872a9a942cef4aa80c26b8327d740b930562ba69f3eca465f1394e1b84b33",
     "oe62_terminal_calibration_split_20261114.json": "12826f348ad7bf6101890e935be24e6acb53580eb892bad192cedc6ef031861b"
+  },
+  "parent_scaler_numeric_replay": {
+    "scope": "Numerical fitted scaler attributes exactly preserved; serialized joblib bytes may differ after load/save.",
+    "equal": true,
+    "scalers": [
+      {
+        "mean_": [
+          -6.616687081026612
+        ],
+        "scale_": [
+          0.6723594200820607
+        ],
+        "var_": [
+          0.452067189773085
+        ],
+        "n_samples_seen_": 8192.0,
+        "n_features_in_": 1
+      },
+      {
+        "mean_": [
+          -1.4726803602130225
+        ],
+        "scale_": [
+          0.8419191673115285
+        ],
+        "var_": [
+          0.7088278842865374
+        ],
+        "n_samples_seen_": 8192.0,
+        "n_features_in_": 1
+      }
+    ]
   }
 }
