@@ -54,3 +54,11 @@ def test_physical_only_ignores_terminal_property_values():
     a,_=terminal_advantages(s,p,p,torch.tensor([.1,.9,0.,0.]),'physical')
     b,_=terminal_advantages(s,p,p,torch.tensor([.9,.1,0.,0.]),'physical')
     torch.testing.assert_close(a,b)
+
+
+def test_nested_channels_are_orthogonal_as_rollout_vectors():
+    s=torch.tensor([True,True,True,True,False,False]);p=torch.tensor([True,True,False,False,False,False])
+    a,c=terminal_advantages(s,p,p,torch.tensor([.1,.9,0.,0.,0.,0.]),'property')
+    matrix=torch.stack(list(c.values()),dim=1);gram=matrix.T@matrix/len(a)
+    torch.testing.assert_close(gram,torch.diag(torch.diag(gram)),atol=1e-6,rtol=0)
+    torch.testing.assert_close(gram.trace(),a.square().mean())

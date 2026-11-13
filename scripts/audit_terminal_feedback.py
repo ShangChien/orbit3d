@@ -21,7 +21,7 @@ def main():
         with path.open('rb') as f:row['checkpoint_sha256']=hashlib.file_digest(f,'sha256').hexdigest()
         if arm!='sft':
             history=state['grpo_history'];assert len(history)==24 and all(r['group_size']==32 for r in history)
-            counts=[];negative=0
+            counts=[];negative=0;energies=[]
             for group in history:
                 rows=group['rollout_records'];eligible=[r for r in rows if r.get('evaluation_status')=='completed'];counts.append(len(eligible))
                 for r in rows:
@@ -30,6 +30,14 @@ def main():
                     if arm=='structure':assert channels['physical']==0
                     negative+=channels['property']<0
                 assert np.std([r['advantage'] for r in rows])<=1.00001
+                vectors=np.array([[r['terminal_advantages'][name] for name in ['structure','physical','property']] for r in rows])
+                gram=vectors.T@vectors/len(rows)
+                assert np.max(np.abs(gram-np.diag(np.diag(gram))))<1e-5
+                energies.append(np.diag(gram))
+            energy=np.mean(energies,axis=0)
+            row['advantage_vector_energy']={name:float(value) for name,value in zip(['structure','physical','property'],energy)}
+            row['energy_fraction']={name:float(value/energy.sum()) if energy.sum() else None for name,value in zip(['structure','physical','property'],energy)}
+            row['energy_scope']='Orthogonal nested advantage vectors in rollout space, not orthogonal parameter gradients or causal attribution.'
             row.update(groups=24,proposals=768,optimizer_updates=sum(r['optimizer_updates'] for r in history),
                 evaluated_per_group=counts,negative_property_components=negative,
                 zero_or_one_property_groups=sum(n<=1 for n in counts),
