@@ -4,7 +4,7 @@
 
 **预训练 Uni-3DAR octree → 点值/区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
 
-论文研究主线为**点值条件与GRPO目标控制**，优先验证GRPO的性质反馈贡献及其上下游接口价值。[核心研究方案](docs/experiments.md#e8-点值grpo核心实验)
+研究主线为**源三维分子的目标均值与偏好宽度控制**，按独立收益选择SFT、条件对比、Hindsight或GRPO；当前先收尾奖励消融，再做小规模条件学习对照。[实验方案](docs/experiments.md#e10-均值宽度与条件学习小实验)
 当前运行配置默认关闭GRPO，以便显式选择SFT或对齐实验；另有显式骨架图增长入口和BRICS片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
@@ -94,7 +94,7 @@ mol_gen/
 | 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_oe62.py`、`prepare_generator_sdf.py` |
 | 性质训练/评价 | `train_source_oracle.py`、`evaluate_source_holdout.py`、`train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
 | OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |
-| 生成训练与迁移 | `initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
+| 生成训练与迁移 | `migrate_gaussian_conditioner.py`、`prepare_hindsight_pool.py`、`run_gaussian_pilot.py`、`initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`evaluate_brics_point_pool.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`analyze_point_ranking.py`、`select_relaxation_cohort.py`、`run_relaxation_comparison.py`、`ablate_*.py` |
 | 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_reward_attribution.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_quantum_repeats.py`、`summarize_*.py`、`audit_*.py` |
 | 量化验证 | `select_qualified_quantum_cohort.py`、`select_point_quantum_cohort.py`、`run_oe62_quantum.py`、`oe62_quantum_singlepoint.py`、`validate_quantum.py`、`compare_pool_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |

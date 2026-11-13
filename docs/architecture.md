@@ -41,6 +41,8 @@ OE62 适配直接读取源 XYZ 和 PBE0 轨道列表，在原 XYZ 原子顺序�
 
 v4 点值条件器对标准化标量和性质 ID 编码，使用显式激活 mask，复用 root prefix/AdaLN。它不编码上下界或宽度；与 v3 区间检查点分别加载。推理支持正确条件、全关闭及替换输入点的打乱对照，后两者仍按原任务目标评价。
 
+v5 高斯偏好条件器输入标准化均值与`log(sigma/scale)`，`sigma`通过`preference_sigma_eV`显式传入；验收仍由`target_tolerance`独立指定。宽度表达请求偏好，不是预测不确定性。v4迁移保留均值输入权重、宽度新增列置零，迁移时行为与原点值条件器一致；适配完成后按v5合同加载。[迁移](../scripts/migrate_gaussian_conditioner.py)
+
 结构自评头使用无条件结构表征预测性质，用于生成后的初筛，避免把输入区间直接当成输出性质。自评值从模型归一化空间还原到物理单位后参与排序。
 
 ### 监督适配
@@ -55,6 +57,10 @@ L = L_gen + lambda_property * L_property
 该组合不是统一的逐 token NLL。v3 训练区间包含真实标签，但中心不必等于标签；归一化跨度按 LogUniform(0.2,2.0) 抽样，并有性质/边界 mask 随机丢弃。训练策略、目标顺序、单位、scaler、表示配置和迁移状态随检查点保存。[训练编排](../src/orbit3d/pipeline/octree_runner.py)、[检查点与编码](../src/orbit3d/generator/octree_backend.py)
 
 v4 SFT 输入真实激活标签，并以 10% 概率关闭整个条件向量。`active_targets` 指定单目标；继续 SFT 可单独冻结骨干和自评头，只更新 conditioner。
+
+v5 SFT按源标签`y`构造`mu=y+sigma*epsilon`，批内共用从声明范围对数均匀抽取的物理宽度，10%整请求关闭。可启用双向条件margin：按激活标签反序配对，只对两个方向的高斯兼容性都更高的配对，比较同一结构在自身/交叉请求下的逐分子生成损失；逐分子损失仍按树、元素、坐标决策分别归一化。保留普通SFT项，记录配对覆盖。[条件采样](../src/orbit3d/generator/gaussian_conditions.py)
+
+Hindsight通过独立SDF输入追加生成结构；batch一半源数据、一半生成数据，scaler沿用源检查点。准备工具复用冻结原始池的A预测及对应坐标、按图去重并排除非训练源骨架，按性质分层取样。源标签和代理标签分别记录，不自动引入DFT验证候选。[数据准备](../scripts/prepare_hindsight_pool.py)
 
 ### 可选 GRPO
 

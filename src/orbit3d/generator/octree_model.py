@@ -178,6 +178,23 @@ class PointConditioner(nn.Module):
     modulate_out = DynamicIntervalConditioner.modulate_out
 
 
+class GaussianConditioner(PointConditioner):
+    """Normalized mean plus log normalized preference width; not predictive uncertainty."""
+    def __init__(self, emb_dim, num_props, num_layers):
+        super().__init__(emb_dim, num_props, num_layers)
+        for encoder in self.prop_encoders:
+            encoder[0] = nn.Linear(2, emb_dim)
+
+    def forward(self, values, widths, active_mask):
+        active = active_mask.any(-1) if active_mask.ndim == 3 else active_mask
+        values = torch.where(active, values, 0)
+        widths = torch.where(active, widths, 1)
+        features = [(encoder(torch.stack([values[:, k], widths[:, k].log()], -1))
+                     + self.prop_id_emb.weight[k]) * active[:, k:k+1]
+                    for k, encoder in enumerate(self.prop_encoders)]
+        return self.global_mlp(torch.cat(features, -1)) * active.any(-1, keepdim=True)
+
+
 class Suffix3DPropertyHead(nn.Module):
     """
     3D Self-Consistent Property Understanding Head pooling:
@@ -245,7 +262,9 @@ class ConditionalUni3DAR(Uni3DARSampler):
         super().__init__(args, dictionary)
         self.num_props = num_props
         self.condition_version = getattr(args, "condition_version", 1)
-        if self.condition_version == 4:
+        if self.condition_version == 5:
+            self.interval_conditioner = GaussianConditioner(args.emb_dim, num_props, args.layer)
+        elif self.condition_version == 4:
             self.interval_conditioner = PointConditioner(args.emb_dim, num_props, args.layer)
         else:
             self.interval_conditioner = DynamicIntervalConditioner(

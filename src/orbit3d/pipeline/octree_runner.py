@@ -76,12 +76,20 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                                 'forcefield': paths['forcefield_path'] if uses_evaluators else None,
                                 'property_model': paths['property_checkpoint_dir'] if uses_evaluators else None,
                                 'applicability_domain': domain_path,
-                                'adaptation_data': paths.get('train_data_path') if needs_training else None})
+                                'adaptation_data': paths.get('train_data_path') if needs_training else None,
+                                'hindsight_data': paths.get('hindsight_data_path') if needs_training else None})
     training = []
+    source_count = 0
     if needs_training and paths.get("train_data_path"):
         training = list(Chem.SDMolSupplier(paths["train_data_path"], removeHs=False))
         if any(m is None for m in training):
             raise ValueError("Training SDF contains unreadable molecules")
+    source_count = len(training)
+    if needs_training and paths.get('hindsight_data_path'):
+        additions = list(Chem.SDMolSupplier(paths['hindsight_data_path'], removeHs=False))
+        if not additions or any(m is None for m in additions):
+            raise ValueError('Hindsight data must contain readable structures')
+        training.extend(additions)
     train_smiles = {Chem.MolToSmiles(Chem.RemoveHs(m), isomericSmiles=True) for m in training}
     history = []
     if mode in {"train", "train_and_predict"}:
@@ -182,6 +190,8 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                     "training_smiles": sorted(train_smiles),
                     "label_source": label_source,
                     "active_targets": settings.get("active_targets", names),
+                    "conditional_training": {k: settings.get(k) for k in ["preference_sigma_range_eV", "condition_contrast_weight"]},
+                    "hindsight_data_path": paths.get("hindsight_data_path"),
                     "label_theory": sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                     "train_backbone": train_backbone,
                     "element_loss_weighting": weighting_metadata,
@@ -198,9 +208,12 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             model.train()
             dataset.grid.set_epoch(step + 1)
             indices = rng.integers(0, len(training), size=batch)
+            if paths.get('hindsight_data_path'):
+                indices[:batch//2] = rng.integers(0, source_count, size=batch//2)
+                indices[batch//2:] = rng.integers(source_count, len(training), size=batch-batch//2)
             packed = dataset.collate(indices)
             target = torch.tensor(yn[indices], device=device)
-            if model.condition_version == 4:
+            if model.condition_version >= 4:
                 lower, upper = target, target
                 enabled = settings.get('active_targets', names)
                 if not enabled or set(enabled) - set(names):
@@ -208,6 +221,10 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                 active = torch.tensor([n in enabled for n in names], device=device)
                 keep = torch.rand((len(target), 1), device=device) >= 0.1
                 mask = (active[None, :] & keep).unsqueeze(-1).expand(-1, -1, 2)
+                if model.condition_version == 5:
+                    from ..generator.gaussian_conditions import sample_gaussian_conditions
+                    lower, upper, mask = sample_gaussian_conditions(target, scale, active,
+                        tuple(settings.get('preference_sigma_range_eV', [.1, .5])))
             else:
                 width = torch.rand_like(target) * 0.25 + 0.15
                 lower, upper = target - width, target + width
@@ -224,9 +241,28 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                 device_type=device.split(":")[0], dtype=torch.bfloat16, enabled=device.startswith("cuda")
             ):
                 loss, metrics = model.compute_sft_and_understanding_loss(
-                    packed, target, lower, upper, mask, understanding_weight=0.5,
+                    packed, target, lower, upper, mask, understanding_weight=float(settings.get("understanding_weight", .5)),
+                    return_per_molecule=bool(settings.get("condition_contrast_weight", 0)),
                     atom_class_weights=atom_class_weights
                 )
+            if settings.get('condition_contrast_weight', 0):
+                if model.condition_version != 5:
+                    raise ValueError('Reciprocal Gaussian contrast requires v5 conditions')
+                from ..generator.gaussian_conditions import reciprocal_pairs
+                from ..generator.condition_contrast import condition_margin_loss
+                partner, eligible = reciprocal_pairs(target, lower, upper, mask)
+                positive = metrics.pop('per_molecule_generation_loss')
+                contrast = positive.sum() * 0
+                if eligible.any():
+                    with torch.autocast(device_type=device.split(':')[0], dtype=torch.bfloat16,
+                                        enabled=device.startswith('cuda')):
+                        _, negative = model.compute_sft_and_understanding_loss(
+                            packed, target, lower[partner], upper[partner], mask[partner],
+                            understanding_weight=0, return_per_molecule=True)
+                    contrast = condition_margin_loss(positive, negative['per_molecule_generation_loss'], eligible, .02)
+                loss = loss + float(settings['condition_contrast_weight']) * contrast
+                metrics.update(loss_contrast=float(contrast.detach()), contrast_eligible=int(eligible.sum()),
+                               loss_total=float(loss.detach()))
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"Octree SFT diverged at step {step + 1}")
             opt.zero_grad()
@@ -269,7 +305,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
     if spatial_box:
         spatial_box.validate_model(model.args)
     points = None
-    if model.condition_version == 4:
+    if model.condition_version >= 4:
         points = TargetPoints.parse(inference['target_point'], inference['target_tolerance'], names)
         trained_targets = (settings.get('active_targets', names) if mode in {'train','train_and_predict'}
                            else state.get('active_targets'))
@@ -281,6 +317,14 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
     else:
         intervals = TargetIntervals.parse(inference['target_interval'], names)
         lower, upper, active_bounds = interval_arrays(intervals, mean, scale, model.condition_version)
+    if model.condition_version == 5:
+        sigma = inference['preference_sigma_eV']
+        sigma_values = np.array([float(sigma[n]) if isinstance(sigma, dict) else float(sigma) for n in names])
+        if not np.isfinite(sigma_values).all() or (sigma_values <= 0).any():
+            raise ValueError('Preference width must be finite and positive')
+        upper = sigma_values / scale
+        if int(settings.get('grpo_steps', 0)):
+            raise ValueError('v5 experiment uses supervised objectives; GRPO remains a separate v4 control')
     # Preserve the acceptance task separately from optional inference controls.
     if inference.get('condition_control', 'correct') == 'off':
         active_bounds = np.zeros_like(active_bounds, dtype=bool)
@@ -290,7 +334,8 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
         supplied = TargetPoints.parse(inference['input_target_point'], inference['target_tolerance'], names)
         if [x is not None for x in supplied.values] != [x is not None for x in points.values]:
             raise ValueError('Shuffled controls must preserve the active property mask')
-        lower, upper, active_bounds = supplied.arrays(mean, scale)
+        lower, supplied_upper, active_bounds = supplied.arrays(mean, scale)
+        if model.condition_version != 5: upper = supplied_upper
     elif inference.get('condition_control', 'correct') != 'correct':
         raise ValueError('Unknown condition control')
     if int(settings.get('grpo_steps', 0)) and inference.get('condition_control', 'correct') != 'correct':

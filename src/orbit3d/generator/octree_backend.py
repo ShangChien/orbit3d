@@ -98,7 +98,7 @@ def load_pretrained(path, device="cuda:0", targets=2, batch_size=16, condition_v
 
 def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
     state = torch.load(path, map_location="cpu", weights_only=False)
-    versions = {"uni3dar_octree_v1": 1, "uni3dar_octree_v2": 2, "uni3dar_octree_v3": 3, "uni3dar_octree_v4": 4}
+    versions = {"uni3dar_octree_v1": 1, "uni3dar_octree_v2": 2, "uni3dar_octree_v3": 3, "uni3dar_octree_v4": 4, "uni3dar_octree_v5": 5}
     if state["backend"] not in versions:
         raise ValueError("Unknown octree checkpoint contract")
     model = build_octree(device, len(state["target_cols"]), batch_size, versions[state["backend"]], state.get('representation_config'))
@@ -113,7 +113,7 @@ def load_octree_checkpoint(path, device="cuda:0", batch_size=16):
 
 
 def interval_arrays(intervals, mean, scale, condition_version):
-    if condition_version == 4:
+    if condition_version >= 4:
         raise ValueError("Point checkpoints require explicit point conditions")
     bounds = intervals.condition(mean, scale).reshape(len(mean), 4)
     if condition_version == 1:
