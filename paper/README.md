@@ -5,7 +5,12 @@ The proposed next architecture and experiments are maintained separately in
 [design changes and implementation status](../docs/design_changes.md) and
 [experiment designs and execution status](../docs/experiments.md).
 The implemented algorithms are described in [architecture](../docs/architecture.md).
-Unfinished experiments are not reported as completed results. The current research direction selects methods by measured target-control gains; GRPO is a comparison method, not a required paper centerpiece. The completed E10 pilot and E11 point-contrast repeats are tracked in the experiment plan and current results. These newer experiments are not yet incorporated into the built manuscript; do not treat the older PDF as the current evidence summary.
+Unfinished experiments are not reported as completed results. The built draft now
+centers native-coordinate OE62 point control, complete-pool terminal quantum
+validation, full-data SFT and generated-geometry predictor calibration. Earlier
+OCELOT studies and initial geometry controls are preserved in appendices. GRPO
+remains an optional method whose contribution must be measured. E16 currently
+appears as a frozen protocol; its unfinished outcomes are not in the conclusions.
 
 ## Files
 
@@ -22,16 +27,15 @@ Unfinished experiments are not reported as completed results. The current resear
 | `build_arxiv_submission.py` | Package the typesetting sources and ancillary data |
 | `ORBIT3D_arXiv_Paper.pdf`, `ORBIT3D_arXiv_Submission.tar.gz` | Built manuscript and source archive |
 
-The main results include matched property predictors, BRICS comparisons, 36 SFT
-continuation evaluations, 45 GRPO evaluations, fixed-start refinement controls,
-preselected quantum cohorts and full replay. The native-coordinate OE62 extension
-adds frozen-model evaluation on 4,762 held-out structures, 48,384 proposals across three independent generator training seeds,
-independent HyFF assessment, 48-start geometry comparisons and a 256-proposal
-wheel replay. GRPO improves property-hit yield but not time-matched target MAE.
-An independent PBE0/def2-TZVP study adds 19 source references and 24 frozen policy
-candidates: 20 converge with graph preservation and 12 retain the target.
-Same-coordinate force checks distinguish MLIP and DFT convergence. Supplementary experiments retain
-negative adaptation results, spatial/scaffold checks and excited-state diagnostics.
+The main evidence includes three-seed policy and reward-attribution controls,
+846 successful DFT single points from 848 frozen terminal candidates, a shared
+condition-off pool, uniformly processed BRICS proposals, and 2026 successful
+new single points for the full-source SFT comparison. Terminal-DFT predictor
+adaptation uses separate fitting/validation/test scaffolds and is tested on the
+new pool. Selection improvements are reported separately from generation yield.
+The twelve known-hit BRICS optimizations measure conditional hit persistence,
+not whole-proposal optimized yield. All manuscript tables are generated from
+checksum-bound research records.
 
 ## Build
 
@@ -57,11 +61,11 @@ uv run --no-project --with matplotlib python paper/draw_grpo_seeds.py
 uv run --no-project --with matplotlib python paper/draw_oe62_seeds.py --homo docs/experiments/oe62_formal_homo_hyff_repeats_20261113.json --lumo docs/experiments/oe62_formal_lumo_hyff_repeats_20261113.json
 ```
 
-Figure 0 uses SVG/vector PDF; PNG rendering requires Poppler (`pdftoppm`). Figure 1
+Figure 0 shows the current point-generation and terminal-feedback path, using SVG/vector PDF; PNG rendering requires Poppler (`pdftoppm`). Figure 1
 shows actual training-seed aggregates and means. Figure 2 reports the OE62
 paired HyFF effects, with three generator seeds and no significance claim.
 
-The source archive includes TeX, bibliography, all three vector figures and research
+The source archive includes TeX, bibliography, the three vector figures and research
 data under `anc/`. It supports inspection of the reported evidence, not a complete
 training rerun: datasets and model weights remain separate. Building the archive
 does not submit or publish the paper.

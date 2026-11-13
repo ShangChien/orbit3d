@@ -17,7 +17,7 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
 
-WIDTH, HEIGHT = 1200, 550
+WIDTH, HEIGHT = 1200, 605
 INK = "#172A3A"
 MUTED = "#526575"
 RULE = "#D7E0E7"
@@ -32,12 +32,12 @@ class Figure:
         output_dir.mkdir(parents=True, exist_ok=True)
         self.output_dir = output_dir
         self.pdf = canvas.Canvas(str(output_dir / f"{STEM}.pdf"), pagesize=(WIDTH, HEIGHT))
-        self.pdf.setTitle("ORBIT-3D five-stage architecture")
+        self.pdf.setTitle("ORBIT-3D terminal-feedback architecture")
         self.pdf.setAuthor("ORBIT-3D authors")
         self.svg = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">',
-            '<title id="title">ORBIT-3D five-stage architecture</title>',
-            '<desc id="desc">Stages 1 to 3 learn a 3D molecular policy; optional Stage 4 aligns it. Stage 5 refines sampled candidates. A dashed arrow shows training feedback. Shared property and force evaluators support alignment and refinement. Outputs must pass explicit validation.</desc>',
+            '<title id="title">ORBIT-3D terminal-feedback architecture</title>',
+            '<desc id="desc">Native-coordinate SFT initializes an autoregressive 3D generator. Point requests produce complete molecular proposals, followed by structure checks, fixed-budget energy relaxation and terminal property scoring. Optional policy feedback uses the original trajectories. Frozen independent models and DFT validate fresh pools.</desc>',
         ]
         self.rect(0, 0, WIDTH, HEIGHT, fill="#FFFFFF", stroke=None, radius=0)
 
@@ -128,26 +128,12 @@ def octree_icon(f, cx, cy):
         f.circle(x+dx, y+dy, 4.6, BLUE)
 
 
-def interval_icon(f, cx, cy):
-    for i, (a, b, v) in enumerate([(-27, 19, -7), (-4, 43, 22), (-37, 1, -18)]):
-        y = cy-25+i*25
-        f.line([(cx-55, y), (cx+55, y)], RULE, 2)
-        f.line([(cx+a, y), (cx+b, y)], "#ACC3DC", 11)
-        f.circle(cx+v, y, 5.6, BLUE)
-
-
 def rank_icon(f, cx, cy):
     for i, (length, color) in enumerate([(84, BLUE), (55, "#9CB2C6"), (30, "#C9D5DF")]):
         y = cy-27+i*26
         f.circle(cx-47, y, 6, color)
         f.line([(cx-28, y), (cx-28+length, y)], color, 7)
     f.line([(cx-56, cy-30), (cx-51, cy-24), (cx-39, cy-37)], "#FFFFFF", 2)
-
-
-def reward_icon(f, cx, cy):
-    f.line([(cx-54, cy+27), (cx+56, cy+27)], "#B6D5D1", 1.5)
-    for x, height, fill in [(cx-46, 45, "#BED9D4"), (cx-10, 22, "#76AFA6"), (cx+26, 34, TEAL)]:
-        f.rect(x, cy+26-height, 23, height, fill=fill, stroke=None, radius=3)
 
 
 def molecule(f, cx, cy, distorted=False):
@@ -162,61 +148,61 @@ def molecule(f, cx, cy, distorted=False):
 
 def draw(output_dir: Path, render_png=True):
     f = Figure(output_dir)
-    f.rect(24, 18, 1112, 44, fill="#F3F6F8", stroke=None, radius=9)
-    f.text(43, 47, "INPUTS", size=17, bold=True, color=MUTED)
-    f.text(130, 47, "3D structures  ·  target values or intervals  ·  supported electronic states", size=21, max_width=980)
-
-    f.text(24, 96, "POLICY LEARNING", size=17, bold=True, color=BLUE)
-    f.line([(191, 90), (906, 90)], RULE, 1.5)
-    f.text(944, 96, "REFINEMENT", size=17, bold=True, color=AMBER)
-
-    # The only feedback edge in the diagram is a training-time policy update.
-    f.line([(810, 147), (810, 120), (350, 120), (350, 147)], BLUE, 1.7, dash=True, arrow=True)
-    f.rect(470, 105, 220, 27, fill="#FFFFFF", stroke=None, radius=0)
-    f.text(580, 125, "conditioner update", size=19, color=BLUE, anchor="middle")
+    f.text(24, 42, "ORBIT-3D", size=23, bold=True, color=INK)
+    f.rect(254, 20, 192, 78, fill="#F2F6FA", stroke=None, radius=10)
+    f.text(350, 49, "Native 3D + labels", size=19, bold=True, anchor="middle", max_width=176)
+    f.text(350, 77, "Pretrained prior / SFT", size=17, color=MUTED, anchor="middle", max_width=176)
+    f.line([(350, 102), (350, 146)], BLUE, 1.7, arrow=True)
+    f.text(484, 50, "Generate, relax, then evaluate", size=25, bold=True, max_width=652)
+    f.text(484, 82, "Point conditions are separate from acceptance tolerances", size=19, color=MUTED, max_width=652)
 
     stages = [
-        (24, BLUE, "#F7FAFD", "01", "3D prior", "Pretrained octree", octree_icon),
-        (254, BLUE, "#F7FAFD", "02", "Target SFT", "Point / interval", interval_icon),
-        (484, BLUE, "#F7FAFD", "03", "Self-ranking", "Select candidates", rank_icon),
-        (714, TEAL, "#F2F8F6", "04", "GRPO", "Optional alignment", reward_icon),
-        (944, AMBER, "#FCF7F2", "05", "Relaxation", "Accept or backtrack", None),
+        (24, BLUE, "#F7FAFD", "REQUEST", "Target point", "HOMO or LUMO", None),
+        (254, BLUE, "#F7FAFD", "POLICY", "3D generator", "tree / atoms / XYZ", octree_icon),
+        (484, TEAL, "#F2F8F6", "STRUCTURE", "Chemical gate", "graph / charge / stereo", None),
+        (714, AMBER, "#FCF7F2", "GEOMETRY", "Energy relax", "DPA, fixed budget", None),
+        (944, TEAL, "#F2F8F6", "PROPERTY", "Point score", "Terminal geometry", rank_icon),
     ]
-    for x, color, fill, number, title, subtitle, icon in stages:
+    for x, color, fill, label, title, subtitle, icon in stages:
         f.rect(x, 150, 192, 185, fill=fill, stroke=RULE, radius=12)
-        f.text(x+16, 178, number, size=17, bold=True, color=color)
-        f.text(x+96, 209, title, size=24, bold=True, anchor="middle", max_width=176)
+        f.text(x+16, 178, label, size=15, bold=True, color=color)
+        f.text(x+96, 209, title, size=22, bold=True, anchor="middle", max_width=176)
         if icon:
             icon(f, x+96, 260)
+        elif x == 24:
+            for j, offset in enumerate([-32, 7, 36]):
+                y = 238+23*j
+                f.line([(x+40, y), (x+152, y)], RULE, 2)
+                f.circle(x+96+offset, y, 5.5, BLUE)
         else:
             molecule(f, x+96, 254)
-            f.line([(x+149, 235), (x+132, 244)], AMBER, 2, arrow=True)
-            f.line([(x+44, 277), (x+62, 270)], AMBER, 2, arrow=True)
-        f.text(x+96, 317, subtitle, size=19, color=MUTED, anchor="middle", max_width=176)
+            if x == 714:
+                f.line([(x+149, 235), (x+132, 244)], AMBER, 2, arrow=True)
+                f.line([(x+44, 277), (x+62, 270)], AMBER, 2, arrow=True)
+        f.text(x+96, 317, subtitle, size=16.5, color=MUTED, anchor="middle", max_width=176)
     for x in [216, 446, 676, 906]:
         f.line([(x+4, 243), (x+32, 243)], "#7C8D9B", 2, arrow=True)
 
-    # Shared evaluators have one short branch to each consumer, with no crossings.
-    f.line([(465, 420), (465, 380), (1040, 380), (1040, 340)], MUTED, 1.8, arrow=True)
-    f.line([(810, 380), (810, 340)], MUTED, 1.8, arrow=True)
-    f.circle(810, 380, 3.3, MUTED)
-    f.rect(540, 366, 185, 28, fill="#FFFFFF", stroke=None, radius=0)
-    f.text(632, 386, "shared evaluation", size=18, color=MUTED, anchor="middle")
+    # One collector combines full-molecule outcomes, including rejected starts.
+    f.line([(580, 340), (580, 406)], TEAL, 1.7, dash=True, arrow=True)
+    f.line([(810, 340), (810, 370), (580, 370)], TEAL, 1.7, dash=True)
+    f.line([(1040, 340), (1040, 370), (810, 370)], TEAL, 1.7, dash=True)
+    f.circle(580, 370, 3, TEAL); f.circle(810, 370, 3, TEAL)
+    f.text(620, 395, "Structure / physics / target feedback", size=17, color=TEAL, max_width=430)
+    f.rect(254, 410, 652, 110, fill="#F5F9F8", stroke=RULE, radius=10)
+    f.text(278, 443, "Optional policy alignment", size=22, bold=True)
+    f.text(278, 473, "Update the original sampled trajectory", size=20, color=MUTED)
+    f.text(278, 500, "Keep every rejected proposal in the denominator", size=18, color=MUTED, max_width=606)
+    f.line([(350, 406), (350, 340)], BLUE, 1.8, dash=True, arrow=True)
+    f.text(370, 383, "GRPO", size=17, color=BLUE)
 
-    f.rect(24, 420, 882, 112, fill="#FAFBFC", stroke=RULE, radius=10)
-    f.line([(465, 438), (465, 515)], RULE, 1.3)
-    f.text(46, 452, "Property oracle", size=22, bold=True)
-    f.text(46, 481, "Predictions + uncertainty", size=20, color=MUTED)
-    f.text(46, 511, "3D adapters / fingerprint models", size=18, color=MUTED, max_width=399)
-    f.text(488, 452, "Force field", size=22, bold=True)
-    f.text(488, 481, "Energy + interatomic forces", size=20, color=MUTED)
-    f.text(488, 511, "DPA-4 / HyFF", size=18, color=MUTED)
-
-    f.line([(1136, 260), (1167, 260), (1167, 476), (1141, 476)], AMBER, 1.8, arrow=True)
-    f.rect(944, 420, 192, 112, fill="#FFFFFF", stroke="#DCC6B4", radius=10)
-    f.text(1040, 452, "Validate output", size=21, bold=True, anchor="middle", max_width=174)
-    f.text(1040, 483, "Chemistry · targets", size=19, color=MUTED, anchor="middle", max_width=174)
-    f.text(1040, 512, "Residual forces", size=19, color=MUTED, anchor="middle", max_width=174)
+    f.line([(1136, 243), (1171, 243), (1171, 465), (1141, 465)], AMBER, 1.8, arrow=True)
+    f.rect(944, 410, 192, 110, fill="#FFFFFF", stroke="#DCC6B4", radius=10)
+    f.text(1040, 441, "Independent check", size=18, bold=True, anchor="middle", max_width=176)
+    f.text(1040, 473, "Frozen new pools", size=18, color=MUTED, anchor="middle", max_width=176)
+    f.text(1040, 502, "Uni-Mol2 + DFT", size=18, color=MUTED, anchor="middle", max_width=176)
+    f.text(24, 563, "Property adapters can use disjoint terminal-DFT labels for calibration.", size=20, color=MUTED, max_width=1112)
+    f.text(24, 590, "Training, selection and independent validation retain separate data and budgets.", size=18, color=MUTED, max_width=1112)
     return f.save(render_png)
 
 

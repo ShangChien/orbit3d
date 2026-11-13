@@ -237,6 +237,32 @@ def build():
     full=next(r for r in geometry['aggregate'] if r['target']=='all' and r['method']=='full')
     lines += ['', f'Table: Identical 48 generated starting structures. Force means DPA RMS force at most 0.1 eV/Angstrom; joint proxy success additionally requires both DPA and HyFF within 0.25 eV of the requested point. Full also uses {full["property_gradient_calls"]} property-gradient calls. Optimizer budgets differ and all graph failures remain in the denominator.']
     tables['OE62_GEOMETRY']='\n'.join(lines)
+    terminal=current['oe62_terminal_full_quantum_20261114.json']
+    labels={'point_frozen':'Frozen SFT','terminal_sft':'Time SFT','terminal_structure':'Structure','terminal_physical':'Structure + physical','terminal_property':'Structure + physical + target'}
+    lines=['| Feedback arm | Terminal | DFT success | DFT hits / 384 | Target MAE |','| :--- | ---: | ---: | ---: | ---: |']
+    for name,label in labels.items():
+        row=terminal['arms'][name];cells=list(row['cells'].values())
+        lines.append(f"| {label} | {row['terminal_selected']} | {sum(c['dft_completed'] for c in cells)} | {sum(c['hits'] for c in cells)} | {row['mae_equal_target_eV']:.3f} |")
+    lines += ['', 'Table: Complete frozen terminal pools at three central HOMO requests, one training seed. Every arm has 384 original proposals. DFT single-point hits use 0.25 eV tolerance. MAE (eV) conditions on successful endpoints and weights requests equally; it is not a DFT geometry-optimization result.']
+    tables['TERMINAL_QUANTUM']='\n'.join(lines)
+    full=current['oe62_full_source_quantum_20261114.json']['reports']
+    labels={'subset8192_5000':'8k / 5k','full43951_5000':'44k / 5k','full43951_27000':'44k / 27k'}
+    lines=['| Property / training | Terminal | DFT hits / 640 | Off hit (%) | MAE | Slope |','| :--- | ---: | ---: | ---: | ---: | ---: |']
+    for target in ['homo','lumo']:
+        for arm,label in labels.items():
+            row=full[f'e14_{target}_correct']['arms'][arm];off=full[f'e14_{target}_off']['arms'][arm]
+            hits=sum(c['hits'] for c in row['cells'].values())
+            lines.append(f"| {target[0].upper()} / {label} | {row['terminal_selected']} | {hits} | {100*off['yield_equal_target']:.2f} | {row['mae_equal_target_eV']:.3f} | {row['response_slope']:.3f} |")
+    lines += ['', 'Table: Full native-data SFT controls, all 2,026 selected single points converged. Correct-condition budgets are 640 per row; each off pool has 128 unique proposals rescored at five targets. H/L denote HOMO/LUMO; 8k/44k denote 8192/43951 source structures and 27k denotes 5k plus restarted 22k updates. MAE (eV) and DFT mean-response slope use successful endpoints.']
+    tables['FULL_SOURCE_QUANTUM']='\n'.join(lines)
+    lines=['| Property head | Generated test H/L | Native test H/L | Fresh pool H/L |','| :--- | ---: | ---: | ---: |']
+    for size in ['8192','43951']:
+        fitted=current[f'oe62_terminal_calibration{size}_20261114.json']['metrics'];transfer=current[f'oe62_terminal_transfer{size}_20261114.json']['all']
+        for model,label,key in [('baseline','parent','baseline_mae_eV'),('adapted','+ DFT','adapted_mae_eV')]:
+            pair=lambda xs:f'{xs[0]:.3f} / {xs[1]:.3f}'
+            lines.append(f"| {size} {label} | {pair(fitted['test_generated'][key])} | {pair(fitted['source_test'][key])} | {pair(transfer[model]['mae_eV'])} |")
+    lines += ['', 'Table: Property-prediction MAE in eV, distinct from target MAE. Generated test: 164 scaffold-held-out terminal structures; native test: 4,762 source geometries; fresh pool: 2,026 E14 endpoints excluded from fitting and early stopping.']
+    tables['TERMINAL_CALIBRATION']='\n'.join(lines)
     for name, content in tables.items():
         pattern = r'<!-- BEGIN TABLE '+name+r' -->.*?<!-- END TABLE '+name+r' -->'
         replacement = '<!-- BEGIN TABLE '+name+' -->\n'+content+'\n<!-- END TABLE '+name+' -->'

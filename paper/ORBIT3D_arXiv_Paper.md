@@ -1,4 +1,4 @@
-# ORBIT-3D: Interval-Targeted Molecular Generation with Constrained 3D Refinement
+# ORBIT-3D: Point-Targeted Molecular Generation with Terminal Feedback and Quantum Validation
 
 **Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao**\
 DP Technology, Beijing, China\
@@ -7,17 +7,17 @@ November 2026
 
 ## Abstract
 
-Inverse molecular design often specifies acceptable property ranges, yet a candidate can leave those ranges during geometric relaxation. We present ORBIT-3D, a five-stage framework that separates discrete 3D proposal learning from constrained refinement. A pretrained octree autoregressive prior is adapted to property intervals and paired with a self-ranking head. Optional group-relative policy optimization uses property predictions, uncertainty estimates, and interatomic forces. A terminal relaxer accepts only finite, chemically admissible steps that satisfy explicit property and energy tests. The property evaluator may be differentiable or black-box. We give a conditional feasibility result for the acceptance rule and distinguish it from empirical molecular accuracy. Scaffold-held-out four-property OCELOT training, a five-objective GRPO matrix with three training seeds, matched refinement controls, and full-pipeline replay establish implementation behavior. Refinement gains depend on the evaluator: a separate fingerprint model favors energy-only relaxation over property-preserving acceptance. Independent model and quantum checks expose remaining failures in conditional generation. Three supervised continuations learn B/Si but do not consistently improve independent target success. A training-fragment baseline substantially exceeds the adapted octree on a central target window, identifying proposal quality as a bottleneck. A native-coordinate OE62 study further separates source-property prediction, conditional response, candidate coverage and geometry convergence. The resulting formulation separates implementation guarantees from molecular-design effectiveness and makes negative results reproducible.
+A point-valued molecular design request is useful only if generated structures can meet it after geometric processing. We study this problem with ORBIT-3D, an octree-autoregressive system that separates proposal generation, complete-molecule acceptance, terminal property evaluation and optional policy feedback. Native OE62 three-dimensional coordinates provide supervised training data; a fixed-budget interatomic-potential relaxation defines a common terminal operator. Structural, physical and property comparisons update the original sampled trajectories. Whole-proposal denominators, condition-off controls, frozen cross-model evaluation and quantum calculations distinguish increased candidate supply from improved target accuracy. Three-seed reward ablations largely reproduce policy-alignment gains using eligibility alone. Increasing native training coverage from 8,192 to 43,951 structures improves some response measures but does not consistently improve quantum target yield. Of 848 accepted endpoints in a five-arm feedback experiment, 846 converge in quantum single-point calculations; an unconditional pool remains competitive. In contrast, adapting the property evaluator with 753 generated-terminal quantum labels reduces HOMO/LUMO errors on 2,026 new endpoints from 0.331/0.399 to 0.190/0.192 eV and improves fixed-pool selection. These results identify distinct bottlenecks in structure supply, condition response and evaluator transfer, and provide a reproducible basis for deciding whether policy feedback adds value beyond supervised generation and calibrated selection.
 
 ## 1. Introduction
 
 Many molecular design tasks seek a feasible region rather than an extreme property value. An emitter may require an orbital-energy window, while a multi-objective campaign may impose several simultaneous intervals. A useful candidate must also preserve its chemical identity and retain an acceptable geometry after refinement. Optimizing a predictor score alone does not establish any of these conditions.
 
-ORBIT-3D organizes this problem into five stages: reuse a pretrained 3D prior, condition it on intervals, rank proposals, optionally align the policy with external feedback, and refine the selected structures. Uni-3DAR provides the octree autoregressive starting point [@lu2025uni3dar]. The central design choice is to apply continuous force-based refinement to completed molecular proposals, with an explicit acceptance rule that checks the same target properties used during policy alignment.
+ORBIT-3D retains the pretrained Uni-3DAR octree-autoregressive structure [@lu2025uni3dar]. A point request conditions complete three-dimensional proposals; molecular checks and energy relaxation precede target scoring. Policy alignment is optional. The central question is whether its feedback improves the generator, rather than whether a postprocessor can repair selected outputs.
 
-Our contributions are a modular formulation of interval-targeted generation, a reward construction that separates positive gated utility from invalidity penalties, and a finite-step acceptance rule for constrained refinement. We treat foundation generators, property predictors, and interatomic potentials as reusable components. The contribution is their coordinated use and evaluation, not a new claim about their underlying architectures.
+Our contribution is an implemented terminal-feedback formulation and a sequence of controlled evaluations that separate proposal supply, numerical condition response, physical acceptance and quantum target accuracy. The property and force models are reusable components; we do not claim a new foundation-model architecture. Generated-geometry calibration is evaluated on separate pools before it is used as a candidate reward model.
 
-**Scope of the numerical evidence.** The method sections specify the target architecture. Section 4 reports the unified-package experiments, and Appendix A retains supplementary representation and quantum diagnostics. The evidence includes controlled comparisons and negative results; it does not establish general superiority or DFT-level property accuracy.
+**Scope of the numerical evidence.** Section 4 focuses on native-coordinate OE62 point control, complete-pool quantum checks and property-evaluator calibration. Appendix A retains the earlier OCELOT interval and implementation comparisons, Appendix B gives additional representation diagnostics, and Appendix C details the initial OE62 geometry controls. The evidence does not establish universal policy-alignment superiority or source-test accuracy on arbitrary generated structures.
 
 ### 1.1. Relation to existing methods
 
@@ -27,9 +27,9 @@ PropMolFlow generates property-conditioned 3D molecules using geometry-complete 
 
 Domain-specific components can serve complementary roles. OCNet predicts molecular properties and characterization signals, and OSCFF supplies a force field for organic semiconductors [@zhao2025ocnet; @zhao2025oscff]. They should be evaluated in those roles rather than placed in a single generator ranking. We make no quantitative comparison with these systems without a matched experimental run.
 
-## 2. Five-stage architecture
+## 2. Architecture and terminal evaluation
 
-![ORBIT-3D five-stage architecture. Stages 1-3 learn a proposal policy; optional Stage 4 aligns it. The dashed edge updates the target conditioner during GRPO. At deployment, the learned policy generates and ranks candidates before Stage 5 refinement. Shared property and force evaluators support alignment and acceptance. An output is released only after explicit validation.](figures/fig0_orbit3d_system_architecture.png){#fig:arch width=100%}
+![Implemented point-targeted terminal-feedback path. Native-coordinate SFT initializes the autoregressive policy. Every proposal receives a structural outcome; eligible structures undergo fixed-budget DPA energy relaxation and terminal property scoring. Dashed edges carry optional policy feedback to the original sampled trajectory. Fresh frozen pools receive cross-model and DFT validation; Uni-Mol2 is a development cross-check, not a blind final test. Earlier self-ranking and property-constrained refinement remain optional comparison paths.](figures/fig0_orbit3d_system_architecture.png){#fig:arch width=100%}
 
 ### 2.1. Molecular state and interval constraints
 
@@ -44,15 +44,15 @@ $$
 
 The chemical predicate $C(\mathcal{M})$ checks the task's requirements for connectivity, valence, formal charge, and electronic state. Closed-shell validity is required only for closed-shell tasks; radicals and triplets require their own explicit state checks. An even electron count is not sufficient evidence of a closed shell.
 
-### 2.2. Stage 1: reuse a pretrained 3D proposal prior
+### 2.2. Pretrained 3D proposal prior
 
 The generator represents 3D structure through a coarse-to-fine octree and predicts the resulting token sequence autoregressively. The spatial range, quantization resolution, element vocabulary, and sequence limits belong to the model specification and are saved with its checkpoint. Inputs outside that specification are rejected or processed by an explicitly trained alternative representation; they are not silently clipped, truncated, or converted to another element.
 
 Octree grammar constrains spatial tokenization. Chemical constraints require additional state, including connectivity and remaining valence, followed by validation of the completed structure. We distinguish these constraints because a syntactically valid spatial sequence need not describe a chemically valid molecule. Decoding must preserve atom identities and recover a graph consistent with the coordinates, rather than assigning every inferred bond as a single bond.
 
-### 2.3. Stage 2: learn target conditioning
+### 2.3. Target conditioning
 
-During supervised fine-tuning (SFT), intervals are sampled around observed properties, with independently varied widths and active-target masks. The current condition contains normalized interval bounds and target identities. The tested mainline is restricted to neutral closed-shell molecules; broad charge/spin-conditioned generation requires separate representation and training validation. A condition prefix and layer-wise adaptive normalization modulate the autoregressive policy. Any new input semantics, such as rescaled spatial bins or additional elements, require explicit checkpoint migration and validation.
+In the interval-conditioned variant of supervised fine-tuning (SFT), intervals are sampled around observed properties, with independently varied widths and active-target masks. The current condition contains normalized interval bounds and target identities. The tested mainline is restricted to neutral closed-shell molecules; broad charge/spin-conditioned generation requires separate representation and training validation. A condition prefix and layer-wise adaptive normalization modulate the autoregressive policy. Any new input semantics, such as rescaled spatial bins or additional elements, require explicit checkpoint migration and validation.
 
 The token likelihood is trained on the same admissible vocabulary used for sampling. All active property dimensions contribute to conditioning; missing targets are represented by masks, not by placeholder values that can be mistaken for measurements.
 
@@ -72,7 +72,7 @@ where $\tau_k$ is an evaluation tolerance, not a condition input. The OE62 study
 below separates HOMO-only and LUMO-only training and keeps inactive properties
 out of scoring and acceptance.
 
-### 2.4. Stage 3: learn and use self-ranking
+### 2.4. Optional self-ranking
 
 A structure-understanding head predicts properties from the generated structure representation and ranks a pool of candidates before expensive external evaluation. To avoid learning the interval midpoint as a shortcut, its regression training uses an unconditional or condition-masked pass. A joint objective is
 
@@ -86,9 +86,9 @@ L_{\mathrm{SFT}}=L_{\mathrm{gen}}+
 (\hat{\mathbf y}_{\mathrm{self}},\mathbf y).
 $$
 
-Each cross entropy is averaged over its own decision type; the self loss uses training-normalized targets and $\lambda_{\mathrm{self}}=0.5$ in the reported SFT runs. Self-ranking reduces external oracle calls, but still has a computational cost and can introduce selection bias. The candidate-pool size, ranking criteria, rejected proposals, and retained count must therefore be reported. At deployment, the trained head is used without further SFT.
+Each cross entropy is averaged over its own decision type; the self loss uses training-normalized targets and $\lambda_{\mathrm{self}}=0.5$ in the initial SFT runs. Conditioner-only terminal controls explicitly use generation loss without this auxiliary term. Self-ranking reduces external oracle calls, but still has a computational cost and can introduce selection bias. The candidate-pool size, ranking criteria, rejected proposals, and retained count must therefore be reported. At deployment, the trained head is used without further SFT.
 
-### 2.5. Stage 4: align with gated group-relative feedback
+### 2.5. Baseline group-relative feedback
 
 For each target condition, the policy samples a group of proposals. A property oracle returns predicted means and uncertainty estimates; a force field returns finite energies and unmodified forces. Ensemble disagreement is computed from individual fold predictions and calibrated on held-out structures. A shared backbone with several heads is not automatically a cross-validated ensemble.
 
@@ -113,7 +113,7 @@ $$
 
 Replay updates the conditioner using the generation loss only. The KL is averaged over the same per-molecule decision counts as the policy term. Here $r_{g,t}$ is the new-policy to rollout-policy probability ratio under the same token constraints. The reference is frozen; the current-policy KL contribution must retain gradients. Physics and uncertainty gates are risk controls, not proofs that reward exploitation has been eliminated. Independent property validation remains necessary.
 
-The point-controlled experiment isolates a simpler reward: an admissible,
+The initial point-controlled experiment isolates a simpler reward: an admissible,
 in-domain, successfully evaluated proposal receives $1/(1+D)$ and an ineligible
 proposal receives $-1$. Physics, uncertainty and supervised replay weights are
 zero in this experiment. This bounded reward emphasizes target-neighborhood mass
@@ -121,7 +121,7 @@ and eligibility; it is not equivalent to minimizing mean absolute error over the
 changing evaluable subset. Both quantities must therefore be reported. The
 reference remains the original frozen SFT policy across resumed training segments.
 
-### 2.6. Stage 5: refine with explicit acceptance
+### 2.6. Optional property-constrained refinement
 
 For a completed proposal, refinement holds its chemical graph, charge, multiplicity, and any fixed scaffold atoms constant. Let $\mathbf F=-\nabla_{\mathbf X}E$ and $\mathbf g=\nabla_{\mathbf X}L_{\mathrm{geom}}$, restricted to movable coordinates. The current relaxer uses $L_{\mathrm{geom}}=\sum_k v_k^2$, where $v_k=s_kd_k$ is the violation in physical property units; the reported HOMO/LUMO targets both use eV. When gradients are available, a regularized projection damps the force component that increases interval violation:
 
@@ -147,6 +147,26 @@ The implementation also anchors energy and each violation to their initial value
 
 **Proof.** The initial iterate satisfies the conditions by assumption. An accepted iterate satisfies the chemical and per-target tests and cannot increase energy. A rejected step retains the previous iterate. Induction establishes both statements. This result does not imply convergence to a stationary point, discovery of a feasible molecule from an infeasible start, or agreement of surrogate properties and energies with DFT. The implemented initial-state tests bound drift when tolerances are nonzero; they do not guarantee progress from an infeasible start.
 
+### 2.7. Complete-molecule terminal feedback
+
+The terminal operator keeps the sampled elements and inferred molecular graph fixed. Initial checks cover connectivity, closed-shell electronic state, supported atom count and geometry. Admitted starts undergo energy-only L-BFGS relaxation with at most 148 force calls, maximum atomic displacement 0.2 Angstrom and maximum atomic force 0.1 eV/Angstrom. Initial and terminal property measurements bring the declared budget to 150 DPA calls. Graph and specified stereochemistry are checked after relaxation. Properties are evaluated on exactly the coordinates used for terminal acceptance. Morgan-domain membership is recorded as a stratum, not used as an additional gate in these experiments.
+
+For a sampled group of size $G$, let $s_i$ denote initial structural admission, $p_i$ denote physical acceptance and $e_i$ denote availability of a terminal property evaluation. Define $S=\{i:s_i=1\}$ and $P=\{i:p_i e_i=1\}$, with terminal point quality $u_i=1/(1+D_i)$. The three feedback channels are
+
+$$
+\begin{aligned}
+a_i^{\rm str}&=\frac{s_i-\overline{s}}{\max({\rm sd}(s),10^{-6})},\\
+a_i^{\rm phys}&=\mathbf1_{i\in S}\frac{G}{|S|}
+\frac{p_i-\overline{p}_S}{\max({\rm sd}_S(p),0.1)},\\
+a_i^{\rm prop}&=\mathbf1_{i\in P}\frac{G}{|P|}
+\frac{u_i-\overline{u}_P}{\max({\rm sd}_P(u),0.1)}.
+\end{aligned}
+$$
+
+A conditional channel is zero when its subset contains fewer than two candidates. Enabled channels are summed and divided by the larger of one and their group standard deviation. Thus property comparisons occur only among evaluable, physically accepted endpoints, while failed groups can still supply structural or physical comparisons. Neither lack of a property comparison nor structural improvement is called target-control learning.
+
+The policy ratio always refers to the original generated octree/atom/coordinate decisions. Relaxed coordinates are not re-encoded and substituted for the sampled trajectory. All three channels may update the conditioner affecting tree, atom and XYZ decisions; they are not assigned to disjoint token types. The reported terminal experiments use conditioner-only adaptation, two updates per group, KL weight 0.02 and supervised replay weight 0.1. Inference uses the same terminal operator as training. DFT single-point validation certifies the property at that endpoint; it does not certify a DFT-optimized, identity-preserving minimum.
+
 ## 3. Evaluator interfaces and implementation requirements
 
 A property oracle exposes predictions, uncertainty information, supported targets, and optional coordinate gradients. Uni-Mol [@zhou2023unimol], task-specific heads on frozen representations, and Uni-QSAR ensembles can implement this interface. Every path must return the same physical-unit prediction for the same structure. Replacing nonlinear stacking with a mean is not a valid differentiation strategy.
@@ -155,353 +175,13 @@ A force-field backend exposes energy, forces, supported elements and states, and
 
 The two evaluators may share a backbone to reduce memory use, but remain distinct logical interfaces. One scalar per molecule limits the largest atom displacement while preserving the projected direction; physical diagnostics use raw finite forces. Element mappings, bond orders, formal charges, coordinate units, target scales, and electronic-state conventions must be preserved across both interfaces.
 
-The five stages describe a learning-and-refinement workflow. They are not five models retrained for each requested molecule. Deployment uses a saved, aligned policy and ranking head, followed by Stage 5. Specialist online adaptation is an optional separate operation with its own budget and checkpoint.
+Deployment loads saved models. The main terminal-feedback experiments process complete unranked pools before evaluation; self-ranking and property-constrained refinement are separately configured comparisons. A policy update is a training operation with its own budget and checkpoint, not a necessary operation for every requested molecule.
 
 ## 4. Experimental evaluation
 
-### 4.1. Data, protocol and success criterion
+Native-coordinate point-control experiments are primary. Earlier interval and implementation comparisons are retained in the appendices with their original models and denominators.
 
-The executable package uses a vendored pretrained Uni-3DAR octree, an explicit
-multi-target conditioner, independent bootstrap property adapters, and DPA4-Mini
-physical evaluation. MIM-Flow QM9s [@cheng2026mimdata] supplies structures and its original 240-channel spectra;
-HOMO/LUMO predictions on QM9s are clearly marked pseudo-labels. OCELOT [@bhat2023ocelot] supplies
-reference HOMO/LUMO labels in eV. Its available official archive has no original
-DFT geometries or per-molecule range parameters, so the 3D property model uses
-ETKDG/MMFF reconstructions and fixed scaffold-separated splits in the initial experiments. A separate expanded-element experiment explicitly uses ETKDG/UFF for every input.
-
-The primary success metric is a per-sample conjunction over all generated proposals:
-
-$$
-S=\frac1{N_{\mathrm{attempted}}}\sum_i
-\mathbf1\{C(\mathcal M_i)=1, D(\mathcal M_i)=1\}\,
-\prod_{k\in\mathcal K}\mathbf1\{\hat y_k(\mathcal M_i)\in[a_k,b_k]\}\,
-\mathbf1\{F_{\mathrm{rms}}(\mathcal M_i)\leq F_{\max}\}.
-$$
-
-The force statistic is $F_{\mathrm{rms}}=\sqrt{N^{-1}\sum_j\|\mathbf F_j\|_2^2}$. The wide and optical generation comparisons use a 0.5 eV/Å DPA-force threshold. Marginal validity and hit rates are not multiplied to estimate the joint metric. We additionally report raw and retained counts, connected validity, graph/coordinate consistency, novelty, diversity, per-target violations, maximum force, and numerical-failure rates. Closed-shell statistics apply only to the corresponding target states.
-
-The original HOMO/LUMO intervals are [-8.2, -7.2]/[-0.6, 0.8] eV. The central
-window uses [-7.75, -6.75]/[-1.13, -0.13] eV, centered on training-label medians;
-its width and frequency differ from the original task. The exploratory lower-gap
-window is [-7.26, -6.46]/[-1.46, -0.66] eV. Optical experiments use S1 [2.5, 3.5]
-and T1 [1.5, 2.5] eV; the four-target task combines these with the original orbital
-window. Inactive targets are masked. The ancillary evidence retains the window
-selection rules and values.
-
-### 4.2. Held-out property prediction
-
-<!-- BEGIN TABLE OPTICAL -->
-| Shared optical test (512 molecules) | DPA MAE (eV) | HyFF MAE (eV) | Fingerprint MAE (eV) |
-| :--- | ---: | ---: | ---: |
-| HOMO | 0.2895 | 0.3077 | 0.3593 |
-| LUMO | 0.2326 | 0.2502 | 0.3354 |
-| Vertical S1 | 0.2314 | 0.2475 | 0.2968 |
-| Vertical T1 | 0.1381 | 0.1661 | 0.2616 |
-| Paired vertical S1–T1 | 0.2226 | 0.2176 | 0.2546 |
-
-Table: Official OCELOT labels on the same 512 scaffold-held-out molecules. DPA and HyFF share 8192 training structures and exact downstream geometries; the fingerprint model uses 20356 structures. Architecture and pretraining differ.  The last row averages per-molecule absolute gap errors.
-<!-- END TABLE OPTICAL -->
-
-A separate 15-element OCELOT run uses 8192 uniform ETKDG/UFF training conformers,
-three bootstrap adapters and 512 test structures, giving HOMO/LUMO MAEs of
-0.2985/0.2382 eV. Test subgroups contain B 13, Si seven, Se one, As one and Te four
-structures; the latter counts cannot support broad element-specific accuracy
-claims. Geometry failures, including unsupported UFF Se types, remain exclusions.
-The exact input graphs are preserved in property training. A coordinate-only
-audit of 321 rare-element inputs recovers 295 exact identities, adds previously
-unspecified stereo in 18, changes charge/bond assignments in seven and rejects
-one. The same counts after 0.01 Å rounding implicate graph inference rather than
-that rounding step.
-
-The four-target property extension adds the official vertical S1 and T1 labels
-while reusing the exact UFF conformers and splits. Its paired vertical S1–T1
-MAE is 0.2226 eV; the absolute difference of means is 0.0537 eV and would hide
-substantial molecule-level errors. These supervised CSV errors neither reproduce
-the unavailable original DFT geometries nor establish an adiabatic gap error. The
-512-record calibration has 89.06% joint test coverage, but mean widths are
-1.58–2.06 eV and spread/error correlations remain weak.
-
-
-HyFF-presto adapters trained on exactly the same 8192/512/512 conformers give
-slightly higher individual-target errors and a slightly lower paired gap error.
-These are single-training-seed comparisons; descriptor architectures and
-pretraining differ. The HyFF calibration gives 90.43% joint coverage, but mean
-interval widths are 1.90–2.27 eV and spread/error correlations are 0.035–0.221.
-Neither model's spread supports enabling the uncertainty reward by default.
-
-### 4.3. Proposal quality and target feasibility
-
-<!-- BEGIN TABLE BRICS -->
-| Proposal / target window | Valid / 192 | In domain / 192 | DPA joint / 192 | FP joint / 192 | HyFF joint / 192 |
-| :--- | ---: | ---: | ---: | ---: | ---: |
-| Octree / original | 113 | 9 | 4 | 4 | 3 |
-| BRICS / original | 173 | 173 | 10 | 4 | 13 |
-| Octree / central | 108 | 13 | 3 | 2 | 2 |
-| BRICS / central | 173 | 173 | 45 | 45 | 44 |
-
-Table: Same 8188 adaptation structures, target windows and proposal/ranking/refinement caps. Octree uses the 5000-step control; BRICS uses single-cut training fragments and ETKDG/UFF geometry. FP and HyFF independently rescore unchanged exports; all three joint columns use the source DPA force criterion. Actual evaluator calls and training compute differ.
-<!-- END TABLE BRICS -->
-
-The graph baseline uses BRICS rules [@degen2008brics] to cut one bond in each training molecule, retains the
-resulting single-port fragments with their SourceIDs, and samples one compatible
-pair per candidate. No property labels enter fragment choice. ETKDG/UFF generates
-the conformer; over-size, failed and invalid candidates remain in the denominator.
-The fragment library contains 9903 unique fragments and takes 17.16 seconds to
-build. Every retained product is novel relative to the 8188 adaptation structures;
-this does not establish novelty against the octree's pretraining corpus.
-
-The central-window BRICS result is substantially better under all three
-surrogates. In the original window, the fingerprint count ties the octree despite
-higher DPA and HyFF counts. Domain coverage therefore identifies a proposal-quality
-bottleneck, while evaluator disagreement prevents a universal ranking. The same
-192 unconditional BRICS proposals are reused across windows: there are 384
-condition-specific attempts, not 384 independent graph draws. Ranking uses 96
-external calls per BRICS window versus 9/13 for octree; the matched caps do not
-imply equal actual compute. Refinement evaluation/gradient calls are 1572/1071
-and 1548/65 for BRICS, versus 235/90 and 462/148 for octree.
-
-The duration experiment continues the common 5000-step model for 15000 further
-full-backbone SFT updates on the same 8188 labelled conformers, using seeds 42–44.
-Both total-10000 and total-20000 checkpoints are evaluated at the original and
-central windows with inference seeds 2026–2028, retaining all 64 attempts per run.
-The optimizer starts fresh; this is not a resumed optimizer trajectory. No
-checkpoint or seed is selected by its evaluation result.
-
-<!-- BEGIN TABLE SFT_DURATION -->
-| Total steps / window | Valid / 576 | In domain / 576 | DPA joint / 576 | FP joint / 576 |
-| :--- | ---: | ---: | ---: | ---: |
-| 10000 / original | 393 | 51 | 9 | 15 |
-| 10000 / central | 376 | 41 | 9 | 8 |
-| 20000 / original | 370 | 54 | 12 | 11 |
-| 20000 / central | 349 | 41 | 10 | 10 |
-
-Table: Three stochastic SFT continuations from one common 5000-step checkpoint, with three inference seeds per window and fixed total-10000/20000 evaluations. Each continuation uses the same 8188 labelled structures and a fresh optimizer. This does not replicate the initial 5000-step training or upstream pretraining.
-<!-- END TABLE SFT_DURATION -->
-
-Across the two windows, validity decreases from 769/1152 at total 10000 steps
-to 719/1152 at total 20000, while DPA joint hits increase from 18 to 22 and
-fingerprint hits decrease from 23 to 21. At 20000 steps, DPA original/central
-joint rates are 2.08%/1.74%, with across-continuation SDs of 0.52/1.08 percentage
-points; fingerprint rates are 1.91%/1.74%, with SDs of 0.60/0.80 points. Three
-continuations provide descriptive variation, not a significance test. The
-original 5000-step control is a single trained model and is not counted as three
-baseline training replicas.
-
-All three final models recover 8/12 B and 27/28 Si teacher-forced decisions on
-the same 511 validation structures, versus zero for both elements at 5000 steps.
-Valid generated B/Si occurrences increase from 16/67 to 67/74 across 1152
-attempts. Thus the longer run learns these elements, but this training budget
-does not produce a consistent improvement in independent design success.
-
-<!-- BEGIN TABLE OPTICAL_GENERATION -->
-| Active targets | Valid / 192 | In domain / 192 | Optimizing joint / 192 | Independent joint / 192 |
-| :--- | ---: | ---: | ---: | ---: |
-| HOMO/LUMO | 111 | 9 | 1 | 1 |
-| Vertical S1/T1 | 94 | 5 | 1 | 1 |
-| All four | 111 | 11 | 0 | 0 |
-
-Table: One four-target generator, three inference seeds per window and unchanged ranking/refinement limits. Inactive targets are masked. This experiment trains and reloads the expanded interface but does not establish useful joint four-property generation.
-<!-- END TABLE OPTICAL_GENERATION -->
-
-The expanded four-target generator is initialized from the 5000-step model and
-receives 2000 conditioner/readout updates with its backbone frozen. Its four-target
-window gives no joint hits. HyFF rescoring of all 25 retained structures gives
-the same per-window totals as the DPA and fingerprint models: 1/192 for orbitals,
-1/192 for vertical excitations and 0/192 for all four. Original DPA and independent
-HyFF force criteria also give equal totals. These remain surrogate checks sharing
-OCELOT labels, not independent quantum accuracy measurements.
-
-### 4.4. Ranking, policy alignment and refinement controls
-
-<!-- BEGIN TABLE RANKING -->
-| Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |
-| :--- | ---: | ---: |
-| first valid | 11.46 | 1.80 |
-| self | 11.46 | 1.80 |
-| external | 20.83 | 1.80 |
-
-Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.
-<!-- END TABLE RANKING -->
-
-The three ranking runs use identical proposal tokens for each seed, with a fixed
-32-proposal/8-retained budget. External ranking consumes additional property-model
-calls, so its gain is a selection result, not an equal-oracle-budget superiority
-claim. Self-ranking does not improve the measured joint success over first-valid.
-
-<!-- BEGIN TABLE STAGES -->
-| Policy stage | Attempts | Optimizing joint hits | Independent joint hits |
-| :--- | ---: | ---: | ---: |
-| Unconditional prior | 192 | 1 | 2 |
-| Interval SFT | 192 | 4 | 4 |
-| SFT + full GRPO | 576 | 20 | 20 |
-
-Table: Three inference seeds per policy. GRPO additionally uses three training seeds (42-44), all initialized from one SFT checkpoint. The prior-to-SFT comparison changes both conditioning and the self-shortlist.
-<!-- END TABLE STAGES -->
-
-The full-policy matrix starts from the same SFT checkpoint. This separates GRPO
-training-seed variation from variation in SFT initialization; it is not a replicated
-SFT study. The stage table also changes conditioning and selection together, so
-its prior-to-SFT difference is not a single-factor causal effect.
-
-<!-- BEGIN TABLE GRPO -->
-| GRPO objective | Valid / 576 | Optimizing joint / 576 | Independent joint / 576 |
-| :--- | ---: | ---: | ---: |
-| full | 482 | 20 | 20 |
-| no kl | 483 | 14 | 17 |
-| no physics | 482 | 14 | 17 |
-| no replay | 484 | 16 | 19 |
-| uncertainty on | 489 | 17 | 20 |
-
-Table: Five objectives, three GRPO training seeds and three inference seeds. Each policy uses fifty rollout iterations with two optimizer passes per group and a common SFT initialization. The independent fingerprint evaluator is not DFT truth.
-<!-- END TABLE GRPO -->
-
-The initial BF16 policy comparison failed behavior/recomputed-probability checks;
-GRPO now uses FP32 throughout. The completed five-objective matrix contains
-45 evaluation runs: three training seeds and three inference seeds per objective.
-Full GRPO gives 20/576 joint hits under each evaluator; no-KL and no-physics give
-14 optimizing and 17 independent hits each. Yet no-KL training seed 44 outperforms
-Full under both evaluators. Nonzero uncertainty weighting gives 17 optimizing
-and 20 independent hits. Aggregate differences therefore do not establish a
-uniform or statistically reliable component ranking. Each group receives two
-optimizer passes, updating the interval conditioner only.
-
-![GRPO training-seed variation. Each point aggregates three inference runs and 192 attempted proposals at one training seed; horizontal bars show the three-seed mean. All policies start from one SFT checkpoint. The independent fingerprint model is not quantum reference truth.](figures/fig1_grpo_training_seeds.png){#fig:grposeeds width=100%}
-
-For Full, training-seed optimizing counts are 8/7/5 and independent counts are
-8/5/7, each out of 192. Both aggregate to 3.47%, with an across-training-seed
-standard deviation of 0.80 percentage points. Source records include all seed
-counts and descriptive cluster-bootstrap intervals; only three training clusters
-are available, so these intervals do not justify significance claims.
-
-<!-- BEGIN TABLE REFINEMENT -->
-| Refinement rule | Optimizing joint hits / 192 | Independent joint hits / 192 | Mean RMS force (eV/Å) |
-| :--- | ---: | ---: | ---: |
-| None | 0 | 0 | 2.5858 |
-| Energy only | 7 | 17 | 0.1709 |
-| Projection only | 7 | 8 | 1.0572 |
-| Full acceptance | 8 | 8 | 1.3537 |
-
-Table: Identical 34 selected starting structures from 192 proposals; 30-step budget and production step size 0.004. Selection is fixed, but backtracking changes evaluator cost. The independent fingerprint surrogate favors energy-only refinement.
-<!-- END TABLE REFINEMENT -->
-
-Matched refinement exposes evaluator dependence. Full acceptance preserves all
-six initially property-feasible molecules and reaches eight optimizing joint
-hits; energy-only and projection-only each lose one and reach seven. Yet the
-independent fingerprint surrogate gives energy-only 17 joint hits versus eight
-for full acceptance. Its 17 property hits are unchanged across rules because
-it is insensitive to geometry. The lowest mean residual force also comes from
-energy-only refinement. These results support the acceptance invariant but do
-not establish superior physical or independent property quality.
-
-### 4.5. Same-level quantum diagnostics
-
-Quantum calculations use PySCF 2.12.1 [@sun2020pyscf] and GPU4PySCF 1.9.1
-[@li2024gpu4pyscf]. The internally specified level is IP-tuned LC-wPBE
-(Libxc 478)/def2-SVP, with $J_h=|\epsilon_H+E(N-1)-E(N)|$, a 99/590
-integration grid and 1e-9 Hartree SCF tolerance. No density fitting or TDA is
-substituted. S1/T1 refer to full linear-response TDDFT at the same S0 geometry
-and S0-tuned omega. These settings define an internal diagnostic; they have not
-reproduced the released OCELOT reference protocol.
-
-The seed-42 total-20000 SFT checkpoint yields eight surrogate-qualified outputs
-from 384 attempts. Before quantum evaluation, select the lowest original candidate
-ID in each nonempty window/inference-seed stratum: five structures, with no
-replacement for the empty sixth stratum. All five complete graph-preserving S0
-optimization; two retain both original orbital intervals and three miss HOMO.
-All five LUMOs remain in their target windows. Quantum RMS forces are
-0.00117–0.00176 eV/Å, but no vibrational-minimum test is included. The remaining
-three qualified outputs have unknown quantum outcomes.
-
-<!-- BEGIN TABLE QUALIFIED_QUANTUM -->
-| Case / window | Source DPA H / L (eV) | Quantum H / L (eV) | Target check |
-| :--- | ---: | ---: | :--- |
-| 0 / original | -7.5762 / -0.0745 | -7.8003 / 0.1750 | Hit |
-| 1 / original | -7.9748 / -0.3420 | -8.6653 / 0.1991 | HOMO miss |
-| 2 / central | -6.9484 / -0.5410 | -7.4414 / -0.4153 | Hit |
-| 3 / central | -7.7398 / -0.6621 | -7.8836 / -0.6121 | HOMO miss |
-| 4 / central | -7.7032 / -0.8856 | -8.1364 / -0.5140 | HOMO miss |
-
-Table: Preselected subset of eight surrogate-qualified designs from 384 attempts. One lowest-ID candidate is selected per nonempty window/inference-seed stratum before quantum calculation. All five preserve the source graph after S0 optimization; the three unselected qualified designs have unknown quantum outcomes. H/L denote HOMO/LUMO.
-<!-- END TABLE QUALIFIED_QUANTUM -->
-
-\FloatBarrier
-
-On these unchanged quantum geometries, the frozen two-target DPA and fingerprint
-models give mean absolute HOMO/LUMO disagreements of 0.4689/0.2846 and
-0.3906/0.4082 eV, respectively. All five remain inside the graph applicability
-domain. A post-hoc exact-graph check finds that case 1 matches training record
-`csd_RASWEO`, whose released labels are -7.7901/-0.4019 eV. Its quantum values
-differ by -0.8752/+0.6011 eV, whereas DPA at the quantum geometry predicts
--7.8780/-0.4530 eV. This is not an unseen graph; the absent original quantum
-geometry and omega prevent separating reference-protocol and conformer effects.
-No correction is fitted to this selected cohort. The two observed hits establish
-feasibility under the internal quantum protocol, not an all-proposal quantum
-success rate or an OCELOT reference-accuracy claim.
-
-A separate structural-only adaptation adds B using 512 MIM-Flow structures
-without validating a B property conditioner. All ten B-containing outputs from
-its 64 proposals were selected for the same nominal
-quantum protocol before inspecting their quantum results. Five complete S0
-optimization, graph-preservation checks and full TDDFT; the other five fail SCF,
-geometry convergence, graph or specified-stereo checks. The successful cases
-have vertical S1–T1 separations of 0.4944–1.2712 eV. Longer-budget retries resolve
-the SCF/geometry iteration limits for two cases but both then fail graph/stereo
-checks. These failures remain part of the original cohort. Recovered final
-geometries include new bonding and hydrogen transfer despite low DFT residual
-forces, illustrating why force alone is insufficient to certify identity.
-No vibrational-minimum claim is made for this ten-molecule cohort.
-
-All five completed structures lie outside the wide-OCELOT applicability domain.
-At their same quantum geometries, mean absolute disagreements of the four-target
-DPA adapter are 0.4355/0.3303/0.5212/0.2120 eV for HOMO/LUMO/S1/T1; its paired
-vertical-gap disagreement is 0.4104 eV. The fingerprint counterpart is 0.3451 eV
-for that gap. The matched HyFF adapter gives 0.4171/0.2614/0.4009/0.1879 eV
-for the four targets and 0.2693 eV for the paired gap. The same five geometries
-and quantum reference scalars are used throughout. These are five-case
-extrapolation diagnostics, not OCELOT test MAEs or evidence of B-conditioned design.
-
-Fixed-omega excitation gradients provide a separate check of the local geometric
-response. All five completed cases reproduce their stored ground and excitation
-energies within predeclared thresholds. DPA's mean S1/T1 gradient cosines against
-TDDFT are 0.630/0.658; HyFF's are 0.422/0.573. Every individual-property cosine
-is positive, but DPA gradient norms are only 0.31–0.73 times their quantum
-counterparts. This supports directional information on this cohort, not calibrated
-magnitudes or accuracy beyond it.
-
-A post-hoc interval-loss check uses the previously defined S1 [2.5, 3.5] and T1
-[1.5, 2.5] eV window. For cohort case 2, DPA predicts S1 = 3.5425 eV while TDDFT
-gives 2.2770 eV. Their property-gradient cosine is +0.819, but their interval-loss
-gradient cosine is -0.819 because the predictions violate opposite bounds. DPA
-also assigns zero interval loss to two quantum-infeasible cases. Scalar prediction
-bias can therefore reverse the desired interval correction despite a correctly
-computed, positively aligned property derivative. These cases are already excluded
-by the applicability-domain filter; the diagnostic is not an observed in-domain
-failure rate.
-
-
-A separate single-molecule diagnostic verifies two excited-state minima; its
-vertical and adiabatic energies are kept distinct in Appendix A.
-
-### 4.6. Runtime and reproducibility
-
-Each run must identify the code revision, environment, input/split versions, tokenizer specification, full target intervals, model and oracle checkpoint hashes, electronic states, seed policy, sampling budget, and filtering rules. Reload checks compare every molecule's tokens, graph, coordinates, and predictions under declared tolerances. Independent random streams do not by themselves guarantee bitwise agreement across batching strategies or attention kernels.
-
-Tables are generated from checksum-bound evidence. The manuscript archive includes selected per-candidate records, quantum geometries and raw gradient arrays; model weights and training datasets are distributed separately. Each experiment saves its source snapshot, environment, input and checkpoint hashes, complete raw proposals and failure ledger. Numerical comparisons use declared coordinate/property tolerances, distinct from exact token and graph comparisons.
-
-Separate four-target and fixed-20000-step two-target inference bundles contain
-the adapted generator, evaluators, scalers, applicability domain, project wheel,
-dependency lock and original replay cohort. After isolated wheel installation
-and model relocation, all 64 raw proposals in each bundle and six/nine exports,
-respectively, replay under the original 1e-5 coordinate/property tolerances.
-All 23 files in each bundle pass their SHA-256 checks.
-This uses the validated remote dependencies, not a newly built operating-system
-image. An optional geometric-growth KV buffer matches the reference storage on
-24 sampled trajectories, but shows no meaningful timing gain and higher peak
-allocation. The full-prefix absolute-logit check fails its predeclared 2e-4 bound
-for both storage modes (maximum 2.3651e-4); that failure is retained.
-
-
-### 4.7. Native-coordinate OE62 point-control study
+### 4.1. Native-coordinate OE62 point-control study
 
 **Source geometry and prediction.** To separate input reconstruction from the
 proposal and alignment problems, we use the published OE62 coordinates and
@@ -601,6 +281,507 @@ optimization is assessed separately below. The final wheel reproduces all 256
 tokens/coordinate trajectories in two complete frozen-SFT P50 pools exactly;
 common exported property differences are below $10^{-6}$ eV on the existing
 validated GPU runtime.
+
+### 4.2. Reward attribution and complete-pool terminal validation
+
+A subsequent three-training-seed reward ablation compares the original point reward, eligibility-only reward, frozen SFT and time-matched SFT on 46,080 new proposals. Frozen Uni-Mol2 evaluation shows that eligibility alone reproduces most supply and hit-yield gains. Point reward versus eligibility-only changes HOMO/LUMO target MAE by +0.014/-0.021 eV; its LUMO hit-yield increment is only 0.052 percentage points. A fixed 36-candidate quantum queue gives 34 converged, graph-preserving optimizations and 18 final hits. It is a selected queue, not a whole-proposal success estimate.
+
+Gaussian preference-width SFT and prediction-labelled hindsight pilots do not consistently improve over the point-SFT starting model. Point-condition contrast gives modest mean-response improvements in three-seed repeats, but individual-molecule accuracy is not consistently better. These results motivate separating structural and physical supply from terminal property feedback rather than expanding the earlier reward matrix.
+
+The five-arm terminal experiment uses 384 unranked proposals per arm at three central HOMO requests. All 848 physically accepted endpoints are frozen before quantum evaluation. GPU PBE0/def2-TZVP calculations use density fitting with def2-universal-jkfit, integration grid level 3, energy convergence threshold 1e-8 and a 100-cycle SCF cap. There are 846 successful single points and two retained SCF failures. Quantum labels do not rank candidates or select checkpoints.
+
+<!-- BEGIN TABLE TERMINAL_QUANTUM -->
+| Feedback arm | Terminal | DFT success | DFT hits / 384 | Target MAE |
+| :--- | ---: | ---: | ---: | ---: |
+| Frozen SFT | 177 | 177 | 28 | 0.929 |
+| Time SFT | 160 | 159 | 34 | 0.963 |
+| Structure | 167 | 167 | 30 | 0.996 |
+| Structure + physical | 182 | 181 | 41 | 0.904 |
+| Structure + physical + target | 162 | 162 | 37 | 0.853 |
+
+Table: Complete frozen terminal pools at three central HOMO requests, one training seed. Every arm has 384 original proposals. DFT single-point hits use 0.25 eV tolerance. MAE (eV) conditions on successful endpoints and weights requests equally; it is not a DFT geometry-optimization result.
+<!-- END TABLE TERMINAL_QUANTUM -->
+
+Physical feedback increases quantum hits from 28 to 41 relative to frozen SFT, but the shared condition-off baseline yields 10.94% versus the physical arm's 10.68%. Their difference is -0.26 percentage points with a fixed-checkpoint sampling interval of [-4.69,+4.17]. Condition-off trajectories are identical across the five conditioner-only policies: 640 historical records represent one 128-proposal pool, which is processed once and rescored at three goals. None of the five conditional arms has a strictly positive sampling interval against this baseline. These intervals do not include training-seed variance.
+
+The full property-feedback arm has the lowest accepted-endpoint target MAE, 0.853 eV, but its DFT mean-response slope is only 0.071. A better average distance to central requests therefore does not establish a responsive conditional generator. On the same 846 endpoints, optimizing DPA and frozen Uni-Mol2 have HOMO/LUMO prediction MAE of 0.405/0.504 and 0.705/0.802 eV; their error correlations are 0.862/0.892. Cross-model agreement is not a substitute for quantum labels.
+
+**Matched fragment baseline.** Of 192 frozen BRICS proposals, 141 pass initial and terminal admission and all 141 converge in the same single-point protocol. Failures, including 43 proposals exceeding 80 atoms, remain in the denominator; no failed conformer is regenerated and no UFF relaxation is added. The shared pool yields 19.27%/17.19% across the three central HOMO/LUMO requests. It is unconditional and draws on training fragments. Larger size and different aromatic/heteroatom composition prevent attributing the advantage solely to graph versus octree representation. DPA and Uni-Mol2 errors on its endpoints are much smaller than on the octree pools.
+
+A later fixed-hash selection of twelve already-known BRICS HOMO single-point hits tests geometry persistence. All twelve retain their graph, eleven converge within 80 PBE-D3BJ/def2-TZVP optimization steps and nine retain the PBE0 target after optimization. The nonconverged case remains a failure. This is a conditional retention experiment and cannot be multiplied by the whole-pool single-point yield to estimate an overall optimized yield.
+
+### 4.3. Full native-data SFT controls
+
+The source training split contains 43,951 native geometries; the initial studies used 8,192. We restore all fixed training IDs, verifying zero coordinate difference, identical graph identities and identical labels on the original subset. The development, calibration and test splits remain unchanged. Each property is trained from the same structural prior for 5,000 updates, followed by a predeclared 22,000-update continuation. The continuation restarts the optimizer and random sampler; it is not an uninterrupted 27,000-step run. At 5,000 steps, data size is compared at equal update count. The longer checkpoint adds both data exposure and optimization cost.
+
+Evaluation uses two new inference seeds, five original request points and 640 correct-condition proposals per arm/property, plus each model's own 128-proposal condition-off pool. All 2,026 accepted endpoints from 4,608 original proposals converge in single-point DFT. The three policies have different backbone weights, so their condition-off pools cannot be merged as in the conditioner-only experiment.
+
+<!-- BEGIN TABLE FULL_SOURCE_QUANTUM -->
+| Property / training | Terminal | DFT hits / 640 | Off hit (%) | MAE | Slope |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| H / 8k / 5k | 256 | 55 | 3.91 | 0.855 | 0.495 |
+| H / 44k / 5k | 281 | 48 | 6.56 | 0.912 | 0.702 |
+| H / 44k / 27k | 275 | 56 | 9.38 | 0.949 | 0.687 |
+| L / 8k / 5k | 288 | 44 | 6.41 | 1.293 | 0.421 |
+| L / 44k / 5k | 286 | 29 | 4.69 | 1.353 | 0.483 |
+| L / 44k / 27k | 306 | 50 | 5.31 | 1.166 | 0.595 |
+
+Table: Full native-data SFT controls, all 2,026 selected single points converged. Correct-condition budgets are 640 per row; each off pool has 128 unique proposals rescored at five targets. H/L denote HOMO/LUMO; 8k/44k denote 8192/43951 source structures and 27k denotes 5k plus restarted 22k updates. MAE (eV) and DFT mean-response slope use successful endpoints.
+<!-- END TABLE FULL_SOURCE_QUANTUM -->
+
+Larger data at equal updates does not increase quantum hits. Longer training improves LUMO target MAE and mean response, but the hit-yield difference versus the 8,192 baseline is only +0.94 percentage points, with sampling interval [-2.19,+4.06]. The HOMO difference is +0.16 points [-2.97,+3.28], and its target MAE worsens. Higher mean-response slope and better individual-molecule accuracy are distinct outcomes. A 128-source-structure teacher-forcing diagnostic confirms that all three models prefer sufficiently separated correct labels more often than mismatched labels; free-generation failure is not equivalent to complete absence of condition information.
+
+### 4.4. Calibrating the evaluator on generated terminal geometries
+
+We split successful terminal quantum labels from the earlier octree, shared-off and fragment pools by molecular scaffold, excluding source held-out scaffolds and exact duplicate geometries. The generated split contains 753 training, 85 validation and 164 test structures. An equal number of source-training anchors accompanies the 753 generated training structures. Validation weights generated and source examples equally. Three bootstrap adapters retain each parent model's scaler and are fine-tuned for up to 35 epochs; the generated test set and the new 2,026-endpoint pool are excluded from fitting and early stopping. Source Tier2 labels and new def2-TZVP labels retain their distinct provenance.
+
+<!-- BEGIN TABLE TERMINAL_CALIBRATION -->
+| Property head | Generated test H/L | Native test H/L | Fresh pool H/L |
+| :--- | ---: | ---: | ---: |
+| 8192 parent | 0.433 / 0.442 | 0.100 / 0.103 | 0.393 / 0.475 |
+| 8192 + DFT | 0.204 / 0.218 | 0.105 / 0.112 | 0.215 / 0.225 |
+| 43951 parent | 0.363 / 0.370 | 0.072 / 0.070 | 0.331 / 0.399 |
+| 43951 + DFT | 0.181 / 0.189 | 0.076 / 0.083 | 0.190 / 0.192 |
+
+Table: Property-prediction MAE in eV, distinct from target MAE. Generated test: 164 scaffold-held-out terminal structures; native test: 4,762 source geometries; fresh pool: 2,026 E14 endpoints excluded from fitting and early stopping.
+<!-- END TABLE TERMINAL_CALIBRATION -->
+
+The new-pool improvement persists on 1,774 endpoints whose scaffolds are absent from the added generated-label training subset: the full-source adapted head has HOMO/LUMO MAE 0.197/0.197 eV there. Shared upstream/source pretraining is not claimed to be scaffold-blind. The 43,951-source parent uses the same epoch count as the 8,192 parent, so this predictor data-size comparison also increases update count.
+
+For prespecified top-4 selection within each 64-proposal pool, aggregating the three correct-condition checkpoints gives 120 requested slots per property. Full-source adaptation increases quantum hits from 74 to 87 for HOMO and 69 to 79 for LUMO; selected-molecule target MAE decreases from 0.278/0.297 to 0.179/0.221 eV. At top-8, gains are smaller: 126 to 134 and 106 to 108 hits out of 240 slots. No DFT value participates in ranking, and these changes do not alter whole-pool generation yield. Mean within-pool Spearman correlation between predicted and DFT target distances increases from 0.794/0.838 to 0.912/0.940.
+
+Calibrated selection also exposes the role of condition-off generation. For the long-trained source model, correct/off top-4 HOMO hits are 31/40 and 32/40; LUMO gives 28/40 and 24/40. Reusing an unconditional pool across requests does not create new proposals or independent replicates. A usable point-valued selection interface does not by itself prove that the generator benefits from that conditioning.
+
+Nominal 90% residual intervals on the full-source adapted head cover 90.9% of each property in the generated test set, but total widths are 0.792/0.908 eV. Scaling by bootstrap spread gives no consistent coverage-width advantage. The 85 validation structures also select early stopping, so these are empirical coverage diagnostics, not independent conformal guarantees.
+
+A post-hoc normalized element/formal-charge audit finds source-unseen combinations in 410/2,026 generated endpoints, versus none of the 141 BRICS endpoints. Full-source HOMO/LUMO errors in that stratum are 0.765/0.792 eV before adaptation and 0.335/0.287 afterwards. On 512 native validation geometries, coordinate-only graph recovery accepts 502 and reproduces 496 normalized bond/charge graphs; fine-grid quantization reproduces 495 and introduces one source-unseen combination. This localizes part of the distribution shift without declaring all inferred charges invalid or adding a retrospective filter.
+
+### 4.5. Calibrated-feedback experiment protocol
+
+The next fixed experiment asks whether improved evaluator transfer changes generation, using one common 43,951-source HOMO checkpoint. Frozen SFT, time-matched SFT, source-critic GRPO and calibrated-critic GRPO share the same evaluation operator. Each GRPO arm uses 48 groups of 32 trajectories and two updates per group, with only the conditioner trainable. Training rotates P25/P50/P75; evaluation additionally includes P35/P65, which are held out from GRPO request rotation but not from continuous-label SFT. Four new inference seeds give 1,280 correct-condition proposals per arm plus one audited 256-proposal shared-off pool. All accepted endpoints receive independent quantum evaluation. This section records the frozen protocol; no unfinished outcome is included in the abstract or conclusions.
+
+## 5. Limitations and scope
+
+The study separates four sources of success: chemically admissible proposals, physically accepted endpoints, target-conditioned response and accurate property evaluation. A change in one does not imply a change in the others. Whole-pool single-point DFT and small selected geometry queues answer different questions. The quantum protocol is close to, but does not reproduce, the source FHI-aims Tier2/PBE-TS calculations.
+
+The terminal-feedback and full-data comparisons currently use one generator training seed. Inference-seed/candidate bootstrap intervals describe sampling variability, not training variance. Uni-Mol2 is frozen within comparisons but has informed method development; it is not a wholly unseen final benchmark. Generated-geometry calibration requires its own held-out data and fresh policy-evaluation pools, especially after a policy optimizes against the calibrated predictor.
+
+The representation supplies elements and coordinates, with molecular graphs inferred afterwards. A valid octree sequence does not guarantee valence, bond identity, stable electronic state or synthetic accessibility. Native-source graph recovery itself has failures, and generator composition differs from source chemistry. Formal-charge strata are descriptive and do not measure quantum atomic charge. Open-shell, ionic and organometallic regimes require dedicated representation and training validation.
+
+The earlier property-preserving acceptance proposition is relative to fixed evaluators and applies to its configured refinement path, not to the main energy-only terminal operator. Neither path guarantees a DFT minimum or global property feasibility. DPA/HyFF and DFT force criteria remain model-specific boundaries rather than a separate optimization target of this work.
+
+## 6. Conclusion
+
+ORBIT-3D provides an implemented interface between point-conditioned three-dimensional generation, complete-molecule geometry processing, property scoring and optional policy feedback. The useful unit of evaluation is the full proposal population with its failures, followed by explicit conditional coverage and same-coordinate validation.
+
+Across the completed experiments, increased eligibility explains much of the early GRPO yield benefit, stronger average response does not ensure lower molecular target error, and full native-data SFT alone does not establish a robust quantum-hit advantage. Generated-terminal quantum labels provide a clearer improvement in evaluator accuracy and fixed-pool selection, while unconditional fragment proposals remain a competitive baseline. Whether a more reliable terminal evaluator also improves policy learning is a separate controlled question. These distinctions support selecting the simplest method that delivers verified target-control gains rather than treating policy alignment as a required component.
+
+## Appendix A. Earlier OCELOT interval and implementation comparisons
+
+### Data, protocol and success criterion
+
+The executable package uses a vendored pretrained Uni-3DAR octree, an explicit
+multi-target conditioner, independent bootstrap property adapters, and DPA4-Mini
+physical evaluation. MIM-Flow QM9s [@cheng2026mimdata] supplies structures and its original 240-channel spectra;
+HOMO/LUMO predictions on QM9s are clearly marked pseudo-labels. OCELOT [@bhat2023ocelot] supplies
+reference HOMO/LUMO labels in eV. Its available official archive has no original
+DFT geometries or per-molecule range parameters, so the 3D property model uses
+ETKDG/MMFF reconstructions and fixed scaffold-separated splits in the initial experiments. A separate expanded-element experiment explicitly uses ETKDG/UFF for every input.
+
+The primary success metric is a per-sample conjunction over all generated proposals:
+
+$$
+S=\frac1{N_{\mathrm{attempted}}}\sum_i
+\mathbf1\{C(\mathcal M_i)=1, D(\mathcal M_i)=1\}\,
+\prod_{k\in\mathcal K}\mathbf1\{\hat y_k(\mathcal M_i)\in[a_k,b_k]\}\,
+\mathbf1\{F_{\mathrm{rms}}(\mathcal M_i)\leq F_{\max}\}.
+$$
+
+The force statistic is $F_{\mathrm{rms}}=\sqrt{N^{-1}\sum_j\|\mathbf F_j\|_2^2}$. The wide and optical generation comparisons use a 0.5 eV/Å DPA-force threshold. Marginal validity and hit rates are not multiplied to estimate the joint metric. We additionally report raw and retained counts, connected validity, graph/coordinate consistency, novelty, diversity, per-target violations, maximum force, and numerical-failure rates. Closed-shell statistics apply only to the corresponding target states.
+
+The original HOMO/LUMO intervals are [-8.2, -7.2]/[-0.6, 0.8] eV. The central
+window uses [-7.75, -6.75]/[-1.13, -0.13] eV, centered on training-label medians;
+its width and frequency differ from the original task. The exploratory lower-gap
+window is [-7.26, -6.46]/[-1.46, -0.66] eV. Optical experiments use S1 [2.5, 3.5]
+and T1 [1.5, 2.5] eV; the four-target task combines these with the original orbital
+window. Inactive targets are masked. The ancillary evidence retains the window
+selection rules and values.
+
+### Held-out property prediction
+
+<!-- BEGIN TABLE OPTICAL -->
+| Shared optical test (512 molecules) | DPA MAE (eV) | HyFF MAE (eV) | Fingerprint MAE (eV) |
+| :--- | ---: | ---: | ---: |
+| HOMO | 0.2895 | 0.3077 | 0.3593 |
+| LUMO | 0.2326 | 0.2502 | 0.3354 |
+| Vertical S1 | 0.2314 | 0.2475 | 0.2968 |
+| Vertical T1 | 0.1381 | 0.1661 | 0.2616 |
+| Paired vertical S1–T1 | 0.2226 | 0.2176 | 0.2546 |
+
+Table: Official OCELOT labels on the same 512 scaffold-held-out molecules. DPA and HyFF share 8192 training structures and exact downstream geometries; the fingerprint model uses 20356 structures. Architecture and pretraining differ.  The last row averages per-molecule absolute gap errors.
+<!-- END TABLE OPTICAL -->
+
+A separate 15-element OCELOT run uses 8192 uniform ETKDG/UFF training conformers,
+three bootstrap adapters and 512 test structures, giving HOMO/LUMO MAEs of
+0.2985/0.2382 eV. Test subgroups contain B 13, Si seven, Se one, As one and Te four
+structures; the latter counts cannot support broad element-specific accuracy
+claims. Geometry failures, including unsupported UFF Se types, remain exclusions.
+The exact input graphs are preserved in property training. A coordinate-only
+audit of 321 rare-element inputs recovers 295 exact identities, adds previously
+unspecified stereo in 18, changes charge/bond assignments in seven and rejects
+one. The same counts after 0.01 Å rounding implicate graph inference rather than
+that rounding step.
+
+The four-target property extension adds the official vertical S1 and T1 labels
+while reusing the exact UFF conformers and splits. Its paired vertical S1–T1
+MAE is 0.2226 eV; the absolute difference of means is 0.0537 eV and would hide
+substantial molecule-level errors. These supervised CSV errors neither reproduce
+the unavailable original DFT geometries nor establish an adiabatic gap error. The
+512-record calibration has 89.06% joint test coverage, but mean widths are
+1.58–2.06 eV and spread/error correlations remain weak.
+
+
+HyFF-presto adapters trained on exactly the same 8192/512/512 conformers give
+slightly higher individual-target errors and a slightly lower paired gap error.
+These are single-training-seed comparisons; descriptor architectures and
+pretraining differ. The HyFF calibration gives 90.43% joint coverage, but mean
+interval widths are 1.90–2.27 eV and spread/error correlations are 0.035–0.221.
+Neither model's spread supports enabling the uncertainty reward by default.
+
+### Proposal quality and target feasibility
+
+<!-- BEGIN TABLE BRICS -->
+| Proposal / target window | Valid / 192 | In domain / 192 | DPA joint / 192 | FP joint / 192 | HyFF joint / 192 |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| Octree / original | 113 | 9 | 4 | 4 | 3 |
+| BRICS / original | 173 | 173 | 10 | 4 | 13 |
+| Octree / central | 108 | 13 | 3 | 2 | 2 |
+| BRICS / central | 173 | 173 | 45 | 45 | 44 |
+
+Table: Same 8188 adaptation structures, target windows and proposal/ranking/refinement caps. Octree uses the 5000-step control; BRICS uses single-cut training fragments and ETKDG/UFF geometry. FP and HyFF independently rescore unchanged exports; all three joint columns use the source DPA force criterion. Actual evaluator calls and training compute differ.
+<!-- END TABLE BRICS -->
+
+The graph baseline uses BRICS rules [@degen2008brics] to cut one bond in each training molecule, retains the
+resulting single-port fragments with their SourceIDs, and samples one compatible
+pair per candidate. No property labels enter fragment choice. ETKDG/UFF generates
+the conformer; over-size, failed and invalid candidates remain in the denominator.
+The fragment library contains 9903 unique fragments and takes 17.16 seconds to
+build. Every retained product is novel relative to the 8188 adaptation structures;
+this does not establish novelty against the octree's pretraining corpus.
+
+The central-window BRICS result is substantially better under all three
+surrogates. In the original window, the fingerprint count ties the octree despite
+higher DPA and HyFF counts. Domain coverage therefore identifies a proposal-quality
+bottleneck, while evaluator disagreement prevents a universal ranking. The same
+192 unconditional BRICS proposals are reused across windows: there are 384
+condition-specific attempts, not 384 independent graph draws. Ranking uses 96
+external calls per BRICS window versus 9/13 for octree; the matched caps do not
+imply equal actual compute. Refinement evaluation/gradient calls are 1572/1071
+and 1548/65 for BRICS, versus 235/90 and 462/148 for octree.
+
+The duration experiment continues the common 5000-step model for 15000 further
+full-backbone SFT updates on the same 8188 labelled conformers, using seeds 42–44.
+Both total-10000 and total-20000 checkpoints are evaluated at the original and
+central windows with inference seeds 2026–2028, retaining all 64 attempts per run.
+The optimizer starts fresh; this is not a resumed optimizer trajectory. No
+checkpoint or seed is selected by its evaluation result.
+
+<!-- BEGIN TABLE SFT_DURATION -->
+| Total steps / window | Valid / 576 | In domain / 576 | DPA joint / 576 | FP joint / 576 |
+| :--- | ---: | ---: | ---: | ---: |
+| 10000 / original | 393 | 51 | 9 | 15 |
+| 10000 / central | 376 | 41 | 9 | 8 |
+| 20000 / original | 370 | 54 | 12 | 11 |
+| 20000 / central | 349 | 41 | 10 | 10 |
+
+Table: Three stochastic SFT continuations from one common 5000-step checkpoint, with three inference seeds per window and fixed total-10000/20000 evaluations. Each continuation uses the same 8188 labelled structures and a fresh optimizer. This does not replicate the initial 5000-step training or upstream pretraining.
+<!-- END TABLE SFT_DURATION -->
+
+Across the two windows, validity decreases from 769/1152 at total 10000 steps
+to 719/1152 at total 20000, while DPA joint hits increase from 18 to 22 and
+fingerprint hits decrease from 23 to 21. At 20000 steps, DPA original/central
+joint rates are 2.08%/1.74%, with across-continuation SDs of 0.52/1.08 percentage
+points; fingerprint rates are 1.91%/1.74%, with SDs of 0.60/0.80 points. Three
+continuations provide descriptive variation, not a significance test. The
+original 5000-step control is a single trained model and is not counted as three
+baseline training replicas.
+
+All three final models recover 8/12 B and 27/28 Si teacher-forced decisions on
+the same 511 validation structures, versus zero for both elements at 5000 steps.
+Valid generated B/Si occurrences increase from 16/67 to 67/74 across 1152
+attempts. Thus the longer run learns these elements, but this training budget
+does not produce a consistent improvement in independent design success.
+
+<!-- BEGIN TABLE OPTICAL_GENERATION -->
+| Active targets | Valid / 192 | In domain / 192 | Optimizing joint / 192 | Independent joint / 192 |
+| :--- | ---: | ---: | ---: | ---: |
+| HOMO/LUMO | 111 | 9 | 1 | 1 |
+| Vertical S1/T1 | 94 | 5 | 1 | 1 |
+| All four | 111 | 11 | 0 | 0 |
+
+Table: One four-target generator, three inference seeds per window and unchanged ranking/refinement limits. Inactive targets are masked. This experiment trains and reloads the expanded interface but does not establish useful joint four-property generation.
+<!-- END TABLE OPTICAL_GENERATION -->
+
+The expanded four-target generator is initialized from the 5000-step model and
+receives 2000 conditioner/readout updates with its backbone frozen. Its four-target
+window gives no joint hits. HyFF rescoring of all 25 retained structures gives
+the same per-window totals as the DPA and fingerprint models: 1/192 for orbitals,
+1/192 for vertical excitations and 0/192 for all four. Original DPA and independent
+HyFF force criteria also give equal totals. These remain surrogate checks sharing
+OCELOT labels, not independent quantum accuracy measurements.
+
+### Ranking, policy alignment and refinement controls
+
+<!-- BEGIN TABLE RANKING -->
+| Candidate ranking | Mean joint success (%) | Across-seed SD (percentage points) |
+| :--- | ---: | ---: |
+| first valid | 11.46 | 1.80 |
+| self | 11.46 | 1.80 |
+| external | 20.83 | 1.80 |
+
+Table: Three inference seeds and identical proposal pools, before applying the later applicability-domain filter. Joint success uses the optimizing surrogate and includes all 32 attempts in its denominator.
+<!-- END TABLE RANKING -->
+
+The three ranking runs use identical proposal tokens for each seed, with a fixed
+32-proposal/8-retained budget. External ranking consumes additional property-model
+calls, so its gain is a selection result, not an equal-oracle-budget superiority
+claim. Self-ranking does not improve the measured joint success over first-valid.
+
+<!-- BEGIN TABLE STAGES -->
+| Policy stage | Attempts | Optimizing joint hits | Independent joint hits |
+| :--- | ---: | ---: | ---: |
+| Unconditional prior | 192 | 1 | 2 |
+| Interval SFT | 192 | 4 | 4 |
+| SFT + full GRPO | 576 | 20 | 20 |
+
+Table: Three inference seeds per policy. GRPO additionally uses three training seeds (42-44), all initialized from one SFT checkpoint. The prior-to-SFT comparison changes both conditioning and the self-shortlist.
+<!-- END TABLE STAGES -->
+
+The full-policy matrix starts from the same SFT checkpoint. This separates GRPO
+training-seed variation from variation in SFT initialization; it is not a replicated
+SFT study. The stage table also changes conditioning and selection together, so
+its prior-to-SFT difference is not a single-factor causal effect.
+
+<!-- BEGIN TABLE GRPO -->
+| GRPO objective | Valid / 576 | Optimizing joint / 576 | Independent joint / 576 |
+| :--- | ---: | ---: | ---: |
+| full | 482 | 20 | 20 |
+| no kl | 483 | 14 | 17 |
+| no physics | 482 | 14 | 17 |
+| no replay | 484 | 16 | 19 |
+| uncertainty on | 489 | 17 | 20 |
+
+Table: Five objectives, three GRPO training seeds and three inference seeds. Each policy uses fifty rollout iterations with two optimizer passes per group and a common SFT initialization. The independent fingerprint evaluator is not DFT truth.
+<!-- END TABLE GRPO -->
+
+The initial BF16 policy comparison failed behavior/recomputed-probability checks;
+GRPO now uses FP32 throughout. The completed five-objective matrix contains
+45 evaluation runs: three training seeds and three inference seeds per objective.
+Full GRPO gives 20/576 joint hits under each evaluator; no-KL and no-physics give
+14 optimizing and 17 independent hits each. Yet no-KL training seed 44 outperforms
+Full under both evaluators. Nonzero uncertainty weighting gives 17 optimizing
+and 20 independent hits. Aggregate differences therefore do not establish a
+uniform or statistically reliable component ranking. Each group receives two
+optimizer passes, updating the interval conditioner only.
+
+![GRPO training-seed variation. Each point aggregates three inference runs and 192 attempted proposals at one training seed; horizontal bars show the three-seed mean. All policies start from one SFT checkpoint. The independent fingerprint model is not quantum reference truth.](figures/fig1_grpo_training_seeds.png){#fig:grposeeds width=100%}
+
+For Full, training-seed optimizing counts are 8/7/5 and independent counts are
+8/5/7, each out of 192. Both aggregate to 3.47%, with an across-training-seed
+standard deviation of 0.80 percentage points. Source records include all seed
+counts and descriptive cluster-bootstrap intervals; only three training clusters
+are available, so these intervals do not justify significance claims.
+
+<!-- BEGIN TABLE REFINEMENT -->
+| Refinement rule | Optimizing joint hits / 192 | Independent joint hits / 192 | Mean RMS force (eV/Å) |
+| :--- | ---: | ---: | ---: |
+| None | 0 | 0 | 2.5858 |
+| Energy only | 7 | 17 | 0.1709 |
+| Projection only | 7 | 8 | 1.0572 |
+| Full acceptance | 8 | 8 | 1.3537 |
+
+Table: Identical 34 selected starting structures from 192 proposals; 30-step budget and production step size 0.004. Selection is fixed, but backtracking changes evaluator cost. The independent fingerprint surrogate favors energy-only refinement.
+<!-- END TABLE REFINEMENT -->
+
+Matched refinement exposes evaluator dependence. Full acceptance preserves all
+six initially property-feasible molecules and reaches eight optimizing joint
+hits; energy-only and projection-only each lose one and reach seven. Yet the
+independent fingerprint surrogate gives energy-only 17 joint hits versus eight
+for full acceptance. Its 17 property hits are unchanged across rules because
+it is insensitive to geometry. The lowest mean residual force also comes from
+energy-only refinement. These results support the acceptance invariant but do
+not establish superior physical or independent property quality.
+
+### Same-level quantum diagnostics
+
+Quantum calculations use PySCF 2.12.1 [@sun2020pyscf] and GPU4PySCF 1.9.1
+[@li2024gpu4pyscf]. The internally specified level is IP-tuned LC-wPBE
+(Libxc 478)/def2-SVP, with $J_h=|\epsilon_H+E(N-1)-E(N)|$, a 99/590
+integration grid and 1e-9 Hartree SCF tolerance. No density fitting or TDA is
+substituted. S1/T1 refer to full linear-response TDDFT at the same S0 geometry
+and S0-tuned omega. These settings define an internal diagnostic; they have not
+reproduced the released OCELOT reference protocol.
+
+The seed-42 total-20000 SFT checkpoint yields eight surrogate-qualified outputs
+from 384 attempts. Before quantum evaluation, select the lowest original candidate
+ID in each nonempty window/inference-seed stratum: five structures, with no
+replacement for the empty sixth stratum. All five complete graph-preserving S0
+optimization; two retain both original orbital intervals and three miss HOMO.
+All five LUMOs remain in their target windows. Quantum RMS forces are
+0.00117–0.00176 eV/Å, but no vibrational-minimum test is included. The remaining
+three qualified outputs have unknown quantum outcomes.
+
+<!-- BEGIN TABLE QUALIFIED_QUANTUM -->
+| Case / window | Source DPA H / L (eV) | Quantum H / L (eV) | Target check |
+| :--- | ---: | ---: | :--- |
+| 0 / original | -7.5762 / -0.0745 | -7.8003 / 0.1750 | Hit |
+| 1 / original | -7.9748 / -0.3420 | -8.6653 / 0.1991 | HOMO miss |
+| 2 / central | -6.9484 / -0.5410 | -7.4414 / -0.4153 | Hit |
+| 3 / central | -7.7398 / -0.6621 | -7.8836 / -0.6121 | HOMO miss |
+| 4 / central | -7.7032 / -0.8856 | -8.1364 / -0.5140 | HOMO miss |
+
+Table: Preselected subset of eight surrogate-qualified designs from 384 attempts. One lowest-ID candidate is selected per nonempty window/inference-seed stratum before quantum calculation. All five preserve the source graph after S0 optimization; the three unselected qualified designs have unknown quantum outcomes. H/L denote HOMO/LUMO.
+<!-- END TABLE QUALIFIED_QUANTUM -->
+
+\FloatBarrier
+
+On these unchanged quantum geometries, the frozen two-target DPA and fingerprint
+models give mean absolute HOMO/LUMO disagreements of 0.4689/0.2846 and
+0.3906/0.4082 eV, respectively. All five remain inside the graph applicability
+domain. A post-hoc exact-graph check finds that case 1 matches training record
+`csd_RASWEO`, whose released labels are -7.7901/-0.4019 eV. Its quantum values
+differ by -0.8752/+0.6011 eV, whereas DPA at the quantum geometry predicts
+-7.8780/-0.4530 eV. This is not an unseen graph; the absent original quantum
+geometry and omega prevent separating reference-protocol and conformer effects.
+No correction is fitted to this selected cohort. The two observed hits establish
+feasibility under the internal quantum protocol, not an all-proposal quantum
+success rate or an OCELOT reference-accuracy claim.
+
+A separate structural-only adaptation adds B using 512 MIM-Flow structures
+without validating a B property conditioner. All ten B-containing outputs from
+its 64 proposals were selected for the same nominal
+quantum protocol before inspecting their quantum results. Five complete S0
+optimization, graph-preservation checks and full TDDFT; the other five fail SCF,
+geometry convergence, graph or specified-stereo checks. The successful cases
+have vertical S1–T1 separations of 0.4944–1.2712 eV. Longer-budget retries resolve
+the SCF/geometry iteration limits for two cases but both then fail graph/stereo
+checks. These failures remain part of the original cohort. Recovered final
+geometries include new bonding and hydrogen transfer despite low DFT residual
+forces, illustrating why force alone is insufficient to certify identity.
+No vibrational-minimum claim is made for this ten-molecule cohort.
+
+All five completed structures lie outside the wide-OCELOT applicability domain.
+At their same quantum geometries, mean absolute disagreements of the four-target
+DPA adapter are 0.4355/0.3303/0.5212/0.2120 eV for HOMO/LUMO/S1/T1; its paired
+vertical-gap disagreement is 0.4104 eV. The fingerprint counterpart is 0.3451 eV
+for that gap. The matched HyFF adapter gives 0.4171/0.2614/0.4009/0.1879 eV
+for the four targets and 0.2693 eV for the paired gap. The same five geometries
+and quantum reference scalars are used throughout. These are five-case
+extrapolation diagnostics, not OCELOT test MAEs or evidence of B-conditioned design.
+
+Fixed-omega excitation gradients provide a separate check of the local geometric
+response. All five completed cases reproduce their stored ground and excitation
+energies within predeclared thresholds. DPA's mean S1/T1 gradient cosines against
+TDDFT are 0.630/0.658; HyFF's are 0.422/0.573. Every individual-property cosine
+is positive, but DPA gradient norms are only 0.31–0.73 times their quantum
+counterparts. This supports directional information on this cohort, not calibrated
+magnitudes or accuracy beyond it.
+
+A post-hoc interval-loss check uses the previously defined S1 [2.5, 3.5] and T1
+[1.5, 2.5] eV window. For cohort case 2, DPA predicts S1 = 3.5425 eV while TDDFT
+gives 2.2770 eV. Their property-gradient cosine is +0.819, but their interval-loss
+gradient cosine is -0.819 because the predictions violate opposite bounds. DPA
+also assigns zero interval loss to two quantum-infeasible cases. Scalar prediction
+bias can therefore reverse the desired interval correction despite a correctly
+computed, positively aligned property derivative. These cases are already excluded
+by the applicability-domain filter; the diagnostic is not an observed in-domain
+failure rate.
+
+
+A separate single-molecule diagnostic verifies two excited-state minima; its
+vertical and adiabatic energies are kept distinct in Appendix B.
+
+### Runtime and reproducibility
+
+Each run must identify the code revision, environment, input/split versions, tokenizer specification, full target intervals, model and oracle checkpoint hashes, electronic states, seed policy, sampling budget, and filtering rules. Reload checks compare every molecule's tokens, graph, coordinates, and predictions under declared tolerances. Independent random streams do not by themselves guarantee bitwise agreement across batching strategies or attention kernels.
+
+Tables are generated from checksum-bound evidence. The manuscript archive includes selected per-candidate records, quantum geometries and raw gradient arrays; model weights and training datasets are distributed separately. Each experiment saves its source snapshot, environment, input and checkpoint hashes, complete raw proposals and failure ledger. Numerical comparisons use declared coordinate/property tolerances, distinct from exact token and graph comparisons.
+
+Separate four-target and fixed-20000-step two-target inference bundles contain
+the adapted generator, evaluators, scalers, applicability domain, project wheel,
+dependency lock and original replay cohort. After isolated wheel installation
+and model relocation, all 64 raw proposals in each bundle and six/nine exports,
+respectively, replay under the original 1e-5 coordinate/property tolerances.
+All 23 files in each bundle pass their SHA-256 checks.
+This uses the validated remote dependencies, not a newly built operating-system
+image. An optional geometric-growth KV buffer matches the reference storage on
+24 sampled trajectories, but shows no meaningful timing gain and higher peak
+allocation. The full-prefix absolute-logit check fails its predeclared 2e-4 bound
+for both storage modes (maximum 2.3651e-4); that failure is retained.
+
+
+## Appendix B. Additional representation and excited-state diagnostics
+
+### Element learning and explicit molecular graphs
+
+Three matched interventions test alternatives to longer supervised adaptation.
+Raising atom temperature from 0.3 to 1.0 introduces B/Si/Se/As/Te into valid
+outputs, but lowers validity from 110/192 to 89/192 and optimizing joint hits
+from two to zero. A paired-condition hinge objective and its unpaired control
+both obtain 3 optimizing and 4 independent joint hits in 384 proposals. Inverse-
+square-root element-frequency weighting increases valid B/Si occurrence to two
+and six molecules, but reduces optimizing hits from 7/384 to 3/384 while
+independent hits remain 6/384. Each training intervention uses one matched seed;
+none establishes improved conditional design. Default temperature and objective
+are unchanged.
+
+The depth-seven representation retains 0.24 Angstrom leaf cells and covers a
+30.72 Angstrom box. An audit of 960 saved proposals finds 515 chemically valid
+outputs, ten above 40 atoms and six beyond the earlier 14.80 Angstrom rotation-safe
+span. The largest valid diameter is 22.30 Angstrom. All six extended structures
+pass the same graph and bond-geometry checks but contain internally charged atoms;
+spatial capacity alone does not establish useful long-chromophore generation.
+
+An explicit fragment-attachment workflow preserves designated sites and fixed
+world-frame coordinates for benzene, naphthalene, pyridine and a B-containing
+scaffold. All 24 proposals are valid, 16 receive external ranking and eight are
+refined; none reaches joint success in the eight-step diagnostic. Whole-cohort
+replay preserves attachment decisions, graphs and fixed coordinates. This is
+explicit graph growth, not learned octree scaffold completion.
+
+A fixed-coordinate comparison of RDKit's connect-the-dots, van der Waals and
+extended Hueckel connectivity [@rdkit2026bonds] separates generation quality from
+perception sensitivity. On 511 known validation structures, the default and
+Hueckel each preserve 505 constitutions. Among 384 generated coordinates, valid
+graphs without atomic formal charges number 89 and 91, while 29 paired valid
+graphs change constitution. This does not support changing the production
+perception method. Identity comparison includes hydrogen count, isotopes and
+specified stereo; an unspecified source stereocenter may acquire a compatible
+specification without changing the molecular constitution.
+
+### Structural boron adaptation and excited-state minima
+
+A structural-only adaptation uses 512 closed-shell MIM-Flow B-containing
+structures. Of 64 attempts, 33 are valid and ten contain B; all ten are novel
+relative to the adaptation structures. Energy-only refinement preserves their
+graphs and lowers mean RMS force from 4.29 to 0.41 eV/Angstrom, with nine below
+0.5. This model has no validated B property conditioner. Its original 450-channel
+spectra are preserved separately from the OCELOT electronic labels. The subsequent
+ten-case quantum cohort and its five failures are reported in Appendix A.
+
+A separate single-molecule diagnostic distinguishes vertical and adiabatic
+excitation energies. At the internal IP-tuned LC-wPBE/def2-SVP level, the source
+graph is preserved and the S0 DFT RMS force is 0.00255 eV/Angstrom. HOMO/LUMO are
+-8.81566/-0.00179 eV, missing the original HOMO interval. Full spin-adapted TDDFT
+gives vertical S1/T1 energies of 4.03502/3.08312 eV. State-specific optimizations
+at the same S0-tuned range parameter give adiabatic excitations of
+3.63105/2.51208 eV and an S1-T1 difference of 1.11897 eV, without zero-point
+corrections. Central differences of all 51 gradient coordinates yield 45 positive
+vibrational modes in each state (lowest 47.46/23.90 inverse centimeters); both
+preserve the graph. This is a one-case internal-protocol validation, not an
+OCELOT accuracy benchmark or a demonstrated general design capability.
+
+## Appendix C. Initial OE62 geometry and quantum controls
 
 **Ranking and physical controls.** On fixed pilot pools, distance ranking and
 an empirical interval probability fitted from held-out source residuals differ
@@ -710,83 +891,6 @@ changes from 0.2212 to 0.1561 eV, HyFF from 0.3608 to 0.2710 eV, and fingerprint
 from 0.5217 to 0.4103 eV. These are geometry-specific diagnostics, not source-test
 accuracy or universal uncertainty guarantees.
 
-
-## 5. Limitations and scope
-
-First, acceptance guarantees are relative to fixed surrogate evaluators. Correlated errors between property models and force fields can survive both uncertainty and physical gates. Multiple MLIP evaluators provide a useful diagnostic, but are not substitutes for quantum-chemical validation.
-
-Second, explicit electronic-state inputs do not establish accuracy for all elements, charges, or multiplicities. The generator vocabulary, training distribution, graph representation, and selected checkpoint must all support the requested chemistry. Open-shell and organometallic design require dedicated validation rather than extrapolation from closed-shell QM9 results.
-
-Third, constrained refinement can stagnate when no step simultaneously improves energy and preserves the required properties. Such a result should be reported as a failed or unresolved candidate. The method does not guarantee thermodynamic stability, synthetic accessibility, excited-state accuracy, or global optimality.
-
-Finally, autoregressive decoding, candidate selection, ensemble evaluation, and refinement can be expensive. KV caching and batching are engineering opportunities, but their speed and output-quality effects require measurement. Scaffold-conditioned generation additionally requires preservation of the input graph, explicit attachment constraints, and projection in the movable coordinate subspace.
-
-## 6. Conclusion
-
-ORBIT-3D formulates point- and interval-targeted molecular design as discrete proposal learning followed by explicitly constrained refinement. Its five stages give distinct roles to the generative prior, target conditioning, self-ranking, externally scored policy alignment, and terminal relaxation. A common evaluator interface supports differentiable and black-box properties, while an acceptance test makes the conditions for retaining a refinement step explicit.
-
-The corrected implementation has matched-budget controls, three GRPO training seeds, three SFT continuations from a common trained initialization, independent surrogate checks and a ten-molecule quantum cohort with five failures retained. A separate preselected check of five delivered designs preserves every graph and retains two orbital-window hits under the internal quantum protocol. A fragment-recombination baseline is markedly stronger on one target regime, and refinement preferences change with the evaluator. The separate native-coordinate OE62 study replicates all adaptation stages across three seeds: GRPO increases independent proxy hit yield but worsens target MAE relative to time-matched SFT, while raw MLIP force-qualified yield remains zero. A preselected 24-candidate OE62 quantum cohort gives twelve converged, graph-preserving point hits after refinement, without supporting a GRPO advantage; MLIP and DFT force criteria disagree even on independently converged geometries. These results identify proposal quality, objective choice, geometry convergence and evaluator reliability as remaining limitations. Broader quantum validation with reproducible reference settings is needed before claiming general design effectiveness.
-
-## Appendix A. Supplementary experiments
-
-### Element learning and explicit molecular graphs
-
-Three matched interventions test alternatives to longer supervised adaptation.
-Raising atom temperature from 0.3 to 1.0 introduces B/Si/Se/As/Te into valid
-outputs, but lowers validity from 110/192 to 89/192 and optimizing joint hits
-from two to zero. A paired-condition hinge objective and its unpaired control
-both obtain 3 optimizing and 4 independent joint hits in 384 proposals. Inverse-
-square-root element-frequency weighting increases valid B/Si occurrence to two
-and six molecules, but reduces optimizing hits from 7/384 to 3/384 while
-independent hits remain 6/384. Each training intervention uses one matched seed;
-none establishes improved conditional design. Default temperature and objective
-are unchanged.
-
-The depth-seven representation retains 0.24 Angstrom leaf cells and covers a
-30.72 Angstrom box. An audit of 960 saved proposals finds 515 chemically valid
-outputs, ten above 40 atoms and six beyond the earlier 14.80 Angstrom rotation-safe
-span. The largest valid diameter is 22.30 Angstrom. All six extended structures
-pass the same graph and bond-geometry checks but contain internally charged atoms;
-spatial capacity alone does not establish useful long-chromophore generation.
-
-An explicit fragment-attachment workflow preserves designated sites and fixed
-world-frame coordinates for benzene, naphthalene, pyridine and a B-containing
-scaffold. All 24 proposals are valid, 16 receive external ranking and eight are
-refined; none reaches joint success in the eight-step diagnostic. Whole-cohort
-replay preserves attachment decisions, graphs and fixed coordinates. This is
-explicit graph growth, not learned octree scaffold completion.
-
-A fixed-coordinate comparison of RDKit's connect-the-dots, van der Waals and
-extended Hueckel connectivity [@rdkit2026bonds] separates generation quality from
-perception sensitivity. On 511 known validation structures, the default and
-Hueckel each preserve 505 constitutions. Among 384 generated coordinates, valid
-graphs without atomic formal charges number 89 and 91, while 29 paired valid
-graphs change constitution. This does not support changing the production
-perception method. Identity comparison includes hydrogen count, isotopes and
-specified stereo; an unspecified source stereocenter may acquire a compatible
-specification without changing the molecular constitution.
-
-### Structural boron adaptation and excited-state minima
-
-A structural-only adaptation uses 512 closed-shell MIM-Flow B-containing
-structures. Of 64 attempts, 33 are valid and ten contain B; all ten are novel
-relative to the adaptation structures. Energy-only refinement preserves their
-graphs and lowers mean RMS force from 4.29 to 0.41 eV/Angstrom, with nine below
-0.5. This model has no validated B property conditioner. Its original 450-channel
-spectra are preserved separately from the OCELOT electronic labels. The subsequent
-ten-case quantum cohort and its five failures are reported in Section 4.5.
-
-A separate single-molecule diagnostic distinguishes vertical and adiabatic
-excitation energies. At the internal IP-tuned LC-wPBE/def2-SVP level, the source
-graph is preserved and the S0 DFT RMS force is 0.00255 eV/Angstrom. HOMO/LUMO are
--8.81566/-0.00179 eV, missing the original HOMO interval. Full spin-adapted TDDFT
-gives vertical S1/T1 energies of 4.03502/3.08312 eV. State-specific optimizations
-at the same S0-tuned range parameter give adiabatic excitations of
-3.63105/2.51208 eV and an S1-T1 difference of 1.11897 eV, without zero-point
-corrections. Central differences of all 51 gradient coordinates yield 45 positive
-vibrational modes in each state (lowest 47.46/23.90 inverse centimeters); both
-preserve the graph. This is a one-case internal-protocol validation, not an
-OCELOT accuracy benchmark or a demonstrated general design capability.
 
 ## References
 

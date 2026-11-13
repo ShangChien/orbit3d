@@ -1,79 +1,77 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="550" viewBox="0 0 1200 550" role="img" aria-labelledby="title desc">
-<title id="title">ORBIT-3D five-stage architecture</title>
-<desc id="desc">Stages 1 to 3 learn a 3D molecular policy; optional Stage 4 aligns it. Stage 5 refines sampled candidates. A dashed arrow shows training feedback. Shared property and force evaluators support alignment and refinement. Outputs must pass explicit validation.</desc>
-<rect x="0" y="0" width="1200" height="550" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
-<rect x="24" y="18" width="1112" height="44" rx="9" fill="#F3F6F8" stroke="none" stroke-width="1.5"/>
-<text x="43" y="47" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#526575" text-anchor="start">INPUTS</text>
-<text x="130" y="47" font-family="Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#172A3A" text-anchor="start">3D structures  ·  target values or intervals  ·  supported electronic states</text>
-<text x="24" y="96" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">POLICY LEARNING</text>
-<polyline points="191,90 906,90" fill="none" stroke="#D7E0E7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="944" y="96" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#B46B35" text-anchor="start">REFINEMENT</text>
-<polyline points="810,147 810,120 350,120 350,147" fill="none" stroke="#3F6C9E" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
-<polygon points="350,147 354,138 346,138" fill="#3F6C9E"/>
-<rect x="470" y="105" width="220" height="27" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
-<text x="580" y="125" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#3F6C9E" text-anchor="middle">conditioner update</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="605" viewBox="0 0 1200 605" role="img" aria-labelledby="title desc">
+<title id="title">ORBIT-3D terminal-feedback architecture</title>
+<desc id="desc">Native-coordinate SFT initializes an autoregressive 3D generator. Point requests produce complete molecular proposals, followed by structure checks, fixed-budget energy relaxation and terminal property scoring. Optional policy feedback uses the original trajectories. Frozen independent models and DFT validate fresh pools.</desc>
+<rect x="0" y="0" width="1200" height="605" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
+<text x="24" y="42" font-family="Helvetica, Arial, sans-serif" font-size="23" font-weight="700" fill="#172A3A" text-anchor="start">ORBIT-3D</text>
+<rect x="254" y="20" width="192" height="78" rx="10" fill="#F2F6FA" stroke="none" stroke-width="1.5"/>
+<text x="350" y="49" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#172A3A" text-anchor="middle">Native 3D + labels</text>
+<text x="350" y="77" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#526575" text-anchor="middle">Pretrained prior / SFT</text>
+<polyline points="350,102 350,146" fill="none" stroke="#3F6C9E" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="350,146 354,137 346,137" fill="#3F6C9E"/>
+<text x="484" y="50" font-family="Helvetica, Arial, sans-serif" font-size="25" font-weight="700" fill="#172A3A" text-anchor="start">Generate, relax, then evaluate</text>
+<text x="484" y="82" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="start">Point conditions are separate from acceptance tolerances</text>
 <rect x="24" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
-<text x="40" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">01</text>
-<text x="120" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">3D prior</text>
-<polyline points="93,240 137,240 137,284 93,284 93,240" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="113,226 157,226 157,270 113,270 113,226" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="93,240 113,226" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="137,240 157,226" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="137,284 157,270" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="93,284 113,270" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="115,240 115,284" fill="none" stroke="#3F6C9E" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="93,262 137,262" fill="none" stroke="#3F6C9E" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="104" cy="251" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<circle cx="126" cy="273" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<circle cx="129" cy="235" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<text x="120" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Pretrained octree</text>
+<text x="40" y="178" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#3F6C9E" text-anchor="start">REQUEST</text>
+<text x="120" y="209" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="middle">Target point</text>
+<polyline points="64,238 176,238" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="88" cy="238" r="5.5" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<polyline points="64,261 176,261" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="127" cy="261" r="5.5" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<polyline points="64,284 176,284" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="156" cy="284" r="5.5" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<text x="120" y="317" font-family="Helvetica, Arial, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">HOMO or LUMO</text>
 <rect x="254" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
-<text x="270" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">02</text>
-<text x="350" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Target SFT</text>
-<polyline points="295,235 405,235" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="323,235 369,235" fill="none" stroke="#ACC3DC" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="343" cy="235" r="5.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<polyline points="295,260 405,260" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="346,260 393,260" fill="none" stroke="#ACC3DC" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="372" cy="260" r="5.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<polyline points="295,285 405,285" fill="none" stroke="#D7E0E7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="313,285 351,285" fill="none" stroke="#ACC3DC" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="332" cy="285" r="5.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<text x="350" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Point / interval</text>
-<rect x="484" y="150" width="192" height="185" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
-<text x="500" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#3F6C9E" text-anchor="start">03</text>
-<text x="580" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Self-ranking</text>
-<circle cx="533" cy="233" r="6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
-<polyline points="552,233 636,233" fill="none" stroke="#3F6C9E" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="533" cy="259" r="6" fill="#9CB2C6" stroke="none" stroke-width="1.5"/>
-<polyline points="552,259 607,259" fill="none" stroke="#9CB2C6" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="533" cy="285" r="6" fill="#C9D5DF" stroke="none" stroke-width="1.5"/>
-<polyline points="552,285 582,285" fill="none" stroke="#C9D5DF" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="524,230 529,236 541,223" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="580" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Select candidates</text>
-<rect x="714" y="150" width="192" height="185" rx="12" fill="#F2F8F6" stroke="#D7E0E7" stroke-width="1.5"/>
-<text x="730" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#247C75" text-anchor="start">04</text>
-<text x="810" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">GRPO</text>
-<polyline points="756,287 866,287" fill="none" stroke="#B6D5D1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<rect x="764" y="241" width="23" height="45" rx="3" fill="#BED9D4" stroke="none" stroke-width="1.5"/>
-<rect x="800" y="264" width="23" height="22" rx="3" fill="#76AFA6" stroke="none" stroke-width="1.5"/>
-<rect x="836" y="252" width="23" height="34" rx="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
-<text x="810" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Optional alignment</text>
-<rect x="944" y="150" width="192" height="185" rx="12" fill="#FCF7F2" stroke="#D7E0E7" stroke-width="1.5"/>
-<text x="960" y="178" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#B46B35" text-anchor="start">05</text>
-<text x="1040" y="209" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#172A3A" text-anchor="middle">Relaxation</text>
-<polyline points="1015,243 1038,229 1063,244 1063,270 1040,283 1015,269 1015,243" fill="none" stroke="#96A3AD" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="1015" cy="243" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
-<circle cx="1038" cy="229" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
-<circle cx="1063" cy="244" r="5.7" fill="#B46B35" stroke="none" stroke-width="1.5"/>
-<circle cx="1063" cy="270" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
-<circle cx="1040" cy="283" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
-<circle cx="1015" cy="269" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
-<polyline points="1093,235 1076,244" fill="none" stroke="#B46B35" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<polygon points="1076,244 1085.83,243.324 1082.08,236.254" fill="#B46B35"/>
-<polyline points="988,277 1006,270" fill="none" stroke="#B46B35" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<polygon points="1006,270 996.162,269.534 999.062,276.99" fill="#B46B35"/>
-<text x="1040" y="317" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Accept or backtrack</text>
+<text x="270" y="178" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#3F6C9E" text-anchor="start">POLICY</text>
+<text x="350" y="209" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="middle">3D generator</text>
+<polyline points="323,240 367,240 367,284 323,284 323,240" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="343,226 387,226 387,270 343,270 343,226" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="323,240 343,226" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="367,240 387,226" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="367,284 387,270" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="323,284 343,270" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="345,240 345,284" fill="none" stroke="#3F6C9E" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="323,262 367,262" fill="none" stroke="#3F6C9E" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="334" cy="251" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<circle cx="356" cy="273" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<circle cx="359" cy="235" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<text x="350" y="317" font-family="Helvetica, Arial, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">tree / atoms / XYZ</text>
+<rect x="484" y="150" width="192" height="185" rx="12" fill="#F2F8F6" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="500" y="178" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#247C75" text-anchor="start">STRUCTURE</text>
+<text x="580" y="209" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="middle">Chemical gate</text>
+<polyline points="555,243 578,229 603,244 603,270 580,283 555,269 555,243" fill="none" stroke="#96A3AD" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="555" cy="243" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="578" cy="229" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="603" cy="244" r="5.7" fill="#B46B35" stroke="none" stroke-width="1.5"/>
+<circle cx="603" cy="270" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="580" cy="283" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="555" cy="269" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<text x="580" y="317" font-family="Helvetica, Arial, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">graph / charge / stereo</text>
+<rect x="714" y="150" width="192" height="185" rx="12" fill="#FCF7F2" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="730" y="178" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#B46B35" text-anchor="start">GEOMETRY</text>
+<text x="810" y="209" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="middle">Energy relax</text>
+<polyline points="785,243 808,229 833,244 833,270 810,283 785,269 785,243" fill="none" stroke="#96A3AD" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="785" cy="243" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="808" cy="229" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="833" cy="244" r="5.7" fill="#B46B35" stroke="none" stroke-width="1.5"/>
+<circle cx="833" cy="270" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="810" cy="283" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="785" cy="269" r="5.7" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<polyline points="863,235 846,244" fill="none" stroke="#B46B35" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="846,244 855.826,243.324 852.083,236.254" fill="#B46B35"/>
+<polyline points="758,277 776,270" fill="none" stroke="#B46B35" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="776,270 766.162,269.534 769.062,276.99" fill="#B46B35"/>
+<text x="810" y="317" font-family="Helvetica, Arial, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">DPA, fixed budget</text>
+<rect x="944" y="150" width="192" height="185" rx="12" fill="#F2F8F6" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="960" y="178" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#247C75" text-anchor="start">PROPERTY</text>
+<text x="1040" y="209" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="middle">Point score</text>
+<circle cx="993" cy="233" r="6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<polyline points="1012,233 1096,233" fill="none" stroke="#3F6C9E" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="993" cy="259" r="6" fill="#9CB2C6" stroke="none" stroke-width="1.5"/>
+<polyline points="1012,259 1067,259" fill="none" stroke="#9CB2C6" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="993" cy="285" r="6" fill="#C9D5DF" stroke="none" stroke-width="1.5"/>
+<polyline points="1012,285 1042,285" fill="none" stroke="#C9D5DF" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="984,230 989,236 1001,223" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1040" y="317" font-family="Helvetica, Arial, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">Terminal geometry</text>
 <polyline points="220,243 248,243" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <polygon points="248,243 239,239 239,247" fill="#7C8D9B"/>
 <polyline points="450,243 478,243" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
@@ -82,25 +80,26 @@
 <polygon points="708,243 699,239 699,247" fill="#7C8D9B"/>
 <polyline points="910,243 938,243" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <polygon points="938,243 929,239 929,247" fill="#7C8D9B"/>
-<polyline points="465,420 465,380 1040,380 1040,340" fill="none" stroke="#526575" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-<polygon points="1040,340 1036,349 1044,349" fill="#526575"/>
-<polyline points="810,380 810,340" fill="none" stroke="#526575" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-<polygon points="810,340 806,349 814,349" fill="#526575"/>
-<circle cx="810" cy="380" r="3.3" fill="#526575" stroke="none" stroke-width="1.5"/>
-<rect x="540" y="366" width="185" height="28" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1.5"/>
-<text x="632" y="386" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="middle">shared evaluation</text>
-<rect x="24" y="420" width="882" height="112" rx="10" fill="#FAFBFC" stroke="#D7E0E7" stroke-width="1.5"/>
-<polyline points="465,438 465,515" fill="none" stroke="#D7E0E7" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="46" y="452" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="start">Property oracle</text>
-<text x="46" y="481" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#526575" text-anchor="start">Predictions + uncertainty</text>
-<text x="46" y="511" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">3D adapters / fingerprint models</text>
-<text x="488" y="452" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="start">Force field</text>
-<text x="488" y="481" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#526575" text-anchor="start">Energy + interatomic forces</text>
-<text x="488" y="511" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">DPA-4 / HyFF</text>
-<polyline points="1136,260 1167,260 1167,476 1141,476" fill="none" stroke="#B46B35" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-<polygon points="1141,476 1150,480 1150,472" fill="#B46B35"/>
-<rect x="944" y="420" width="192" height="112" rx="10" fill="#FFFFFF" stroke="#DCC6B4" stroke-width="1.5"/>
-<text x="1040" y="452" font-family="Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="middle">Validate output</text>
-<text x="1040" y="483" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Chemistry · targets</text>
-<text x="1040" y="512" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#526575" text-anchor="middle">Residual forces</text>
+<polyline points="580,340 580,406" fill="none" stroke="#247C75" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polygon points="580,406 584,397 576,397" fill="#247C75"/>
+<polyline points="810,340 810,370 580,370" fill="none" stroke="#247C75" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polyline points="1040,340 1040,370 810,370" fill="none" stroke="#247C75" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<circle cx="580" cy="370" r="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="810" cy="370" r="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<text x="620" y="395" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#247C75" text-anchor="start">Structure / physics / target feedback</text>
+<rect x="254" y="410" width="652" height="110" rx="10" fill="#F5F9F8" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="278" y="443" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#172A3A" text-anchor="start">Optional policy alignment</text>
+<text x="278" y="473" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#526575" text-anchor="start">Update the original sampled trajectory</text>
+<text x="278" y="500" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">Keep every rejected proposal in the denominator</text>
+<polyline points="350,406 350,340" fill="none" stroke="#3F6C9E" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polygon points="350,340 346,349 354,349" fill="#3F6C9E"/>
+<text x="370" y="383" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#3F6C9E" text-anchor="start">GRPO</text>
+<polyline points="1136,243 1171,243 1171,465 1141,465" fill="none" stroke="#B46B35" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="1141,465 1150,469 1150,461" fill="#B46B35"/>
+<rect x="944" y="410" width="192" height="110" rx="10" fill="#FFFFFF" stroke="#DCC6B4" stroke-width="1.5"/>
+<text x="1040" y="441" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#172A3A" text-anchor="middle">Independent check</text>
+<text x="1040" y="473" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="middle">Frozen new pools</text>
+<text x="1040" y="502" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="middle">Uni-Mol2 + DFT</text>
+<text x="24" y="563" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#526575" text-anchor="start">Property adapters can use disjoint terminal-DFT labels for calibration.</text>
+<text x="24" y="590" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">Training, selection and independent validation retain separate data and budgets.</text>
 </svg>

@@ -57,3 +57,13 @@ The primary protocol is PBE0/def2-TZVP with PBE-D3BJ/def2-TZVP optimization;
 source FHI-aims Tier2/PBE-TS settings differ. The two-case QZVP/TZVPD diagnostic
 is post-hoc and does not replace primary values. The original worker's geometry
 "steps" field counts gradient callback evaluations, including the initial one.
+
+Terminal-feedback extension: complete 848-endpoint policy pools, a deduplicated
+shared condition-off pool, uniformly processed BRICS proposals and the fixed
+BRICS known-hit geometry-persistence cohort. Whole-proposal single-point yields
+are distinct from selected-cohort optimized yields. Full-source SFT compares
+8192 and 43951 training structures with fixed checkpoints and 2026 new quantum
+endpoints. Generated-geometry evaluator calibration preserves scaffold fitting
+separation, parent scalers and fresh-pool evaluation; selection reports do not
+change generation yield. The calibrated-feedback protocol is included as a
+protocol until its outcomes have been completed and incorporated.

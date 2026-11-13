@@ -14,7 +14,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配、v4点值和v5均值宽度条件已实现，HOMO-only/LUMO-only 的三训练seed四臂对照已完成。
 已完成 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
-![点值与区间条件的五阶段概览](paper/figures/fig0_orbit3d_system_architecture.svg)
+![点值生成与终态反馈流程](paper/figures/fig0_orbit3d_system_architecture.svg)
 
 ## 文档导航
 
