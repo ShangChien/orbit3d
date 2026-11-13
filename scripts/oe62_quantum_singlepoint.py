@@ -30,6 +30,9 @@ def single(mol,engine="gpu"):
 
 def main():
  p=argparse.ArgumentParser();p.add_argument('--input',type=Path,required=True);p.add_argument('--index',type=int,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--optimize',action='store_true');p.add_argument('--engine',choices=['cpu','gpu'],default='gpu');a=p.parse_args()
+ calculate(a)
+
+def calculate(a):
  lib.num_threads(4);a.output.mkdir(parents=True,exist_ok=False)
  ms=list(Chem.SDMolSupplier(str(a.input),removeHs=False));m=ms[a.index];assert m is not None
  syms=[x.GetSymbol() for x in m.GetAtoms()];coords=m.GetConformer().GetPositions();start=time.perf_counter()

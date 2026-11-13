@@ -1,0 +1,213 @@
+{
+  "attempted": 192,
+  "accepted": 141,
+  "historical_valid": 141,
+  "historical_domain": 141,
+  "max_restored_sdf_coordinate_delta_A": 5.000444502911705e-13,
+  "failures": [
+    {
+      "id": "2026:0",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:2",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:8",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:15",
+      "reason": "The selected compatible BRICS pair produced no complete graph"
+    },
+    {
+      "id": "2026:20",
+      "reason": "etkdg_failed"
+    },
+    {
+      "id": "2026:21",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:22",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:26",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:29",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:34",
+      "reason": "The selected compatible BRICS pair produced no complete graph"
+    },
+    {
+      "id": "2026:37",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:46",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:52",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:53",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:56",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2026:59",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:0",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:2",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:7",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:10",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:21",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:25",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:32",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:36",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:43",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:46",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:48",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:54",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:58",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2027:59",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:0",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:2",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:4",
+      "reason": "connectivity_geometry: coordinate edges differ (added=[(18, 28)], removed=[])"
+    },
+    {
+      "id": "2028:5",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:12",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:15",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:17",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:22",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:23",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:30",
+      "reason": "etkdg_failed"
+    },
+    {
+      "id": "2028:33",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:36",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:39",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:44",
+      "reason": "connectivity_geometry: coordinate edges differ (added=[(9, 26)], removed=[])"
+    },
+    {
+      "id": "2028:45",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:46",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:49",
+      "reason": "The selected compatible BRICS pair produced no complete graph"
+    },
+    {
+      "id": "2028:52",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:59",
+      "reason": "connectivity_geometry: coordinate edges differ (added=[(27, 42), (28, 41)], removed=[])"
+    },
+    {
+      "id": "2028:60",
+      "reason": "atom_limit"
+    },
+    {
+      "id": "2028:63",
+      "reason": "atom_limit"
+    }
+  ]
+}

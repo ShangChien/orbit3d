@@ -116,6 +116,8 @@ step_direction = F_projected - property_gradient_weight * g
 
 BRICS 根据局部化学环境确定可切键和可连接端点。当前实现逐条作单键切分，建立带来源 ID 的单端口片段库，随机选取兼容片段对并连接，再产生构象，进入性质排序和弛豫。提案本身不使用性质标签；目标用于下游选择。[片段实现](../src/orbit3d/baselines/brics.py)、[实验入口](../scripts/evaluate_brics_baseline.py)
 
+新统一评价通路由 `diagnose_brics_terminal.py` 读取冻结原图与原坐标，调用与octree相同的终态函数；全部提案与失败保留，Morgan仅记录分层。在同一末端坐标上进行Uni-Mol2复评和PBE0单点；指纹仅保留二维诊断，不能据其排名判定BRICS/octree优劣。
+
 该路径作为简单结构提案基线，衡量已有片段重组能提供多少可用候选。它不在 octree 失败后补位；也不能独立选择三个部件、多步组装或创造新环核。规则兼容不保证可合成、可嵌入三维或评价域内。
 
 ## 数据接口、输出与重放

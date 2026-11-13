@@ -1,0 +1,19 @@
+{
+  "paired": 3,
+  "states": [
+    "completed",
+    "completed",
+    "completed"
+  ],
+  "max_coordinate_delta": 0.0,
+  "max_orbital_delta_eV": [
+    1.616484723854228e-13,
+    1.6830981053317373e-13
+  ],
+  "persistent_elapsed": 11.490211725234985,
+  "per_molecule_elapsed": [
+    6.13019010797143,
+    4.092844106256962,
+    1.2190928533673286
+  ]
+}

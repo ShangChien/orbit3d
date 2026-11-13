@@ -23,8 +23,8 @@ def summarize(rows,planned=None,optimization_requested=True):
         'input_target':errors([delta(r,'singlepoint') for r in initial],planned),
         'input_target_same_accepted_subset':errors([delta(r,'singlepoint') for r in final],planned),
         'optimized_target':errors([delta(r,'optimized_singlepoint') for r in final],planned),
-        'dpa_minus_quantum_input':errors([r['dpa_prediction_eV'][['homo','lumo'].index(r['target'])]-r['singlepoint']['prediction_eV'][['homo','lumo'].index(r['target'])] for r in initial],planned),
-        'dpa_target_input':errors([r['dpa_prediction_eV'][['homo','lumo'].index(r['target'])]-r['target_eV'] for r in rows],planned),
+        'dpa_minus_quantum_input':errors([r['dpa_prediction_eV'][['homo','lumo'].index(r['target'])]-r['singlepoint']['prediction_eV'][['homo','lumo'].index(r['target'])] for r in initial if r.get('dpa_prediction_eV') is not None],planned),
+        'dpa_target_input':errors([r['dpa_prediction_eV'][['homo','lumo'].index(r['target'])]-r['target_eV'] for r in rows if r.get('dpa_prediction_eV') is not None],planned),
         'failed_or_unaccepted_indices':[r['index'] for r in rows if r not in final],
         'failed_singlepoint_indices':[r['index'] for r in rows if r not in initial]}
     if not optimization_requested:
