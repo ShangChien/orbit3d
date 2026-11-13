@@ -88,7 +88,7 @@ def test_condition_controls_keep_the_original_scoring_target(tmp_path, monkeypat
                         'output_dir':str(tmp_path/'run'),'forcefield_path':str(source),'property_checkpoint_dir':str(source)},
          'oracle_config':{'target_cols':['homo','lumo'],'target_units':['eV','eV']},
          'inference_config':{'target_point':{'homo':-7},'target_tolerance':{'homo':.25},
-                             'preference_sigma_eV':.4,'condition_control':control,'input_target_point':{'homo':-5},'num_candidates':1}}
+                             'preference_sigma_eV':{'homo':.4} if version==5 else .4,'condition_control':control,'input_target_point':{'homo':-5},'num_candidates':1}}
     with pytest.raises(CapturedGeneration):runner.run_octree_from_config(cfg)
     saved=json.loads((tmp_path/'run/run_config.json').read_text())['inference_config']
     assert saved['target_point']=={'homo':-7}
