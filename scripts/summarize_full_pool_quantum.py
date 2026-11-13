@@ -4,8 +4,8 @@ from pathlib import Path
 import numpy as np
 
 
-def metric(rows, denominator, target):
-    values=[r['singlepoint']['prediction_eV'][0] for r in rows if r.get('status')=='completed' and 'singlepoint' in r]
+def metric(rows, denominator, target, property_index=0):
+    values=[r['singlepoint']['prediction_eV'][property_index] for r in rows if r.get('status')=='completed' and 'singlepoint' in r]
     errors=np.asarray(values)-target
     hits=int((abs(errors)<=.25).sum()); n=denominator; z=1.959963984540054
     center=(hits/n+z*z/(2*n))/(1+z*z/n)
@@ -17,8 +17,8 @@ def metric(rows, denominator, target):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--manifest',type=Path,required=True);p.add_argument('--results',type=Path,required=True);p.add_argument('--targets',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    manifest=json.loads(a.manifest.read_text());points=json.loads(a.targets.read_text())['single_target_points']['homo']
+    p=argparse.ArgumentParser();p.add_argument('--manifest',type=Path,required=True);p.add_argument('--results',type=Path,required=True);p.add_argument('--targets',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument("--target",choices=["homo","lumo"],default="homo");p.add_argument("--quantiles",type=int,nargs="+",default=[25,50,75]);a=p.parse_args();property_index=["homo","lumo"].index(a.target)
+    manifest=json.loads(a.manifest.read_text());points=json.loads(a.targets.read_text())['single_target_points'][a.target]
     completed=json.loads((a.results/'completed.json').read_text());assert completed['attempted']==manifest['selected']
     rows=[];hashes={}
     for item in manifest['records']:
@@ -33,13 +33,13 @@ def main():
     for arm in manifest['arms']:
         records=[r for r in rows if r['arm']==arm];n=manifest['proposal_denominators'][arm]
         cells={}
-        for q in [25,50,75]:
+        for q in a.quantiles:
             subset=records if off else [r for r in records if r['quantile']==q]
-            den=n if off else n//3
-            cells[str(q)]=metric(subset,den,points[str(q)])
+            den=n if off else n//len(a.quantiles)
+            cells[str(q)]=metric(subset,den,points[str(q)],property_index)
         strata={}
         for name,predicate in [('in_domain',lambda r:bool(r.get('domain') and r['domain']['in_domain'])),('out_domain',lambda r:not bool(r.get('domain') and r['domain']['in_domain']))]:
-            strata[name]={str(q):metric([r for r in records if predicate(r) and (off or r['quantile']==q)],n if off else n//3,points[str(q)]) for q in [25,50,75]}
+            strata[name]={str(q):metric([r for r in records if predicate(r) and (off or r['quantile']==q)],n if off else n//len(a.quantiles),points[str(q)],property_index) for q in a.quantiles}
         arms[arm]=dict(proposals=n,terminal_selected=len(records),cells=cells,domain=strata,
             yield_equal_target=float(np.mean([v['yield_all_proposals'] for v in cells.values()])),
             mae_equal_target_eV=float(np.mean([v['mae_eV'] for v in cells.values()])) if all(v['mae_eV'] is not None for v in cells.values()) else None)

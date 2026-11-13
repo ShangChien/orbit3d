@@ -18,3 +18,9 @@ def test_empty_quantum_cell_is_missing_error_not_zero():
     result=module.metric([],64,-6.)
     assert result['hits']==0 and result['mae_eV'] is None
     assert result['prediction_std_eV'] is None
+
+
+def test_lumo_uses_lumo_prediction_not_homo_column():
+    rows=[{'status':'completed','singlepoint':{'prediction_eV':[-6.,-1.2]}}]
+    assert module.metric(rows,64,-1.2,property_index=1)['hits']==1
+    assert module.metric(rows,64,-1.2,property_index=0)['hits']==0

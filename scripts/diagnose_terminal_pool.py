@@ -36,12 +36,13 @@ def main():
     p.add_argument('--root',type=Path,required=True);p.add_argument('--manifest',type=Path,required=True)
     p.add_argument('--target',choices=['homo','lumo'],required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--device',default='cuda:0')
+    p.add_argument('--quantiles',type=int,nargs='+',default=[25,50,75])
     p.add_argument('--control',choices=['correct','off'],default='correct')
     p.add_argument('--arm',default='point_frozen');p.add_argument('--training-seed',type=int,default=42)
     p.add_argument('--inference-seeds',type=int,nargs='+',default=[2071]);a=p.parse_args()
     lock_deterministic_environment(42);torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
     source=json.loads(a.manifest.read_text());elements=tuple(source['elements']);inputs={'manifest':a.manifest};pools=[]
-    for q in ([25,50,75] if a.control=='correct' else [50]):
+    for q in (a.quantiles if a.control=='correct' else [50]):
         for seed in a.inference_seeds:
             pool=a.root/f'eval_{a.target}_seed{a.training_seed}'/f'eval_{a.arm}_p{q}_wNone_s{seed}_{a.control}'
             for name in ['run_config.json','raw_symbols.json','raw_trajectories.npz']:inputs[f'{q}/{seed}/{name}']=pool/'run'/name

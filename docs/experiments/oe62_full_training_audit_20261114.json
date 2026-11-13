@@ -1,0 +1,15 @@
+{
+  "full_records": 43951,
+  "matched_subset": 8192,
+  "maximum_subset_coordinate_delta_A": 0.0,
+  "source_geometry": "OE62 original coordinates; no ETKDG or relaxation",
+  "full_sdf_sha256": "ddcad4fb5d962a9d15a4936f97e821e325f0b9a159e4bb88f3e7db409aab01fa",
+  "full_label_mean": [
+    -6.622574530499891,
+    -1.465266690632757
+  ],
+  "full_label_std": [
+    0.6624399388010108,
+    0.8449815889844315
+  ]
+}
