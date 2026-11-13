@@ -2,13 +2,13 @@
   "diagnostic_source_commit": "1a35caf",
   "training_source_commit": "f19fd8e",
   "evaluation_source_commit": "547d852",
-  "analysis_source_commit": "f89f2c6",
+  "analysis_source_commit": "1e08c64",
   "gpu_indices": [
     0,
     1
   ],
   "tests": {
-    "passed": 253,
+    "passed": 254,
     "optional_quantum_skipped": 5
   },
   "installed_wheel_tests": {
@@ -34,5 +34,18 @@
     "additional_off_raw_proposals_per_arm": 128,
     "planned_quantum_slots": 18
   },
-  "scope": "Execution validation and predeclared budgets; final model audit and results are added only when complete."
+  "scope": "Execution validation and predeclared budgets; final model audit and results are added only when complete.",
+  "formal_training_completed": true,
+  "primary_evaluation_completed": true,
+  "quantum_execution": {
+    "selected": 18,
+    "unique_graphs": 18,
+    "cpu_workers": 4,
+    "gpu_indices": [
+      0,
+      1
+    ],
+    "scratch_root": "/dev/shm/orbit_e12_quantum",
+    "scope": "Same frozen cohort; CPU input singlepoints and GPU optimization overlap after training/evaluation release GPUs."
+  }
 }

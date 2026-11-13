@@ -1,0 +1,160 @@
+{
+  "initial_sha256": "4550a6ce412fd34ba35f373d75751dcd3241d6b3c798806f7f8819078ac442c4",
+  "arms": {
+    "structure": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "checkpoint_sha256": "a5071558e4bba53159302db094482b9413ada7c57a702e8832563ba7a663ae30",
+      "advantage_vector_energy": {
+        "structure": 0.9999999944137116,
+        "physical": 0.0,
+        "property": 0.0
+      },
+      "energy_fraction": {
+        "structure": 1.0,
+        "physical": 0.0,
+        "property": 0.0
+      },
+      "energy_scope": "Orthogonal nested advantage vectors in rollout space, not orthogonal parameter gradients or causal attribution.",
+      "groups": 24,
+      "proposals": 768,
+      "optimizer_updates": 48,
+      "evaluated_per_group": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "negative_property_components": 0,
+      "zero_or_one_property_groups": 24,
+      "energy_force_calls": 0
+    },
+    "physical": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "checkpoint_sha256": "11a645f7bb63de48f32e0efd5bbfec9bf7a35ea30de9d8fc864a55b204e2213d",
+      "advantage_vector_energy": {
+        "structure": 0.38722234099413555,
+        "physical": 0.6127776704459936,
+        "property": 0.0
+      },
+      "energy_fraction": {
+        "structure": 0.38722233656426197,
+        "physical": 0.6127776634357379,
+        "property": 0.0
+      },
+      "energy_scope": "Orthogonal nested advantage vectors in rollout space, not orthogonal parameter gradients or causal attribution.",
+      "groups": 24,
+      "proposals": 768,
+      "optimizer_updates": 48,
+      "evaluated_per_group": [
+        13,
+        11,
+        13,
+        16,
+        14,
+        13,
+        14,
+        16,
+        13,
+        19,
+        13,
+        11,
+        14,
+        15,
+        9,
+        12,
+        17,
+        12,
+        19,
+        14,
+        7,
+        18,
+        13,
+        9
+      ],
+      "negative_property_components": 0,
+      "zero_or_one_property_groups": 0,
+      "energy_force_calls": 25895
+    },
+    "property": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "checkpoint_sha256": "a2ec3cddea91a8f02b5ceadb63d983afc18ed61036a6ec3244cf5730f5f407dd",
+      "advantage_vector_energy": {
+        "structure": 0.2107861503021982,
+        "physical": 0.3074213091784103,
+        "property": 0.48179257894089894
+      },
+      "energy_fraction": {
+        "structure": 0.21078614220347683,
+        "physical": 0.3074212973668206,
+        "property": 0.4817925604297025
+      },
+      "energy_scope": "Orthogonal nested advantage vectors in rollout space, not orthogonal parameter gradients or causal attribution.",
+      "groups": 24,
+      "proposals": 768,
+      "optimizer_updates": 48,
+      "evaluated_per_group": [
+        13,
+        9,
+        16,
+        17,
+        13,
+        13,
+        13,
+        16,
+        15,
+        21,
+        8,
+        15,
+        15,
+        15,
+        17,
+        11,
+        9,
+        17,
+        19,
+        14,
+        17,
+        19,
+        11,
+        11
+      ],
+      "negative_property_components": 213,
+      "zero_or_one_property_groups": 0,
+      "energy_force_calls": 28484
+    },
+    "sft": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "checkpoint_sha256": "508be46c83fcbc1dbae9bd32c3e8606b6dc0b815c83b27d2289a4f5767e16b45",
+      "optimizer_updates": 22030
+    }
+  },
+  "script_sha256": "fc06473a88cf13a422d37c5757489e715d2831140d2bd990e4bb1f984cfbac47"
+}
