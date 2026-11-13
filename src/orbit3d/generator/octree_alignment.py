@@ -34,7 +34,12 @@ def align_octree(
     model, molecules, labels, mean, scale, intervals, oracle, forcefield, steps=20, group_size=8, lr=2e-5,
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
     points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
+    point_reward_type="inverse_point_distance",
 ):
+    if point_reward_type not in {"inverse_point_distance", "eligibility_only"}:
+        raise ValueError("Unknown point reward type")
+    if points is None and point_reward_type != "inverse_point_distance":
+        raise ValueError("Point reward ablations require point conditions")
     if points is not None and (physics_weight or uncertainty_weight):
         raise ValueError("Point GRPO primary comparison uses property-only reward")
     device = next(model.parameters()).device
@@ -55,6 +60,8 @@ def align_octree(
                 'replay_weight':replay_weight,'electron_parity':electron_parity,
                 'targets':[(p.names,p.values,p.radii) for p in (point_pool or [points])] if points
                           else (intervals.names,intervals.bounds)}
+    # Preserve legacy default resume settings; non-default rewards are explicit.
+    if point_reward_type != "inverse_point_distance":settings["point_reward_type"] = point_reward_type
     if resume_checkpoint is not None:
         saved = resume_checkpoint['alignment_training_state']
         if saved['settings'] != settings:
@@ -154,7 +161,9 @@ def align_octree(
                 violation = intervals.violations(prediction).numpy() / scale
                 rms = float(force.square().sum(-1).mean().sqrt())
                 if points is not None:
-                    reward = 1.0 / (1.0 + points.distance(prediction))
+                    distance = points.distance(prediction)
+                    rollout_records[i]["point_distance"] = distance
+                    reward = 1.0 if point_reward_type == "eligibility_only" else 1.0 / (1.0 + distance)
                 else:
                     reward = float(
                         np.exp(
@@ -172,6 +181,7 @@ def align_octree(
             row['reward'] = value
         reward = torch.tensor(rewards, device=device)
         adv = (reward - reward.mean()) / reward.std(unbiased=False).clamp_min(1e-6)
+        for record, advantage in zip(rollout_records, adv.tolist()):record["advantage"] = advantage
         # With no ranking signal or auxiliary objective, Adam's momentum and
         # weight decay must not silently move the policy on an all-failed group.
         updates = 2 if bool(adv.any()) or kl_beta or replay_weight else 0
@@ -221,7 +231,7 @@ def align_octree(
             "reward_std": float(reward.std(unbiased=False)),
             "evaluated": sum(r.get('evaluation_status') == 'completed' for r in rollout_records),
             "point_target": dict(zip(points.names, points.values)) if points else None,
-            "reward_type": 'inverse_point_distance' if points else 'exponential_interval_violation',
+            "reward_type": point_reward_type if points else 'exponential_interval_violation',
             "advantage_max": float(adv.max()),
             "loss": float(loss.detach()),
             "precision": "float32",

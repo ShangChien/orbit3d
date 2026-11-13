@@ -22,6 +22,7 @@ def main():
     p.add_argument('--target', choices=['homo', 'lumo'], required=True)
     p.add_argument('--device', default='cuda:0')
     p.add_argument('--seed', type=int, default=42)
+    p.add_argument('--point-reward-type',choices=['inverse_point_distance','eligibility_only'],default='inverse_point_distance')
     p.add_argument('--stage', choices=['sft', 'arms', 'grpo'], required=True)
     a = p.parse_args()
     if not (a.output / 'run_manifest.json').exists():
@@ -89,7 +90,7 @@ def main():
                'train_backbone': False, 'train_property_head': False, 'lr_schedule': 'constant',
                'checkpoint_every': 100})
     if a.stage in ['arms', 'grpo']:
-        alignment = {'grpo_steps': 200, 'group_size': 16, 'grpo_lr': 2e-5,
+        alignment = {'point_reward_type':a.point_reward_type,'grpo_steps': 200, 'group_size': 16, 'grpo_lr': 2e-5,
                'kl_beta': .02, 'physics_weight': 0., 'uncertainty_weight': 0., 'replay_weight': 0.,
                'alignment_checkpoints': [50, 100],
                'point_target_pool': [{a.target: points[q]} for q in ['25', '50', '75']]}

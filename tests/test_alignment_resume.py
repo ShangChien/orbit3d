@@ -1,4 +1,5 @@
 import copy
+import pytest
 from types import SimpleNamespace
 import numpy as np
 import torch
@@ -21,7 +22,8 @@ class Policy(torch.nn.Module):
         return [(logits.log_softmax(-1),torch.arange(len(low))%2,torch.arange(len(low)))]
 
 
-def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path):
+@pytest.mark.parametrize("reward_type",["inverse_point_distance","eligibility_only"])
+def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path,reward_type):
     def instance(t,**kwargs):
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
     monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
@@ -32,7 +34,7 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     def run(model,**kwargs):
         return align_octree(model,[],None,np.zeros(1),np.ones(1),pool[0].intervals(),oracle,ff,
                             steps=4,group_size=4,lr=.03,kl_beta=.2,physics_weight=0,replay_weight=0,
-                            points=pool[0],point_pool=pool,**kwargs)
+                            points=pool[0],point_pool=pool,point_reward_type=reward_type,**kwargs)
     full=copy.deepcopy(base);full_history=run(full)
     torch.set_rng_state(rng);partial=copy.deepcopy(base);saved={}
     def snapshot(step,model,history,state):
@@ -48,3 +50,22 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     for key,value in full.state_dict().items():
         torch.testing.assert_close(value,resumed.state_dict()[key],atol=0,rtol=0)
     assert full_history==resumed_history
+
+
+def test_eligibility_reward_ignores_property_value_but_keeps_evaluation(monkeypatch):
+    def instance(t,**kwargs):
+        if int(t['decoder_feat'][0,0])==3:raise ValueError('invalid graph')
+        return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
+    monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
+    calls=[]
+    def predict(mols):
+        calls.extend(mols);return np.array(mols)[:,None]*100,np.zeros((len(mols),1))
+    oracle=SimpleNamespace(predict_3d_mols=predict)
+    ff=SimpleNamespace(atom_type_map=['C'],compute_energy_and_forces=lambda *a,**k:(0.,torch.zeros(1,3)))
+    point=TargetPoints.parse({'y':0.},{'y':1.},['y'])
+    history=align_octree(Policy(),[],None,np.zeros(1),np.ones(1),point.intervals(),oracle,ff,
+        steps=1,group_size=4,physics_weight=0,replay_weight=0,points=point,point_reward_type='eligibility_only')
+    rows=history[0]['rollout_records']
+    assert len(calls)==3 and [r['reward'] for r in rows]==[1.,1.,1.,-1.]
+    assert len({r['point_distance'] for r in rows[:3]})==3
+    assert rows[0]['advantage']==rows[1]['advantage']==rows[2]['advantage']>rows[3]['advantage']

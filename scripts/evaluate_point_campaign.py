@@ -16,6 +16,7 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--campaign',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--extra-checkpoints',type=Path,help='Named arm -> checkpoint JSON; also permits explicit control reuse')
     p.add_argument('--frozen',type=Path,required=True)
     p.add_argument('--continued',type=Path,required=True)
     p.add_argument('--continued-wall',type=Path)
@@ -47,6 +48,8 @@ def main():
                  'continue200':a.continued.parent/'octree_step_200.pt',
                  'grpo50':a.campaign/'grpo_part100/weights/octree_group_50.pt',
                  'grpo100':a.campaign/'grpo_part100/weights/octree_group_100.pt'}
+    if a.extra_checkpoints:
+        checkpoints.update({name:Path(path) for name,path in json.loads(a.extra_checkpoints.read_text()).items()})
     if 'continue_wall' in a.arms and (a.continued_wall is None or a.time_control):
         p.error('Evaluate a saved continue_wall arm with --continued-wall; --time-control trains and evaluates it separately')
     inputs=record_input_hashes(a.output,{'source_manifest':data/'manifest.json',

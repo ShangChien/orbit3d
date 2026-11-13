@@ -370,6 +370,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             checkpoint_callback=save_alignment_step,
             resume_checkpoint=resume,
             stop_after=settings.get('alignment_stop_after'),
+            point_reward_type=settings.get('point_reward_type','inverse_point_distance'),
         )
         filename = 'octree_aligned.pt' if len(history)==int(settings['grpo_steps']) else f'octree_resume_{len(history)}.pt'
         checkpoint = Path(paths["checkpoint_save_dir"]) / filename
