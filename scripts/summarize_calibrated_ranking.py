@@ -24,7 +24,7 @@ def aggregate(cells):
         target_maes.append(sum(c['error_sum_eV'] for c in local)/n if n else None)
     s.update(delivery_coverage=s['selected']/s['requested'],hit_rate_requested_slots=s['hits']/s['requested'],
              quantum_coverage_selected=s['quantum_verified']/s['selected'] if s['selected'] else None,
-             yield_all_proposals_equal_goal=s['hits']/(len(cells)*64),
+             retained_hit_yield_all_proposals_equal_goal=s['hits']/(len(cells)*64),
              mae_equal_goal_eV=float(np.mean(target_maes)) if all(v is not None for v in target_maes) else None,
              mae_quantum_verified_selected_eV=sum(c['error_sum_eV'] for c in cells)/s['quantum_verified'] if s['quantum_verified'] else None,
              unique_selected_endpoints=len({i for c in cells for i in c['selected_indices']}))

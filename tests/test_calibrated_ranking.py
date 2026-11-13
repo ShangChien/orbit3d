@@ -15,4 +15,4 @@ def test_short_pool_preserves_requested_slots_and_raw_denominator():
     total=module.aggregate([{**r,'quantile':50,'inference_seed':2091}])
     assert total['delivery_coverage']==.25
     assert total['hit_rate_requested_slots']==.25
-    assert total['yield_all_proposals_equal_goal']==1/64
+    assert total['retained_hit_yield_all_proposals_equal_goal']==1/64
