@@ -190,5 +190,16 @@
     "wheel_tests_passed": 11,
     "wheel_sha256": "6a59e52d79d9b442425ca21372b5112f4aa5cf59d41e2414b6fd1a7b61836a6c",
     "wheel_metadata_has_pinned_dispersion": true
+  },
+  "quantum_repeat_reducer": {
+    "tests_passed": 3,
+    "real_singlepoint_replay_cases": 36,
+    "all_group_selection_summaries_exact": true,
+    "contracts": [
+      "Preserve missing and failed slots in planned denominators",
+      "Keep local worker indices bound to training seed",
+      "Reject duplicate CPU/GPU cohorts as independent samples",
+      "Separate singlepoints from requested geometry optimization"
+    ]
   }
 }
