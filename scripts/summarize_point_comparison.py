@@ -11,6 +11,7 @@ from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from orbit3d.constraints import TargetPoints
 from evaluate_point_pool import summarize_records
+from analyze_alignment_signal import analyze as analyze_advantages
 
 
 def reward_signal(history):
@@ -137,6 +138,7 @@ def main():
                   'last_policy_kl':history[-1]['policy_kl_before_last_update'],
                   'optimizer_state_steps':sorted({int(v['step']) for v in saved['optimizer']['state'].values()}) if saved else None,
                   'reward_signal':reward_signal(history),
+                  'advantage_signal':analyze_advantages(history),
                   'windows':{}}
         for name,window in [('first50',history[:50]),('last50',history[-50:])]:
             training['windows'][name]={'groups':len(window),

@@ -169,6 +169,23 @@
       "first_group_tokens_identical": true,
       "first_group_coordinates_identical": true,
       "eligible_predictions_max_delta": 0.0
+    },
+    "homo_44": {
+      "same_reference": true,
+      "first_group_tokens_identical": true,
+      "first_group_coordinates_identical": true,
+      "eligible_predictions_max_delta": 0.0
+    },
+    "lumo_44": {
+      "same_reference": true,
+      "first_group_tokens_identical": true,
+      "first_group_coordinates_identical": true,
+      "eligible_predictions_max_delta": 0.0
     }
+  },
+  "latest_regression": {
+    "passed": 231,
+    "skipped_optional_quantum_tests": 5,
+    "real_remote_oe62_basis_tests_passed": 2
   }
 }
