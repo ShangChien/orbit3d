@@ -2,14 +2,14 @@
 
 面向性质目标的分子生成与三维优化研究。当前可执行主线为：
 
-**预训练 Uni-3DAR octree → 点值/区间监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
+**预训练 Uni-3DAR octree → 点值/区间/均值宽度监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
 
-研究主线为**源三维分子的目标均值与偏好宽度控制**，按独立收益选择SFT、条件对比、Hindsight或GRPO；当前先收尾奖励消融，再做小规模条件学习对照。[实验方案](docs/experiments.md#e10-均值宽度与条件学习小实验)
+研究主线为**源三维分子的目标均值与偏好宽度控制**，按独立收益选择SFT、条件对比、Hindsight或GRPO；三seed奖励消融已完成，当前运行小规模条件学习对照。[实验方案](docs/experiments.md#e10-均值宽度与条件学习小实验)
 当前运行配置默认关闭GRPO，以便显式选择SFT或对齐实验；另有显式骨架图增长入口和BRICS片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
 当前算法见[架构](docs/architecture.md)；拟调整方向和实施状态见[方案调整](docs/design_changes.md)，
-实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配和 v4 点值条件已实现，HOMO-only/LUMO-only 的三训练seed四臂对照已完成。
+实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配、v4点值和v5均值宽度条件已实现，HOMO-only/LUMO-only 的三训练seed四臂对照已完成。
 已完成 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
 ![点值与区间条件的五阶段概览](paper/figures/fig0_orbit3d_system_architecture.svg)

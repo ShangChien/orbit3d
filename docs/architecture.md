@@ -6,12 +6,12 @@
 
 ```mermaid
 flowchart LR
-    A[性质点值或区间与模型检查点] --> B[条件 octree 生成]
+    A[点值 / 均值与宽度 / 区间及模型检查点] --> B[条件 octree 生成]
     B --> C[分子图恢复与化学验证]
     C --> D[适用域与候选排序]
-    D --> E[DPA / HyFF 受约束弛豫]
+    D --> E[可选 DPA / HyFF 弛豫]
     E --> F[导出与独立评价]
-    G[可选 GRPO] -.更新 conditioner.-> B
+    G[SFT / 条件对比 / 可选 GRPO] -.更新 conditioner.-> B
     H[显式骨架图生长] --> C
 ```
 
