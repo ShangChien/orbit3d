@@ -29,7 +29,7 @@ def main():
                 print('Finished',job['index'],'exit',job['exit_code'],flush=True)
         (a.output/'jobs.json').write_text(json.dumps(jobs,indent=2)+'\n')
         if active:time.sleep(2)
-    (a.output/'completed.json').write_text(json.dumps({'attempted':count,'elapsed_seconds':time.time()-start,'jobs':jobs},indent=2)+'\n')
+    (a.output/'completed.json').write_text(json.dumps({'attempted':count,'engine':a.engine,'optimization_requested':a.optimize,'elapsed_seconds':time.time()-start,'jobs':jobs},indent=2)+'\n')
 
 
 if __name__=='__main__':main()
