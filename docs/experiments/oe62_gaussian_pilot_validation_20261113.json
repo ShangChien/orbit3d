@@ -253,5 +253,167 @@
     "passed": 23,
     "wheel_sha256": "08b096b5017a19ab102a1d05b5f8c176833a61af252162debbc57a231a6b9223",
     "scope": "Tests copied outside checkout, imports asserted to extracted wheel; Gaussian/point conditioning and GRPO advantage/resume contracts."
+  },
+  "formal_training_costs": {
+    "homo": [
+      {
+        "name": "migrate",
+        "seconds": 10.55465904250741,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/source/scripts/migrate_gaussian_conditioner.py",
+          "--checkpoint",
+          "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/point_homo_seed42/sft/weights/octree_conditional.pt",
+          "--output",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/homo_seed42/initial_gaussian.pt"
+        ]
+      },
+      {
+        "name": "gaussian",
+        "seconds": 217.42885022982955,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/homo_seed42/configs/gaussian.json"
+        ]
+      },
+      {
+        "name": "sft",
+        "seconds": 127.28494404256344,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/homo_seed42/configs/sft.json"
+        ]
+      },
+      {
+        "name": "contrast",
+        "seconds": 206.34520673379302,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/homo_seed42/configs/contrast.json"
+        ]
+      },
+      {
+        "name": "hindsight",
+        "seconds": 127.40019865334034,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/homo_seed42/configs/hindsight.json"
+        ]
+      },
+      {
+        "name": "both",
+        "seconds": 209.03008625283837,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/homo_seed42/configs/both.json"
+        ]
+      }
+    ],
+    "lumo": [
+      {
+        "name": "migrate",
+        "seconds": 10.573786869645119,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/source/scripts/migrate_gaussian_conditioner.py",
+          "--checkpoint",
+          "/sjtu-combustion/wjw/chensq/orbit3d_oe62_20261112/point_lumo_seed42/sft/weights/octree_conditional.pt",
+          "--output",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/lumo_seed42/initial_gaussian.pt"
+        ]
+      },
+      {
+        "name": "gaussian",
+        "seconds": 221.1072487309575,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/lumo_seed42/configs/gaussian.json"
+        ]
+      },
+      {
+        "name": "sft",
+        "seconds": 129.10021363571286,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/lumo_seed42/configs/sft.json"
+        ]
+      },
+      {
+        "name": "contrast",
+        "seconds": 209.5819497667253,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/lumo_seed42/configs/contrast.json"
+        ]
+      },
+      {
+        "name": "hindsight",
+        "seconds": 126.77698564901948,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/lumo_seed42/configs/hindsight.json"
+        ]
+      },
+      {
+        "name": "both",
+        "seconds": 208.78658575564623,
+        "returncode": 0,
+        "command": [
+          "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+          "-u",
+          "-m",
+          "orbit3d.cli",
+          "--config",
+          "/sjtu-combustion/wjw/chensq/orbit_gaussian_pilot_20261113/lumo_seed42/configs/both.json"
+        ]
+      }
+    ]
   }
 }

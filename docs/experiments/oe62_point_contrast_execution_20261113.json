@@ -1,0 +1,19 @@
+{
+  "source_commit": "1662f4c",
+  "first_homo_seed42_source_commit": "e7501d1",
+  "full_tests": {
+    "passed": 245,
+    "skipped_optional_quantum": 5
+  },
+  "wheel_tests": {
+    "passed": 24,
+    "wheel_sha256": "620c189327d1335c2f805832bde2224e45556680c470c4c83c53c6dc34e5ba3c",
+    "scope": "Tests run outside checkout, import path asserted to extracted wheel; includes actual tiny-model point-contrast SFT and frozen-backbone check."
+  },
+  "repeat_protocol_commit": "1662f4c",
+  "training_gpu_indices": [
+    0,
+    1
+  ],
+  "quantum_selection": "Frozen 24 slots, seed42, no B per-sample score selection; CPU singlepoints asynchronous, GPU geometry after generation evaluations."
+}
