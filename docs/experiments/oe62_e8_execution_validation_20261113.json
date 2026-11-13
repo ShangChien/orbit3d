@@ -201,5 +201,18 @@
       "Reject duplicate CPU/GPU cohorts as independent samples",
       "Separate singlepoints from requested geometry optimization"
     ]
+  },
+  "all36_cpu_gpu_singlepoints": {
+    "paired_cases": 36,
+    "max_abs_delta_homo_lumo_eV": [
+      0.0004350960880499244,
+      0.00022059190184264832
+    ],
+    "mean_abs_delta_homo_lumo_eV": [
+      7.928912119692377e-05,
+      6.333723751940896e-05
+    ],
+    "cpu_summary_sha256": "a4251e1169897c9d70bf897d3e6daa23cb992f5b6cbea285f4cda668d72e5409",
+    "gpu_summary_sha256": "816b52b472c3155b8a786d4a5c7b6a403b09edacb7460ec3d1176d6c32e57ff9"
   }
 }
