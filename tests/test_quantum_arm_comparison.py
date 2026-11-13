@@ -22,3 +22,15 @@ def test_failed_and_missing_endpoints_stay_in_full_proposal_denominator():
     report['arms']['new'] = {**metric, 'proposals': 6}
     with pytest.raises(ValueError, match='equal proposal'):
         module.compare(report, 'base')
+
+
+def test_request_subset_keeps_proposals_that_never_reached_dft():
+    from summarize_feedback_experiment import request_subset
+    cells = {str(q): dict(proposals=128, terminal_selected=10, yield_all_proposals=.01,
+                         mae_eV=.5, prediction_mean_eV=-6.+q/100) for q in [25, 35, 50, 65, 75]}
+    report = dict(target='homo', arms={'base': {'cells': cells}},
+                  records=[dict(arm='base', quantile=q, target_eV=-6.+q/100) for q in [25, 35, 50, 65, 75]])
+    subset = request_subset(report, [35, 65])
+    assert subset['arms']['base']['proposals'] == 256
+    assert subset['arms']['base']['terminal_selected'] == 20
+    assert len(subset['records']) == 2
