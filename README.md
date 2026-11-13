@@ -57,12 +57,12 @@ mol_gen/
 │   │   ├── scaffold*.py         # 显式连接/环闭合、开放位点、局部 XYZ 支持集
 │   │   └── 其他模块             # 空间窗口、独立随机流、条件与词表迁移
 │   ├── baselines/brics.py       # 训练片段库与显式配对基线
-│   ├── oracles/                 # DPA/HyFF 属性头、指纹、域判断、校准及可选外部模型
+│   ├── oracles/                 # DPA/HyFF 属性头、Uni-Mol v1/v2、指纹、域判断与校准
 │   ├── physics/                 # DPA/HyFF 势、串行/批量受约束弛豫
 │   ├── quantum/                 # PySCF/GPU4PySCF、ω 调参、激发态与几何检查
 │   ├── utils/                   # 数据、身份比较、指标、运行快照与整批重放
 │   ├── vendor/                  # 固定版本 Uni-3DAR 及其必要依赖
-│   └── compat/hyff/             # 打包的 HyFF 源码、注册表与许可证
+│   └── compat/                 # 固定版本 HyFF、Uni-Mol2 核心源码与许可证
 ├── scripts/                     # 可重用实验与数据工具，按功能见下表
 ├── tests/                       # 当前功能的回归测试，防止清理/改造破坏已验证行为
 ├── data/                        # 数据 provenance、划分/目标协议、结构组成统计
@@ -73,6 +73,7 @@ mol_gen/
 │   ├── results.md               # 最终结果与解释
 │   ├── pitfalls.md              # 必要方法与数值注意事项
 │   ├── runtime.md               # 实际运行和模型接口
+│   ├── figures/                 # 实验响应曲线
 │   └── experiments/             # 最终 JSON、必要原始结果/哈希、量化 SDF/NPZ
 ├── paper/                       # 文稿、当前图、同步证据和可重建 arXiv 源码包
 ├── third_party/                 # 运行依赖的固定版本、来源和许可证
@@ -89,6 +90,7 @@ mol_gen/
 | --- | --- |
 | 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_oe62.py`、`prepare_generator_sdf.py` |
 | 性质训练/评价 | `train_source_oracle.py`、`evaluate_source_holdout.py`、`train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
+| OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |
 | 生成训练与迁移 | `initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`evaluate_brics_point_pool.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`analyze_point_ranking.py`、`select_relaxation_cohort.py`、`run_relaxation_comparison.py`、`ablate_*.py` |
 | 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_*.py`、`audit_*.py` |

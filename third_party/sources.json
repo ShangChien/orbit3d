@@ -14,6 +14,16 @@
       "license": "Apache-2.0",
       "license_sha256": "ece6c7026732f576af3a909a117b321c9e8cfd96fc4d56e5229ff1a288dae087",
       "subdirectory": "AI4Science/hyff/src/hyff"
+    },
+    {
+      "name": "Uni-Mol2",
+      "url": "https://github.com/deepmodeling/Uni-Mol",
+      "commit": "90f52c41299a1a582da0f9765e9f87aa21faa16a",
+      "license": "MIT",
+      "license_sha256": "86df9d01a4cde3773da9a8c895e5b1699aa19ff899e130a7d2421e25770a350c",
+      "subdirectory": "unimol2",
+      "local": "src/orbit3d/compat/unimol2",
+      "source_manifest": "src/orbit3d/compat/unimol2/upstream.json"
     }
   ]
 }

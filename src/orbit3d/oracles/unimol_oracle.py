@@ -381,12 +381,12 @@ class InternalUniMolOracle(PropertyOracleBase):
         return mean, spread
 
     @torch.no_grad()
-    def predict_3d_mols(self, mols: List[Chem.Mol]) -> Tuple[np.ndarray, np.ndarray]:
+    def predict_3d_mols(self, mols: List[Chem.Mol], batch_size: int = 32) -> Tuple[np.ndarray, np.ndarray]:
         if not mols:
             return np.empty((0, self.output_dim)), np.empty((0, self.output_dim))
         dummy_y = np.zeros((len(mols), self.output_dim), dtype=np.float32)
         ds = _UniMol3DDataset(mols, dummy_y, remove_hs=self.remove_hs, max_atoms=self.max_atoms)
-        loader = DataLoader(ds, batch_size=32, shuffle=False, collate_fn=_collate_unimol_3d)
+        loader = DataLoader(ds, batch_size=batch_size, shuffle=False, collate_fn=_collate_unimol_3d)
         fold_outputs = []
         for model in self.folds:
             predictions = [model(tokens.to(self.device), distances.to(self.device), edges.to(self.device))

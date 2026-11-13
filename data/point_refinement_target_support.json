@@ -1,0 +1,96 @@
+{
+  "scope": "Target neighborhood counts in the fixed 8192 property-training graphs, not the exact 8188 encodable generator set; no held-out labels used.",
+  "source_sha256": "9ccde14ace63e63f288655c47ab32d14a44ab478319e48ccc0a2c27ce8bd1985",
+  "selection_file": "docs/experiments/ocelot_optical8192_20261112.json",
+  "selection_sha256": "972f2bdc9610c750dd8bee4eefaed57d81b0539e5b4fae504eba609aa822de3e",
+  "n": 8192,
+  "target_names": [
+    "homo",
+    "lumo"
+  ],
+  "targets": {
+    "central": {
+      "point_eV": [
+        -7.25,
+        -0.63
+      ],
+      "marginal_percentiles": [
+        49.54833984375,
+        49.5361328125
+      ],
+      "joint_neighborhood_counts": {
+        "0.1": 147,
+        "0.25": 885,
+        "0.5": 2828
+      },
+      "nearest_training_id": "csd_FITRIL",
+      "nearest_labels_eV": [
+        -7.253742898,
+        -0.626406428
+      ]
+    },
+    "original_center": {
+      "point_eV": [
+        -7.7,
+        0.1
+      ],
+      "marginal_percentiles": [
+        24.1943359375,
+        85.02197265625
+      ],
+      "joint_neighborhood_counts": {
+        "0.1": 32,
+        "0.25": 239,
+        "0.5": 988
+      },
+      "nearest_training_id": "csd_HICJOU",
+      "nearest_labels_eV": [
+        -7.680145536,
+        0.103947548
+      ]
+    }
+  },
+  "historical_oracle_training4096": {
+    "n": 4096,
+    "source": "/sjtu-combustion/wjw/chensq/orbit3d_experiments_20261111/results/ocelot_3d_4096_v2/train.sdf",
+    "source_sha256": "b5bf8babd22238b00650ac8f1a9b45a4fea691cdc91afc9a67f8ed15a344389c",
+    "oracle_meta_sha256": "dcb4268f3c1bbd5c0bf2b72affb37a9d63d7874a46be0558b400492b5e35eb1c",
+    "target_names": [
+      "homo",
+      "lumo"
+    ],
+    "targets": {
+      "central": {
+        "point_eV": [
+          -7.25,
+          -0.63
+        ],
+        "marginal_percentiles": [
+          56.4453125,
+          45.99609375
+        ],
+        "joint_neighborhood_counts": {
+          "0.1": 79,
+          "0.25": 477,
+          "0.5": 1451
+        }
+      },
+      "original_center": {
+        "point_eV": [
+          -7.7,
+          0.1
+        ],
+        "marginal_percentiles": [
+          28.2958984375,
+          82.6416015625
+        ],
+        "joint_neighborhood_counts": {
+          "0.1": 21,
+          "0.25": 138,
+          "0.5": 545
+        }
+      }
+    }
+  },
+  "selection_note": "Targets selected from existing official 8192-label statistics before the experiment; the frozen historical Oracle was subsequently verified as the 4096 model. Both support counts are retained; no target was changed after observing results."
+}

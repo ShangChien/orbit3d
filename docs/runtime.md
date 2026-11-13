@@ -115,7 +115,11 @@ python scripts/summarize_point_quantum.py --manifest "$ORBIT_QC/manifest.json" \
 顺序、单位、scaler、构象准备方法和适用域随模型保存。普通预测、可微预测、
 导出复查必须对应同一个模型。多头分歧是诊断量，不能自动当成校准置信区间。
 
-可选 Uni-Mol/Uni-QSAR 独立桥接模块保留，尚未接入当前双后端 CLI 的评估器工厂，也不属于当前主实验的 GPU 精度结论：
+OE62独立评价已验证官方Uni-Mol v1与Uni-Mol2；按开发集选中的Uni-Mol2 1.1B使用 `InternalUniMol2Oracle.load_from_dir(model_dir, device)`，目录须含 `model.pt`、`oracle_meta.json`。`predict_3d_mols(mols, batch_size=...)` 直接读取输入源坐标，沿官方路径移除显式氢，不嵌入、不裁剪；本轮共同支持集为14元素、源分子≤80原子。返回的零spread只表示单模型接口，不代表零误差，区间由独立校准残差给出。官方v2内部detach距离，不提供坐标性质梯度。
+
+训练入口为 `train_unimol2_source.py`；`select_unimol2_development.py` 只读开发集，`profile_dual_oracle.py --selection ...` 在选模冻结后运行源测试，`reevaluate_dual_oracle.py --profile profile_unimol2` 评价原A已冻结的候选与选择。`run_unimol2_evaluation.py` 串联这三步及优化后量化几何复评。该B通过独立实验入口使用，没有加入生成CLI评估器工厂或奖励函数。精度、适用范围、权重哈希及耗时见[最终profile](experiments/oe62_unimol2_evaluation_20261113.json)。
+
+可选Uni-QSAR外部桥接仍与该原生Uni-Mol2路径区分：
 
 - Uni-Mol 必须加载匹配的真实预训练骨干；fold scaler 只在对应训练折拟合。
 - Uni-QSAR 按训练配置加载所有成员/fold、scaler 和 stacking；归一化空间中的

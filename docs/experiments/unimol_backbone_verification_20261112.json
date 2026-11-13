@@ -1,0 +1,13 @@
+{
+  "loaded_backbone_tensors": 193,
+  "official_cls_max_abs_difference": 0.0,
+  "with_padding": true,
+  "dictionary_exact": true,
+  "weight_url": "https://huggingface.co/dptech/Uni-Mol-Models/resolve/main/mol_pre_all_h_220816.pt",
+  "encoder_url": "https://raw.githubusercontent.com/deepmodeling/Uni-Mol/main/unimol_tools/unimol_tools/models/transformers.py",
+  "sha256": {
+    "weight": "7f5f14bb28bf479a0b8f38ebab4bb9d7ae867383f14c4d694d056500fa3446a7",
+    "official_encoder": "53871a17f336334293b7401832aad75d88e15896b7f5535ea76c821abf656a7d",
+    "dictionary": "94135cb9a9198f988de684cb61e2c372882a3bd59b8320effbae704c38057127"
+  }
+}
