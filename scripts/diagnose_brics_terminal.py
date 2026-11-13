@@ -9,6 +9,7 @@ from orbit3d.pipeline.evaluators import load_evaluators
 from orbit3d.physics.terminal_evaluation import evaluate_terminal
 from orbit3d.utils.dataset_io import write_precise_sdf
 from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from orbit3d.utils.reproducibility import lock_deterministic_environment
 from diagnose_terminal_pool import summarize
 
 
@@ -31,7 +32,7 @@ def frozen_instance(original,mols,arrays,elements):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--source',type=Path,required=True);p.add_argument('--config',type=Path,required=True);p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
+    lock_deterministic_environment(42);torch.set_num_threads(4);a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
     cfg=json.loads(a.config.read_text());cfg['device']='cuda:0';manifest=json.loads(a.manifest.read_text());elements=tuple(manifest['elements'])
     source=json.loads((a.source/'summary.json').read_text());assert len(source['records'])==192
     mols={m.GetProp('ProposalID'):m for m in Chem.SDMolSupplier(str(a.source/'raw_valid.sdf'),removeHs=False)}

@@ -1,0 +1,73 @@
+{
+  "scope": "Both full-data 5000-step endpoints completed; performance evaluation is still pending. Additional 22000 updates are a separate continuation stage.",
+  "records": {
+    "homo": {
+      "checkpoint_sha256": "28c2551083f0a172a6527cff694609bf4aac1b81980be0c8186838fb067d8477",
+      "initial_weights_sha256": "b77cd05f83100929fd569b2700a17f37b82ecd9f5da639a90969d72ae66d8a5b",
+      "updates": 5000,
+      "training_backbone": true,
+      "active_targets": [
+        "homo"
+      ],
+      "training_graphs": 43951,
+      "normalization_mean": [
+        -6.616677284240723,
+        -1.4726800918579102
+      ],
+      "normalization_scale": [
+        0.6723601222038269,
+        0.8419189453125
+      ],
+      "costs": [
+        {
+          "name": "sft",
+          "command": [
+            "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+            "-u",
+            "-m",
+            "orbit3d.cli",
+            "--config",
+            "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/full_homo_seed42/configs/sft.json"
+          ],
+          "wall_seconds": 1072.5009778439999,
+          "returncode": 0,
+          "device": "cuda:0"
+        }
+      ]
+    },
+    "lumo": {
+      "checkpoint_sha256": "746ce586024bd61c4ec97f67d48fe1e5dfc44e17a4c722271fda56a7dc7f2028",
+      "initial_weights_sha256": "b77cd05f83100929fd569b2700a17f37b82ecd9f5da639a90969d72ae66d8a5b",
+      "updates": 5000,
+      "training_backbone": true,
+      "active_targets": [
+        "lumo"
+      ],
+      "training_graphs": 43951,
+      "normalization_mean": [
+        -6.616677284240723,
+        -1.4726800918579102
+      ],
+      "normalization_scale": [
+        0.6723601222038269,
+        0.8419189453125
+      ],
+      "costs": [
+        {
+          "name": "sft",
+          "command": [
+            "/sjtu-combustion/wjw/chensq/orbit3d_clean_20261111/checkout/.venv/bin/python",
+            "-u",
+            "-m",
+            "orbit3d.cli",
+            "--config",
+            "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/full_lumo_seed42/configs/sft.json"
+          ],
+          "wall_seconds": 1015.2171579189599,
+          "returncode": 0,
+          "device": "cuda:0"
+        }
+      ]
+    }
+  }
+}

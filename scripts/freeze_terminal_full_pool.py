@@ -28,7 +28,7 @@ def freeze(root, output, off=False, arms=None, target="homo", proposals=None):
             mol = mols[row['coordinates_key']]
             mol.SetProp('QuantumIndex', str(len(records)))
             records.append(dict(index=len(records), target=target, target_eV=row['goal_eV'],
-                quantile=row['quantile'], arm=arm, selection='all_terminal_accepted', training_seed=42,
+                quantile=row['quantile'], arm=arm, selection='all_terminal_accepted', training_seed=None if arm=='brics' else 42,
                 inference_seed=row['inference_seed'],candidate_id=row['candidate_id'],
                 domain=row.get('domain'), source_terminal=str(folder), coordinates_key=row['coordinates_key'],
                 dpa_prediction_eV=row.get('final',{}).get('prediction_eV'), smiles=Chem.MolToSmiles(mol)))

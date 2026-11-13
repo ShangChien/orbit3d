@@ -1,0 +1,157 @@
+{
+  "scope": "Fixed source split, same target points; sampling coverage is deterministic replay of the plain v4 SFT sampler, not a new training experiment. Continuation restarts the same seed and optimizer as documented.",
+  "numpy": "1.26.4",
+  "input_sha256": {
+    "train.csv": "50f34c25984642b2ff2add1681dab7ac24636c22cf5ebd1493b9b859b58add03",
+    "manifest.json": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e"
+  },
+  "groups": {
+    "subset8192": {
+      "count": 8192,
+      "atoms_p10_p50_p90": [
+        23.0,
+        38.0,
+        59.0
+      ],
+      "properties": {
+        "homo": {
+          "mean": -6.616687081298828,
+          "std": 0.6723594210660534,
+          "fixed_target_support": {
+            "10": {
+              "goal_eV": -7.45834,
+              "count": 1021,
+              "fraction": 0.1246337890625
+            },
+            "25": {
+              "goal_eV": -7.040765,
+              "count": 1880,
+              "fraction": 0.2294921875
+            },
+            "50": {
+              "goal_eV": -6.56081,
+              "count": 2337,
+              "fraction": 0.2852783203125
+            },
+            "75": {
+              "goal_eV": -6.148085,
+              "count": 2225,
+              "fraction": 0.2716064453125
+            },
+            "90": {
+              "goal_eV": -5.82362,
+              "count": 1412,
+              "fraction": 0.17236328125
+            }
+          }
+        },
+        "lumo": {
+          "mean": -1.4726803601074219,
+          "std": 0.8419191679246879,
+          "fixed_target_support": {
+            "10": {
+              "goal_eV": -2.577495,
+              "count": 812,
+              "fraction": 0.09912109375
+            },
+            "25": {
+              "goal_eV": -2.0524325,
+              "count": 1482,
+              "fraction": 0.180908203125
+            },
+            "50": {
+              "goal_eV": -1.44879,
+              "count": 1784,
+              "fraction": 0.2177734375
+            },
+            "75": {
+              "goal_eV": -0.8437325,
+              "count": 1524,
+              "fraction": 0.18603515625
+            },
+            "90": {
+              "goal_eV": -0.390311,
+              "count": 991,
+              "fraction": 0.1209716796875
+            }
+          }
+        }
+      },
+      "sampling_unique_at_5000": 8130
+    },
+    "full43951": {
+      "count": 43951,
+      "atoms_p10_p50_p90": [
+        23.0,
+        38.0,
+        59.0
+      ],
+      "properties": {
+        "homo": {
+          "mean": -6.622574530499874,
+          "std": 0.6624399388010122,
+          "fixed_target_support": {
+            "10": {
+              "goal_eV": -7.45834,
+              "count": 5337,
+              "fraction": 0.12143068417100862
+            },
+            "25": {
+              "goal_eV": -7.040765,
+              "count": 10430,
+              "fraction": 0.23730973129166572
+            },
+            "50": {
+              "goal_eV": -6.56081,
+              "count": 12672,
+              "fraction": 0.28832108484448593
+            },
+            "75": {
+              "goal_eV": -6.148085,
+              "count": 11804,
+              "fraction": 0.26857181861618623
+            },
+            "90": {
+              "goal_eV": -5.82362,
+              "count": 7209,
+              "fraction": 0.16402357170485313
+            }
+          }
+        },
+        "lumo": {
+          "mean": -1.46526669063275,
+          "std": 0.8449815889844335,
+          "fixed_target_support": {
+            "10": {
+              "goal_eV": -2.577495,
+              "count": 4308,
+              "fraction": 0.0980182475939114
+            },
+            "25": {
+              "goal_eV": -2.0524325,
+              "count": 7853,
+              "fraction": 0.17867625310004323
+            },
+            "50": {
+              "goal_eV": -1.44879,
+              "count": 9638,
+              "fraction": 0.21928966348888534
+            },
+            "75": {
+              "goal_eV": -0.8437325,
+              "count": 7949,
+              "fraction": 0.1808605037428045
+            },
+            "90": {
+              "goal_eV": -0.390311,
+              "count": 5581,
+              "fraction": 0.12698232122136016
+            }
+          }
+        }
+      },
+      "sampling_unique_at_5000": 26277,
+      "sampling_unique_at_5000_plus_restarted_22000": 43139
+    }
+  }
+}

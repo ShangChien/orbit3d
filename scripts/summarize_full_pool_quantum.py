@@ -60,10 +60,19 @@ def main():
                     den=sum(size_bin(r)==label and (off or r['quantile']==q) for r in proposals)
                     chosen=[r for r in records if size_bin(r)==label and (off or r['quantile']==q)]
                     size_strata[label][str(q)]=metric(chosen,den,points[str(q)],property_index,known_graphs) if den else None
+        hits=[r for r in records if r.get('status')=='completed' and 'singlepoint' in r and
+              any(abs(r['singlepoint']['prediction_eV'][property_index]-goal)<=.25 for goal in
+                  ([points[str(q)] for q in a.quantiles] if off else [r['target_eV']]))]
+        unique={Chem.MolToSmiles(Chem.RemoveHs(Chem.MolFromSmiles(r['smiles']))) for r in hits}
+        indices={r['index'] for r in records}
+        task_seconds=sum(j['end']-j['start'] for j in completed['jobs'] if j['index'] in indices)
         arms[arm]=dict(proposals=n,terminal_selected=len(records),cells=cells,domain=strata,size_strata=size_strata,
+            unique_hits_across_requests=len(unique),
+            unique_novel_hits_across_requests=len(unique-known_graphs) if known_graphs is not None else None,
+            quantum_task_wall_seconds=task_seconds,
             yield_equal_target=float(np.mean([v['yield_all_proposals'] for v in cells.values()])),
             mae_equal_target_eV=float(np.mean([v['mae_eV'] for v in cells.values()])) if all(v['mae_eV'] is not None for v in cells.values()) else None)
-    report=dict(scope='Single trained seed; Wilson intervals describe proposal sampling only. Off proposals rescored at three goals are not independent repeats. DFT singlepoints do not certify optimized identity.',
+    report=dict(scope='Single trained seed; Wilson intervals describe proposal sampling only. Off proposals rescored at three goals are not independent repeats. Across-request unique counts are system pool counts, not single-goal success rates. Quantum task times exclude upstream generation/relaxation/training. DFT singlepoints do not certify optimized identity.',
         target=a.target,novelty_reference_sha256=hashlib.sha256(a.training_sdf.read_bytes()).hexdigest() if a.training_sdf else None,control=manifest.get('control','correct'),arms=arms,records=rows,source_sha256=hashes,
         manifest_sha256=hashlib.sha256(a.manifest.read_bytes()).hexdigest(),elapsed_seconds=completed['elapsed_seconds'])
     a.output.write_text(json.dumps(report,indent=2)+'\n')
