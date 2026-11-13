@@ -1,0 +1,321 @@
+{
+  "evaluation_scope": "Geometry persistence conditional on already-known BRICS DFT singlepoint hits; NOT a fresh proposal hit-rate experiment. Four fixed-hash hits at each of three central HOMO targets; unique molecular graphs across requests; all failures retained, no replacement.",
+  "selection_salt": "E13-BRICS-SP-hit-persistence-20261114",
+  "selected": 12,
+  "expected": 12,
+  "arms": [
+    "brics"
+  ],
+  "targets": [
+    "homo"
+  ],
+  "planned_per_group": {
+    "homo/brics": 12
+  },
+  "planned_by_selection": {
+    "singlepoint_hit_fixed_hash": 12
+  },
+  "records": [
+    {
+      "index": 0,
+      "original_index": 8,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]c1c([H])c([N+](=O)[O-])c([H])c([H])c1C(=O)N([H])[C@](C(=O)Oc1c([H])c2c(c([H])c1C([H])([H])[H])[Si](C([H])([H])[H])(C([H])([H])[H])C([H])([H])C([H])([H])[Si]2(C([H])([H])[H])C([H])([H])[H])(C([H])([H])[H])[C@@]([H])(C([H])([H])[H])C([H])([H])C([H])([H])[H]",
+      "dpa_prediction_eV": [
+        -7.069581508636475,
+        -2.863913059234619
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.879122315881415,
+          -2.7006936349574606
+        ],
+        "energy_Ha": -2114.955916419938,
+        "converged": true,
+        "seconds": 8.44482197985053
+      },
+      "inference_seed": 2026,
+      "candidate_id": 11
+    },
+    {
+      "index": 1,
+      "original_index": 37,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]c1c([H])c(-c2c([H])c([H])c(C(=O)OC([H])([H])[H])c(C(=O)OC([H])([H])[H])c2C2(C([H])(C([H])([H])[H])C([H])([H])[H])C(=O)N([H])C(=O)N([H])C2=O)c([H])c([H])c1Br",
+      "dpa_prediction_eV": [
+        -7.172158718109131,
+        -1.9886339902877808
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -7.156629782217819,
+          -1.9113717155914884
+        ],
+        "energy_Ha": -4097.937149490049,
+        "converged": true,
+        "seconds": 6.300872005522251
+      },
+      "inference_seed": 2026,
+      "candidate_id": 49
+    },
+    {
+      "index": 2,
+      "original_index": 73,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]Oc1c([H])c(OC([H])([H])[H])c([H])c([H])c1C(=O)c1c([H])c([H])c([C@@]2([H])N(C(=O)[C@]([H])(C(=O)OC([H])([H])[H])[C@]3([H])C([H])([H])C([H])([H])C([H])([H])[C@@]3([H])C([H])=C([H])[H])C(=O)OC2([H])[H])c([H])c1O[H]",
+      "dpa_prediction_eV": [
+        -6.663217544555664,
+        -1.890094518661499
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.804418626127067,
+          -1.9409260131858639
+        ],
+        "energy_Ha": -1814.845491850132,
+        "converged": true,
+        "seconds": 7.919962577521801
+      },
+      "inference_seed": 2027,
+      "candidate_id": 31
+    },
+    {
+      "index": 3,
+      "original_index": 22,
+      "target": "homo",
+      "target_eV": -7.040765,
+      "quantile": 25,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]c1c([H])c([H])c(-c2nnc([C@]3([H])O[C@]([H])(c4c([H])c([H])c([H])c([H])c4[H])O[C@]3([H])C(=O)OC([H])([H])[H])c([S@](=O)C([H])([H])[H])c2[H])c([H])c1[H]",
+      "dpa_prediction_eV": [
+        -6.90960693359375,
+        -2.1132164001464844
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.81040611557412,
+          -1.941455472932419
+        ],
+        "energy_Ha": -1732.964179142983,
+        "converged": true,
+        "seconds": 4.452470976859331
+      },
+      "inference_seed": 2026,
+      "candidate_id": 31
+    },
+    {
+      "index": 4,
+      "original_index": 109,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]OC(=O)[C@@]1([H])C([H])([H])C([H])([H])[C@]([H])(OOC(C([H])([H])[H])(C([H])([H])[H])C([H])([H])[H])[C@@]2([H])C(=O)C([H])([H])C([H])([H])[C@@]21[H]",
+      "dpa_prediction_eV": [
+        -7.031747817993164,
+        -0.5823953151702881
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.388643493511812,
+          -0.5189520859125647
+        ],
+        "energy_Ha": -922.0888435063121,
+        "converged": true,
+        "seconds": 2.21108540892601
+      },
+      "inference_seed": 2028,
+      "candidate_id": 18
+    },
+    {
+      "index": 5,
+      "original_index": 28,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]C1=C([H])[C@@]([H])(C([H])([H])[H])N(C(=O)C([H])([H])[H])[C@@]1(C(=O)OC([H])([H])[H])C(=O)n1c([H])c([C@]2([H])C([H])([H])C(=O)C([H])([H])C2([H])[H])c2c([H])c(C#N)c([H])c([H])c21",
+      "dpa_prediction_eV": [
+        -6.915179252624512,
+        -1.5295919179916382
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.729174353141306,
+          -1.5834311806848966
+        ],
+        "energy_Ha": -1467.641162306721,
+        "converged": true,
+        "seconds": 4.942361120134592
+      },
+      "inference_seed": 2026,
+      "candidate_id": 39
+    },
+    {
+      "index": 6,
+      "original_index": 40,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]C1=C([H])[C@@]2([H])C([H])([H])[C@]([H])(c3sc(-c4c(F)c(F)c(F)c(F)c4F)c([H])c3[H])OC([H])([H])[C@@]2([H])[C@]([H])(S(=O)(=O)c2c([H])c([H])c([H])c([H])c2[H])C1([H])[H]",
+      "dpa_prediction_eV": [
+        -6.524874687194824,
+        -1.8720128536224365
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.598801570506989,
+          -1.6786879526270835
+        ],
+        "energy_Ha": -2483.839997933873,
+        "converged": true,
+        "seconds": 5.6840945109725
+      },
+      "inference_seed": 2026,
+      "candidate_id": 54
+    },
+    {
+      "index": 7,
+      "original_index": 6,
+      "target": "homo",
+      "target_eV": -6.56081,
+      "quantile": 50,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]Oc1c(Oc2c([H])c([H])c([H])c([H])c2[H])c(C([H])([H])C([H])([H])[H])nn1[C@]1(c2c([H])c([H])c([H])c([H])c2[H])ON1S(=O)(=O)C([H])([H])[H]",
+      "dpa_prediction_eV": [
+        -6.832130432128906,
+        -0.961034893989563
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.4771020181487975,
+          -0.7414330321588184
+        ],
+        "energy_Ha": -1672.7977185750697,
+        "converged": true,
+        "seconds": 4.0085593946278095
+      },
+      "inference_seed": 2026,
+      "candidate_id": 9
+    },
+    {
+      "index": 8,
+      "original_index": 76,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]c1c([H])c([H])c(C#C[C@](OC([H])([H])[H])(c2c([H])c([H])c([H])c([H])c2[H])[C@]2([H])N([H])[C@@]([H])(c3c([H])c([H])c([H])c([H])c3[H])N3N=C(C(=O)OC([H])([H])[H])[C@]4([H])[C@@]32[C@@]2([H])c3c([H])c([H])c([H])c([H])c3[C@]4([H])C2([H])[H])c([H])c1[H]",
+      "dpa_prediction_eV": [
+        -6.160697937011719,
+        -1.4484705924987793
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -5.933984934070764,
+          -1.063283020878444
+        ],
+        "energy_Ha": -1856.2245292694497,
+        "converged": true,
+        "seconds": 12.047520864754915
+      },
+      "inference_seed": 2027,
+      "candidate_id": 35
+    },
+    {
+      "index": 9,
+      "original_index": 65,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]C([H])=C1C(=O)c2c([C@@]34OO[C@@](c5c([H])c([H])c([H])c([H])c5[H])(O3)[C@@]([H])(C([H])([H])[H])C4(C([H])([H])[H])C([H])([H])[H])c(C([H])([H])[H])n([H])c2C([H])([H])C1([H])[H]",
+      "dpa_prediction_eV": [
+        -6.274255275726318,
+        -1.241446852684021
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.314392446094614,
+          -1.292292860302691
+        ],
+        "energy_Ha": -1246.0642198145642,
+        "converged": true,
+        "seconds": 4.110536176711321
+      },
+      "inference_seed": 2027,
+      "candidate_id": 22
+    },
+    {
+      "index": 10,
+      "original_index": 89,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]Oc1c([H])c([H])c([H])c([H])c1C([H])([H])N([H])[C@]1([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])[C@@]1([H])N([H])C([H])([H])c1c([H])c([H])c([H])c2c([H])c([H])c([H])c([Si]3([H])OC(C([H])([H])[H])(C([H])([H])[H])C(C([H])([H])[H])(C([H])([H])[H])O3)c12",
+      "dpa_prediction_eV": [
+        -6.081204414367676,
+        -1.3860065937042236
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -6.144954946191421,
+          -1.4080842643558968
+        ],
+        "energy_Ha": -1790.7228799488457,
+        "converged": true,
+        "seconds": 8.561179853975773
+      },
+      "inference_seed": 2027,
+      "candidate_id": 52
+    },
+    {
+      "index": 11,
+      "original_index": 51,
+      "target": "homo",
+      "target_eV": -6.148085,
+      "quantile": 75,
+      "arm": "brics",
+      "selection": "singlepoint_hit_fixed_hash",
+      "smiles": "[H]O[C@]1([H])C([H])([H])N([H])C(=O)[C@@]1(N(c1c([H])c([H])c([H])c([H])c1[H])C([H])([H])C([H])([H])N([H])C(=O)c1nc([H])c([H])c([H])c1[H])C([H])([H])c1c([H])c([H])c([H])c([H])c1[H]",
+      "dpa_prediction_eV": [
+        -6.053597927093506,
+        -1.5682854652404785
+      ],
+      "original_singlepoint": {
+        "prediction_eV": [
+          -5.9051014635335095,
+          -1.612815944854429
+        ],
+        "energy_Ha": -1411.895641706668,
+        "converged": true,
+        "seconds": 5.111882198601961
+      },
+      "inference_seed": 2027,
+      "candidate_id": 5
+    }
+  ],
+  "sdf_sha256": "5beb7ff320bcf94889c2f73a043bce34db27ed4c67a0e8457cb50ef9a5014ca3"
+}
