@@ -89,6 +89,26 @@ LUMO使用独立输出目录并改`--target lumo`。正式seed43/44需从共同�
 
 GRPO的`octree_resume_*.pt`保存当前策略、原始参考策略标识、AdamW状态、随机流和累计更新进度。对齐配置用`mount_paths.alignment_resume_path`恢复，而非把中途策略当成新的参考模型；已完成的100+100组恢复与400次优化器更新有实际记录。
 
+## OE62 PySCF量化复核
+
+使用已安装的独立量化环境，协议为PBE0/def2-TZVP、密度拟合def2-universal-jkfit、grid level 3、SCF容差1e-8。`--optimize`增加PBE-D3BJ/def2-TZVP几何优化和PBE0末端单点；优化后的图与坐标仍走共享化学验收。计算不使用ω调参或旧OCELOT的LC-wPBE设置。
+
+```bash
+export PYTHONPATH=src
+ORBIT_FORMAL=/path/to/formal_campaign_root
+ORBIT_QC=/path/to/new_quantum_cohort
+ORBIT_QC_RESULTS=/path/to/new_quantum_results
+ORBIT_QC_PYTHON=/path/to/quantum/python_or_runtime_wrapper
+
+python scripts/select_point_quantum_cohort.py --root "$ORBIT_FORMAL" --output "$ORBIT_QC"
+python scripts/run_oe62_quantum.py --input "$ORBIT_QC/cohort.sdf" \
+  --output "$ORBIT_QC_RESULTS" --python "$ORBIT_QC_PYTHON" --gpus 0 1 --optimize
+python scripts/summarize_point_quantum.py --manifest "$ORBIT_QC/manifest.json" \
+  --results "$ORBIT_QC_RESULTS" --output "$ORBIT_QC/comparison.json"
+```
+
+候选选择固定正式GRPO200和等时SFT、三个中央目标及匹配训练/推理seed，量化结果不会改变队列。GPU编号由启动参数指定，一张卡一个进程。`completed.json`表示队列退出，逐结构的SCF收敛、几何收敛和保图结果需要分别查看；失败保留分母。已有源参照直接复用，元素覆盖扩展由`select_point_quantum_references.py`固定源开发结构。
+
 ## 性质模型合同
 
 主实验使用 DPA/HyFF 描述符加 bootstrap 属性头，以及独立指纹模型。训练的目标
