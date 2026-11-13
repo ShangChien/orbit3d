@@ -18,6 +18,7 @@ PyTorch 后端，源码构建设置 `DP_ENABLE_TENSORFLOW=0 DP_ENABLE_PYTORCH=0`
 
 HyFF 用 `--extra hyff`；其源码、注册表和许可证随 wheel 打包，真实权重单独获取。
 量化 CPU 依赖为 `--extra quantum`；Linux CUDA12 依赖为 `--extra quantum-gpu`。
+固定的pyscf-dispersion 1.3.0仅发布x86_64轮子，安装声明按架构限定；Apple Silicon保留CPU单点能力，既定D3BJ几何优化使用已验证的远程x86_64环境。
 实际 GPU 量化使用独立环境，以避免与主模型的二进制依赖混用。GPU4PySCF 1.9.1、
 GPU Libxc 0.9.0、CuPy 13.4.1、cuTENSOR 2.2.0、PySCF 2.12.1及pyscf-dispersion 1.3.0的组合已有
 实测；不把它写成所有可选依赖合装或 Docker 镜像的验收结论。
