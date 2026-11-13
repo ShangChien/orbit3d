@@ -180,3 +180,31 @@ CUDA_VISIBLE_DEVICES= PYTHONPATH=src python scripts/compare_pool_quantum.py \
 ```
 
 该入口针对`eval_{target}_seed{seed}`及`unimol2_{target}_seed{seed}`布局的点值实验；优化后的新坐标仍需重新做性质预测。
+
+## 均值与偏好宽度小实验
+
+v5以目标均值和正的`preference_sigma_eV`作为条件，仍通过`target_tolerance`独立定义验收。宽度不是不确定性，旧v4点值模型不接受宽度语义。下列命令使用已有OE62单目标SFT配置和冻结原始池：
+
+```bash
+PYTHONPATH=src python scripts/prepare_hindsight_pool.py \
+  --campaign /path/to/frozen_seed42_pool --data /path/to/oe62 \
+  --target homo --exclude-sdfs /path/to/frozen_quantum_cohort.sdf \
+  --output /path/to/hindsight_homo
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=src python scripts/run_gaussian_pilot.py \
+  --base-config /path/to/point_homo_seed42/configs/sft.json \
+  --initial /path/to/point_homo_seed42/sft/weights/octree_conditional.pt \
+  --hindsight /path/to/hindsight_homo/train.sdf --output /path/to/homo_pilot
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=src python scripts/evaluate_gaussian_pilot.py \
+  --campaign /path/to/homo_pilot --independent /path/to/fingerprint/oracle \
+  --manifest /path/to/oe62/manifest.json --output /path/to/homo_pools
+```
+
+训练入口执行无损v4→v5迁移、2000步共同起点和四个1000步续训臂；实际配置、输入哈希与成本随输出保存。用`evaluate_formal_unimol2.py`复评`homo_pools`后，再运行：
+
+```bash
+PYTHONPATH=src python scripts/summarize_gaussian_pilot.py \
+  --evaluation /path/to/homo_pools --unimol2 /path/to/frozen_b_results \
+  --output /path/to/homo_pilot_summary.json
+```
+
+均值响应、预测分布宽度和固定容差命中分开汇总。关闭/打乱条件的重新评分不是新增提案；点值基线不因改变验收宽度重复生成。原始输入SDF保留原生坐标；Hindsight的A标签不称为DFT真值，冻结量化图不得回流本轮训练。
