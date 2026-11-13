@@ -9,7 +9,7 @@ def sample_gaussian_conditions(target, scale, active, sigma_range=(.1, .5), drop
         raise ValueError('Preference widths must be positive and ordered')
     # One physical width per batch; pairing does not mix narrow/wide preferences.
     sigma_eV = torch.empty((), device=target.device).uniform_(math.log(low), math.log(high)).exp()
-    sigma = (sigma_eV / torch.as_tensor(scale, device=target.device)).expand_as(target)
+    sigma = (sigma_eV / torch.as_tensor(scale, device=target.device, dtype=target.dtype)).expand_as(target)
     mu = target + sigma * torch.randn_like(target)
     keep = torch.rand((len(target), 1), device=target.device) >= dropout
     mask = (active[None, :] & keep).unsqueeze(-1).expand(-1, -1, 2)

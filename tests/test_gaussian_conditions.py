@@ -29,8 +29,9 @@ def test_migration_preserves_values_and_learns_width():
 def test_sampling_noise_tracks_requested_width_not_output_variance():
     torch.manual_seed(42)
     target=torch.zeros(10000,2)
-    mu,sigma,mask=sample_gaussian_conditions(target,[2.,1.],torch.tensor([True,False]),(.25,.25),dropout=0)
+    mu,sigma,mask=sample_gaussian_conditions(target,torch.tensor([2.,1.],dtype=torch.float64),torch.tensor([True,False]),(.25,.25),dropout=0)
     torch.testing.assert_close(sigma[0],torch.tensor([.125,.25]))
+    assert mu.dtype == sigma.dtype == target.dtype
     z=(mu-target)/sigma
     assert z.mean().abs()<.03 and abs(float(z.std())-1)<.03
     assert mask[:,0].all() and not mask[:,1].any()
