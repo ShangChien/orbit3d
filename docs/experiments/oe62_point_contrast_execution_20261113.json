@@ -128,5 +128,19 @@
         "forcefield_path": "/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"
       }
     ]
+  },
+  "offline_execution": {
+    "remote_directory": "orbit_point_contrast_repeats_20261113",
+    "training_controller_pids": [
+      113562,
+      113563
+    ],
+    "cpu_quantum_queue_pid": 119973,
+    "continuation_controller_pid": 122894,
+    "geometry_gpu": 1,
+    "geometry_scratch_root": "/dev/shm/orbit_e11_quantum",
+    "quantum_runtime_commit": "bc29a94",
+    "completion_marker": "offline_completed.txt",
+    "scope": "Only the already frozen E11 repeats, 24 quantum candidates, summaries and checkpoint audit. E12 is not launched."
   }
 }
