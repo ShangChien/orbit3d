@@ -11,18 +11,6 @@
     "passed": 212,
     "skipped": 3
   },
-  "matched_first_group": {
-    "homo": {
-      "first_group_tokens_identical": true,
-      "same_reference": true,
-      "eligible_predictions_max_delta": 0.0
-    },
-    "lumo": {
-      "first_group_tokens_identical": true,
-      "same_reference": true,
-      "eligible_predictions_max_delta": 0.0
-    }
-  },
   "cpu_geometry": {
     "cpu_status": "completed",
     "cpu_graph_preserved": true,
@@ -157,6 +145,30 @@
         "counterfactual_negative_eligible": 271,
         "max_combined_advantage_std": 1.0000001192092896
       }
+    }
+  },
+  "matched_first_groups": {
+    "homo_42": {
+      "first_group_tokens_identical": true,
+      "same_reference": true,
+      "eligible_predictions_max_delta": 0.0
+    },
+    "lumo_42": {
+      "first_group_tokens_identical": true,
+      "same_reference": true,
+      "eligible_predictions_max_delta": 0.0
+    },
+    "homo_43": {
+      "same_reference": true,
+      "first_group_tokens_identical": true,
+      "first_group_coordinates_identical": true,
+      "eligible_predictions_max_delta": 0.0
+    },
+    "lumo_43": {
+      "same_reference": true,
+      "first_group_tokens_identical": true,
+      "first_group_coordinates_identical": true,
+      "eligible_predictions_max_delta": 0.0
     }
   }
 }
