@@ -11,8 +11,10 @@ def main():
     r=json.loads(a.summary.read_text());arms=r['selection'].get('arms',list(dict.fromkeys(v['arm'] for v in r['records'])))
     optimize=r.get('optimization_requested',True)
     names={'continue_wall':'Time-matched SFT','grpo200':'Original point GRPO','eligibility200':'Eligibility-only GRPO','conditional200':'Separated-advantage GRPO'}
-    fig,axes=plt.subplots(2,len(arms),figsize=(4.5*len(arms),6),layout='constrained',sharey=True,squeeze=False)
-    for row,target in enumerate(['homo','lumo']):
+    names.update(point_contrast='Point contrast',point_time='Time-matched SFT',terminal_property='Structure + physics + target',terminal_physical='Structure + physics',terminal_sft='Time-matched SFT')
+    targets=r['selection'].get('targets',['homo','lumo'])
+    fig,axes=plt.subplots(len(targets),len(arms),figsize=(4.5*len(arms),3*len(targets)),layout='constrained',sharey=True,squeeze=False)
+    for row,target in enumerate(targets):
         k=['homo','lumo'].index(target)
         for col,arm in enumerate(arms):
             ax=axes[row,col];data=[v for v in r['records'] if v['target']==target and v['arm']==arm]
