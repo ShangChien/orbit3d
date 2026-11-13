@@ -15,7 +15,7 @@
     0,
     1
   ],
-  "quantum_selection": "Frozen 24 slots, seed42, no B per-sample score selection; CPU singlepoints asynchronous, GPU geometry after generation evaluations.",
+  "quantum_selection": "Frozen 24 slots, seed42, no B per-sample score selection; CPU singlepoints asynchronous, GPU1 geometry after its two training/evaluation runs finish, concurrent with remaining GPU0 work.",
   "pilot_parameter_audit": {
     "scope": "Exact checkpoint tensor comparisons; time budget is pipeline time, process wall reported separately. No evaluation-based checkpoint selection.",
     "runs": [
