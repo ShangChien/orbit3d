@@ -44,6 +44,8 @@ BRICS的192次冻结提案中141个通过初始准入，全部141个通过相同
 
 BRICS上DPA对DFT的HOMO/LUMO MAE为0.151/0.121 eV，B为0.130/0.171 eV，明显小于octree正确条件池。这里的BRICS优势获得了量化支持，不能再全部解释为指纹评价偏爱；同时也说明预测器偏差取决于生成分布。[BRICS评价器配对](experiments/oe62_brics_terminal_oracle_errors_20261114.json)、[关闭条件评价器配对](experiments/oe62_shared_off_oracle_errors_20261114.json)。
 
+事后化学组成诊断显示，源训练集无芳香原子的结构占19.0%，octree正确条件终态为37.1%，BRICS为4.3%；杂原子/重原子比例中位数分别为22.7%、38.1%、25.0%。因此差异不限于分子大小。即使只看芳香重原子占比超过50%的结构，octree的B对DFT HOMO MAE仍为0.489 eV，BRICS为0.111 eV，单一芳香性分层不能消除差距。该分析只覆盖终态合格结构，是分布诊断，不是全提案产率或因果证明。[化学组成及误差分层](experiments/oe62_terminal_chemistry_20261114.json)
+
 持久GPU进程的量化任务耗时为关闭条件128.2秒/60例、BRICS960.4秒/141例；848主池采用逐例进程共9170.4秒。实现启动开销不同，这些数只用于实际成本核算，不作方法计算速度排名；生成、弛豫及训练成本另列。
 
 ![整池DFT命中与均值响应](figures/oe62_terminal_whole_pool_quantum.png)

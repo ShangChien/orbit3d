@@ -1,0 +1,47 @@
+{
+  "scope": "Both fixed endpoints complete. A 5000-step run followed by 22000-step continuation with optimizer and RNG reset, not one uninterrupted 27000-step schedule. Performance uses separately frozen new inference seeds; this artifact verifies execution only.",
+  "records": {
+    "homo": {
+      "checkpoint_sha256": "6ae16665d59a71232837ae21410898e5d163d2d9e4d8a9ebb4b130a84220df8e",
+      "parent_5000_sha256": "28c2551083f0a172a6527cff694609bf4aac1b81980be0c8186838fb067d8477",
+      "initial_weights_sha256": "28c2551083f0a172a6527cff694609bf4aac1b81980be0c8186838fb067d8477",
+      "continuation_updates": 22000,
+      "total_updates": 27000,
+      "training_backbone": true,
+      "active_targets": [
+        "homo"
+      ],
+      "training_graphs": 43951,
+      "normalization_mean": [
+        -6.616677284240723,
+        -1.4726800918579102
+      ],
+      "normalization_scale": [
+        0.6723601222038269,
+        0.8419189453125
+      ],
+      "training_wall_seconds": 4462.002339482307
+    },
+    "lumo": {
+      "checkpoint_sha256": "baac0c269702432fc679767caf775d4bb8f64f629298756293890a1759962068",
+      "parent_5000_sha256": "746ce586024bd61c4ec97f67d48fe1e5dfc44e17a4c722271fda56a7dc7f2028",
+      "initial_weights_sha256": "746ce586024bd61c4ec97f67d48fe1e5dfc44e17a4c722271fda56a7dc7f2028",
+      "continuation_updates": 22000,
+      "total_updates": 27000,
+      "training_backbone": true,
+      "active_targets": [
+        "lumo"
+      ],
+      "training_graphs": 43951,
+      "normalization_mean": [
+        -6.616677284240723,
+        -1.4726800918579102
+      ],
+      "normalization_scale": [
+        0.6723601222038269,
+        0.8419189453125
+      ],
+      "training_wall_seconds": 4454.5944388099015
+    }
+  }
+}
