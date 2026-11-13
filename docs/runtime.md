@@ -92,7 +92,7 @@ GRPO的`octree_resume_*.pt`保存当前策略、原始参考策略标识、AdamW
 
 ## OE62 PySCF量化复核
 
-使用已安装的独立量化环境，协议为PBE0/def2-TZVP、密度拟合def2-universal-jkfit、grid level 3、SCF容差1e-8。`--optimize`增加PBE-D3BJ/def2-TZVP几何优化和PBE0末端单点；优化后的图与坐标仍走共享化学验收。计算不使用ω调参或旧OCELOT的LC-wPBE设置。
+使用已安装的独立量化环境，协议为PBE0/def2-TZVP及重元素对应的标量ECP（I/Te为28芯电子，逐结果记录）、密度拟合def2-universal-jkfit、grid level 3、SCF容差1e-8。`--optimize`增加PBE-D3BJ/def2-TZVP几何优化和PBE0末端单点；优化后的图与坐标仍走共享化学验收。计算不使用ω调参或旧OCELOT的LC-wPBE设置。
 
 ```bash
 export PYTHONPATH=src

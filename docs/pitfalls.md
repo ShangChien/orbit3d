@@ -32,7 +32,7 @@
 ## 量子计算
 
 - 函数名相近不代表 Hamiltonian 相同。当前内部诊断使用 Libxc 478 的 LC-wPBE；不能把 Gaussian LC-wHPBE、其他 Libxc 变体及不同 ω 调参规则直接视为同一参考。
-- `def2-svp` 轨道基组与标量 ECP 要一起构造。Te/I 的 def2 ECP 扣除 28 个芯电子；仅加载价层基组不等价。旧记录保持当时的 ECP 约定，不能用新默认重标旧结果。
+- def2轨道基组与匹配的标量ECP要一起构造。PySCF 2.12按已知基组名（如`def2-tzvp`）加载ECP，不识别通用名`def2-ecp`。Te/I 的 def2 ECP 扣除 28 个芯电子；仅加载价层基组不等价。旧记录保持当时的 ECP 约定，不能用新默认重标旧结果。
 - GPU4PySCF 的版本和自定义 ω 路径需要实际 CPU/GPU交叉验证。全 TDDFT 激发态梯度所需的高阶 XC 导数使用已验证的 CPU Libxc 计算，不能把缺失导数当零，也不能悄悄换成 TDA。
 - 梯度对积分网格响应和 SCF 收敛敏感。HI 的初始 1e-9 SCF 测试未通过 1e-5 eV/Å CPU/GPU 力差阈值；单独采用 1e-11 与完整网格响应的 HI/TeH2 检查通过原阈值。这是数值收敛诊断，不改写既有队列协议。[初始检查](experiments/ecp_initial_failure_20261112.json)、[收敛检查](experiments/ecp_tight_grid_20261112.json)
 - 固定几何、固定 ω 的局部导数与重新优化几何/重新调 ω 后的性质变化是不同对象。几何优化收敛、图保持和振动极小点也分别验收。

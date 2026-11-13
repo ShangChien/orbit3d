@@ -11,7 +11,7 @@ EV=27.211386245988
 def array(x):return x.get() if hasattr(x,'get') else np.asarray(x)
 
 def make_mol(symbols,coords,path):
- ecp={s:'def2-ecp' for s in set(symbols) if Chem.GetPeriodicTable().GetAtomicNumber(s)>36}
+ ecp={s:'def2-tzvp' for s in set(symbols) if Chem.GetPeriodicTable().GetAtomicNumber(s)>36}
  return gto.M(atom=list(zip(symbols,coords.tolist())),basis='def2-tzvp',ecp=ecp,unit='Angstrom',charge=0,spin=0,verbose=4,output=str(path))
 
 def method(mol,xc,disp=None,engine="gpu"):
@@ -43,7 +43,9 @@ def main():
   'coordinates_A':coords.tolist(),'symbols':syms,'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'engine':a.engine,'runtime_versions':versions,'scratch_directory':os.environ.get('TMPDIR'),'visible_gpu':os.environ.get('CUDA_VISIBLE_DEVICES'),'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference','status':'running'}
  if m.HasProp('homo'):report['source_labels_eV']=[float(m.GetProp(k)) for k in ['homo','lumo']]
  try:
-  mol=make_mol(syms,coords,a.output/'singlepoint.log');sp,mf=single(mol,a.engine);report['singlepoint']=sp
+  mol=make_mol(syms,coords,a.output/'singlepoint.log')
+  report['ecp_core_electrons']={mol.atom_symbol(i):int(mol.atom_nelec_core(i)) for i in range(mol.natm) if mol.atom_nelec_core(i)}
+  sp,mf=single(mol,a.engine);report['singlepoint']=sp
   (a.output/'result.json').write_text(json.dumps(report,indent=2))
   if a.optimize:
    from pyscf.geomopt.geometric_solver import kernel
