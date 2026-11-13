@@ -39,11 +39,12 @@ def main():
    from pyscf.geomopt.geometric_solver import kernel
    from orbit3d.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
    optmol=make_mol(syms,coords,a.output/'geometry.log');optmf=method(optmol,'pbe','d3bj');trace=[]
+   report['geometry']={'protocol':'PBE-D3BJ/def2-TZVP/DF, not source PBE-TS/Tier2','converged':False,'graph_preserved':False,'trace':trace}
    def callback(env):
     grad=array(env['gradients']);trace.append({'energy_Ha':float(env['energy']),'rms_gradient_Ha_Bohr':float(np.sqrt(np.mean(np.square(grad)))),'max_atom_gradient_Ha_Bohr':float(np.linalg.norm(grad,axis=1).max())})
    converged,relaxed=kernel(optmf,maxsteps=80,callback=callback,convergence_energy=1e-6,convergence_grms=1e-4,convergence_gmax=2e-4,convergence_drms=1.2e-3,convergence_dmax=1.8e-3)
    final_coords=relaxed.atom_coords(unit='Angstrom');np.save(a.output/'optimized_coords.npy',final_coords)
-   report['geometry']={'protocol':'PBE-D3BJ/def2-TZVP/DF, not source PBE-TS/Tier2','converged':bool(converged),'steps':len(trace),'trace':trace,'coordinates_A':final_coords.tolist()}
+   report['geometry']={'protocol':'PBE-D3BJ/def2-TZVP/DF, not source PBE-TS/Tier2','converged':bool(converged),'gradient_evaluations':len(trace),'trace':trace,'coordinates_A':final_coords.tolist()}
    elements=tuple(sorted(set(syms)));inst=Mol3DInstance(coords=final_coords,atom_types=np.array([elements.index(s) for s in syms]),smiles=Chem.MolToSmiles(m),graph=m,element_table=elements)
    try:
     mol3d_to_validated_rdkit_mol(inst);report['geometry']['graph_preserved']=True
@@ -52,6 +53,7 @@ def main():
    report['status']='completed' if converged else 'geometry_not_converged'
   else:report['status']='completed'
  except (ValueError,RuntimeError,NotImplementedError) as error:report.update(status='failed',reason=str(error))
+ if 'geometry' in report:report['geometry']['gradient_evaluations']=len(report['geometry']['trace'])
  report['elapsed_seconds']=time.perf_counter()-start;(a.output/'result.json').write_text(json.dumps(report,indent=2)+'\n');print(report['index'],report['status'],report.get('singlepoint'),flush=True)
 
 if __name__=='__main__':main()

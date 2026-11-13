@@ -38,6 +38,9 @@ def main():
             assert result['input_sha256']==manifest['sdf_sha256'] and result['index']==i
             assert result['status']!='running','Queue has an unfinished result'
             hashes[str(path)]=hashlib.sha256(path.read_bytes()).hexdigest()
+        if 'steps' in result.get('geometry',{}):
+            # The frozen initial worker named callback evaluations 'steps'.
+            result['geometry']['gradient_evaluations']=result['geometry'].pop('steps')
         rows.append({**source,**result})
     report={'scope':'Pre-frozen exploratory cohort; no candidate replacement, no population quantum success claim. Target/seed assignment is matched across policies but not independently crossed.',
         'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid3, SCF1e-8; PBE-D3BJ/def2-TZVP optimization max80; distinct from source FHI-aims Tier2/PBE-TS.',
