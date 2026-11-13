@@ -36,7 +36,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--manifest',type=Path,required=True);p.add_argument('--results',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     manifest=json.loads(a.manifest.read_text());completed=json.loads((a.results/'completed.json').read_text());assert completed['attempted']==manifest['selected']
     optimize=completed.get('optimization_requested',any('--optimize' in job['command'] for job in completed['jobs']))
-    rows=[];hashes={str(a.manifest):hashlib.sha256(a.manifest.read_bytes()).hexdigest()}
+    rows=[];hashes={str(a.manifest):hashlib.sha256(a.manifest.read_bytes()).hexdigest(),str(a.results/'completed.json'):hashlib.sha256((a.results/'completed.json').read_bytes()).hexdigest()}
     for source in manifest['records']:
         i=source['index'];path=a.results/f'job{i:02d}/result.json'
         result=json.loads(path.read_text()) if path.exists() else {'status':'worker_failed','reason':'Worker produced no result; consult preserved job log'}
@@ -52,6 +52,7 @@ def main():
         'optimization_requested':optimize,
         'protocol':'PBE0/def2-TZVP/DF(def2-universal-jkfit), grid3, SCF1e-8'+('; PBE-D3BJ/def2-TZVP optimization max80' if optimize else '; input-geometry singlepoints only')+'; distinct from source FHI-aims Tier2/PBE-TS.',
         'selection':{k:v for k,v in manifest.items() if k!='records'},'elapsed_seconds':completed['elapsed_seconds'],
+        'execution_metadata':{k:v for k,v in completed.items() if k!='jobs'},
         'all':summarize(rows,manifest['expected'],optimize),'groups':{f'{target}/{arm}':summarize([r for r in rows if r['target']==target and r['arm']==arm],manifest.get('planned_per_group',{}).get(f'{target}/{arm}'),optimize) for target in ['homo','lumo'] for arm in manifest.get('arms',['continue_wall','grpo200'])},
         'by_selection':{rule:summarize([r for r in rows if r['selection']==rule],manifest['expected']//2,optimize) for rule in ['top1','fixed_hash']},
         'records':rows,'source_sha256':hashes}
