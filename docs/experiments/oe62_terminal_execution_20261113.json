@@ -1,0 +1,38 @@
+{
+  "diagnostic_source_commit": "1a35caf",
+  "training_source_commit": "f19fd8e",
+  "evaluation_source_commit": "547d852",
+  "analysis_source_commit": "f89f2c6",
+  "gpu_indices": [
+    0,
+    1
+  ],
+  "tests": {
+    "passed": 253,
+    "optional_quantum_skipped": 5
+  },
+  "installed_wheel_tests": {
+    "passed": 14,
+    "sha256": "ca0aa415121416b099aa58bb5257d81dae9f899096ab0c4163b918360c5a44e4",
+    "scope": "Extracted-wheel imports asserted outside source tree; terminal channels, endpoint coordinates, optimizer budget and alignment resume."
+  },
+  "native_smoke": {
+    "source_commit": "a8b0d92",
+    "groups": 1,
+    "group_size": 8,
+    "initial_valid": 6,
+    "physical_accepted": 5,
+    "optimizer_updates": 2,
+    "scope": "Execution check only, not included in the frozen five-arm experiment."
+  },
+  "formal_budget": {
+    "training_seed": 42,
+    "feedback_groups_per_arm": 24,
+    "proposals_per_group": 32,
+    "updates_per_group": 2,
+    "evaluation_correct_proposals_per_arm": 384,
+    "additional_off_raw_proposals_per_arm": 128,
+    "planned_quantum_slots": 18
+  },
+  "scope": "Execution validation and predeclared budgets; final model audit and results are added only when complete."
+}
