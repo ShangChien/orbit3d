@@ -15,6 +15,7 @@ def main():
     selected=json.loads(a.selection.read_text());expected=selected['hashes'][selected['selected_unimol']]['model.pt']
     with (a.oracle/'model.pt').open('rb') as f:actual=hashlib.file_digest(f,'sha256').hexdigest()
     assert actual==expected
+    assert hashlib.sha256((a.oracle/"oracle_meta.json").read_bytes()).hexdigest()==selected["hashes"][selected["selected_unimol"]]["oracle_meta.json"]
     q=json.loads(a.quantum.read_text());assert hashlib.sha256(a.sdf.read_bytes()).hexdigest()==q['selection']['sdf_sha256']
     source=list(Chem.SDMolSupplier(str(a.sdf),removeHs=False));mols=[];items=[]
     for row in q['records']:

@@ -17,6 +17,7 @@ def main():
     p.add_argument('--selection',type=Path,required=True);p.add_argument('--manifest',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     torch.set_num_threads(4);freeze_run(a.output,__file__);selection=json.loads(a.selection.read_text())
     with (a.oracle/'model.pt').open('rb') as f:assert hashlib.file_digest(f,'sha256').hexdigest()==selection['hashes'][selection['selected_unimol']]['model.pt']
+    assert hashlib.sha256((a.oracle/"oracle_meta.json").read_bytes()).hexdigest()==selection["hashes"][selection["selected_unimol"]]["oracle_meta.json"]
     elements=tuple(json.loads(a.manifest.read_text())['elements']);model=InternalUniMol2Oracle.load_from_dir(a.oracle)
     inputs={'oracle':a.oracle,'selection':a.selection,'manifest':a.manifest};pools=[];start=time.perf_counter()
     for root in a.sources:
@@ -29,6 +30,7 @@ def main():
                     i=source['candidate_id'];row={'candidate_id':i,'valid':source['valid'],'original_in_domain':bool(source.get('domain') and source['domain']['in_domain']),
                         'prediction_attempted':False,'unimol2_evaluated':False};rows.append(row)
                     if not source['valid']:continue
+                    if len(symbols[i])>80:row['support_exclusion']='More than 80 source atoms';continue
                     if 'Te' in symbols[i]:row['support_exclusion']='Te absent from shared training support';continue
                     inst=trajectory_to_instance({'atom_symbols':symbols[i],'positions_np':coords[f'coordinates_{i}']},element_table=elements)
                     assert compare_molecular_identity(Chem.MolFromSmiles(source['smiles']),Chem.MolFromSmiles(inst.smiles))['identity_match']
@@ -41,7 +43,7 @@ def main():
             dest=a.output/(target+'_'+name);dest.mkdir();(dest/'summary.json').write_text(json.dumps(result,indent=2)+'\n');pools.append(result)
             for label,file in [('original',path),('coordinates',pool/'run/raw_trajectories.npz'),('symbols',pool/'run/raw_symbols.json')]:inputs[target+'/'+name+'/'+label]=file
             print(target,name,len(mols),round(result['wall_seconds'],2),flush=True)
-    report={'evaluator':'Uni-Mol2 1.1B','prediction_prefix':'unimol2','scope':'Frozen source-heavy-atom Uni-Mol2; original XYZ, original domains and all proposals retained. Te support exclusions separate; no reward, selection or generator changes.',
+    report={'evaluator':'Uni-Mol2 1.1B','prediction_prefix':'unimol2','scope':'Frozen source-heavy-atom Uni-Mol2; original XYZ, original domains and all proposals retained. Element and source-size support exclusions separate; no reward, selection or generator changes.',
         'wall_seconds':time.perf_counter()-start,'pools':pools}
     (a.output/'summary.json').write_text(json.dumps(report,indent=2)+'\n');record_input_hashes(a.output,inputs)
     print('FORMAL UNIMOL2 COMPLETE',len(pools),flush=True)

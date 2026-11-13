@@ -1,0 +1,32 @@
+{
+  "handoff_commit": "78f0808",
+  "main_before_integration": "f708650",
+  "source_pools": 358,
+  "proposal_rows": 20608,
+  "unique_evaluated_raw_geometries": 11525,
+  "historical_proposals_scores_domains_forces_unchanged": true,
+  "quantum_outcomes_unchanged": 24,
+  "side_uncommitted_files_excluded": [
+    "data/oe62_source.json",
+    "scripts/initialize_point_octree.py",
+    "src/orbit3d/pipeline/octree_runner.py",
+    "tests/test_octree_backend.py"
+  ],
+  "source_reference_shared": true,
+  "quantum_cohort_shared_graphs": [],
+  "quantum_cohort_sizes": {
+    "formal_grpo200_time_sft": 24,
+    "side_grpo50_frozen_sft": 24
+  },
+  "side_quantum_sdf_sha256": "8906724d573966a702749855a4effcbdb47d463f3b6061b2cb1a991e236b9906",
+  "meta_sha256_verified": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e",
+  "shared_source_reference_sha256": "32b0e742ffdb0d440691e3d98887b3729c81e6820237ece3754c8f010bd17456",
+  "excluded_side_float32_fixes_already_present_in_main": true,
+  "formal_unimol2_size_exclusion": {
+    "training_seed": 43,
+    "target": "homo",
+    "pool": "eval_frozen_p75_s2026",
+    "candidate_id": 39,
+    "atoms": 82
+  }
+}
