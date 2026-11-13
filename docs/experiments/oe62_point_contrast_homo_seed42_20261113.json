@@ -12,11 +12,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.7077790739534835,
       "coverage": 0.1890625,
+      "mean_absolute_response_bias_eV": 0.39940766983306614,
       "mean_prediction_std_eV": 0.7012446091597362,
       "response_slope": 0.2598968743654056,
       "hit_rate_fixed_025": 0.0359375,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.39940766983306614
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -25,11 +25,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.5174612424214212,
       "coverage": 0.1890625,
+      "mean_absolute_response_bias_eV": 0.4088952248577863,
       "mean_prediction_std_eV": 0.40072062724271235,
       "response_slope": 0.24025961307807814,
       "hit_rate_fixed_025": 0.05,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.4088952248577863
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -38,11 +38,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.6328458696421889,
       "coverage": 0.1890625,
+      "mean_absolute_response_bias_eV": 0.44753823531126624,
       "mean_prediction_std_eV": 0.5786358536803524,
       "response_slope": 0.20278451969113287,
       "hit_rate_fixed_025": 0.040625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.44753823531126624
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -51,11 +51,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.8396249133924429,
       "coverage": 0.1890625,
+      "mean_absolute_response_bias_eV": 0.655428016362709,
       "mean_prediction_std_eV": 0.7012446091597362,
       "response_slope": -0.17673756997568094,
       "hit_rate_fixed_025": 0.0359375,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.655428016362709
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -64,11 +64,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.69322540842675,
       "coverage": 0.1890625,
+      "mean_absolute_response_bias_eV": 0.6655451955099702,
       "mean_prediction_std_eV": 0.40072062724271246,
       "response_slope": -0.12168306591667007,
       "hit_rate_fixed_025": 0.0296875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6655451955099702
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -77,11 +77,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.7548063608511508,
       "coverage": 0.1890625,
+      "mean_absolute_response_bias_eV": 0.6579105569359411,
       "mean_prediction_std_eV": 0.5786358536803523,
       "response_slope": -0.12246990667899124,
       "hit_rate_fixed_025": 0.0390625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6579105569359411
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -90,11 +90,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.6610319000585937,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5309320619506837,
       "mean_prediction_std_eV": 0.5340845094674818,
       "response_slope": 2.997651173283063e-16,
       "hit_rate_fixed_025": 0.046875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5309320619506837
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -103,11 +103,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6050523812948736,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5427731511692899,
       "mean_prediction_std_eV": 0.41282301322305043,
       "response_slope": 1.1052292692360525e-15,
       "hit_rate_fixed_025": 0.0390625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5427731511692899
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_frozen",
@@ -116,11 +116,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.6354456098273743,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.521748566463916,
       "mean_prediction_std_eV": 0.5026225643520892,
       "response_slope": 3.4481164563481564e-17,
       "hit_rate_fixed_025": 0.05,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.521748566463916
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -129,11 +129,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.6460861470329864,
       "coverage": 0.2265625,
+      "mean_absolute_response_bias_eV": 0.3519705311795728,
       "mean_prediction_std_eV": 0.6845737336791295,
       "response_slope": 0.3726750067774001,
       "hit_rate_fixed_025": 0.05,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.3519705311795728
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -142,11 +142,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.5373847577339914,
       "coverage": 0.2265625,
+      "mean_absolute_response_bias_eV": 0.40891918654068127,
       "mean_prediction_std_eV": 0.4415148710405507,
       "response_slope": 0.25584325010583614,
       "hit_rate_fixed_025": 0.0640625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.40891918654068127
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -155,11 +155,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.620148220813135,
       "coverage": 0.2265625,
+      "mean_absolute_response_bias_eV": 0.4004369278986653,
       "mean_prediction_std_eV": 0.5824099005907524,
       "response_slope": 0.29204381782337924,
       "hit_rate_fixed_025": 0.0453125,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.4004369278986653
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -168,11 +168,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.790884862997724,
       "coverage": 0.2265625,
+      "mean_absolute_response_bias_eV": 0.6589894688204273,
       "mean_prediction_std_eV": 0.6845737336791295,
       "response_slope": -0.1526960191910327,
       "hit_rate_fixed_025": 0.0515625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6589894688204273
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -181,11 +181,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6874632092487526,
       "coverage": 0.2265625,
+      "mean_absolute_response_bias_eV": 0.6407555261360537,
       "mean_prediction_std_eV": 0.4415148710405507,
       "response_slope": -0.06452774388971863,
       "hit_rate_fixed_025": 0.03125,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6407555261360537
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -194,11 +194,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.7596295885688705,
       "coverage": 0.2265625,
+      "mean_absolute_response_bias_eV": 0.6759628568309629,
       "mean_prediction_std_eV": 0.5824099005907524,
       "response_slope": -0.1324312906003645,
       "hit_rate_fixed_025": 0.0421875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6759628568309629
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -207,11 +207,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.6610318962438965,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5309320657653809,
       "mean_prediction_std_eV": 0.5340844979429773,
       "response_slope": 1.6543746152453208e-15,
       "hit_rate_fixed_025": 0.046875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5309320657653809
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -220,11 +220,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6050523812948736,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5427731511692899,
       "mean_prediction_std_eV": 0.41282301322305043,
       "response_slope": 1.1052292692360525e-15,
       "hit_rate_fixed_025": 0.0390625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5427731511692899
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_sft",
@@ -233,11 +233,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.6354456098273743,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.521748566463916,
       "mean_prediction_std_eV": 0.5026225643520892,
       "response_slope": 3.4481164563481564e-17,
       "hit_rate_fixed_025": 0.05,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.521748566463916
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -246,11 +246,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.690840843111303,
       "coverage": 0.23125,
+      "mean_absolute_response_bias_eV": 0.21574123836658593,
       "mean_prediction_std_eV": 0.7846499979240127,
       "response_slope": 0.611273816328919,
       "hit_rate_fixed_025": 0.046875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.21574123836658593
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -259,11 +259,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.5430324600658396,
       "coverage": 0.23125,
+      "mean_absolute_response_bias_eV": 0.3513216115142591,
       "mean_prediction_std_eV": 0.46439149325237994,
       "response_slope": 0.35248564739234123,
       "hit_rate_fixed_025": 0.0625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.3513216115142591
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -272,11 +272,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.6084485652995386,
       "coverage": 0.23125,
+      "mean_absolute_response_bias_eV": 0.28210698242555676,
       "mean_prediction_std_eV": 0.6470222762358493,
       "response_slope": 0.4447883242085635,
       "hit_rate_fixed_025": 0.071875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.28210698242555676
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -285,11 +285,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.9177382640091258,
       "coverage": 0.23125,
+      "mean_absolute_response_bias_eV": 0.7957764779332885,
       "mean_prediction_std_eV": 0.7846499979240127,
       "response_slope": -0.23992869410658274,
       "hit_rate_fixed_025": 0.053125,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.7957764779332885
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -298,11 +298,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6985155265646603,
       "coverage": 0.23125,
+      "mean_absolute_response_bias_eV": 0.6799879898273182,
       "mean_prediction_std_eV": 0.46439149325237983,
       "response_slope": -0.056612171910839316,
       "hit_rate_fixed_025": 0.034375,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6799879898273182
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -311,11 +311,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.8208873145998149,
       "coverage": 0.23125,
+      "mean_absolute_response_bias_eV": 0.7466828249379438,
       "mean_prediction_std_eV": 0.6470222762358494,
       "response_slope": -0.14904567661165918,
       "hit_rate_fixed_025": 0.0375,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.7466828249379438
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -324,11 +324,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.6610318352087402,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5309320886535646,
       "mean_prediction_std_eV": 0.5340843774275462,
       "response_slope": -5.064667842352614e-16,
       "hit_rate_fixed_025": 0.046875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5309320886535646
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -337,11 +337,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6050523812948736,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5427731511692899,
       "mean_prediction_std_eV": 0.41282301322305043,
       "response_slope": 1.1052292692360525e-15,
       "hit_rate_fixed_025": 0.0390625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5427731511692899
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_contrast",
@@ -350,11 +350,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.6354456098273743,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.521748566463916,
       "mean_prediction_std_eV": 0.5026225643520892,
       "response_slope": 3.4481164563481564e-17,
       "hit_rate_fixed_025": 0.05,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.521748566463916
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -363,11 +363,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.6202700526306446,
       "coverage": 0.21875,
+      "mean_absolute_response_bias_eV": 0.4092228709213268,
       "mean_prediction_std_eV": 0.6526838060143361,
       "response_slope": 0.24841677816696092,
       "hit_rate_fixed_025": 0.0671875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.4092228709213268
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -376,11 +376,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.539903124138939,
       "coverage": 0.21875,
+      "mean_absolute_response_bias_eV": 0.44477259722762036,
       "mean_prediction_std_eV": 0.3940891138521544,
       "response_slope": 0.12520431069605645,
       "hit_rate_fixed_025": 0.0640625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.44477259722762036
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -389,11 +389,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.5644543070043083,
       "coverage": 0.21875,
+      "mean_absolute_response_bias_eV": 0.3940134583475595,
       "mean_prediction_std_eV": 0.5038712811245076,
       "response_slope": 0.22877687280445666,
       "hit_rate_fixed_025": 0.0546875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.3940134583475595
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -402,11 +402,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.7729294085183802,
       "coverage": 0.21875,
+      "mean_absolute_response_bias_eV": 0.6017371290786733,
       "mean_prediction_std_eV": 0.6526838060143361,
       "response_slope": -0.050127321606636445,
       "hit_rate_fixed_025": 0.0296875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6017371290786733
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -415,11 +415,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6195803842192218,
       "coverage": 0.21875,
+      "mean_absolute_response_bias_eV": 0.5908486586548586,
       "mean_prediction_std_eV": 0.3940891138521544,
       "response_slope": -0.009966122153370428,
       "hit_rate_fixed_025": 0.04375,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5908486586548586
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -428,11 +428,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.7214459024627489,
       "coverage": 0.21875,
+      "mean_absolute_response_bias_eV": 0.6450459202818883,
       "mean_prediction_std_eV": 0.5038712811245076,
       "response_slope": -0.08857085493785465,
       "hit_rate_fixed_025": 0.0296875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.6450459202818883
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -441,11 +441,11 @@
       "evaluator": "dpa",
       "target_mae_eV": 0.6610318390234375,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5309320772094728,
       "mean_prediction_std_eV": 0.534084390633202,
       "response_slope": -2.6446182561224306e-16,
       "hit_rate_fixed_025": 0.046875,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5309320772094728
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -454,11 +454,11 @@
       "evaluator": "fingerprint",
       "target_mae_eV": 0.6050523812948736,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.5427731511692899,
       "mean_prediction_std_eV": 0.41282301322305043,
       "response_slope": 1.1052292692360525e-15,
       "hit_rate_fixed_025": 0.0390625,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.5427731511692899
+      "hit_rate_requested_width": null
     },
     {
       "arm": "point_time",
@@ -467,11 +467,11 @@
       "evaluator": "unimol2",
       "target_mae_eV": 0.6354456098273743,
       "coverage": 0.1953125,
+      "mean_absolute_response_bias_eV": 0.521748566463916,
       "mean_prediction_std_eV": 0.5026225643520892,
       "response_slope": 3.4481164563481564e-17,
       "hit_rate_fixed_025": 0.05,
-      "hit_rate_requested_width": null,
-      "mean_absolute_response_bias_eV": 0.521748566463916
+      "hit_rate_requested_width": null
     }
   ],
   "cells": [
@@ -4317,54 +4317,54 @@
     }
   ],
   "raw_source_sha256": {
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p10_wNone_s2071_correct/raw/summary.json": "0ce68a5d4f90cfaf6a56da9897523f2ed1a563595de06f853df04d15e60032ed",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p10_wNone_s2072_correct/raw/summary.json": "f31e2e198722750619cd1e279fbb05961722387a705f674493777db459c61718",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p25_wNone_s2071_correct/raw/summary.json": "f601674fc6498c2ae766e6ce80bfda565c7ffbe05728ea982e55d102dcf5f0bf",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p25_wNone_s2072_correct/raw/summary.json": "8244f2d201b21fd2a83345a6bfeb4542f35a9239570be29c3f2fdacf49ff4468",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2071_correct/raw/summary.json": "6f99467a016c15f2428b0c954826cb61b8458c88db2f5d8e729a199fe77fe3a5",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2072_correct/raw/summary.json": "417a0ecb52546c41a5ff47a0268f3caecdcdb7c102e0da2c21232694d8110494",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p75_wNone_s2071_correct/raw/summary.json": "0a2a4fef1b63042baa8df0c19a17edbc64acd991defd50822ce090af38a39701",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p75_wNone_s2072_correct/raw/summary.json": "4b35336fbf3394c262aa1b6f032c27aa2538202425f6a367e67237903940e58d",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p90_wNone_s2071_correct/raw/summary.json": "ac2638ee1db322a1a8af3e89e51fbfeb515b873a5fb3911bfbfa7524eb56ad3f",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p90_wNone_s2072_correct/raw/summary.json": "74a4e52660815f4be9cb075c89bc7e33aa069e9ff1f80ac31fb65d844f339a2d",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2071_off/raw/summary.json": "68255719c9d7a3d43e14a63237ca172d90e2c3890c5b1df37dca844e26a896ec",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2072_off/raw/summary.json": "1d0e6e08da333d747347822d21a1020eb68a3bce27b5d758e61f99ab1d93e1ad",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p10_wNone_s2071_correct/raw/summary.json": "ad04baadede6a55e7254da6be72973ff7a50df79fbe329747614035b8c64ecd7",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p10_wNone_s2072_correct/raw/summary.json": "ee19773d50cdd9249627ad5e21e80b8b09c12016d5bbce7772f6a9cb2c4738bd",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p25_wNone_s2071_correct/raw/summary.json": "7e582a837d852383ef65a35c5e8906b6956b259edfbc2cf2f8a86b0126bb0cfa",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p25_wNone_s2072_correct/raw/summary.json": "ce3737af8fa12da827d6288b94de9a88010ef46fca707b2f69eec109738369de",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2071_correct/raw/summary.json": "460409e9383dd5a8cc9e7eb36646744fbdc239c472c59b2b93e0d4bd6e02d42a",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2072_correct/raw/summary.json": "230f5caadc6f7ec6938cb21c84ffccfefb3c3da359426e14dfa3f1dc419468e6",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p75_wNone_s2071_correct/raw/summary.json": "a915cfbc5b8355a7be6edc0a809ed5244a943086b14a96dc8b455d39241b182a",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p75_wNone_s2072_correct/raw/summary.json": "050cde865bf21866ceeb7d503295bfc35482e3f83a88f8097366e9f860bde1c9",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p90_wNone_s2071_correct/raw/summary.json": "c434564aa53e32bc940410bad0d87dfd9b0dfbc4c98bc534cc374131d27fecad",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p90_wNone_s2072_correct/raw/summary.json": "20a37394a11aebab7c56eee4e6bdaf1d8184f61c6696bed594b73ec9223eeb53",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2071_off/raw/summary.json": "c2988c137a321a177994b8799d268c450d6c0f2352ef773ae02cd78424967bd8",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2072_off/raw/summary.json": "34535e4b111ca6942f309f3659069212a10c725cfbcc64e0d51ab01cf9836e3d",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p10_wNone_s2071_correct/raw/summary.json": "a6fbeaff8476a310d9bb2d508b950ba0718aa601ae684fa69b6f8e8307ebd06d",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p10_wNone_s2072_correct/raw/summary.json": "4bb8f7994009460ef482542bbb1fa148b9609c7a36f358ac4aec68fcfa18b6dd",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2071_correct/raw/summary.json": "e23fba823a188f91f82ed964ee8d84b43d89bea61dc5f3081fa3de0941c7c396",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2072_correct/raw/summary.json": "279d23e47f5996e6f70e7f024b1a3e32ba1e80d226d8171ff650e024536fce9a",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2071_correct/raw/summary.json": "38910b78206f768a961a89c6a9ab6e82decc84d9b3625ce3b72252d4935050e0",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_correct/raw/summary.json": "ce85df3e6e965d1ad8022b02d248ea2ea58ba64ed7fc1823f3969352711dc519",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2071_correct/raw/summary.json": "97386d7d7464612452363ddf27f79c77f175bddcda85aee0660008e2b56373c1",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2072_correct/raw/summary.json": "60240bf27b8e830a71e85566efba7eb8839b95bd57be40f6d904308650295372",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p90_wNone_s2071_correct/raw/summary.json": "28ed24056428ff2de2ab0c458492c4c9ad920c4c39fb717963ef8f373909c33e",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p90_wNone_s2072_correct/raw/summary.json": "e5f6c15c88d3413218962f90359aeabb3b279df74a5299327fb5badefa988c4f",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2071_off/raw/summary.json": "16dc923ceb76e12134d0377134285b09e3eac0bbddf23c5caa1021ea0f4b9f4d",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_off/raw/summary.json": "ba6c0e94efaa0b4f901484eda2a5587ba72b63b389b3167423ffec03c8a4e742",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p10_wNone_s2071_correct/raw/summary.json": "fe41ddac89ee01fb2517b5ca6a62d1f343ab1272f1df544cccb3812b41030ac7",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p10_wNone_s2072_correct/raw/summary.json": "3ab68e1f7e43a92a57feb1d6d863a52a28259dbc1e17f241e169c31a708443c4",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2071_correct/raw/summary.json": "3a1ed1b8d5c72b5e7b7286bb11c5bd134807d50df0d8053c8e0ba9e2853911a1",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2072_correct/raw/summary.json": "ede727cbd0a8d3a42354781a260744bc4747c06fbcc9483869c765c409a2294c",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2071_correct/raw/summary.json": "d90ffa548e8c9d23ad39e3cf36f517115f57665564fd1cd448f4e25ac7df4683",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_correct/raw/summary.json": "3e6862ad4d3277f059aa229311255eca640fba3f6cfb3877b83503e353d0c853",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2071_correct/raw/summary.json": "8b5a89d8d4fd38d793a1622f1952b1f7b23a56b20cc39fe3091761e02456650f",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2072_correct/raw/summary.json": "ecf775c69492a66575330e5fba07666aa0d0823a931118e206044168cef5adc6",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p90_wNone_s2071_correct/raw/summary.json": "906726f5ac2efb6bf315b2679a4acb81c336a0a95264f00c80aa7c8a6ffed060",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p90_wNone_s2072_correct/raw/summary.json": "5e8dae3bc4de3a297417515ec89976b058b17546c9a18dc191e2b24c693ffc6c",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2071_off/raw/summary.json": "ec44aff2af2190c924baecb157b14b6994cbb655acfb02b1493f35ae2140ddc2",
-    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_bridge_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_off/raw/summary.json": "6d1d2ae662cf32772d35838d7b9d342a83723d221fba31d7c49f8ebc446b704f"
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p10_wNone_s2071_correct/raw/summary.json": "0ce68a5d4f90cfaf6a56da9897523f2ed1a563595de06f853df04d15e60032ed",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p10_wNone_s2072_correct/raw/summary.json": "f31e2e198722750619cd1e279fbb05961722387a705f674493777db459c61718",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p25_wNone_s2071_correct/raw/summary.json": "f601674fc6498c2ae766e6ce80bfda565c7ffbe05728ea982e55d102dcf5f0bf",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p25_wNone_s2072_correct/raw/summary.json": "8244f2d201b21fd2a83345a6bfeb4542f35a9239570be29c3f2fdacf49ff4468",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2071_correct/raw/summary.json": "6f99467a016c15f2428b0c954826cb61b8458c88db2f5d8e729a199fe77fe3a5",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2072_correct/raw/summary.json": "417a0ecb52546c41a5ff47a0268f3caecdcdb7c102e0da2c21232694d8110494",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p75_wNone_s2071_correct/raw/summary.json": "0a2a4fef1b63042baa8df0c19a17edbc64acd991defd50822ce090af38a39701",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p75_wNone_s2072_correct/raw/summary.json": "4b35336fbf3394c262aa1b6f032c27aa2538202425f6a367e67237903940e58d",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p90_wNone_s2071_correct/raw/summary.json": "ac2638ee1db322a1a8af3e89e51fbfeb515b873a5fb3911bfbfa7524eb56ad3f",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p90_wNone_s2072_correct/raw/summary.json": "74a4e52660815f4be9cb075c89bc7e33aa069e9ff1f80ac31fb65d844f339a2d",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2071_off/raw/summary.json": "68255719c9d7a3d43e14a63237ca172d90e2c3890c5b1df37dca844e26a896ec",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_frozen_p50_wNone_s2072_off/raw/summary.json": "1d0e6e08da333d747347822d21a1020eb68a3bce27b5d758e61f99ab1d93e1ad",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p10_wNone_s2071_correct/raw/summary.json": "ad04baadede6a55e7254da6be72973ff7a50df79fbe329747614035b8c64ecd7",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p10_wNone_s2072_correct/raw/summary.json": "ee19773d50cdd9249627ad5e21e80b8b09c12016d5bbce7772f6a9cb2c4738bd",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p25_wNone_s2071_correct/raw/summary.json": "7e582a837d852383ef65a35c5e8906b6956b259edfbc2cf2f8a86b0126bb0cfa",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p25_wNone_s2072_correct/raw/summary.json": "ce3737af8fa12da827d6288b94de9a88010ef46fca707b2f69eec109738369de",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2071_correct/raw/summary.json": "460409e9383dd5a8cc9e7eb36646744fbdc239c472c59b2b93e0d4bd6e02d42a",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2072_correct/raw/summary.json": "230f5caadc6f7ec6938cb21c84ffccfefb3c3da359426e14dfa3f1dc419468e6",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p75_wNone_s2071_correct/raw/summary.json": "a915cfbc5b8355a7be6edc0a809ed5244a943086b14a96dc8b455d39241b182a",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p75_wNone_s2072_correct/raw/summary.json": "050cde865bf21866ceeb7d503295bfc35482e3f83a88f8097366e9f860bde1c9",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p90_wNone_s2071_correct/raw/summary.json": "c434564aa53e32bc940410bad0d87dfd9b0dfbc4c98bc534cc374131d27fecad",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p90_wNone_s2072_correct/raw/summary.json": "20a37394a11aebab7c56eee4e6bdaf1d8184f61c6696bed594b73ec9223eeb53",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2071_off/raw/summary.json": "c2988c137a321a177994b8799d268c450d6c0f2352ef773ae02cd78424967bd8",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_sft_p50_wNone_s2072_off/raw/summary.json": "34535e4b111ca6942f309f3659069212a10c725cfbcc64e0d51ab01cf9836e3d",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p10_wNone_s2071_correct/raw/summary.json": "a6fbeaff8476a310d9bb2d508b950ba0718aa601ae684fa69b6f8e8307ebd06d",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p10_wNone_s2072_correct/raw/summary.json": "4bb8f7994009460ef482542bbb1fa148b9609c7a36f358ac4aec68fcfa18b6dd",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2071_correct/raw/summary.json": "e23fba823a188f91f82ed964ee8d84b43d89bea61dc5f3081fa3de0941c7c396",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p25_wNone_s2072_correct/raw/summary.json": "279d23e47f5996e6f70e7f024b1a3e32ba1e80d226d8171ff650e024536fce9a",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2071_correct/raw/summary.json": "38910b78206f768a961a89c6a9ab6e82decc84d9b3625ce3b72252d4935050e0",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_correct/raw/summary.json": "ce85df3e6e965d1ad8022b02d248ea2ea58ba64ed7fc1823f3969352711dc519",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2071_correct/raw/summary.json": "97386d7d7464612452363ddf27f79c77f175bddcda85aee0660008e2b56373c1",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p75_wNone_s2072_correct/raw/summary.json": "60240bf27b8e830a71e85566efba7eb8839b95bd57be40f6d904308650295372",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p90_wNone_s2071_correct/raw/summary.json": "28ed24056428ff2de2ab0c458492c4c9ad920c4c39fb717963ef8f373909c33e",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p90_wNone_s2072_correct/raw/summary.json": "e5f6c15c88d3413218962f90359aeabb3b279df74a5299327fb5badefa988c4f",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2071_off/raw/summary.json": "16dc923ceb76e12134d0377134285b09e3eac0bbddf23c5caa1021ea0f4b9f4d",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_contrast_p50_wNone_s2072_off/raw/summary.json": "ba6c0e94efaa0b4f901484eda2a5587ba72b63b389b3167423ffec03c8a4e742",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p10_wNone_s2071_correct/raw/summary.json": "fe41ddac89ee01fb2517b5ca6a62d1f343ab1272f1df544cccb3812b41030ac7",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p10_wNone_s2072_correct/raw/summary.json": "3ab68e1f7e43a92a57feb1d6d863a52a28259dbc1e17f241e169c31a708443c4",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2071_correct/raw/summary.json": "3a1ed1b8d5c72b5e7b7286bb11c5bd134807d50df0d8053c8e0ba9e2853911a1",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p25_wNone_s2072_correct/raw/summary.json": "ede727cbd0a8d3a42354781a260744bc4747c06fbcc9483869c765c409a2294c",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2071_correct/raw/summary.json": "d90ffa548e8c9d23ad39e3cf36f517115f57665564fd1cd448f4e25ac7df4683",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_correct/raw/summary.json": "3e6862ad4d3277f059aa229311255eca640fba3f6cfb3877b83503e353d0c853",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2071_correct/raw/summary.json": "8b5a89d8d4fd38d793a1622f1952b1f7b23a56b20cc39fe3091761e02456650f",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p75_wNone_s2072_correct/raw/summary.json": "ecf775c69492a66575330e5fba07666aa0d0823a931118e206044168cef5adc6",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p90_wNone_s2071_correct/raw/summary.json": "906726f5ac2efb6bf315b2679a4acb81c336a0a95264f00c80aa7c8a6ffed060",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p90_wNone_s2072_correct/raw/summary.json": "5e8dae3bc4de3a297417515ec89976b058b17546c9a18dc191e2b24c693ffc6c",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2071_off/raw/summary.json": "ec44aff2af2190c924baecb157b14b6994cbb655acfb02b1493f35ae2140ddc2",
+    "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/eval_homo_seed42/eval_point_time_p50_wNone_s2072_off/raw/summary.json": "6d1d2ae662cf32772d35838d7b9d342a83723d221fba31d7c49f8ebc446b704f"
   },
   "yield_attribution": [
     {
@@ -4787,7 +4787,7 @@
   "independent_evaluation_seconds": 63.78247057646513,
   "novelty_scope": "Relative to each checkpoint training_smiles, including hindsight graphs when used.",
   "cost_scope": "Generation/raw timers cover per-pool calls, not initial model loading and hashing; training and source-pool acquisition costs are separate campaign artifacts.",
-  "analysis_script_sha256": "f03e5e2da3ced5b4a64da0a9369bf8de6920f7032dfdcd8f0b748494aa80a3d6",
+  "analysis_script_sha256": "45ea5dd5418b44b9cb5a35434044c01e03173fd88edfa21bc9f0f902625ddc93",
   "independent_inputs": {
     "oracle": {
       "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
@@ -4800,29 +4800,5 @@
       "manifest.json": "e1d34eca410a38f3ab872c3e1f9cff408a1098a11ad739a93e9a92999cf95e9e"
     }
   },
-  "independent_summary_sha256": "8b5c15ada030ec3639c3b060fa11ca6dfd51530b35392094d0ae4e0357258791",
-  "training_costs": [
-    {
-      "name": "point_sft",
-      "wall_seconds": 125.90507951751351,
-      "returncode": 0,
-      "optimizer_updates": 1000,
-      "pipeline_training_seconds": 113.48676933720708
-    },
-    {
-      "name": "point_contrast",
-      "wall_seconds": 209.11749606207013,
-      "returncode": 0,
-      "optimizer_updates": 1000,
-      "pipeline_training_seconds": 194.68298292160034
-    },
-    {
-      "name": "point_time",
-      "wall_seconds": 208.3644894696772,
-      "returncode": 0,
-      "optimizer_updates": 1875,
-      "pipeline_training_seconds": 194.72358698025346
-    }
-  ],
-  "response_bias_note": "Post-hoc diagnostic of the first bridge pilot, predeclared for subsequent training repeats."
+  "independent_summary_sha256": "8b5c15ada030ec3639c3b060fa11ca6dfd51530b35392094d0ae4e0357258791"
 }
