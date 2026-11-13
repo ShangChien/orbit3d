@@ -59,11 +59,16 @@ mol_gen/
 │   │   ├── octree_model.py      # 条件 octree、自排序与完整轨迹概率
 │   │   ├── octree_backend.py    # 数据编码、检查点契约、预训练/适配模型加载
 │   │   ├── octree_alignment.py  # conditioner 的 GRPO 更新
+│   │   ├── terminal_feedback.py # 结构、物理和性质的条件子集优势
 │   │   ├── scaffold*.py         # 显式连接/环闭合、开放位点、局部 XYZ 支持集
 │   │   └── 其他模块             # 空间窗口、独立随机流、条件与词表迁移
 │   ├── baselines/brics.py       # 训练片段库与显式配对基线
 │   ├── oracles/                 # DPA/HyFF 属性头、Uni-Mol v1/v2、指纹、域判断与校准
-│   ├── physics/                 # DPA/HyFF 势、串行/批量受约束弛豫
+│   ├── physics/
+│   │   ├── terminal_evaluation.py # 训练/推理共用的完整分子终态验收
+│   │   ├── standard_relaxer.py    # ASE L-BFGS/FIRE 纯能量弛豫
+│   │   ├── dpa_forcefield.py / hyff_forcefield.py # 势与原始受力接口
+│   │   └── conformer_relaxer.py / batched_relaxer.py # 可选性质约束弛豫
 │   ├── quantum/                 # PySCF/GPU4PySCF、ω 调参、激发态与几何检查
 │   ├── utils/                   # 数据、身份比较、指标、运行快照与整批重放
 │   ├── vendor/                  # 固定版本 Uni-3DAR 及其必要依赖
@@ -85,7 +90,7 @@ mol_gen/
 ├── dataset/                     # 本地原始/处理数据，不进入 Git
 ├── pretrained/                  # 本地模型权重，不进入 Git
 ├── external/                    # 可选上游参考检出，不进入 Git
-├── local_dev/                   # 仅保留私有服务器/模型位置与量化启动配置，不进入 Git
+├── local_dev/                   # 私有路径、运行控制器与临时诊断，不进入 Git
 └── dist/、outputs/、checkpoints/ # 构建及运行时产物，不进入 Git
 ```
 
@@ -95,12 +100,14 @@ mol_gen/
 | --- | --- |
 | 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_oe62.py`、`prepare_generator_sdf.py` |
 | 性质训练/评价 | `train_source_oracle.py`、`evaluate_source_holdout.py`、`train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
+| 终态评价器校准 | `prepare_generated_calibration.py`、`finetune_terminal_oracle.py`、`evaluate_terminal_oracle_transfer.py`、`evaluate_terminal_uncertainty.py`、`summarize_calibrated_ranking.py` |
 | OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |
 | 生成训练与迁移 | `migrate_gaussian_conditioner.py`、`prepare_hindsight_pool.py`、`run_gaussian_pilot.py`、`run_point_contrast_bridge.py`、`run_terminal_feedback_arm.py`、`initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`evaluate_brics_point_pool.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`analyze_point_ranking.py`、`select_relaxation_cohort.py`、`run_relaxation_comparison.py`、`ablate_*.py` |
 | 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_reward_attribution.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_quantum_repeats.py`、`summarize_*.py`、`audit_*.py` |
+| 整池终态验证 | `diagnose_terminal_pool.py`、`freeze_terminal_full_pool.py`、`run_quantum_persistent.py`、`summarize_full_pool_quantum.py`、`compare_quantum_arms.py`、`summarize_feedback_experiment.py` |
 | 量化验证 | `select_qualified_quantum_cohort.py`、`select_point_quantum_cohort.py`、`run_oe62_quantum.py`、`oe62_quantum_singlepoint.py`、`validate_quantum.py`、`compare_pool_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |
-| 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py` |
+| 梯度/执行验证 | `compare_excitation_gradients.py`、`validate_*.py`、`profile_octree_sampling.py`、`benchmark_dpa_packing.py` |
 | 打包与重放 | `check_wheel.py`、`pack_pretrained_weights.py`、`export_inference_bundle.py`、`validate_octree_reload.py` |
 
 ## 最小运行
