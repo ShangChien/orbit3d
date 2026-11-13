@@ -142,5 +142,436 @@
     "quantum_runtime_commit": "bc29a94",
     "completion_marker": "offline_completed.txt",
     "scope": "Only the already frozen E11 repeats, 24 quantum candidates, summaries and checkpoint audit. E12 is not launched."
+  },
+  "complete_parameter_audit": {
+    "scope": "Exact checkpoint tensor comparisons; time budget is pipeline time, process wall reported separately. No evaluation-based checkpoint selection.",
+    "runs": [
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/homo_seed42",
+        "initial_sha256": "4550a6ce412fd34ba35f373d75751dcd3241d6b3c798806f7f8819078ac442c4",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 125.90507951751351,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 113.48676933720708
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 209.11749606207013,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 194.68298292160034
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 208.3644894696772,
+            "returncode": 0,
+            "optimizer_updates": 1875,
+            "pipeline_training_seconds": 194.72358698025346
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "feb56b34c959ef9cca04c5ebdc387e0d08adeadcdc4d3377db1f733ae6bb59d2",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 113.48676933720708,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "b6dd81ca799ead23587d7891b7cb66a9e7064882f1e5d79009fc984cfe4e38f9",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 194.68298292160034,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": 0.012242063435085583,
+            "mean_eligible_pairs_per_batch": 5.226
+          },
+          "point_time": {
+            "checkpoint_sha256": "ed02b249217beba9528414843f431b7e0a40f9fa35cd15accd39bbd23dbb2bbd",
+            "optimizer_updates": 1875,
+            "pipeline_training_seconds": 194.72358698025346,
+            "requested_wall_seconds": 194.68298292160034,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      },
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/homo_seed43",
+        "initial_sha256": "1dd90dad91fda0d0ca44c9ee9559f241f8c3fb5dcbe8a6f47125ff84b138b6fd",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 125.63003344833851,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 113.21158702671528
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 205.8149549216032,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 192.39113952592015
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 206.05753091350198,
+            "returncode": 0,
+            "optimizer_updates": 1838,
+            "pipeline_training_seconds": 192.39776177704334
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "cecee339cc7034fdbffe2f144a16a0310c869d0d04c81e05a5646cd0e74b9d33",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 113.21158702671528,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "df5a11b93214a9b3a754a50d71ee4a5cd9e426fdd17f33003645ead8be7040e0",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 192.39113952592015,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": 0.01249248188646743,
+            "mean_eligible_pairs_per_batch": 5.15
+          },
+          "point_time": {
+            "checkpoint_sha256": "29ef821a62c2bb3799e0579f3a07d071bb2f79e1302ac0715f39508d6411b982",
+            "optimizer_updates": 1838,
+            "pipeline_training_seconds": 192.39776177704334,
+            "requested_wall_seconds": 192.39113952592015,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      },
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/homo_seed44",
+        "initial_sha256": "68a188a6d73fae1de305181a583b49625a04b0fe365951437f047a64e3057e46",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 131.99378913268447,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 119.87109161540866
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 223.48764700815082,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 208.61906530335546
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 223.25328922271729,
+            "returncode": 0,
+            "optimizer_updates": 1911,
+            "pipeline_training_seconds": 208.70863150432706
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "301cf2065ce1ae6916dea3694cace29a95f65059b90e36bb816d62cb315a0464",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 119.87109161540866,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "88c5cae55ce0e5670e93fc4bc5eb51b7f0fcf96a0e6493c27aaa28e55c8f421b",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 208.61906530335546,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": 0.011936948647839018,
+            "mean_eligible_pairs_per_batch": 5.22
+          },
+          "point_time": {
+            "checkpoint_sha256": "d79d4ea97f1428aadabb541162c0e8faf0698d95dcc48e3bb27ff65a239ea642",
+            "optimizer_updates": 1911,
+            "pipeline_training_seconds": 208.70863150432706,
+            "requested_wall_seconds": 208.61906530335546,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "homo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      },
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/lumo_seed42",
+        "initial_sha256": "46db69f04fb9b22b2713d360562ae83482ffda06c3e91a66c5124cc237bd78e9",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 127.90381395444274,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 115.37514997273684
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 208.98357186838984,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 196.82969688624144
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 207.97295002266765,
+            "returncode": 0,
+            "optimizer_updates": 1882,
+            "pipeline_training_seconds": 196.92064590379596
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "8befb7cc2718ba53465b54d3b8c8144b1d5d169e7b90b28e958ef9c38b8ff68a",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 115.37514997273684,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "0bbe126e37955ff1c6004de7e46b597f4648499e730e349f9a51010e2ea7e8a0",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 196.82969688624144,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": 0.01211835143979988,
+            "mean_eligible_pairs_per_batch": 5.428
+          },
+          "point_time": {
+            "checkpoint_sha256": "bd1407ce299cc3db178ccb1d64ca9d3ab8cbf60aa2ae41523d4f190f68e232c5",
+            "optimizer_updates": 1882,
+            "pipeline_training_seconds": 196.92064590379596,
+            "requested_wall_seconds": 196.82969688624144,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      },
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/lumo_seed43",
+        "initial_sha256": "86abaa420d7b628d47ae7219f5966fb24676cb2aa86b6ea3b52cc7765be705cd",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 143.17846014723182,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 129.70316398143768
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 269.737327426672,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 216.24976404383779
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 230.52033760771155,
+            "returncode": 0,
+            "optimizer_updates": 1923,
+            "pipeline_training_seconds": 216.3291390761733
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "f816722d1493a5deed51f8a25fa1bf3e73819dd9b1d7f97f3e6af2c7d7fd763a",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 129.70316398143768,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "98442fea4a24ced9d952c9ca053728df615d4454557abcc731cc24e04aa5db88",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 216.24976404383779,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": 0.01214904075054801,
+            "mean_eligible_pairs_per_batch": 5.444
+          },
+          "point_time": {
+            "checkpoint_sha256": "f50d022f2d70fde5ac83b94e4a901a169f12eee8fe906be06aaad2cbc96f84d3",
+            "optimizer_updates": 1923,
+            "pipeline_training_seconds": 216.3291390761733,
+            "requested_wall_seconds": 216.24976404383779,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      },
+      {
+        "campaign": "/sjtu-combustion/wjw/chensq/orbit_point_contrast_repeats_20261113/lumo_seed44",
+        "initial_sha256": "b1ea63e987e8fb26fee926892a43755bfe4a741d8bf2995a906646f471c0d4f4",
+        "training_costs": [
+          {
+            "name": "point_sft",
+            "wall_seconds": 130.16948100179434,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 118.00559001788497
+          },
+          {
+            "name": "point_contrast",
+            "wall_seconds": 211.08345986902714,
+            "returncode": 0,
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 197.61253215000033
+          },
+          {
+            "name": "point_time",
+            "wall_seconds": 211.65487645938993,
+            "returncode": 0,
+            "optimizer_updates": 1789,
+            "pipeline_training_seconds": 197.6840753518045
+          }
+        ],
+        "arms": {
+          "point_sft": {
+            "checkpoint_sha256": "c5e762d7513bebe4dfe7c1fda19aae5b719f5a7261f8e5fc195eb83768ae4683",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 118.00559001788497,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          },
+          "point_contrast": {
+            "checkpoint_sha256": "6093bf2b1a7237db0431116f4fb4327d56f0b8b6d783d6b7625f92fa583c6c1f",
+            "optimizer_updates": 1000,
+            "pipeline_training_seconds": 197.61253215000033,
+            "requested_wall_seconds": null,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": 0.012003409752782317,
+            "mean_eligible_pairs_per_batch": 5.464
+          },
+          "point_time": {
+            "checkpoint_sha256": "dd3abc17854af916c58060fb8852e35ad9e4624f630c084426149cc071ed9363",
+            "optimizer_updates": 1789,
+            "pipeline_training_seconds": 197.6840753518045,
+            "requested_wall_seconds": 197.61253215000033,
+            "changed_conditioner_tensors": 30,
+            "nonconditioner_tensors_unchanged": true,
+            "scaler_unchanged": true,
+            "active_targets": [
+              "lumo"
+            ],
+            "mean_contrast_loss": null,
+            "mean_eligible_pairs_per_batch": null
+          }
+        }
+      }
+    ]
   }
 }

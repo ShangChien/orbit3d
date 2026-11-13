@@ -4,7 +4,7 @@
 
 **预训练 Uni-3DAR octree → 点值/区间/均值宽度监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
 
-研究主线为**源三维分子的目标均值与偏好宽度控制**，按独立收益选择SFT、条件对比、Hindsight或GRPO；三seed奖励消融与高斯条件小实验已完成；当前复核点值条件对比的均值响应收益及逐分子误差代价，使用三训练seed和冻结量化队列。[实验方案](docs/experiments.md#e11-点值条件对比桥接)
+研究主线为**OE62源三维分子的点值控制与终态验收反馈**，按实测选择方法。E11三seed点值对比已完成；E12先在384次未排序提案上验证可弛豫供给，再进行五臂反馈对照。均值/宽度条件已实现，当前不扩大其训练矩阵。[实验方案](docs/experiments.md#e12-终态验收与反馈闭环)
 当前运行配置默认关闭GRPO，以便显式选择SFT或对齐实验；另有显式骨架图增长入口和BRICS片段基线。
 BRICS 用训练分子的规则切分与随机重组，检验简单图提案能否改善候选供给；
 它没有接入 octree 作为补位逻辑。[作用与局限](docs/architecture.md#brics-的作用与局限)
@@ -94,7 +94,7 @@ mol_gen/
 | 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_oe62.py`、`prepare_generator_sdf.py` |
 | 性质训练/评价 | `train_source_oracle.py`、`evaluate_source_holdout.py`、`train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
 | OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |
-| 生成训练与迁移 | `migrate_gaussian_conditioner.py`、`prepare_hindsight_pool.py`、`run_gaussian_pilot.py`、`run_point_contrast_bridge.py`、`initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
+| 生成训练与迁移 | `migrate_gaussian_conditioner.py`、`prepare_hindsight_pool.py`、`run_gaussian_pilot.py`、`run_point_contrast_bridge.py`、`run_terminal_feedback_arm.py`、`initialize_point_octree.py`、`train_octree_structural.py`、`migrate_octree_*.py`、`run_sft_duration_campaign.py` |
 | 对照实验 | `evaluate_target_windows.py`、`evaluate_brics_baseline.py`、`evaluate_brics_point_pool.py`、`run_grpo_factorial.py`、`run_point_comparison.py`、`evaluate_point_campaign.py`、`analyze_point_ranking.py`、`select_relaxation_cohort.py`、`run_relaxation_comparison.py`、`ablate_*.py` |
 | 独立评价/汇总 | `evaluate_point_pool.py`、`reevaluate_graph_campaign.py`、`evaluate_independent_3d_campaign.py`、`plot_reward_attribution.py`、`plot_*.py`、`evaluate_generated*.py`、`summarize_quantum_repeats.py`、`summarize_*.py`、`audit_*.py` |
 | 量化验证 | `select_qualified_quantum_cohort.py`、`select_point_quantum_cohort.py`、`run_oe62_quantum.py`、`oe62_quantum_singlepoint.py`、`validate_quantum.py`、`compare_pool_quantum.py`、`compare_quantum_oracles.py`、`optimize_excited_states.py` |

@@ -82,6 +82,8 @@ LUMO三seed也已完成：点值对比与等时SFT的B目标MAE为0.7119 vs 0.75
 
 同一24个输入坐标上，DPA/指纹/B相对量化的活跃性质MAE为0.3040/0.6078/0.4731 eV；B的9个预测命中只有3个量化命中，因此跨模型改善也不能直接替代量化裁决。[末端逐例结果](experiments/oe62_point_contrast_quantum_geometry_20261113.json)、[同坐标预测对照](experiments/oe62_point_contrast_quantum_predictors_20261113.json)
 
+![E11预先冻结量化队列的输入与优化末端](figures/oe62_point_contrast_quantum.png)
+
 ![三训练种子下的条件响应](figures/oe62_point_contrast_response.png)
 
 ![目标误差、响应偏差与命中产率的权衡](figures/oe62_point_contrast_tradeoff.png)
