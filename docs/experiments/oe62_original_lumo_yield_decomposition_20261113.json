@@ -1,0 +1,2387 @@
+{
+  "target": "lumo",
+  "training_seeds": [
+    42,
+    43,
+    44
+  ],
+  "treatment": "grpo200",
+  "definition": "Hit yield = evaluable coverage * hit fraction among evaluable proposals. Delta splits exactly into delta coverage * average conditional hit fraction + delta conditional hit fraction * average coverage. Per-quantile, then equal quantile and training-seed means.",
+  "interpretation": "Accounting identity, not a causal mediation estimate. Policy arms generate different candidate populations; raw coverage, conditional MAE and independent evaluators remain necessary.",
+  "comparisons": [
+    {
+      "training_seed": 42,
+      "evaluator": "dpa",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 20,
+            "mae": 0.7433187833644057
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 22,
+            "mae": 0.7706625890277644
+          },
+          "control_coverage": 0.19791666666666666,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.2631578947368421,
+          "treatment_conditional_hit_fraction": 0.18032786885245902,
+          "yield_delta": 0.005208333333333329,
+          "supply_component": 0.02656294938165085,
+          "conditional_hit_component": -0.02135461604831751,
+          "target_mae_delta_eV": 0.0273438056633587
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 81,
+            "hits": 16,
+            "mae": 0.846253280915272
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 120,
+            "hits": 22,
+            "mae": 0.770189284989357
+          },
+          "control_coverage": 0.2109375,
+          "treatment_coverage": 0.3125,
+          "control_conditional_hit_fraction": 0.19753086419753085,
+          "treatment_conditional_hit_fraction": 0.18333333333333332,
+          "yield_delta": 0.015625,
+          "supply_component": 0.0193407600308642,
+          "conditional_hit_component": -0.003715760030864198,
+          "target_mae_delta_eV": -0.07606399592591495
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 68,
+            "hits": 5,
+            "mae": 0.9178445561874614
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 14,
+            "mae": 0.9480623320818727
+          },
+          "control_coverage": 0.17708333333333334,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.07352941176470588,
+          "treatment_conditional_hit_fraction": 0.11475409836065574,
+          "yield_delta": 0.0234375,
+          "supply_component": 0.013238684305689486,
+          "conditional_hit_component": 0.01019881569431051,
+          "target_mae_delta_eV": 0.030217775894411325
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 57,
+            "hits": 12,
+            "mae": 1.034510821268224
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 13,
+            "mae": 1.048725913216167
+          },
+          "control_coverage": 0.1484375,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.21052631578947367,
+          "treatment_conditional_hit_fraction": 0.14444444444444443,
+          "yield_delta": 0.0026041666666666644,
+          "supply_component": 0.015252649853801169,
+          "conditional_hit_component": -0.012648483187134503,
+          "target_mae_delta_eV": 0.014215091947943126
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 53,
+            "hits": 10,
+            "mae": 1.2714354285275487
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 12,
+            "mae": 1.1626740887496032
+          },
+          "control_coverage": 0.13802083333333334,
+          "treatment_coverage": 0.19791666666666666,
+          "control_conditional_hit_fraction": 0.18867924528301888,
+          "treatment_conditional_hit_fraction": 0.15789473684210525,
+          "yield_delta": 0.005208333333333332,
+          "supply_component": 0.010379168735518036,
+          "conditional_hit_component": -0.005170835402184711,
+          "target_mae_delta_eV": -0.10876133977794544
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.010416666666666666,
+        "supply_component": 0.01695484246150475,
+        "conditional_hit_component": -0.006538175794838083,
+        "target_mae_delta_eV": -0.022609732439629448
+      }
+    },
+    {
+      "training_seed": 42,
+      "evaluator": "dpa",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 18,
+            "mae": 0.8048364454148015
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 22,
+            "mae": 0.7706625890277644
+          },
+          "control_coverage": 0.234375,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.2,
+          "treatment_conditional_hit_fraction": 0.18032786885245902,
+          "yield_delta": 0.010416666666666664,
+          "supply_component": 0.015846994535519125,
+          "conditional_hit_component": -0.00543032786885246,
+          "target_mae_delta_eV": -0.03417385638703707
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 19,
+            "mae": 0.751447824994778
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 120,
+            "hits": 22,
+            "mae": 0.770189284989357
+          },
+          "control_coverage": 0.2265625,
+          "treatment_coverage": 0.3125,
+          "control_conditional_hit_fraction": 0.21839080459770116,
+          "treatment_conditional_hit_fraction": 0.18333333333333332,
+          "yield_delta": 0.0078125,
+          "supply_component": 0.017261584051724135,
+          "conditional_hit_component": -0.009449084051724144,
+          "target_mae_delta_eV": 0.01874145999457899
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 81,
+            "hits": 13,
+            "mae": 0.8536373837944903
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 14,
+            "mae": 0.9480623320818727
+          },
+          "control_coverage": 0.2109375,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.16049382716049382,
+          "treatment_conditional_hit_fraction": 0.11475409836065574,
+          "yield_delta": 0.0026041666666666713,
+          "supply_component": 0.014694225190582201,
+          "conditional_hit_component": -0.012090058523915531,
+          "target_mae_delta_eV": 0.09442494828738246
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 69,
+            "hits": 11,
+            "mae": 1.1686715821058855
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 13,
+            "mae": 1.048725913216167
+          },
+          "control_coverage": 0.1796875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.15942028985507245,
+          "treatment_conditional_hit_fraction": 0.14444444444444443,
+          "yield_delta": 0.005208333333333332,
+          "supply_component": 0.008308801328502414,
+          "conditional_hit_component": -0.003100467995169082,
+          "target_mae_delta_eV": -0.11994566888971847
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 51,
+            "hits": 5,
+            "mae": 1.320464641050194
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 12,
+            "mae": 1.1626740887496032
+          },
+          "control_coverage": 0.1328125,
+          "treatment_coverage": 0.19791666666666666,
+          "control_conditional_hit_fraction": 0.09803921568627451,
+          "treatment_conditional_hit_fraction": 0.15789473684210525,
+          "yield_delta": 0.018229166666666664,
+          "supply_component": 0.008331183350533193,
+          "conditional_hit_component": 0.00989798331613347,
+          "target_mae_delta_eV": -0.1577905523005907
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.008854166666666666,
+        "supply_component": 0.012888557691372213,
+        "conditional_hit_component": -0.004034391024705549,
+        "target_mae_delta_eV": -0.03974873385907696
+      }
+    },
+    {
+      "training_seed": 42,
+      "evaluator": "fingerprint",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 8,
+            "mae": 0.7753119135671352
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 12,
+            "mae": 0.8465385119135506
+          },
+          "control_coverage": 0.19791666666666666,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.10526315789473684,
+          "treatment_conditional_hit_fraction": 0.09836065573770492,
+          "yield_delta": 0.010416666666666668,
+          "supply_component": 0.012196218004026458,
+          "conditional_hit_component": -0.0017795513373597919,
+          "target_mae_delta_eV": 0.07122659834641532
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 81,
+            "hits": 30,
+            "mae": 0.5219407209732999
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 120,
+            "hits": 40,
+            "mae": 0.5160863585931534
+          },
+          "control_coverage": 0.2109375,
+          "treatment_coverage": 0.3125,
+          "control_conditional_hit_fraction": 0.37037037037037035,
+          "treatment_conditional_hit_fraction": 0.3333333333333333,
+          "yield_delta": 0.02604166666666667,
+          "supply_component": 0.035734953703703706,
+          "conditional_hit_component": -0.009693287037037037,
+          "target_mae_delta_eV": -0.005854362380146472
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 68,
+            "hits": 20,
+            "mae": 0.526322157493546
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 27,
+            "mae": 0.533186415732447
+          },
+          "control_coverage": 0.17708333333333334,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.29411764705882354,
+          "treatment_conditional_hit_fraction": 0.22131147540983606,
+          "yield_delta": 0.018229166666666664,
+          "supply_component": 0.03624111017357762,
+          "conditional_hit_component": -0.018011943506910964,
+          "target_mae_delta_eV": 0.006864258238900911
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 57,
+            "hits": 14,
+            "mae": 0.640536948309885
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 22,
+            "mae": 0.7116606104980745
+          },
+          "control_coverage": 0.1484375,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.24561403508771928,
+          "treatment_conditional_hit_fraction": 0.24444444444444444,
+          "yield_delta": 0.02083333333333333,
+          "supply_component": 0.02105720029239766,
+          "conditional_hit_component": -0.0002238669590643264,
+          "target_mae_delta_eV": 0.07112366218818955
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 53,
+            "hits": 5,
+            "mae": 0.932747963483486
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 9,
+            "mae": 0.8767345434138348
+          },
+          "control_coverage": 0.13802083333333334,
+          "treatment_coverage": 0.19791666666666666,
+          "control_conditional_hit_fraction": 0.09433962264150944,
+          "treatment_conditional_hit_fraction": 0.11842105263157894,
+          "yield_delta": 0.010416666666666666,
+          "supply_component": 0.006371738973022177,
+          "conditional_hit_component": 0.004044927693644487,
+          "target_mae_delta_eV": -0.056013420069651154
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.0171875,
+        "supply_component": 0.022320244229345525,
+        "conditional_hit_component": -0.005132744229345527,
+        "target_mae_delta_eV": 0.01746934726474163
+      }
+    },
+    {
+      "training_seed": 42,
+      "evaluator": "fingerprint",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 9,
+            "mae": 0.9157149636296424
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 12,
+            "mae": 0.8465385119135506
+          },
+          "control_coverage": 0.234375,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.1,
+          "treatment_conditional_hit_fraction": 0.09836065573770492,
+          "yield_delta": 0.0078125,
+          "supply_component": 0.00826502732240437,
+          "conditional_hit_component": -0.0004525273224043736,
+          "target_mae_delta_eV": -0.06917645171609188
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 32,
+            "mae": 0.4941936126936698
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 120,
+            "hits": 40,
+            "mae": 0.5160863585931534
+          },
+          "control_coverage": 0.2265625,
+          "treatment_coverage": 0.3125,
+          "control_conditional_hit_fraction": 0.367816091954023,
+          "treatment_conditional_hit_fraction": 0.3333333333333333,
+          "yield_delta": 0.020833333333333343,
+          "supply_component": 0.030127514367816088,
+          "conditional_hit_component": -0.009294181034482762,
+          "target_mae_delta_eV": 0.021892745899483645
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 81,
+            "hits": 22,
+            "mae": 0.5285905186984389
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 27,
+            "mae": 0.533186415732447
+          },
+          "control_coverage": 0.2109375,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.2716049382716049,
+          "treatment_conditional_hit_fraction": 0.22131147540983606,
+          "yield_delta": 0.013020833333333336,
+          "supply_component": 0.026314548126222758,
+          "conditional_hit_component": -0.013293714792889424,
+          "target_mae_delta_eV": 0.00459589703400809
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 69,
+            "hits": 15,
+            "mae": 0.7434956380966643
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 22,
+            "mae": 0.7116606104980745
+          },
+          "control_coverage": 0.1796875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.21739130434782608,
+          "treatment_conditional_hit_fraction": 0.24444444444444444,
+          "yield_delta": 0.018229166666666664,
+          "supply_component": 0.012628321256038647,
+          "conditional_hit_component": 0.005600845410628019,
+          "target_mae_delta_eV": -0.031835027598589805
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 51,
+            "hits": 6,
+            "mae": 0.9296080431927274
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 9,
+            "mae": 0.8767345434138348
+          },
+          "control_coverage": 0.1328125,
+          "treatment_coverage": 0.19791666666666666,
+          "control_conditional_hit_fraction": 0.11764705882352941,
+          "treatment_conditional_hit_fraction": 0.11842105263157894,
+          "yield_delta": 0.0078125,
+          "supply_component": 0.007684508836429307,
+          "conditional_hit_component": 0.0001279911635706906,
+          "target_mae_delta_eV": -0.05287349977889255
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.013541666666666669,
+        "supply_component": 0.017003983981782232,
+        "conditional_hit_component": -0.0034623173151155707,
+        "target_mae_delta_eV": -0.0254792672320165
+      }
+    },
+    {
+      "training_seed": 42,
+      "evaluator": "unimol2",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 17,
+            "mae": 0.7119594329237353
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 29,
+            "mae": 0.755015225503703
+          },
+          "control_coverage": 0.19791666666666666,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.2236842105263158,
+          "treatment_conditional_hit_fraction": 0.23770491803278687,
+          "yield_delta": 0.031249999999999993,
+          "supply_component": 0.027635286345987917,
+          "conditional_hit_component": 0.0036147136540120757,
+          "target_mae_delta_eV": 0.04305579257996772
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 81,
+            "hits": 17,
+            "mae": 0.6782364715898521
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 120,
+            "hits": 31,
+            "mae": 0.6314976068550462
+          },
+          "control_coverage": 0.2109375,
+          "treatment_coverage": 0.3125,
+          "control_conditional_hit_fraction": 0.20987654320987653,
+          "treatment_conditional_hit_fraction": 0.25833333333333336,
+          "yield_delta": 0.036458333333333336,
+          "supply_component": 0.023776282793209876,
+          "conditional_hit_component": 0.012682050540123467,
+          "target_mae_delta_eV": -0.04673886473480593
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 68,
+            "hits": 15,
+            "mae": 0.6620347997517255
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 18,
+            "mae": 0.759625280282596
+          },
+          "control_coverage": 0.17708333333333334,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.22058823529411764,
+          "treatment_conditional_hit_fraction": 0.14754098360655737,
+          "yield_delta": 0.0078125,
+          "supply_component": 0.025884085703953705,
+          "conditional_hit_component": -0.01807158570395371,
+          "target_mae_delta_eV": 0.0975904805308705
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 57,
+            "hits": 15,
+            "mae": 0.7728292618963489
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 11,
+            "mae": 0.8921123973631989
+          },
+          "control_coverage": 0.1484375,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.2631578947368421,
+          "treatment_conditional_hit_fraction": 0.12222222222222222,
+          "yield_delta": -0.010416666666666668,
+          "supply_component": 0.016559301900584796,
+          "conditional_hit_component": -0.026975968567251457,
+          "target_mae_delta_eV": 0.11928313546684999
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 53,
+            "hits": 9,
+            "mae": 1.052409328709223
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 7,
+            "mae": 1.0415499237293648
+          },
+          "control_coverage": 0.13802083333333334,
+          "treatment_coverage": 0.19791666666666666,
+          "control_conditional_hit_fraction": 0.16981132075471697,
+          "treatment_conditional_hit_fraction": 0.09210526315789473,
+          "yield_delta": -0.005208333333333332,
+          "supply_component": 0.0078438560286329,
+          "conditional_hit_component": -0.013052189361966235,
+          "target_mae_delta_eV": -0.010859404979858267
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.011979166666666666,
+        "supply_component": 0.02033976255447384,
+        "conditional_hit_component": -0.008360595887807172,
+        "target_mae_delta_eV": 0.0404662277726048
+      }
+    },
+    {
+      "training_seed": 42,
+      "evaluator": "unimol2",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 89,
+            "hits": 24,
+            "mae": 0.7687477859468688
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 29,
+            "mae": 0.755015225503703
+          },
+          "control_coverage": 0.23177083333333334,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.2696629213483146,
+          "treatment_conditional_hit_fraction": 0.23770491803278687,
+          "yield_delta": 0.013020833333333329,
+          "supply_component": 0.021800961848406693,
+          "conditional_hit_component": -0.008780128515073373,
+          "target_mae_delta_eV": -0.013732560443165731
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 24,
+            "mae": 0.659620931111326
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 120,
+            "hits": 31,
+            "mae": 0.6314976068550462
+          },
+          "control_coverage": 0.2265625,
+          "treatment_coverage": 0.3125,
+          "control_conditional_hit_fraction": 0.27586206896551724,
+          "treatment_conditional_hit_fraction": 0.25833333333333336,
+          "yield_delta": 0.01822916666666667,
+          "supply_component": 0.02295370869252874,
+          "conditional_hit_component": -0.004724542025862061,
+          "target_mae_delta_eV": -0.028123324256279836
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 81,
+            "hits": 18,
+            "mae": 0.6664029333881063
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 122,
+            "hits": 18,
+            "mae": 0.759625280282596
+          },
+          "control_coverage": 0.2109375,
+          "treatment_coverage": 0.3177083333333333,
+          "control_conditional_hit_fraction": 0.2222222222222222,
+          "treatment_conditional_hit_fraction": 0.14754098360655737,
+          "yield_delta": 0.0,
+          "supply_component": 0.019739962811171824,
+          "conditional_hit_component": -0.019739962811171824,
+          "target_mae_delta_eV": 0.09322234689448972
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 69,
+            "hits": 13,
+            "mae": 0.9593841881936334
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 11,
+            "mae": 0.8921123973631989
+          },
+          "control_coverage": 0.1796875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.18840579710144928,
+          "treatment_conditional_hit_fraction": 0.12222222222222222,
+          "yield_delta": -0.005208333333333332,
+          "supply_component": 0.008493734903381643,
+          "conditional_hit_component": -0.013702068236714977,
+          "target_mae_delta_eV": -0.06727179083043444
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 51,
+            "hits": 5,
+            "mae": 1.2285581397090546
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 76,
+            "hits": 7,
+            "mae": 1.0415499237293648
+          },
+          "control_coverage": 0.1328125,
+          "treatment_coverage": 0.19791666666666666,
+          "control_conditional_hit_fraction": 0.09803921568627451,
+          "treatment_conditional_hit_fraction": 0.09210526315789473,
+          "yield_delta": 0.005208333333333334,
+          "supply_component": 0.006189598920708634,
+          "conditional_hit_component": -0.0009812655873753014,
+          "target_mae_delta_eV": -0.18700821597968975
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.00625,
+        "supply_component": 0.01583559343523951,
+        "conditional_hit_component": -0.009585593435239508,
+        "target_mae_delta_eV": -0.040582708923016006
+      }
+    },
+    {
+      "training_seed": 43,
+      "evaluator": "dpa",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 98,
+            "hits": 25,
+            "mae": 0.7265284133904321
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 123,
+            "hits": 27,
+            "mae": 0.807717198735209
+          },
+          "control_coverage": 0.2552083333333333,
+          "treatment_coverage": 0.3203125,
+          "control_conditional_hit_fraction": 0.25510204081632654,
+          "treatment_conditional_hit_fraction": 0.21951219512195122,
+          "yield_delta": 0.005208333333333329,
+          "supply_component": 0.015449682159449151,
+          "conditional_hit_component": -0.010241348826115812,
+          "target_mae_delta_eV": 0.08118878534477691
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 16,
+            "mae": 0.7756810356501878
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 107,
+            "hits": 22,
+            "mae": 0.7781062012949839
+          },
+          "control_coverage": 0.2265625,
+          "treatment_coverage": 0.2786458333333333,
+          "control_conditional_hit_fraction": 0.1839080459770115,
+          "treatment_conditional_hit_fraction": 0.205607476635514,
+          "yield_delta": 0.015625,
+          "supply_component": 0.01014363340136785,
+          "conditional_hit_component": 0.005481366598632147,
+          "target_mae_delta_eV": 0.0024251656447961123
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 72,
+            "hits": 7,
+            "mae": 0.9687982890174125
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 96,
+            "hits": 8,
+            "mae": 1.018064444654559
+          },
+          "control_coverage": 0.1875,
+          "treatment_coverage": 0.25,
+          "control_conditional_hit_fraction": 0.09722222222222222,
+          "treatment_conditional_hit_fraction": 0.08333333333333333,
+          "yield_delta": 0.0026041666666666644,
+          "supply_component": 0.005642361111111111,
+          "conditional_hit_component": -0.003038194444444446,
+          "target_mae_delta_eV": 0.049266155637146536
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 62,
+            "hits": 6,
+            "mae": 1.0354606349707418
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 95,
+            "hits": 13,
+            "mae": 1.1549782921535845
+          },
+          "control_coverage": 0.16145833333333334,
+          "treatment_coverage": 0.24739583333333334,
+          "control_conditional_hit_fraction": 0.0967741935483871,
+          "treatment_conditional_hit_fraction": 0.1368421052631579,
+          "yield_delta": 0.018229166666666664,
+          "supply_component": 0.010038200339558575,
+          "conditional_hit_component": 0.008190966327108095,
+          "target_mae_delta_eV": 0.11951765718284268
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 11,
+            "mae": 0.9044689000326648
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 5,
+            "mae": 1.4738893886544897
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.2265625,
+          "control_conditional_hit_fraction": 0.16666666666666666,
+          "treatment_conditional_hit_fraction": 0.05747126436781609,
+          "yield_delta": -0.015624999999999998,
+          "supply_component": 0.0061287715517241385,
+          "conditional_hit_component": -0.021753771551724137,
+          "target_mae_delta_eV": 0.5694204886218249
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.005208333333333331,
+        "supply_component": 0.009480529712642165,
+        "conditional_hit_component": -0.004272196379308831,
+        "target_mae_delta_eV": 0.16436365048627744
+      }
+    },
+    {
+      "training_seed": 43,
+      "evaluator": "dpa",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 77,
+            "hits": 18,
+            "mae": 0.7994080735862177
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 123,
+            "hits": 27,
+            "mae": 0.807717198735209
+          },
+          "control_coverage": 0.20052083333333334,
+          "treatment_coverage": 0.3203125,
+          "control_conditional_hit_fraction": 0.23376623376623376,
+          "treatment_conditional_hit_fraction": 0.21951219512195122,
+          "yield_delta": 0.0234375,
+          "supply_component": 0.02714948923028191,
+          "conditional_hit_component": -0.0037119892302819118,
+          "target_mae_delta_eV": 0.008309125148991292
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 71,
+            "hits": 13,
+            "mae": 0.7854812204778028
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 107,
+            "hits": 22,
+            "mae": 0.7781062012949839
+          },
+          "control_coverage": 0.18489583333333334,
+          "treatment_coverage": 0.2786458333333333,
+          "control_conditional_hit_fraction": 0.18309859154929578,
+          "treatment_conditional_hit_fraction": 0.205607476635514,
+          "yield_delta": 0.0234375,
+          "supply_component": 0.018220596946162952,
+          "conditional_hit_component": 0.005216903053837038,
+          "target_mae_delta_eV": -0.007375019182818909
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 67,
+            "hits": 8,
+            "mae": 0.9137657615759834
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 96,
+            "hits": 8,
+            "mae": 1.018064444654559
+          },
+          "control_coverage": 0.17447916666666666,
+          "treatment_coverage": 0.25,
+          "control_conditional_hit_fraction": 0.11940298507462686,
+          "treatment_conditional_hit_fraction": 0.08333333333333333,
+          "yield_delta": 0.0,
+          "supply_component": 0.007655407856550581,
+          "conditional_hit_component": -0.00765540785655058,
+          "target_mae_delta_eV": 0.1042986830785756
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 74,
+            "hits": 16,
+            "mae": 0.9103199858675948
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 95,
+            "hits": 13,
+            "mae": 1.1549782921535845
+          },
+          "control_coverage": 0.19270833333333334,
+          "treatment_coverage": 0.24739583333333334,
+          "control_conditional_hit_fraction": 0.21621621621621623,
+          "treatment_conditional_hit_fraction": 0.1368421052631579,
+          "yield_delta": -0.0078125,
+          "supply_component": 0.009653938477951636,
+          "conditional_hit_component": -0.017466438477951637,
+          "target_mae_delta_eV": 0.24465830628598972
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 56,
+            "hits": 5,
+            "mae": 1.2459573836979516
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 5,
+            "mae": 1.4738893886544897
+          },
+          "control_coverage": 0.14583333333333334,
+          "treatment_coverage": 0.2265625,
+          "control_conditional_hit_fraction": 0.08928571428571429,
+          "treatment_conditional_hit_fraction": 0.05747126436781609,
+          "yield_delta": 0.0,
+          "supply_component": 0.005923784294608647,
+          "conditional_hit_component": -0.005923784294608649,
+          "target_mae_delta_eV": 0.2279320049565381
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.0078125,
+        "supply_component": 0.013720643361111146,
+        "conditional_hit_component": -0.005908143361111147,
+        "target_mae_delta_eV": 0.11556462005745516
+      }
+    },
+    {
+      "training_seed": 43,
+      "evaluator": "fingerprint",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 98,
+            "hits": 17,
+            "mae": 0.7327222375912433
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 123,
+            "hits": 16,
+            "mae": 0.8010932349361071
+          },
+          "control_coverage": 0.2552083333333333,
+          "treatment_coverage": 0.3203125,
+          "control_conditional_hit_fraction": 0.17346938775510204,
+          "treatment_conditional_hit_fraction": 0.13008130081300814,
+          "yield_delta": -0.0026041666666666713,
+          "supply_component": 0.00988120731015984,
+          "conditional_hit_component": -0.012485373976826497,
+          "target_mae_delta_eV": 0.06837099734486374
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 30,
+            "mae": 0.5369241661940952
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 107,
+            "hits": 36,
+            "mae": 0.5305013580811746
+          },
+          "control_coverage": 0.2265625,
+          "treatment_coverage": 0.2786458333333333,
+          "control_conditional_hit_fraction": 0.3448275862068966,
+          "treatment_conditional_hit_fraction": 0.3364485981308411,
+          "yield_delta": 0.015625,
+          "supply_component": 0.017741567300461916,
+          "conditional_hit_component": -0.0021165673004619285,
+          "target_mae_delta_eV": -0.006422808112920619
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 72,
+            "hits": 22,
+            "mae": 0.5027681594141232
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 96,
+            "hits": 23,
+            "mae": 0.6081435753805456
+          },
+          "control_coverage": 0.1875,
+          "treatment_coverage": 0.25,
+          "control_conditional_hit_fraction": 0.3055555555555556,
+          "treatment_conditional_hit_fraction": 0.23958333333333334,
+          "yield_delta": 0.0026041666666666713,
+          "supply_component": 0.01703559027777778,
+          "conditional_hit_component": -0.014431423611111115,
+          "target_mae_delta_eV": 0.10537541596642241
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 62,
+            "hits": 8,
+            "mae": 0.747287765018639
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 95,
+            "hits": 24,
+            "mae": 0.7720850390682238
+          },
+          "control_coverage": 0.16145833333333334,
+          "treatment_coverage": 0.24739583333333334,
+          "control_conditional_hit_fraction": 0.12903225806451613,
+          "treatment_conditional_hit_fraction": 0.25263157894736843,
+          "yield_delta": 0.04166666666666667,
+          "supply_component": 0.016399617996604415,
+          "conditional_hit_component": 0.025267048670062256,
+          "target_mae_delta_eV": 0.02479727404958476
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 6,
+            "mae": 0.8724421071368511
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 7,
+            "mae": 1.0064148843498528
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.2265625,
+          "control_conditional_hit_fraction": 0.09090909090909091,
+          "treatment_conditional_hit_fraction": 0.08045977011494253,
+          "yield_delta": 0.002604166666666668,
+          "supply_component": 0.004685867293625914,
+          "conditional_hit_component": -0.0020817006269592485,
+          "target_mae_delta_eV": 0.13397277721300171
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.01197916666666667,
+        "supply_component": 0.013148770035725973,
+        "conditional_hit_component": -0.0011696033690593067,
+        "target_mae_delta_eV": 0.0652187312921904
+      }
+    },
+    {
+      "training_seed": 43,
+      "evaluator": "fingerprint",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 77,
+            "hits": 11,
+            "mae": 0.8943629913711536
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 123,
+            "hits": 16,
+            "mae": 0.8010932349361071
+          },
+          "control_coverage": 0.20052083333333334,
+          "treatment_coverage": 0.3203125,
+          "control_conditional_hit_fraction": 0.14285714285714285,
+          "treatment_conditional_hit_fraction": 0.13008130081300814,
+          "yield_delta": 0.013020833333333332,
+          "supply_component": 0.01634787553232675,
+          "conditional_hit_component": -0.003327042198993413,
+          "target_mae_delta_eV": -0.09326975643504654
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 71,
+            "hits": 15,
+            "mae": 0.6346828822555001
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 107,
+            "hits": 36,
+            "mae": 0.5305013580811746
+          },
+          "control_coverage": 0.18489583333333334,
+          "treatment_coverage": 0.2786458333333333,
+          "control_conditional_hit_fraction": 0.2112676056338028,
+          "treatment_conditional_hit_fraction": 0.3364485981308411,
+          "yield_delta": 0.0546875,
+          "supply_component": 0.025674197051467677,
+          "conditional_hit_component": 0.02901330294853231,
+          "target_mae_delta_eV": -0.10418152417432547
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 67,
+            "hits": 24,
+            "mae": 0.49294817545914105
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 96,
+            "hits": 23,
+            "mae": 0.6081435753805456
+          },
+          "control_coverage": 0.17447916666666666,
+          "treatment_coverage": 0.25,
+          "control_conditional_hit_fraction": 0.3582089552238806,
+          "treatment_conditional_hit_fraction": 0.23958333333333334,
+          "yield_delta": -0.0026041666666666644,
+          "supply_component": 0.02257288589604063,
+          "conditional_hit_component": -0.02517705256270729,
+          "target_mae_delta_eV": 0.1151953999214046
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 74,
+            "hits": 17,
+            "mae": 0.5718880617732839
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 95,
+            "hits": 24,
+            "mae": 0.7720850390682238
+          },
+          "control_coverage": 0.19270833333333334,
+          "treatment_coverage": 0.24739583333333334,
+          "control_conditional_hit_fraction": 0.22972972972972974,
+          "treatment_conditional_hit_fraction": 0.25263157894736843,
+          "yield_delta": 0.018229166666666664,
+          "supply_component": 0.013189567034139402,
+          "conditional_hit_component": 0.005039599632527264,
+          "target_mae_delta_eV": 0.2001969772949399
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 56,
+            "hits": 5,
+            "mae": 1.0052975178204668
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 7,
+            "mae": 1.0064148843498528
+          },
+          "control_coverage": 0.14583333333333334,
+          "treatment_coverage": 0.2265625,
+          "control_conditional_hit_fraction": 0.08928571428571429,
+          "treatment_conditional_hit_fraction": 0.08045977011494253,
+          "yield_delta": 0.005208333333333334,
+          "supply_component": 0.006851705750547344,
+          "conditional_hit_component": -0.0016433724172140128,
+          "target_mae_delta_eV": 0.001117366529385988
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.01770833333333333,
+        "supply_component": 0.01692724625290436,
+        "conditional_hit_component": 0.0007810870804289714,
+        "target_mae_delta_eV": 0.023811692627271695
+      }
+    },
+    {
+      "training_seed": 43,
+      "evaluator": "unimol2",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 98,
+            "hits": 22,
+            "mae": 0.7107560632462235
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 123,
+            "hits": 27,
+            "mae": 0.7822038032945523
+          },
+          "control_coverage": 0.2552083333333333,
+          "treatment_coverage": 0.3203125,
+          "control_conditional_hit_fraction": 0.22448979591836735,
+          "treatment_conditional_hit_fraction": 0.21951219512195122,
+          "yield_delta": 0.013020833333333336,
+          "supply_component": 0.014453189812510375,
+          "conditional_hit_component": -0.001432356479177036,
+          "target_mae_delta_eV": 0.07144774004832877
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 13,
+            "mae": 0.7031339712630603
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 107,
+            "hits": 25,
+            "mae": 0.6802409222307759
+          },
+          "control_coverage": 0.2265625,
+          "treatment_coverage": 0.2786458333333333,
+          "control_conditional_hit_fraction": 0.14942528735632185,
+          "treatment_conditional_hit_fraction": 0.2336448598130841,
+          "yield_delta": 0.03125000000000001,
+          "supply_component": 0.00997578508253661,
+          "conditional_hit_component": 0.02127421491746338,
+          "target_mae_delta_eV": -0.022893049032284396
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 72,
+            "hits": 12,
+            "mae": 0.7179800819177221
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 96,
+            "hits": 18,
+            "mae": 0.8249635981028338
+          },
+          "control_coverage": 0.1875,
+          "treatment_coverage": 0.25,
+          "control_conditional_hit_fraction": 0.16666666666666666,
+          "treatment_conditional_hit_fraction": 0.1875,
+          "yield_delta": 0.015625,
+          "supply_component": 0.011067708333333332,
+          "conditional_hit_component": 0.004557291666666669,
+          "target_mae_delta_eV": 0.1069835161851117
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 62,
+            "hits": 10,
+            "mae": 1.0214896357453813
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 95,
+            "hits": 14,
+            "mae": 1.049667725071281
+          },
+          "control_coverage": 0.16145833333333334,
+          "treatment_coverage": 0.24739583333333334,
+          "control_conditional_hit_fraction": 0.16129032258064516,
+          "treatment_conditional_hit_fraction": 0.14736842105263157,
+          "yield_delta": 0.010416666666666668,
+          "supply_component": 0.01326268039049236,
+          "conditional_hit_component": -0.0028460137238256952,
+          "target_mae_delta_eV": 0.028178089325899602
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 9,
+            "mae": 0.8700838104148594
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 11,
+            "mae": 1.2304133431504425
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.2265625,
+          "control_conditional_hit_fraction": 0.13636363636363635,
+          "treatment_conditional_hit_fraction": 0.12643678160919541,
+          "yield_delta": 0.005208333333333332,
+          "supply_component": 0.0071859489289446184,
+          "conditional_hit_component": -0.001977615595611281,
+          "target_mae_delta_eV": 0.3603295327355831
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.015104166666666669,
+        "supply_component": 0.011189062509563459,
+        "conditional_hit_component": 0.003915104157103206,
+        "target_mae_delta_eV": 0.10880916585252776
+      }
+    },
+    {
+      "training_seed": 43,
+      "evaluator": "unimol2",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 77,
+            "hits": 18,
+            "mae": 0.7540340240417417
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 123,
+            "hits": 27,
+            "mae": 0.7822038032945523
+          },
+          "control_coverage": 0.20052083333333334,
+          "treatment_coverage": 0.3203125,
+          "control_conditional_hit_fraction": 0.23376623376623376,
+          "treatment_conditional_hit_fraction": 0.21951219512195122,
+          "yield_delta": 0.0234375,
+          "supply_component": 0.02714948923028191,
+          "conditional_hit_component": -0.0037119892302819118,
+          "target_mae_delta_eV": 0.02816977925281061
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 71,
+            "hits": 19,
+            "mae": 0.6920346041233851
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 107,
+            "hits": 25,
+            "mae": 0.6802409222307759
+          },
+          "control_coverage": 0.18489583333333334,
+          "treatment_coverage": 0.2786458333333333,
+          "control_conditional_hit_fraction": 0.2676056338028169,
+          "treatment_conditional_hit_fraction": 0.2336448598130841,
+          "yield_delta": 0.015625000000000007,
+          "supply_component": 0.023496116888245353,
+          "conditional_hit_component": -0.007871116888245355,
+          "target_mae_delta_eV": -0.011793681892609209
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 67,
+            "hits": 7,
+            "mae": 0.7323178775254067
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 96,
+            "hits": 18,
+            "mae": 0.8249635981028338
+          },
+          "control_coverage": 0.17447916666666666,
+          "treatment_coverage": 0.25,
+          "control_conditional_hit_fraction": 0.1044776119402985,
+          "treatment_conditional_hit_fraction": 0.1875,
+          "yield_delta": 0.028645833333333332,
+          "supply_component": 0.01102519628420398,
+          "conditional_hit_component": 0.01762063704912935,
+          "target_mae_delta_eV": 0.09264572057742715
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 74,
+            "hits": 11,
+            "mae": 0.8448710751106024
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 95,
+            "hits": 14,
+            "mae": 1.049667725071281
+          },
+          "control_coverage": 0.19270833333333334,
+          "treatment_coverage": 0.24739583333333334,
+          "control_conditional_hit_fraction": 0.14864864864864866,
+          "treatment_conditional_hit_fraction": 0.14736842105263157,
+          "yield_delta": 0.007812500000000003,
+          "supply_component": 0.00809421674964438,
+          "conditional_hit_component": -0.00028171674964438606,
+          "target_mae_delta_eV": 0.20479664996067848
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 56,
+            "hits": 9,
+            "mae": 1.1738804776175298
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 87,
+            "hits": 11,
+            "mae": 1.2304133431504425
+          },
+          "control_coverage": 0.14583333333333334,
+          "treatment_coverage": 0.2265625,
+          "control_conditional_hit_fraction": 0.16071428571428573,
+          "treatment_conditional_hit_fraction": 0.12643678160919541,
+          "yield_delta": 0.005208333333333332,
+          "supply_component": 0.011590733186234265,
+          "conditional_hit_component": -0.006382399852900931,
+          "target_mae_delta_eV": 0.0565328655329127
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.016145833333333335,
+        "supply_component": 0.016271150467721977,
+        "conditional_hit_component": -0.00012531713438864654,
+        "target_mae_delta_eV": 0.07407026668624395
+      }
+    },
+    {
+      "training_seed": 44,
+      "evaluator": "dpa",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 93,
+            "hits": 20,
+            "mae": 0.6880920335615834
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 114,
+            "hits": 23,
+            "mae": 0.8525130453324317
+          },
+          "control_coverage": 0.2421875,
+          "treatment_coverage": 0.296875,
+          "control_conditional_hit_fraction": 0.21505376344086022,
+          "treatment_conditional_hit_fraction": 0.20175438596491227,
+          "yield_delta": 0.0078125,
+          "supply_component": 0.01139709783531409,
+          "conditional_hit_component": -0.003584597835314096,
+          "target_mae_delta_eV": 0.16442101177084822
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 98,
+            "hits": 18,
+            "mae": 0.7708947170201127
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 85,
+            "hits": 16,
+            "mae": 0.7570937117007761
+          },
+          "control_coverage": 0.2552083333333333,
+          "treatment_coverage": 0.22135416666666666,
+          "control_conditional_hit_fraction": 0.1836734693877551,
+          "treatment_conditional_hit_fraction": 0.18823529411764706,
+          "yield_delta": -0.005208333333333336,
+          "supply_component": -0.006295330632252899,
+          "conditional_hit_component": 0.001086997298919565,
+          "target_mae_delta_eV": -0.01380100531933659
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 57,
+            "hits": 11,
+            "mae": 0.9196835723062147
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 102,
+            "hits": 21,
+            "mae": 0.9229325493281962
+          },
+          "control_coverage": 0.1484375,
+          "treatment_coverage": 0.265625,
+          "control_conditional_hit_fraction": 0.19298245614035087,
+          "treatment_conditional_hit_fraction": 0.20588235294117646,
+          "yield_delta": 0.026041666666666668,
+          "supply_component": 0.02337098490712074,
+          "conditional_hit_component": 0.002670681759545924,
+          "target_mae_delta_eV": 0.0032489770219815695
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 72,
+            "hits": 14,
+            "mae": 1.0398322104175886
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 15,
+            "mae": 1.0163124417393636
+          },
+          "control_coverage": 0.1875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.19444444444444445,
+          "treatment_conditional_hit_fraction": 0.16666666666666666,
+          "yield_delta": 0.0026041666666666644,
+          "supply_component": 0.008463541666666666,
+          "conditional_hit_component": -0.005859375000000003,
+          "target_mae_delta_eV": -0.023519768678224917
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 50,
+            "hits": 9,
+            "mae": 1.0083346463016534
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 79,
+            "hits": 19,
+            "mae": 1.0229839639161027
+          },
+          "control_coverage": 0.13020833333333334,
+          "treatment_coverage": 0.20572916666666666,
+          "control_conditional_hit_fraction": 0.18,
+          "treatment_conditional_hit_fraction": 0.24050632911392406,
+          "yield_delta": 0.026041666666666664,
+          "supply_component": 0.01587849419831223,
+          "conditional_hit_component": 0.010163172468354433,
+          "target_mae_delta_eV": 0.01464931761444932
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.01145833333333333,
+        "supply_component": 0.010562957595032165,
+        "conditional_hit_component": 0.0008953757383011647,
+        "target_mae_delta_eV": 0.02899970648194352
+      }
+    },
+    {
+      "training_seed": 44,
+      "evaluator": "dpa",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 99,
+            "hits": 21,
+            "mae": 0.7072264401971451
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 114,
+            "hits": 23,
+            "mae": 0.8525130453324317
+          },
+          "control_coverage": 0.2578125,
+          "treatment_coverage": 0.296875,
+          "control_conditional_hit_fraction": 0.21212121212121213,
+          "treatment_conditional_hit_fraction": 0.20175438596491227,
+          "yield_delta": 0.005208333333333336,
+          "supply_component": 0.008083507775119618,
+          "conditional_hit_component": -0.0028751744417862884,
+          "target_mae_delta_eV": 0.14528660513528657
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 82,
+            "hits": 15,
+            "mae": 0.786876411516681
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 85,
+            "hits": 16,
+            "mae": 0.7570937117007761
+          },
+          "control_coverage": 0.21354166666666666,
+          "treatment_coverage": 0.22135416666666666,
+          "control_conditional_hit_fraction": 0.18292682926829268,
+          "treatment_conditional_hit_fraction": 0.18823529411764706,
+          "yield_delta": 0.0026041666666666644,
+          "supply_component": 0.001449852044476327,
+          "conditional_hit_component": 0.0011543146221903399,
+          "target_mae_delta_eV": -0.029782699815904867
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 67,
+            "hits": 6,
+            "mae": 0.8001132219450509
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 102,
+            "hits": 21,
+            "mae": 0.9229325493281962
+          },
+          "control_coverage": 0.17447916666666666,
+          "treatment_coverage": 0.265625,
+          "control_conditional_hit_fraction": 0.08955223880597014,
+          "treatment_conditional_hit_fraction": 0.20588235294117646,
+          "yield_delta": 0.0390625,
+          "supply_component": 0.0134638160301434,
+          "conditional_hit_component": 0.025598683969856595,
+          "target_mae_delta_eV": 0.12281932738314538
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 11,
+            "mae": 1.105428735021389
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 15,
+            "mae": 1.0163124417393636
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.16666666666666666,
+          "treatment_conditional_hit_fraction": 0.16666666666666666,
+          "yield_delta": 0.010416666666666668,
+          "supply_component": 0.010416666666666666,
+          "conditional_hit_component": 0.0,
+          "target_mae_delta_eV": -0.0891162932820253
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 10,
+            "mae": 0.9974560767935117
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 79,
+            "hits": 19,
+            "mae": 1.0229839639161027
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.20572916666666666,
+          "control_conditional_hit_fraction": 0.15151515151515152,
+          "treatment_conditional_hit_fraction": 0.24050632911392406,
+          "yield_delta": 0.023437499999999997,
+          "supply_component": 0.00663578027106508,
+          "conditional_hit_component": 0.016801719728934916,
+          "target_mae_delta_eV": 0.02552788712259102
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.016145833333333335,
+        "supply_component": 0.008009924557494217,
+        "conditional_hit_component": 0.008135908775839112,
+        "target_mae_delta_eV": 0.03494696530861856
+      }
+    },
+    {
+      "training_seed": 44,
+      "evaluator": "fingerprint",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 93,
+            "hits": 10,
+            "mae": 0.74803410289337
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 114,
+            "hits": 16,
+            "mae": 0.8699973005854107
+          },
+          "control_coverage": 0.2421875,
+          "treatment_coverage": 0.296875,
+          "control_conditional_hit_fraction": 0.10752688172043011,
+          "treatment_conditional_hit_fraction": 0.14035087719298245,
+          "yield_delta": 0.015624999999999997,
+          "supply_component": 0.006777907470288625,
+          "conditional_hit_component": 0.008847092529711373,
+          "target_mae_delta_eV": 0.12196319769204067
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 98,
+            "hits": 36,
+            "mae": 0.509125346076279
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 85,
+            "hits": 25,
+            "mae": 0.5693636071793776
+          },
+          "control_coverage": 0.2552083333333333,
+          "treatment_coverage": 0.22135416666666666,
+          "control_conditional_hit_fraction": 0.3673469387755102,
+          "treatment_conditional_hit_fraction": 0.29411764705882354,
+          "yield_delta": -0.02864583333333333,
+          "supply_component": -0.011196666166466585,
+          "conditional_hit_component": -0.017449167166866748,
+          "target_mae_delta_eV": 0.0602382611030986
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 57,
+            "hits": 18,
+            "mae": 0.5165703404204007
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 102,
+            "hits": 30,
+            "mae": 0.5052005302216911
+          },
+          "control_coverage": 0.1484375,
+          "treatment_coverage": 0.265625,
+          "control_conditional_hit_fraction": 0.3157894736842105,
+          "treatment_conditional_hit_fraction": 0.29411764705882354,
+          "yield_delta": 0.03125,
+          "supply_component": 0.035736745356037145,
+          "conditional_hit_component": -0.004486745356037146,
+          "target_mae_delta_eV": -0.01136981019870964
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 72,
+            "hits": 18,
+            "mae": 0.6290556885361808
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 23,
+            "mae": 0.7172230698581707
+          },
+          "control_coverage": 0.1875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.25,
+          "treatment_conditional_hit_fraction": 0.25555555555555554,
+          "yield_delta": 0.013020833333333336,
+          "supply_component": 0.011848958333333333,
+          "conditional_hit_component": 0.0011718749999999958,
+          "target_mae_delta_eV": 0.08816738132198998
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 50,
+            "hits": 10,
+            "mae": 0.7463586443087276
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 79,
+            "hits": 5,
+            "mae": 0.8373962281942343
+          },
+          "control_coverage": 0.13020833333333334,
+          "treatment_coverage": 0.20572916666666666,
+          "control_conditional_hit_fraction": 0.2,
+          "treatment_conditional_hit_fraction": 0.06329113924050633,
+          "yield_delta": -0.013020833333333334,
+          "supply_component": 0.009941983122362868,
+          "conditional_hit_component": -0.022962816455696203,
+          "target_mae_delta_eV": 0.09103758388550676
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.003645833333333333,
+        "supply_component": 0.010621785623111077,
+        "conditional_hit_component": -0.006975952289777746,
+        "target_mae_delta_eV": 0.07000732276078528
+      }
+    },
+    {
+      "training_seed": 44,
+      "evaluator": "fingerprint",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 99,
+            "hits": 10,
+            "mae": 0.8175453878419935
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 114,
+            "hits": 16,
+            "mae": 0.8699973005854107
+          },
+          "control_coverage": 0.2578125,
+          "treatment_coverage": 0.296875,
+          "control_conditional_hit_fraction": 0.10101010101010101,
+          "treatment_conditional_hit_fraction": 0.14035087719298245,
+          "yield_delta": 0.015624999999999997,
+          "supply_component": 0.0047140816055289735,
+          "conditional_hit_component": 0.010910918394471024,
+          "target_mae_delta_eV": 0.052451912743417206
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 82,
+            "hits": 31,
+            "mae": 0.558772030074476
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 85,
+            "hits": 25,
+            "mae": 0.5693636071793776
+          },
+          "control_coverage": 0.21354166666666666,
+          "treatment_coverage": 0.22135416666666666,
+          "control_conditional_hit_fraction": 0.3780487804878049,
+          "treatment_conditional_hit_fraction": 0.29411764705882354,
+          "yield_delta": -0.015625,
+          "supply_component": 0.002625650107604017,
+          "conditional_hit_component": -0.018250650107604016,
+          "target_mae_delta_eV": 0.010591577104901662
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 67,
+            "hits": 17,
+            "mae": 0.5429665838730315
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 102,
+            "hits": 30,
+            "mae": 0.5052005302216911
+          },
+          "control_coverage": 0.17447916666666666,
+          "treatment_coverage": 0.265625,
+          "control_conditional_hit_fraction": 0.2537313432835821,
+          "treatment_conditional_hit_fraction": 0.29411764705882354,
+          "yield_delta": 0.033854166666666664,
+          "supply_component": 0.024967076382791928,
+          "conditional_hit_component": 0.008887090283874743,
+          "target_mae_delta_eV": -0.03776605365134045
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 11,
+            "mae": 0.7030142762171231
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 23,
+            "mae": 0.7172230698581707
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.16666666666666666,
+          "treatment_conditional_hit_fraction": 0.25555555555555554,
+          "yield_delta": 0.03125,
+          "supply_component": 0.013194444444444443,
+          "conditional_hit_component": 0.018055555555555554,
+          "target_mae_delta_eV": 0.014208793641047657
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 5,
+            "mae": 0.8438720255029506
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 79,
+            "hits": 5,
+            "mae": 0.8373962281942343
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.20572916666666666,
+          "control_conditional_hit_fraction": 0.07575757575757576,
+          "treatment_conditional_hit_fraction": 0.06329113924050633,
+          "yield_delta": 0.0,
+          "supply_component": 0.002353689186165451,
+          "conditional_hit_component": -0.0023536891861654515,
+          "target_mae_delta_eV": -0.00647579730871628
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.013020833333333332,
+        "supply_component": 0.009570988345306963,
+        "conditional_hit_component": 0.003449844988026371,
+        "target_mae_delta_eV": 0.006602086505861959
+      }
+    },
+    {
+      "training_seed": 44,
+      "evaluator": "unimol2",
+      "control": "continue_wall",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 93,
+            "hits": 26,
+            "mae": 0.6414549121037199
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 114,
+            "hits": 28,
+            "mae": 0.768288334369472
+          },
+          "control_coverage": 0.2421875,
+          "treatment_coverage": 0.296875,
+          "control_conditional_hit_fraction": 0.27956989247311825,
+          "treatment_conditional_hit_fraction": 0.24561403508771928,
+          "yield_delta": 0.005208333333333343,
+          "supply_component": 0.014360498019241651,
+          "conditional_hit_component": -0.009152164685908315,
+          "target_mae_delta_eV": 0.12683342226575212
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 98,
+            "hits": 18,
+            "mae": 0.6428772821605436
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 85,
+            "hits": 23,
+            "mae": 0.666572640199331
+          },
+          "control_coverage": 0.2552083333333333,
+          "treatment_coverage": 0.22135416666666666,
+          "control_conditional_hit_fraction": 0.1836734693877551,
+          "treatment_conditional_hit_fraction": 0.27058823529411763,
+          "yield_delta": 0.013020833333333336,
+          "supply_component": -0.007689325730292115,
+          "conditional_hit_component": 0.020710159063625444,
+          "target_mae_delta_eV": 0.023695358038787417
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 57,
+            "hits": 16,
+            "mae": 0.7665017105721744
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 102,
+            "hits": 24,
+            "mae": 0.7422270892015334
+          },
+          "control_coverage": 0.1484375,
+          "treatment_coverage": 0.265625,
+          "control_conditional_hit_fraction": 0.2807017543859649,
+          "treatment_conditional_hit_fraction": 0.23529411764705882,
+          "yield_delta": 0.020833333333333336,
+          "supply_component": 0.030234133126934987,
+          "conditional_hit_component": -0.00940079979360165,
+          "target_mae_delta_eV": -0.02427462137064107
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 71,
+            "hits": 16,
+            "mae": 0.7827938943263729
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 15,
+            "mae": 0.9621983750002419
+          },
+          "control_coverage": 0.18489583333333334,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.22535211267605634,
+          "treatment_conditional_hit_fraction": 0.16666666666666666,
+          "yield_delta": -0.0026041666666666644,
+          "supply_component": 0.009698381259780906,
+          "conditional_hit_component": -0.012302547926447579,
+          "target_mae_delta_eV": 0.17940448067386894
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 50,
+            "hits": 9,
+            "mae": 0.8467815289026329
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 79,
+            "hits": 9,
+            "mae": 0.9666666733725519
+          },
+          "control_coverage": 0.13020833333333334,
+          "treatment_coverage": 0.20572916666666666,
+          "control_conditional_hit_fraction": 0.18,
+          "treatment_conditional_hit_fraction": 0.11392405063291139,
+          "yield_delta": 0.0,
+          "supply_component": 0.011098694620253162,
+          "conditional_hit_component": -0.011098694620253164,
+          "target_mae_delta_eV": 0.11988514446991894
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.00729166666666667,
+        "supply_component": 0.011540476259183717,
+        "conditional_hit_component": -0.004248809592517053,
+        "target_mae_delta_eV": 0.08510875681553727
+      }
+    },
+    {
+      "training_seed": 44,
+      "evaluator": "unimol2",
+      "control": "frozen",
+      "per_quantile": [
+        {
+          "quantile": "10",
+          "control": {
+            "attempted": 384,
+            "evaluated": 99,
+            "hits": 31,
+            "mae": 0.6440806791100863
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 114,
+            "hits": 28,
+            "mae": 0.768288334369472
+          },
+          "control_coverage": 0.2578125,
+          "treatment_coverage": 0.296875,
+          "control_conditional_hit_fraction": 0.31313131313131315,
+          "treatment_conditional_hit_fraction": 0.24561403508771928,
+          "yield_delta": -0.0078125,
+          "supply_component": 0.010912995082402977,
+          "conditional_hit_component": -0.018725495082402985,
+          "target_mae_delta_eV": 0.12420765525938571
+        },
+        {
+          "quantile": "25",
+          "control": {
+            "attempted": 384,
+            "evaluated": 82,
+            "hits": 21,
+            "mae": 0.6511536913794566
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 85,
+            "hits": 23,
+            "mae": 0.666572640199331
+          },
+          "control_coverage": 0.21354166666666666,
+          "treatment_coverage": 0.22135416666666666,
+          "control_conditional_hit_fraction": 0.25609756097560976,
+          "treatment_conditional_hit_fraction": 0.27058823529411763,
+          "yield_delta": 0.005208333333333336,
+          "supply_component": 0.0020573663916786224,
+          "conditional_hit_component": 0.0031509669416547054,
+          "target_mae_delta_eV": 0.01541894881987449
+        },
+        {
+          "quantile": "50",
+          "control": {
+            "attempted": 384,
+            "evaluated": 67,
+            "hits": 12,
+            "mae": 0.7005044738583628
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 102,
+            "hits": 24,
+            "mae": 0.7422270892015334
+          },
+          "control_coverage": 0.17447916666666666,
+          "treatment_coverage": 0.265625,
+          "control_conditional_hit_fraction": 0.1791044776119403,
+          "treatment_conditional_hit_fraction": 0.23529411764705882,
+          "yield_delta": 0.03125,
+          "supply_component": 0.018885352648522098,
+          "conditional_hit_component": 0.012364647351477905,
+          "target_mae_delta_eV": 0.041722615343170566
+        },
+        {
+          "quantile": "75",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 12,
+            "mae": 0.9857901523419873
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 90,
+            "hits": 15,
+            "mae": 0.9621983750002419
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.234375,
+          "control_conditional_hit_fraction": 0.18181818181818182,
+          "treatment_conditional_hit_fraction": 0.16666666666666666,
+          "yield_delta": 0.0078125,
+          "supply_component": 0.010890151515151516,
+          "conditional_hit_component": -0.003077651515151518,
+          "target_mae_delta_eV": -0.023591777341745446
+        },
+        {
+          "quantile": "90",
+          "control": {
+            "attempted": 384,
+            "evaluated": 66,
+            "hits": 8,
+            "mae": 0.90490755188484
+          },
+          "treatment": {
+            "attempted": 384,
+            "evaluated": 79,
+            "hits": 9,
+            "mae": 0.9666666733725519
+          },
+          "control_coverage": 0.171875,
+          "treatment_coverage": 0.20572916666666666,
+          "control_conditional_hit_fraction": 0.12121212121212122,
+          "treatment_conditional_hit_fraction": 0.11392405063291139,
+          "yield_delta": 0.002604166666666668,
+          "supply_component": 0.003980169575501853,
+          "conditional_hit_component": -0.0013760029088351884,
+          "target_mae_delta_eV": 0.0617591214877119
+        }
+      ],
+      "mean": {
+        "yield_delta": 0.0078125,
+        "supply_component": 0.009345207042651415,
+        "conditional_hit_component": -0.0015327070426514162,
+        "target_mae_delta_eV": 0.04390331271367944
+      }
+    }
+  ],
+  "aggregate": [
+    {
+      "evaluator": "dpa",
+      "control": "continue_wall",
+      "mean": {
+        "yield_delta": 0.009027777777777775,
+        "supply_component": 0.01233277658972636,
+        "conditional_hit_component": -0.003304998811948583,
+        "target_mae_delta_eV": 0.05691787484286384
+      }
+    },
+    {
+      "evaluator": "dpa",
+      "control": "frozen",
+      "mean": {
+        "yield_delta": 0.010937500000000001,
+        "supply_component": 0.011539708536659192,
+        "conditional_hit_component": -0.000602208536659195,
+        "target_mae_delta_eV": 0.03692095050233225
+      }
+    },
+    {
+      "evaluator": "fingerprint",
+      "control": "continue_wall",
+      "mean": {
+        "yield_delta": 0.010937500000000001,
+        "supply_component": 0.015363599962727527,
+        "conditional_hit_component": -0.004426099962727526,
+        "target_mae_delta_eV": 0.050898467105905766
+      }
+    },
+    {
+      "evaluator": "fingerprint",
+      "control": "frozen",
+      "mean": {
+        "yield_delta": 0.014756944444444442,
+        "supply_component": 0.014500739526664521,
+        "conditional_hit_component": 0.00025620491777992384,
+        "target_mae_delta_eV": 0.0016448373003723849
+      }
+    },
+    {
+      "evaluator": "unimol2",
+      "control": "continue_wall",
+      "mean": {
+        "yield_delta": 0.011458333333333334,
+        "supply_component": 0.014356433774407006,
+        "conditional_hit_component": -0.0028981004410736726,
+        "target_mae_delta_eV": 0.07812805014688995
+      }
+    },
+    {
+      "evaluator": "unimol2",
+      "control": "frozen",
+      "mean": {
+        "yield_delta": 0.010069444444444445,
+        "supply_component": 0.01381731698187097,
+        "conditional_hit_component": -0.003747872537426523,
+        "target_mae_delta_eV": 0.02579695682563579
+      }
+    }
+  ],
+  "sources": {
+    "docs/experiments/oe62_formal_lumo_seed42_20261113.json": "cc94170ac3c4f792c26ff3b63a1ac3fb1f0e78e1f1e5cdf41b90b28786c883cf",
+    "docs/experiments/oe62_formal_lumo_seed43_20261113.json": "7941ac6308221549788d8cbc98a1a6d90d018518d6240dc013c908f5c3f740bd",
+    "docs/experiments/oe62_formal_lumo_seed44_20261113.json": "ebfd56e83f03605411e39cb76fa96dd55bbd263960f788fc498c9cf94bc6f90d",
+    "docs/experiments/oe62_formal_unimol2_seed42_20261113.json": "ef66f6d4afb5b2a3d26e35cffa5c5014ef9d2b7b2292d27a23a2d72eabdf711c",
+    "docs/experiments/oe62_formal_unimol2_seed43_20261113.json": "17fde03890cf2dfcec18e91b2be91041a6372be02eb88dc962fc4702adffcc8a",
+    "docs/experiments/oe62_formal_unimol2_seed44_20261113.json": "32023f014d66c810430051032b493e364b6f64dc03cb71e863992aff10f1aeaa"
+  }
+}

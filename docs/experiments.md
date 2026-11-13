@@ -294,7 +294,7 @@ P_est(x,t) = mean_i 1[ abs(prediction_k(x) + r_i,k - t_k) <= tau_k，对所有 k
 
 **运行状态（2026-11-13）。** 奖励消融实现`9ce237c`，完整测试212通过、3跳过；远程`orbit_grpo_ablation_20261113`在GPU0/1分别运行HOMO/LUMO，按seed42→43→44训练、全池评价及冻结Uni-Mol2交叉评价。原点值策略复用已冻结200组检查点；仅有效性臂重新训练200组，并按其实际耗时新增继续SFT对照。每臂每性质每训练种子为5目标×3推理种子×128提案，不覆盖历史池。
 
-量化归因队列预先固定为seed42、P25/P50/P75、对应推理seed2041/2042/2043，比较`grpo200`、`eligibility200`、`continue_wall`，每格取A排名top1和其余导出分子中SHA256最小者（盐`OE62-E8-attribution-20261113`），共36个名额；不足记缺失，不补样。候选在查看DFT结果前冻结。CPU/GPU同几何单点HOMO/LUMO差为0.0000418/0.0000593 eV，旧24例选择器重放候选与SDF哈希一致（[执行验证](experiments/oe62_e8_execution_validation_20261113.json)）。使用4个CPU worker、每个4线程异步执行原PBE0/TZVP单点→PBE-D3BJ/TZVP几何优化→PBE0/TZVP复算，GPU继续训练；该seed42小队列用于归因诊断，增强版另行冻结验证队列。
+量化归因队列预先固定为seed42、P25/P50/P75、对应推理seed2041/2042/2043，比较`grpo200`、`eligibility200`、`continue_wall`，每格取A排名top1和其余导出分子中SHA256最小者（盐`OE62-E8-attribution-20261113`），共36个名额；不足记缺失，不补样。候选在查看DFT结果前冻结。CPU/GPU同几何单点HOMO/LUMO差为0.0000418/0.0000593 eV，旧24例选择器重放候选与SDF哈希一致（[执行验证](experiments/oe62_e8_execution_validation_20261113.json)）。CPU同几何单点耗时91.7秒，GPU为3.54秒。为兼顾并行推进与效率，先用4个CPU worker、每个4线程异步完成PBE0/TZVP原始几何单点，GPU继续训练；随后在一张训练卡释放后执行原PBE-D3BJ/TZVP优化→PBE0/TZVP复算，另一张卡继续训练/评价。两阶段各自保留结果和计算引擎，候选集不变；该seed42小队列用于归因诊断，增强版另行冻结验证队列。
 
 原6个GRPO训练的[优势诊断](experiments/oe62_e8_original_advantages_20261113.json)显示：组内可评价候选间的差异仅占实际优势平方和3.41%–4.23%；4388个可评价候选的优势全部为正。这说明原更新普遍提高可评价轨迹概率，只以较小幅度区分好坏性质；该分解仍是描述性信号诊断，因果判断等待消融。新旧HOMO/LUMO seed42首组的token哈希、参考权重哈希、性质预测逐项相同。
 
