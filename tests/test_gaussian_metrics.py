@@ -7,6 +7,7 @@ from summarize_gaussian_pilot import statistics
 def test_width_acceptance_does_not_change_fixed_error_or_failure_denominator():
     narrow=statistics([0.,.2,.4],0.,6,.1)
     broad=statistics([0.,.2,.4],0.,6,.5)
+    assert narrow['property_hits_fixed_025']==broad['property_hits_fixed_025']==2
     assert narrow['coverage']==broad['coverage']==.5
     assert narrow['target_mae_eV']==broad['target_mae_eV']
     assert narrow['hit_rate_all_attempts']['0.25']==broad['hit_rate_all_attempts']['0.25']==2/6

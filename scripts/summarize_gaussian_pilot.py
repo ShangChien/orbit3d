@@ -4,12 +4,14 @@ from pathlib import Path
 import numpy as np
 from rdkit import Chem,DataStructs
 from rdkit.Chem import rdFingerprintGenerator
+from summarize_reward_attribution import decompose
 
 
 def statistics(values, goal, attempted, requested_width):
     x=np.asarray(values,dtype=float);error=x-goal
     widths=sorted({.1,.25,.5,float(requested_width)}) if requested_width else [.1,.25,.5]
     return {'attempted':attempted,'evaluated':len(x),'coverage':len(x)/attempted,
+            'property_hits_fixed_025':int((np.abs(error)<=.25).sum()),
             'target_mae_eV':float(np.abs(error).mean()) if len(x) else None,
             'target_rmse_eV':float(np.sqrt(np.square(error).mean())) if len(x) else None,
             'mean_prediction_eV':float(x.mean()) if len(x) else None,
@@ -70,14 +72,34 @@ def main():
                         'response_slope':float(np.polyfit([goals[q] for q in quantiles],predictions,1)[0]) if all(v is not None for v in predictions) else None,
                         'hit_rate_fixed_025':float(np.mean([r['hit_rate_all_attempts']['0.25'] for r in metrics])),
                         'hit_rate_requested_width':float(np.mean([r['hit_rate_all_attempts'][str(width)] for r in metrics])) if width else None})
+    attribution=[]
+    for width in [.1,.25,.5]:
+        for evaluator in ['dpa','fingerprint','unimol2']:
+            for arm in ['contrast','hindsight','both']:
+                differences=[]
+                for q in quantiles:
+                    def score(name):
+                        row=next(r for r in cells if r['arm']==name and r['control']=='correct'
+                                 and r['preference_sigma_eV']==width and r['quantile']==q)['metrics'][evaluator]
+                        return {'attempted':row['attempted'],'evaluated':row['evaluated'],
+                                'hits':row['property_hits_fixed_025'],'mae':row['target_mae_eV']}
+                    differences.append({'quantile':q,**decompose(score('sft'),score(arm))})
+                keys=['yield_delta','supply_component','conditional_hit_component','target_mae_delta_eV']
+                attribution.append({'treatment':arm,'control':'sft','preference_sigma_eV':width,
+                    'evaluator':evaluator,'per_quantile':differences,
+                    'mean':{key:float(np.mean([r[key] for r in differences]))
+                            if all(r[key] is not None for r in differences) else None for key in keys}})
     report={'target':target,'training_seed':42,'actual_pools':len(matrix),'actual_proposals':sum(r['attempted'] for r in matrix),
         'scope':'Single training seed pilot; equal target-quantile means. Off/shuffled are rescoring of frozen pools, not additional proposals. Point-policy widths are absent; tolerance changes do not retrain or regenerate them. Frozen Uni-Mol2 is cross-model evidence, not quantum truth.',
         'aggregates':aggregates,'cells':cells,'raw_source_sha256':hashes,
+        'yield_attribution':attribution,
+        'attribution_scope':'Exact per-target hit-yield accounting against continued Gaussian SFT; not causal mediation.',
         'generation_and_raw_evaluation_seconds':sum(r['wall_seconds'] for r in matrix),
         'independent_evaluation_seconds':independent['wall_seconds'],
         'novelty_scope':'Relative to each checkpoint training_smiles, including hindsight graphs when used.',
         'cost_scope':'Generation/raw timers cover per-pool calls, not initial model loading and hashing; training and source-pool acquisition costs are separate campaign artifacts.',
         'analysis_script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        'independent_inputs':{role:bound[role] for role in ['oracle','selection','manifest']},
         'independent_summary_sha256':hashlib.sha256((a.unimol2/'summary.json').read_bytes()).hexdigest()}
     a.output.write_text(json.dumps(report,indent=2)+'\n')
 
