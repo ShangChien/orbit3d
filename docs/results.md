@@ -101,6 +101,8 @@ LUMO三seed也已完成：点值对比与等时SFT的B目标MAE为0.7119 vs 0.75
 
 十二个连续32候选组分别有9–21个终态合格分子，没有0/1合格组，性质比较具有可用支持。Morgan域内终态合格只有HOMO26个、LUMO37个；本诊断不将该域作为物理门，域外性质是代理诊断，不是DFT验证。成本不含原池历史生成及初始化，已冻结原始输入和调用轨迹。[HOMO逐例](experiments/oe62_terminal_diagnostic_homo_20261113.json)、[LUMO逐例](experiments/oe62_terminal_diagnostic_lumo_20261113.json)
 
+![未排序提案的力收敛、终态验收与DPA预测命中](figures/oe62_terminal_diagnostic.png)
+
 ### E8奖励消融：三训练种子完成
 
 seed42/43/44全部完成；每性质/臂共5760次新提案，三推理seed2041/2042/2043、五目标，完整矩阵46080提案。表内MAE先对目标等权，再对三个训练seed等权；命中保留全部提案分母。
