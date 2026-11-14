@@ -32,6 +32,9 @@ names = [
     'oe62_terminal_charge_support_20261114.json',
     'oe62_source_graph_reconstruction_20261114.json',
     'oe62_calibrated_feedback_protocol_20261114.json',
+    'oe62_calibrated_feedback_20261114.json',
+    'oe62_calibrated_feedback_training_20261114.json',
+    'oe62_dpa_packing_20261114.json',
 
     'oe62_pyscf_source_reference_20261113.json',
     'oe62_pyscf_extra_reference_20261113.json',
@@ -160,3 +163,8 @@ for stem,manifest_name,key in [
     bound=json.loads(records[manifest_name]['json'])[key]['sdf_sha256']
     assert hashlib.sha256(source.read_bytes()).hexdigest()==bound
     shutil.copyfile(source,staging/source.name)
+
+feedback = json.loads(records['oe62_calibrated_feedback_20261114.json']['json'])
+source = paper.parent/'docs/experiments'/feedback['quantum_inputs']['file']
+assert hashlib.sha256(source.read_bytes()).hexdigest() == feedback['quantum_inputs']['sha256']
+shutil.copyfile(source, staging/source.name)

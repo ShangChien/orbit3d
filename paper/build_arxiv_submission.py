@@ -16,6 +16,8 @@ def build_arxiv_tarball() -> Path:
         "figures/fig0_orbit3d_system_architecture.pdf",
         "figures/fig1_grpo_training_seeds.pdf",
         "figures/fig2_oe62_paired_effects.pdf",
+        "figures/fig3_calibrated_feedback.png",
+        "build/data/oe62_calibrated_feedback_20261114_inputs.sdf",
         "build/data/boron_quantum_input_20261112.sdf",
         "build/data/qualified20k_quantum_input_20261112.sdf",
         "build/data/unified_evidence.json",

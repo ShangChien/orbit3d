@@ -65,5 +65,8 @@ are distinct from selected-cohort optimized yields. Full-source SFT compares
 8192 and 43951 training structures with fixed checkpoints and 2026 new quantum
 endpoints. Generated-geometry evaluator calibration preserves scaffold fitting
 separation, parent scalers and fresh-pool evaluation; selection reports do not
-change generation yield. The calibrated-feedback protocol is included as a
-protocol until its outcomes have been completed and incorporated.
+change generation yield. The completed calibrated-feedback report contains all 5376 proposals and
+2475 successful quantum endpoints. Its input SDF concatenates exact original
+cohort byte blocks; offsets, lengths, hashes and combined indices are recorded.
+Training-signal diagnostics and the separate fixed-coordinate DPA packing
+benchmark are included. Force-call throughput is not full-pipeline throughput.

@@ -263,6 +263,16 @@ def build():
             lines.append(f"| {size} {label} | {pair(fitted['test_generated'][key])} | {pair(fitted['source_test'][key])} | {pair(transfer[model]['mae_eV'])} |")
     lines += ['', 'Table: Property-prediction MAE in eV, distinct from target MAE. Generated test: 164 scaffold-held-out terminal structures; native test: 4,762 source geometries; fresh pool: 2,026 E14 endpoints excluded from fitting and early stopping.']
     tables['TERMINAL_CALIBRATION']='\n'.join(lines)
+    feedback=current['oe62_calibrated_feedback_20261114.json']
+    lines=['| Policy | Terminal | DFT hits / 1280 | Yield (%) | MAE | Slope |',
+           '| :--- | ---: | ---: | ---: | ---: | ---: |']
+    for arm,label in [('frozen','Frozen SFT'),('continue_wall','Time SFT'),('native_critic','Source GRPO'),('calibrated_critic','Calibrated GRPO')]:
+        q=feedback['arms'][arm]['quantum']
+        assert q['proposals']==1280
+        hits=sum(c['hits'] for c in q['cells'].values())
+        lines.append(f"| {label} | {q['terminal_selected']} | {hits} | {100*q['yield_equal_target']:.2f} | {q['mae_equal_target_eV']:.3f} | {q['response_slope']:.3f} |")
+    lines += ['', 'Table: Complete E16 HOMO pools, one training seed and four inference seeds. All 2475 accepted endpoints, including 116 shared-off endpoints, converge in DFT. MAE (eV) and response slope use accepted endpoints; yields retain every proposal. The separate 256-proposal shared-off pool yields 8.05% when rescored across five goals.']
+    tables['CALIBRATED_FEEDBACK']='\n'.join(lines)
     for name, content in tables.items():
         pattern = r'<!-- BEGIN TABLE '+name+r' -->.*?<!-- END TABLE '+name+r' -->'
         replacement = '<!-- BEGIN TABLE '+name+' -->\n'+content+'\n<!-- END TABLE '+name+' -->'
@@ -288,6 +298,9 @@ def build():
     latex = re.sub(r",alt=\{[^}]*\}(?=\])", "", latex)
     latex = latex.replace(r'\begin{figure}', r'\begin{figure}[!htbp]')
     latex = compact_tables(latex)
+    # Keep conclusion paragraphs unbroken before the appendices.
+    latex = latex.replace(r'\section{Conclusion}', r'\begin{samepage}' + '\n' + r'\section{Conclusion}')
+    latex = latex.replace(r'\appendix', r'\end{samepage}' + '\n' + r'\appendix', 1)
     latex = latex.replace(r'\subsection{', '\\FloatBarrier\n' + r'\subsection{')
     (PAPER / "ORBIT3D_arXiv_Paper.tex").write_text(latex)
     write_bibliography(latex)

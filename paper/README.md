@@ -9,8 +9,9 @@ Unfinished experiments are not reported as completed results. The built draft no
 centers native-coordinate OE62 point control, complete-pool terminal quantum
 validation, full-data SFT and generated-geometry predictor calibration. Earlier
 OCELOT studies and initial geometry controls are preserved in appendices. GRPO
-remains an optional method whose contribution must be measured. E16 currently
-appears as a frozen protocol; its unfinished outcomes are not in the conclusions.
+remains optional. The complete E16 comparison adds 2475 converged terminal
+single points and finds stronger mean response without a clear incremental
+quantum-hit advantage; evaluator calibration still improves fixed-pool selection.
 
 ## Files
 
@@ -21,7 +22,8 @@ appears as a frozen protocol; its unfinished outcomes are not in the conclusions
 | `sync_current_evidence.py` | Select and checksum the evidence used by the manuscript |
 | `build_manuscript.py` | Generate LaTeX, BBL and result tables |
 | `draw_architecture.py`, `draw_grpo_seeds.py`, `draw_oe62_seeds.py` | Editable architecture and two measured GRPO seed comparisons |
-| `figures/` | Current SVG/PDF/PNG versions of these three figures |
+| `../scripts/plot_calibrated_feedback.py` | Rebuild the E16 result figure from the final report |
+| `figures/` | Architecture and measured comparisons; E16 uses a generated PNG |
 | `ancillary_readme.txt` | Source description of the bundled research evidence |
 | `build/data/` | Generated, Git-ignored evidence staging; rebuilt from `docs/experiments/` and `data/` |
 | `build_arxiv_submission.py` | Package the typesetting sources and ancillary data |
@@ -34,7 +36,8 @@ new single points for the full-source SFT comparison. Terminal-DFT predictor
 adaptation uses separate fitting/validation/test scaffolds and is tested on the
 new pool. Selection improvements are reported separately from generation yield.
 The twelve known-hit BRICS optimizations measure conditional hit persistence,
-not whole-proposal optimized yield. All manuscript tables are generated from
+not whole-proposal optimized yield. The E16 input SDF preserves the exact
+original per-arm byte blocks and their hashes. All manuscript tables are generated from
 checksum-bound research records.
 
 ## Build
