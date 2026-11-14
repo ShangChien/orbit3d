@@ -7,7 +7,11 @@ from ..oracles.unimol2_task import support_exclusion
 def evaluate_point_task(instances, task, points, reward_type='inverse_point_distance'):
     records, molecules, indices = {}, [], []
     for i, instance in instances:
-        mol = mol3d_to_validated_rdkit_mol(instance)
+        try:
+            mol = mol3d_to_validated_rdkit_mol(instance)
+        except ValueError as error:
+            records[i] = dict(valid=False, evaluation_status='invalid_structure', reason=str(error))
+            continue
         excluded = support_exclusion(mol)
         if excluded:
             records[i] = dict(evaluation_status='not_supported', reason=excluded)
