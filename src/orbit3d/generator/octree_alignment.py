@@ -59,6 +59,7 @@ def align_octree(
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
     points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
     point_reward_type="inverse_point_distance", point_advantage_mode="joint", terminal_feedback_level=None, terminal_max_atoms=None,
+    point_task=None,
 ):
     if point_reward_type not in {"inverse_point_distance", "eligibility_only"}:
         raise ValueError("Unknown point reward type")
@@ -72,6 +73,8 @@ def align_octree(
         raise ValueError("Point GRPO primary comparison uses property-only reward")
     if terminal_feedback_level is not None and (points is None or terminal_feedback_level not in {'structure','physical','property'}):
         raise ValueError('Terminal feedback requires point conditions and a known channel level')
+    if point_task is not None and (points is None or terminal_feedback_level is not None or domain is not None or oracle is not None or forcefield is not None):
+        raise ValueError('Frozen point-task feedback is a separate raw-coordinate path')
     device = next(model.parameters()).device
     reference = copy.deepcopy(model).eval().requires_grad_(False) if kl_beta else None
     model.requires_grad_(False)
@@ -95,6 +98,7 @@ def align_octree(
     if point_advantage_mode != "joint":settings["point_advantage_mode"] = point_advantage_mode
     if terminal_feedback_level is not None:settings['terminal_feedback_level']=terminal_feedback_level
     if terminal_max_atoms is not None:settings['terminal_max_atoms']=terminal_max_atoms
+    if point_task is not None:settings['fixed_point_task']=point_task.contract
     if resume_checkpoint is not None:
         saved = resume_checkpoint['alignment_training_state']
         if saved['settings'] != settings:
@@ -163,7 +167,15 @@ def align_octree(
             except ValueError as exc:
                 row['reason'] = str(exc)
             rollout_records.append(row)
-        if terminal_feedback_level is not None:
+        if point_task is not None:
+            from .point_task_feedback import evaluate_point_task
+            evaluated = evaluate_point_task(instances, point_task, points, point_reward_type)
+            for i, result in evaluated.items():
+                rollout_records[i].update(result)
+                if result['evaluation_status'] == 'completed':
+                    rewards[i] = result['reward']
+                    hits[i] = result['property_hit']
+        elif terminal_feedback_level is not None:
             from ..physics.terminal_evaluation import evaluate_terminal
             for i,inst in instances:
                 record=rollout_records[i]
