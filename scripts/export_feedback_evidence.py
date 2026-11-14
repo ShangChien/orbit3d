@@ -50,7 +50,7 @@ def main():
         for row in quantum['records']:
             records.append({**{k:row[k] for k in qkeys if k in row},'combined_input_index':global_index+row['index']})
         assert len(records)==manifest['selected']
-        report['whole_pool_reports'][arm]={**{k:v for k,v in quantum.items() if k not in ['records','source_sha256']},'records':records}
+        report['whole_pool_reports'][arm]={**{k:v for k,v in quantum.items() if k not in ['records','source_sha256','scope']},'records':records}
         cross=read(r/f'independent/{arm}/summary.json')['runs'][0]
         report['B_records'][arm]=[{k:row[k] for k in ['target','quantile','inference_seed','candidate_id','evaluated','prediction_eV','support_exclusion'] if k in row} for row in cross['records']]
         report['B_inputs'][arm]=read(r/f'independent/{arm}/input_manifest.json')
@@ -64,6 +64,7 @@ def main():
     sdf=a.output.with_name(a.output.stem+'_inputs.sdf');sdf.write_bytes(data)
     report['quantum_inputs']=dict(file=sdf.name,molecules=global_index,sha256=hashlib.sha256(data).hexdigest(),blocks=blocks,
                                  scope='Exact original SDF byte blocks; no coordinate re-serialization. Extract by byte offset/length to recover each original quantum-input SHA. Local cohort indices are scoped by arm; combined_input_index is global.')
+    report['whole_pool_scope']='Five fixed HOMO requests, one training seed. The 256 unique shared-off proposals are rescored at all five requests; those rescored records are not independent proposals. Wilson intervals describe proposal sampling only. Across-request unique counts are system pool counts. DFT single points do not certify optimized identity. Frozen input reports are checksum-bound in publication_source_sha256.'
     report['evaluation_cost_scope']='Reported component timers: raw generation plus scoring includes diagnostic fingerprint evaluation; terminal and B candidate timers exclude model loading; quantum queue timer includes its reported queue overhead. Evaluation overlaps on each GPU, so component wall times are not isolated GPU costs and cannot be summed into end-to-end elapsed time. Training process/pipeline times are reported separately.'
     report['publication_source_sha256']=hashes
     a.output.write_text(json.dumps(report,indent=2)+'\n')

@@ -101,7 +101,7 @@ def main():
             mean_absolute_response_bias_eV=float(np.mean([abs(v['bias_eV']) for v in cells.values()])) if all(v['bias_eV'] is not None for v in cells.values()) else None,
             yield_equal_target=float(np.mean([v['yield_all_proposals'] for v in cells.values()])),
             mae_equal_target_eV=float(np.mean([v['mae_eV'] for v in cells.values()])) if all(v['mae_eV'] is not None for v in cells.values()) else None)
-    report=dict(scope='Single trained seed; Wilson intervals describe proposal sampling only. Off proposals rescored at three goals are not independent repeats. Across-request unique counts are system pool counts, not single-goal success rates. Quantum task times exclude upstream generation/relaxation/training. DFT singlepoints do not certify optimized identity.',
+    report=dict(scope='Single trained seed; Wilson intervals describe proposal sampling only. Off proposals rescored at multiple goals are not independent repeats. Across-request unique counts are system pool counts, not single-goal success rates. Quantum task times exclude upstream generation/relaxation/training. DFT singlepoints do not certify optimized identity.',
         target=a.target,extra_fitting_reference_sha256={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in a.extra_training_sdf},novelty_reference_sha256=hashlib.sha256(a.training_sdf.read_bytes()).hexdigest() if a.training_sdf else None,control=manifest.get('control','correct'),arms=arms,records=rows,source_sha256=hashes,
         manifest_sha256=hashlib.sha256(a.manifest.read_bytes()).hexdigest(),elapsed_seconds=completed['elapsed_seconds'])
     a.output.write_text(json.dumps(report,indent=2)+'\n')
