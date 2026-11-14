@@ -5,12 +5,30 @@ import json
 from pathlib import Path
 
 
+def decompose_yield(control, treatment):
+    """Exact symmetric accounting, not a causal mediation estimate."""
+    cells=[]
+    for q,base in control['cells'].items():
+        new=treatment['cells'][q]
+        a0=base['terminal_selected']/base['proposals'];a1=new['terminal_selected']/new['proposals']
+        if not base['terminal_selected'] or not new['terminal_selected']:
+            raise ValueError('Conditional hit accounting requires terminal support in both arms')
+        h0=base['hits']/base['terminal_selected'];h1=new['hits']/new['terminal_selected']
+        cells.append(dict(quantile=int(q),total_delta=a1*h1-a0*h0,
+                          supply_contribution=(a1-a0)*(h1+h0)/2,
+                          conditional_hit_contribution=(h1-h0)*(a1+a0)/2))
+    keys=['total_delta','supply_contribution','conditional_hit_contribution']
+    return dict(scope='Target-wise symmetric two-factor identity: yield = terminal supply times DFT hits per terminal. SCF failures count as unverified terminal outputs, so the conditional factor also includes quantum availability. Components are descriptive accounting, not causal effects. Equal target weighting.',
+                mean={key:sum(c[key] for c in cells)/len(cells) for key in keys},cells=cells)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     r=a.root;hashes={}
     def read(path):
         raw=path.read_bytes();hashes[str(path)]=hashlib.sha256(raw).hexdigest();return json.loads(raw)
     report=read(r/'statistics/feedback_summary.json')
+    report['calibrated_yield_decomposition']={arm:decompose_yield(report['arms'][arm]['quantum'],report['arms']['calibrated_critic']['quantum']) for arm in ['native_critic','continue_wall','frozen']}
     report['evaluation_schedule']=read(r/'evaluation_overlap.json')
     report['null_policy_audit']=read(r/'null_policy_audit.json')
     report['critic_transfer']=read(r/'critic_transfer/summary.json')
