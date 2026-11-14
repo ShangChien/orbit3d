@@ -31,7 +31,7 @@ def aggregate(pools):
 def paired_hit_bootstrap(first, second, repeats=4000):
     key=lambda p:(p['quantile'],p['seed'])
     second={key(p):p for p in second}
-    differences={}
+    differences={};pairs={}
     for pool in first:
         other=second[key(pool)]
         assert pool['goal_eV']==other['goal_eV'] and pool['attempted']==other['attempted']
@@ -39,14 +39,32 @@ def paired_hit_bootstrap(first, second, repeats=4000):
         hit=lambda r:int(r['evaluated'] and abs(r['prediction_eV'][col]-goal)<=.25)
         assert [r['candidate_id'] for r in pool['records']]==[r['candidate_id'] for r in other['records']]
         differences.setdefault(pool['seed'], []).append(np.array([hit(a)-hit(b) for a,b in zip(pool['records'],other['records'])]))
+        pairs.setdefault(pool['seed'], []).append((pool,other))
     rng=np.random.default_rng(20261114)
     # Candidate streams are reused across requests, so resample an index jointly
     # across all requests within a seed instead of pretending those are independent.
-    streams=[np.stack(ds).mean(0) for ds in differences.values()]
-    samples=sum(d[rng.integers(len(d),size=(repeats,len(d)))].mean(1) for d in streams)/len(streams)
+    streams=[];hit_samples=[];mae_samples=[];mae_points=[]
+    for seed,ds in differences.items():
+        d=np.stack(ds).mean(0);streams.append(d)
+        indices=rng.integers(len(d),size=(repeats,len(d)));hit_samples.append(d[indices].mean(1))
+        local=[]
+        for a,b in pairs[seed]:
+            def conditional_errors(pool):
+                col=['homo','lumo'].index(pool['target']);goal=pool['goal_eV']
+                enabled=np.array([r['evaluated'] for r in pool['records']])
+                errors=np.array([abs(r['prediction_eV'][col]-goal) if r['evaluated'] else 0. for r in pool['records']])
+                n=enabled[indices].sum(1)
+                assert np.all(n>0), 'A conditional-MAE bootstrap replicate has no evaluable structures'
+                return errors[indices].sum(1)/n,errors.sum()/enabled.sum()
+            first_mae,first_point=conditional_errors(a);second_mae,second_point=conditional_errors(b)
+            local.append(first_mae-second_mae);mae_points.append(first_point-second_point)
+        mae_samples.append(np.mean(local,axis=0))
+    samples=np.mean(hit_samples,axis=0)
     return dict(difference_pp=float(100*np.mean([d.mean() for d in streams])),
         paired_sampling_95_pp=(100*np.quantile(samples,[.025,.975])).tolist(),
-        scope='Candidate-stream paired bootstrap preserving cross-request stream reuse within each fixed inference seed; no training-seed uncertainty')
+        conditional_mae_difference_eV=float(np.mean(mae_points)),
+        conditional_mae_sampling_95_eV=np.quantile(np.mean(mae_samples,axis=0),[.025,.975]).tolist(),
+        scope='Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators.')
 
 
 def main():
@@ -83,6 +101,7 @@ def main():
             mae_equal_request_eV=float(np.mean([c['mae_eV'] for c in cells])),cells=cells)
     costs={d.parent.name:json.loads(d.read_text()) for d in sorted((a.root/a.training_dir).glob('*/costs.json'))}
     report=dict(scope='Fresh raw B-defined task; no force gate or new DFT. Unique novel hits are deduplicated within each 128-proposal request/seed pool and averaged; cross-request unique graph counts are separate. Shuffled controls exactly permute the same conditional inputs and random streams, so are not independent new proposals. B is both training target and acceptance, not independent accuracy.',
+        analysis_script_sha256=file_sha256(Path(__file__)),
         predictor=next(iter(reports.values()))['predictor'],results=results,paired_differences=comparisons,
         shared_off=off_summary,training_costs=costs,
         evaluation_costs={name:{k:r[k] for k in ['elapsed_seconds','B_molecule_calls','B_forward_calls']} for name,r in reports.items()},

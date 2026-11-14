@@ -1,6 +1,6 @@
 import torch
 import pytest
-from orbit3d.generator.point_preferences import nearby_size_matched_pairs, bidirectional_preference_loss, nearest_condition_candidates, multi_condition_loss
+from orbit3d.generator.point_preferences import nearby_size_matched_pairs, bidirectional_softmax_loss, nearest_condition_candidates, multi_condition_loss
 
 
 def test_pairing_requires_size_and_nearby_labels_and_reverses():
@@ -10,11 +10,11 @@ def test_pairing_requires_size_and_nearby_labels_and_reverses():
 
 def test_molecule_and_condition_preferences_are_both_necessary():
     partner=torch.tensor([1,0]);enabled=torch.tensor([True,True]);reference=torch.zeros(2)
-    good,_=bidirectional_preference_loss(torch.tensor([-.1,-.1]),torch.tensor([.1,.1]),reference,reference,partner,enabled)
+    good,_=bidirectional_softmax_loss(torch.tensor([-.1,-.1]),torch.tensor([.1,.1]),reference,reference,partner,enabled)
     # Both molecules prefer their own condition, but a molecule-wide score shift
     # can still make one molecule preferred for both requested values.
-    shifted,stats=bidirectional_preference_loss(torch.tensor([-1.1,.9]),torch.tensor([-.9,1.1]),reference,reference,partner,enabled)
-    assert good==0 and shifted>0 and stats['condition_loss']==0 and stats['sample_loss']>0
+    shifted,stats=bidirectional_softmax_loss(torch.tensor([-1.1,.9]),torch.tensor([-.9,1.1]),reference,reference,partner,enabled)
+    assert good<1e-5 and shifted>good and stats['sample_loss']>stats['condition_loss']
 
 
 def test_soft_targets_do_not_treat_equal_properties_as_hard_negatives():
@@ -27,7 +27,7 @@ def test_soft_targets_do_not_treat_equal_properties_as_hard_negatives():
     assert loss.grad[0,0]>0 and loss.grad[0,3]<0
 
 
-@pytest.mark.parametrize('method', ['bidirectional', 'bidirectional_softmax', 'multi_condition'])
+@pytest.mark.parametrize('method', ['bidirectional_softmax', 'multi_condition'])
 def test_objective_freezes_reference_but_backpropagates_to_conditioner(method):
     from orbit3d.generator.point_preferences import PointPreferenceObjective
     class Model(torch.nn.Module):
@@ -57,8 +57,10 @@ def test_two_way_softmax_keeps_distinct_channels_inside_the_old_linear_hinge_reg
     positive=torch.tensor([-.01,.01],requires_grad=True)
     negative=torch.tensor([-.005,.005],requires_grad=True)
     zero=torch.zeros(2);partner=torch.tensor([1,0]);enabled=torch.ones(2,dtype=torch.bool)
-    hinge,stats=bidirectional_preference_loss(positive,negative,zero,zero,partner,enabled)
-    assert abs(stats['condition_loss']-stats['sample_loss'])<1e-8
+    # Regression counterexample for the retired two-axis hinge formulation.
+    condition_hinge=torch.relu(.02+positive-negative).mean()
+    sample_hinge=torch.relu(.02+positive-negative[partner]).mean()
+    assert torch.isclose(condition_hinge,sample_hinge)
     smooth,stats=bidirectional_softmax_loss(positive,negative,zero,zero,partner,enabled)
     assert stats['sample_loss']>stats['condition_loss']
     condition_only=.02*torch.nn.functional.softplus((positive-negative)/.02).mean()

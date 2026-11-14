@@ -19,17 +19,6 @@ def nearby_size_matched_pairs(values, atoms, enabled, minimum=.25, maximum=1., a
     return partner,eligible
 
 
-def bidirectional_preference_loss(positive, negative, reference_positive, reference_negative, partner, eligible, margin=.02):
-    """Both condition swaps and molecule swaps, relative to the common frozen start."""
-    if not bool(eligible.any()):return positive.sum()*0,{}
-    own=reference_positive-positive;cross=reference_negative-negative
-    condition_delta=own[eligible]-cross[eligible]
-    sample_delta=own[eligible]-cross[partner][eligible]
-    condition=F.relu(margin-condition_delta).mean();sample=F.relu(margin-sample_delta).mean()
-    return (condition+sample)/2,dict(condition_loss=float(condition.detach()),sample_loss=float(sample.detach()),
-        condition_preference=float((condition_delta>0).float().mean()),sample_preference=float((sample_delta>0).float().mean()))
-
-
 def bidirectional_softmax_loss(positive, negative, reference_positive, reference_negative, partner, eligible, temperature=.02):
     """Two-way cross entropy on both axes of each 2x2 preference pair.
 
@@ -68,7 +57,7 @@ def multi_condition_loss(losses, reference_losses, distances_eV, enabled, tolera
 class PointPreferenceObjective:
     """Frozen-start score differences with identical dropout-free scoring passes."""
     def __init__(self, model, method, property_index, scale):
-        if method not in {'bidirectional', 'bidirectional_softmax', 'multi_condition'}:
+        if method not in {'bidirectional_softmax', 'multi_condition'}:
             raise ValueError('Unknown point preference method')
         self.reference = copy.deepcopy(model).eval().requires_grad_(False)
         self.method, self.property_index, self.scale = method, property_index, scale
@@ -93,14 +82,13 @@ class PointPreferenceObjective:
             return current, reference
 
         try:
-            if self.method in {'bidirectional', 'bidirectional_softmax'}:
+            if self.method == 'bidirectional_softmax':
                 partner, eligible = nearby_size_matched_pairs(values, atoms, enabled)
                 if not bool(eligible.any()):
                     return next(model.interval_conditioner.parameters()).sum()*0, {'preference_eligible': 0}
                 positive, ref_positive = scores(torch.arange(len(values), device=values.device))
                 negative, ref_negative = scores(partner)
-                objective = bidirectional_softmax_loss if self.method == 'bidirectional_softmax' else bidirectional_preference_loss
-                loss, metrics = objective(positive, negative, ref_positive, ref_negative, partner, eligible)
+                loss, metrics = bidirectional_softmax_loss(positive, negative, ref_positive, ref_negative, partner, eligible)
                 metrics['preference_eligible'] = int(eligible.sum())
             else:
                 candidates = nearest_condition_candidates(values, k=4)
