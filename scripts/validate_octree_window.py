@@ -5,11 +5,11 @@ import json
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.generator.octree_backend import load_octree_checkpoint, trajectory_to_instance
-from orbit3d.generator.spatial_box import BoxSpec3D
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run
+from loom.generator.octree_backend import load_octree_checkpoint, trajectory_to_instance
+from loom.generator.spatial_box import BoxSpec3D
+from loom.generator.random_streams import candidate_seed
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument('--checkpoint', required=True)

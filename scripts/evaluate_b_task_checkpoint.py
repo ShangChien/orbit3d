@@ -8,13 +8,13 @@ import numpy as np
 import torch
 from rdkit import Chem
 
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_backend import load_octree_checkpoint, trajectory_to_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.oracles.unimol2_task import FrozenUniMol2Task, support_exclusion, graph_set, summarize_task
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.constraints import TargetPoints
+from loom.generator.octree_backend import load_octree_checkpoint, trajectory_to_instance
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.generator.random_streams import candidate_seed
+from loom.oracles.unimol2_task import FrozenUniMol2Task, support_exclusion, graph_set, summarize_task
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 
 def main():

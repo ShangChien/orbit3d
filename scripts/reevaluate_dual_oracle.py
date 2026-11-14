@@ -7,9 +7,9 @@ from rdkit import Chem,DataStructs
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from profile_dual_oracle import load_models,predict
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.oracles.uniqsar_oracle import UNIMOL_SYM2IDX
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.oracles.uniqsar_oracle import UNIMOL_SYM2IDX
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 FIELDS={'A_historical':'prediction','A_common':'dpa_common_prediction','B_unimol':'unimol_prediction'}
 

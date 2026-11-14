@@ -1,6 +1,6 @@
 import torch
 import pytest
-from orbit3d.generator.octree_model import PointConditioner
+from loom.generator.octree_model import PointConditioner
 
 
 def test_only_active_values_affect_condition_and_gradients():
@@ -20,7 +20,7 @@ def test_only_active_values_affect_condition_and_gradients():
 
 
 def test_point_distance_changes_inside_acceptance_window_and_ignores_inactive():
-    from orbit3d.constraints import TargetPoints
+    from loom.constraints import TargetPoints
     points=TargetPoints.parse({'homo':-7.},{'homo':.25},['homo','lumo'])
     assert points.intervals().hit([-7.1,99.])
     assert points.distance([-7.1,99.])>points.distance([-7.,1000.])
@@ -32,9 +32,9 @@ def test_point_distance_changes_inside_acceptance_window_and_ignores_inactive():
 def test_alignment_snapshots_do_not_modify_frozen_sft_directory(tmp_path,monkeypatch):
     import numpy as np
     from types import SimpleNamespace
-    from orbit3d.pipeline import octree_runner as runner
-    from orbit3d.generator import octree_alignment as alignment
-    from orbit3d.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
+    from loom.pipeline import octree_runner as runner
+    from loom.generator import octree_alignment as alignment
+    from loom.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
     args=build_default_uni3dar_args(1);args.emb_dim=32;args.num_head=4;args.layer=1;args.condition_version=4
     model=ConditionalUni3DAR(args,AtomFeatDict(args),2)
     source=tmp_path/'frozen';source.mkdir();(source/'sft.pt').write_bytes(b'frozen initial weights')
@@ -65,8 +65,8 @@ def test_condition_controls_keep_the_original_scoring_target(tmp_path, monkeypat
     import json
     import numpy as np
     from types import SimpleNamespace
-    from orbit3d.pipeline import octree_runner as runner
-    from orbit3d.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
+    from loom.pipeline import octree_runner as runner
+    from loom.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
     args=build_default_uni3dar_args(1);args.emb_dim=32;args.num_head=4;args.layer=1;args.condition_version=version
     model=ConditionalUni3DAR(args,AtomFeatDict(args),2)
     source=tmp_path/'sft.pt';source.write_bytes(b'frozen')

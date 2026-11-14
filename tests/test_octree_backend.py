@@ -6,10 +6,10 @@ from rdkit.Chem import AllChem
 
 pytest.importorskip("numba")
 pytest.importorskip("lmdb")
-from orbit3d.generator.octree_model import ConditionalUni3DAR, build_default_uni3dar_args, AtomFeatDict
-from orbit3d.generator.octree_backend import OctreeDataset
-from orbit3d.generator.octree_alignment import categorical_policy_loss
-from orbit3d.vendor.uni3dar.models.rope import RoPEnD
+from loom.generator.octree_model import ConditionalUni3DAR, build_default_uni3dar_args, AtomFeatDict
+from loom.generator.octree_backend import OctreeDataset
+from loom.generator.octree_alignment import categorical_policy_loss
+from loom.vendor.uni3dar.models.rope import RoPEnD
 
 
 def test_octree_dictionary_is_stable_and_sft_backpropagates():
@@ -67,9 +67,9 @@ def test_octree_policy_loss_includes_coordinate_heads_and_kl_gradient():
 
 
 def test_one_sided_masks_are_explicit_and_missing_bounds_are_inert():
-    from orbit3d.generator.octree_model import DynamicIntervalConditioner
-    from orbit3d.generator.octree_backend import interval_arrays
-    from orbit3d.constraints import TargetIntervals
+    from loom.generator.octree_model import DynamicIntervalConditioner
+    from loom.generator.octree_backend import interval_arrays
+    from loom.constraints import TargetIntervals
 
     intervals = TargetIntervals.parse({"homo": [None, -5], "lumo": [0, None]}, ["homo", "lumo"])
     with pytest.raises(ValueError, match="v2"):
@@ -92,7 +92,7 @@ def test_one_sided_masks_are_explicit_and_missing_bounds_are_inert():
 
 def test_checkpoint_semantics_include_grid_units_and_scaler():
     from types import SimpleNamespace
-    from orbit3d.generator.octree_backend import checkpoint_contract
+    from loom.generator.octree_backend import checkpoint_contract
 
     args = build_default_uni3dar_args(1)
     model = SimpleNamespace(args=args, dictionary=AtomFeatDict(args), condition_version=2)
@@ -106,7 +106,7 @@ def test_checkpoint_semantics_include_grid_units_and_scaler():
 
 
 def test_smooth_condition_features_preserve_local_property_neighborhoods():
-    from orbit3d.generator.octree_model import DynamicIntervalConditioner
+    from loom.generator.octree_model import DynamicIntervalConditioner
 
     smooth = DynamicIntervalConditioner(emb_dim=32, num_props=2, num_layers=1,
                                         bound_masks=True, smooth_frequencies=True)
@@ -118,7 +118,7 @@ def test_smooth_condition_features_preserve_local_property_neighborhoods():
 
 
 def test_cfg_guides_each_nonlinear_head_with_the_same_sampled_prefix():
-    from orbit3d.vendor.uni3dar.models.autoregressive_prediction_head import AutoRegressivePredictionHead
+    from loom.vendor.uni3dar.models.autoregressive_prediction_head import AutoRegressivePredictionHead
     torch.manual_seed(13)
     head = AutoRegressivePredictionHead([5, 7, 7, 7], 16, emb_dropout=0).eval()
     for p in head.parameters():
@@ -139,7 +139,7 @@ def test_cfg_guides_each_nonlinear_head_with_the_same_sampled_prefix():
 
 
 def test_terminal_parity_mask_is_a_conditional_categorical_distribution():
-    from orbit3d.generator.electronic_constraints import mask_terminal_element_logits
+    from loom.generator.electronic_constraints import mask_terminal_element_logits
     # H/C/N/O/F/null: only the last decision is restricted. Previous atoms
     # contribute odd/even electron counts independently for each molecule.
     probabilities=torch.tensor([[.2,.3,.1,.2,.1,.1]]).repeat(3,1)
@@ -192,7 +192,7 @@ def test_larger_octree_retains_all_atoms_at_fixed_resolution():
 
 
 def test_expanding_allowed_elements_retains_dictionary_ids_and_changes_support():
-    from orbit3d.generator.octree_backend import checkpoint_contract
+    from loom.generator.octree_backend import checkpoint_contract
     args = build_default_uni3dar_args(1)
     args.emb_dim=96;args.num_head=4;args.layer=2
     old=ConditionalUni3DAR(args,AtomFeatDict(args),2)
@@ -209,7 +209,7 @@ def test_expanding_allowed_elements_retains_dictionary_ids_and_changes_support()
 
 @pytest.mark.parametrize('state',[{'charge':1},{'multiplicity':3}])
 def test_octree_pipeline_does_not_ignore_unsupported_electronic_state(state):
-    from orbit3d.pipeline.octree_runner import run_octree_from_config
+    from loom.pipeline.octree_runner import run_octree_from_config
     with pytest.raises(ValueError,match='neutral closed-shell'):
         run_octree_from_config({'stage5_relax_config':state})
 
@@ -234,8 +234,8 @@ def test_zero_kl_objective_needs_no_reference_model_and_keeps_policy_gradients()
 def test_failed_groups_without_auxiliary_objectives_leave_policy_unchanged(monkeypatch):
     import copy
     from types import SimpleNamespace
-    from orbit3d.constraints import TargetIntervals
-    from orbit3d.generator.octree_alignment import align_octree
+    from loom.constraints import TargetIntervals
+    from loom.generator.octree_alignment import align_octree
 
     class FailedPolicy(torch.nn.Module):
         condition_version = 3
@@ -256,7 +256,7 @@ def test_failed_groups_without_auxiliary_objectives_leave_policy_unchanged(monke
     def invalid(*args, **kwargs):
         raise ValueError('invalid generated graph')
 
-    monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance', invalid)
+    monkeypatch.setattr('loom.generator.octree_alignment.trajectory_to_instance', invalid)
     adam = torch.optim.AdamW
     def optimizer_with_existing_momentum(parameters, **kwargs):
         optimizer = adam(parameters, **kwargs)
@@ -277,7 +277,7 @@ def test_failed_groups_without_auxiliary_objectives_leave_policy_unchanged(monke
 
 
 def test_element_supervision_remains_pending_after_structural_adaptation():
-    from orbit3d.generator.octree_backend import required_condition_elements
+    from loom.generator.octree_backend import required_condition_elements
 
     state = {'representation_migration': {'old_elements': ['H', 'C'], 'new_elements': ['H', 'C', 'B'],
                                         'requires_adaptation': False},
@@ -324,7 +324,7 @@ def test_per_molecule_training_scores_match_separate_unequal_size_molecules(weig
 
 
 def test_incompatible_intervals_and_margin_use_only_valid_negative_pairs():
-    from orbit3d.generator.condition_contrast import incompatible_condition_indices, condition_margin_loss
+    from loom.generator.condition_contrast import incompatible_condition_indices, condition_margin_loss
     targets = torch.tensor([[0., 0.], [.1, .1], [.6, -.1]])
     indices, eligible = incompatible_condition_indices(targets, halfwidth=.25)
     assert eligible.all()
@@ -351,7 +351,7 @@ def test_sampling_temperature_rejects_invalid_values(value):
 
 
 def test_element_loss_weights_come_only_from_the_supplied_training_atoms():
-    from orbit3d.generator.supervised_weights import inverse_sqrt_element_weights
+    from loom.generator.supervised_weights import inverse_sqrt_element_weights
     dictionary = AtomFeatDict(build_default_uni3dar_args(1))
     weights, record = inverse_sqrt_element_weights([Chem.MolFromSmiles('CCCO')], dictionary)
     assert record['training_atom_counts'] == {'C': 3, 'O': 1}
@@ -361,8 +361,8 @@ def test_element_loss_weights_come_only_from_the_supplied_training_atoms():
 
 
 def test_target_expansion_preserves_old_conditions_and_readout_when_new_targets_are_inactive():
-    from orbit3d.generator.octree_model import DynamicIntervalConditioner, Suffix3DPropertyHead
-    from orbit3d.generator.target_migration import expand_interval_conditioner, expand_property_readout
+    from loom.generator.octree_model import DynamicIntervalConditioner, Suffix3DPropertyHead
+    from loom.generator.target_migration import expand_interval_conditioner, expand_property_readout
     torch.manual_seed(42)
     before = DynamicIntervalConditioner(emb_dim=32, num_props=2, num_layers=2, bound_masks=True, smooth_frequencies=True)
     after = DynamicIntervalConditioner(emb_dim=32, num_props=4, num_layers=2, bound_masks=True, smooth_frequencies=True)
@@ -386,7 +386,7 @@ def test_target_expansion_preserves_old_conditions_and_readout_when_new_targets_
 @pytest.mark.parametrize("version,continued,timed", [(3,False,False),(4,True,False),(4,True,True)])
 def test_labelled_sft_runs_without_any_oracle_or_forcefield(tmp_path, monkeypatch, version, continued, timed):
     import json
-    from orbit3d.pipeline import octree_runner as runner
+    from loom.pipeline import octree_runner as runner
     args = build_default_uni3dar_args(2)
     args.emb_dim, args.num_head, args.layer = 96, 4, 2
     args.condition_version = version

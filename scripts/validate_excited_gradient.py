@@ -9,9 +9,9 @@ import numpy as np
 from pyscf import lib
 from rdkit import Chem
 
-from orbit3d.quantum.excited_states import response, restricted_reference
-from orbit3d.quantum.ocelot import BOHR_ANGSTROM, host_array, make_quantum_molecule, theory_from_record
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.excited_states import response, restricted_reference
+from loom.quantum.ocelot import BOHR_ANGSTROM, host_array, make_quantum_molecule, theory_from_record
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument('--ground-run', type=Path, required=True)

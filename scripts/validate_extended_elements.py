@@ -7,11 +7,11 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.molecular_state import rdkit_mol_to_mol3d_instance, mol3d_to_validated_rdkit_mol
+from loom.physics.dpa_forcefield import DPAPotentialGuidance
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 p = argparse.ArgumentParser()
 p.add_argument("--weight", required=True)

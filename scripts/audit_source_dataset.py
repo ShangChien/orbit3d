@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 import torch
-from orbit3d.generator.octree_backend import OctreeDataset
-from orbit3d.generator.octree_model import AtomFeatDict, build_default_uni3dar_args
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.octree_backend import OctreeDataset
+from loom.generator.octree_model import AtomFeatDict, build_default_uni3dar_args
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

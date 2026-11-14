@@ -10,13 +10,13 @@ import pandas as pd
 from rdkit import Chem, rdBase
 from rdkit.Chem import rdDetermineBonds
 
-from orbit3d.generator.molecular_state import (
+from loom.generator.molecular_state import (
     Mol3DInstance,
     mol3d_to_validated_rdkit_mol,
     rdkit_mol_to_mol3d_instance,
 )
-from orbit3d.utils.molecular_identity import compare_molecular_identity
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.molecular_identity import compare_molecular_identity
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 METHODS = {'connect_the_dots': {}, 'vdw_1.3': {'useVdw': True, 'covFactor': 1.3},
            'extended_hueckel': {'useHueckel': True}}

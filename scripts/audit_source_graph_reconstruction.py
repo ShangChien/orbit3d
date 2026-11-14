@@ -7,9 +7,9 @@ from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
 from rdkit import Chem
-from orbit3d.generator.molecular_state import Mol3DInstance, mol3d_to_validated_rdkit_mol
-from orbit3d.vendor.uni3dar.data.base_grid_dataset import BaseGridDataset
-from orbit3d.oracles.graph_features import fingerprint_graph
+from loom.generator.molecular_state import Mol3DInstance, mol3d_to_validated_rdkit_mol
+from loom.vendor.uni3dar.data.base_grid_dataset import BaseGridDataset
+from loom.oracles.graph_features import fingerprint_graph
 
 
 def graph_key(mol):

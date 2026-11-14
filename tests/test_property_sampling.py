@@ -1,5 +1,5 @@
 import numpy as np
-from orbit3d.generator.property_sampling import property_sampling_probabilities
+from loom.generator.property_sampling import property_sampling_probabilities
 
 
 def test_equal_width_mass_and_sparse_exposure_cap():

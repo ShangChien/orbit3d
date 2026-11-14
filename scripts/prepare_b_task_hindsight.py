@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.oracles.unimol2_task import graph_set
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.oracles.unimol2_task import graph_set
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

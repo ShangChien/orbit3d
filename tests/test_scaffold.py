@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.generator.scaffold import ScaffoldState, OpenPort
+from loom.generator.scaffold import ScaffoldState, OpenPort
 
 
 def geometry(smiles):

@@ -5,9 +5,9 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem, RDLogger
-from orbit3d.generator.octree_backend import load_pretrained, trajectory_to_instance
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run
+from loom.generator.octree_backend import load_pretrained, trajectory_to_instance
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument("--weight", required=True)

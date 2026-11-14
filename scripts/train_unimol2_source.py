@@ -3,9 +3,9 @@ import argparse,copy,hashlib,json,math,os,time
 from pathlib import Path
 import numpy as np,torch
 from rdkit import Chem
-from orbit3d.oracles.unimol2_oracle import build_unimol2,load_pretrained,SourceUniMol2Dataset,collate_unimol2,grouped_batches
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.oracles.unimol2_oracle import build_unimol2,load_pretrained,SourceUniMol2Dataset,collate_unimol2,grouped_batches
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def update_count(batches,budget):

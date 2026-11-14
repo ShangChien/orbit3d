@@ -6,7 +6,7 @@ import sys
 import time
 from pathlib import Path
 
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
         with (args.output / f'{name}.log').open('w') as stream:
             subprocess.run([sys.executable, *map(str, arguments)], stdout=stream, stderr=subprocess.STDOUT, check=True)
 
-    run(['-m', 'orbit3d.cli', '--config', config], 'train')
+    run(['-m', 'loom.cli', '--config', config], 'train')
     for label, filename in [('total10000', 'octree_step_5000.pt'), ('total20000', 'octree_conditional.pt')]:
         checkpoint = args.output / 'checkpoints' / filename
         run([scripts / 'diagnose_element_likelihood.py', '--checkpoint', checkpoint,

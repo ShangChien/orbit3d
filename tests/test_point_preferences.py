@@ -1,6 +1,6 @@
 import torch
 import pytest
-from orbit3d.generator.point_preferences import nearby_size_matched_pairs, bidirectional_softmax_loss, nearest_condition_candidates, multi_condition_loss
+from loom.generator.point_preferences import nearby_size_matched_pairs, bidirectional_softmax_loss, nearest_condition_candidates, multi_condition_loss
 
 
 def test_pairing_requires_size_and_nearby_labels_and_reverses():
@@ -29,7 +29,7 @@ def test_soft_targets_do_not_treat_equal_properties_as_hard_negatives():
 
 @pytest.mark.parametrize('method', ['bidirectional_softmax', 'multi_condition'])
 def test_objective_freezes_reference_but_backpropagates_to_conditioner(method):
-    from orbit3d.generator.point_preferences import PointPreferenceObjective
+    from loom.generator.point_preferences import PointPreferenceObjective
     class Model(torch.nn.Module):
         def __init__(self):
             super().__init__()
@@ -53,7 +53,7 @@ def test_objective_freezes_reference_but_backpropagates_to_conditioner(method):
 
 
 def test_two_way_softmax_keeps_distinct_channels_inside_the_old_linear_hinge_region():
-    from orbit3d.generator.point_preferences import bidirectional_softmax_loss
+    from loom.generator.point_preferences import bidirectional_softmax_loss
     positive=torch.tensor([-.01,.01],requires_grad=True)
     negative=torch.tensor([-.005,.005],requires_grad=True)
     zero=torch.zeros(2);partner=torch.tensor([1,0]);enabled=torch.ones(2,dtype=torch.bool)

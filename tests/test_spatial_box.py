@@ -2,7 +2,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
-from orbit3d.generator.spatial_box import BoxSpec3D
+from loom.generator.spatial_box import BoxSpec3D
 
 
 def test_window_masks_occupancy_bits_before_sampling():

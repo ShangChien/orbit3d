@@ -39,7 +39,7 @@ def test_standard_optimizer_converges_with_bounded_steps():
 def test_point_gradient_remains_active_inside_interval(monkeypatch):
     import importlib
     from pathlib import Path
-    from orbit3d.constraints import TargetIntervals
+    from loom.constraints import TargetIntervals
     monkeypatch.syspath_prepend(str(Path(__file__).parents[1] / 'scripts'))
     PointExperiment = importlib.import_module('experiment_point_refinement').PointExperiment
     target = [-7.25, -.63]

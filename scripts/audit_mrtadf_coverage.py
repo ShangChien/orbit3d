@@ -3,7 +3,7 @@ from collections import Counter
 from pathlib import Path
 import lmdb
 from rdkit import Chem,RDLogger
-from orbit3d.utils.qm9s import read_record,adapt_record,canonical_record
+from loom.utils.qm9s import read_record,adapt_record,canonical_record
 RDLogger.DisableLog('rdApp.*')
 p=argparse.ArgumentParser(description='Audit complete closed-shell MR-TADF element coverage without repairing labels')
 p.add_argument('--source',type=Path,required=True)

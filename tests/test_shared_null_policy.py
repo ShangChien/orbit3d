@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
-from orbit3d.generator.octree_model import PointConditioner
+from loom.generator.octree_model import PointConditioner
 
 spec=importlib.util.spec_from_file_location('null_audit',Path(__file__).parents[1]/'scripts/audit_shared_null_policy.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 

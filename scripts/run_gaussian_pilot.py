@@ -1,7 +1,7 @@
 """Run the frozen seed-level mean/width SFT and reciprocal/hindsight factorial."""
 import argparse,copy,json,subprocess,sys,time
 from pathlib import Path
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():
@@ -36,7 +36,7 @@ def main():
             checkpoint_save_dir=str(a.output/name/'weights'),output_dir=str(a.output/name/'run'))
         if hindsight:cfg['mount_paths']['hindsight_data_path']=str(a.hindsight)
         path=configs/f'{name}.json';path.write_text(json.dumps(cfg,indent=2)+'\n')
-        execute(name,[sys.executable,'-u','-m','orbit3d.cli','--config',str(path)])
+        execute(name,[sys.executable,'-u','-m','loom.cli','--config',str(path)])
         checkpoints[name]=str(a.output/name/'weights/octree_conditional.pt')
         (a.output/'checkpoints.json').write_text(json.dumps(checkpoints,indent=2)+'\n')
 

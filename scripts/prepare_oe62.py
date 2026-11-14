@@ -9,9 +9,9 @@ import pandas as pd
 from rdkit import Chem, rdBase
 from rdkit.Chem.Scaffolds import MurckoScaffold
 ELEMENTS = ("H", "C", "N", "O", "F", "B", "Si", "P", "S", "Cl", "Br", "I", "Se", "As", "Te")
-from orbit3d.utils.oe62 import adapt_record, THEORY
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run
+from loom.utils.oe62 import adapt_record, THEORY
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run
 
 
 def rank(value, seed=42):

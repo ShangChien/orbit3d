@@ -7,8 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 import torch
-from orbit3d.pipeline.octree_runner import run_octree_from_config
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.pipeline.octree_runner import run_octree_from_config
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 p = argparse.ArgumentParser()
 p.add_argument('--config', type=Path, required=True)
@@ -37,7 +37,7 @@ for name, bounds in windows.items():
         cfg['mount_paths']['output_dir'] = str(run)
         summary = run_octree_from_config(cfg)
         if not records and a.reference_first_run:
-            from orbit3d.utils.replay_validation import compare_run_outputs
+            from loom.utils.replay_validation import compare_run_outputs
             replay = compare_run_outputs(a.reference_first_run, run)
             (a.output / 'reload_summary.json').write_text(json.dumps(replay, indent=2) + '\n')
         subprocess.run([sys.executable, str(Path(__file__).with_name('audit_generation_failures.py')),

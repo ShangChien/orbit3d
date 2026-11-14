@@ -2,24 +2,24 @@
 import argparse,csv,hashlib,json,subprocess,sys,zipfile
 from pathlib import Path
 import numpy as np
-import orbit3d
+import loom
 
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--wheel',type=Path,required=True);p.add_argument('--site',type=Path,required=True)
     p.add_argument('--reference',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    package=Path(orbit3d.__file__).resolve().parent;assert package==(a.site/'orbit3d').resolve(),'Wrong imported package'
+    package=Path(loom.__file__).resolve().parent;assert package==(a.site/'loom').resolve(),'Wrong imported package'
     checked=0
     with zipfile.ZipFile(a.wheel) as wheel:
         for name in wheel.namelist():
-            if name.startswith('orbit3d/') and Path(name).suffix in {'.py','.json','.txt'}:
+            if name.startswith('loom/') and Path(name).suffix in {'.py','.json','.txt'}:
                 assert wheel.read(name)==(a.site/name).read_bytes(),name;checked+=1
     cfg=json.loads((a.reference/'run_config.json').read_text());assert cfg['mode']=='predict' and not cfg['generator_config']['grpo_steps']
     a.output.mkdir(parents=True,exist_ok=False)
     cfg['mount_paths'].update(output_dir=str(a.output/'run'),checkpoint_save_dir=str(a.output/'weights'))
     config=a.output/'config.json';config.write_text(json.dumps(cfg,indent=2)+'\n')
     with (a.output/'pipeline.log').open('w') as log:
-        subprocess.run([sys.executable,'-m','orbit3d.cli','--config',str(config)],stdout=log,stderr=subprocess.STDOUT,check=True)
+        subprocess.run([sys.executable,'-m','loom.cli','--config',str(config)],stdout=log,stderr=subprocess.STDOUT,check=True)
     with np.load(a.reference/'raw_trajectories.npz') as old,np.load(a.output/'run/raw_trajectories.npz') as new:
         assert set(old.files)==set(new.files)
         exact={key:np.array_equal(old[key],new[key]) for key in old.files}

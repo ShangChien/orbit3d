@@ -5,10 +5,10 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.molecular_state import ATOM_TYPES, rdkit_mol_to_mol3d_instance
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
-from orbit3d.physics.conformer_relaxer import relax_conformer_iso_property
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.generator.molecular_state import ATOM_TYPES, rdkit_mol_to_mol3d_instance
+from loom.physics.dpa_forcefield import DPAPotentialGuidance
+from loom.physics.conformer_relaxer import relax_conformer_iso_property
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 
 p = argparse.ArgumentParser()
 p.add_argument("--oracle", required=True)

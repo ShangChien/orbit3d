@@ -7,10 +7,10 @@ import numpy as np
 import torch
 from rdkit import Chem
 
-from orbit3d.generator.molecular_state import ATOM_TYPES
-from orbit3d.pipeline.evaluators import load_evaluators
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.molecular_state import ATOM_TYPES
+from loom.pipeline.evaluators import load_evaluators
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.oracles.unimol2_oracle import source_features, collate_unimol2
+from loom.oracles.unimol2_oracle import source_features, collate_unimol2
 
 
 def main():
@@ -54,7 +54,7 @@ def main():
         expected = namespace[function]([f[key] for f in features], padded)
         torch.testing.assert_close(actual[key], expected, rtol=0, atol=0)
 
-    vendored = Path('src/orbit3d/compat/unimol2')
+    vendored = Path('src/loom/compat/unimol2')
     source_checks = {}
     def without_imports(file):
         tree = ast.parse(file.read_text())

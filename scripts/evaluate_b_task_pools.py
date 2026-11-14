@@ -10,11 +10,11 @@ import torch
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.oracles.unimol2_task import FrozenUniMol2Task, support_exclusion, graph_set, summarize_task
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.oracles.unimol2_task import FrozenUniMol2Task, support_exclusion, graph_set, summarize_task
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 
 def main():

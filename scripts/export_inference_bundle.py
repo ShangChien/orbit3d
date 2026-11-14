@@ -54,11 +54,11 @@ original remote run. Use a GPU machine for that configuration.
     python -m pip install --no-deps package/"""
     readme+=wheel.name+"""
 
-    orbit3d --config config.json
+    loom --config config.json
 
 For full replay, pass the relocated generator path printed in config.json:
 
-    python -c 'from orbit3d.utils.replay_validation import main; main()' \
+    python -c 'from loom.utils.replay_validation import main; main()' \
       --config config.json --checkpoint GENERATOR_PATH \
       --reference-run reference_run --output verification
 
@@ -82,7 +82,7 @@ Then install the bundled source wheel without resolving dependencies again.
 '''
     (output/'README.md').write_text(readme)
     (output/'verify_bundle.py').write_text('''import json,sys
-from orbit3d.utils.replay_validation import main
+from loom.utils.replay_validation import main
 configuration=json.load(open('config.json'))
 sys.argv=['verify_bundle','--config','config.json','--checkpoint',configuration['mount_paths']['checkpoint_load_path'],
           '--reference-run','reference_run','--output','verification']

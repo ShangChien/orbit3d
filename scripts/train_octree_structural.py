@@ -7,17 +7,17 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem, RDLogger
-from orbit3d.generator.octree_backend import (
+from loom.generator.octree_backend import (
     load_octree_checkpoint,
     OctreeDataset,
     checkpoint_contract,
     trajectory_to_instance,
     required_condition_elements,
 )
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.random_streams import candidate_seed
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 p = argparse.ArgumentParser()
 p.add_argument("--checkpoint", type=Path, required=True)

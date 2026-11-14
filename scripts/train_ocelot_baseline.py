@@ -5,9 +5,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from rdkit import Chem
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.property_metrics import paired_energy_difference_metrics
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.property_metrics import paired_energy_difference_metrics
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)

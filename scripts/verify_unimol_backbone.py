@@ -2,8 +2,8 @@
 import argparse,hashlib,importlib.util,json
 from pathlib import Path
 import torch
-from orbit3d.oracles.uniqsar_oracle import StandaloneUniMolModel,UNIMOL_DICT_SYMBOLS
-from orbit3d.oracles.unimol_oracle import load_pretrained_unimol_backbone
+from loom.oracles.uniqsar_oracle import StandaloneUniMolModel,UNIMOL_DICT_SYMBOLS
+from loom.oracles.unimol_oracle import load_pretrained_unimol_backbone
 p=argparse.ArgumentParser();p.add_argument('--weight',required=True);p.add_argument('--official-encoder',required=True);p.add_argument('--dictionary',required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
 torch.set_num_threads(2);torch.manual_seed(42)
 assert Path(a.dictionary).read_text().splitlines()+['[MASK]']==UNIMOL_DICT_SYMBOLS

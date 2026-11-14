@@ -3,11 +3,11 @@ import argparse,json,time
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_backend import load_octree_checkpoint
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.constraints import TargetPoints
+from loom.generator.octree_backend import load_octree_checkpoint
+from loom.generator.random_streams import candidate_seed
+from loom.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 
 def main():

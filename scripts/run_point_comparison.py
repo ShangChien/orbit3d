@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():
@@ -80,7 +80,7 @@ def main():
         cfg['inference_config'].update(inference or {})
         path = configs/f'{name}.json'
         path.write_text(json.dumps(cfg, indent=2)+'\n')
-        execute(name, [sys.executable, '-u', '-m', 'orbit3d.cli', '--config', str(path)])
+        execute(name, [sys.executable, '-u', '-m', 'loom.cli', '--config', str(path)])
 
     frozen = a.frozen_sft or a.output/'sft/weights/octree_conditional.pt'
     if a.stage == 'sft':

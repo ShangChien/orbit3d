@@ -1,6 +1,6 @@
 import torch
-from orbit3d.generator.octree_alignment import categorical_policy_loss
-from orbit3d.generator.alignment_diagnostics import categorical_kl_loss
+from loom.generator.octree_alignment import categorical_policy_loss
+from loom.generator.alignment_diagnostics import categorical_kl_loss
 
 
 def test_kl_probe_matches_training_normalization_for_unequal_trajectory_lengths():

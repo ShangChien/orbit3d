@@ -3,7 +3,7 @@ import argparse,hashlib,json
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
-from orbit3d.utils.dataset_io import write_precise_sdf
+from loom.utils.dataset_io import write_precise_sdf
 p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);a=p.parse_args();out=a.root/'quantum_reference';out.mkdir(exist_ok=False)
 cohort=json.loads((a.root/'quantum_cohort/manifest.json').read_text());allowed={s for r in cohort['records'] for s in r['elements']}
 train=list(Chem.SDMolSupplier(str(a.root/'data/train.sdf'),removeHs=False));valid=list(Chem.SDMolSupplier(str(a.root/'data/valid.sdf'),removeHs=False));valid=[m for m in valid if not {x.GetSymbol() for x in m.GetAtoms()}-allowed]

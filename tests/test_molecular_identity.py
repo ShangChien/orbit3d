@@ -1,7 +1,7 @@
 import pytest
 from rdkit import Chem
 
-from orbit3d.utils.molecular_identity import compare_molecular_identity
+from loom.utils.molecular_identity import compare_molecular_identity
 
 
 @pytest.mark.parametrize('source,recovered,status', [
@@ -44,8 +44,8 @@ def test_inferred_graph_stereo_can_be_revalidated_without_changing_geometry():
     import json
     from pathlib import Path
     import numpy as np
-    from orbit3d.generator.octree_backend import trajectory_to_instance
-    from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
+    from loom.generator.octree_backend import trajectory_to_instance
+    from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
     case=json.loads((Path(__file__).parent/'fixtures/inferred_stereo_cleanup.json').read_text())
     instance=trajectory_to_instance({'atom_symbols':case['symbols'],'positions_np':case['coordinates']},
                                     element_table=tuple(case['elements']))
@@ -64,8 +64,8 @@ def test_existing_bond_length_bounds_cannot_hide_coordinate_connectivity_drift()
     from pathlib import Path
     from dataclasses import replace
     import numpy as np
-    from orbit3d.generator.octree_backend import trajectory_to_instance
-    from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
+    from loom.generator.octree_backend import trajectory_to_instance
+    from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
     case=json.loads((Path(__file__).parent/'fixtures/connectivity_drift.json').read_text())
     instance=trajectory_to_instance({'atom_symbols':case['symbols'],'positions_np':case['initial']},
                                     element_table=tuple(case['elements']))

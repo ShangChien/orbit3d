@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 import pytest
-from orbit3d.utils import replay_validation
+from loom.utils import replay_validation
 
 
 def test_weight_packaging_never_skips_a_requested_model_or_changes_bytes(tmp_path):

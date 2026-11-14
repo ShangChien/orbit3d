@@ -4,7 +4,7 @@ import argparse
 import hashlib
 from pathlib import Path
 import torch
-from orbit3d.generator.octree_backend import load_octree_checkpoint, build_octree, checkpoint_contract
+from loom.generator.octree_backend import load_octree_checkpoint, build_octree, checkpoint_contract
 
 p = argparse.ArgumentParser()
 p.add_argument('--checkpoint', type=Path, required=True)

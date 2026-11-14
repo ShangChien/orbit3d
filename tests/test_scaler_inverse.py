@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 import torch
 from sklearn.preprocessing import StandardScaler,RobustScaler,MinMaxScaler,MaxAbsScaler,PowerTransformer,FunctionTransformer
-from orbit3d.utils.dataset_io import inverse_single_scaler_torch
-from orbit3d.oracles.uniqsar_oracle import _inverse_single_scaler_torch
+from loom.utils.dataset_io import inverse_single_scaler_torch
+from loom.oracles.uniqsar_oracle import _inverse_single_scaler_torch
 
 
 @pytest.mark.parametrize('scaler',[
@@ -46,7 +46,7 @@ def test_log_inverse_is_not_capped_and_unknown_functions_do_not_become_expm1():
 def test_bridge_nonlinear_scaling_matches_public_mean_spread_and_coordinate_gradients(ensemble):
     from types import SimpleNamespace
     from rdkit import Chem
-    from orbit3d.oracles.uniqsar_oracle import UniQSARTrainedBridge
+    from loom.oracles.uniqsar_oracle import UniQSARTrainedBridge
 
     bridge = UniQSARTrainedBridge.__new__(UniQSARTrainedBridge)
     bridge.device = torch.device('cpu')
@@ -95,7 +95,7 @@ def test_bridge_nonlinear_scaling_matches_public_mean_spread_and_coordinate_grad
 
 @pytest.mark.parametrize('scaler', [StandardScaler(), MinMaxScaler(), PowerTransformer()])
 def test_shared_multitarget_scaler_matches_numpy(scaler):
-    from orbit3d.oracles.uniqsar_oracle import UniQSARTrainedBridge
+    from loom.oracles.uniqsar_oracle import UniQSARTrainedBridge
     scaler.fit(np.array([[.1, 1.], [.3, 5.], [1., 3.], [2., 9.], [10., 13.]]))
     bridge = UniQSARTrainedBridge.__new__(UniQSARTrainedBridge)
     bridge.output_dim, bridge.task, bridge.scaler = 2, 'multilabel_regression', scaler

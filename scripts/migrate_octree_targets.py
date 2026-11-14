@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_backend import load_octree_checkpoint, build_octree, checkpoint_contract, required_condition_elements
-from orbit3d.generator.target_migration import expand_interval_conditioner, expand_property_readout
+from loom.generator.octree_backend import load_octree_checkpoint, build_octree, checkpoint_contract, required_condition_elements
+from loom.generator.target_migration import expand_interval_conditioner, expand_property_readout
 
 p = argparse.ArgumentParser()
 p.add_argument('--checkpoint', type=Path, required=True)

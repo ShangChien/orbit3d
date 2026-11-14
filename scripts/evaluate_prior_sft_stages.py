@@ -2,10 +2,10 @@
 import argparse,copy,gc,hashlib,json,subprocess,sys
 from pathlib import Path
 import torch
-from orbit3d.generator.octree_backend import load_pretrained,checkpoint_contract
-from orbit3d.pipeline.octree_runner import run_octree_from_config
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.octree_backend import load_pretrained,checkpoint_contract
+from loom.pipeline.octree_runner import run_octree_from_config
+from loom.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 p=argparse.ArgumentParser()
 p.add_argument('--config',type=Path,required=True)
 p.add_argument('--pretrained',type=Path,required=True)

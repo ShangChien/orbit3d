@@ -1,9 +1,9 @@
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance
-from orbit3d.generator.point_task_feedback import evaluate_point_task
+from loom.constraints import TargetPoints
+from loom.generator.molecular_state import rdkit_mol_to_mol3d_instance
+from loom.generator.point_task_feedback import evaluate_point_task
 
 
 def test_raw_feedback_preserves_coordinates_and_uses_continuous_point_distance():

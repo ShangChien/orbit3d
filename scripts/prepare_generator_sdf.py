@@ -5,10 +5,10 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_model import build_default_uni3dar_args,AtomFeatDict
-from orbit3d.generator.octree_backend import OctreeDataset
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.generator.octree_model import build_default_uni3dar_args,AtomFeatDict
+from loom.generator.octree_backend import OctreeDataset
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 p=argparse.ArgumentParser()
 p.add_argument('--source',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)

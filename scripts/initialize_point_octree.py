@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_backend import load_pretrained,build_octree,checkpoint_contract
+from loom.generator.octree_backend import load_pretrained,build_octree,checkpoint_contract
 
 p=argparse.ArgumentParser();p.add_argument('--pretrained',type=Path,required=True)
 p.add_argument('--sdf',type=Path,required=True);p.add_argument('--output',type=Path,required=True)

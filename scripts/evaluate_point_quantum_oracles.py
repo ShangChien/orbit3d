@@ -4,11 +4,11 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
+from loom.physics.factory import build_forcefield
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():

@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def scaffold(mol):

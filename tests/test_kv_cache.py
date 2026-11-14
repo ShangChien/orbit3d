@@ -1,8 +1,8 @@
 import pytest
 import torch
-from orbit3d.vendor.uni3dar.models.attention import Attention
-from orbit3d.vendor.uni3dar.models.kv_cache import compact_kv
-from orbit3d.vendor.flash_attn.flash_attn_interface import flash_attn_func, flash_attn_varlen_func
+from loom.vendor.uni3dar.models.attention import Attention
+from loom.vendor.uni3dar.models.kv_cache import compact_kv
+from loom.vendor.flash_attn.flash_attn_interface import flash_attn_func, flash_attn_varlen_func
 
 
 @pytest.mark.parametrize('mode', ['concat', 'buffer'])

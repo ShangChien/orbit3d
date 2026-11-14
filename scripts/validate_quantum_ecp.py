@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from orbit3d.quantum.ocelot import (
+from loom.quantum.ocelot import (
     BOHR_ANGSTROM,
     HARTREE_EV,
     OcelotEvaluator,
@@ -14,7 +14,7 @@ from orbit3d.quantum.ocelot import (
     ecp_core_electrons,
     host_array,
 )
-from orbit3d.utils.run_evidence import freeze_run
+from loom.utils.run_evidence import freeze_run
 
 
 def main():

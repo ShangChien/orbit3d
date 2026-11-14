@@ -5,10 +5,10 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_backend import load_octree_checkpoint, OctreeDataset
-from orbit3d.generator.point_preferences import nearby_size_matched_pairs
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.octree_backend import load_octree_checkpoint, OctreeDataset
+from loom.generator.point_preferences import nearby_size_matched_pairs
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 
 def main():

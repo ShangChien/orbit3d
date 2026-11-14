@@ -5,9 +5,9 @@ import json
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.generator.octree_backend import load_octree_checkpoint
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.octree_backend import load_octree_checkpoint
+from loom.generator.random_streams import candidate_seed
+from loom.utils.reproducibility import lock_deterministic_environment
 
 p = argparse.ArgumentParser()
 p.add_argument("--checkpoint", required=True)

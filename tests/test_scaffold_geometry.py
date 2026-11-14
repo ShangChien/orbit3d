@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.generator.scaffold import ScaffoldState
-from orbit3d.generator.scaffold_geometry import AttachmentGrid, attachment_grid, propose_attachment
+from loom.generator.scaffold import ScaffoldState
+from loom.generator.scaffold_geometry import AttachmentGrid, attachment_grid, propose_attachment
 
 
 def scaffold():

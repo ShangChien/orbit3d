@@ -6,9 +6,9 @@ from pathlib import Path
 import cupy
 from pyscf import dft, lib
 from pyscf.scf.chkfile import load_scf
-from orbit3d.quantum.gpu_engine import gpu_scf
-from orbit3d.quantum.ocelot import frontier_orbitals, HARTREE_EV
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.gpu_engine import gpu_scf
+from loom.quantum.ocelot import frontier_orbitals, HARTREE_EV
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument('--input-checkpoint', required=True)

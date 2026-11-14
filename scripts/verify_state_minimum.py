@@ -12,9 +12,9 @@ from pyscf import lib
 from pyscf.hessian.thermo import harmonic_analysis
 from rdkit import Chem
 
-from orbit3d.quantum.excited_states import response, response_gradient_scanner, restricted_reference
-from orbit3d.quantum.ocelot import host_array, make_quantum_molecule, theory_from_record
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.excited_states import response, response_gradient_scanner, restricted_reference
+from loom.quantum.ocelot import host_array, make_quantum_molecule, theory_from_record
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument("--ground-run", type=Path, required=True)

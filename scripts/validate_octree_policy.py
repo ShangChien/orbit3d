@@ -4,9 +4,9 @@ import argparse
 import json
 from pathlib import Path
 import torch
-from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.octree_backend import load_octree_checkpoint, interval_arrays
-from orbit3d.vendor.uni3dar.models import uni3dar_sampler as sampler
+from loom.constraints import TargetIntervals
+from loom.generator.octree_backend import load_octree_checkpoint, interval_arrays
+from loom.vendor.uni3dar.models import uni3dar_sampler as sampler
 
 p = argparse.ArgumentParser()
 p.add_argument("--config", type=Path, required=True)

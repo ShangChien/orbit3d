@@ -6,7 +6,7 @@ import pytest
 from rdkit import Chem
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVC
-from orbit3d.oracles.uniqsar_oracle import UniQSARTrainedBridge
+from loom.oracles.uniqsar_oracle import UniQSARTrainedBridge
 
 
 class StoredRegressor:

@@ -52,7 +52,7 @@ def calculate(a):
   (a.output/'result.json').write_text(json.dumps(report,indent=2))
   if a.optimize:
    from pyscf.geomopt.geometric_solver import kernel
-   from orbit3d.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
+   from loom.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
    optmol=make_mol(syms,coords,a.output/'geometry.log');optmf=method(optmol,'pbe','d3bj',engine=a.engine);trace=[]
    report['geometry']={'protocol':'PBE-D3BJ/def2-TZVP/DF, not source PBE-TS/Tier2','converged':False,'graph_preserved':False,'trace':trace}
    def callback(env):

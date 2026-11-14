@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from orbit3d.oracles.unimol2_task import file_sha256, graph_set, summarize_task
+from loom.oracles.unimol2_task import file_sha256, graph_set, summarize_task
 from summarize_b_task_experiment import aggregate, paired_hit_bootstrap
 
 

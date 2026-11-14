@@ -22,8 +22,8 @@
       "license": "MIT",
       "license_sha256": "86df9d01a4cde3773da9a8c895e5b1699aa19ff899e130a7d2421e25770a350c",
       "subdirectory": "unimol2",
-      "local": "src/orbit3d/compat/unimol2",
-      "source_manifest": "src/orbit3d/compat/unimol2/upstream.json"
+      "local": "src/loom/compat/unimol2",
+      "source_manifest": "src/loom/compat/unimol2/upstream.json"
     }
   ]
 }

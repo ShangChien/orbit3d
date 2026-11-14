@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import lmdb
 from rdkit import Chem, RDLogger
-from orbit3d.utils.qm9s import read_record, canonical_record
+from loom.utils.qm9s import read_record, canonical_record
 
 p = argparse.ArgumentParser()
 p.add_argument('--source', type=Path, required=True)

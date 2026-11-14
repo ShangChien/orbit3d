@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
-from orbit3d.oracles.graph_features import fingerprint_graph
+from loom.oracles.graph_features import fingerprint_graph
 
 
 def states(mol):

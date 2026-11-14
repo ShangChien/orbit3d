@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 import torch
 from rdkit import Chem
-from orbit3d.generator.molecular_state import Mol3DInstance
-from orbit3d.physics.standard_relaxer import relax_conformer_standard_energy
+from loom.generator.molecular_state import Mol3DInstance
+from loom.physics.standard_relaxer import relax_conformer_standard_energy
 
 
 class HarmonicField:

@@ -5,10 +5,10 @@ import numpy as np,torch
 from rdkit import Chem,DataStructs
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.unimol_oracle import InternalUniMolOracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.physics.factory import build_forcefield
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.unimol_oracle import InternalUniMolOracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 NAMES=['homo','lumo']
 def metrics(y,p):
@@ -29,7 +29,7 @@ def load_models(root,selection):
  model_dir=root/'training'/selection/'oracle'
  meta=json.loads((model_dir/'oracle_meta.json').read_text())
  if meta['oracle_type']=='internal_unimol2':
-  from orbit3d.oracles.unimol2_oracle import InternalUniMol2Oracle
+  from loom.oracles.unimol2_oracle import InternalUniMol2Oracle
   evaluator=InternalUniMol2Oracle.load_from_dir(model_dir,'cuda:0')
  else:evaluator=InternalUniMolOracle.load_from_dir(str(model_dir),'cuda:0')
  models={'dpa_common':InternalDPA4PropertyOracle.load_from_dir(str(root/'training/dpa_common/oracle'),ff),

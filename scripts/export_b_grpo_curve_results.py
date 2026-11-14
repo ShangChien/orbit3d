@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from orbit3d.oracles.unimol2_task import file_sha256
+from loom.oracles.unimol2_task import file_sha256
 
 
 def timing_summary(root):

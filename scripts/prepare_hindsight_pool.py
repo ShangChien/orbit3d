@@ -7,9 +7,9 @@ from pathlib import Path
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import record_input_hashes
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import record_input_hashes
 
 
 def main():

@@ -5,15 +5,15 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.baselines.brics import build_library,FragmentSampler
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.oracles.applicability import MorganDomain
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.baselines.brics import build_library,FragmentSampler
+from loom.generator.random_streams import candidate_seed
+from loom.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
+from loom.physics.factory import build_forcefield
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.oracles.applicability import MorganDomain
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def summarize_scores(scores):

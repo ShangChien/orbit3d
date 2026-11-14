@@ -2,8 +2,8 @@
 import argparse,copy,gc,json,subprocess,sys
 from pathlib import Path
 import torch
-from orbit3d.pipeline.octree_runner import run_octree_from_config
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.pipeline.octree_runner import run_octree_from_config
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 p=argparse.ArgumentParser()
 p.add_argument('--config',type=Path,required=True)
 p.add_argument('--tasks',type=Path,required=True,help='JSON list of {variant, training_seed}')

@@ -10,17 +10,17 @@ import torch
 from ase import Atoms
 from ase.calculators.calculator import Calculator, all_changes
 from ase.optimize import LBFGS
-from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import ATOM_TYPES, mol3d_to_validated_rdkit_mol
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.physics.conformer_relaxer import (
+from loom.constraints import TargetIntervals
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import ATOM_TYPES, mol3d_to_validated_rdkit_mol
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.physics.factory import build_forcefield
+from loom.physics.conformer_relaxer import (
     cap_molecular_displacement, relax_conformer_energy_only, relax_conformer_iso_property,
 )
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def reverse_project(force, gradient):

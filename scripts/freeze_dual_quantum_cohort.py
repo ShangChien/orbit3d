@@ -3,9 +3,9 @@ import argparse,hashlib,json
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.oracles.uniqsar_oracle import UNIMOL_SYM2IDX
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.utils.dataset_io import write_precise_sdf
+from loom.oracles.uniqsar_oracle import UNIMOL_SYM2IDX
 
 p=argparse.ArgumentParser();p.add_argument('--snapshot',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=False)
 d=json.loads(a.snapshot.read_text());pools=[x for x in d['pools'] if x['group'].startswith('main:')]

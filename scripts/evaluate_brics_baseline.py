@@ -6,16 +6,16 @@ import numpy as np
 import pandas as pd
 import torch
 from rdkit import Chem
-from orbit3d.baselines.brics import build_library,FragmentSampler
-from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.pipeline.evaluators import load_evaluators
-from orbit3d.physics.batched_relaxer import relax_conformers_iso_property
-from orbit3d.utils.conformers import ocelot_conformer
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.baselines.brics import build_library,FragmentSampler
+from loom.constraints import TargetIntervals
+from loom.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
+from loom.generator.random_streams import candidate_seed
+from loom.pipeline.evaluators import load_evaluators
+from loom.physics.batched_relaxer import relax_conformers_iso_property
+from loom.utils.conformers import ocelot_conformer
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 
 def main():

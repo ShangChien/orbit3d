@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 from rdkit import Chem
-from orbit3d.oracles.unimol2_oracle import build_unimol2,source_features,collate_unimol2,grouped_batches,load_pretrained
+from loom.oracles.unimol2_oracle import build_unimol2,source_features,collate_unimol2,grouped_batches,load_pretrained
 
 
 def mol(smiles):

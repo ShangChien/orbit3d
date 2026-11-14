@@ -3,13 +3,13 @@ import argparse,json,time
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.pipeline.evaluators import load_evaluators
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.physics.terminal_evaluation import evaluate_terminal
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.pipeline.evaluators import load_evaluators
+from loom.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.dataset_io import write_precise_sdf
+from loom.physics.terminal_evaluation import evaluate_terminal
 
 
 def summarize(records):

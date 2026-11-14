@@ -1,4 +1,6 @@
-# ORBIT-3D
+# Uni-Loom (`loom`)
+
+> 旧版 `ORBIT-3D` 包与早期手稿已整体迁移归档至 `archive/orbit3d_legacy/`，代码主包统一为 `src/loom/`。
 
 面向性质目标的分子生成与三维优化研究。当前可执行主线为：
 
@@ -30,7 +32,7 @@ flowchart LR
     B -.完整分子反馈.-> G
 ```
 
-已完成的势场终态闭环另见[论文架构图](paper/figures/fig0_orbit3d_system_architecture.svg)。
+已完成的势场终态闭环另见[论文架构图](archive/orbit3d_legacy/paper/figures/fig0_orbit3d_system_architecture.svg)。
 
 ## 文档导航
 
@@ -45,7 +47,7 @@ flowchart LR
 | [必要踩坑说明](docs/pitfalls.md) | 分子身份、物理量定义、数值精度和评测口径 |
 | [运行与模型接口](docs/runtime.md) | 安装、训练/推理、外部 Oracle、可迁移模型包 |
 | [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
-| [论文](paper/ORBIT3D_arXiv_Paper.pdf) | E13–E16研究稿，尚未并入新B任务；[可编辑来源与构建](paper/README.md) |
+| [论文](archive/orbit3d_legacy/paper/ORBIT3D_arXiv_Paper.pdf) | E13–E16研究稿，尚未并入新B任务；[可编辑来源与构建](archive/orbit3d_legacy/paper/README.md) |
 
 OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。冻结后的4762个源测试结构上，DPA的HOMO/LUMO MAE为0.1000/0.1029 eV，HyFF为0.1596/0.1648 eV。三个独立生成器训练seed共完成48384次评价提案。GRPO相对冻结SFT将HOMO/LUMO域内率从18.42%/19.15%提高到22.95%/26.18%；独立代理命中产率提高，但同等额外训练时间下目标MAE均更差。原始池MLIP物理联合命中为零，GRPO继续作为可选阶段。新增24候选PySCF裁决有20例优化收敛且保图、12例命中目标；这些DFT几何仍全部未过DPA/HyFF的0.1力阈值，两个判据不能混同。
 
@@ -67,8 +69,8 @@ mol_gen/
 ├── Dockerfile                   # 可选部署配方；不等于已验证的平台 GPU 镜像
 ├── .github/workflows/           # CPU 正确性与安装包检查
 ├── configs/                     # octree 双/四性质与显式骨架工作流配置
-├── src/orbit3d/
-│   ├── cli.py                   # orbit3d --config 的统一入口
+├── src/loom/
+│   ├── cli.py                   # loom --config 的统一入口
 │   ├── pipeline/                # 后端分派、octree/骨架流程、共享评估器加载
 │   ├── generator/
 │   │   ├── molecular_state.py   # 分子图、元素/电子态、坐标与化学验证
@@ -146,7 +148,7 @@ DPA 后端使用 `uv sync --frozen --extra octree --extra deepmd`；HyFF 使用
 编辑配置中的实际路径后运行：
 
 ```bash
-orbit3d --config configs/qm9s_ocelot_octree.json
+loom --config configs/qm9s_ocelot_octree.json
 # 四性质：configs/ocelot_optical_octree.json
 # 固定骨架：configs/scaffold_graph_growth.json
 ```

@@ -7,8 +7,8 @@ import time
 import numpy as np
 from rdkit import Chem
 import torch
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.physics.dpa_forcefield import DPAPotentialGuidance
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

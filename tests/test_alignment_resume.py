@@ -4,8 +4,8 @@ import pytest
 from types import SimpleNamespace
 import numpy as np
 import torch
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_alignment import align_octree
+from loom.constraints import TargetPoints
+from loom.generator.octree_alignment import align_octree
 
 
 class Policy(torch.nn.Module):
@@ -41,8 +41,8 @@ class ReplayDataset:
 def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path,reward_type,advantage_mode,use_fixed_task,replay_weight):
     def instance(t,**kwargs):
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
-    monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
-    monkeypatch.setattr('orbit3d.generator.octree_alignment.OctreeDataset',ReplayDataset)
+    monkeypatch.setattr('loom.generator.octree_alignment.trajectory_to_instance',instance)
+    monkeypatch.setattr('loom.generator.octree_alignment.OctreeDataset',ReplayDataset)
     oracle=SimpleNamespace(predict_3d_mols=lambda mols:(np.array(mols)[:,None],np.zeros((len(mols),1))))
     ff=SimpleNamespace(atom_type_map=['C'],compute_energy_and_forces=lambda *a,**k:(0.,torch.zeros(1,3)))
     pool=[TargetPoints.parse({'y':value},{'y':1.},['y']) for value in [0.,.5]]
@@ -51,7 +51,7 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
         return {i:dict(evaluation_status='completed',prediction=[inst.graph],point_distance=points.distance([inst.graph]),
             property_hit=points.intervals().hit([inst.graph]),reward=1. if reward_type=='eligibility_only' else 1./(1.+points.distance([inst.graph])))
             for i,inst in instances}
-    monkeypatch.setattr('orbit3d.generator.point_task_feedback.evaluate_point_task',score)
+    monkeypatch.setattr('loom.generator.point_task_feedback.evaluate_point_task',score)
     torch.manual_seed(21);np.random.seed(21);random.seed(21);base=Policy();rng=torch.get_rng_state()
     numpy_rng=np.random.get_state();python_rng=random.getstate()
     def reset_rng():
@@ -98,7 +98,7 @@ def test_eligibility_reward_ignores_property_value_but_keeps_evaluation(monkeypa
     def instance(t,**kwargs):
         if int(t['decoder_feat'][0,0])==3:raise ValueError('invalid graph')
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
-    monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
+    monkeypatch.setattr('loom.generator.octree_alignment.trajectory_to_instance',instance)
     calls=[]
     def predict(mols):
         calls.extend(mols);return np.array(mols)[:,None]*100,np.zeros((len(mols),1))

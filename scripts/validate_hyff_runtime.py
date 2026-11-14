@@ -7,8 +7,8 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.physics.hyff_forcefield import HyFFPotentialGuidance
-from orbit3d.utils.run_evidence import freeze_run
+from loom.physics.hyff_forcefield import HyFFPotentialGuidance
+from loom.utils.run_evidence import freeze_run
 p=argparse.ArgumentParser()
 p.add_argument('--weights', required=True)
 p.add_argument('--output', type=Path, required=True)

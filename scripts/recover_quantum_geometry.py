@@ -9,7 +9,7 @@ import numpy as np
 from pyscf.scf import chkfile
 from rdkit import Chem
 
-from orbit3d.quantum.ocelot import (
+from loom.quantum.ocelot import (
  BOHR_ANGSTROM,
  HARTREE_EV,
  OcelotEvaluator,
@@ -19,8 +19,8 @@ from orbit3d.quantum.ocelot import (
  inspect_optimized_graph,
  quantum_geometry_molecule,
 )
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 p=argparse.ArgumentParser()
 p.add_argument('--sdf',type=Path,required=True)

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from orbit3d.utils.property_metrics import paired_energy_difference_metrics
+from loom.utils.property_metrics import paired_energy_difference_metrics
 
 
 def test_difference_of_ensemble_means_is_not_a_paired_gap_mae():

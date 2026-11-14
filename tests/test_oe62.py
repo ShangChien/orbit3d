@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 from rdkit import Chem
-from orbit3d.utils.oe62 import adapt_record
-from orbit3d.utils.dataset_io import write_precise_sdf
+from loom.utils.oe62 import adapt_record
+from loom.utils.dataset_io import write_precise_sdf
 
 
 def record():

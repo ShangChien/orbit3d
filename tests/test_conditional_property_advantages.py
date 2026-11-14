@@ -1,5 +1,5 @@
 import torch
-from orbit3d.generator.octree_alignment import group_relative_advantages
+from loom.generator.octree_alignment import group_relative_advantages
 
 
 def test_joint_mode_preserves_existing_normalization_exactly():
@@ -45,7 +45,7 @@ def test_permutation_does_not_change_candidate_advantages():
 
 
 def test_separated_signal_changes_the_actual_policy_gradient_direction():
-    from orbit3d.generator.octree_alignment import categorical_policy_loss
+    from loom.generator.octree_alignment import categorical_policy_loss
     reward=torch.tensor([.9,.1,-1.,-1.]);mask=reward>=0
     joint,_=group_relative_advantages(reward,mask)
     separated,_=group_relative_advantages(reward,mask,'conditional_property_v1')

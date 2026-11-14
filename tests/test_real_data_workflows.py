@@ -6,9 +6,9 @@ import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.utils.qm9s import adapt_record, read_record
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.utils.qm9s import adapt_record, read_record
 
 
 def mol(smi):
@@ -66,7 +66,7 @@ def test_reload_check_separates_native_noise_from_changed_scalers():
 
     from sklearn.preprocessing import StandardScaler
 
-    from orbit3d.oracles.validation import compare_oracle_reload
+    from loom.oracles.validation import compare_oracle_reload
 
     class NoisyDescriptor(DescriptorForce):
         calls = 0
@@ -132,7 +132,7 @@ def test_disconnected_descriptor_does_not_return_partial_coordinate_gradient():
 
 
 def test_precise_sdf_roundtrips_coordinates(tmp_path):
-    from orbit3d.utils.dataset_io import write_precise_sdf
+    from loom.utils.dataset_io import write_precise_sdf
 
     m = mol("CCO")
     m.SetProp("Value", "[1.1, 2.2]")
@@ -146,7 +146,7 @@ def test_precise_sdf_roundtrips_coordinates(tmp_path):
 
 
 def test_calibration_uses_finite_sample_joint_residual_quantiles():
-    from orbit3d.oracles.calibration import ResidualCalibration
+    from loom.oracles.calibration import ResidualCalibration
 
     y = np.array([[i, 2 * i] for i in range(10)], dtype=float)
     mean = np.zeros_like(y)
@@ -160,7 +160,7 @@ def test_calibration_uses_finite_sample_joint_residual_quantiles():
 
 
 def test_applicability_domain_preserves_reference_and_hydrogen_convention(tmp_path):
-    from orbit3d.oracles.applicability import MorganDomain
+    from loom.oracles.applicability import MorganDomain
 
     domain = MorganDomain(['c1ccccc1', 'CCO'], 0.5)
     path = tmp_path / 'domain.json'
@@ -171,7 +171,7 @@ def test_applicability_domain_preserves_reference_and_hydrogen_convention(tmp_pa
 
 
 def test_vectorized_adapter_keeps_frames_and_coordinate_gradients_independent():
-    from orbit3d.oracles.dpa4_oracle import _BootstrapAdapters
+    from loom.oracles.dpa4_oracle import _BootstrapAdapters
 
     torch.manual_seed(7)
     adapter = _BootstrapAdapters(12, 2, 3, hidden_dim=16)
@@ -192,7 +192,7 @@ def test_ocelot_property_adapters_reject_untrained_electronic_states(smiles):
 
 
 def test_phosphazene_mmff_failure_is_an_explicit_preparation_rejection():
-    from orbit3d.utils.conformers import ocelot_conformer
+    from loom.utils.conformers import ocelot_conformer
 
     # OCELOT csd_TAVCOI: parses as a graph, but MMFF cannot kekulize its fused system.
     with pytest.raises(ValueError, match='MMFF aromaticity/valence unsupported'):
@@ -204,7 +204,7 @@ def test_csv_loader_records_geometry_rejection_without_shifting_labels(tmp_path)
 
     import pandas as pd
 
-    from orbit3d.utils.dataset_io import load_3d_molecular_dataset
+    from loom.utils.dataset_io import load_3d_molecular_dataset
 
     source = tmp_path / 'molecules.csv'
     pd.DataFrame({'SMILES': ['FP1(F)=NP(F)(F)=NP2(=N1)Oc1cc3ccccc3cc1O2', 'CC'],
@@ -218,7 +218,7 @@ def test_csv_loader_records_geometry_rejection_without_shifting_labels(tmp_path)
 
 
 def test_wide_element_geometry_uses_the_explicitly_selected_forcefield():
-    from orbit3d.utils.conformers import ocelot_conformer
+    from loom.utils.conformers import ocelot_conformer
 
     smiles = 'B1Nc2ccccc2C1=Cc1ccccc1'
     with pytest.raises(ValueError, match='MMFF parameters unavailable'):
@@ -236,9 +236,9 @@ def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
     import types
     from pathlib import Path
 
-    import orbit3d.compat.hyff as bundled
-    from orbit3d.compat.hyff import registry
-    from orbit3d.compat.hyff.models.factory import build_model, factory_id
+    import loom.compat.hyff as bundled
+    from loom.compat.hyff import registry
+    from loom.compat.hyff.models.factory import build_model, factory_id
 
     monkeypatch.setitem(sys.modules, 'hyff', types.ModuleType('unrelated_hyff'))
     before=list(sys.path)
@@ -246,7 +246,7 @@ def test_vendored_hyff_is_private_and_preserves_constructor_ids(monkeypatch):
     config=json.loads((Path(bundled.__file__).parent/'checkpoints/presto/weights.json').read_text())
     spec={k:v for k,v in config.items() if k in {'format','model_id','model_config','numerical_execution'}}
     model=build_model(spec)
-    assert type(model).__module__.startswith('orbit3d.compat.hyff.')
+    assert type(model).__module__.startswith('loom.compat.hyff.')
     assert set(registry.manifest()['models'])=={'presto','vivace','moderato','andante','largo'}
     assert sys.path==before
 
@@ -266,7 +266,7 @@ def test_mim_wide_element_adapter_requires_declared_spectrum_and_explicit_atoms(
 
 
 def test_fingerprint_similarity_does_not_certify_an_unseen_element(tmp_path):
-    from orbit3d.oracles.applicability import MorganDomain
+    from loom.oracles.applicability import MorganDomain
     domain=MorganDomain(['Nc1ccccc1','Oc1ccccc1'],.25)
     molecule=Chem.MolFromSmiles('OB(O)c1ccccc1')
     assessment=domain.assess(molecule)

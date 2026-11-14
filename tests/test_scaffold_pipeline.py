@@ -5,9 +5,9 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.pipeline import scaffold_runner
-from orbit3d.pipeline.runner import run_from_config
-from orbit3d.utils.dataset_io import write_precise_sdf
+from loom.pipeline import scaffold_runner
+from loom.pipeline.runner import run_from_config
+from loom.utils.dataset_io import write_precise_sdf
 
 
 class SharedOracle:
@@ -65,7 +65,7 @@ def test_scaffold_cli_grows_multiple_ports_without_losing_world_coordinates(tmp_
 
 
 def test_float64_adapter_geometry_is_translation_invariant_before_precision_conversion():
-    from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle, _BootstrapAdapters
+    from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle, _BootstrapAdapters
     oracle = InternalDPA4PropertyOracle.__new__(InternalDPA4PropertyOracle)
     torch.nn.Module.__init__(oracle)
     torch.manual_seed(42)
@@ -80,7 +80,7 @@ def test_float64_adapter_geometry_is_translation_invariant_before_precision_conv
 
 
 def test_ordinary_oracle_preserves_the_same_float64_geometry_as_shared_forward():
-    from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle, _BootstrapAdapters
+    from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle, _BootstrapAdapters
     oracle = InternalDPA4PropertyOracle.__new__(InternalDPA4PropertyOracle)
     torch.nn.Module.__init__(oracle)
     oracle.device, oracle.coordinate_dtype = torch.device('cpu'), torch.float64

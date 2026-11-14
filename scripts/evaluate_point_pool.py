@@ -5,11 +5,11 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.pipeline.evaluators import load_evaluators
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.constraints import TargetPoints
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.pipeline.evaluators import load_evaluators
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def summarize_records(records, point):

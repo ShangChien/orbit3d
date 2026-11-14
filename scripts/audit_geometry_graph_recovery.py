@@ -4,9 +4,9 @@ from collections import Counter
 import json
 from pathlib import Path
 from rdkit import Chem, RDLogger
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import mol_to_clean_smiles
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import mol_to_clean_smiles
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

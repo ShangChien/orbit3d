@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import numpy as np
 
-from orbit3d.quantum.ocelot import OcelotTheory, ecp_core_electrons, make_quantum_molecule, theory_from_record
+from loom.quantum.ocelot import OcelotTheory, ecp_core_electrons, make_quantum_molecule, theory_from_record
 
 
 @unittest.skipUnless(importlib.util.find_spec('pyscf'), 'PySCF quantum extra is not installed')

@@ -3,7 +3,7 @@ import argparse
 import hashlib
 from pathlib import Path
 import torch
-from orbit3d.generator.octree_backend import build_octree, checkpoint_contract
+from loom.generator.octree_backend import build_octree, checkpoint_contract
 
 
 def expand_point_weights(weights):

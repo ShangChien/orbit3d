@@ -1,5 +1,5 @@
 import torch
-from orbit3d.generator.terminal_feedback import terminal_advantages
+from loom.generator.terminal_feedback import terminal_advantages
 
 
 def test_one_accepted_endpoint_cannot_supply_property_comparison():
@@ -28,19 +28,19 @@ def test_terminal_alignment_updates_original_rollout_not_relaxed_coordinates(mon
     import numpy as np
     from types import SimpleNamespace
     from test_alignment_resume import Policy
-    from orbit3d.constraints import TargetPoints
-    from orbit3d.generator.octree_alignment import align_octree
+    from loom.constraints import TargetPoints
+    from loom.generator.octree_alignment import align_octree
     class CheckedPolicy(Policy):
         def trajectory_distributions(self,trajectories,*args,**kwargs):
             assert all(np.count_nonzero(t['positions_np'])==0 for t in trajectories)
             return super().trajectory_distributions(trajectories,*args,**kwargs)
     def instance(t,**kwargs):
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
-    monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
+    monkeypatch.setattr('loom.generator.octree_alignment.trajectory_to_instance',instance)
     def terminal(inst,*args,max_atoms=None):
         assert max_atoms==80
         return SimpleNamespace(coords=np.ones((1,3))*9),{'physical_accepted':True,'coordinates_A':[[9.,9.,9.]],'final':{'prediction_eV':[inst.graph]}}
-    monkeypatch.setattr('orbit3d.physics.terminal_evaluation.evaluate_terminal',terminal)
+    monkeypatch.setattr('loom.physics.terminal_evaluation.evaluate_terminal',terminal)
     point=TargetPoints.parse({'y':0.},{'y':1.},['y'])
     history=align_octree(CheckedPolicy(),[],None,np.zeros(1),np.ones(1),point.intervals(),None,None,
         steps=1,group_size=4,physics_weight=0,replay_weight=0,points=point,terminal_feedback_level='property',terminal_max_atoms=80)

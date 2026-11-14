@@ -1,7 +1,7 @@
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from orbit3d.oracles.unimol2_task import support_exclusion, summarize_task
+from loom.oracles.unimol2_task import support_exclusion, summarize_task
 
 
 def test_all_proposals_and_novel_graphs_are_distinct_metrics():

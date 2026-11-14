@@ -9,9 +9,9 @@ from pathlib import Path
 from pyscf import lib
 from rdkit import Chem
 
-from orbit3d.quantum.excited_states import vertical_excitations
-from orbit3d.quantum.ocelot import make_quantum_molecule, theory_from_record
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.excited_states import vertical_excitations
+from loom.quantum.ocelot import make_quantum_molecule, theory_from_record
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument('--ground-run', type=Path, required=True)

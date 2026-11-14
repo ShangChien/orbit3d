@@ -6,8 +6,8 @@ import cupy
 import numpy as np
 from pyscf.dft.numint import NumInt as CPU
 from gpu4pyscf.dft.numint import NumInt as GPU
-from orbit3d.quantum.xc_integrator import ThirdOrderCPUIntegrator
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.xc_integrator import ThirdOrderCPUIntegrator
+from loom.utils.run_evidence import freeze_run
 p=argparse.ArgumentParser()
 p.add_argument('--output', type=Path, required=True)
 a=p.parse_args()

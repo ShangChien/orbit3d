@@ -2,10 +2,10 @@ import json
 import numpy as np
 import pytest
 from rdkit import Chem
-from orbit3d.oracles.graph_features import RAW_GRAPH,NORMALIZED_GRAPH
-from orbit3d.oracles.graph_features import fingerprint_graph
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.oracles.applicability import MorganDomain
+from loom.oracles.graph_features import RAW_GRAPH,NORMALIZED_GRAPH
+from loom.oracles.graph_features import fingerprint_graph
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.oracles.applicability import MorganDomain
 
 
 def test_equivalent_sulfoxide_forms_have_the_same_features_and_domain():

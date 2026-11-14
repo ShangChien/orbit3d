@@ -7,15 +7,15 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.generator.scaffold import ScaffoldState
-from orbit3d.generator.scaffold_geometry import propose_attachment
-from orbit3d.generator.molecular_state import ATOM_TYPES, rdkit_mol_to_mol3d_instance
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.applicability import MorganDomain
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
-from orbit3d.physics.batched_relaxer import relax_conformers_iso_property
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.scaffold import ScaffoldState
+from loom.generator.scaffold_geometry import propose_attachment
+from loom.generator.molecular_state import ATOM_TYPES, rdkit_mol_to_mol3d_instance
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.applicability import MorganDomain
+from loom.physics.dpa_forcefield import DPAPotentialGuidance
+from loom.physics.batched_relaxer import relax_conformers_iso_property
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 p = argparse.ArgumentParser()
 p.add_argument("--weight", required=True)

@@ -1,5 +1,5 @@
 import torch
-from orbit3d.oracles.uniqsar_oracle import PureTransformerEncoderWithPair
+from loom.oracles.uniqsar_oracle import PureTransformerEncoderWithPair
 
 
 def test_dropout_only_changes_training_and_preserves_checkpoint_contract():

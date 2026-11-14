@@ -4,11 +4,11 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.utils.molecular_identity import compare_molecular_identity
-from orbit3d.oracles.unimol2_oracle import InternalUniMol2Oracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.utils.molecular_identity import compare_molecular_identity
+from loom.oracles.unimol2_oracle import InternalUniMol2Oracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 from evaluate_independent_3d_campaign import metrics
 
 

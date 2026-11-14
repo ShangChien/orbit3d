@@ -3,9 +3,9 @@ requires = ["hatchling>=1.21.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "orbit3d"
+name = "loom"
 version = "1.0.0"
-description = "ORBIT-3D: Octree-Based Reinforced Bidirectional Interval-Targeted 3D Molecular Generation with Pluggable Quantum-Mechanical Oracles"
+description = "Uni-Loom: Weaving Generative, Potential, and Property Foundation Models for Calibrated 3D Molecular Generation"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 license = { text = "MIT" }
@@ -70,10 +70,10 @@ dev = [
 ]
 
 [project.scripts]
-orbit3d = "orbit3d.cli:main"
+loom = "loom.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/orbit3d"]
+packages = ["src/loom"]
 
 [tool.uv]
 managed = true
@@ -99,3 +99,4 @@ src = ["src", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = [".", "src"]

@@ -4,13 +4,13 @@ from pathlib import Path
 import joblib,numpy as np,torch
 from rdkit import Chem
 from torch.utils.data import DataLoader
-from orbit3d.oracles.unimol_oracle import _UniMol3DDataset,_collate_unimol_3d,load_pretrained_unimol_backbone
-from orbit3d.oracles.uniqsar_oracle import StandaloneUniMolModel
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.utils.dataset_io import fit_target_scalers,transform_with_scalers
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.oracles.unimol_oracle import _UniMol3DDataset,_collate_unimol_3d,load_pretrained_unimol_backbone
+from loom.oracles.uniqsar_oracle import StandaloneUniMolModel
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.physics.factory import build_forcefield
+from loom.utils.dataset_io import fit_target_scalers,transform_with_scalers
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():

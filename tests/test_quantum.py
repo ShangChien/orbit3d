@@ -1,6 +1,6 @@
 import numpy as np
 
-from orbit3d.quantum.ocelot import OcelotTheory, frontier_orbitals, ip_objective, tuning_objective
+from loom.quantum.ocelot import OcelotTheory, frontier_orbitals, ip_objective, tuning_objective
 
 
 def test_ip_tuning_uses_positive_vertical_ionization_energy():
@@ -25,7 +25,7 @@ def test_ocelot_joint_tuning_distinguishes_neutral_lumo_and_anion_homo():
 def test_excited_scanner_checks_the_requested_one_based_root():
     from types import SimpleNamespace
 
-    from orbit3d.quantum.excited_states import ResponseStateConvergence
+    from loom.quantum.excited_states import ResponseStateConvergence
     scanner = ResponseStateConvergence()
     scanner.state = 1
     scanner.base = SimpleNamespace(_scf=SimpleNamespace(converged=True), converged=np.array([True]))
@@ -42,7 +42,7 @@ def test_quantum_graph_failure_retains_diagnostics_and_does_not_relabel_itself()
     from rdkit import Chem
     from rdkit.Chem import AllChem
 
-    from orbit3d.quantum.ocelot import inspect_optimized_graph
+    from loom.quantum.ocelot import inspect_optimized_graph
 
     mol = Chem.AddHs(Chem.MolFromSmiles('CC'))
     AllChem.EmbedMolecule(mol, randomSeed=42)
@@ -62,7 +62,7 @@ def test_quantum_graph_check_accepts_imine_stereo_addition_but_rejects_a_specifi
     from rdkit import Chem
     from rdkit.Chem import AllChem
 
-    from orbit3d.quantum.ocelot import inspect_optimized_graph
+    from loom.quantum.ocelot import inspect_optimized_graph
 
     mol = Chem.AddHs(Chem.MolFromSmiles('N=C(C)c1ccccc1'))
     assert AllChem.EmbedMolecule(mol, randomSeed=42) == 0
@@ -86,7 +86,7 @@ def test_optimizer_trace_preserves_failed_step_units_and_source_property_meaning
 
     from rdkit import Chem
 
-    from orbit3d.quantum.ocelot import (
+    from loom.quantum.ocelot import (
         BOHR_ANGSTROM,
         HARTREE_EV,
         quantum_geometry_molecule,

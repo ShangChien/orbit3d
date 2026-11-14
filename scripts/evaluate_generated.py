@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 from rdkit.Contrib.SA_Score import sascorer
-from orbit3d.constraints import TargetIntervals
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
+from loom.constraints import TargetIntervals
+from loom.oracles.fingerprint_oracle import FingerprintOracle
 
 p = argparse.ArgumentParser()
 p.add_argument("--oracle", type=Path, required=True)

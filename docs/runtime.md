@@ -7,7 +7,7 @@
 
 ```bash
 uv sync --frozen --extra octree --extra deepmd
-uv run --frozen --extra octree --extra deepmd orbit3d --config configs/qm9s_ocelot_octree.json
+uv run --frozen --extra octree --extra deepmd loom --config configs/qm9s_ocelot_octree.json
 ```
 
 DeepMD 3.2 的发布 C++ wheel 与所用 Torch 版本不兼容，项目使用其官方 Python
@@ -138,7 +138,7 @@ OE62独立评价已验证官方Uni-Mol v1与Uni-Mol2；按开发集选中的Uni-
 ```bash
 python scripts/export_inference_bundle.py \
   --run /path/to/completed_run --output /persistent/inference_bundle \
-  --wheel dist/orbit3d-1.0.0-py3-none-any.whl \
+  --wheel dist/loom-1.0.0-py3-none-any.whl \
   --requirements /path/to/requirements.lock.txt \
   --asset-root /path/to/original_workdir --archive /persistent/inference_bundle.tar
 ```

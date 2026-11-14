@@ -1,9 +1,9 @@
 import sys
 from pathlib import Path
 import torch
-from orbit3d.generator.octree_model import PointConditioner, GaussianConditioner
-from orbit3d.generator.gaussian_conditions import sample_gaussian_conditions, reciprocal_pairs
-from orbit3d.generator.condition_contrast import condition_margin_loss
+from loom.generator.octree_model import PointConditioner, GaussianConditioner
+from loom.generator.gaussian_conditions import sample_gaussian_conditions, reciprocal_pairs
+from loom.generator.condition_contrast import condition_margin_loss
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 from migrate_gaussian_conditioner import expand_point_weights
 
@@ -55,9 +55,9 @@ def test_point_contrast_runs_through_sft_with_frozen_backbone(tmp_path,monkeypat
     import numpy as np
     from rdkit import Chem
     from rdkit.Chem import AllChem
-    from orbit3d.pipeline import octree_runner as runner
-    from orbit3d.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
-    from orbit3d.utils.dataset_io import write_precise_sdf
+    from loom.pipeline import octree_runner as runner
+    from loom.generator.octree_model import ConditionalUni3DAR,build_default_uni3dar_args,AtomFeatDict
+    from loom.utils.dataset_io import write_precise_sdf
     args=build_default_uni3dar_args(8);args.emb_dim=32;args.num_head=4;args.layer=1;args.condition_version=4
     model=ConditionalUni3DAR(args,AtomFeatDict(args),2)
     with torch.no_grad():

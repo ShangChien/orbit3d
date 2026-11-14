@@ -9,7 +9,7 @@ import torch
 from rdkit import Chem, DataStructs
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.constraints import TargetPoints
+from loom.constraints import TargetPoints
 from evaluate_point_pool import summarize_records
 from analyze_alignment_signal import analyze as analyze_advantages
 

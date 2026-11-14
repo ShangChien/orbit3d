@@ -8,12 +8,12 @@ import numpy as np
 import torch
 from rdkit import Chem,RDLogger
 from rdkit.Chem.MolStandardize import rdMolStandardize
-from orbit3d.generator.octree_backend import OctreeDataset
-from orbit3d.generator.octree_model import AtomFeatDict,build_default_uni3dar_args
-from orbit3d.generator.molecular_state import Mol3DInstance,rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
-from orbit3d.vendor.uni3dar.data.atom_data import atom_list
-from orbit3d.utils.molecular_identity import compare_molecular_identity
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.generator.octree_backend import OctreeDataset
+from loom.generator.octree_model import AtomFeatDict,build_default_uni3dar_args
+from loom.generator.molecular_state import Mol3DInstance,rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
+from loom.vendor.uni3dar.data.atom_data import atom_list
+from loom.utils.molecular_identity import compare_molecular_identity
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():

@@ -7,10 +7,10 @@ from types import SimpleNamespace
 import lmdb
 import numpy as np
 from rdkit import Chem, RDLogger
-from orbit3d.utils.qm9s import read_record, canonical_record, adapt_record
-from orbit3d.generator.molecular_state import ATOM_TYPES, mol3d_to_validated_rdkit_mol
-from orbit3d.generator.octree_backend import OctreeDataset
-from orbit3d.generator.octree_model import build_default_uni3dar_args, AtomFeatDict
+from loom.utils.qm9s import read_record, canonical_record, adapt_record
+from loom.generator.molecular_state import ATOM_TYPES, mol3d_to_validated_rdkit_mol
+from loom.generator.octree_backend import OctreeDataset
+from loom.generator.octree_model import build_default_uni3dar_args, AtomFeatDict
 
 p = argparse.ArgumentParser()
 p.add_argument("--source", type=Path, required=True)

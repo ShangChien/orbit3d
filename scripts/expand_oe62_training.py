@@ -3,9 +3,9 @@ import argparse, hashlib, json
 from pathlib import Path
 import pandas as pd
 from rdkit import Chem
-from orbit3d.utils.oe62 import adapt_record
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.oe62 import adapt_record
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

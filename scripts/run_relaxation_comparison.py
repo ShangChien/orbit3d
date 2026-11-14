@@ -3,16 +3,16 @@ import argparse,json,time
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.physics.conformer_relaxer import relax_conformer_iso_property,relax_conformer_energy_only
-from orbit3d.physics.standard_relaxer import relax_conformer_standard_energy,check_relaxed_geometry
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.constraints import TargetPoints
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.physics.factory import build_forcefield
+from loom.physics.conformer_relaxer import relax_conformer_iso_property,relax_conformer_energy_only
+from loom.physics.standard_relaxer import relax_conformer_standard_energy,check_relaxed_geometry
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def trace_result(entry,energy,force):

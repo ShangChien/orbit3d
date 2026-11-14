@@ -4,8 +4,8 @@ from collections import Counter
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
-from orbit3d.oracles.graph_features import fingerprint_graph
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.oracles.graph_features import fingerprint_graph
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def states(mol):

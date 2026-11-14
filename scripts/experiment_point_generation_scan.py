@@ -16,15 +16,15 @@ import numpy as np
 import torch
 from rdkit import Chem
 from experiment_relaxation_priority import Experiment
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_backend import load_octree_checkpoint, trajectory_to_instance
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.pipeline.evaluators import load_evaluators
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.constraints import TargetPoints
+from loom.generator.octree_backend import load_octree_checkpoint, trajectory_to_instance
+from loom.generator.random_streams import candidate_seed
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.pipeline.evaluators import load_evaluators
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def target_metrics(rows, index, target, field='prediction', in_domain=True):

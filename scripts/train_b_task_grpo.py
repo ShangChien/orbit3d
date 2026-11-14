@@ -6,12 +6,12 @@ import time
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.octree_backend import load_octree_checkpoint
-from orbit3d.generator.octree_alignment import align_octree
-from orbit3d.oracles.unimol2_task import FrozenUniMol2Task
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.constraints import TargetPoints
+from loom.generator.octree_backend import load_octree_checkpoint
+from loom.generator.octree_alignment import align_octree
+from loom.oracles.unimol2_task import FrozenUniMol2Task
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

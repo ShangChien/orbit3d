@@ -7,9 +7,9 @@ import numpy as np
 import torch
 from rdkit import Chem
 from diagnose_brics_terminal import frozen_instance
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol
-from orbit3d.oracles.unimol2_task import FrozenUniMol2Task, support_exclusion, graph_set, summarize_task
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol
+from loom.oracles.unimol2_task import FrozenUniMol2Task, support_exclusion, graph_set, summarize_task
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 
 def main():

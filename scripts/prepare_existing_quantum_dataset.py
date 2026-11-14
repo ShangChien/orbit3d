@@ -10,10 +10,10 @@ import pandas as pd
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 
-from orbit3d.generator.molecular_state import mol_to_clean_smiles
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.oracles.unimol2_task import file_sha256, graph_set
+from loom.generator.molecular_state import mol_to_clean_smiles
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.oracles.unimol2_task import file_sha256, graph_set
 
 
 def scaffold(mol):

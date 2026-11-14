@@ -3,12 +3,12 @@ import argparse,copy,json,time
 from contextlib import redirect_stdout,redirect_stderr
 from pathlib import Path
 import torch
-from orbit3d.generator.octree_backend import load_octree_checkpoint
-from orbit3d.pipeline.octree_runner import run_octree_from_config
-from orbit3d.pipeline.evaluators import load_evaluators
-from orbit3d.oracles.fingerprint_oracle import FingerprintOracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.octree_backend import load_octree_checkpoint
+from loom.pipeline.octree_runner import run_octree_from_config
+from loom.pipeline.evaluators import load_evaluators
+from loom.oracles.fingerprint_oracle import FingerprintOracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 from evaluate_point_pool import evaluate_pool
 
 

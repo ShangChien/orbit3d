@@ -1,7 +1,7 @@
 """Check the adapter's molecule boundaries, electronic states and gradient graph."""
 import torch
 from torch import nn
-from orbit3d.physics.hyff_forcefield import HyFFPotentialGuidance
+from loom.physics.hyff_forcefield import HyFFPotentialGuidance
 from rdkit import Chem
 
 

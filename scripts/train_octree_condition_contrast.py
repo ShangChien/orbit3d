@@ -11,10 +11,10 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.octree_backend import load_octree_checkpoint, OctreeDataset
-from orbit3d.generator.condition_contrast import incompatible_condition_indices, condition_margin_loss
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.generator.octree_backend import load_octree_checkpoint, OctreeDataset
+from loom.generator.condition_contrast import incompatible_condition_indices, condition_margin_loss
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 p = argparse.ArgumentParser()
 p.add_argument('--checkpoint', type=Path, required=True)

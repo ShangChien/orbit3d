@@ -5,8 +5,8 @@ import pytest
 import torch
 from rdkit import Chem
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
-from orbit3d.oracles import unimol_oracle as module
-from orbit3d.oracles.uniqsar_oracle import tokenize_smiles_1d, SMI_TOKEN2IDX
+from loom.oracles import unimol_oracle as module
+from loom.oracles.uniqsar_oracle import tokenize_smiles_1d, SMI_TOKEN2IDX
 
 
 class TinyUniMol(torch.nn.Module):

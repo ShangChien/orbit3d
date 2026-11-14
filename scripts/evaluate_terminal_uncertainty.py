@@ -5,7 +5,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 import numpy as np
-from orbit3d.oracles.calibration import ResidualCalibration
+from loom.oracles.calibration import ResidualCalibration
 
 
 def interval_metrics(calibration, truth, mean, std):

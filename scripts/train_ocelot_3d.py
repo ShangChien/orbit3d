@@ -6,15 +6,15 @@ from rdkit import Chem
 import numpy as np
 import pandas as pd
 import torch
-from orbit3d.generator.molecular_state import ATOM_TYPES
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.validation import compare_oracle_reload
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.property_metrics import paired_energy_difference_metrics
-from orbit3d.utils.reproducibility import lock_deterministic_environment
-from orbit3d.utils.conformers import ocelot_conformer
+from loom.generator.molecular_state import ATOM_TYPES
+from loom.physics.factory import build_forcefield
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.validation import compare_oracle_reload
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.property_metrics import paired_energy_difference_metrics
+from loom.utils.reproducibility import lock_deterministic_environment
+from loom.utils.conformers import ocelot_conformer
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)

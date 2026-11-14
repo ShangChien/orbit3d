@@ -9,14 +9,14 @@ from scipy.stats import spearmanr
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit import DataStructs
-from orbit3d.oracles.calibration import ResidualCalibration
-from orbit3d.oracles.applicability import MorganDomain
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.generator.molecular_state import ATOM_TYPES
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.conformers import ocelot_conformer
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
+from loom.oracles.calibration import ResidualCalibration
+from loom.oracles.applicability import MorganDomain
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.physics.factory import build_forcefield
+from loom.generator.molecular_state import ATOM_TYPES
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.conformers import ocelot_conformer
+from loom.utils.run_evidence import freeze_run, record_input_hashes
 
 p = argparse.ArgumentParser()
 p.add_argument("--data", type=Path, required=True)

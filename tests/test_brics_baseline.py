@@ -1,6 +1,6 @@
 import pytest
 from rdkit import Chem
-from orbit3d.baselines.brics import build_library,FragmentSampler
+from loom.baselines.brics import build_library,FragmentSampler
 
 
 def test_single_cut_recombination_has_no_dummies_and_replays_by_candidate_seed():

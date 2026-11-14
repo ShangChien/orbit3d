@@ -1,7 +1,7 @@
 import runpy
 from pathlib import Path
 import pytest
-from orbit3d.constraints import TargetPoints
+from loom.constraints import TargetPoints
 
 
 def test_raw_pool_metrics_keep_failures_and_separate_domain():

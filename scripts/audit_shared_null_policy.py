@@ -3,7 +3,7 @@ import argparse,hashlib,json
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.generator.octree_model import PointConditioner
+from loom.generator.octree_model import PointConditioner
 
 
 def main():

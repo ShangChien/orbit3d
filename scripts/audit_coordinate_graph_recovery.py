@@ -5,9 +5,9 @@ from dataclasses import replace
 from pathlib import Path
 import numpy as np
 from rdkit import Chem,RDLogger
-from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
-from orbit3d.utils.molecular_identity import compare_molecular_identity
+from loom.generator.molecular_state import rdkit_mol_to_mol3d_instance,mol3d_to_validated_rdkit_mol
+from loom.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.molecular_identity import compare_molecular_identity
 p=argparse.ArgumentParser()
 p.add_argument('--sdf',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)

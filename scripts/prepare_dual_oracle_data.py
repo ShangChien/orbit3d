@@ -4,8 +4,8 @@ from pathlib import Path
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.oracles.uniqsar_oracle import UNIMOL_SYM2IDX
-from orbit3d.utils.dataset_io import write_precise_sdf
+from loom.oracles.uniqsar_oracle import UNIMOL_SYM2IDX
+from loom.utils.dataset_io import write_precise_sdf
 
 p=argparse.ArgumentParser();p.add_argument('--data',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
 a.output.mkdir(parents=True,exist_ok=False);original=json.loads((a.data/'manifest.json').read_text());report={'source_manifest_sha256':hashlib.sha256((a.data/'manifest.json').read_bytes()).hexdigest(),'theory':original['theory'],'units':'eV','hydrogens':'All explicit source hydrogens, no embedding or atom addition','max_atoms':80,'splits':{},'overlaps':{},'excluded':[],'locked_test':'Original scaffold-held-out test, IDs and geometry frozen before fitting; labels not used for selection','generator_overlap_scope':'Known SFT training identities only; pretraining corpus overlap unknown'}

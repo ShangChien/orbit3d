@@ -7,11 +7,11 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.generator.molecular_state import ATOM_TYPES
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
-from orbit3d.utils.run_evidence import freeze_run
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.molecular_state import ATOM_TYPES
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.physics.dpa_forcefield import DPAPotentialGuidance
+from loom.utils.run_evidence import freeze_run
+from loom.utils.reproducibility import lock_deterministic_environment
 
 p = argparse.ArgumentParser()
 p.add_argument('--oracle', required=True)

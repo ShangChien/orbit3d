@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import numpy as np
-from orbit3d.generator.octree_backend import trajectory_to_instance
+from loom.generator.octree_backend import trajectory_to_instance
 
 
 def verify_geometry(record, symbols, coordinates, element_table):

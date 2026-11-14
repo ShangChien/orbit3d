@@ -1,6 +1,6 @@
 import pytest
 import torch
-from orbit3d.generator.random_streams import RowRandomStreams, candidate_seed, inverse_cdf
+from loom.generator.random_streams import RowRandomStreams, candidate_seed, inverse_cdf
 
 
 def test_row_streams_survive_reordering_removal_and_neighbor_retries():
@@ -32,8 +32,8 @@ def test_inverse_cdf_respects_zero_support_and_tail():
 @pytest.mark.parametrize('terminal', [False, True])
 def test_atom_sampling_masks_forbidden_logits_before_softmax(terminal):
     from types import SimpleNamespace
-    from orbit3d.vendor.uni3dar.models.uni3dar_sampler import Uni3DARSampler
-    from orbit3d.generator.electronic_constraints import mask_terminal_element_logits
+    from loom.vendor.uni3dar.models.uni3dar_sampler import Uni3DARSampler
+    from loom.generator.electronic_constraints import mask_terminal_element_logits
     class Head:
         def inference(self, logits, samplers, **kwargs):
             return samplers[0](logits)
@@ -53,7 +53,7 @@ def test_atom_sampling_masks_forbidden_logits_before_softmax(terminal):
 
 
 def test_top_p_one_preserves_full_categorical_distribution():
-    from orbit3d.vendor.uni3dar.models.uni3dar_sampler import softmax_sampling
+    from loom.vendor.uni3dar.models.uni3dar_sampler import softmax_sampling
     generator=torch.Generator().manual_seed(7)
     logits=torch.randn(16,602,generator=generator)*5
     observed=[]

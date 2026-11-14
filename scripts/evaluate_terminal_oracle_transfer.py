@@ -5,9 +5,9 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.physics.factory import build_forcefield
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def metrics(rows):

@@ -4,8 +4,8 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.oracles.unimol2_oracle import InternalUniMol2Oracle
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.oracles.unimol2_oracle import InternalUniMol2Oracle
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():

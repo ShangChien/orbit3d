@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import numpy as np
 import torch
-from orbit3d.pipeline.octree_runner import run_octree_from_config
+from loom.pipeline.octree_runner import run_octree_from_config
 p=argparse.ArgumentParser()
 p.add_argument('--config',type=Path,required=True)
 p.add_argument('--models',type=Path,required=True,help='JSON mapping variant names to checkpoints')

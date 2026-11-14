@@ -4,7 +4,7 @@ import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from orbit3d.generator.molecular_state import (
+from loom.generator.molecular_state import (
     ATOM_TYPES,
     Mol3DInstance,
     mol3d_to_rdkit_mol,
@@ -59,10 +59,10 @@ def test_charge_spin_and_fixed_coordinate_frame_are_preserved():
 
 from types import SimpleNamespace
 
-from orbit3d.constraints import TargetIntervals
-from orbit3d.oracles.base import PropertyOracleBase
-from orbit3d.oracles.uniqsar_oracle import UniQSARTrainedBridge
-from orbit3d.physics.conformer_relaxer import project_force, relax_conformer_iso_property
+from loom.constraints import TargetIntervals
+from loom.oracles.base import PropertyOracleBase
+from loom.oracles.uniqsar_oracle import UniQSARTrainedBridge
+from loom.physics.conformer_relaxer import project_force, relax_conformer_iso_property
 
 
 def test_intervals_named_masked_and_joint():
@@ -169,7 +169,7 @@ def test_fold_uncertainty_and_stacking():
 def test_sdf_sparse_indices_and_empty_data(tmp_path, monkeypatch):
     import pandas as pd
 
-    from orbit3d.utils.dataset_io import PandasTools, load_3d_molecular_dataset
+    from loom.utils.dataset_io import PandasTools, load_3d_molecular_dataset
 
     monkeypatch.setattr(
         PandasTools,
@@ -220,7 +220,7 @@ def test_refinement_freezes_inferred_graph():
 
 
 def test_hyff_never_substitutes_unknown_elements_with_carbon():
-    from orbit3d.physics.hyff_forcefield import HyFFPotentialGuidance
+    from loom.physics.hyff_forcefield import HyFFPotentialGuidance
     ff = HyFFPotentialGuidance.__new__(HyFFPotentialGuidance)
     torch.nn.Module.__init__(ff)
     ff._pt = Chem.GetPeriodicTable()
@@ -234,7 +234,7 @@ def test_hyff_never_substitutes_unknown_elements_with_carbon():
 
 
 def test_hyff_native_failure_is_not_silently_replaced_by_reference():
-    from orbit3d.physics.hyff_forcefield import HyFFPotentialGuidance
+    from loom.physics.hyff_forcefield import HyFFPotentialGuidance
     ff = HyFFPotentialGuidance.__new__(HyFFPotentialGuidance)
     torch.nn.Module.__init__(ff)
     ff._pt = Chem.GetPeriodicTable()
@@ -253,7 +253,7 @@ def test_hyff_native_failure_is_not_silently_replaced_by_reference():
 
 
 def test_displacement_cap_preserves_molecular_tangent_and_batch_independence():
-    from orbit3d.physics.conformer_relaxer import cap_molecular_displacement
+    from loom.physics.conformer_relaxer import cap_molecular_displacement
     gradient = torch.tensor([[2., 0, 0], [1., 0, 0]])
     tangent = torch.tensor([[1., 0, 0], [-2., 0, 0]])
     # Per-atom clipping would rotate this tangent and produce g dot d = +0.1.
@@ -278,7 +278,7 @@ def test_explicit_element_table_preserves_wide_elements(smiles):
 
 
 def test_forcefield_indices_follow_its_own_element_table():
-    from orbit3d.oracles.base import PropertyOracleBase
+    from loom.oracles.base import PropertyOracleBase
     mol = embedded('C')
     inst = rdkit_mol_to_mol3d_instance(mol, np.zeros(1), element_table=('H','C'))
     class FixedOracle(PropertyOracleBase):
@@ -296,7 +296,7 @@ def test_forcefield_indices_follow_its_own_element_table():
 
 
 def test_large_atomic_energy_offsets_do_not_erase_small_physical_energy_changes():
-    from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+    from loom.physics.dpa_forcefield import DPAPotentialGuidance
     class AnalyticNative(torch.nn.Module):
         def forward(self, coords, atom_types):
             # The large atomic reference energy is common in heavy-element MLIPs.
@@ -336,7 +336,7 @@ def test_cis_geometry_cannot_retain_a_trans_graph_label():
 
 
 def test_energy_only_refinement_has_no_fake_property_success_and_forwards_state():
-    from orbit3d.physics.conformer_relaxer import relax_conformer_energy_only
+    from loom.physics.conformer_relaxer import relax_conformer_energy_only
     inst=rdkit_mol_to_mol3d_instance(embedded('CC'),np.zeros(1))
     out,info=relax_conformer_energy_only(inst,BondForce(1.6),n_steps=8,step_size=.0004)
     assert info['status']=='energy_only' and info['interval_hit'] is None
@@ -355,7 +355,7 @@ def test_energy_only_refinement_has_no_fake_property_success_and_forwards_state(
 
 
 def test_dpa_state_is_rejected_before_any_neutral_calculation():
-    from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+    from loom.physics.dpa_forcefield import DPAPotentialGuidance
     ff=DPAPotentialGuidance.__new__(DPAPotentialGuidance)
     torch.nn.Module.__init__(ff)
     for state in [{'charges':[1]},{'multiplicities':[3]}]:
@@ -379,7 +379,7 @@ def test_refinement_preserves_float64_scaffold_world_coordinates():
 def test_generator_backend_must_be_supported_and_explicit(tmp_path, backend):
     import json
 
-    from orbit3d.pipeline.runner import run_from_config
+    from loom.pipeline.runner import run_from_config
     path = tmp_path / "configuration.json"
     path.write_text(json.dumps({"generator_config": {"backend": backend}}))
     with pytest.raises(ValueError, match="Declare generator_config.backend"):
@@ -387,7 +387,7 @@ def test_generator_backend_must_be_supported_and_explicit(tmp_path, backend):
 
 
 def test_packed_molecular_translations_preserve_float32_input_geometry():
-    from orbit3d.physics.dpa_forcefield import DPAPotentialGuidance
+    from loom.physics.dpa_forcefield import DPAPotentialGuidance
 
     class IndependentHarmonicPairs(torch.nn.Module):
         def forward(self, coords, atom_types):

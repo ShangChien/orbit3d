@@ -4,9 +4,9 @@ import numpy as np
 import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from orbit3d.generator.molecular_state import rdkit_mol_to_mol3d_instance
-from orbit3d.physics.conformer_relaxer import relax_conformer_iso_property
-from orbit3d.physics.batched_relaxer import relax_conformers_iso_property
+from loom.generator.molecular_state import rdkit_mol_to_mol3d_instance
+from loom.physics.conformer_relaxer import relax_conformer_iso_property
+from loom.physics.batched_relaxer import relax_conformers_iso_property
 
 
 class AnalyticOracle:
@@ -61,7 +61,7 @@ def test_batch_refinement_matches_serial_and_isolates_nonfinite_frame():
 
 
 def test_native_oracle_reports_per_frame_failures_without_erasing_raw_forces():
-    from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+    from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
 
     class Frames:
         device_str = 'cpu'

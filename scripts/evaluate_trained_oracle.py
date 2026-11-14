@@ -6,12 +6,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from rdkit import Chem
-from orbit3d.generator.molecular_state import ATOM_TYPES
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.oracles.validation import compare_oracle_reload
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.generator.molecular_state import ATOM_TYPES
+from loom.physics.factory import build_forcefield
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.oracles.validation import compare_oracle_reload
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 import torch
 
 p = argparse.ArgumentParser()

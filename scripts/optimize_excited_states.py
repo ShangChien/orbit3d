@@ -11,17 +11,17 @@ from pyscf import lib
 from pyscf.geomopt.geometric_solver import kernel
 from rdkit import Chem
 
-from orbit3d.generator.molecular_state import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
-from orbit3d.quantum.excited_states import response, response_gradient_scanner, restricted_reference
-from orbit3d.quantum.ocelot import (
+from loom.generator.molecular_state import mol3d_to_validated_rdkit_mol, rdkit_mol_to_mol3d_instance
+from loom.quantum.excited_states import response, response_gradient_scanner, restricted_reference
+from loom.quantum.ocelot import (
     BOHR_ANGSTROM,
     HARTREE_EV,
     host_array,
     make_quantum_molecule,
     theory_from_record,
 )
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run
 
 p=argparse.ArgumentParser()
 p.add_argument('--ground-run', type=Path, required=True)

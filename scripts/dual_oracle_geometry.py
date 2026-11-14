@@ -5,12 +5,12 @@ from pathlib import Path
 import numpy as np,torch
 from rdkit import Chem
 from experiment_relaxation_priority import Experiment
-from orbit3d.constraints import TargetPoints
-from orbit3d.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
-from orbit3d.oracles.dpa4_oracle import InternalDPA4PropertyOracle
-from orbit3d.physics.factory import build_forcefield
-from orbit3d.utils.dataset_io import write_precise_sdf
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.constraints import TargetPoints
+from loom.generator.molecular_state import Mol3DInstance,mol3d_to_validated_rdkit_mol
+from loom.oracles.dpa4_oracle import InternalDPA4PropertyOracle
+from loom.physics.factory import build_forcefield
+from loom.utils.dataset_io import write_precise_sdf
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();assert os.environ.get('CUDA_VISIBLE_DEVICES') in ['2','3']
 torch.set_num_threads(2);freeze_run(a.output,__file__)
 manifest=json.loads((a.root/'data/manifest.json').read_text());elements=tuple(manifest['splits']['train']['elements'])

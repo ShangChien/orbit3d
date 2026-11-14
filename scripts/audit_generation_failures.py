@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 from rdkit.Contrib.SA_Score import sascorer
-from orbit3d.generator.octree_backend import trajectory_to_instance
-from orbit3d.generator.spatial_box import BoxSpec3D
-from orbit3d.utils.run_evidence import freeze_run
+from loom.generator.octree_backend import trajectory_to_instance
+from loom.generator.spatial_box import BoxSpec3D
+from loom.utils.run_evidence import freeze_run
 p=argparse.ArgumentParser()
 p.add_argument('--run', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)

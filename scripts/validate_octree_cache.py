@@ -8,12 +8,12 @@ from pathlib import Path
 import numpy as np
 import torch
 from rdkit import Chem
-from orbit3d.constraints import TargetIntervals
-from orbit3d.generator.octree_backend import load_octree_checkpoint, OctreeDataset, interval_arrays
-from orbit3d.generator.random_streams import candidate_seed
-from orbit3d.vendor.uni3dar.models.uni3dar import DecoderInputFeat
-from orbit3d.utils.run_evidence import freeze_run, record_input_hashes
-from orbit3d.utils.reproducibility import lock_deterministic_environment
+from loom.constraints import TargetIntervals
+from loom.generator.octree_backend import load_octree_checkpoint, OctreeDataset, interval_arrays
+from loom.generator.random_streams import candidate_seed
+from loom.vendor.uni3dar.models.uni3dar import DecoderInputFeat
+from loom.utils.run_evidence import freeze_run, record_input_hashes
+from loom.utils.reproducibility import lock_deterministic_environment
 
 
 @torch.no_grad()

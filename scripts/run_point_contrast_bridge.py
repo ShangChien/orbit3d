@@ -2,7 +2,7 @@
 import argparse,copy,json,subprocess,sys,time
 from pathlib import Path
 import torch
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
         cfg['mount_paths'].update(checkpoint_load_path=str(a.initial),checkpoint_save_dir=str(a.output/name/'weights'),output_dir=str(a.output/name/'run'))
         path=configs/f'{name}.json';path.write_text(json.dumps(cfg,indent=2)+'\n');started=time.perf_counter()
         with (a.output/f'{name}.log').open('x') as stream:
-            result=subprocess.run([sys.executable,'-u','-m','orbit3d.cli','--config',str(path)],stdout=stream,stderr=subprocess.STDOUT)
+            result=subprocess.run([sys.executable,'-u','-m','loom.cli','--config',str(path)],stdout=stream,stderr=subprocess.STDOUT)
         costs.append({'name':name,'wall_seconds':time.perf_counter()-started,'returncode':result.returncode})
         (a.output/'costs.json').write_text(json.dumps(costs,indent=2)+'\n');result.check_returncode()
         checkpoint=a.output/name/'weights/octree_conditional.pt';state=torch.load(checkpoint,map_location='cpu',weights_only=False,mmap=True)

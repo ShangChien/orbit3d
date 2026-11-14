@@ -8,8 +8,8 @@ import json
 from pathlib import Path
 import time
 from rdkit import Chem
-from orbit3d.quantum.ocelot import OcelotEvaluator, OcelotTheory
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.ocelot import OcelotEvaluator, OcelotTheory
+from loom.utils.run_evidence import freeze_run
 
 
 def evaluate_one(task):

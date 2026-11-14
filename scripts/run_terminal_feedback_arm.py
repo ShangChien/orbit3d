@@ -2,7 +2,7 @@
 import argparse,json,subprocess,sys,time
 from pathlib import Path
 import torch
-from orbit3d.utils.run_evidence import freeze_run,record_input_hashes
+from loom.utils.run_evidence import freeze_run,record_input_hashes
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
     cfg['inference_config'].update(target_point={'homo':points['50']},target_tolerance={'homo':.25})
     config=a.output/'config.json';config.write_text(json.dumps(cfg,indent=2)+'\n');started=time.perf_counter()
     with (a.output/'train.log').open('x') as log:
-        result=subprocess.run([sys.executable,'-u','-m','orbit3d.cli','--config',str(config)],stdout=log,stderr=subprocess.STDOUT)
+        result=subprocess.run([sys.executable,'-u','-m','loom.cli','--config',str(config)],stdout=log,stderr=subprocess.STDOUT)
     costs={'arm':a.arm,'process_wall_seconds':time.perf_counter()-started,'returncode':result.returncode,'groups':a.groups if a.arm!='sft' else None}
     (a.output/'costs.json').write_text(json.dumps(costs,indent=2)+'\n');result.check_returncode()
     path=a.output/'weights'/('octree_conditional.pt' if a.arm=='sft' else 'octree_aligned.pt')

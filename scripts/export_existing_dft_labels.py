@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from rdkit import Chem
 
-from orbit3d.utils.dataset_io import write_precise_sdf
+from loom.utils.dataset_io import write_precise_sdf
 
 
 def main():

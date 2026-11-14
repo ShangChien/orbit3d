@@ -7,8 +7,8 @@ import re
 from dataclasses import asdict
 from pathlib import Path
 import numpy as np
-from orbit3d.quantum.ocelot import OcelotEvaluator, OcelotTheory, frontier_orbitals, HARTREE_EV
-from orbit3d.utils.run_evidence import freeze_run
+from loom.quantum.ocelot import OcelotEvaluator, OcelotTheory, frontier_orbitals, HARTREE_EV
+from loom.utils.run_evidence import freeze_run
 
 p = argparse.ArgumentParser()
 p.add_argument('--input', type=Path, required=True)
