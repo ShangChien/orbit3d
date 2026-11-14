@@ -51,8 +51,9 @@ def paired_hit_bootstrap(first, second, repeats=4000):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--reference',default='oa_source');a=p.parse_args()
-    reports={d.parent.name:json.loads(d.read_text()) for d in sorted((a.root/'stage1_evaluation').glob('*/summary.json'))}
+    p.add_argument('--reference',default='oa_source');p.add_argument('--evaluation-dir',default='stage1_evaluation')
+    p.add_argument('--training-dir',default='training');a=p.parse_args()
+    reports={d.parent.name:json.loads(d.read_text()) for d in sorted((a.root/a.evaluation_dir).glob('*/summary.json'))}
     groups={};results={}
     for name,report in reports.items():
         for control in sorted({p['control'] for p in report['pools']}):
@@ -80,12 +81,12 @@ def main():
         off_summary=dict(unique_proposals=sum(p['attempted'] for p in off),
             hit_yield_equal_request=float(np.mean([c['hits']/c['attempted'] for c in cells])),
             mae_equal_request_eV=float(np.mean([c['mae_eV'] for c in cells])),cells=cells)
-    costs={d.parent.name:json.loads(d.read_text()) for d in sorted((a.root/'training').glob('*/costs.json'))}
+    costs={d.parent.name:json.loads(d.read_text()) for d in sorted((a.root/a.training_dir).glob('*/costs.json'))}
     report=dict(scope='Fresh raw B-defined task; no force gate or new DFT. Unique novel hits are deduplicated within each 128-proposal request/seed pool and averaged; cross-request unique graph counts are separate. Shuffled controls exactly permute the same conditional inputs and random streams, so are not independent new proposals. B is both training target and acceptance, not independent accuracy.',
         predictor=next(iter(reports.values()))['predictor'],results=results,paired_differences=comparisons,
         shared_off=off_summary,training_costs=costs,
         evaluation_costs={name:{k:r[k] for k in ['elapsed_seconds','B_molecule_calls','B_forward_calls']} for name,r in reports.items()},
-        inputs={str(d):file_sha256(d) for d in sorted((a.root/'stage1_evaluation').glob('*/summary.json'))})
+        inputs={str(d):file_sha256(d) for d in sorted((a.root/a.evaluation_dir).glob('*/summary.json'))})
     a.output.write_text(json.dumps(report,indent=2)+'\n')
     for name,result in results.items():print(name,{k:v for k,v in result.items() if k not in {'cells','top_k'}})
     print('paired',comparisons);print('shared_off',off_summary)

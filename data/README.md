@@ -1,7 +1,7 @@
 # 数据与目标定义
 
 原始/处理数据放在根目录 `dataset/`，不进入 Git。本目录只保存来源、校验和、
-划分、目标窗口和必要的统计。当前研究使用 MIM-Flow 与 OCELOT；DB_chromophore
+划分、目标窗口和必要的统计。当前研究使用 OE62 源三维及历史生成结构；已完成实验另有 MIM-Flow 与 OCELOT。DB_chromophore
 和其他 figshare 表未进入本轮实验，原文件保留，待后续决定是否使用。
 
 ## 来源
@@ -106,3 +106,11 @@ PYTHONPATH=src python scripts/prepare_oe62.py --source /data/df_62k.json --outpu
 ```
 
 排除原因和逐条 ID 保存在运行产物 `records.json`；本仓库清单保存各原因计数。原始数据和 SDF 依其许可另行获取，不加入 Git。
+
+## 历史DFT生成分子扩展集
+
+既有E13–E16单点已整理到`dataset/oe62_generated_quantum/`，无需重新计算。按图去重并排除源留出骨架，按骨架哈希划分；当前B支持/几何准入后的训练、验证、测试分别为3873、401、388。数据是MLIP终态坐标上的PBE0/def2-TZVP单点，保留确切输入坐标，不称DFT优化几何。
+
+每个SDF同时提供`DFT_homo/DFT_lumo`和`B_homo/B_lumo`（eV），并保留`DFTProtocol`、源队列与原索引。当前冻结B任务的默认`homo/lumo`字段使用B标签；若研究原DFT标签，应显式读取`DFT_*`并注明与OE62源Tier2标签的基组差异。B本身未据此微调。纳入训练的历史生成池退出独立策略测试；后续生成对照使用新的候选池。[清单、标签合同和SDF校验和](existing_quantum_dataset.json)
+
+这批数据已用于E18扩充对照，结果未显示相对仅源数据的明确收益；具体预算和新池指标见[结果](../docs/results.md#e18b标签对齐与历史dft分子扩充)。

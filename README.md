@@ -2,13 +2,15 @@
 
 面向性质目标的分子生成与三维优化研究。当前可执行主线为：
 
-**预训练 Uni-3DAR octree → 点值/区间/均值宽度监督适配 → 候选排序 → DPA/HyFF 约束弛豫 → 独立评价。**
+**预训练 Uni-3DAR octree → 点值条件生成 → 原始三维结构准入 → 冻结 Uni-Mol2 性质评分与排序。**
 
-研究主线为**OE62源三维分子的点值控制与终态验收反馈**，分别报告供给、条件精度和量化命中。整池DFT、43951源结构SFT、终态标签校准与E16四臂对照均已完成；当前不继续堆叠小规模奖励或宽度变体。[实验状态](docs/experiments.md)｜[方案取舍](docs/design_changes.md)
+研究主线为**OE62源三维分子的点值控制**，分别报告结构供给、目标精度和每预算唯一新颖命中。DPA/HyFF终态反馈及其DFT验证作为已完成实验保留，势场后处理是可选路径。[实验状态](docs/experiments.md)｜[方案取舍](docs/design_changes.md)
 
 新阶段按同一个冻结Uni-Mol2 1.1B统一训练标签、奖励、排序与验收，先复评已有原始池，再比较标签对齐SFT、平衡Hindsight、条件对比和GRPO增量。不再新做DFT；已有DFT坐标/标签可进入扩展数据集，另附同坐标B标签，纳入训练的旧池不再当独立策略测试。DPA后处理单列，不阻塞当前实验。
 
 已有DFT生成结构已整理为本地`dataset/oe62_generated_quantum/`，B任务可用训练/验证/测试为3873/401/388，DFT和B标签分字段保留；[数据清单](data/existing_quantum_dataset.json)。
+
+E18已实际比较数据扩充：四策略各1792次新提案，仅源B-SFT命中380次，加入历史生成分子366次，原标签续训及冻结父模型各369次；扩充收益尚未建立。E19在同OA-source起点比较等成本源SFT、Hindsight、条件margin、双向偏好与K=4多条件目标。[新任务结果](docs/results.md#e18b标签对齐与历史dft分子扩充)
 
 E16共5376次提案，2475个终态DFT单点全部收敛。冻结SFT、等时SFT、源评价器GRPO、校准评价器GRPO的命中率为10.39%、9.92%、10.31%、10.78%，没有建立GRPO的额外命中收益；它增强了均值响应，但目标内分散仍约1 eV。终态标签校准在该新池将HOMO/LUMO预测MAE从0.314/0.398降至0.176/0.184 eV，同池top-4命中从224增至250/320名额。后续实验切换到上述固定B任务，历史DFT结果保持原口径。[完整结果](docs/results.md#e16校准奖励的完整生成对照)
 
@@ -19,7 +21,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 实验协议和执行状态见[实验设计](docs/experiments.md)。OE62 源三维适配、v4点值和v5均值宽度条件已实现，HOMO-only/LUMO-only 的三训练seed四臂对照已完成。
 已完成 [GRPO 增益对照](docs/experiments.md#e3-g-grpo-的增益与成本)：同一 SFT 起点比较冻结、继续监督训练与 GRPO，并报告独立效果及训练成本。
 
-![点值生成与终态反馈流程](paper/figures/fig0_orbit3d_system_architecture.svg)
+![已完成E12–E16的终态反馈流程；新B任务按上文原始坐标评分](paper/figures/fig0_orbit3d_system_architecture.svg)
 
 ## 文档导航
 
@@ -34,7 +36,7 @@ BRICS 用训练分子的规则切分与随机重组，检验简单图提案能�
 | [必要踩坑说明](docs/pitfalls.md) | 分子身份、物理量定义、数值精度和评测口径 |
 | [运行与模型接口](docs/runtime.md) | 安装、训练/推理、外部 Oracle、可迁移模型包 |
 | [数据说明](data/README.md) | 数据来源、实际划分、坐标来源、元素与分子大小 |
-| [论文](paper/ORBIT3D_arXiv_Paper.pdf) | 当前研究稿；[可编辑来源与构建](paper/README.md) |
+| [论文](paper/ORBIT3D_arXiv_Paper.pdf) | E13–E16研究稿，尚未并入新B任务；[可编辑来源与构建](paper/README.md) |
 
 OE62 新实验：源几何性质头在512个开发结构上的 HOMO/LUMO MAE 为0.0990/0.0999 eV；相同预算下 drug 先验的域内有效提案为37/192，QM9先验为3/192。冻结后的4762个源测试结构上，DPA的HOMO/LUMO MAE为0.1000/0.1029 eV，HyFF为0.1596/0.1648 eV。三个独立生成器训练seed共完成48384次评价提案。GRPO相对冻结SFT将HOMO/LUMO域内率从18.42%/19.15%提高到22.95%/26.18%；独立代理命中产率提高，但同等额外训练时间下目标MAE均更差。原始池MLIP物理联合命中为零，GRPO继续作为可选阶段。新增24候选PySCF裁决有20例优化收敛且保图、12例命中目标；这些DFT几何仍全部未过DPA/HyFF的0.1力阈值，两个判据不能混同。
 
@@ -64,6 +66,9 @@ mol_gen/
 │   │   ├── octree_model.py      # 条件 octree、自排序与完整轨迹概率
 │   │   ├── octree_backend.py    # 数据编码、检查点契约、预训练/适配模型加载
 │   │   ├── octree_alignment.py  # conditioner 的 GRPO 更新
+│   │   ├── point_preferences.py # 条件/分子双向偏好与多条件软目标
+│   │   ├── point_task_feedback.py # 不调用原子势的原始坐标B反馈
+│   │   ├── property_sampling.py # 等宽性质分箱、单图曝光和回收比例限制
 │   │   ├── terminal_feedback.py # 结构、物理和性质的条件子集优势
 │   │   ├── scaffold*.py         # 显式连接/环闭合、开放位点、局部 XYZ 支持集
 │   │   └── 其他模块             # 空间窗口、独立随机流、条件与词表迁移
@@ -104,6 +109,7 @@ mol_gen/
 | 功能 | 主要入口 |
 | --- | --- |
 | 数据获取/准备 | `manage_data.py`、`inspect_mim_*.py`、`adapt_qm9s.py`、`prepare_ocelot.py`、`prepare_oe62.py`、`prepare_generator_sdf.py` |
+| 固定B任务与数据复用 | `label_source_with_b.py`、`prepare_existing_quantum_dataset.py`、`prepare_b_task_hindsight.py`、`evaluate_b_task_checkpoint.py`、`train_b_task_grpo.py`、`summarize_b_task_experiment.py` |
 | 性质训练/评价 | `train_source_oracle.py`、`evaluate_source_holdout.py`、`train_ocelot_3d.py`、`train_ocelot_baseline.py`、`calibrate_ocelot.py`、`evaluate_trained_oracle.py` |
 | 终态评价器校准 | `prepare_generated_calibration.py`、`finetune_terminal_oracle.py`、`evaluate_terminal_oracle_transfer.py`、`evaluate_terminal_uncertainty.py`、`summarize_calibrated_ranking.py` |
 | OE62 双模型评价 | `prepare_dual_oracle_data.py`、`train_unimol2_source.py`、`select_unimol2_development.py`、`profile_dual_oracle.py`、`reevaluate_dual_oracle.py` |

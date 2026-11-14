@@ -107,5 +107,67 @@
     "DFT_homo/DFT_lumo": "Original same-coordinate PBE0 single-point labels"
   },
   "split": "80/10/10 scaffold hash before B support/geometry admission; source holdout scaffolds excluded; exact graph disjoint",
-  "new_DFT_performed": false
+  "new_DFT_performed": false,
+  "training_composition": {
+    "atoms_min_q25_median_q75_max": [
+      5.0,
+      24.0,
+      30.0,
+      37.0,
+      80.0
+    ],
+    "heavy_atoms_min_q25_median_q75_max": [
+      2.0,
+      14.0,
+      18.0,
+      23.0,
+      47.0
+    ],
+    "elements": [
+      "As",
+      "B",
+      "Br",
+      "C",
+      "Cl",
+      "F",
+      "H",
+      "I",
+      "N",
+      "O",
+      "P",
+      "S",
+      "Se",
+      "Si"
+    ]
+  },
+  "training_label_comparison": {
+    "homo": {
+      "B_minus_DFT_bias_eV": -0.6108623439008912,
+      "B_vs_DFT_MAE_eV": 0.6861415072986028,
+      "B_q10_q50_q90_eV": [
+        -7.531441160952928,
+        -6.657025760780071,
+        -6.015901161710695
+      ],
+      "DFT_q10_q50_q90_eV": [
+        -7.350814927343584,
+        -6.239663986688996,
+        -4.586063282119101
+      ]
+    },
+    "lumo": {
+      "B_minus_DFT_bias_eV": 0.485801089002081,
+      "B_vs_DFT_MAE_eV": 0.7736902841733143,
+      "B_q10_q50_q90_eV": [
+        -2.8352258329525313,
+        -1.8077094733368924,
+        -0.592433692521416
+      ],
+      "DFT_q10_q50_q90_eV": [
+        -4.2179652949668975,
+        -2.1322694660270214,
+        -0.5188899031319597
+      ]
+    }
+  }
 }
