@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..generator.condition_contrast import condition_margin_loss, incompatible_condition_indices
+from ..generator.condition_contrast import condition_margin_loss
 from ..generator.electronic_constraints import atom_electron_parities, mask_terminal_element_logits
 from ..generator.octree_model import AtomFeatDict, build_default_uni3dar_args
 from ..vendor.uni3dar.data.atom_data import atom_list
@@ -40,6 +40,33 @@ def _suffix_causal_sdpa_mask(seq_q: int, seq_k: int, device_str: str) -> torch.T
     q_idx = torch.arange(seq_q, device=device)[:, None] + (seq_k - seq_q)
     k_idx = torch.arange(seq_k, device=device)[None, :]
     return (k_idx <= q_idx).unsqueeze(0).unsqueeze(0)
+
+
+def _select_incompatible_negatives(
+    targets_eV: torch.Tensor,
+    active_mask: torch.Tensor,
+    min_gap_eV: float = 0.40,
+    deterministic: bool = False,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Select an incompatible condition `j` for each row `i` along row `i`'s active target axes."""
+    bsz = targets_eV.shape[0]
+    device = targets_eV.device
+    act = active_mask.bool()
+    has_cond = act.any(dim=-1)
+    # Pairwise |y_i - y_j| masked by row i's active_mask: (B, B, P) -> (B, B)
+    diff = (targets_eV.unsqueeze(1) - targets_eV.unsqueeze(0)).abs()
+    masked_max_diff = (diff * act.unsqueeze(1).float()).amax(dim=-1)
+    valid = (masked_max_diff > float(min_gap_eV)) & has_cond.unsqueeze(1)
+    eligible = valid.any(dim=1)
+    if deterministic:
+        gen = torch.Generator(device=device)
+        gen.manual_seed(13579 + bsz)
+        scores = torch.rand((bsz, bsz), generator=gen, device=device)
+    else:
+        scores = torch.rand((bsz, bsz), device=device)
+    scores = scores.masked_fill(~valid, -1.0)
+    neg_idx = scores.argmax(dim=1)
+    return neg_idx, eligible
 
 
 def _gpu_multinomial_sample(
@@ -82,7 +109,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         *,
         num_rbf: int = 32,
         num_freqs: int = 16,
-        num_prefix_tokens: int = 4,
+        num_prefix_tokens: int = 0,
         modulation_cap: float = 4.0,
         lora_rank: int = 16,
         lora_alpha: float = 32.0,
@@ -363,7 +390,13 @@ class LoomUni3DARGenerator(GeneratorSlot):
         kv_cache["step"] = kv_cache["step"] + 1
 
         seq_k = k_all.shape[2]
-        if seq_q == seq_k:
+        if seq_q <= 2 and seq_k <= 256:
+            scores = torch.matmul(q_t, k_all.transpose(-1, -2)) * layer.attn.scale
+            if seq_q == 2:
+                scores[:, :, 0, -1] = float("-inf")
+            probs = torch.softmax(scores.float(), dim=-1).to(v_all.dtype)
+            attn_out = torch.matmul(probs, v_all)
+        elif seq_q == seq_k:
             attn_out = F.scaled_dot_product_attention(q_t, k_all, v_all, is_causal=True)
         elif seq_q == 1:
             attn_out = F.scaled_dot_product_attention(q_t, k_all, v_all, is_causal=False)
@@ -555,11 +588,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
         total_loss = gen_loss
         if contrast_weight > 0.0:
             targets_eV = self.denormalize_targets(targets_norm)
-            has_cond_row = train_mask.any(dim=-1)
-            # Build masked eV vector for active axes so incompatible pair selection respects active axes
-            active_eV = torch.where(train_mask, targets_eV, torch.zeros_like(targets_eV))
-            neg_idx, pair_ok = incompatible_condition_indices(active_eV, halfwidth=contrast_min_gap_eV)
-            eligible = pair_ok & has_cond_row & has_cond_row[neg_idx]
+            neg_idx, eligible = _select_incompatible_negatives(
+                targets_eV, train_mask, min_gap_eV=max(contrast_min_gap_eV, 0.40), deterministic=False
+            )
             if bool(eligible.any()):
                 neg_targets_norm = targets_norm[neg_idx]
                 dec_neg = self.forward_sequence(decoder_input, cu_lens, max_len, neg_targets_norm, train_mask)
@@ -616,9 +647,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
             pos_nll = pos_info["per_molecule_generation_loss"]
 
             targets_eV = self.denormalize_targets(targets_norm)
-            active_eV = torch.where(active_mask.bool(), targets_eV, torch.zeros_like(targets_eV))
-            neg_idx, pair_ok = incompatible_condition_indices(active_eV, halfwidth=min_gap_eV)
-            eligible = pair_ok & active_mask.bool().any(dim=-1)
+            neg_idx, eligible = _select_incompatible_negatives(
+                targets_eV, active_mask, min_gap_eV=max(min_gap_eV, 0.50), deterministic=True
+            )
 
             if not bool(eligible.any()):
                 return {"eligible": 0, "preferred": 0, "preference_rate": float("nan"), "mean_nll_gap": float("nan")}
@@ -725,6 +756,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         seed: Optional[int] = None,
         use_bf16: bool = True,
         electron_parity: Optional[int] = 0,
+        max_decode_steps: int = 256,
     ) -> List[Dict[str, Any]]:
         """High-throughput conditional octree trajectory generation with Selective Logit-CFG."""
         was_training = self.training
@@ -948,12 +980,13 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     keep_flags: List[bool] = []
                     next_feat_list: List[torch.Tensor] = []
                     new_raw_feat: List[torch.Tensor] = []
+                    force_stop = step_idx >= max_decode_steps
                     orig_indices_list: Optional[List[int]] = None
-                    if any(q.shape[0] == 0 for q in raw_feat):
+                    if force_stop or any(q.shape[0] == 0 for q in raw_feat):
                         orig_indices_list = cond_vars["orig_idx"].tolist()
 
                     for i, q in enumerate(raw_feat):
-                        if q.shape[0] > 0:
+                        if q.shape[0] > 0 and not force_stop:
                             keep_flags.append(True)
                             next_feat_list.append(q[0:1])
                             new_raw_feat.append(q[1:])

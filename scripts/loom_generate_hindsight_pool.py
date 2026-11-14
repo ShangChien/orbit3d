@@ -30,6 +30,7 @@ from loom.weaving import (
     RewardOracleSlot,
     assert_not_audit_oracle,
     formal_charge_signature,
+    is_clean_organic_charge_state,
 )
 
 
@@ -170,8 +171,8 @@ def main() -> None:
                 counts["invalid_3d_graph"] += 1
                 continue
 
-            if formal_charge_signature(mol) not in seen_charges:
-                counts["unseen_formal_charge"] += 1
+            if not is_clean_organic_charge_state(mol):
+                counts["exotic_zwitterion_charge"] += 1
                 continue
             scaf = murcko_scaffold(mol)
             if scaf in heldout_scaffolds:
@@ -193,13 +194,24 @@ def main() -> None:
         c_mols = [c[0] for c in batch_candidates]
         keep_phys = np.ones(len(c_mols), dtype=bool)
         fmax_vals = np.zeros(len(c_mols), dtype=np.float64)
+        final_mols: List[Chem.Mol] = list(c_mols)
         if pot_slot is not None:
-            p_out = pot_slot.evaluate_molecules(c_mols, chunk_size=32)
-            fmax_vals = p_out["f_max_eV_A"]
-            keep_phys = np.isfinite(fmax_vals) & (fmax_vals <= args.max_fmax_eV_A)
-            counts["high_strain_rejected"] += int((~keep_phys).sum())
+            rel_out = pot_slot.relax_molecules(c_mols, n_steps=15, chunk_size=32)
+            fmax_vals = rel_out["final_f_max_eV_A"]
+            pres = rel_out["graph_preserved"]
+            keep_phys = pres & np.isfinite(fmax_vals) & (fmax_vals <= args.max_fmax_eV_A)
+            counts["relaxation_graph_broken"] += int((~pres).sum())
+            counts["high_strain_after_relax"] += int((pres & ~keep_phys).sum())
+            for i in range(len(c_mols)):
+                if keep_phys[i] and rel_out["relaxed_mols"][i] is not None:
+                    rm = rel_out["relaxed_mols"][i]
+                    if not is_clean_organic_charge_state(rm):
+                        keep_phys[i] = False
+                        counts["exotic_zwitterion_after_relax"] += 1
+                    else:
+                        final_mols[i] = rm
 
-        phys_mols = [c_mols[i] for i in range(len(c_mols)) if keep_phys[i]]
+        phys_mols = [final_mols[i] for i in range(len(c_mols)) if keep_phys[i]]
         phys_reqs = [batch_candidates[i][2] for i in range(len(c_mols)) if keep_phys[i]]
         phys_fmax = [float(fmax_vals[i]) for i in range(len(c_mols)) if keep_phys[i]]
         if not phys_mols:

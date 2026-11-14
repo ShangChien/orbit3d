@@ -41,11 +41,40 @@ class LoRALinear(nn.Module):
 
         for p in self.base.parameters():
             p.requires_grad_(False)
+        self._eval_weight: torch.Tensor | None = None
+        self._eval_weight_bf16: torch.Tensor | None = None
+
+    def _clear_eval_cache(self) -> None:
+        self._eval_weight = None
+        self._eval_weight_bf16 = None
+
+    def train(self, mode: bool = True) -> "LoRALinear":
+        self._clear_eval_cache()
+        return super().train(mode)
+
+    def _load_from_state_dict(self, *args, **kwargs) -> None:
+        self._clear_eval_cache()
+        super()._load_from_state_dict(*args, **kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        need_lora_grad = torch.is_grad_enabled() and (self.lora_A.requires_grad or self.lora_B.requires_grad)
+        if not self.training and not need_lora_grad:
+            if self._eval_weight is None or self._eval_weight.device != self.base.weight.device:
+                with torch.no_grad():
+                    merged = (self.base.weight + (self.lora_B @ self.lora_A) * self.scaling).detach()
+                    self._eval_weight = merged
+                    self._eval_weight_bf16 = merged.to(torch.bfloat16) if merged.is_cuda else None
+            if x.dtype == torch.bfloat16 and self._eval_weight_bf16 is not None:
+                w = self._eval_weight_bf16
+            else:
+                w = self._eval_weight.to(x.dtype)
+            b = self.base.bias.to(x.dtype) if self.base.bias is not None else None
+            return F.linear(x, w, b)
+
+        self._clear_eval_cache()
         base_out = self.base(x)
-        x_drop = self.dropout(x).to(self.lora_A.dtype)
-        delta = F.linear(F.linear(x_drop, self.lora_A), self.lora_B) * self.scaling
+        x_drop = self.dropout(x)
+        delta = F.linear(F.linear(x_drop, self.lora_A.to(x_drop.dtype)), self.lora_B.to(x_drop.dtype)) * self.scaling
         return base_out + delta.to(base_out.dtype)
 
 

@@ -18,4 +18,6 @@ with zipfile.ZipFile(wheels[0]) as wheel:
     assert "loom/oracles/unimol2_oracle.py" in wheel.namelist()
     assert "loom/vendor/UNI3DAR_LICENSE.txt" in wheel.namelist()
     assert "loom/vendor/uni3dar/models/uni3dar.py" in wheel.namelist()
-print(f"{wheels[0]}: Octree, HyFF and Uni-Mol2 source/license resources packaged")
+    assert "loom/weaving/__init__.py" in wheel.namelist()
+    assert "loom/weaving/gp_atlas.py" in wheel.namelist()
+print(f"{wheels[0]}: Loom Weaving, Octree, HyFF and Uni-Mol2 source/license resources packaged")

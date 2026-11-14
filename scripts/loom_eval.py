@@ -30,6 +30,7 @@ from loom.weaving import (
     RewardOracleSlot,
     compute_loom_metrics,
     formal_charge_signature,
+    is_clean_organic_charge_state,
 )
 
 
@@ -159,7 +160,7 @@ def main() -> None:
                             mols_all.append(mol)
                             legal_list.append(True)
                             smiles_list.append(inst.smiles)
-                            unseen_charge_list.append(formal_charge_signature(mol) not in seen_charges)
+                            unseen_charge_list.append(not is_clean_organic_charge_state(mol))
                         except ValueError:
                             mols_all.append(None)
                             legal_list.append(False)
@@ -202,6 +203,23 @@ def main() -> None:
                 sub_orig_rew = rew_preds_1d[sub_idx]
                 sub_req = np.asarray(req_list)[sub_idx]
                 both_rel = rew_ev_mask[sub_idx] & rel_ev
+                post_relax_aud_mae = None
+                post_relax_rew_aud_gap = None
+                post_relax_clean_rew_aud_gap = None
+                if audit_slot is not None:
+                    rel_aud_full, _, rel_aud_ev, _ = audit_slot.evaluate_candidates(rel_mols_eval, batch_size=32)
+                    both_aud = both_rel & rel_aud_ev
+                    sub_clean = np.asarray([not unseen_charge_list[i] for i in sub_idx], dtype=bool)
+                    both_aud_clean = both_aud & sub_clean
+                    if both_aud.any():
+                        post_relax_aud_mae = float(np.mean(np.abs(rel_aud_full[both_aud, aud_col_idx] - sub_req[both_aud])))
+                        post_relax_rew_aud_gap = float(
+                            np.mean(np.abs(rel_rew_full[both_aud, rew_col_idx] - rel_aud_full[both_aud, aud_col_idx]))
+                        )
+                    if both_aud_clean.any():
+                        post_relax_clean_rew_aud_gap = float(
+                            np.mean(np.abs(rel_rew_full[both_aud_clean, rew_col_idx] - rel_aud_full[both_aud_clean, aud_col_idx]))
+                        )
                 relax_summary = {
                     "audited_subset": len(sub_mols),
                     "graph_preserved_rate": float(np.mean(preserved_mask)),
@@ -211,6 +229,9 @@ def main() -> None:
                     "zero_step_mae_on_subset_eV": float(np.mean(np.abs(sub_orig_rew[both_rel] - sub_req[both_rel]))) if both_rel.any() else None,
                     "post_relax_mae_on_subset_eV": float(np.mean(np.abs(rel_rew_full[both_rel, rew_col_idx] - sub_req[both_rel]))) if both_rel.any() else None,
                     "mean_abs_pred_shift_from_relaxation_eV": float(np.mean(np.abs(rel_rew_full[both_rel, rew_col_idx] - sub_orig_rew[both_rel]))) if both_rel.any() else None,
+                    "post_relax_audit_mae_on_subset_eV": post_relax_aud_mae,
+                    "post_relax_reward_audit_disagreement_eV": post_relax_rew_aud_gap,
+                    "post_relax_clean_reward_audit_disagreement_eV": post_relax_clean_rew_aud_gap,
                 }
 
         loom_m = compute_loom_metrics(
@@ -225,18 +246,25 @@ def main() -> None:
             tolerance_eV=0.25,
         )
 
-        # Novelty & uniqueness among hits
+        # Novelty & uniqueness among hits + zwitterion-clean hits
         hit_smiles = [
             smiles_list[i]
             for i in range(len(req_list))
             if rew_ev_mask[i] and smiles_list[i] is not None and abs(rew_preds_1d[i] - req_list[i]) <= 0.25
         ]
+        clean_hit_count = sum(
+            1
+            for i in range(len(req_list))
+            if rew_ev_mask[i] and not unseen_charge_list[i] and abs(rew_preds_1d[i] - req_list[i]) <= 0.25
+        )
         unique_hits = set(hit_smiles)
         novel_unique_hits = unique_hits - source_graphs
 
         loom_m.update({
             "cfg_scale": cfg_val,
             "xyz_cfg_scale": args.xyz_cfg_scale,
+            "clean_hits": int(clean_hit_count),
+            "clean_hit_yield": float(clean_hit_count / max(len(req_list), 1)),
             "unique_hit_graphs": len(unique_hits),
             "novel_unique_hit_graphs": len(novel_unique_hits),
             "generation_seconds": gen_seconds,

@@ -1,0 +1,18 @@
+{
+  "checkpoint": "/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs/stage1_homo_r1_sft/best_checkpoint.pt",
+  "mode": "homo",
+  "cfg_scale": 1.6,
+  "max_fmax_eV_A": 2.5,
+  "counts": {
+    "attempted": 3584,
+    "exotic_zwitterion_charge": 951,
+    "invalid_3d_graph": 1289,
+    "heldout_scaffold": 329,
+    "relaxation_graph_broken": 135,
+    "high_strain_after_relax": 101,
+    "admitted": 779
+  },
+  "admitted_unique_molecules": 779,
+  "wall_seconds": 267.80812333896756,
+  "sdf_path": "/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs/stage1_homo_r2_pool/hindsight_train.sdf"
+}

@@ -22,10 +22,34 @@ from ..generator.octree_backend import OctreeDataset, trajectory_to_instance
 from .slots import GeneratorSlot, PotentialSlot, RewardOracleSlot, assert_not_audit_oracle
 
 
+ALLOWED_DIPOLAR_PAIRS = frozenset({
+    ("N", 1),
+    ("O", -1),
+    ("S", 1),
+    ("S", 2),
+    ("P", 1),
+    ("B", -1),
+})
+
+
 def formal_charge_signature(mol: Chem.Mol) -> Tuple[Tuple[str, int], ...]:
     """Canonical formal-charge multiset signature of nonzero-charged atoms."""
     nonzero = sorted((a.GetSymbol(), int(a.GetFormalCharge())) for a in mol.GetAtoms() if a.GetFormalCharge() != 0)
     return tuple(nonzero)
+
+
+def is_clean_organic_charge_state(mol: Chem.Mol, max_abs_formal_sum: int = 4) -> bool:
+    """Return True iff `mol` is net-neutral and carries no exotic zwitterions (`C-`, `O+`, halonium, etc.)."""
+    net_q = 0
+    abs_q = 0
+    for atom in mol.GetAtoms():
+        q = int(atom.GetFormalCharge())
+        if q != 0:
+            net_q += q
+            abs_q += abs(q)
+            if (atom.GetSymbol(), q) not in ALLOWED_DIPOLAR_PAIRS:
+                return False
+    return net_q == 0 and abs_q <= max_abs_formal_sum
 
 
 def compute_disentangled_group_advantages(
@@ -35,11 +59,15 @@ def compute_disentangled_group_advantages(
     eval_mask: torch.Tensor,
     prop_scores: torch.Tensor,
     *,
-    w_valid: float = 0.35,
+    w_valid: float = 0.75,
     w_phys: float = 0.25,
     w_prop: float = 1.00,
 ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
-    """Compute strictly disentangled group-normalized advantages for a single prompt group `(G,)`."""
+    """Compute strictly disentangled, monotonic group-normalized advantages for a prompt group `(G,)`.
+
+    Enforces strict monotonic hierarchy within each group:
+      `Clean Low-Strain Hit > Clean Miss > Exotic Zwitterion > Invalid Graph`
+    """
     g = valid_scores.shape[0]
     device = valid_scores.device
 
@@ -51,22 +79,35 @@ def compute_disentangled_group_advantages(
 
     adv_phys = torch.zeros(g, device=device, dtype=torch.float32)
     n_valid = int(valid_mask.sum().item())
-    if w_phys > 0.0 and n_valid >= 2:
-        p_vals = phys_scores[valid_mask]
-        p_std = p_vals.std(unbiased=False)
-        if float(p_std.item()) > 1e-6:
-            adv_phys[valid_mask] = (p_vals - p_vals.mean()) / p_std.clamp_min(0.05)
+    if w_phys > 0.0 and n_valid >= 1:
+        if n_valid >= 2:
+            p_vals = phys_scores[valid_mask]
+            p_std = p_vals.std(unbiased=False)
+            if float(p_std.item()) > 1e-6:
+                adv_phys[valid_mask] = ((p_vals - p_vals.mean()) / p_std.clamp_min(0.05)).clamp(-1.5, 2.0)
+        else:
+            adv_phys[valid_mask] = phys_scores[valid_mask].clamp(0.0, 1.0)
+        if n_valid < g:
+            adv_phys[~valid_mask] = -0.65
+            adv_phys = adv_phys - adv_phys.mean()
 
     adv_prop = torch.zeros(g, device=device, dtype=torch.float32)
     n_eval = int(eval_mask.sum().item())
-    if w_prop > 0.0 and n_eval >= 2:
-        r_vals = prop_scores[eval_mask]
-        r_std = r_vals.std(unbiased=False)
-        if float(r_std.item()) > 1e-6:
-            adv_prop[eval_mask] = (r_vals - r_vals.mean()) / r_std.clamp_min(0.05)
+    if w_prop > 0.0 and n_eval >= 1:
+        if n_eval >= 2:
+            r_vals = prop_scores[eval_mask]
+            r_std = r_vals.std(unbiased=False)
+            if float(r_std.item()) > 1e-6:
+                adv_prop[eval_mask] = ((r_vals - r_vals.mean()) / r_std.clamp_min(0.05)).clamp(-1.35, 2.0)
+        else:
+            adv_prop[eval_mask] = prop_scores[eval_mask].clamp(0.0, 1.0)
+        if n_eval < g:
+            adv_prop[~eval_mask] = -0.85
+            adv_prop = adv_prop - adv_prop.mean()
 
     combined = w_valid * adv_valid + w_phys * adv_phys + w_prop * adv_prop
-    scale = combined.std(unbiased=False).clamp_min(1.0)
+    combined = combined - combined.mean()
+    scale = combined.std(unbiased=False).clamp_min(0.20)
     combined = combined / scale
     return combined, {
         "adv_valid": adv_valid,
@@ -76,10 +117,13 @@ def compute_disentangled_group_advantages(
 
 
 def property_distance_reward(distance_eV: np.ndarray | torch.Tensor, tolerance_eV: float = 0.25) -> torch.Tensor:
-    """Hybrid Cauchy (long-range pull) + Gaussian (sharp ±tolerance concentration) reward in `(0, 1]`."""
+    """Hybrid Cauchy (long-range pull) + Gaussian (concentration) + smooth hit-window bonus in `(0, 1]`."""
     d = torch.as_tensor(distance_eV, dtype=torch.float32)
-    u = d / max(tolerance_eV, 1e-4)
-    return 0.5 / (1.0 + u) + 0.5 * torch.exp(-0.5 * u.square())
+    tol = max(tolerance_eV, 1e-4)
+    u = d / tol
+    base = 0.40 / (1.0 + u) + 0.35 * torch.exp(-0.5 * u.square())
+    hit_bonus = 0.25 * torch.sigmoid((tol - d) / (0.16 * tol))
+    return base + hit_bonus
 
 
 def zero_step_physical_reward(f_rms_eV_A: np.ndarray | torch.Tensor, f_max_eV_A: np.ndarray | torch.Tensor) -> torch.Tensor:
@@ -110,7 +154,7 @@ class LoomGRPOTrainer:
         ppo_epochs: int = 2,
         replay_weight: float = 0.15,
         replay_batch_size: int = 8,
-        w_valid: float = 0.35,
+        w_valid: float = 0.75,
         w_phys: float = 0.25,
         w_prop: float = 1.00,
         tolerance_eV: float = 0.25,
@@ -225,6 +269,7 @@ class LoomGRPOTrainer:
         allowed_elems = tuple(self.generator.args.allow_atoms.split(","))
         mols: List[Optional[Chem.Mol]] = [None] * total_b
         valid_mask_np = np.zeros(total_b, dtype=bool)
+        clean_charge_np = np.zeros(total_b, dtype=bool)
         seen_charge_np = np.ones(total_b, dtype=bool)
         valid_scores_np = np.full(total_b, -1.0, dtype=np.float32)
 
@@ -238,11 +283,16 @@ class LoomGRPOTrainer:
                 valid_mask_np[idx] = True
                 valid_indices.append(idx)
                 valid_mols.append(mol)
-                if self.seen_charge_signatures is not None:
+                clean_q = is_clean_organic_charge_state(mol)
+                clean_charge_np[idx] = clean_q
+                if not clean_q:
+                    valid_scores_np[idx] = -0.35
+                    seen_charge_np[idx] = False
+                elif self.seen_charge_signatures is not None:
                     sig = formal_charge_signature(mol)
                     is_seen = sig in self.seen_charge_signatures
                     seen_charge_np[idx] = is_seen
-                    valid_scores_np[idx] = 1.0 if is_seen else 0.25
+                    valid_scores_np[idx] = 1.0 if is_seen else 0.75
                 else:
                     valid_scores_np[idx] = 1.0
             except ValueError:
@@ -261,8 +311,9 @@ class LoomGRPOTrainer:
                 if np.isfinite(r_phys_valid[local_i]):
                     phys_scores_np[global_i] = r_phys_valid[local_i]
 
-        # 4. Batched RewardOracleSlot evaluation
-        preds_all, _, eval_mask_np, _ = self.reward_oracle.evaluate_candidates(mols, batch_size=32)
+        # 4. Batched RewardOracleSlot evaluation (strictly gating out exotic zwitterions from property reward!)
+        mols_for_prop = [m if clean_charge_np[i] else None for i, m in enumerate(mols)]
+        preds_all, _, eval_mask_np, _ = self.reward_oracle.evaluate_candidates(mols_for_prop, batch_size=32)
         preds_aligned = preds_all[:, self.oracle_col_indices]  # (B, num_props)
 
         prop_scores_np = np.zeros(total_b, dtype=np.float32)
@@ -368,6 +419,8 @@ class LoomGRPOTrainer:
             "evaluated": int(eval_mask_np.sum()),
             "hits": int(hits_np.sum()),
             "hit_yield": float(hits_np.mean()),
+            "clean_charge_rate_among_valid": float(clean_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
+            "exotic_charge_rate_among_valid": float(1.0 - clean_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
             "unseen_charge_rate": float(1.0 - seen_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
             "conditional_mae_eV": float(np.mean(valid_err)) if len(valid_err) > 0 else float("nan"),
             "f_max_median_eV_A": float(np.median(valid_f)) if len(valid_f) > 0 else float("nan"),
@@ -401,6 +454,7 @@ class LoomGRPOTrainer:
                     f"hits={metrics['hits']}/{metrics['proposals']} ({metrics['hit_yield']*100:.1f}%) "
                     f"MAE={metrics['conditional_mae_eV']:.3f}eV "
                     f"valid={metrics['valid_rate']*100:.1f}% "
+                    f"exoticQ={metrics['exotic_charge_rate_among_valid']*100:.1f}% "
                     f"Fmax={metrics['f_max_median_eV_A']:.2f} "
                     f"KL={metrics['kl']:.4f} ({metrics['wall_seconds']:.1f}s)",
                     flush=True,

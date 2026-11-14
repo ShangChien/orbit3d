@@ -123,6 +123,17 @@ class PotentialSlot(nn.Module):
         self.backend_name = backend
         self.atom_types = list(atom_types)
         self.device_str = device
+        if backend == "hyff":
+            if weights:
+                w_lower = str(weights).lower()
+                for candidate_tier in ("presto", "vivace", "moderato", "andante", "largo"):
+                    if candidate_tier in w_lower:
+                        tier = candidate_tier
+                        break
+            if route == "auto":
+                # Heterogeneous generated molecule batches vary in atom/edge count every step;
+                # PyTorch GPU eager (`reference`) avoids 60s CUDA-graph recompilations and bucket caps.
+                route = "reference"
         self.engine = build_forcefield(
             backend=backend,
             weights=weights,
@@ -312,10 +323,24 @@ class RewardOracleSlot(PropertyOracleBase):
         elif backend in ("dpa4", "hyff"):
             from ..oracles.dpa4_oracle import InternalDPA4PropertyOracle
 
+            tier = "vivace"
+            if backend == "hyff" and forcefield_path:
+                w_lower = Path(forcefield_path).name.lower()
+                for candidate_tier in ("presto", "vivace", "moderato", "andante", "largo"):
+                    if candidate_tier in w_lower:
+                        tier = candidate_tier
+                        break
+            guidance = build_forcefield(
+                backend=backend,
+                weights=forcefield_path,
+                atom_types=list(self.supported_elements),
+                device=device,
+                tier=tier,
+                route="auto" if backend == "hyff" else "reference",
+            )
             self.oracle = InternalDPA4PropertyOracle.load_from_dir(
                 str(self.checkpoint_dir),
-                forcefield_path=forcefield_path,
-                device=device,
+                guidance,
             )
             self.target_cols = list(self.oracle.target_cols)
             self.output_dim = len(self.target_cols)

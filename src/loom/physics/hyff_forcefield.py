@@ -373,11 +373,24 @@ class HyFFPotentialGuidance(nn.Module):
             chg_np = charges_t.detach().cpu().numpy().astype(np.float32, copy=False)
             mult_np = mults_t.detach().cpu().numpy().astype(np.int64, copy=False)
 
+            from ..compat.hyff.batch.collection import CapacityClassLimitError
+
             cp = self._get_or_create_native_cp(batch_size, n_total)
-            out = cp.predict(pos_np, z_np, offsets_np, chg_np, mult_np)
-            mol_energies = torch.as_tensor(out["energies"], dtype=torch.float64, device=device)
-            f_t = torch.as_tensor(out["forces"], dtype=coords.dtype, device=device)
-            forces = f_t[inv_perm] if inv_perm is not None else f_t
+            try:
+                out = cp.predict(pos_np, z_np, offsets_np, chg_np, mult_np)
+                mol_energies = torch.as_tensor(out["energies"], dtype=torch.float64, device=device)
+                f_t = torch.as_tensor(out["forces"], dtype=coords.dtype, device=device)
+                forces = f_t[inv_perm] if inv_perm is not None else f_t
+            except CapacityClassLimitError:
+                self.close()
+                mol_energies, forces = self._compute_pytorch_gpu(
+                    coords=coords,
+                    atomic_nums=atomic_nums,
+                    node_batch_idx=node_batch_idx,
+                    batch_size=batch_size,
+                    charges_t=charges_t,
+                    mults_t=mults_t,
+                )
 
         else:
             mol_energies, forces = self._compute_pytorch_gpu(

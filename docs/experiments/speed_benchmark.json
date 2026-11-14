@@ -1,0 +1,105 @@
+{
+  "device_name": "NVIDIA A800-SXM4-80GB",
+  "total_molecules_per_arm": 256,
+  "sampling": [
+    {
+      "arm": "legacy_fp32_rowstreams_b32_cfg1.0",
+      "batch_size": 32,
+      "precision": "fp32",
+      "cfg_scale": 1.0,
+      "wall_seconds": 39.929904632270336,
+      "mol_per_sec": 6.411234946779895,
+      "speedup_vs_legacy": 1.0,
+      "valid_rate": 0.671875
+    },
+    {
+      "arm": "loom_bf16_b32_cfg1.0",
+      "batch_size": 32,
+      "precision": "bf16",
+      "cfg_scale": 1.0,
+      "xyz_cfg_scale": 1.0,
+      "wall_seconds": 36.88847715035081,
+      "mol_per_sec": 6.9398364957325285,
+      "speedup_vs_legacy": 1.0824492556177696,
+      "valid_rate": 0.6796875,
+      "peak_vram_gb": 1.667
+    },
+    {
+      "arm": "loom_bf16_b64_cfg1.0",
+      "batch_size": 64,
+      "precision": "bf16",
+      "cfg_scale": 1.0,
+      "xyz_cfg_scale": 1.0,
+      "wall_seconds": 21.791881661862135,
+      "mol_per_sec": 11.747494042610573,
+      "speedup_vs_legacy": 1.832329362459391,
+      "valid_rate": 0.64453125,
+      "peak_vram_gb": 1.918
+    },
+    {
+      "arm": "loom_bf16_b128_cfg1.0",
+      "batch_size": 128,
+      "precision": "bf16",
+      "cfg_scale": 1.0,
+      "xyz_cfg_scale": 1.0,
+      "wall_seconds": 12.676517847925425,
+      "mol_per_sec": 20.194820302477282,
+      "speedup_vs_legacy": 3.149911127905292,
+      "valid_rate": 0.66796875,
+      "peak_vram_gb": 2.386
+    },
+    {
+      "arm": "loom_bf16_b256_cfg1.0",
+      "batch_size": 256,
+      "precision": "bf16",
+      "cfg_scale": 1.0,
+      "xyz_cfg_scale": 1.0,
+      "wall_seconds": 7.873055387288332,
+      "mol_per_sec": 32.51596583625363,
+      "speedup_vs_legacy": 5.071716464327218,
+      "valid_rate": 0.6796875,
+      "peak_vram_gb": 3.234
+    },
+    {
+      "arm": "loom_bf16_b64_cfg1.75",
+      "batch_size": 64,
+      "precision": "bf16",
+      "cfg_scale": 1.75,
+      "xyz_cfg_scale": 1.0,
+      "wall_seconds": 22.71455753967166,
+      "mol_per_sec": 11.270305378076957,
+      "speedup_vs_legacy": 1.7578992926686579,
+      "valid_rate": 0.67578125,
+      "peak_vram_gb": 2.388
+    },
+    {
+      "arm": "loom_bf16_b128_cfg1.75",
+      "batch_size": 128,
+      "precision": "bf16",
+      "cfg_scale": 1.75,
+      "xyz_cfg_scale": 1.0,
+      "wall_seconds": 12.89322054386139,
+      "mol_per_sec": 19.85539602996123,
+      "speedup_vs_legacy": 3.096969023094965,
+      "valid_rate": 0.65234375,
+      "peak_vram_gb": 3.355
+    }
+  ],
+  "training_step": [
+    {
+      "arm": "legacy_sft_no_contrast_fp32_varlen_loop",
+      "batch_size": 32,
+      "sec_per_step": 0.4392543103545904,
+      "mol_per_sec": 72.85073645416895,
+      "trainable_params": 18888193
+    },
+    {
+      "arm": "loom_sft_plus_contrast_lora16_bf16_fused_sdpa",
+      "batch_size": 32,
+      "sec_per_step": 0.3954751878976822,
+      "mol_per_sec": 80.91531650850135,
+      "speedup_vs_legacy_even_with_contrast_2x_pass": 1.1107000484395364,
+      "trainable_params": 23673489
+    }
+  ]
+}

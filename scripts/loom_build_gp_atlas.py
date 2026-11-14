@@ -16,15 +16,37 @@ from loom.weaving import (
     HeteroscedasticGPAtlas1D,
     HeteroscedasticGPAtlas2D,
     LoomUni3DARGenerator,
+    PotentialSlot,
     RewardOracleSlot,
+    is_clean_organic_charge_state,
 )
 from scripts.loom_train_sft import load_sdf_with_targets
+
+
+def _prepare_clean_relaxed_mols(mols_all: list, pot_slot: PotentialSlot | None) -> list:
+    clean_idx = [
+        i for i, m in enumerate(mols_all) if m is not None and is_clean_organic_charge_state(m)
+    ]
+    out_mols = [None] * len(mols_all)
+    if not clean_idx:
+        return out_mols
+    if pot_slot is None:
+        for i in clean_idx:
+            out_mols[i] = mols_all[i]
+        return out_mols
+    sub_mols = [mols_all[i] for i in clean_idx]
+    rel = pot_slot.relax_molecules(sub_mols, n_steps=15, chunk_size=32)
+    for loc_i, glob_i in enumerate(clean_idx):
+        if rel["graph_preserved"][loc_i] and rel["relaxed_mols"][loc_i] is not None:
+            out_mols[glob_i] = rel["relaxed_mols"][loc_i]
+    return out_mols
 
 
 def run_1d_grid(
     gen: LoomUni3DARGenerator,
     reward_slot: RewardOracleSlot,
     audit_slot: AuditOracleSlot | None,
+    pot_slot: PotentialSlot | None,
     prop_name: str,
     grid_eV: np.ndarray,
     proposals_per_point: int,
@@ -61,10 +83,11 @@ def run_1d_grid(
             except ValueError:
                 mols_all.append(None)
 
-    rew_full, _, rew_ev, _ = reward_slot.evaluate_candidates(mols_all, batch_size=32)
+    eval_mols = _prepare_clean_relaxed_mols(mols_all, pot_slot)
+    rew_full, _, rew_ev, _ = reward_slot.evaluate_candidates(eval_mols, batch_size=32)
     aud_1d = None
     if audit_slot is not None:
-        aud_full, _, _, _ = audit_slot.evaluate_candidates(mols_all, batch_size=32)
+        aud_full, _, _, _ = audit_slot.evaluate_candidates(eval_mols, batch_size=32)
         aud_1d = aud_full[:, aud_idx]
 
     atlas = HeteroscedasticGPAtlas1D.fit_from_proposals(
@@ -87,6 +110,8 @@ def main() -> None:
     parser.add_argument("--reward-oracle-dir", type=Path, required=True)
     parser.add_argument("--audit-oracle-dir", type=Path, default=None)
     parser.add_argument("--dpa4-forcefield", type=Path, default=None)
+    parser.add_argument("--potential-backend", choices=["none", "dpa4", "hyff"], default="dpa4")
+    parser.add_argument("--potential-weights", type=Path, default=None)
     parser.add_argument("--proposals-per-1d-point", type=int, default=64)
     parser.add_argument("--proposals-per-2d-cell", type=int, default=32)
     parser.add_argument("--cfg-scale", type=float, default=1.75)
@@ -114,6 +139,13 @@ def main() -> None:
         else None
     )
 
+    pot_weights = args.potential_weights or args.dpa4_forcefield
+    pot_slot = (
+        PotentialSlot(backend=args.potential_backend, weights=str(pot_weights), device=args.device)
+        if args.potential_backend != "none" and pot_weights is not None
+        else None
+    )
+
     gen_h, _ = LoomUni3DARGenerator.load_checkpoint(args.homo_checkpoint, device=args.device, batch_size=128)
     gen_h.eval()
 
@@ -122,7 +154,7 @@ def main() -> None:
     homo_grid = np.linspace(h_p02 - 0.35, h_p98 + 0.35, 16)
     print(f"[GP-Atlas] Evaluating 1D HOMO grid ({len(homo_grid)} pts × {args.proposals_per_1d_point} mols)...", flush=True)
     homo_1d = run_1d_grid(
-        gen_h, reward_slot, audit_slot, "homo", homo_grid, args.proposals_per_1d_point,
+        gen_h, reward_slot, audit_slot, pot_slot, "homo", homo_grid, args.proposals_per_1d_point,
         args.cfg_scale, src_labels[:, 0], cal_sigma_eV=0.19, seed=71001
     )
 
@@ -142,7 +174,7 @@ def main() -> None:
         lumo_grid = np.linspace(l_p02 - 0.35, l_p98 + 0.35, 16)
         print(f"[GP-Atlas] Evaluating 1D LUMO grid ({len(lumo_grid)} pts × {args.proposals_per_1d_point} mols)...", flush=True)
         out_data["lumo_1d_atlas"] = run_1d_grid(
-            gen_j, reward_slot, audit_slot, "lumo", lumo_grid, args.proposals_per_1d_point,
+            gen_j, reward_slot, audit_slot, pot_slot, "lumo", lumo_grid, args.proposals_per_1d_point,
             args.cfg_scale, src_labels[:, 1], cal_sigma_eV=0.21, seed=72001
         )
 
@@ -178,7 +210,8 @@ def main() -> None:
                 except ValueError:
                     mols_2d.append(None)
 
-        rew_2d, _, ev_2d, _ = reward_slot.evaluate_candidates(mols_2d, batch_size=32)
+        eval_mols_2d = _prepare_clean_relaxed_mols(mols_2d, pot_slot)
+        rew_2d, _, ev_2d, _ = reward_slot.evaluate_candidates(eval_mols_2d, batch_size=32)
         atlas_2d = HeteroscedasticGPAtlas2D.fit_from_proposals(
             np.asarray(req_2d_list, dtype=np.float64),
             rew_2d[:, [reward_slot.target_cols.index("homo"), reward_slot.target_cols.index("lumo")]],

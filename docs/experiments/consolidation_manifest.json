@@ -1,0 +1,153 @@
+{
+  "protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF1e-8; approximate OE62 reference",
+  "source_train_count": 43858,
+  "heldout_scaffolds_excluded_count": 6178,
+  "total_result_jsons_scanned": 5826,
+  "newly_recovered_unique_graphs_beyond_e17": 85,
+  "consolidated_quantum_dft_counts": {
+    "train": 3949,
+    "valid": 398,
+    "test": 390
+  },
+  "consolidated_quantum_B_admitted_counts": {
+    "train": 3949,
+    "valid": 398,
+    "test": 390
+  },
+  "oe62_master_train_B_total": 47807,
+  "exclusion_breakdown": {
+    "source_holdout_scaffold": 219,
+    "not_singlepoint_schema": 66,
+    "invalid_or_unsupported_3d_graph": 16,
+    "already_source_training_graph": 52,
+    "scf_or_status_failed": 2,
+    "missing_iodine_ecp": 3,
+    "duplicate_graph": 731
+  },
+  "raw_jobs_by_cohort": {
+    "orbit3d_oe62_20261112": 1,
+    "orbit3d_oe62_20261112/quantum_point_extra_reference_results_20261113": 6,
+    "orbit3d_oe62_20261112/quantum_point_results_20261113": 24,
+    "orbit3d_quantum_20261111/boron_completed_final_states": 5,
+    "orbit3d_quantum_20261111/boron_failed_final_states": 2,
+    "orbit3d_quantum_20261111": 5,
+    "orbit3d_quantum_20261111/boron_generated_cohort": 6,
+    "orbit3d_quantum_20261111/boron_retry_geometry160": 1,
+    "orbit3d_quantum_20261111/generated_ocelot_4000_gpu19": 1,
+    "orbit3d_quantum_20261111/qualified20k_quantum": 5,
+    "orbit3d_quantum_20261111/reference_gpu": 1,
+    "orbit3d_quantum_20261111/reference_j2_478": 1,
+    "orbit3d_quantum_20261111/reference_jn2_478": 1,
+    "orbit_dual_oracle_5fe5/quantum_cohort": 1,
+    "orbit_dual_oracle_5fe5/quantum_cohort/results": 24,
+    "orbit_dual_oracle_5fe5/quantum_reference/results": 13,
+    "orbit_e13_e14_20261113/brics_persistence_quantum": 2,
+    "orbit_e13_e14_20261113/brics_persistence_quantum_gpu": 12,
+    "orbit_e13_e14_20261113/brics_quantum": 141,
+    "orbit_e13_e14_20261113/e14_quantum_homo_correct": 812,
+    "orbit_e13_e14_20261113/e14_quantum_homo_off": 156,
+    "orbit_e13_e14_20261113/e14_quantum_lumo_correct": 880,
+    "orbit_e13_e14_20261113/e14_quantum_lumo_off": 178,
+    "orbit_e13_e14_20261113/off_quantum": 60,
+    "orbit_e13_e14_20261113/persistent/smoke_results": 3,
+    "orbit_e13_e14_20261113/quantum848": 848,
+    "orbit_e16_calibrated_feedback_20261114/quantum_calibrated_critic": 590,
+    "orbit_e16_calibrated_feedback_20261114/quantum_continue_wall": 586,
+    "orbit_e16_calibrated_feedback_20261114/quantum_frozen": 595,
+    "orbit_e16_calibrated_feedback_20261114/quantum_native_critic": 588,
+    "orbit_e16_calibrated_feedback_20261114/quantum_shared_off": 116,
+    "orbit_grpo_ablation_20261113": 2,
+    "orbit_grpo_ablation_20261113/iodine_reference": 1,
+    "orbit_grpo_ablation_20261113/quantum_ecp_corrections": 3,
+    "orbit_grpo_ablation_20261113/quantum_geometry_results": 36,
+    "orbit_grpo_ablation_20261113/quantum_results": 36,
+    "orbit_point_contrast_repeats_20261113/quantum_geometry": 24,
+    "orbit_point_contrast_repeats_20261113/quantum_singlepoints": 24,
+    "orbit_terminal_feedback_20261113/quantum_geometry": 18,
+    "orbit_terminal_feedback_20261113/quantum_singlepoints": 18
+  },
+  "accepted_unique_graphs_by_cohort": {
+    "orbit3d_oe62_20261112/quantum_point_results_20261113": 23,
+    "orbit_grpo_ablation_20261113/quantum_geometry_results": 29,
+    "orbit_e13_e14_20261113/brics_persistence_quantum_gpu": 11,
+    "orbit_point_contrast_repeats_20261113/quantum_geometry": 22,
+    "orbit_terminal_feedback_20261113/quantum_geometry": 14,
+    "orbit_e16_calibrated_feedback_20261114/quantum_calibrated_critic": 426,
+    "orbit_e16_calibrated_feedback_20261114/quantum_continue_wall": 499,
+    "orbit_e13_e14_20261113/e14_quantum_lumo_correct": 831,
+    "orbit_e16_calibrated_feedback_20261114/quantum_native_critic": 408,
+    "orbit_e13_e14_20261113/off_quantum": 55,
+    "orbit_e13_e14_20261113/e14_quantum_lumo_off": 160,
+    "orbit_e16_calibrated_feedback_20261114/quantum_frozen": 443,
+    "orbit_e13_e14_20261113/quantum848": 680,
+    "orbit_e13_e14_20261113/brics_quantum": 121,
+    "orbit_e13_e14_20261113/e14_quantum_homo_correct": 763,
+    "orbit_e16_calibrated_feedback_20261114/quantum_shared_off": 108,
+    "orbit_e13_e14_20261113/e14_quantum_homo_off": 140,
+    "orbit_e13_e14_20261113/persistent/smoke_results": 3,
+    "orbit3d_oe62_20261112": 1
+  },
+  "oracle_vs_dft_calibration": {
+    "train": {
+      "dft_total": 3949,
+      "B_admitted": 3949,
+      "B_excluded_reasons": {},
+      "B_vs_DFT": {
+        "homo_mae_eV": 0.6848348248802554,
+        "homo_rmse_eV": 1.0637190894648103,
+        "lumo_mae_eV": 0.7720215955916907,
+        "lumo_rmse_eV": 1.2171713184579755
+      }
+    },
+    "valid": {
+      "dft_total": 398,
+      "B_admitted": 398,
+      "B_excluded_reasons": {},
+      "B_vs_DFT": {
+        "homo_mae_eV": 0.6347073352162922,
+        "homo_rmse_eV": 1.0464965499506451,
+        "lumo_mae_eV": 0.7724997925765402,
+        "lumo_rmse_eV": 1.2423572822032876
+      },
+      "Audit_DPA4_vs_DFT": {
+        "evaluated": 398,
+        "homo_mae_eV": 0.1834590103637542,
+        "homo_rmse_eV": 0.2751728540684826,
+        "lumo_mae_eV": 0.18975897441990686,
+        "lumo_rmse_eV": 0.2727873948991759
+      },
+      "B_vs_Audit_DPA4": {
+        "paired": 398,
+        "homo_mae_eV": 0.6216062461710793,
+        "homo_rmse_eV": 1.0021130044919728,
+        "lumo_mae_eV": 0.7404135178581066,
+        "lumo_rmse_eV": 1.1913016677016208
+      }
+    },
+    "test": {
+      "dft_total": 390,
+      "B_admitted": 390,
+      "B_excluded_reasons": {},
+      "B_vs_DFT": {
+        "homo_mae_eV": 0.720133202003576,
+        "homo_rmse_eV": 1.1060177300168008,
+        "lumo_mae_eV": 0.7776128579793102,
+        "lumo_rmse_eV": 1.2525570495482672
+      },
+      "Audit_DPA4_vs_DFT": {
+        "evaluated": 390,
+        "homo_mae_eV": 0.1863806915153808,
+        "homo_rmse_eV": 0.26813474386694836,
+        "lumo_mae_eV": 0.1826662598448111,
+        "lumo_rmse_eV": 0.2678470126136929
+      },
+      "B_vs_Audit_DPA4": {
+        "paired": 390,
+        "homo_mae_eV": 0.6918396996803947,
+        "homo_rmse_eV": 1.0576077698816724,
+        "lumo_mae_eV": 0.7424852066814881,
+        "lumo_rmse_eV": 1.1755546068433786
+      }
+    }
+  }
+}

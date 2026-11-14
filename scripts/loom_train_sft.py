@@ -177,7 +177,7 @@ def main() -> None:
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--lora-rank", type=int, default=16)
     parser.add_argument("--lora-alpha", type=float, default=32.0)
-    parser.add_argument("--num-prefix-tokens", type=int, default=4)
+    parser.add_argument("--num-prefix-tokens", type=int, default=0)
     parser.add_argument("--cfg-dropout", type=float, default=0.15)
     parser.add_argument("--contrast-weight", type=float, default=0.35)
     parser.add_argument("--contrast-margin", type=float, default=0.06)

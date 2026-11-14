@@ -51,7 +51,7 @@ def main() -> None:
         batch_size=32,
         num_rbf=32,
         num_freqs=16,
-        num_prefix_tokens=4,
+        num_prefix_tokens=0,
         lora_rank=16,
         lora_alpha=32.0,
     )

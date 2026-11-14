@@ -6,6 +6,7 @@ from .grpo import (
     LoomGRPOTrainer,
     compute_disentangled_group_advantages,
     formal_charge_signature,
+    is_clean_organic_charge_state,
     property_distance_reward,
     zero_step_physical_reward,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "compute_loom_metrics",
     "formal_charge_signature",
     "inject_uni3dar_lora",
+    "is_clean_organic_charge_state",
     "iter_lora_parameters",
     "property_distance_reward",
     "zero_step_physical_reward",

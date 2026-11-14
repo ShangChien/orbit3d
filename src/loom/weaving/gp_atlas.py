@@ -190,9 +190,9 @@ class HeteroscedasticGPAtlas1D:
 
         zones: List[str] = []
         for idx in range(len(t_arr)):
-            if p_hit_reward[idx] >= 0.35 and abs(bias[idx]) <= 0.20:
+            if p_hit_reward[idx] >= 0.16 and abs(bias[idx]) <= 0.35:
                 zones.append("calibrated_reachable")
-            elif p_hit_reward[idx] >= 0.15 and abs(bias[idx]) <= 0.45:
+            elif p_hit_reward[idx] >= 0.08 and abs(bias[idx]) <= 0.55:
                 zones.append("boundary_degrading")
             else:
                 zones.append("unreachable_ood")

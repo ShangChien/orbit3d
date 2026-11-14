@@ -232,18 +232,20 @@ def test_audit_oracle_guard_blocks_training():
 
 
 def test_disentangled_advantages_metrics_and_gp_atlas():
-    valid_scores = torch.tensor([1.0, 1.0, 0.25, -1.0, 1.0, 1.0, -1.0, 1.0])
-    valid_mask = valid_scores > 0
-    phys_scores = torch.tensor([0.9, 0.4, 0.6, 0.0, 0.85, 0.3, 0.0, 0.7])
-    eval_mask = valid_mask.clone()
-    prop_scores = torch.tensor([0.95, 0.30, 0.50, 0.0, 0.80, 0.20, 0.0, 0.65])
+    # Group of 8: [0] clean hit, [1] clean worst miss, [2] exotic zwitterion, [3] invalid, [4..7] clean mid/good
+    valid_scores = torch.tensor([1.0, 1.0, -0.35, -1.0, 1.0, 1.0, -1.0, 1.0])
+    valid_mask = torch.tensor([True, True, True, False, True, True, False, True])
+    phys_scores = torch.tensor([0.9, 0.4, 0.6, 0.0, 0.85, 0.35, 0.0, 0.7])
+    eval_mask = torch.tensor([True, True, False, False, True, True, False, True])
+    prop_scores = torch.tensor([0.95, 0.12, 0.0, 0.0, 0.82, 0.45, 0.0, 0.68])
 
     adv, parts = compute_disentangled_group_advantages(
         valid_scores, valid_mask, phys_scores, eval_mask, prop_scores
     )
     assert adv.shape == (8,)
     assert torch.isfinite(adv).all()
-    assert float(adv[0]) > float(adv[3])  # High-quality hit strictly beats invalid graph
+    # Strict monotonic ordering: Clean Hit [0] > Clean Worst Miss [1] > Exotic Zwitterion [2] > Invalid [3]
+    assert float(adv[0]) > float(adv[1]) > float(adv[2]) > float(adv[3])
 
     zwitterion = Chem.MolFromSmiles("C[N+](C)(C)CC(=O)[O-]")
     assert formal_charge_signature(zwitterion) == (("N", 1), ("O", -1))

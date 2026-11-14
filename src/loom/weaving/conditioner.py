@@ -28,7 +28,7 @@ class LoomConditioner(nn.Module):
         rbf_min: float = -4.5,
         rbf_max: float = 4.5,
         num_freqs: int = 16,
-        num_prefix_tokens: int = 4,
+        num_prefix_tokens: int = 0,
         modulation_cap: float = 4.0,
     ) -> None:
         super().__init__()
@@ -75,16 +75,19 @@ class LoomConditioner(nn.Module):
             nn.SiLU(),
         )
 
-        # Multi-token causal prefix embeddings: [B, P, emb_dim]
+        # Multi-token causal prefix embeddings: [B, P, emb_dim] (zero-initialized when enabled)
         if self.num_prefix_tokens > 0:
             self.prefix_queries = nn.Parameter(torch.randn(self.num_prefix_tokens, emb_dim) * 0.02)
+            proj_out = nn.Linear(emb_dim, emb_dim)
+            nn.init.zeros_(proj_out.weight)
+            nn.init.zeros_(proj_out.bias)
             self.prefix_proj = nn.Sequential(
                 nn.Linear(emb_dim * 2, emb_dim),
                 nn.LayerNorm(emb_dim),
                 nn.SiLU(),
-                nn.Linear(emb_dim, emb_dim),
+                proj_out,
             )
-            self.null_prefix = nn.Parameter(torch.randn(self.num_prefix_tokens, emb_dim) * 0.02)
+            self.null_prefix = nn.Parameter(torch.zeros(self.num_prefix_tokens, emb_dim))
         else:
             self.prefix_queries = None
             self.prefix_proj = None
