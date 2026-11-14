@@ -30,6 +30,23 @@ def bidirectional_preference_loss(positive, negative, reference_positive, refere
         condition_preference=float((condition_delta>0).float().mean()),sample_preference=float((sample_delta>0).float().mean()))
 
 
+def bidirectional_softmax_loss(positive, negative, reference_positive, reference_negative, partner, eligible, temperature=.02):
+    """Two-way cross entropy on both axes of each 2x2 preference pair.
+
+    A hinge is linear until the margin is reached. In that region, averaging
+    over reciprocal pairs makes its two axes algebraically identical. The
+    smooth cross entropy retains score-dependent weights on both axes.
+    """
+    if not bool(eligible.any()):return positive.sum()*0,{}
+    own=reference_positive-positive;cross=reference_negative-negative
+    condition_delta=own[eligible]-cross[eligible]
+    sample_delta=own[eligible]-cross[partner][eligible]
+    condition=temperature*F.softplus(-condition_delta/temperature).mean()
+    sample=temperature*F.softplus(-sample_delta/temperature).mean()
+    return (condition+sample)/2,dict(condition_loss=float(condition.detach()),sample_loss=float(sample.detach()),
+        condition_preference=float((condition_delta>0).float().mean()),sample_preference=float((sample_delta>0).float().mean()))
+
+
 def nearest_condition_candidates(values, k=4):
     if not 2<=k<=len(values):raise ValueError('K must fit the training batch')
     distance=(values[:,None]-values[None]).abs();distance.fill_diagonal_(float('inf'))
@@ -51,7 +68,7 @@ def multi_condition_loss(losses, reference_losses, distances_eV, enabled, tolera
 class PointPreferenceObjective:
     """Frozen-start score differences with identical dropout-free scoring passes."""
     def __init__(self, model, method, property_index, scale):
-        if method not in {'bidirectional', 'multi_condition'}:
+        if method not in {'bidirectional', 'bidirectional_softmax', 'multi_condition'}:
             raise ValueError('Unknown point preference method')
         self.reference = copy.deepcopy(model).eval().requires_grad_(False)
         self.method, self.property_index, self.scale = method, property_index, scale
@@ -76,13 +93,14 @@ class PointPreferenceObjective:
             return current, reference
 
         try:
-            if self.method == 'bidirectional':
+            if self.method in {'bidirectional', 'bidirectional_softmax'}:
                 partner, eligible = nearby_size_matched_pairs(values, atoms, enabled)
                 if not bool(eligible.any()):
                     return next(model.interval_conditioner.parameters()).sum()*0, {'preference_eligible': 0}
                 positive, ref_positive = scores(torch.arange(len(values), device=values.device))
                 negative, ref_negative = scores(partner)
-                loss, metrics = bidirectional_preference_loss(positive, negative, ref_positive, ref_negative, partner, eligible)
+                objective = bidirectional_softmax_loss if self.method == 'bidirectional_softmax' else bidirectional_preference_loss
+                loss, metrics = objective(positive, negative, ref_positive, ref_negative, partner, eligible)
                 metrics['preference_eligible'] = int(eligible.sum())
             else:
                 candidates = nearest_condition_candidates(values, k=4)

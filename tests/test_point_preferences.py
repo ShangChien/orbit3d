@@ -27,7 +27,7 @@ def test_soft_targets_do_not_treat_equal_properties_as_hard_negatives():
     assert loss.grad[0,0]>0 and loss.grad[0,3]<0
 
 
-@pytest.mark.parametrize('method', ['bidirectional', 'multi_condition'])
+@pytest.mark.parametrize('method', ['bidirectional', 'bidirectional_softmax', 'multi_condition'])
 def test_objective_freezes_reference_but_backpropagates_to_conditioner(method):
     from orbit3d.generator.point_preferences import PointPreferenceObjective
     class Model(torch.nn.Module):
@@ -50,3 +50,18 @@ def test_objective_freezes_reference_but_backpropagates_to_conditioner(method):
     assert model.interval_conditioner.weight.grad.abs().sum() > 0
     assert all(p.grad is None and not p.requires_grad for p in objective.reference.parameters())
     assert stats['preference_eligible'] == 4
+
+
+def test_two_way_softmax_keeps_distinct_channels_inside_the_old_linear_hinge_region():
+    from orbit3d.generator.point_preferences import bidirectional_softmax_loss
+    positive=torch.tensor([-.01,.01],requires_grad=True)
+    negative=torch.tensor([-.005,.005],requires_grad=True)
+    zero=torch.zeros(2);partner=torch.tensor([1,0]);enabled=torch.ones(2,dtype=torch.bool)
+    hinge,stats=bidirectional_preference_loss(positive,negative,zero,zero,partner,enabled)
+    assert abs(stats['condition_loss']-stats['sample_loss'])<1e-8
+    smooth,stats=bidirectional_softmax_loss(positive,negative,zero,zero,partner,enabled)
+    assert stats['sample_loss']>stats['condition_loss']
+    condition_only=.02*torch.nn.functional.softplus((positive-negative)/.02).mean()
+    combined_grad=torch.autograd.grad(smooth,positive,retain_graph=True)[0]
+    condition_grad=torch.autograd.grad(condition_only,positive)[0]
+    assert not torch.allclose(combined_grad,condition_grad)
