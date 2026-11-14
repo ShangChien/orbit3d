@@ -2,7 +2,22 @@
 
 本文描述当前源码实现的算法、数据流和配置语义。调整决策及实施状态见[方案调整](design_changes.md)，实验协议及执行状态见[实验设计](experiments.md)，验证证据见[实验结果](results.md)。参数以运行配置和检查点为准；本文不包含尚未实施的候选架构。
 
-## CLI总体数据流
+## 固定B点值任务数据流
+
+```mermaid
+flowchart LR
+    T[点值目标] --> G[Uni-3DAR自回归生成]
+    G --> V[完整分子化学与基本几何准入]
+    V --> B[冻结Uni-Mol2评分]
+    B --> O[候选排序与评价记录]
+    B -.完整分子反馈.-> G
+    S[源及回收三维结构] --> L[SFT或条件偏好]
+    L -.更新条件参数.-> G
+```
+
+该路径通过`evaluate_b_task_checkpoint.py`和`train_b_task_grpo.py`直接调用生成器、共同分子验证器及`FrozenUniMol2Task`。性质在原始生成坐标上评价；B同时定义标签、反馈和验收，不代表独立物理真值。原始轨迹保留用于策略更新，B评分不反传穿过坐标或预测器。支持范围检查是性质调用的条件，DPA/HyFF力收敛和Morgan相似度不属于该路径的准入门。学习目标详见下方固定B学习接口。
+
+## 势场CLI数据流
 
 ```mermaid
 flowchart LR
@@ -56,7 +71,7 @@ L = L_gen + lambda_property * L_property
 
 该组合不是统一的逐 token NLL。v3 训练区间包含真实标签，但中心不必等于标签；归一化跨度按 LogUniform(0.2,2.0) 抽样，并有性质/边界 mask 随机丢弃。训练策略、目标顺序、单位、scaler、表示配置和迁移状态随检查点保存。[训练编排](../src/orbit3d/pipeline/octree_runner.py)、[检查点与编码](../src/orbit3d/generator/octree_backend.py)
 
-v4 SFT 输入真实激活标签，并以 10% 概率关闭整个条件向量。`active_targets` 指定单目标；继续 SFT 可单独冻结骨干和自评头，只更新 conditioner。
+v4 SFT 输入数据集中声明的激活性质标签，并以 10% 概率关闭整个条件向量。`active_targets` 指定单目标；继续 SFT 可单独冻结骨干和自评头，只更新 conditioner。
 
 v5 SFT按源标签`y`构造`mu=y+sigma*epsilon`，批内共用从声明范围对数均匀抽取的物理宽度，10%整请求关闭。v4/v5均可启用双向条件margin：按激活标签反序配对，只对两个方向的高斯兼容性都更高的配对，比较同一结构在自身/交叉请求下的逐分子生成损失；逐分子损失仍按树、元素、坐标决策分别归一化。v4使用精确标签作为请求，配对尺度通过`contrast_pairing_sigma_eV`指定，仅决定负例间距，不进入点值条件器。保留普通SFT项，记录配对覆盖。[条件采样](../src/orbit3d/generator/gaussian_conditions.py)
 
@@ -68,7 +83,7 @@ Hindsight通过独立SDF追加结构，scaler沿用源检查点。新实现默�
 
 GRPO 对树、元素及 XYZ 决策计算策略比率与裁剪目标，可叠加参考策略 KL 和监督 replay。当前冻结骨干，只更新 conditioner；奖励综合归一化区间违约、原始力惩罚和可选不确定性惩罚，组内标准化得到优势。当前配置默认关闭 GRPO，不确定性奖励权重默认为零。[对齐实现](../src/orbit3d/generator/octree_alignment.py)
 
-点值对齐使用 `r=1/(1+D)`，其中 `D=mean_active(((prediction-target)/tolerance)^2)`；无效、域外或评价失败为 -1。每组共享一个目标，组间按固定目标池轮换；该模式要求关闭 physics/uncertainty，replay 由配置控制。`point_reward_type=eligibility_only`提供消融模式：同样执行性质/力评价，但可评价候选统一奖励+1，失败仍为−1；默认保持点值距离奖励。记录组内可评价数、性质距离、逐提案优势、奖励标准差、更新次数、KL、梯度与参数变化，并保存对齐中间检查点；奖励类型写入恢复合同，禁止恢复时切换。
+点值对齐使用 `r=1/(1+D)`，其中 `D=mean_active(((prediction-target)/tolerance)^2)`；无效、域外或评价失败为 -1。每组共享一个目标，组间按固定目标池轮换；该模式要求关闭 physics/uncertainty，replay 由配置控制。`point_reward_type=eligibility_only`提供消融模式：同样执行性质/力评价，但可评价候选统一奖励+1，失败仍为−1；默认保持点值距离奖励。 上述域/力调用属于势场CLI路径；固定B入口只检查结构及B支持范围，不查询力或Morgan域。记录组内可评价数、性质距离、逐提案优势、奖励标准差、更新次数、KL、梯度与参数变化，并保存对齐中间检查点；奖励类型写入恢复合同，禁止恢复时切换。
 
 `point_advantage_mode=conditional_property_v1`复用同一标量性质奖励，分开计算两个优势通道。令组大小为`K`、可评价数为`m`：有效性通道为±1二值奖励的组内标准化；性质通道仅在`m>=2`时为`(K/m)*(q-mean_evaluable(q))/max(std_evaluable(q),0.1)`，其余候选为0。两通道等权相加，再除以`max(std_all(sum),1)`，只缩小总尺度、不放大小差异。默认模式为`joint`；分离优势通过上述配置显式启用。模式进入恢复合同，逐候选保存两个优势分量。[优势实现](../src/orbit3d/generator/octree_alignment.py)
 
@@ -78,13 +93,13 @@ GRPO 对树、元素及 XYZ 决策计算策略比率与裁剪目标，可叠加�
 
 ## 性质模型与候选选择
 
-新增`FrozenUniMol2Task`固定1.1B权重、scaler、FP32 eval和规范重原子padding，提供B标签和原始池验收工具；支持范围包括总原子数≤80及声明的14种元素。该接口不提供能量、力、坐标梯度或有效不确定性。新阶段B同时定义训练和成功，不冒称独立量化裁决；训练方法接入进度仍见实验方案。[统一B合同](../src/orbit3d/oracles/unimol2_task.py)
+新增`FrozenUniMol2Task`固定1.1B权重、scaler、FP32 eval和规范重原子padding，提供B标签和原始池验收工具；支持范围包括总原子数≤80及声明的14种元素。该接口不提供能量、力、坐标梯度或有效不确定性。新阶段B同时定义训练和成功，不冒称独立量化裁决；B对齐采用独立原始坐标入口，不加载原子势。[统一B合同](../src/orbit3d/oracles/unimol2_task.py)
 
 DPA/HyFF 提供冻结的原子描述符，性质适配器在其上训练；已验证模型使用三个 bootstrap 成员输出均值与 spread。图指纹模型提供另一种图级预测。 新建指纹模型和Morgan域共用官能团标准化及规范异构SMILES特征表示，输入图与三维坐标保持原状；转换必须守恒总电荷。逐候选进行特征准入，合格特征一次批预测，失败保留原因与原始分母。模型和域文件保存特征契约，加载v1文件仍使用原图预处理，不将旧参数静默配到新特征上。力场能量/力和性质头是不同输出，具有不同训练目标。共享同一 MLIP 时可复用描述符计算。
 
 DPA性质适配器支持从已有权重继续训练，保留父模型scaler与已训练元素范围；可给验证样本指定权重，按原样本索引与分组批次对齐。新增终态DFT标签的适配器使用独立目录保存，历史A/B保持冻结。[适配训练](../scripts/finetune_terminal_oracle.py)、[属性头](../src/orbit3d/oracles/dpa4_oracle.py)
 
-OE62研究评价采用三层证据：历史DPA为优化/选择模型A，同划分DPA用于公平源基线；开发集选中的Uni-Mol2 1.1B为冻结交叉评价器B；预先冻结候选池由PySCF/GPU4PySCF按同坐标单点或几何优化协议裁决。B不参与逐候选筛选、训练奖励或检查点步数选择；方法比较与后续实验设计已查看B的聚合结果，因此后续试验中的B属于冻结交叉模型开发证据，不能称完全未接触的最终测试。量化可覆盖全部物理合格终态，或按预先固定规则抽取子队列。v2沿官方路径读取源重原子坐标，完整适配骨干和性质头；只换版本不保证生成几何上的准确性，源测试与生成几何量化误差分别报告。[v2模型](../src/orbit3d/oracles/unimol2_oracle.py)、[冻结重评](../scripts/reevaluate_dual_oracle.py)
+历史E0–E16研究采用三层证据：历史DPA为优化/选择模型A，同划分DPA用于公平源基线；开发集选中的Uni-Mol2 1.1B为冻结交叉评价器B；预先冻结候选池由PySCF/GPU4PySCF按同坐标单点或几何优化协议裁决。B不参与逐候选筛选、训练奖励或检查点步数选择；方法比较与后续实验设计已查看B的聚合结果，因此后续试验中的B属于冻结交叉模型开发证据，不能称完全未接触的最终测试。量化可覆盖全部物理合格终态，或按预先固定规则抽取子队列。v2沿官方路径读取源重原子坐标，完整适配骨干和性质头；只换版本不保证生成几何上的准确性，源测试与生成几何量化误差分别报告。[v2模型](../src/orbit3d/oracles/unimol2_oracle.py)、[冻结重评](../scripts/reevaluate_dual_oracle.py)
 
 适用域由训练元素覆盖和 Morgan 最近邻相似度判断，阈值来自对应模型的校准配置。常规CLI候选先经过化学/适用域检查，再按自评得分初筛；`external` 模式在预算内调用外部性质头重排。当前排序主分数为：
 
