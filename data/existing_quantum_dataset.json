@@ -1,0 +1,111 @@
+{
+  "scope": "Previously computed E13/E14/E16 terminal single points; no new DFT. One geometry per canonical graph selected by geometry hash, never property success. Source holdout scaffolds and existing source training graphs excluded. New 80/10/10 scaffold hash split. Historical cohorts are development assets and no longer independent policy tests after training use. B labels are attached in a separate unchanged-coordinate pass.",
+  "pre_B_counts": {
+    "train": 3884,
+    "valid": 401,
+    "test": 390
+  },
+  "DFT_collection_exclusions": {
+    "duplicate_graph": 630,
+    "already_source_training_graph": 48,
+    "source_holdout_scaffold": 195,
+    "failed": 2
+  },
+  "B_contract": {
+    "version": 1,
+    "hashes": {
+      "model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+      "oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e"
+    },
+    "mean": [
+      -6.618685245513916,
+      -1.4722509384155273
+    ],
+    "scale": [
+      0.6718618273735046,
+      0.8426896333694458
+    ],
+    "target_cols": [
+      "homo",
+      "lumo"
+    ],
+    "target_units": [
+      "eV",
+      "eV"
+    ],
+    "input_contract": {
+      "source_geometry": true,
+      "remove_hydrogen": true,
+      "center_coordinates": true,
+      "crop": false,
+      "max_source_atoms": 80,
+      "drop_feat_prob": 1.0,
+      "padding": "group by canonical per-molecule padded length, matching train/inference"
+    },
+    "precision": "float32",
+    "mode": "eval",
+    "supported_elements": [
+      "As",
+      "B",
+      "Br",
+      "C",
+      "Cl",
+      "F",
+      "H",
+      "I",
+      "N",
+      "O",
+      "P",
+      "S",
+      "Se",
+      "Si"
+    ],
+    "max_total_atoms": 80,
+    "role": "Same fixed B defines training labels, rewards and success; not independent DFT truth",
+    "preprocessing_sha256": "aa8db051f15d78bda20f6d354176b57015caa516ed49180c774de1628ec19ff7"
+  },
+  "B_datasets": {
+    "train_generated": {
+      "input_count": 3884,
+      "accepted": 3873,
+      "exclusions": {
+        "unsupported_elements:Te": 3,
+        "stereo_geometry: coordinates disagree with a specified double-bond configuration": 8
+      }
+    },
+    "valid_generated": {
+      "input_count": 401,
+      "accepted": 401,
+      "exclusions": {}
+    },
+    "test_generated": {
+      "input_count": 390,
+      "accepted": 388,
+      "exclusions": {
+        "unsupported_elements:Te": 2
+      }
+    }
+  },
+  "local_dataset": "dataset/oe62_generated_quantum",
+  "files": {
+    "train_generated.sdf": {
+      "sha256": "5fa9e65afe804486f065846a2ade8db2c6745148b876a7666704c34b5ba0c345",
+      "molecules": 3873
+    },
+    "valid_generated.sdf": {
+      "sha256": "c31e34320838baa9c9fc2a2eefbaa355d7be46a813850580995e0ec026d579bd",
+      "molecules": 401
+    },
+    "test_generated.sdf": {
+      "sha256": "1fd2689281359e6877abe5a2eecf2b5b37c7cc0957d610de47e49b8a21ded518",
+      "molecules": 388
+    }
+  },
+  "label_fields": {
+    "homo/lumo": "Frozen B labels used for current task",
+    "B_homo/B_lumo": "Same fixed B predictions",
+    "DFT_homo/DFT_lumo": "Original same-coordinate PBE0 single-point labels"
+  },
+  "split": "80/10/10 scaffold hash before B support/geometry admission; source holdout scaffolds excluded; exact graph disjoint",
+  "new_DFT_performed": false
+}

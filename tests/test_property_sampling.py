@@ -22,3 +22,8 @@ def test_replay_cannot_capture_half_batch_or_exceed_per_graph_cap():
 def test_constant_labels_stay_uniform():
     p,_=property_sampling_probabilities(np.ones(100))
     np.testing.assert_allclose(p,np.full(100,.01))
+
+
+def test_fixed_source_edges_do_not_move_when_replay_extends_label_range():
+    _,meta=property_sampling_probabilities([0.,.4,.8,1.,10.],bins=2,edges=[0.,.5,1.])
+    assert meta['edges_eV']==[0.,.5,1.] and meta['bin_counts']==[2,3]

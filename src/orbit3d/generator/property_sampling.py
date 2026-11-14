@@ -13,11 +13,13 @@ def _allocate(weights, mass, cap):
     return np.minimum(high*weights,cap)
 
 
-def property_sampling_probabilities(values, bins=20, max_exposure=5., source_count=None, max_generated_fraction=.25):
+def property_sampling_probabilities(values, bins=20, max_exposure=5., source_count=None, max_generated_fraction=.25, edges=None):
     values=np.asarray(values,dtype=float)
     if values.ndim!=1 or len(values)==0 or not np.isfinite(values).all() or bins<1 or max_exposure<1:
         raise ValueError('Property sampling requires finite scalar labels and exposure >= 1')
-    edges=np.linspace(values.min(),values.max(),bins+1)
+    edges=np.linspace(values.min(),values.max(),bins+1) if edges is None else np.asarray(edges,dtype=float)
+    if edges.shape!=(bins+1,) or not np.isfinite(edges).all() or np.any(np.diff(edges)<0):
+        raise ValueError('Sampling edges must be finite ordered bin boundaries')
     ids=np.clip(np.searchsorted(edges,values,side='right')-1,0,bins-1)
     counts=np.bincount(ids,minlength=bins);weights=1/counts[ids]
     cap=max_exposure/len(values);probabilities=_allocate(weights,1.,cap)

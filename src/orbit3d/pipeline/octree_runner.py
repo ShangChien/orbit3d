@@ -177,7 +177,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             sampling_probabilities,sampling_metadata=property_sampling_probabilities(
                 sampling_values,bins=int(settings.get('sampling_bins',20)),max_exposure=float(settings.get('sampling_max_exposure',5.)),
                 source_count=source_count if paths.get('hindsight_data_path') else None,
-                max_generated_fraction=float(settings.get('hindsight_max_fraction',.25)))
+                max_generated_fraction=float(settings.get('hindsight_max_fraction',.25)),edges=settings.get('sampling_edges_eV'))
             sampling_metadata['property_field']=target
         elif settings.get('sampling_scheme','uniform')!='uniform':
             raise ValueError('Unknown property sampling scheme')
@@ -213,6 +213,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                     "conditional_training": {k: settings.get(k) for k in ["preference_sigma_range_eV", "condition_contrast_weight", "contrast_pairing_sigma_eV"]},
                     "hindsight_data_path": paths.get("hindsight_data_path"),
                     "sampling": sampling_metadata,
+                    "fixed_predictor_contract": cfg.get('B_task_contract'),
                     "label_theory": sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                     "train_backbone": train_backbone,
                     "element_loss_weighting": weighting_metadata,

@@ -49,6 +49,7 @@ def main():
             torch.cuda.synchronize();generation_seconds+=time.perf_counter()-t;t=time.perf_counter();mols=[];indices=[]
             for j,traj in enumerate(trajectories):
                 i=begin+j;symbols.append(traj['atom_symbols']);xyz[f'coordinates_{i}']=traj['positions_np']
+                xyz[f'tokens_{i}']=traj['decoder_feat'].cpu().numpy()
                 row=dict(candidate_id=i,atoms=len(traj['atom_symbols']),valid=False,legal=False,evaluated=False,
                          token_sha256=hashlib.sha256(traj['decoder_feat'].cpu().numpy().tobytes()).hexdigest());rows.append(row)
                 try:

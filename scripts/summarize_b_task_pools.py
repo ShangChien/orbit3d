@@ -44,9 +44,19 @@ def main():
                 unique_all_asset_novel_hits_per128=float(np.mean([128*c['unique_all_asset_novel_hits']/c['attempted'] for c in cs.values()])),
                 response_slope=float(np.polyfit([c['goal_eV'] for c in cs.values()],[c['prediction_mean_eV'] for c in cs.values()],1)[0]),
                 std_equal_request_eV=float(np.mean([c['prediction_std_eV'] for c in cs.values()])))
+        off_selection={}
+        column=['homo','lumo'].index(target)
+        for k in [4,8]:
+            chosen=[];hits=0
+            for _,goal in requests:
+                for pool in off_pools:
+                    selected=sorted([r for r in pool['records'] if r['evaluated']],key=lambda r:(abs(r['prediction_eV'][column]-goal),r['candidate_id']))[:k]
+                    chosen.extend(selected);hits+=sum(abs(r['prediction_eV'][column]-goal)<=.25 for r in selected)
+            off_selection[str(k)]=dict(requested=len(requests)*len(off_pools)*k,selected=len(chosen),hits=hits,
+                unique_graphs_across_requests=len({r['smiles'] for r in chosen}),unique_raw_proposals=len(off_rows))
         result=dict(campaign=campaign,target=target,arm=arm,attempted=len(all_rows),legal=sum(r['legal'] for r in all_rows),
             evaluated=sum(r['evaluated'] for r in all_rows),metrics=aggregate(cells),cells=cells,
-            shared_off=dict(unique_proposals=len(off_rows),metrics=aggregate(off),cells=off),
+            shared_off=dict(unique_proposals=len(off_rows),metrics=aggregate(off),cells=off,top_k=off_selection),
             top_k={str(k):dict(requested=sum(pool['top_k'][str(k)]['requested'] for pool in pools),
                               selected=sum(pool['top_k'][str(k)]['attempted'] for pool in pools),
                               hits=sum(pool['top_k'][str(k)]['hits'] for pool in pools)) for k in [4,8]})
