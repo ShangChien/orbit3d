@@ -169,5 +169,33 @@
         -0.5188899031319597
       ]
     }
+  },
+  "DFT_supervised_view": {
+    "path": "dataset/oe62_generated_quantum/dft",
+    "reproduce": "PYTHONPATH=src .venv/bin/python scripts/export_existing_dft_labels.py --dataset dataset/oe62_generated_quantum --output dataset/oe62_generated_quantum/dft",
+    "label_fields": {
+      "homo/lumo": "DFT_homo/DFT_lumo",
+      "B_homo/B_lumo": "Unchanged frozen predictor values"
+    },
+    "geometry": "Original quantum input; MLIP terminal, not DFT-optimized",
+    "split": "Inherits the admitted dual-label dataset; no new split or sample selection",
+    "new_DFT": false,
+    "files": {
+      "train.sdf": {
+        "molecules": 3873,
+        "sha256": "6fd9d7dc705be1a4f876de641c6c33379cb542820d0bae6abd3591709e27cdbb",
+        "input_sha256": "5fa9e65afe804486f065846a2ade8db2c6745148b876a7666704c34b5ba0c345"
+      },
+      "valid.sdf": {
+        "molecules": 401,
+        "sha256": "f82093bc0d839db799538ccf998e241eddf3696e9d720588b73cc78e3af98d09",
+        "input_sha256": "c31e34320838baa9c9fc2a2eefbaa355d7be46a813850580995e0ec026d579bd"
+      },
+      "test.sdf": {
+        "molecules": 388,
+        "sha256": "e1342f97858b433743410bcaa9d0389992fecf71b0f5cabd6cba10d707d16196",
+        "input_sha256": "1fd2689281359e6877abe5a2eecf2b5b37c7cc0957d610de47e49b8a21ded518"
+      }
+    }
   }
 }
