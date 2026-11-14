@@ -22,7 +22,7 @@ def timing_summary(root):
         steady_profile_groups=[r['group'] for r in steady],
         stage_median_seconds={k:float(np.median([r['stage_seconds'][k] for r in steady if k in r['stage_seconds']])) for k in keys},
         probes=[r for r in rows if r.get('gradient_probes')],
-        scope='Synchronized sequential stage walls on GPU0. Medians exclude group1 warmup; sparse probe groups, not all updates. Evaluation shares NAMD GPUs and is not a performance benchmark.')
+        scope='Synchronized sequential stage walls on GPU0. Medians exclude group1 warmup; sparse probe groups, not all updates. Evaluation is excluded from performance claims; device routing is recorded in the protocols and execution addenda.')
 
 
 def validation_structure_summary(root):
@@ -68,6 +68,12 @@ def main():
         for g in [64,128,256,512,1024]:
             path=root/f'training/octree_group_{g}.receipt.json';report['input_hashes'][str(path)]=file_sha256(path)
     path=a.margin/'paired_comparison.json';report['input_hashes'][str(path)]=file_sha256(path)
+    report['execution_addenda']={}
+    for name,root in roots.items():
+        path=root/'execution_addendum.json'
+        if path.exists():
+            report['execution_addenda'][name]=json.loads(path.read_text())
+            report['input_hashes'][str(path)]=file_sha256(path)
     a.output.write_text(json.dumps(report,indent=2)+'\n')
 
 
