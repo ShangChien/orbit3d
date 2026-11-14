@@ -1,0 +1,199 @@
+{
+  "initial_sha256": "6ae16665d59a71232837ae21410898e5d163d2d9e4d8a9ebb4b130a84220df8e",
+  "arms": {
+    "native_critic": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "conditioner_delta_l2": 1.0950523935778482,
+      "conditioner_relative_delta_l2": 0.009101433018217114,
+      "checkpoint_sha256": "0ed1522ecf2f09d38fb4781ce60a36dfacf74e36a331ffbf92a6ce178d452d68",
+      "advantage_vector_energy": {
+        "structure": 0.2072206335062111,
+        "physical": 0.3061781053056511,
+        "property": 0.4866013005280155
+      },
+      "energy_fraction": {
+        "structure": 0.20722062535417707,
+        "physical": 0.3061780932606424,
+        "property": 0.48660128138518066
+      },
+      "energy_scope": "Orthogonal nested advantage vectors in rollout space, not orthogonal parameter gradients or causal attribution.",
+      "update_diagnostics": {
+        "gradient_norm": {
+          "min": 0.010556606575846672,
+          "median": 0.017815799452364445,
+          "max": 0.028329024091362953
+        },
+        "parameter_update_l2": {
+          "min": 0.0450737439095974,
+          "median": 0.04890385828912258,
+          "max": 0.13514316082000732
+        },
+        "policy_kl_before_last_update": {
+          "min": 1.9832264115393627e-06,
+          "median": 0.0002301605127286166,
+          "max": 0.0009327619918622077
+        }
+      },
+      "groups": 48,
+      "proposals": 1536,
+      "optimizer_updates": 96,
+      "evaluated_per_group": [
+        16,
+        8,
+        12,
+        13,
+        10,
+        11,
+        14,
+        13,
+        13,
+        12,
+        14,
+        16,
+        12,
+        12,
+        11,
+        18,
+        14,
+        13,
+        19,
+        13,
+        13,
+        11,
+        13,
+        15,
+        16,
+        16,
+        13,
+        13,
+        13,
+        12,
+        10,
+        16,
+        16,
+        20,
+        15,
+        12,
+        12,
+        13,
+        14,
+        16,
+        20,
+        12,
+        15,
+        16,
+        9,
+        16,
+        15,
+        18
+      ],
+      "negative_property_components": 426,
+      "zero_or_one_property_groups": 0,
+      "energy_force_calls": 56062
+    },
+    "calibrated_critic": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "conditioner_delta_l2": 1.1699354340655528,
+      "conditioner_relative_delta_l2": 0.009723816916189785,
+      "checkpoint_sha256": "a713c06c1e0a72614a2f0e0ed9598a8d9a891f72bb45ec4fea97e987879fb59d",
+      "advantage_vector_energy": {
+        "structure": 0.20945824868480803,
+        "physical": 0.3133879456900602,
+        "property": 0.4771538629467638
+      },
+      "energy_fraction": {
+        "structure": 0.20945823667832003,
+        "physical": 0.3133879277261527,
+        "property": 0.4771538355955272
+      },
+      "energy_scope": "Orthogonal nested advantage vectors in rollout space, not orthogonal parameter gradients or causal attribution.",
+      "update_diagnostics": {
+        "gradient_norm": {
+          "min": 0.010637551546096802,
+          "median": 0.01896862033754587,
+          "max": 0.02734164334833622
+        },
+        "parameter_update_l2": {
+          "min": 0.04469086229801178,
+          "median": 0.05060494318604469,
+          "max": 0.1342182159423828
+        },
+        "policy_kl_before_last_update": {
+          "min": 1.936866055984865e-06,
+          "median": 0.00021406455925898626,
+          "max": 0.0012699711369350553
+        }
+      },
+      "groups": 48,
+      "proposals": 1536,
+      "optimizer_updates": 96,
+      "evaluated_per_group": [
+        16,
+        9,
+        13,
+        11,
+        9,
+        13,
+        16,
+        15,
+        11,
+        13,
+        11,
+        14,
+        18,
+        16,
+        10,
+        14,
+        9,
+        11,
+        15,
+        14,
+        12,
+        17,
+        11,
+        18,
+        13,
+        13,
+        14,
+        12,
+        14,
+        13,
+        10,
+        11,
+        14,
+        20,
+        17,
+        18,
+        15,
+        16,
+        12,
+        15,
+        17,
+        13,
+        17,
+        10,
+        16,
+        16,
+        15,
+        18
+      ],
+      "negative_property_components": 425,
+      "zero_or_one_property_groups": 0,
+      "energy_force_calls": 55157
+    },
+    "continue_wall": {
+      "nonconditioner_tensors_unchanged": true,
+      "target_contract_and_scaler_unchanged": true,
+      "changed_conditioner_tensors": 30,
+      "conditioner_delta_l2": 21.42291016099725,
+      "conditioner_relative_delta_l2": 0.1780546602419148,
+      "checkpoint_sha256": "911afaa7de00bfc8255fa359cd822621d82ff0bb3a56cafad69ac239caf21d21",
+      "optimizer_updates": 45421
+    }
+  },
+  "script_sha256": "25be52501341d14f3e9b3fcea4b4d06afc65a72d7d334851dfae59c70dc3ec86"
+}
