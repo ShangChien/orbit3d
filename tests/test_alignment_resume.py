@@ -1,4 +1,5 @@
 import copy
+import random
 import pytest
 from types import SimpleNamespace
 import numpy as np
@@ -20,15 +21,28 @@ class Policy(torch.nn.Module):
         features=torch.tensor([[t['value']] for t in trajectories])+low
         logits=self.interval_conditioner(features)
         return [(logits.log_softmax(-1),torch.arange(len(low))%2,torch.arange(len(low)))]
+    def compute_sft_and_understanding_loss(self,packed,target,lower,upper,mask,**kwargs):
+        return self.interval_conditioner(packed['features']+lower).square().mean(),{}
+
+
+class ReplayDataset:
+    def __init__(self,*args,**kwargs):
+        torch.rand(3)  # Construction is allowed to consume RNG before restoration.
+        np.random.rand(3);random.random()
+    def collate(self,indices):
+        noise=torch.tensor(np.random.rand(len(indices),1),dtype=torch.float32)+random.random()
+        return {'features':torch.as_tensor(indices,dtype=torch.float32)[:,None]+torch.rand(len(indices),1)+noise}
 
 
 @pytest.mark.parametrize("advantage_mode",["joint","conditional_property_v1"])
 @pytest.mark.parametrize("reward_type",["inverse_point_distance","eligibility_only"])
 @pytest.mark.parametrize('use_fixed_task',[False,True])
-def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path,reward_type,advantage_mode,use_fixed_task):
+@pytest.mark.parametrize('replay_weight',[0.,.1])
+def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch,tmp_path,reward_type,advantage_mode,use_fixed_task,replay_weight):
     def instance(t,**kwargs):
         return SimpleNamespace(graph=t['value'],coords=t['positions_np'],symbols=['C'],smiles=str(t['value']))
     monkeypatch.setattr('orbit3d.generator.octree_alignment.trajectory_to_instance',instance)
+    monkeypatch.setattr('orbit3d.generator.octree_alignment.OctreeDataset',ReplayDataset)
     oracle=SimpleNamespace(predict_3d_mols=lambda mols:(np.array(mols)[:,None],np.zeros((len(mols),1))))
     ff=SimpleNamespace(atom_type_map=['C'],compute_energy_and_forces=lambda *a,**k:(0.,torch.zeros(1,3)))
     pool=[TargetPoints.parse({'y':value},{'y':1.},['y']) for value in [0.,.5]]
@@ -38,13 +52,16 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
             property_hit=points.intervals().hit([inst.graph]),reward=1. if reward_type=='eligibility_only' else 1./(1.+points.distance([inst.graph])))
             for i,inst in instances}
     monkeypatch.setattr('orbit3d.generator.point_task_feedback.evaluate_point_task',score)
-    torch.manual_seed(21);base=Policy();rng=torch.get_rng_state()
+    torch.manual_seed(21);np.random.seed(21);random.seed(21);base=Policy();rng=torch.get_rng_state()
+    numpy_rng=np.random.get_state();python_rng=random.getstate()
+    def reset_rng():
+        torch.set_rng_state(rng);np.random.set_state(numpy_rng);random.setstate(python_rng)
     def run(model,reward_override=reward_type,advantage_override=advantage_mode,**kwargs):
-        return align_octree(model,[],None,np.zeros(1),np.ones(1),pool[0].intervals(),None if task else oracle,None if task else ff,
-                            steps=4,group_size=4,lr=.03,kl_beta=.2,physics_weight=0,replay_weight=0,
+        return align_octree(model,[None]*6,np.linspace(-1,1,6,dtype=np.float32)[:,None],np.zeros(1,dtype=np.float32),np.ones(1,dtype=np.float32),pool[0].intervals(),None if task else oracle,None if task else ff,
+                            steps=4,group_size=4,lr=.03,kl_beta=.2,physics_weight=0,replay_weight=replay_weight,
                             points=pool[0],point_pool=pool,point_reward_type=reward_override,point_advantage_mode=advantage_override,point_task=task,**kwargs)
     full=copy.deepcopy(base);full_history=run(full)
-    torch.set_rng_state(rng);partial=copy.deepcopy(base);saved={}
+    reset_rng();partial=copy.deepcopy(base);saved={}
     def snapshot(step,model,history,state):
         saved.update(copy.deepcopy({'model_state_dict':model.state_dict(),'grpo_history':history,
                                     'alignment_training_state':state}))
@@ -53,11 +70,18 @@ def test_resume_preserves_optimizer_reference_rng_and_group_sequence(monkeypatch
     torch.save(saved,tmp_path/'resume.pt')
     saved=torch.load(tmp_path/'resume.pt',weights_only=False)
     torch.rand(100)  # A fresh process/model may have consumed unrelated randomness.
+    np.random.rand(100);random.random()
     resumed=copy.deepcopy(base)  # The reference remains the original SFT policy.
     resumed_history=run(resumed,resume_checkpoint=saved)
     for key,value in full.state_dict().items():
         torch.testing.assert_close(value,resumed.state_dict()[key],atol=0,rtol=0)
     assert full_history==resumed_history
+    reset_rng();instrumented=copy.deepcopy(base);diagnostics=[]
+    measured_history=run(instrumented,diagnostics_callback=diagnostics.append,profile_groups=[1,4],gradient_probe_groups=[1,4])
+    for key,value in full.state_dict().items():
+        torch.testing.assert_close(value,instrumented.state_dict()[key],atol=0,rtol=0)
+    assert measured_history==full_history
+    assert len([row for row in diagnostics if row.get('profiled')])==2
     other='eligibility_only' if reward_type=='inverse_point_distance' else 'inverse_point_distance'
     with pytest.raises(ValueError,match='same GRPO targets, optimizer and reward settings'):
         run(copy.deepcopy(base),reward_override=other,resume_checkpoint=saved)

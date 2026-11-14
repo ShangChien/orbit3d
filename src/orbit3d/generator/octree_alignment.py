@@ -2,6 +2,8 @@
 
 import copy
 import hashlib
+import random
+import time
 import numpy as np
 import torch
 from .octree_backend import trajectory_to_instance, OctreeDataset, interval_arrays
@@ -59,8 +61,9 @@ def align_octree(
     seed=42, kl_beta=0.02, physics_weight=0.2, uncertainty_weight=0.0, replay_weight=0.1, domain=None, electron_parity=None,
     points=None, point_pool=None, checkpoint_callback=None, resume_checkpoint=None, stop_after=None,
     point_reward_type="inverse_point_distance", point_advantage_mode="joint", terminal_feedback_level=None, terminal_max_atoms=None,
-    point_task=None,
+    point_task=None, diagnostics_callback=None, profile_groups=(), gradient_probe_groups=(),
 ):
+    setup_started=time.perf_counter()
     if point_reward_type not in {"inverse_point_distance", "eligibility_only"}:
         raise ValueError("Unknown point reward type")
     if points is None and point_reward_type != "inverse_point_distance":
@@ -108,6 +111,8 @@ def align_octree(
         model.load_state_dict(resume_checkpoint['model_state_dict'],strict=True)
         optimizer.load_state_dict(saved['optimizer'])
         rng.bit_generator.state = saved['numpy_rng']
+        if 'numpy_global_rng' in saved:np.random.set_state(saved['numpy_global_rng'])
+        if 'python_rng' in saved:random.setstate(saved['python_rng'])
         torch.set_rng_state(saved['torch_rng'].cpu())
         if device.type == 'cuda':
             torch.cuda.set_rng_state(saved['cuda_rng'].cpu(),device)
@@ -117,7 +122,14 @@ def align_octree(
     end = steps if stop_after is None else int(stop_after)
     if not len(history) < end <= steps:
         raise ValueError('Alignment segment must advance within the requested total groups')
+    if diagnostics_callback is not None:
+        if device.type=='cuda':torch.cuda.synchronize(device)
+        diagnostics_callback(dict(event='setup',seconds=time.perf_counter()-setup_started))
+    from .alignment_diagnostics import StageTimer
     for step in range(len(history), end):
+        group_started=time.perf_counter()
+        timer=StageTimer(device,step+1 in profile_groups or step+1 in gradient_probe_groups)
+        probes=[]
         if point_pool:
             points = point_pool[step % len(point_pool)]
             intervals = points.intervals()
@@ -130,6 +142,7 @@ def align_octree(
             torch.no_grad(),
             torch.autocast(device_type=device.type, enabled=False),
         ):
+            timer.start('generation')
             trajectories = model.generate_conditional_trajectories(
                 low,
                 high,
@@ -142,12 +155,16 @@ def align_octree(
                 row_seeds=[candidate_seed(seed, step * group_size + i) for i in range(group_size)],
                 electron_parity=electron_parity,
             )
+            timer.stop('generation')
+            timer.start('old_reference_distributions')
             old = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
             ref = reference.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity) if reference is not None else None
+            timer.stop('old_reference_distributions')
         rewards = [-1.0] * len(trajectories)
         hits = [False] * len(trajectories)
         instances = []
         rollout_records = []
+        timer.start('chemical_admission_including_D2H')
         for i, trajectory in enumerate(trajectories):
             tokens = trajectory['decoder_feat'].cpu().numpy()
             row = {'candidate_seed': candidate_seed(seed, step * group_size + i), 'valid': False,
@@ -156,17 +173,22 @@ def align_octree(
             try:
                 inst = trajectory_to_instance(trajectory, element_table=tuple(model.args.allow_atoms.split(',')))
                 row.update(valid=True, smiles=inst.smiles)
-                assessment = domain.assess(inst.graph) if domain else None
-                row['oracle_in_domain'] = assessment['in_domain'] if assessment else True
-                row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
-                row['unseen_oracle_training_elements'] = assessment['unseen_training_elements'] if assessment else []
-                if assessment and not assessment['in_domain'] and terminal_feedback_level is None:
-                    row.update(reason='out_of_oracle_domain', evaluation_status='not_evaluated')
-                else:
+                if point_task is not None:
                     instances.append((i, inst))
+                else:
+                    assessment = domain.assess(inst.graph) if domain else None
+                    row['oracle_in_domain'] = assessment['in_domain'] if assessment else True
+                    row['oracle_domain_similarity'] = assessment['similarity'] if assessment else None
+                    row['unseen_oracle_training_elements'] = assessment['unseen_training_elements'] if assessment else []
+                    if assessment and not assessment['in_domain'] and terminal_feedback_level is None:
+                        row.update(reason='out_of_oracle_domain', evaluation_status='not_evaluated')
+                    else:
+                        instances.append((i, inst))
             except ValueError as exc:
                 row['reason'] = str(exc)
             rollout_records.append(row)
+        timer.stop('chemical_admission_including_D2H')
+        timer.start('environment_scoring')
         if point_task is not None:
             from .point_task_feedback import evaluate_point_task
             evaluated = evaluate_point_task(instances, point_task, points, point_reward_type)
@@ -239,6 +261,8 @@ def align_octree(
                                               evaluation_status='completed')
                 except (ValueError, FloatingPointError) as exc:
                     rollout_records[i].update(reason=str(exc), evaluation_status='failed')
+        timer.stop('environment_scoring')
+        timer.start('advantages')
         for row, value in zip(rollout_records, rewards):
             row['reward'] = value
         reward = torch.tensor(rewards, device=device)
@@ -257,6 +281,7 @@ def align_octree(
         if components is not None:
             for record, eligibility_part, property_part in zip(rollout_records,components[0].tolist(),components[1].tolist()):
                 record.update(eligibility_advantage=eligibility_part,property_advantage=property_part)
+        timer.stop('advantages')
         # With no ranking signal or auxiliary objective, Adam's momentum and
         # weight decay must not silently move the policy on an all-failed group.
         updates = 2 if bool(adv.any()) or kl_beta or replay_weight else 0
@@ -264,8 +289,9 @@ def align_octree(
         before = [p.detach().clone() for p in parameters]
         gradient_norm = 0.0
         policy_kl = None
-        for _ in range(updates):
+        for update_index in range(updates):
             with torch.autocast(device_type=device.type, enabled=False):
+                timer.start('current_policy_forward_and_loss')
                 current = model.trajectory_distributions(trajectories, low, high, mask, electron_parity=electron_parity)
                 loss = categorical_policy_loss(current, old, ref, adv, beta=kl_beta)
                 if ref is not None:
@@ -275,7 +301,10 @@ def align_octree(
                             delta = torch.where(torch.isfinite(logp), logp - ref_logp, torch.zeros_like(logp))
                             kl_terms.append((logp.exp() * delta).sum(-1))
                         policy_kl = float(torch.cat(kl_terms).mean())
+                timer.stop('current_policy_forward_and_loss')
+                replay_term=None
                 if replay_weight:
+                    timer.start('replay_collation_and_forward')
                     indices = rng.integers(0, len(molecules), size=4)
                     packed = dataset.collate(indices)
                     y = torch.tensor((labels[indices] - mean) / scale, device=device)
@@ -287,19 +316,28 @@ def align_octree(
                         replay_mask = torch.ones_like(y, dtype=torch.bool)
                     replay, _ = model.compute_sft_and_understanding_loss(
                         packed, y, replay_lower, replay_upper, replay_mask, understanding_weight=0.0)
-                    loss = loss + replay_weight * replay
+                    replay_term = replay_weight * replay
+                    loss = loss + replay_term
+                    timer.stop('replay_collation_and_forward')
             if not torch.isfinite(loss):
                 raise FloatingPointError("Nonfinite octree policy loss")
+            if update_index==0 and step+1 in gradient_probe_groups:
+                from .alignment_diagnostics import categorical_kl_loss, gradient_probe
+                timer.start('gradient_diagnostics')
+                terms={'policy':categorical_policy_loss(current,old,None,adv,beta=0)}
+                if ref is not None:terms['kl']=kl_beta*categorical_kl_loss(current,ref,adv)
+                if replay_term is not None:terms['replay']=replay_term
+                probes.append(gradient_probe(terms,parameters))
+                timer.stop('gradient_diagnostics')
+            timer.start('backward_and_optimizer')
             optimizer.zero_grad()
             loss.backward()
             gradient_norm = float(torch.nn.utils.clip_grad_norm_(parameters, 1.0, error_if_nonfinite=True))
             optimizer.step()
+            timer.stop('backward_and_optimizer')
         row = {
             "step": step + 1,
             "valid": sum(row['valid'] for row in rollout_records),
-            "domain_eligible": sum(r.get("oracle_in_domain",False) for r in rollout_records),
-            "physical_accepted":sum(r.get("terminal",{}).get("physical_accepted",False) for r in rollout_records),
-            "domain_cutoff": domain.cutoff if domain else None,
             "electron_parity": electron_parity,
             "group_size": group_size,
             "property_hits": sum(hits),
@@ -320,10 +358,22 @@ def align_octree(
             "weights": {'kl': kl_beta, 'physics': physics_weight, 'uncertainty': uncertainty_weight, 'replay': replay_weight},
             "rollout_records": rollout_records,
         }
+        if point_task is None:
+            row.update(domain_eligible=sum(r.get('oracle_in_domain',False) for r in rollout_records),
+                       physical_accepted=sum(r.get('terminal',{}).get('physical_accepted',False) for r in rollout_records),
+                       domain_cutoff=domain.cutoff if domain else None)
+        else:
+            row['evaluation_task']='frozen_B_raw_coordinates'
+        if diagnostics_callback is not None:
+            if device.type=='cuda':torch.cuda.synchronize(device)
+            diagnostics_callback(dict(event='group',group=step+1,group_wall_seconds=time.perf_counter()-group_started,
+                profile_scope='Sequential wall sections with CUDA boundary synchronization; not GPU kernel-only time. Sampled groups only.',
+                profiled=timer.enabled,stage_seconds=timer.seconds,gradient_probes=probes))
         history.append(row)
         if checkpoint_callback is not None:
             training_state = {'settings':settings,'completed_groups':step+1,
                               'optimizer':optimizer.state_dict(),'numpy_rng':rng.bit_generator.state,
+                              'numpy_global_rng':np.random.get_state(),'python_rng':random.getstate(),
                               'torch_rng':torch.get_rng_state(),
                               'cuda_rng':torch.cuda.get_rng_state(device) if device.type=='cuda' else None}
             checkpoint_callback(step + 1, model, history, training_state)
