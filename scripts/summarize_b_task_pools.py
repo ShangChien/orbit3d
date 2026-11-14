@@ -26,6 +26,8 @@ def main():
             repeated_hit=s['hits']-s['unique_hit_graphs'],known_asset_unique_hit=s['unique_hit_graphs']-s['unique_all_asset_novel_hits'],
             unique_novel_hit=s['unique_all_asset_novel_hits'])
         assert sum(s['loss_partition'].values())==len(rows)
+        s['by_size']={name:summarize_task([r for r in rows if lo<=r['atoms']<=hi],target,goal,source,known)
+                      for name,lo,hi in [('empty',0,0),('1-20',1,20),('21-40',21,40),('41-80',41,80),('over80',81,100000)]}
         return s
     for (campaign,target,arm,control),pools in groups.items():
         if control!='correct':continue
