@@ -189,6 +189,13 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             sampling_probabilities=np.concatenate([np.full(source_count,(1-fraction)/source_count),np.full(count,fraction/count)])
             sampling_metadata={'scheme':'proportional_capped_replay','generated_fraction':fraction}
         initial_hash = hashlib.sha256(initial_path.read_bytes()).hexdigest()
+        preference = None
+        if settings.get('point_preference_method'):
+            from ..generator.point_preferences import PointPreferenceObjective
+            active_names = settings.get('active_targets', names)
+            if model.condition_version != 4 or len(active_names) != 1 or settings.get('condition_contrast_weight', 0):
+                raise ValueError('Point preference requires one point target and a separate comparison from legacy contrast')
+            preference = PointPreferenceObjective(model, settings['point_preference_method'], names.index(active_names[0]), scale)
         def save_adaptation(save_path):
             torch.save(
                 {
@@ -211,6 +218,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                     "label_source": label_source,
                     "active_targets": settings.get("active_targets", names),
                     "conditional_training": {k: settings.get(k) for k in ["preference_sigma_range_eV", "condition_contrast_weight", "contrast_pairing_sigma_eV"]},
+                    "point_preference": {k: settings.get(k) for k in ['point_preference_method', 'point_preference_weight']},
                     "hindsight_data_path": paths.get("hindsight_data_path"),
                     "sampling": sampling_metadata,
                     "fixed_predictor_contract": cfg.get('B_task_contract'),
@@ -286,6 +294,13 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                 loss = loss + float(settings['condition_contrast_weight']) * contrast
                 metrics.update(loss_contrast=float(contrast.detach()), contrast_eligible=int(eligible.sum()),
                                loss_total=float(loss.detach()))
+            if preference is not None:
+                atoms = torch.tensor([training[i].GetNumAtoms() for i in indices], device=device)
+                with torch.autocast(device_type=device.split(':')[0], dtype=torch.bfloat16,
+                                    enabled=device.startswith('cuda')):
+                    preference_loss, preference_metrics = preference(model, packed, target, lower, upper, mask, atoms)
+                loss = loss + float(settings.get('point_preference_weight', 1.)) * preference_loss
+                metrics.update(preference_metrics, loss_preference=float(preference_loss.detach()), loss_total=float(loss.detach()))
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"Octree SFT diverged at step {step + 1}")
             opt.zero_grad()
