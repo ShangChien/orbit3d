@@ -17,9 +17,9 @@ def main():
     report['critic_ranking']=read(r/'statistics/critic_ranking.json')
     report['critic_transfer_inputs']=read(r/'critic_transfer/input_manifest.json')
     report['training_inputs']={arm:read(r/f'training/{arm}/run/input_manifest.json') for arm in ['native_critic','calibrated_critic','continue_wall']}
-    report['whole_pool_reports']={};report['proposal_records']={};blocks=[];offset=0;global_index=0;data=bytearray()
+    report['whole_pool_reports']={};report['proposal_records']={};report['B_records']={};report['B_inputs']={};blocks=[];offset=0;global_index=0;data=bytearray()
     qkeys=['index','arm','quantile','target_eV','inference_seed','candidate_id','smiles','atoms','status','singlepoint','domain','ecp_core_electrons','input_sha256']
-    rawkeys=['target','quantile','candidate_id','group','inference_seed','goal_eV','atoms','initial_valid','physical_accepted','total_dpa_calls','smiles','domain','scope_supported','scope_exclusion','initial','optimization','final','error','initial_property_error','seconds','coordinates_key']
+    rawkeys=['target','quantile','candidate_id','group','inference_seed','goal_eV','atoms','initial_valid','physical_accepted','total_dpa_calls','smiles','domain','domain_error','scope_supported','scope_exclusion','initial','optimization','final','error','initial_property_error','seconds','coordinates_key']
     for arm in ['frozen','continue_wall','native_critic','calibrated_critic','shared_off']:
         cohort=r/f'cohort_{arm}';manifest=read(cohort/'manifest.json');raw=(cohort/'cohort.sdf').read_bytes();digest=hashlib.sha256(raw).hexdigest()
         assert digest==manifest['sdf_sha256']
@@ -33,6 +33,9 @@ def main():
             records.append({**{k:row[k] for k in qkeys if k in row},'combined_input_index':global_index+row['index']})
         assert len(records)==manifest['selected']
         report['whole_pool_reports'][arm]={**{k:v for k,v in quantum.items() if k not in ['records','source_sha256']},'records':records}
+        cross=read(r/f'independent/{arm}/summary.json')['runs'][0]
+        report['B_records'][arm]=[{k:row[k] for k in ['target','quantile','inference_seed','candidate_id','evaluated','prediction_eV','support_exclusion'] if k in row} for row in cross['records']]
+        report['B_inputs'][arm]=read(r/f'independent/{arm}/input_manifest.json')
         terminal=read(r/f'terminals/{arm}/summary.json')
         report['proposal_records'][arm]=[{k:row[k] for k in rawkeys if k in row} for row in terminal['records']]
         assert len(report['proposal_records'][arm])==manifest['proposal_denominators'][arm]
