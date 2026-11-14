@@ -168,6 +168,26 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
             opt, lambda step: 1.0 if settings.get("lr_schedule") == "constant" else 0.1 + 0.9 * 0.5 * (1 + np.cos(np.pi * step / steps))
         )
         rng = np.random.default_rng(int(cfg.get("seed", 42)))
+        sampling_probabilities=None
+        sampling_metadata={'scheme':'uniform'}
+        if settings.get('sampling_scheme','uniform')=='equal_width_capped':
+            from ..generator.property_sampling import property_sampling_probabilities
+            target=settings['sampling_property']
+            sampling_values=[float(m.GetProp(target)) for m in training]
+            sampling_probabilities,sampling_metadata=property_sampling_probabilities(
+                sampling_values,bins=int(settings.get('sampling_bins',20)),max_exposure=float(settings.get('sampling_max_exposure',5.)),
+                source_count=source_count if paths.get('hindsight_data_path') else None,
+                max_generated_fraction=float(settings.get('hindsight_max_fraction',.25)))
+            sampling_metadata['property_field']=target
+        elif settings.get('sampling_scheme','uniform')!='uniform':
+            raise ValueError('Unknown property sampling scheme')
+        elif paths.get('hindsight_data_path'):
+            # Proportional replay, capped at 25%; the old fixed half-batch
+            # exposed a small recovered pool far more often than source data.
+            count=len(training)-source_count
+            fraction=min(float(settings.get('hindsight_max_fraction',.25)),count/len(training))
+            sampling_probabilities=np.concatenate([np.full(source_count,(1-fraction)/source_count),np.full(count,fraction/count)])
+            sampling_metadata={'scheme':'proportional_capped_replay','generated_fraction':fraction}
         initial_hash = hashlib.sha256(initial_path.read_bytes()).hexdigest()
         def save_adaptation(save_path):
             torch.save(
@@ -192,6 +212,7 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
                     "active_targets": settings.get("active_targets", names),
                     "conditional_training": {k: settings.get(k) for k in ["preference_sigma_range_eV", "condition_contrast_weight", "contrast_pairing_sigma_eV"]},
                     "hindsight_data_path": paths.get("hindsight_data_path"),
+                    "sampling": sampling_metadata,
                     "label_theory": sorted({m.GetProp("LabelTheory") for m in training if m.HasProp("LabelTheory")}),
                     "train_backbone": train_backbone,
                     "element_loss_weighting": weighting_metadata,
@@ -207,10 +228,8 @@ def run_octree_from_config(cfg, config_path=None, *, prepared_evaluators=None, p
         for step in range(steps):
             model.train()
             dataset.grid.set_epoch(step + 1)
-            indices = rng.integers(0, len(training), size=batch)
-            if paths.get('hindsight_data_path'):
-                indices[:batch//2] = rng.integers(0, source_count, size=batch//2)
-                indices[batch//2:] = rng.integers(source_count, len(training), size=batch-batch//2)
+            indices = (rng.integers(0,len(training),size=batch) if sampling_probabilities is None
+                       else rng.choice(len(training),size=batch,p=sampling_probabilities))
             packed = dataset.collate(indices)
             target = torch.tensor(yn[indices], device=device)
             if model.condition_version >= 4:
