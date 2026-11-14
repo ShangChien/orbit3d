@@ -1,0 +1,3435 @@
+{
+  "status": "Complete E21; margin counterpart E22 running. Both use frozen B, not independent DFT truth.",
+  "protocol": {
+    "source_commit": "6daf461",
+    "target": "homo",
+    "seed": 42,
+    "budgets": [
+      0,
+      64,
+      128,
+      256,
+      512,
+      1024
+    ],
+    "groups": 1024,
+    "group_size": 32,
+    "updates_per_group": 2,
+    "lr": 2e-05,
+    "kl": 0.02,
+    "replay": 0.1,
+    "train_backbone": false,
+    "point_advantage_mode": "conditional_property_v1",
+    "dev_seeds": [
+      24401,
+      24402
+    ],
+    "validation_seeds": [
+      24411,
+      24412
+    ],
+    "quantiles": [
+      10,
+      25,
+      35,
+      50,
+      65,
+      75,
+      90
+    ],
+    "attempts_per_cell": 128,
+    "tolerance_eV": 0.25,
+    "selection": "Descending all-asset-novel unique hits/128, raw hits, then lower MAE, then earlier group.",
+    "training_gpu": 0,
+    "quality_gpus": [
+      2,
+      3
+    ],
+    "quality_shares_NAMD": true,
+    "no_early_stopping": true,
+    "new_DFT": false,
+    "inputs": {
+      "/sjtu-combustion/wjw/chensq/orbit_b_task_20261114/training/oa_source/weights/octree_conditional.pt": "96be0726e000da199f932a1bd7094443907fd9eb663625fcc960744e1e3d9c20",
+      "/sjtu-combustion/wjw/chensq/orbit_b_task_20261114/source_labels/train_source.sdf": "51373c41f886e7842fc89c1a0ecb54704baa73ae3b6d14ea7e6821067146c24b",
+      "/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/data_full/train.sdf": "ddcad4fb5d962a9d15a4936f97e821e325f0b9a159e4bb88f3e7db409aab01fa",
+      "/sjtu-combustion/wjw/chensq/orbit_b_task_20261114/targets_B.json": "b34437824e589acc16ceedec0040e2a4c7e6150cc4c9f726074c95b06c868cb3",
+      "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/selection_unimol2/selection.json": "c1b86367234965a902e9283f25667e0de9f00992febf74ffa5cc7ab661b4dc2e",
+      "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/training/unimol2_11b/oracle/model.pt": "108b50b8d9910144cd840446b86b2f95500bec5c27cf8a08de20b5cc2701d385",
+      "/sjtu-combustion/wjw/chensq/orbit_dual_oracle_5fe5/training/unimol2_11b/oracle/oracle_meta.json": "d8c48e7a07dad6becd5c4da5ef291ebc8f7c2b54a96ef01dcecfbc992d80f24e",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/run_curve.py": "2d00bb4178e8e5ab4ed0a984efbdb570b21406d03718057452a74f47e23d477f"
+    }
+  },
+  "development": {
+    "scope": "Frozen B defines reward and acceptance, not independent quantum truth. GPU2/3 evaluation shares NAMD; evaluation time excluded from performance. Novelty uses source graphs and each checkpoint cumulative training assets.",
+    "phase": "development",
+    "metrics": {
+      "0": {
+        "attempted": 1792,
+        "legal": 1240,
+        "evaluated": 1236,
+        "hits": 398,
+        "hit_yield": 0.22209821428571427,
+        "mae_equal_pool_eV": 0.48131850477505317,
+        "unique_source_novel_hits_per128": 28.285714285714285,
+        "unique_all_asset_novel_hits_per128": 28.285714285714285,
+        "response_slope": 0.45726206522836144,
+        "std_equal_pool_eV": 0.5250053998343279,
+        "mean_legal_atoms": 31.65806451612903,
+        "unique_legal_graphs": 1215,
+        "unique_legal_scaffolds": 1060,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24401,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 92,
+              "evaluated": 92,
+              "unsupported": 0,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.22826086956521738,
+              "mae_eV": 0.5550354773653723,
+              "bias_eV": 0.337720517512315,
+              "prediction_mean_eV": -7.108177799617728,
+              "prediction_std_eV": 0.5900301454959425,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 21,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24402,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 85,
+              "evaluated": 85,
+              "unsupported": 0,
+              "hits": 24,
+              "hit_yield": 0.1875,
+              "conditional_hit_rate": 0.2823529411764706,
+              "mae_eV": 0.5660565991072615,
+              "bias_eV": 0.28463522945751074,
+              "prediction_mean_eV": -7.161263087672532,
+              "prediction_std_eV": 0.6220551454606296,
+              "unique_hit_graphs": 24,
+              "unique_source_novel_hits": 24,
+              "unique_all_asset_novel_hits": 24,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 24,
+                "0.5": 43
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24401,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 95,
+              "evaluated": 95,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.28421052631578947,
+              "mae_eV": 0.5065912896150814,
+              "bias_eV": 0.1506568722664086,
+              "prediction_mean_eV": -6.894170783503754,
+              "prediction_std_eV": 0.5950249732591816,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 27,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 27,
+                "0.5": 47
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24402,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.3655913978494624,
+              "mae_eV": 0.47274448739063357,
+              "bias_eV": 0.21865923631068093,
+              "prediction_mean_eV": -6.826168419459482,
+              "prediction_std_eV": 0.550692893781282,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 34,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24401,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 37,
+              "hit_yield": 0.2890625,
+              "conditional_hit_rate": 0.4065934065934066,
+              "mae_eV": 0.3748287277556981,
+              "bias_eV": 0.1247551768553547,
+              "prediction_mean_eV": -6.73330415748908,
+              "prediction_std_eV": 0.4733534562270731,
+              "unique_hit_graphs": 37,
+              "unique_source_novel_hits": 37,
+              "unique_all_asset_novel_hits": 37,
+              "hit_tolerances": {
+                "0.1": 19,
+                "0.25": 37,
+                "0.5": 68
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24402,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.313953488372093,
+              "mae_eV": 0.4401012889442183,
+              "bias_eV": 0.193012778535574,
+              "prediction_mean_eV": -6.6650465558088605,
+              "prediction_std_eV": 0.5063694975247647,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 27,
+              "hit_tolerances": {
+                "0.1": 15,
+                "0.25": 27,
+                "0.5": 56
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24401,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 81,
+              "evaluated": 81,
+              "unsupported": 0,
+              "hits": 29,
+              "hit_yield": 0.2265625,
+              "conditional_hit_rate": 0.35802469135802467,
+              "mae_eV": 0.457670404735662,
+              "bias_eV": -0.15047983803814047,
+              "prediction_mean_eV": -6.731209150868565,
+              "prediction_std_eV": 0.5438081165094807,
+              "unique_hit_graphs": 29,
+              "unique_source_novel_hits": 29,
+              "unique_all_asset_novel_hits": 29,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 29,
+                "0.5": 46
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24402,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 89,
+              "unsupported": 1,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.3707865168539326,
+              "mae_eV": 0.46063982611988946,
+              "bias_eV": -0.10990723121771637,
+              "prediction_mean_eV": -6.690636544048141,
+              "prediction_std_eV": 0.5714200871897417,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 33,
+                "0.5": 53
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24401,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 85,
+              "unsupported": 1,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.24705882352941178,
+              "mae_eV": 0.49487010145521526,
+              "bias_eV": -0.2536433752442049,
+              "prediction_mean_eV": -6.585943487002575,
+              "prediction_std_eV": 0.5653617005789049,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 21,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24402,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 82,
+              "evaluated": 82,
+              "unsupported": 0,
+              "hits": 32,
+              "hit_yield": 0.25,
+              "conditional_hit_rate": 0.3902439024390244,
+              "mae_eV": 0.4207777711142742,
+              "bias_eV": -0.24634707813898568,
+              "prediction_mean_eV": -6.578647189897356,
+              "prediction_std_eV": 0.4817850382303511,
+              "unique_hit_graphs": 32,
+              "unique_source_novel_hits": 32,
+              "unique_all_asset_novel_hits": 32,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 32,
+                "0.5": 60
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24401,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 98,
+              "evaluated": 98,
+              "unsupported": 0,
+              "hits": 40,
+              "hit_yield": 0.3125,
+              "conditional_hit_rate": 0.40816326530612246,
+              "mae_eV": 0.4459962079855903,
+              "bias_eV": -0.30069440338171505,
+              "prediction_mean_eV": -6.47113880747593,
+              "prediction_std_eV": 0.4858594753714072,
+              "unique_hit_graphs": 40,
+              "unique_source_novel_hits": 39,
+              "unique_all_asset_novel_hits": 39,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 40,
+                "0.5": 64
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24402,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 84,
+              "evaluated": 84,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.27380952380952384,
+              "mae_eV": 0.4931895451511181,
+              "bias_eV": -0.38881923252626116,
+              "prediction_mean_eV": -6.559263636620477,
+              "prediction_std_eV": 0.46590509685631765,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 23,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24401,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 87,
+              "unsupported": 1,
+              "hits": 29,
+              "hit_yield": 0.2265625,
+              "conditional_hit_rate": 0.3333333333333333,
+              "mae_eV": 0.5035761831807785,
+              "bias_eV": -0.4685736386225346,
+              "prediction_mean_eV": -6.314626512703572,
+              "prediction_std_eV": 0.45742265084046096,
+              "unique_hit_graphs": 29,
+              "unique_source_novel_hits": 29,
+              "unique_all_asset_novel_hits": 29,
+              "hit_tolerances": {
+                "0.1": 15,
+                "0.25": 29,
+                "0.5": 50
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24402,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 89,
+              "evaluated": 88,
+              "unsupported": 1,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.23863636363636365,
+              "mae_eV": 0.5463811569299506,
+              "bias_eV": -0.5103082037038331,
+              "prediction_mean_eV": -6.35636107778487,
+              "prediction_std_eV": 0.4409873203550527,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 6,
+                "0.25": 21,
+                "0.5": 45
+              }
+            }
+          }
+        ]
+      },
+      "1024": {
+        "attempted": 1792,
+        "legal": 1324,
+        "evaluated": 1323,
+        "hits": 428,
+        "hit_yield": 0.23883928571428573,
+        "mae_equal_pool_eV": 0.476134207039927,
+        "unique_source_novel_hits_per128": 30.5,
+        "unique_all_asset_novel_hits_per128": 30.285714285714285,
+        "response_slope": 0.6030441014598094,
+        "std_equal_pool_eV": 0.54769681267025,
+        "mean_legal_atoms": 30.979607250755286,
+        "unique_legal_graphs": 1310,
+        "unique_legal_scaffolds": 1121,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24401,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.3125,
+              "mae_eV": 0.5981436918555503,
+              "bias_eV": 0.12301346578049084,
+              "prediction_mean_eV": -7.322884851349552,
+              "prediction_std_eV": 0.7845447579684953,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 30,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24402,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2777777777777778,
+              "mae_eV": 0.5491718931545163,
+              "bias_eV": 0.17357519040364283,
+              "prediction_mean_eV": -7.2723231267264,
+              "prediction_std_eV": 0.654805622563484,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 25,
+                "0.5": 47
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24401,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 103,
+              "evaluated": 103,
+              "unsupported": 0,
+              "hits": 36,
+              "hit_yield": 0.28125,
+              "conditional_hit_rate": 0.34951456310679613,
+              "mae_eV": 0.4417812810955701,
+              "bias_eV": 0.07650177791109822,
+              "prediction_mean_eV": -6.968325877859065,
+              "prediction_std_eV": 0.5602359159003836,
+              "unique_hit_graphs": 36,
+              "unique_source_novel_hits": 36,
+              "unique_all_asset_novel_hits": 35,
+              "hit_tolerances": {
+                "0.1": 17,
+                "0.25": 36,
+                "0.5": 62
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24402,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 103,
+              "evaluated": 103,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.3300970873786408,
+              "mae_eV": 0.5076612484192642,
+              "bias_eV": 0.19581058951711608,
+              "prediction_mean_eV": -6.849017066253047,
+              "prediction_std_eV": 0.5934323088804101,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 34,
+                "0.5": 56
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24401,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 101,
+              "evaluated": 101,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.26732673267326734,
+              "mae_eV": 0.4810102018106719,
+              "bias_eV": 0.0643393851326811,
+              "prediction_mean_eV": -6.793719949211754,
+              "prediction_std_eV": 0.5744923725393297,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 26,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 27,
+                "0.5": 59
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24402,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.22916666666666666,
+              "mae_eV": 0.4947172340338173,
+              "bias_eV": 0.14714100201249794,
+              "prediction_mean_eV": -6.710918332331937,
+              "prediction_std_eV": 0.576339039744703,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 22,
+                "0.5": 52
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24401,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 95,
+              "evaluated": 95,
+              "unsupported": 0,
+              "hits": 35,
+              "hit_yield": 0.2734375,
+              "conditional_hit_rate": 0.3684210526315789,
+              "mae_eV": 0.4059720929782999,
+              "bias_eV": -0.04119715110159515,
+              "prediction_mean_eV": -6.621926463932019,
+              "prediction_std_eV": 0.5031731842734923,
+              "unique_hit_graphs": 35,
+              "unique_source_novel_hits": 35,
+              "unique_all_asset_novel_hits": 35,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 35,
+                "0.5": 65
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24402,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 92,
+              "evaluated": 91,
+              "unsupported": 1,
+              "hits": 32,
+              "hit_yield": 0.25,
+              "conditional_hit_rate": 0.3516483516483517,
+              "mae_eV": 0.47787758924629037,
+              "bias_eV": -0.1910739584173032,
+              "prediction_mean_eV": -6.771803271247728,
+              "prediction_std_eV": 0.5962935384310087,
+              "unique_hit_graphs": 32,
+              "unique_source_novel_hits": 32,
+              "unique_all_asset_novel_hits": 32,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 32,
+                "0.5": 60
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24401,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 38,
+              "hit_yield": 0.296875,
+              "conditional_hit_rate": 0.40860215053763443,
+              "mae_eV": 0.4017180990283217,
+              "bias_eV": -0.16230003854088185,
+              "prediction_mean_eV": -6.494600150299251,
+              "prediction_std_eV": 0.47353518494558033,
+              "unique_hit_graphs": 38,
+              "unique_source_novel_hits": 38,
+              "unique_all_asset_novel_hits": 38,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 38,
+                "0.5": 64
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24402,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.32558139534883723,
+              "mae_eV": 0.46584950850046875,
+              "bias_eV": -0.18224364628321857,
+              "prediction_mean_eV": -6.514543758041588,
+              "prediction_std_eV": 0.5902738792852732,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 27,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 28,
+                "0.5": 58
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24401,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 100,
+              "evaluated": 100,
+              "unsupported": 0,
+              "hits": 38,
+              "hit_yield": 0.296875,
+              "conditional_hit_rate": 0.38,
+              "mae_eV": 0.43865369006309607,
+              "bias_eV": -0.23425243522710212,
+              "prediction_mean_eV": -6.404696839321318,
+              "prediction_std_eV": 0.5008564465489955,
+              "unique_hit_graphs": 38,
+              "unique_source_novel_hits": 38,
+              "unique_all_asset_novel_hits": 38,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 38,
+                "0.5": 63
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24402,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 88,
+              "unsupported": 0,
+              "hits": 41,
+              "hit_yield": 0.3203125,
+              "conditional_hit_rate": 0.4659090909090909,
+              "mae_eV": 0.3511403889667679,
+              "bias_eV": -0.17551642679716872,
+              "prediction_mean_eV": -6.345960830891384,
+              "prediction_std_eV": 0.41897970360952375,
+              "unique_hit_graphs": 41,
+              "unique_source_novel_hits": 41,
+              "unique_all_asset_novel_hits": 41,
+              "hit_tolerances": {
+                "0.1": 15,
+                "0.25": 41,
+                "0.5": 65
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24401,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 19,
+              "hit_yield": 0.1484375,
+              "conditional_hit_rate": 0.2087912087912088,
+              "mae_eV": 0.5381563864234957,
+              "bias_eV": -0.5133068440144897,
+              "prediction_mean_eV": -6.359359718095527,
+              "prediction_std_eV": 0.40750618626861734,
+              "unique_hit_graphs": 19,
+              "unique_source_novel_hits": 19,
+              "unique_all_asset_novel_hits": 19,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 19,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24402,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.25555555555555554,
+              "mae_eV": 0.5140255929828474,
+              "bias_eV": -0.44167342605224674,
+              "prediction_mean_eV": -6.287726300133284,
+              "prediction_std_eV": 0.43328723642420364,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 23,
+                "0.5": 47
+              }
+            }
+          }
+        ]
+      },
+      "128": {
+        "attempted": 1792,
+        "legal": 1228,
+        "evaluated": 1227,
+        "hits": 391,
+        "hit_yield": 0.21819196428571427,
+        "mae_equal_pool_eV": 0.49436576038403995,
+        "unique_source_novel_hits_per128": 27.857142857142858,
+        "unique_all_asset_novel_hits_per128": 27.857142857142858,
+        "response_slope": 0.4576512519898145,
+        "std_equal_pool_eV": 0.542002062352268,
+        "mean_legal_atoms": 31.280944625407166,
+        "unique_legal_graphs": 1211,
+        "unique_legal_scaffolds": 1063,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24401,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 100,
+              "evaluated": 100,
+              "unsupported": 0,
+              "hits": 31,
+              "hit_yield": 0.2421875,
+              "conditional_hit_rate": 0.31,
+              "mae_eV": 0.5673695021772471,
+              "bias_eV": 0.34922885346718163,
+              "prediction_mean_eV": -7.096669463662861,
+              "prediction_std_eV": 0.6213065359539893,
+              "unique_hit_graphs": 31,
+              "unique_source_novel_hits": 31,
+              "unique_all_asset_novel_hits": 31,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 31,
+                "0.5": 49
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24402,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 100,
+              "evaluated": 99,
+              "unsupported": 1,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.23232323232323232,
+              "mae_eV": 0.6493772807421114,
+              "bias_eV": 0.405101189592942,
+              "prediction_mean_eV": -7.0407971275371,
+              "prediction_std_eV": 0.6561665549307263,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 23,
+                "0.5": 37
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24401,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 84,
+              "evaluated": 84,
+              "unsupported": 0,
+              "hits": 26,
+              "hit_yield": 0.203125,
+              "conditional_hit_rate": 0.30952380952380953,
+              "mae_eV": 0.5055278165314177,
+              "bias_eV": 0.08829759682627099,
+              "prediction_mean_eV": -6.956530058943892,
+              "prediction_std_eV": 0.6079455385602822,
+              "unique_hit_graphs": 26,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 26,
+                "0.5": 44
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24402,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 80,
+              "evaluated": 80,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.375,
+              "mae_eV": 0.4597984635197941,
+              "bias_eV": 0.1319927964730882,
+              "prediction_mean_eV": -6.912834859297075,
+              "prediction_std_eV": 0.5771791503804343,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 30,
+                "0.5": 49
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24401,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 82,
+              "evaluated": 82,
+              "unsupported": 0,
+              "hits": 24,
+              "hit_yield": 0.1875,
+              "conditional_hit_rate": 0.2926829268292683,
+              "mae_eV": 0.5113485733817316,
+              "bias_eV": 0.005863938470825637,
+              "prediction_mean_eV": -6.8521953958736095,
+              "prediction_std_eV": 0.6377037238806146,
+              "unique_hit_graphs": 24,
+              "unique_source_novel_hits": 24,
+              "unique_all_asset_novel_hits": 24,
+              "hit_tolerances": {
+                "0.1": 6,
+                "0.25": 24,
+                "0.5": 50
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24402,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 80,
+              "evaluated": 80,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.2875,
+              "mae_eV": 0.4724370812437826,
+              "bias_eV": 0.042776851534924096,
+              "prediction_mean_eV": -6.81528248280951,
+              "prediction_std_eV": 0.5758371101648823,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 23,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24401,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 81,
+              "evaluated": 81,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.345679012345679,
+              "mae_eV": 0.4223288834670518,
+              "bias_eV": 0.021793547444345234,
+              "prediction_mean_eV": -6.558935765386079,
+              "prediction_std_eV": 0.5066017967998062,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 28,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24402,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 98,
+              "evaluated": 98,
+              "unsupported": 0,
+              "hits": 35,
+              "hit_yield": 0.2734375,
+              "conditional_hit_rate": 0.35714285714285715,
+              "mae_eV": 0.40734001381978646,
+              "bias_eV": -0.013703465203418329,
+              "prediction_mean_eV": -6.594432778033843,
+              "prediction_std_eV": 0.5061411741393571,
+              "unique_hit_graphs": 35,
+              "unique_source_novel_hits": 35,
+              "unique_all_asset_novel_hits": 35,
+              "hit_tolerances": {
+                "0.1": 17,
+                "0.25": 35,
+                "0.5": 68
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24401,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.3655913978494624,
+              "mae_eV": 0.47570529479908347,
+              "bias_eV": -0.2497697811274939,
+              "prediction_mean_eV": -6.582069892885864,
+              "prediction_std_eV": 0.5533943962417747,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 17,
+                "0.25": 34,
+                "0.5": 55
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24402,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 32,
+              "hit_yield": 0.25,
+              "conditional_hit_rate": 0.37209302325581395,
+              "mae_eV": 0.420508599973962,
+              "bias_eV": -0.1568695624907845,
+              "prediction_mean_eV": -6.489169674249154,
+              "prediction_std_eV": 0.5057629169547312,
+              "unique_hit_graphs": 32,
+              "unique_source_novel_hits": 32,
+              "unique_all_asset_novel_hits": 32,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 32,
+                "0.5": 56
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24401,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 92,
+              "evaluated": 92,
+              "unsupported": 0,
+              "hits": 31,
+              "hit_yield": 0.2421875,
+              "conditional_hit_rate": 0.33695652173913043,
+              "mae_eV": 0.45791269663178263,
+              "bias_eV": -0.3234150575993295,
+              "prediction_mean_eV": -6.493859461693545,
+              "prediction_std_eV": 0.5071127688161666,
+              "unique_hit_graphs": 31,
+              "unique_source_novel_hits": 31,
+              "unique_all_asset_novel_hits": 31,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 31,
+                "0.5": 60
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24402,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 36,
+              "hit_yield": 0.28125,
+              "conditional_hit_rate": 0.4186046511627907,
+              "mae_eV": 0.39800004743630746,
+              "bias_eV": -0.239699306362548,
+              "prediction_mean_eV": -6.410143710456763,
+              "prediction_std_eV": 0.4296971675296042,
+              "unique_hit_graphs": 36,
+              "unique_source_novel_hits": 36,
+              "unique_all_asset_novel_hits": 36,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 36,
+                "0.5": 58
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24401,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 84,
+              "evaluated": 84,
+              "unsupported": 0,
+              "hits": 18,
+              "hit_yield": 0.140625,
+              "conditional_hit_rate": 0.21428571428571427,
+              "mae_eV": 0.6285670093631326,
+              "bias_eV": -0.6115196706819835,
+              "prediction_mean_eV": -6.45757254476302,
+              "prediction_std_eV": 0.4286678411656007,
+              "unique_hit_graphs": 18,
+              "unique_source_novel_hits": 18,
+              "unique_all_asset_novel_hits": 18,
+              "hit_tolerances": {
+                "0.1": 2,
+                "0.25": 18,
+                "0.5": 37
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24402,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 82,
+              "evaluated": 82,
+              "unsupported": 0,
+              "hits": 20,
+              "hit_yield": 0.15625,
+              "conditional_hit_rate": 0.24390243902439024,
+              "mae_eV": 0.5448993822893688,
+              "bias_eV": -0.5103699122507093,
+              "prediction_mean_eV": -6.356422786331747,
+              "prediction_std_eV": 0.47451219741378076,
+              "unique_hit_graphs": 20,
+              "unique_source_novel_hits": 20,
+              "unique_all_asset_novel_hits": 20,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 20,
+                "0.5": 42
+              }
+            }
+          }
+        ]
+      },
+      "256": {
+        "attempted": 1792,
+        "legal": 1279,
+        "evaluated": 1278,
+        "hits": 402,
+        "hit_yield": 0.22433035714285715,
+        "mae_equal_pool_eV": 0.46776064109606535,
+        "unique_source_novel_hits_per128": 28.642857142857142,
+        "unique_all_asset_novel_hits_per128": 28.642857142857142,
+        "response_slope": 0.4949075181695717,
+        "std_equal_pool_eV": 0.5130522504172729,
+        "mean_legal_atoms": 31.25879593432369,
+        "unique_legal_graphs": 1264,
+        "unique_legal_scaffolds": 1126,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24401,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.24444444444444444,
+              "mae_eV": 0.47037890038734836,
+              "bias_eV": 0.257615258451411,
+              "prediction_mean_eV": -7.188283058678632,
+              "prediction_std_eV": 0.49092804268671886,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 22,
+                "0.5": 52
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24402,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 24,
+              "hit_yield": 0.1875,
+              "conditional_hit_rate": 0.25,
+              "mae_eV": 0.5309476621351212,
+              "bias_eV": 0.2538498850577109,
+              "prediction_mean_eV": -7.1920484320723315,
+              "prediction_std_eV": 0.5881443451311986,
+              "unique_hit_graphs": 24,
+              "unique_source_novel_hits": 24,
+              "unique_all_asset_novel_hits": 24,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 24,
+                "0.5": 53
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24401,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 100,
+              "evaluated": 100,
+              "unsupported": 0,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.33,
+              "mae_eV": 0.4737775692198683,
+              "bias_eV": 0.0907843788499119,
+              "prediction_mean_eV": -6.954043276920252,
+              "prediction_std_eV": 0.5931976208672921,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 16,
+                "0.25": 33,
+                "0.5": 65
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24402,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2604166666666667,
+              "mae_eV": 0.48847120289974866,
+              "bias_eV": 0.15232119123885032,
+              "prediction_mean_eV": -6.892506464531313,
+              "prediction_std_eV": 0.59229447334068,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 24,
+              "unique_all_asset_novel_hits": 24,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 25,
+                "0.5": 59
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24401,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.32967032967032966,
+              "mae_eV": 0.4435438940508301,
+              "bias_eV": 0.030718871200511626,
+              "prediction_mean_eV": -6.827340463143923,
+              "prediction_std_eV": 0.5571879640902963,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 16,
+                "0.25": 30,
+                "0.5": 58
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24402,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.3333333333333333,
+              "mae_eV": 0.4744176448355871,
+              "bias_eV": 0.16461402340051545,
+              "prediction_mean_eV": -6.693445310943919,
+              "prediction_std_eV": 0.5620343583039651,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 30,
+                "0.5": 54
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24401,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.3448275862068966,
+              "mae_eV": 0.38438505087282665,
+              "bias_eV": -0.07749113305313306,
+              "prediction_mean_eV": -6.658220445883558,
+              "prediction_std_eV": 0.481705732587915,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 17,
+                "0.25": 30,
+                "0.5": 61
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24402,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 40,
+              "hit_yield": 0.3125,
+              "conditional_hit_rate": 0.4166666666666667,
+              "mae_eV": 0.385790757917051,
+              "bias_eV": -0.050344769580397415,
+              "prediction_mean_eV": -6.631074082410822,
+              "prediction_std_eV": 0.5148805401098879,
+              "unique_hit_graphs": 40,
+              "unique_source_novel_hits": 40,
+              "unique_all_asset_novel_hits": 40,
+              "hit_tolerances": {
+                "0.1": 20,
+                "0.25": 40,
+                "0.5": 66
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24401,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 36,
+              "hit_yield": 0.28125,
+              "conditional_hit_rate": 0.4186046511627907,
+              "mae_eV": 0.4266026673883806,
+              "bias_eV": -0.1333096957235999,
+              "prediction_mean_eV": -6.46560980748197,
+              "prediction_std_eV": 0.5338857457509066,
+              "unique_hit_graphs": 36,
+              "unique_source_novel_hits": 36,
+              "unique_all_asset_novel_hits": 36,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 36,
+                "0.5": 63
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24402,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.39080459770114945,
+              "mae_eV": 0.3645834282888947,
+              "bias_eV": -0.13901140698914496,
+              "prediction_mean_eV": -6.471311518747514,
+              "prediction_std_eV": 0.45004380428535545,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 20,
+                "0.25": 34,
+                "0.5": 67
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24401,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.3076923076923077,
+              "mae_eV": 0.47575265791346943,
+              "bias_eV": -0.3317096517786429,
+              "prediction_mean_eV": -6.502154055872858,
+              "prediction_std_eV": 0.5199682135611429,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 5,
+                "0.25": 28,
+                "0.5": 58
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24402,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 84,
+              "evaluated": 84,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2976190476190476,
+              "mae_eV": 0.49286355204756455,
+              "bias_eV": -0.4324221753211395,
+              "prediction_mean_eV": -6.602866579415355,
+              "prediction_std_eV": 0.4141475745261094,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 25,
+                "0.5": 45
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24401,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 94,
+              "evaluated": 93,
+              "unsupported": 1,
+              "hits": 17,
+              "hit_yield": 0.1328125,
+              "conditional_hit_rate": 0.1827956989247312,
+              "mae_eV": 0.6252730806767347,
+              "bias_eV": -0.6040276167535403,
+              "prediction_mean_eV": -6.450080490834577,
+              "prediction_std_eV": 0.44782341620751726,
+              "unique_hit_graphs": 17,
+              "unique_source_novel_hits": 17,
+              "unique_all_asset_novel_hits": 17,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 17,
+                "0.5": 41
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24402,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.3076923076923077,
+              "mae_eV": 0.5118609067114894,
+              "bias_eV": -0.4746107832220055,
+              "prediction_mean_eV": -6.320663657303043,
+              "prediction_std_eV": 0.43648967439283565,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 28,
+                "0.5": 51
+              }
+            }
+          }
+        ]
+      },
+      "512": {
+        "attempted": 1792,
+        "legal": 1250,
+        "evaluated": 1249,
+        "hits": 414,
+        "hit_yield": 0.23102678571428573,
+        "mae_equal_pool_eV": 0.4812804573254387,
+        "unique_source_novel_hits_per128": 29.571428571428573,
+        "unique_all_asset_novel_hits_per128": 29.571428571428573,
+        "response_slope": 0.5962103279105965,
+        "std_equal_pool_eV": 0.5541444734953561,
+        "mean_legal_atoms": 31.0096,
+        "unique_legal_graphs": 1236,
+        "unique_legal_scaffolds": 1064,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24401,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 36,
+              "hit_yield": 0.28125,
+              "conditional_hit_rate": 0.3870967741935484,
+              "mae_eV": 0.5102895098572543,
+              "bias_eV": 0.14620750843396985,
+              "prediction_mean_eV": -7.299690808696073,
+              "prediction_std_eV": 0.6402766412056559,
+              "unique_hit_graphs": 36,
+              "unique_source_novel_hits": 36,
+              "unique_all_asset_novel_hits": 36,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 36,
+                "0.5": 54
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24402,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.25287356321839083,
+              "mae_eV": 0.5985717694380507,
+              "bias_eV": 0.2579816861018691,
+              "prediction_mean_eV": -7.187916631028173,
+              "prediction_std_eV": 0.672611321317903,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 22,
+                "0.5": 38
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24401,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 80,
+              "evaluated": 80,
+              "unsupported": 0,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.2625,
+              "mae_eV": 0.5050560963139704,
+              "bias_eV": 0.09834764591276471,
+              "prediction_mean_eV": -6.946480009857399,
+              "prediction_std_eV": 0.6132433374407075,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 21,
+                "0.5": 46
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24402,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 94,
+              "evaluated": 94,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.24468085106382978,
+              "mae_eV": 0.5974863138901401,
+              "bias_eV": 0.14247932078825393,
+              "prediction_mean_eV": -6.90234833498191,
+              "prediction_std_eV": 0.7098721869395831,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 23,
+                "0.5": 46
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24401,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 89,
+              "evaluated": 89,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.30337078651685395,
+              "mae_eV": 0.5187711836426476,
+              "bias_eV": 0.06474103734330372,
+              "prediction_mean_eV": -6.7933182970011305,
+              "prediction_std_eV": 0.6596171708135459,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 27,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 27,
+                "0.5": 47
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24402,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.37362637362637363,
+              "mae_eV": 0.44113602826169024,
+              "bias_eV": 0.08029285282285636,
+              "prediction_mean_eV": -6.777766481521578,
+              "prediction_std_eV": 0.5594983155307476,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 34,
+                "0.5": 59
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24401,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.313953488372093,
+              "mae_eV": 0.48654802448951845,
+              "bias_eV": -0.025730138603104316,
+              "prediction_mean_eV": -6.606459451433529,
+              "prediction_std_eV": 0.6012101898627696,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 27,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 27,
+                "0.5": 50
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24402,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 89,
+              "evaluated": 89,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.33707865168539325,
+              "mae_eV": 0.44386611003961923,
+              "bias_eV": -0.06379067465349775,
+              "prediction_mean_eV": -6.644519987483922,
+              "prediction_std_eV": 0.5533902786781262,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 30,
+                "0.5": 57
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24401,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.3225806451612903,
+              "mae_eV": 0.4095349004179076,
+              "bias_eV": -0.1120790479905118,
+              "prediction_mean_eV": -6.444379159748881,
+              "prediction_std_eV": 0.48282864852992907,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 30,
+                "0.5": 65
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24402,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 94,
+              "evaluated": 93,
+              "unsupported": 1,
+              "hits": 30,
+              "hit_yield": 0.234375,
+              "conditional_hit_rate": 0.3225806451612903,
+              "mae_eV": 0.4297853058222781,
+              "bias_eV": -0.18471067817803521,
+              "prediction_mean_eV": -6.517010789936405,
+              "prediction_std_eV": 0.49557171896134083,
+              "unique_hit_graphs": 30,
+              "unique_source_novel_hits": 30,
+              "unique_all_asset_novel_hits": 30,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 30,
+                "0.5": 62
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24401,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 84,
+              "evaluated": 84,
+              "unsupported": 0,
+              "hits": 46,
+              "hit_yield": 0.359375,
+              "conditional_hit_rate": 0.5476190476190477,
+              "mae_eV": 0.3568500347978766,
+              "bias_eV": -0.22540116553035056,
+              "prediction_mean_eV": -6.395845569624567,
+              "prediction_std_eV": 0.4137847752732462,
+              "unique_hit_graphs": 46,
+              "unique_source_novel_hits": 46,
+              "unique_all_asset_novel_hits": 46,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 46,
+                "0.5": 63
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24402,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 84,
+              "evaluated": 84,
+              "unsupported": 0,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.39285714285714285,
+              "mae_eV": 0.4505063397082574,
+              "bias_eV": -0.29786856692596647,
+              "prediction_mean_eV": -6.4683129710201825,
+              "prediction_std_eV": 0.5117712551488401,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 16,
+                "0.25": 33,
+                "0.5": 54
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24401,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 88,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.26136363636363635,
+              "mae_eV": 0.5284428137046228,
+              "bias_eV": -0.4820049160012742,
+              "prediction_mean_eV": -6.328057790082311,
+              "prediction_std_eV": 0.43074894989782925,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 23,
+                "0.5": 49
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24402,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 98,
+              "evaluated": 98,
+              "unsupported": 0,
+              "hits": 32,
+              "hit_yield": 0.25,
+              "conditional_hit_rate": 0.32653061224489793,
+              "mae_eV": 0.4610819721723092,
+              "bias_eV": -0.38480898740807734,
+              "prediction_mean_eV": -6.230861861489115,
+              "prediction_std_eV": 0.41359783933476235,
+              "unique_hit_graphs": 32,
+              "unique_source_novel_hits": 32,
+              "unique_all_asset_novel_hits": 32,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 32,
+                "0.5": 62
+              }
+            }
+          }
+        ]
+      },
+      "64": {
+        "attempted": 1792,
+        "legal": 1218,
+        "evaluated": 1217,
+        "hits": 382,
+        "hit_yield": 0.21316964285714285,
+        "mae_equal_pool_eV": 0.4989161798483717,
+        "unique_source_novel_hits_per128": 27.142857142857142,
+        "unique_all_asset_novel_hits_per128": 27.142857142857142,
+        "response_slope": 0.4099584874376683,
+        "std_equal_pool_eV": 0.5381783879607408,
+        "mean_legal_atoms": 31.362889983579638,
+        "unique_legal_graphs": 1191,
+        "unique_legal_scaffolds": 1044,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24401,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 88,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.3068181818181818,
+              "mae_eV": 0.5127675514590597,
+              "bias_eV": 0.3504225783782318,
+              "prediction_mean_eV": -7.095475738751811,
+              "prediction_std_eV": 0.5495594469170619,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 27,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 27,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24402,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 19,
+              "hit_yield": 0.1484375,
+              "conditional_hit_rate": 0.2111111111111111,
+              "mae_eV": 0.6452543525881537,
+              "bias_eV": 0.39894737396410007,
+              "prediction_mean_eV": -7.0469509431659425,
+              "prediction_std_eV": 0.6358262124564467,
+              "unique_hit_graphs": 19,
+              "unique_source_novel_hits": 19,
+              "unique_all_asset_novel_hits": 19,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 19,
+                "0.5": 34
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24401,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 36,
+              "hit_yield": 0.28125,
+              "conditional_hit_rate": 0.375,
+              "mae_eV": 0.47445371802251984,
+              "bias_eV": 0.22258931250561828,
+              "prediction_mean_eV": -6.822238343264545,
+              "prediction_std_eV": 0.5414203430723685,
+              "unique_hit_graphs": 36,
+              "unique_source_novel_hits": 36,
+              "unique_all_asset_novel_hits": 36,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 36,
+                "0.5": 54
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24402,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 82,
+              "evaluated": 82,
+              "unsupported": 0,
+              "hits": 16,
+              "hit_yield": 0.125,
+              "conditional_hit_rate": 0.1951219512195122,
+              "mae_eV": 0.5846359665754886,
+              "bias_eV": 0.3128197354401075,
+              "prediction_mean_eV": -6.732007920330056,
+              "prediction_std_eV": 0.6146563453552449,
+              "unique_hit_graphs": 16,
+              "unique_source_novel_hits": 15,
+              "unique_all_asset_novel_hits": 15,
+              "hit_tolerances": {
+                "0.1": 5,
+                "0.25": 16,
+                "0.5": 41
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24401,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 88,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.3181818181818182,
+              "mae_eV": 0.4700029655054358,
+              "bias_eV": 0.11633746289465051,
+              "prediction_mean_eV": -6.741721871449784,
+              "prediction_std_eV": 0.5744972611323961,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 28,
+                "0.5": 56
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24402,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.2441860465116279,
+              "mae_eV": 0.49685512192151204,
+              "bias_eV": 0.17607324217360237,
+              "prediction_mean_eV": -6.681986092170832,
+              "prediction_std_eV": 0.5833278734076235,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 21,
+                "0.5": 48
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24401,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 35,
+              "hit_yield": 0.2734375,
+              "conditional_hit_rate": 0.40229885057471265,
+              "mae_eV": 0.38454056895426314,
+              "bias_eV": -0.08197036531216918,
+              "prediction_mean_eV": -6.662699678142594,
+              "prediction_std_eV": 0.47003931586838155,
+              "unique_hit_graphs": 35,
+              "unique_source_novel_hits": 35,
+              "unique_all_asset_novel_hits": 35,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 35,
+                "0.5": 60
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24402,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 83,
+              "evaluated": 83,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.40963855421686746,
+              "mae_eV": 0.4309801510856084,
+              "bias_eV": -0.0784272447973074,
+              "prediction_mean_eV": -6.659156557627732,
+              "prediction_std_eV": 0.5543903014390328,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 34,
+                "0.5": 55
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24401,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 95,
+              "evaluated": 94,
+              "unsupported": 1,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.35106382978723405,
+              "mae_eV": 0.5394807947155335,
+              "bias_eV": -0.35868923329568864,
+              "prediction_mean_eV": -6.690989345054058,
+              "prediction_std_eV": 0.5968197415647344,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 33,
+                "0.5": 55
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24402,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.3793103448275862,
+              "mae_eV": 0.4264824989249627,
+              "bias_eV": -0.1730483602489671,
+              "prediction_mean_eV": -6.505348472007337,
+              "prediction_std_eV": 0.5147918001302974,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 32,
+              "unique_all_asset_novel_hits": 32,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 33,
+                "0.5": 59
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24401,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.3218390804597701,
+              "mae_eV": 0.4992295476479716,
+              "bias_eV": -0.3488829654565483,
+              "prediction_mean_eV": -6.519327369550764,
+              "prediction_std_eV": 0.5511966741262404,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 28,
+                "0.5": 53
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24402,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 86,
+              "evaluated": 86,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.32558139534883723,
+              "mae_eV": 0.43407266978746367,
+              "bias_eV": -0.29818142855673446,
+              "prediction_mean_eV": -6.46862583265095,
+              "prediction_std_eV": 0.4584348281704003,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 28,
+                "0.5": 58
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24401,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 80,
+              "evaluated": 80,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.275,
+              "mae_eV": 0.5686536587201336,
+              "bias_eV": -0.5154722728861301,
+              "prediction_mean_eV": -6.361525146967168,
+              "prediction_std_eV": 0.47848699414489654,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 6,
+                "0.25": 22,
+                "0.5": 42
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24402,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 83,
+              "evaluated": 83,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.26506024096385544,
+              "mae_eV": 0.517416951969098,
+              "bias_eV": -0.4788304387317684,
+              "prediction_mean_eV": -6.324883312812806,
+              "prediction_std_eV": 0.4110502936652464,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 22,
+                "0.5": 45
+              }
+            }
+          }
+        ]
+      }
+    },
+    "paired_vs_group0": {
+      "1024": {
+        "difference_pp": 1.6741071428571423,
+        "paired_sampling_95_pp": [
+          -1.1174665178571426,
+          4.408482142857142
+        ],
+        "conditional_mae_difference_eV": -0.005184297735126127,
+        "conditional_mae_sampling_95_eV": [
+          -0.033633466857831876,
+          0.023004170839891012
+        ],
+        "scope": "Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators."
+      },
+      "128": {
+        "difference_pp": -0.3906249999999999,
+        "paired_sampling_95_pp": [
+          -2.7343749999999996,
+          1.8987165178571477
+        ],
+        "conditional_mae_difference_eV": 0.013047255608986856,
+        "conditional_mae_sampling_95_eV": [
+          -0.01274036481499517,
+          0.03981714519539838
+        ],
+        "scope": "Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators."
+      },
+      "256": {
+        "difference_pp": 0.2232142857142857,
+        "paired_sampling_95_pp": [
+          -2.3437499999999996,
+          2.9017857142857135
+        ],
+        "conditional_mae_difference_eV": -0.013557863678987746,
+        "conditional_mae_sampling_95_eV": [
+          -0.03923018804347114,
+          0.012492775340740808
+        ],
+        "scope": "Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators."
+      },
+      "512": {
+        "difference_pp": 0.8928571428571428,
+        "paired_sampling_95_pp": [
+          -1.7299107142857144,
+          3.571428571428571
+        ],
+        "conditional_mae_difference_eV": -3.8047449614378846e-05,
+        "conditional_mae_sampling_95_eV": [
+          -0.02914419854430108,
+          0.028981015220298317
+        ],
+        "scope": "Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators."
+      },
+      "64": {
+        "difference_pp": -0.8928571428571428,
+        "paired_sampling_95_pp": [
+          -3.2924107142857135,
+          1.4508928571428572
+        ],
+        "conditional_mae_difference_eV": 0.017597675073318615,
+        "conditional_mae_sampling_95_eV": [
+          -0.009309184961144565,
+          0.04400904506949156
+        ],
+        "scope": "Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators."
+      }
+    },
+    "inputs": {
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/development/group0/summary.json": "c87551539114e16b8dc952d0ea0ecb28312136b1381ca82373310a9d96d83ced",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/development/group1024/summary.json": "416d5faf88b31dd2c27195bacf9a56f3c9a9f1c5ee7c536894dc30fcc52d0ecb",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/development/group128/summary.json": "136813a11582d4363258a9f1a2540a06a38500d2150013fda947be7b5d788758",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/development/group256/summary.json": "d10b22d3b0db36dedc6d39be17cb3a8b137bd13cf355461b65d781addadc0092",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/development/group512/summary.json": "53020a9935c6a7309afd6e8948d07f0de77e6dc116fc314031052ce19ca405e0",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/development/group64/summary.json": "0d49ce6902ae9d781bca28c26e66c7176e89dc41b5fedbf226f3d366c7e46290"
+    }
+  },
+  "validation": {
+    "scope": "Frozen B defines reward and acceptance, not independent quantum truth. GPU2/3 evaluation shares NAMD; evaluation time excluded from performance. Novelty uses source graphs and each checkpoint cumulative training assets.",
+    "phase": "validation",
+    "metrics": {
+      "0": {
+        "attempted": 1792,
+        "legal": 1275,
+        "evaluated": 1272,
+        "hits": 371,
+        "hit_yield": 0.20703125,
+        "mae_equal_pool_eV": 0.5211205156831066,
+        "unique_source_novel_hits_per128": 26.428571428571427,
+        "unique_all_asset_novel_hits_per128": 26.428571428571427,
+        "response_slope": 0.4089583063659365,
+        "std_equal_pool_eV": 0.5618564257372723,
+        "mean_legal_atoms": 31.409411764705883,
+        "unique_legal_graphs": 1246,
+        "unique_legal_scaffolds": 1079,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24411,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.26881720430107525,
+              "mae_eV": 0.5879105702392778,
+              "bias_eV": 0.3437506041888006,
+              "prediction_mean_eV": -7.1021477129412425,
+              "prediction_std_eV": 0.6188483782288565,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 25,
+                "0.5": 46
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24412,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 100,
+              "evaluated": 100,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.28,
+              "mae_eV": 0.5604566170837164,
+              "bias_eV": 0.3773972696737692,
+              "prediction_mean_eV": -7.068501047456274,
+              "prediction_std_eV": 0.5755232034256169,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 28,
+                "0.5": 52
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24411,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 95,
+              "evaluated": 95,
+              "unsupported": 0,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.29473684210526313,
+              "mae_eV": 0.5283322736869069,
+              "bias_eV": 0.14712165742126834,
+              "prediction_mean_eV": -6.897705998348895,
+              "prediction_std_eV": 0.6506176650000319,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 28,
+                "0.5": 52
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24412,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.25287356321839083,
+              "mae_eV": 0.49217548958769963,
+              "bias_eV": 0.13623928964797263,
+              "prediction_mean_eV": -6.90858836612219,
+              "prediction_std_eV": 0.5715906426035117,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 22,
+                "0.5": 54
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24411,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.25274725274725274,
+              "mae_eV": 0.5109454208176961,
+              "bias_eV": 0.007455398357798691,
+              "prediction_mean_eV": -6.850603935986636,
+              "prediction_std_eV": 0.6409275344035432,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 23,
+                "0.5": 50
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24412,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2777777777777778,
+              "mae_eV": 0.4834941584922624,
+              "bias_eV": 0.04940029564487624,
+              "prediction_mean_eV": -6.808659038699559,
+              "prediction_std_eV": 0.588555363505916,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 25,
+                "0.5": 57
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24411,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 88,
+              "unsupported": 0,
+              "hits": 38,
+              "hit_yield": 0.296875,
+              "conditional_hit_rate": 0.4318181818181818,
+              "mae_eV": 0.3983086352329716,
+              "bias_eV": -0.11353392390897495,
+              "prediction_mean_eV": -6.694263236739399,
+              "prediction_std_eV": 0.4873960716750447,
+              "unique_hit_graphs": 38,
+              "unique_source_novel_hits": 38,
+              "unique_all_asset_novel_hits": 38,
+              "hit_tolerances": {
+                "0.1": 17,
+                "0.25": 38,
+                "0.5": 57
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24412,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 92,
+              "evaluated": 91,
+              "unsupported": 1,
+              "hits": 28,
+              "hit_yield": 0.21875,
+              "conditional_hit_rate": 0.3076923076923077,
+              "mae_eV": 0.4691497847077046,
+              "bias_eV": -0.07871643929468278,
+              "prediction_mean_eV": -6.659445752125107,
+              "prediction_std_eV": 0.5787242970502571,
+              "unique_hit_graphs": 28,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 16,
+                "0.25": 28,
+                "0.5": 56
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24411,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 88,
+              "evaluated": 88,
+              "unsupported": 0,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.375,
+              "mae_eV": 0.4333066088186941,
+              "bias_eV": -0.22117843075662727,
+              "prediction_mean_eV": -6.553478542514997,
+              "prediction_std_eV": 0.5129871333640956,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 12,
+                "0.25": 33,
+                "0.5": 59
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24412,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 29,
+              "hit_yield": 0.2265625,
+              "conditional_hit_rate": 0.3118279569892473,
+              "mae_eV": 0.5181595799739188,
+              "bias_eV": -0.31725928937936,
+              "prediction_mean_eV": -6.649559401137729,
+              "prediction_std_eV": 0.5820109472223514,
+              "unique_hit_graphs": 29,
+              "unique_source_novel_hits": 28,
+              "unique_all_asset_novel_hits": 28,
+              "hit_tolerances": {
+                "0.1": 16,
+                "0.25": 29,
+                "0.5": 50
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24411,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 92,
+              "evaluated": 90,
+              "unsupported": 2,
+              "hits": 26,
+              "hit_yield": 0.203125,
+              "conditional_hit_rate": 0.28888888888888886,
+              "mae_eV": 0.5171784466475029,
+              "bias_eV": -0.4460440001966593,
+              "prediction_mean_eV": -6.616488404290875,
+              "prediction_std_eV": 0.467256844822736,
+              "unique_hit_graphs": 26,
+              "unique_source_novel_hits": 26,
+              "unique_all_asset_novel_hits": 26,
+              "hit_tolerances": {
+                "0.1": 5,
+                "0.25": 26,
+                "0.5": 53
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24412,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 82,
+              "evaluated": 82,
+              "unsupported": 0,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.25609756097560976,
+              "mae_eV": 0.5334878476394148,
+              "bias_eV": -0.3975848486917047,
+              "prediction_mean_eV": -6.56802925278592,
+              "prediction_std_eV": 0.5342732768130707,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 21,
+                "0.5": 46
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24411,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 89,
+              "evaluated": 89,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.25842696629213485,
+              "mae_eV": 0.6267432796286343,
+              "bias_eV": -0.5612019895856357,
+              "prediction_mean_eV": -6.407254863666672,
+              "prediction_std_eV": 0.5522382092499779,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 7,
+                "0.25": 23,
+                "0.5": 45
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24412,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 95,
+              "evaluated": 95,
+              "unsupported": 0,
+              "hits": 22,
+              "hit_yield": 0.171875,
+              "conditional_hit_rate": 0.23157894736842105,
+              "mae_eV": 0.636038507007093,
+              "bias_eV": -0.5705185348192553,
+              "prediction_mean_eV": -6.4165714089002925,
+              "prediction_std_eV": 0.5050403929568019,
+              "unique_hit_graphs": 22,
+              "unique_source_novel_hits": 22,
+              "unique_all_asset_novel_hits": 22,
+              "hit_tolerances": {
+                "0.1": 5,
+                "0.25": 22,
+                "0.5": 42
+              }
+            }
+          }
+        ]
+      },
+      "1024": {
+        "attempted": 1792,
+        "legal": 1297,
+        "evaluated": 1296,
+        "hits": 424,
+        "hit_yield": 0.23660714285714285,
+        "mae_equal_pool_eV": 0.48206037819649467,
+        "unique_source_novel_hits_per128": 30.285714285714285,
+        "unique_all_asset_novel_hits_per128": 30.214285714285715,
+        "response_slope": 0.5956480191764673,
+        "std_equal_pool_eV": 0.5734620943195734,
+        "mean_legal_atoms": 30.824980724749423,
+        "unique_legal_graphs": 1281,
+        "unique_legal_scaffolds": 1120,
+        "top_k": {
+          "4": {
+            "requested": 56,
+            "hits": 56
+          },
+          "8": {
+            "requested": 112,
+            "hits": 112
+          }
+        },
+        "cells": [
+          {
+            "quantile": 10,
+            "seed": 24411,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 27,
+              "hit_yield": 0.2109375,
+              "conditional_hit_rate": 0.2967032967032967,
+              "mae_eV": 0.577374203759131,
+              "bias_eV": 0.2551755455512715,
+              "prediction_mean_eV": -7.190722771578772,
+              "prediction_std_eV": 0.6853281258491349,
+              "unique_hit_graphs": 27,
+              "unique_source_novel_hits": 27,
+              "unique_all_asset_novel_hits": 26,
+              "hit_tolerances": {
+                "0.1": 10,
+                "0.25": 27,
+                "0.5": 48
+              }
+            }
+          },
+          {
+            "quantile": 10,
+            "seed": 24412,
+            "goal_eV": -7.445898317130043,
+            "input_goal_eV": -7.445898317130043,
+            "metrics": {
+              "attempted": 128,
+              "legal": 95,
+              "evaluated": 95,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2631578947368421,
+              "mae_eV": 0.5614422033662677,
+              "bias_eV": 0.17346348400543032,
+              "prediction_mean_eV": -7.2724348331246125,
+              "prediction_std_eV": 0.687437878773591,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 25,
+                "0.5": 51
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24411,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 90,
+              "unsupported": 0,
+              "hits": 23,
+              "hit_yield": 0.1796875,
+              "conditional_hit_rate": 0.25555555555555554,
+              "mae_eV": 0.47349187091229905,
+              "bias_eV": 0.1311754753962534,
+              "prediction_mean_eV": -6.9136521803739095,
+              "prediction_std_eV": 0.5375001612441886,
+              "unique_hit_graphs": 23,
+              "unique_source_novel_hits": 23,
+              "unique_all_asset_novel_hits": 23,
+              "hit_tolerances": {
+                "0.1": 11,
+                "0.25": 23,
+                "0.5": 47
+              }
+            }
+          },
+          {
+            "quantile": 25,
+            "seed": 24412,
+            "goal_eV": -7.044827655770163,
+            "input_goal_eV": -7.044827655770163,
+            "metrics": {
+              "attempted": 128,
+              "legal": 94,
+              "evaluated": 94,
+              "unsupported": 0,
+              "hits": 29,
+              "hit_yield": 0.2265625,
+              "conditional_hit_rate": 0.30851063829787234,
+              "mae_eV": 0.49385976685787103,
+              "bias_eV": 0.10353876247141493,
+              "prediction_mean_eV": -6.941288893298748,
+              "prediction_std_eV": 0.602458138558156,
+              "unique_hit_graphs": 29,
+              "unique_source_novel_hits": 29,
+              "unique_all_asset_novel_hits": 29,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 29,
+                "0.5": 57
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24411,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 87,
+              "evaluated": 87,
+              "unsupported": 0,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.3793103448275862,
+              "mae_eV": 0.4554296469830687,
+              "bias_eV": -0.06359705826277012,
+              "prediction_mean_eV": -6.921656392607205,
+              "prediction_std_eV": 0.5817718912931347,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 33,
+                "0.5": 52
+              }
+            }
+          },
+          {
+            "quantile": 35,
+            "seed": 24412,
+            "goal_eV": -6.858059334344435,
+            "input_goal_eV": -6.858059334344435,
+            "metrics": {
+              "attempted": 128,
+              "legal": 89,
+              "evaluated": 89,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2808988764044944,
+              "mae_eV": 0.4977497338890974,
+              "bias_eV": -0.024983926930825295,
+              "prediction_mean_eV": -6.88304326127526,
+              "prediction_std_eV": 0.6233377442601805,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 25,
+                "0.5": 53
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24411,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 91,
+              "evaluated": 91,
+              "unsupported": 0,
+              "hits": 26,
+              "hit_yield": 0.203125,
+              "conditional_hit_rate": 0.2857142857142857,
+              "mae_eV": 0.4994331865473508,
+              "bias_eV": -0.10569159423527737,
+              "prediction_mean_eV": -6.686420907065702,
+              "prediction_std_eV": 0.6852507488539512,
+              "unique_hit_graphs": 26,
+              "unique_source_novel_hits": 26,
+              "unique_all_asset_novel_hits": 26,
+              "hit_tolerances": {
+                "0.1": 14,
+                "0.25": 26,
+                "0.5": 50
+              }
+            }
+          },
+          {
+            "quantile": 50,
+            "seed": 24412,
+            "goal_eV": -6.5807293128304245,
+            "input_goal_eV": -6.5807293128304245,
+            "metrics": {
+              "attempted": 128,
+              "legal": 98,
+              "evaluated": 98,
+              "unsupported": 0,
+              "hits": 36,
+              "hit_yield": 0.28125,
+              "conditional_hit_rate": 0.3673469387755102,
+              "mae_eV": 0.43443019473267475,
+              "bias_eV": -0.06620722944101878,
+              "prediction_mean_eV": -6.646936542271443,
+              "prediction_std_eV": 0.5515399890650989,
+              "unique_hit_graphs": 36,
+              "unique_source_novel_hits": 36,
+              "unique_all_asset_novel_hits": 36,
+              "hit_tolerances": {
+                "0.1": 15,
+                "0.25": 36,
+                "0.5": 63
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24411,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 96,
+              "evaluated": 96,
+              "unsupported": 0,
+              "hits": 43,
+              "hit_yield": 0.3359375,
+              "conditional_hit_rate": 0.4479166666666667,
+              "mae_eV": 0.42917305996755156,
+              "bias_eV": -0.21210072628838894,
+              "prediction_mean_eV": -6.544400838046759,
+              "prediction_std_eV": 0.6414571332078851,
+              "unique_hit_graphs": 43,
+              "unique_source_novel_hits": 43,
+              "unique_all_asset_novel_hits": 43,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 43,
+                "0.5": 67
+              }
+            }
+          },
+          {
+            "quantile": 65,
+            "seed": 24412,
+            "goal_eV": -6.33230011175837,
+            "input_goal_eV": -6.33230011175837,
+            "metrics": {
+              "attempted": 128,
+              "legal": 100,
+              "evaluated": 100,
+              "unsupported": 0,
+              "hits": 44,
+              "hit_yield": 0.34375,
+              "conditional_hit_rate": 0.44,
+              "mae_eV": 0.3679762669581933,
+              "bias_eV": -0.13752376744928851,
+              "prediction_mean_eV": -6.469823879207659,
+              "prediction_std_eV": 0.454267967040388,
+              "unique_hit_graphs": 44,
+              "unique_source_novel_hits": 44,
+              "unique_all_asset_novel_hits": 44,
+              "hit_tolerances": {
+                "0.1": 21,
+                "0.25": 44,
+                "0.5": 73
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24411,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 90,
+              "evaluated": 89,
+              "unsupported": 1,
+              "hits": 33,
+              "hit_yield": 0.2578125,
+              "conditional_hit_rate": 0.3707865168539326,
+              "mae_eV": 0.4396942971386417,
+              "bias_eV": -0.2216321870635495,
+              "prediction_mean_eV": -6.392076591157765,
+              "prediction_std_eV": 0.5128163877640927,
+              "unique_hit_graphs": 33,
+              "unique_source_novel_hits": 33,
+              "unique_all_asset_novel_hits": 33,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 33,
+                "0.5": 60
+              }
+            }
+          },
+          {
+            "quantile": 75,
+            "seed": 24412,
+            "goal_eV": -6.170444404094216,
+            "input_goal_eV": -6.170444404094216,
+            "metrics": {
+              "attempted": 128,
+              "legal": 93,
+              "evaluated": 93,
+              "unsupported": 0,
+              "hits": 34,
+              "hit_yield": 0.265625,
+              "conditional_hit_rate": 0.3655913978494624,
+              "mae_eV": 0.44533785467030024,
+              "bias_eV": -0.30610144668867395,
+              "prediction_mean_eV": -6.476545850782889,
+              "prediction_std_eV": 0.5023286496691012,
+              "unique_hit_graphs": 34,
+              "unique_source_novel_hits": 34,
+              "unique_all_asset_novel_hits": 34,
+              "hit_tolerances": {
+                "0.1": 13,
+                "0.25": 34,
+                "0.5": 63
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24411,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 89,
+              "evaluated": 89,
+              "unsupported": 0,
+              "hits": 25,
+              "hit_yield": 0.1953125,
+              "conditional_hit_rate": 0.2808988764044944,
+              "mae_eV": 0.5018977569151851,
+              "bias_eV": -0.44178649793527464,
+              "prediction_mean_eV": -6.287839372016312,
+              "prediction_std_eV": 0.44256169720132815,
+              "unique_hit_graphs": 25,
+              "unique_source_novel_hits": 25,
+              "unique_all_asset_novel_hits": 25,
+              "hit_tolerances": {
+                "0.1": 8,
+                "0.25": 25,
+                "0.5": 52
+              }
+            }
+          },
+          {
+            "quantile": 90,
+            "seed": 24412,
+            "goal_eV": -5.846052874081037,
+            "input_goal_eV": -5.846052874081037,
+            "metrics": {
+              "attempted": 128,
+              "legal": 94,
+              "evaluated": 94,
+              "unsupported": 0,
+              "hits": 21,
+              "hit_yield": 0.1640625,
+              "conditional_hit_rate": 0.22340425531914893,
+              "mae_eV": 0.5715552520532933,
+              "bias_eV": -0.45473802270553615,
+              "prediction_mean_eV": -6.300790896786573,
+              "prediction_std_eV": 0.5204128076937957,
+              "unique_hit_graphs": 21,
+              "unique_source_novel_hits": 21,
+              "unique_all_asset_novel_hits": 21,
+              "hit_tolerances": {
+                "0.1": 9,
+                "0.25": 21,
+                "0.5": 43
+              }
+            }
+          }
+        ]
+      }
+    },
+    "paired_vs_group0": {
+      "1024": {
+        "difference_pp": 2.9575892857142856,
+        "paired_sampling_95_pp": [
+          0.3906249999999999,
+          5.580357142857142
+        ],
+        "conditional_mae_difference_eV": -0.039060137486612,
+        "conditional_mae_sampling_95_eV": [
+          -0.06768257170444919,
+          -0.011705154811202764
+        ],
+        "scope": "Pointwise candidate-stream paired bootstrap preserving cross-request reuse within each fixed inference seed; no training-seed uncertainty or multiplicity correction. Conditional MAE uses each policy evaluable subset; failures remain in hit denominators."
+      }
+    },
+    "inputs": {
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/validation/group0/summary.json": "a92617c5cf31a5ddfd74873fee8fd475dfca05191089b6c3ccf0a71a04991439",
+      "/sjtu-combustion/wjw/chensq/orbit_b_curve_20261114/validation/group1024/summary.json": "3d3e6ee8e6eb9a04b797049f9ad61f74191aeebf0cde54a236b4b14e86371018"
+    }
+  },
+  "selection": {
+    "selected_group": 1024,
+    "validation_groups": [
+      0,
+      1024
+    ],
+    "rule": "Descending all-asset-novel unique hits/128, raw hits, then lower MAE, then earlier group.",
+    "development_used_for_selection": true
+  },
+  "training_costs": {
+    "segment_seconds": 10414.385721579194,
+    "process_seconds": 10414.385722894222,
+    "groups": 1024,
+    "raw_proposals": 32768,
+    "B_molecule_calls": 22939,
+    "B_forward_calls": 6487,
+    "timing": {
+      "initialization_seconds": [
+        41.81078776344657
+      ],
+      "alignment_setup_seconds": 2.5809933207929134,
+      "group_wall_seconds": 10065.559471227229,
+      "profiled_gradient_diagnostic_seconds": 3.96462843939662,
+      "checkpoint_saving_seconds": 288.3703082278371,
+      "scope": "Group wall excludes checkpoint saving and initialization; sampled gradient diagnostics are a subset of group wall, not additive. Evaluation is a separate process. Profiled stage walls include CUDA synchronization, not just GPU kernels."
+    }
+  }
+}
