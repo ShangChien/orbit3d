@@ -20,6 +20,7 @@ def main():
     p.add_argument('--targets',type=Path,required=True);p.add_argument('--target',choices=['homo','lumo'],required=True)
     p.add_argument('--groups',type=int,default=256);p.add_argument('--seed',type=int,default=42)
     p.add_argument('--output',type=Path,required=True);p.add_argument('--resume',type=Path);p.add_argument('--stop-after',type=int)
+    p.add_argument('--save-groups',type=int,nargs='*',default=[])
     a=p.parse_args();started=time.perf_counter();lock_deterministic_environment(a.seed);torch.set_num_threads(4)
     # A resumed segment gets its own immutable source/input receipt.
     a.output.mkdir(parents=True,exist_ok=False);freeze_run(a.output,__file__)
@@ -38,6 +39,7 @@ def main():
     previous_seconds=resume.get('training_wall_seconds',0.) if resume else 0.
     previous_calls=resume.get('B_molecule_calls',0) if resume else 0
     previous_forwards=resume.get('B_forward_calls',0) if resume else 0
+    cost_curve=list(resume.get('cost_curve',[])) if resume else []
     latest_training_state=None
     def save(path, history):
         result={**state,'model_state_dict':model.state_dict(),'initial_weights_sha256':file_sha256(a.checkpoint),
@@ -46,11 +48,17 @@ def main():
             'training_smiles':sorted(set(state.get('training_smiles',[]))|{r['smiles'] for h in history for r in h['rollout_records'] if r['valid']}),
             'training_wall_seconds':previous_seconds+time.perf_counter()-started,
             'B_molecule_calls':previous_calls+task.molecule_calls,'B_forward_calls':previous_forwards+task.forward_calls,
+            'cost_curve':cost_curve,
             'optimizer_updates':sum(h['optimizer_updates'] for h in history)}
         temporary=path.with_suffix('.tmp');torch.save(result,temporary);temporary.replace(path)
     def checkpoint(step, model, history, training_state):
         nonlocal latest_training_state
         latest_training_state=training_state
+        cost_curve.append(dict(groups=step,raw_proposals=step*32,
+            B_molecule_calls=previous_calls+task.molecule_calls,B_forward_calls=previous_forwards+task.forward_calls,
+            elapsed_seconds=previous_seconds+time.perf_counter()-started))
+        if step in a.save_groups:
+            save(a.output/f'octree_group_{step}.pt',history)
         if step%16==0 or step==(a.stop_after or a.groups):
             save(a.output/'resume.pt',history)
             (a.output/'progress.json').write_text(json.dumps(dict(groups=step,raw_proposals=step*32,B_molecule_calls=task.molecule_calls,
@@ -64,6 +72,7 @@ def main():
         process_seconds=previous_seconds+time.perf_counter()-started,groups=len(history),
         raw_proposals=len(history)*32,B_molecule_calls=previous_calls+task.molecule_calls,
         B_forward_calls=previous_forwards+task.forward_calls),indent=2)+'\n')
+    (a.output/'cost_curve.json').write_text(json.dumps(cost_curve,indent=2)+'\n')
 
 
 if __name__=='__main__':main()

@@ -40,7 +40,9 @@ def main():
         def gradients(loss,retain):
             values=torch.autograd.grad(loss,parameters,retain_graph=retain,allow_unused=True)
             return torch.cat([(torch.zeros_like(p) if v is None else v).reshape(-1) for p,v in zip(parameters,values)])
-        first=gradients(condition,True);second=gradients(sample,False)
+        # Accumulate the large parameter-vector reductions in float64; float32
+        # dot/norm reduction order can otherwise report a cosine slightly > 1.
+        first=gradients(condition,True).double();second=gradients(sample,False).double()
         rows.append(dict(eligible=int(eligible.sum()),condition_hinge_active_fraction=float((condition_delta<.02).float().mean()),
             sample_hinge_active_fraction=float((sample_delta<.02).float().mean()),
             channel_gradient_cosine=float(torch.dot(first,second)/(first.norm()*second.norm()).clamp_min(1e-20)),
