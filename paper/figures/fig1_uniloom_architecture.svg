@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+<title id="title">Uni-Loom architecture</title>
+<desc id="desc">External property models, differentiable 3D predictors, and MLIPs plug into a declarative Critic Bus without retraining. The five-stage forward pipeline (Weaving spec, Octree policy, Neutral graph, Critic bus, 4-zone atlas) feeds trusted intervals to scale-decoupled inner RSI and frozen blindspots to outer-loop DFT acquisition and zero-retrain Bayesian residual calibration.</desc>
+<rect x="0" y="0" width="1280" height="640" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<text x="24" y="46" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#172A3A" text-anchor="start">UNI-LOOM</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" fill="#526575" text-anchor="start">loom v2.0</text>
+<text x="184" y="46" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="start">Weave external predictors, valence-pure 3D, and RSI</text>
+<text x="184" y="76" font-family="Arial, Helvetica, sans-serif" font-size="15.5" font-weight="400" fill="#526575" text-anchor="start">Zero-retrain asset mounting, scale-decoupled RL, and blindspot-safe calibration</text>
+<rect x="756" y="18" width="204" height="80" rx="10" fill="#F2F6FA" stroke="none" stroke-width="1.5"/>
+<text x="858" y="48" font-family="Arial, Helvetica, sans-serif" font-size="18.5" font-weight="700" fill="#172A3A" text-anchor="middle">External asset hub</text>
+<text x="858" y="75" font-family="Arial, Helvetica, sans-serif" font-size="15.5" font-weight="400" fill="#526575" text-anchor="middle">QSAR / 3D grad / MLIP</text>
+<polyline points="858,102 858,144" fill="none" stroke="#3F6C9E" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="858,144 862,135 854,135" fill="#3F6C9E"/>
+<rect x="24" y="148" width="204" height="188" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="40" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#3F6C9E" text-anchor="start">TASK SPEC</text>
+<text x="126" y="207" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="middle">Weaving spec</text>
+<polyline points="70,238 182,238" fill="none" stroke="#D7E0E7" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="92" cy="238" r="5.5" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<polyline points="70,260 182,260" fill="none" stroke="#D7E0E7" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="136" cy="260" r="5.5" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<polyline points="70,282 182,282" fill="none" stroke="#D7E0E7" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="168" cy="282" r="5.5" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="168" cy="282" r="9.5" fill="none" stroke="#247C75" stroke-width="1.4"/>
+<text x="126" y="318" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="400" fill="#526575" text-anchor="middle">Targets + SA / SMARTS</text>
+<rect x="268" y="148" width="204" height="188" rx="12" fill="#F7FAFD" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="284" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#3F6C9E" text-anchor="start">GENERATOR</text>
+<text x="370" y="207" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="middle">Octree policy</text>
+<polyline points="342,241 386,241 386,285 342,285 342,241" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="362,227 406,227 406,271 362,271 362,227" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="342,241 362,227" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="386,241 406,227" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="386,285 406,271" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="342,285 362,271" fill="none" stroke="#3F6C9E" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="364,241 364,285" fill="none" stroke="#3F6C9E" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="342,263 386,263" fill="none" stroke="#3F6C9E" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="353" cy="252" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<circle cx="375" cy="274" r="4.6" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<circle cx="378" cy="236" r="4.8" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="378" cy="236" r="9.2" fill="none" stroke="#247C75" stroke-width="1.4"/>
+<text x="370" y="318" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="400" fill="#526575" text-anchor="middle">Uni-3DAR + Track A guard</text>
+<rect x="512" y="148" width="204" height="188" rx="12" fill="#F2F8F6" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="528" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#247C75" text-anchor="start">VALENCE GATE</text>
+<text x="614" y="207" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="middle">Neutral graph</text>
+<polyline points="590,249 612,236 636,250 636,275 612,287 590,274 590,249" fill="none" stroke="#96A3AD" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="636,250 656,240" fill="none" stroke="#247C75" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="636,275 656,285" fill="none" stroke="#247C75" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="590" cy="249" r="5.4" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="612" cy="236" r="5.4" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="636" cy="250" r="5.4" fill="#B46B35" stroke="none" stroke-width="1.5"/>
+<circle cx="636" cy="275" r="5.4" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="612" cy="287" r="5.4" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="590" cy="274" r="5.4" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="656" cy="240" r="3.8" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="656" cy="285" r="3.8" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<text x="614" y="318" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="400" fill="#526575" text-anchor="middle">Track B (0.00 Å heavy)</text>
+<rect x="756" y="148" width="204" height="188" rx="12" fill="#FCF7F2" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="772" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#B46B35" text-anchor="start">CRITIC &amp; MLIP</text>
+<text x="858" y="207" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="middle">Critic bus</text>
+<polyline points="807,251 826,240 845,251 845,272 826,283 807,272 807,251" fill="none" stroke="#96A3AD" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="807" cy="251" r="4.5" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="826" cy="240" r="4.5" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="845" cy="251" r="4.5" fill="#B46B35" stroke="none" stroke-width="1.5"/>
+<circle cx="845" cy="272" r="4.5" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="826" cy="283" r="4.5" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<circle cx="807" cy="272" r="4.5" fill="#5D6C76" stroke="none" stroke-width="1.5"/>
+<polyline points="861,238 849,247" fill="none" stroke="#B46B35" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="849,247 858.6,244.8 853.8,238.4" fill="#B46B35"/>
+<polyline points="791,284 803,275" fill="none" stroke="#B46B35" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="803,275 793.4,277.2 798.2,283.6" fill="#B46B35"/>
+<circle cx="878" cy="242" r="4.2" fill="#3F6C9E" stroke="none" stroke-width="1.5"/>
+<polyline points="890,242 934,242" fill="none" stroke="#3F6C9E" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="878" cy="260" r="4.2" fill="#9CB2C6" stroke="none" stroke-width="1.5"/>
+<polyline points="890,260 921,260" fill="none" stroke="#9CB2C6" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="878" cy="278" r="4.2" fill="#C9D5DF" stroke="none" stroke-width="1.5"/>
+<polyline points="890,278 908,278" fill="none" stroke="#C9D5DF" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="858" y="318" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="400" fill="#526575" text-anchor="middle">DPA-4 / HyFF + AD audit</text>
+<rect x="1000" y="148" width="204" height="188" rx="12" fill="#F2F8F6" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="1016" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#247C75" text-anchor="start">GP-ATLAS</text>
+<text x="1102" y="207" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="middle">4-zone atlas</text>
+<polyline points="1046,284 1158,284" fill="none" stroke="#7C8D9B" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="1046,284 1046,234" fill="none" stroke="#7C8D9B" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="1052,280 1154,238" fill="none" stroke="#7C8D9B" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polygon points="1056,269 1080,257 1104,245 1128,231 1154,220 1154,262 1128,259 1104,263 1080,273 1056,283" fill="#F5DFC9" fill-opacity="0.75"/>
+<polygon points="1056,271 1080,260 1104,249 1128,239 1154,234 1154,248 1128,251 1104,259 1080,270 1056,281" fill="#DCE8F5" fill-opacity="0.88"/>
+<polyline points="1056,276 1080,265 1104,254 1128,245 1154,241" fill="none" stroke="#247C75" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="1056" cy="276" r="2.7" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="1080" cy="265" r="2.7" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="1104" cy="254" r="2.7" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="1128" cy="245" r="2.7" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="1154" cy="241" r="2.7" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<text x="1102" y="318" font-family="Arial, Helvetica, sans-serif" font-size="14.5" font-weight="400" fill="#526575" text-anchor="middle">Separate σ_gen and σ_cal</text>
+<polyline points="233,242 263,242" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="263,242 254,238 254,246" fill="#7C8D9B"/>
+<polyline points="477,242 507,242" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="507,242 498,238 498,246" fill="#7C8D9B"/>
+<polyline points="721,242 751,242" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="751,242 742,238 742,246" fill="#7C8D9B"/>
+<polyline points="965,242 995,242" fill="none" stroke="#7C8D9B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="995,242 986,238 986,246" fill="#7C8D9B"/>
+<polyline points="614,340 614,408" fill="none" stroke="#247C75" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polygon points="614,408 618,399 610,399" fill="#247C75"/>
+<polyline points="858,340 858,370 614,370" fill="none" stroke="#247C75" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polyline points="1032,340 1032,370 858,370" fill="none" stroke="#247C75" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<circle cx="614" cy="370" r="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<circle cx="858" cy="370" r="3" fill="#247C75" stroke="none" stroke-width="1.5"/>
+<text x="628" y="396" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" fill="#247C75" text-anchor="start">Clean 3D + monotonic rewards (trusted σ_cal ≤ τ_cal)</text>
+<rect x="268" y="412" width="692" height="120" rx="10" fill="#F5F9F8" stroke="#D7E0E7" stroke-width="1.5"/>
+<text x="292" y="444" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#172A3A" text-anchor="start">Scale-decoupled inner RSI</text>
+<text x="292" y="474" font-family="Arial, Helvetica, sans-serif" font-size="17.5" font-weight="400" fill="#526575" text-anchor="start">Stage 2.5A TopoGRPO on coarse tokens + detached 0.01 Å XYZ distill</text>
+<text x="292" y="502" font-family="Arial, Helvetica, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="start">80% deficit curriculum + 20% anchor replay; blindspots frozen at 0%</text>
+<polyline points="370,408 370,340" fill="none" stroke="#3F6C9E" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<polygon points="370,340 366,349 374,349" fill="#3F6C9E"/>
+<text x="384" y="384" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" fill="#3F6C9E" text-anchor="start">TopoGRPO + XYZ</text>
+<polyline points="1148,340 1148,408" fill="none" stroke="#B46B35" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="1148,408 1152,399 1144,399" fill="#B46B35"/>
+<text x="1136" y="396" font-family="Arial, Helvetica, sans-serif" font-size="15.5" font-weight="400" fill="#B46B35" text-anchor="end">σ_cal &gt; τ_cal</text>
+<rect x="1000" y="412" width="204" height="120" rx="10" fill="#FFFFFF" stroke="#DCC6B4" stroke-width="1.5"/>
+<text x="1102" y="443" font-family="Arial, Helvetica, sans-serif" font-size="18.5" font-weight="700" fill="#172A3A" text-anchor="middle">Outer-loop RSI</text>
+<text x="1102" y="474" font-family="Arial, Helvetica, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">Murcko SDF + DFT</text>
+<text x="1102" y="502" font-family="Arial, Helvetica, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="middle">Blind DPA-4 audit</text>
+<polyline points="1204,472 1244,472 1244,58 966,58" fill="none" stroke="#B46B35" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="966,58 975,62 975,54" fill="#B46B35"/>
+<text x="1105" y="44" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" fill="#B46B35" text-anchor="middle">Zero-retrain Δ_GP calibration</text>
+<text x="24" y="580" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#526575" text-anchor="start">Raw point-cloud and valence-reconciled metrics are reported side by side; blind DPA-4 audit stays strictly isolated.</text>
+<text x="24" y="608" font-family="Arial, Helvetica, sans-serif" font-size="16.5" font-weight="400" fill="#526575" text-anchor="start">External predictors mount without retraining; Bayesian residual calibration contracts blindspot σ_cal to unlock inner RL.</text>
+</svg>

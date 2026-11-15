@@ -1,0 +1,68 @@
+\begin{thebibliography}{21}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax\else\urlstyle{same}\fi
+
+\bibitem{stuke2020oe62}
+Stuke, A. et~al. Atomic Structures and Orbital Energies of 61,489 Crystal-Forming Organic Molecules. \emph{Scientific Data} \textbf{7}, 58 (2020). \href{https://doi.org/10.1038/s41597-020-0385-y}{https://doi.org/10.1038/s41597-020-0385-y}.
+
+\bibitem{bhat2023ocelot}
+Bhat, V. et~al. Electronic, Redox, and Optical Property Prediction of Organic $\pi$-Conjugated Molecules Through a Hierarchy of Machine Learning Approaches. \emph{Chemical Science} \textbf{14}, 203--213 (2023).
+
+\bibitem{zhao2026o2gen}
+Zhao, G. et~al. Fast and Flexible 3D Molecular Design Framework for Novel Organic Optoelectronic Materials. \emph{JACS Au} (2026). \href{https://doi.org/10.1021/jacsau.5c01756}{https://doi.org/10.1021/jacsau.5c01756}.
+
+\bibitem{ertl2009sa}
+Ertl, P. \& Schuffenhauer, A. Estimation of Synthetic Accessibility Score of Drug-Like Molecules Based on Molecular Complexity and Fragment Contributions. \emph{Journal of Cheminformatics} \textbf{1}, 8 (2009).
+
+\bibitem{bickerton2012qed}
+Bickerton, G. R., Paolini, G. V., Besnard, J., Muresan, S. \& Hopkins, A. L. Quantifying the Chemical Beauty of Drugs. \emph{Nature Chemistry} \textbf{4}, 90--98 (2012).
+
+\bibitem{hoogeboom2022edm}
+Hoogeboom, E., Satorras, V. G., Vignac, C. \& Welling, M. Equivariant Diffusion for Molecule Generation in 3D. \emph{Proceedings of the 39th International Conference on Machine Learning} \textbf{162}, 8867--8887 (2022).
+
+\bibitem{xu2023geoldm}
+Xu, M., Powers, A. S., Dror, R. O., Ermon, S. \& Leskovec, J. Geometric Latent Diffusion Models for 3D Molecule Generation. \emph{Proceedings of the 40th International Conference on Machine Learning} \textbf{202}, 38592--38610 (2023).
+
+\bibitem{zeng2026propmolflow}
+Zeng, C. et~al. PropMolFlow: Property-Guided Molecule Generation with Geometry-Complete Flow Matching. \emph{Nature Computational Science} \textbf{6}, 233--242 (2026). \href{https://doi.org/10.1038/s43588-025-00946-y}{https://doi.org/10.1038/s43588-025-00946-y}.
+
+\bibitem{lu2025uni3dar}
+Lu, S. et~al. Unified Cross-Scale 3D Generation and Understanding via Autoregressive Modeling. \emph{arXiv preprint arXiv:2503.16278} (2025). \url{https://arxiv.org/abs/2503.16278}.
+
+\bibitem{ji2024unimol2}
+Ji, X. et~al. Uni-Mol2: Exploring Molecular Pretraining Model at Scale. \emph{Advances in Neural Information Processing Systems} \textbf{37} (2024).
+
+\bibitem{zhou2023unimol}
+Zhou, G. et~al. Uni-Mol: A Universal 3D Molecular Representation Learning Framework. \emph{International Conference on Learning Representations} (2023). \url{https://github.com/dptech-corp/Uni-Mol}.
+
+\bibitem{deepmodeling2026dpa4}
+DeePMD-kit Developers. DPA4/SeZM Model Documentation. \emph{DeePMD-kit Documentation} (2026). \url{https://github.com/deepmodeling/deepmd-kit/blob/master/doc/model/dpa4.md}.
+
+\bibitem{hyra2026hyff}
+Tencent Hunyuan Hyra Team. HyFF: Molecular Force Fields and Inference Runtime. \emph{Hyra Research Artifacts (v0.2.0)} (2026). \url{https://github.com/Tencent-Hunyuan/Hyra-results/tree/main/AI4Science/hyff}.
+
+\bibitem{rdkit2026bonds}
+RDKit Contributors. RDKit rdDetermineBonds API Documentation. (2026). \url{https://www.rdkit.org/docs/source/rdkit.Chem.rdDetermineBonds.html}.
+
+\bibitem{rasmussen2006gp}
+Rasmussen, C. E. \& Williams, C. K. I. Gaussian Processes for Machine Learning. \emph{MIT Press} (2006).
+
+\bibitem{hu2022lora}
+Hu, E. J. et~al. LoRA: Low-Rank Adaptation of Large Language Models. \emph{International Conference on Learning Representations} (2022).
+
+\bibitem{ho2022cfg}
+Ho, J. \& Salimans, T. Classifier-Free Diffusion Guidance. \emph{arXiv preprint arXiv:2207.12598} (2022).
+
+\bibitem{shao2024grpo}
+Shao, Z. et~al. DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models. \emph{arXiv preprint arXiv:2402.03300} (2024).
+
+\bibitem{bemis1996murcko}
+Bemis, G. W. \& Murcko, M. A. The Properties of Known Drugs. 1. Molecular Frameworks. \emph{Journal of Medicinal Chemistry} \textbf{39}, 2887--2893 (1996).
+
+\bibitem{sun2020pyscf}
+Sun, Q. et~al. Recent Developments in the PySCF Program Package. \emph{The Journal of Chemical Physics} \textbf{153}, 024109 (2020). \href{https://doi.org/10.1063/5.0006074}{https://doi.org/10.1063/5.0006074}.
+
+\bibitem{li2024gpu4pyscf}
+Li, R., Sun, Q., Zhang, X. \& Chan, G. K.-L. Introducing GPU-Acceleration into the Python-Based Simulations of Chemistry Framework. \emph{arXiv preprint arXiv:2407.09700} (2024).
+
+\end{thebibliography}
