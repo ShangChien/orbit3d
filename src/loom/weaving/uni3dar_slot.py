@@ -57,15 +57,31 @@ _ELEMENT_MAX_COORD: Dict[str, int] = {
     "Br": 1,
     "I": 1,
     "O": 2,
-    "B": 4,
+    "B": 3,
     "C": 4,
-    "N": 4,
+    "N": 3,
     "Si": 4,
     "Se": 4,
     "P": 5,
     "As": 5,
     "S": 6,
 }
+
+
+class HeavyAtomValenceHead(nn.Module):
+    """Lightweight auxiliary head supervising `(num_attached_H in {0..4}, formal_charge in {-1,0,+1})`
+    on heavy-atom hidden states so the backbone internalizes local neutral Lewis valence budgets.
+    """
+
+    def __init__(self, emb_dim: int) -> None:
+        super().__init__()
+        self.norm = nn.LayerNorm(emb_dim)
+        self.proj_num_h = nn.Linear(emb_dim, 5)
+        self.proj_charge = nn.Linear(emb_dim, 3)
+
+    def forward(self, hidden_atoms: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.norm(hidden_atoms)
+        return self.proj_num_h(h), self.proj_charge(h)
 
 
 @lru_cache(maxsize=32)
@@ -169,6 +185,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         lora_include_heads: bool = True,
         lora_include_xyz_heads: bool = False,
         train_xyz_embeddings: bool = False,
+        use_valence_head: bool = False,
     ) -> None:
         super().__init__()
         if len(target_cols) != len(target_units) or len(mean) != len(target_cols) or len(scale) != len(target_cols):
@@ -200,6 +217,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             "lora_include_heads": bool(lora_include_heads),
             "lora_include_xyz_heads": bool(lora_include_xyz_heads),
             "train_xyz_embeddings": bool(train_xyz_embeddings),
+            "use_valence_head": bool(use_valence_head),
         }
 
         self.conditioner = LoomConditioner(
@@ -210,6 +228,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
             num_freqs=num_freqs,
             num_prefix_tokens=num_prefix_tokens,
             modulation_cap=modulation_cap,
+        )
+        self.valence_head: Optional[HeavyAtomValenceHead] = (
+            HeavyAtomValenceHead(self.args.emb_dim) if use_valence_head else None
         )
 
         self.injected_lora_modules: List[str] = []
@@ -381,7 +402,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 for emb in getattr(ahead, "emb_layers", []):
                     emb.requires_grad_(True)
         self.conditioner.requires_grad_(train_conditioner)
+        if self.valence_head is not None:
+            self.valence_head.requires_grad_(True)
         return [p for p in self.parameters() if p.requires_grad]
+
+    def enable_v20_valence_head(self) -> List[nn.Parameter]:
+        """Attach `HeavyAtomValenceHead` in-place onto a `v1.0` or `v1.1` checkpoint
+        with zero initial perturbation to autoregressive sampling.
+        """
+        if self.valence_head is None:
+            self.valence_head = HeavyAtomValenceHead(self.args.emb_dim).to(self.target_mean.device)
+        self.loom_config["use_valence_head"] = True
+        return self.configure_trainable()
 
     def enable_v11_xyz_heads(
         self,
@@ -411,26 +443,40 @@ class LoomUni3DARGenerator(GeneratorSlot):
         placed_types: torch.Tensor,
         placed_valid: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Compute `(p_rcov, p_saturated)` of shape `(N, K)` for already-placed atoms."""
+        """Compute `(p_rcov, p_saturated)` of shape `(N, K)` using bond-order-aware neutral valence budgets.
+
+        Saturates:
+          - Carbonyl `O` after a single short `C=O / N=O` bond (`d <= 0.91 * (r_i + r_j)`, order proxy = 2)
+            or after 2 single bonds, preventing oxonium `[O+]` internal salts.
+          - Boron `B` at 3 bonds (preventing `[B-]`), halogens `F/Cl/Br/I` at 1 bond, `H` at 1 bond.
+          - Nitrogen `N` at 3 valence units unless already bonded to `O` (allowing `-NO2` / `N-oxide` up to 4).
+        """
         device = placed_pos.device
         n_rows, k_atoms, _ = placed_pos.shape
         rcov_table, max_c_table = _atom_geometry_tables(self.backbone.num_atom, str(device))
         safe_types = placed_types.clamp(0, self.backbone.num_atom - 1).long()
         p_rcov = rcov_table[safe_types]
-        p_maxc = max_c_table[safe_types]
+        p_maxc = max_c_table[safe_types].clone()
         if k_atoms <= 1 or not bool(placed_valid.any().item()):
-            p_deg = torch.zeros((n_rows, k_atoms), dtype=torch.int32, device=device)
+            p_val_used = torch.zeros((n_rows, k_atoms), dtype=torch.int32, device=device)
         else:
             d_kk = torch.cdist(placed_pos.float(), placed_pos.float())
             not_self = ~torch.eye(k_atoms, dtype=torch.bool, device=device).unsqueeze(0)
-            bonded = (
-                (d_kk <= 1.26 * (p_rcov.unsqueeze(2) + p_rcov.unsqueeze(1)))
-                & placed_valid.unsqueeze(2)
-                & placed_valid.unsqueeze(1)
-                & not_self
-            )
-            p_deg = bonded.sum(dim=-1).to(torch.int32)
-        p_sat = placed_valid & (p_deg >= p_maxc)
+            valid_pair = placed_valid.unsqueeze(2) & placed_valid.unsqueeze(1) & not_self
+            r_pair = p_rcov.unsqueeze(2) + p_rcov.unsqueeze(1)
+            is_single = valid_pair & (d_kk <= 1.26 * r_pair)
+            is_double = valid_pair & (d_kk <= 0.91 * r_pair)
+            is_triple = valid_pair & (d_kk <= 0.83 * r_pair)
+            bo_proxy = is_single.to(torch.int32) + is_double.to(torch.int32) + is_triple.to(torch.int32)
+            p_val_used = bo_proxy.sum(dim=-1)
+
+            # Permit N up to 4 valence units only when bonded to an oxygen atom (nitro / N-oxide)
+            n_id = self.dictionary.indices.get("N", -1) if hasattr(self.dictionary, "indices") else self.dictionary["N"]
+            o_id = self.dictionary.indices.get("O", -1) if hasattr(self.dictionary, "indices") else self.dictionary["O"]
+            is_o = (safe_types == o_id).unsqueeze(1)
+            has_o_nb = (is_single & is_o).any(dim=-1)
+            p_maxc = torch.where((safe_types == n_id) & has_o_nb, torch.full_like(p_maxc, 4), p_maxc)
+        p_sat = placed_valid & (p_val_used >= p_maxc)
         return p_rcov, p_sat
 
     def _element_guard_logit_bias(
@@ -662,6 +708,63 @@ class LoomUni3DARGenerator(GeneratorSlot):
     # ------------------------------------------------------------------
     # Supervised / Hindsight + Contrastive Margin Objective
     # ------------------------------------------------------------------
+    def _compute_valence_aux_loss(
+        self,
+        atom_hidden: torch.Tensor,
+        gts_xyz: List[torch.Tensor],
+        atom_vox_phy_pos: torch.Tensor,
+        cu_lens: torch.Tensor,
+        is_gen_atom: torch.Tensor,
+        bsz: int,
+    ) -> torch.Tensor:
+        """Vectorized GPU supervision of `(num_attached_H in {0..4}, formal_charge in {-1,0,+1})` on heavy atoms."""
+        assert self.valence_head is not None
+        device = atom_hidden.device
+        elem_ids = gts_xyz[0]
+        h_id = self.dictionary["H"]
+        n_id = self.dictionary["N"]
+        o_id = self.dictionary["O"]
+        real_mask = (elem_ids >= 0) & (elem_ids < len(atom_list))
+        heavy_mask = real_mask & (elem_ids != h_id)
+        if not bool(heavy_mask.any().item()):
+            return torch.zeros((), device=device)
+
+        owners_all = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
+        atom_owners = owners_all[is_gen_atom]
+
+        vox_origins = atom_vox_phy_pos.float() - 0.5 * float(self.args.grid_len)
+        xyz_bins = torch.stack(gts_xyz[1:4], dim=-1).float()
+        atom_pos = vox_origins + xyz_bins * float(self.args.xyz_resolution)
+
+        same_mol = atom_owners.unsqueeze(1) == atom_owners.unsqueeze(0)
+        not_self = ~torch.eye(atom_pos.shape[0], dtype=torch.bool, device=device)
+        d_aa = torch.cdist(atom_pos, atom_pos)
+
+        is_h_col = (elem_ids == h_id).unsqueeze(0)
+        h_bonded = same_mol & not_self & is_h_col & (d_aa <= 1.32)
+        gt_num_h_all = h_bonded.sum(dim=-1).clamp(0, 4).long()
+
+        # Dipolar charge proxy on heavy atoms: {-1 -> 0, 0 -> 1, +1 -> 2}
+        rcov_table, _ = _atom_geometry_tables(self.backbone.num_atom, str(device))
+        r_vec = rcov_table[elem_ids.clamp(0, self.backbone.num_atom - 1)]
+        heavy_col = heavy_mask.unsqueeze(0)
+        heavy_bonded = same_mol & not_self & heavy_col & (d_aa <= 1.26 * (r_vec.unsqueeze(1) + r_vec.unsqueeze(0)))
+        heavy_deg = heavy_bonded.sum(dim=-1)
+        has_o_nb = (heavy_bonded & (elem_ids == o_id).unsqueeze(0)).any(dim=-1)
+
+        is_n_plus = (elem_ids == n_id) & (heavy_deg >= 3) & has_o_nb & (gt_num_h_all == 0)
+        bonded_to_n_plus = (heavy_bonded & is_n_plus.unsqueeze(0)).any(dim=-1)
+        is_o_minus = (elem_ids == o_id) & (heavy_deg == 1) & (gt_num_h_all == 0) & bonded_to_n_plus
+
+        gt_charge_cls_all = torch.ones_like(gt_num_h_all)
+        gt_charge_cls_all = torch.where(is_o_minus, torch.zeros_like(gt_charge_cls_all), gt_charge_cls_all)
+        gt_charge_cls_all = torch.where(is_n_plus, torch.full_like(gt_charge_cls_all, 2), gt_charge_cls_all)
+
+        logits_h, logits_q = self.valence_head(atom_hidden[heavy_mask])
+        loss_h = F.cross_entropy(logits_h.float(), gt_num_h_all[heavy_mask])
+        loss_q = F.cross_entropy(logits_q.float(), gt_charge_cls_all[heavy_mask])
+        return loss_h + 0.5 * loss_q
+
     def _nll_from_hidden(
         self,
         dec_y: torch.Tensor,
@@ -669,7 +772,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
         cu_lens: torch.Tensor,
         bsz: int,
         *,
+        decoder_input: Optional[DecoderInputFeat] = None,
         xyz_loss_weight: float = 0.1,
+        valence_loss_weight: float = 0.15,
         atom_class_weights: Optional[torch.Tensor] = None,
         return_per_molecule: bool = False,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
@@ -687,6 +792,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
         loss_atom = torch.zeros((), device=device)
         loss_xyz = torch.zeros((), device=device)
+        loss_valence = torch.zeros((), device=device)
         atom_logits = None
         preds_xyz = None
         gts_xyz = None
@@ -701,12 +807,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 + F.cross_entropy(preds_xyz[3].float(), gts_xyz[3])
             ) / 3.0
 
-        gen_loss = loss_tree + loss_atom + xyz_loss_weight * loss_xyz
+            if self.valence_head is not None and decoder_input is not None and valence_loss_weight > 0.0:
+                loss_valence = self._compute_valence_aux_loss(
+                    dec_y[is_gen_atom], gts_xyz, decoder_input.phy_pos[is_gen_atom], cu_lens, is_gen_atom, bsz
+                )
+
+        gen_loss = loss_tree + loss_atom + xyz_loss_weight * loss_xyz + valence_loss_weight * loss_valence
         info: Dict[str, Any] = {
             "loss_gen": float(gen_loss.detach().item()),
             "loss_tree": float(loss_tree.detach().item()),
             "loss_atom": float(loss_atom.detach().item()),
             "loss_xyz": float(loss_xyz.detach().item()),
+            "loss_valence": float(loss_valence.detach().item()),
         }
 
         if return_per_molecule:
@@ -753,6 +865,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         contrast_margin: float = 0.05,
         contrast_min_gap_eV: float = 0.25,
         xyz_loss_weight: float = 0.1,
+        valence_loss_weight: float = 0.15,
         atom_class_weights: Optional[torch.Tensor] = None,
         return_per_molecule: bool = False,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
@@ -777,7 +890,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
             decoder_gen_target,
             cu_lens,
             bsz,
+            decoder_input=decoder_input,
             xyz_loss_weight=xyz_loss_weight,
+            valence_loss_weight=valence_loss_weight,
             atom_class_weights=atom_class_weights,
             return_per_molecule=need_per_mol,
         )

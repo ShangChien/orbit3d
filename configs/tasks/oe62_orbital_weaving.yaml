@@ -1,0 +1,47 @@
+task_name: oe62_orbital_weaving
+description: >-
+  Standard OE62 2-channel frontier orbital weaving specification (HOMO & LUMO)
+  mounted via declarative PredictorAsset adapters without hardcoded pipeline flags.
+potential_asset_id: mlip_dpa4
+reconcile_valence: true
+unphysical_pair_rule: "x>=y"
+
+objectives:
+  - name: homo
+    asset_id: ext_unimol2
+    asset_channel: homo
+    mode: point
+    tolerance: 0.25
+    unit: eV
+    weight: 1.0
+  - name: lumo
+    asset_id: ext_unimol2
+    asset_channel: lumo
+    mode: point
+    tolerance: 0.25
+    unit: eV
+    weight: 1.0
+
+constraints:
+  - name: zero_reactive_alerts
+    asset_id: builtin_rules
+    asset_channel: smarts_alert
+    op: leq
+    threshold: 0.0
+    soft_margin: 0.5
+    weight: 0.4
+    hard_gate: false
+
+auditors:
+  - name: dpa4_homo_audit
+    objective_name: homo
+    mode: cross_oracle
+    auditor_asset_id: audit_dpa4
+    auditor_channel: homo
+    disagreement_cap: 0.35
+  - name: dpa4_lumo_audit
+    objective_name: lumo
+    mode: cross_oracle
+    auditor_asset_id: audit_dpa4
+    auditor_channel: lumo
+    disagreement_cap: 0.38

@@ -18,39 +18,14 @@ import numpy as np
 import torch
 from rdkit import Chem
 
+from ..chemistry.valence_reconciler import (
+    ALLOWED_DIPOLAR_PAIRS,
+    formal_charge_signature,
+    is_clean_organic_charge_state,
+)
 from ..generator.octree_alignment import categorical_policy_loss
 from ..generator.octree_backend import OctreeDataset, trajectory_to_instance
 from .slots import GeneratorSlot, PotentialSlot, RewardOracleSlot, assert_not_audit_oracle
-
-
-ALLOWED_DIPOLAR_PAIRS = frozenset({
-    ("N", 1),
-    ("O", -1),
-    ("S", 1),
-    ("S", 2),
-    ("P", 1),
-    ("B", -1),
-})
-
-
-def formal_charge_signature(mol: Chem.Mol) -> Tuple[Tuple[str, int], ...]:
-    """Canonical formal-charge multiset signature of nonzero-charged atoms."""
-    nonzero = sorted((a.GetSymbol(), int(a.GetFormalCharge())) for a in mol.GetAtoms() if a.GetFormalCharge() != 0)
-    return tuple(nonzero)
-
-
-def is_clean_organic_charge_state(mol: Chem.Mol, max_abs_formal_sum: int = 4) -> bool:
-    """Return True iff `mol` is net-neutral and carries no exotic zwitterions (`C-`, `O+`, halonium, etc.)."""
-    net_q = 0
-    abs_q = 0
-    for atom in mol.GetAtoms():
-        q = int(atom.GetFormalCharge())
-        if q != 0:
-            net_q += q
-            abs_q += abs(q)
-            if (atom.GetSymbol(), q) not in ALLOWED_DIPOLAR_PAIRS:
-                return False
-    return net_q == 0 and abs_q <= max_abs_formal_sum
 
 
 def compute_disentangled_group_advantages(
@@ -152,9 +127,10 @@ class LoomGRPOTrainer:
     def __init__(
         self,
         generator: GeneratorSlot,
-        reward_oracle: RewardOracleSlot,
+        reward_oracle: Optional[RewardOracleSlot] = None,
         potential_slot: Optional[PotentialSlot] = None,
         *,
+        critic_bus: Optional[Any] = None,
         seen_charge_signatures: Optional[FrozenSet[Tuple[Tuple[str, int], ...]]] = None,
         replay_molecules: Optional[Sequence[Chem.Mol]] = None,
         replay_targets_eV: Optional[np.ndarray] = None,
@@ -183,12 +159,18 @@ class LoomGRPOTrainer:
         electron_parity: Optional[int] = 0,
         seed: int = 42,
     ) -> None:
-        assert_not_audit_oracle(reward_oracle)
+        if reward_oracle is None and critic_bus is None:
+            raise ValueError("LoomGRPOTrainer requires either `reward_oracle` or `critic_bus`")
+        if reward_oracle is not None:
+            assert_not_audit_oracle(reward_oracle)
+        if potential_slot is None and critic_bus is not None:
+            potential_slot = getattr(critic_bus, "potential_slot", None)
         if potential_slot is not None:
             assert_not_audit_oracle(potential_slot)
 
         self.generator = generator
         self.reward_oracle = reward_oracle
+        self.critic_bus = critic_bus
         self.potential_slot = potential_slot
         self.seen_charge_signatures = seen_charge_signatures
 
@@ -223,8 +205,12 @@ class LoomGRPOTrainer:
         self.seed = int(seed)
         self.rng = np.random.default_rng(self.seed)
 
-        # Map generator target_cols to reward_oracle target_cols indices
-        self.oracle_col_indices = [self.reward_oracle.target_cols.index(col) for col in self.generator.target_cols]
+        # Map generator target_cols to reward_oracle target_cols indices when using legacy reward_oracle
+        self.oracle_col_indices = (
+            [self.reward_oracle.target_cols.index(col) for col in self.generator.target_cols]
+            if self.reward_oracle is not None
+            else list(range(len(self.generator.target_cols)))
+        )
 
         self.replay_dataset: Optional[OctreeDataset] = None
         self.replay_targets_eV: Optional[np.ndarray] = None
@@ -300,97 +286,142 @@ class LoomGRPOTrainer:
                 else None
             )
 
-        # 2. Chemical & formal-charge admission
-        allowed_elems = tuple(self.generator.args.allow_atoms.split(","))
-        mols: List[Optional[Chem.Mol]] = [None] * total_b
-        valid_mask_np = np.zeros(total_b, dtype=bool)
-        clean_charge_np = np.zeros(total_b, dtype=bool)
-        seen_charge_np = np.ones(total_b, dtype=bool)
-        valid_scores_np = np.full(total_b, -1.0, dtype=np.float32)
-
-        valid_indices: List[int] = []
-        valid_mols: List[Chem.Mol] = []
-        for idx, traj in enumerate(trajectories):
-            try:
-                inst = trajectory_to_instance(traj, element_table=allowed_elems)
-                mol = inst.graph
-                mols[idx] = mol
-                valid_mask_np[idx] = True
-                valid_indices.append(idx)
-                valid_mols.append(mol)
-                clean_q = is_clean_organic_charge_state(mol)
-                clean_charge_np[idx] = clean_q
-                if not clean_q:
-                    valid_scores_np[idx] = -0.35
-                    seen_charge_np[idx] = False
-                elif self.seen_charge_signatures is not None:
-                    sig = formal_charge_signature(mol)
-                    is_seen = sig in self.seen_charge_signatures
-                    seen_charge_np[idx] = is_seen
-                    valid_scores_np[idx] = 1.0 if is_seen else 0.75
-                else:
-                    valid_scores_np[idx] = 1.0
-            except ValueError:
-                pass
-
-        # 3. Batched PotentialSlot zero-step force evaluation
-        phys_scores_np = np.zeros(total_b, dtype=np.float32)
-        f_max_np = np.full(total_b, np.nan, dtype=np.float64)
-        f_rms_np = np.full(total_b, np.nan, dtype=np.float64)
-        if self.potential_slot is not None and valid_mols:
-            phys_out = self.potential_slot.evaluate_molecules(valid_mols, chunk_size=32)
-            r_phys_valid = zero_step_physical_reward(phys_out["f_rms_eV_A"], phys_out["f_max_eV_A"]).numpy()
-            for local_i, global_i in enumerate(valid_indices):
-                f_max_np[global_i] = phys_out["f_max_eV_A"][local_i]
-                f_rms_np[global_i] = phys_out["f_rms_eV_A"][local_i]
-                if np.isfinite(r_phys_valid[local_i]):
-                    phys_scores_np[global_i] = r_phys_valid[local_i]
-
-        # 4. Batched RewardOracleSlot evaluation (strictly gating out exotic zwitterions from property reward!)
-        mols_for_prop = [m if clean_charge_np[i] else None for i, m in enumerate(mols)]
-        preds_all, _, eval_mask_np, _ = self.reward_oracle.evaluate_candidates(mols_for_prop, batch_size=32)
-        preds_aligned = preds_all[:, self.oracle_col_indices]  # (B, num_props)
-
-        prop_scores_np = np.zeros(total_b, dtype=np.float32)
-        abs_err_np = np.full(total_b, np.nan, dtype=np.float64)
-        hits_np = np.zeros(total_b, dtype=bool)
-        for idx in range(total_b):
-            if eval_mask_np[idx]:
-                act = rep_mask_np[idx]
-                if act.any():
-                    diffs = np.abs(preds_aligned[idx, act] - rep_targets_eV[idx, act])
-                    mean_err = float(np.mean(diffs))
-                    max_err = float(np.max(diffs))
-                    abs_err_np[idx] = mean_err
-                    hits_np[idx] = max_err <= self.tolerance_eV
-                    prop_scores_np[idx] = float(
-                        property_distance_reward(
-                            mean_err, self.tolerance_eV, sharp_concentration=self.sharp_concentration
-                        ).item()
-                    )
-
-        # 5. Per-prompt disentangled group-normalized advantages
-        valid_scores_t = torch.as_tensor(valid_scores_np, device=self.device)
-        valid_mask_t = torch.as_tensor(valid_mask_np, device=self.device)
-        phys_scores_t = torch.as_tensor(phys_scores_np, device=self.device)
-        eval_mask_t = torch.as_tensor(eval_mask_np, device=self.device)
-        prop_scores_t = torch.as_tensor(prop_scores_np, device=self.device)
-
-        adv_all = torch.zeros(total_b, device=self.device, dtype=torch.float32)
-        for p_idx in range(p_count):
-            s = p_idx * group_size
-            e = s + group_size
-            adv_g, _ = compute_disentangled_group_advantages(
-                valid_scores_t[s:e],
-                valid_mask_t[s:e],
-                phys_scores_t[s:e],
-                eval_mask_t[s:e],
-                prop_scores_t[s:e],
+        # 2-5. Evaluation & Advantage Routing (`CompositeCriticBus` OR legacy `RewardOracleSlot`)
+        constraints_met_rate = 1.0
+        if self.critic_bus is not None:
+            admit_out = self.critic_bus.admit_trajectories(trajectories)
+            mols = admit_out["mols"]
+            bus_obj_names = self.critic_bus.spec.objective_names
+            gen_cols = list(self.generator.target_cols)
+            if len(bus_obj_names) == rep_targets_eV.shape[-1] and tuple(bus_obj_names) == tuple(gen_cols):
+                bus_req = rep_targets_eV
+                bus_act = rep_mask_np
+            else:
+                obj_col_indices = [
+                    gen_cols.index(nm) if nm in gen_cols else min(i, rep_targets_eV.shape[-1] - 1)
+                    for i, nm in enumerate(bus_obj_names)
+                ]
+                bus_req = rep_targets_eV[:, obj_col_indices]
+                bus_act = rep_mask_np[:, obj_col_indices]
+            ev_bundle = self.critic_bus.evaluate_molecules(
+                mols,
+                requested_targets=bus_req,
+                active_mask=bus_act,
+                include_audit=False,
+                for_training=True,
+                sharp_concentration=self.sharp_concentration,
+                batch_size=32,
+            )
+            valid_mask_np = ev_bundle["legal_mask"]
+            clean_charge_np = ev_bundle["clean_charge_mask"]
+            seen_charge_np = clean_charge_np.copy()
+            valid_scores_np = ev_bundle["valid_scores"]
+            phys_scores_np = ev_bundle["phys_scores"]
+            f_max_np = ev_bundle["f_max_eV_A"]
+            f_rms_np = ev_bundle["f_rms_eV_A"]
+            eval_mask_np = ev_bundle["evaluated_mask"]
+            prop_scores_np = ev_bundle["prop_scores"]
+            hits_np = ev_bundle["constrained_clean_hits"]
+            abs_err_np = ev_bundle["mean_normalized_error"] * self.tolerance_eV
+            if valid_mask_np.any():
+                constraints_met_rate = float(ev_bundle["constraints_met"][valid_mask_np].mean())
+            adv_all = self.critic_bus.compute_group_advantages(
+                ev_bundle,
+                group_size=group_size,
+                device=self.device,
                 w_valid=self.w_valid,
                 w_phys=self.w_phys,
                 w_prop=self.w_prop,
             )
-            adv_all[s:e] = adv_g
+        else:
+            assert self.reward_oracle is not None
+            allowed_elems = tuple(self.generator.args.allow_atoms.split(","))
+            mols = [None] * total_b
+            valid_mask_np = np.zeros(total_b, dtype=bool)
+            clean_charge_np = np.zeros(total_b, dtype=bool)
+            seen_charge_np = np.ones(total_b, dtype=bool)
+            valid_scores_np = np.full(total_b, -1.0, dtype=np.float32)
+
+            valid_indices: List[int] = []
+            valid_mols: List[Chem.Mol] = []
+            for idx, traj in enumerate(trajectories):
+                try:
+                    inst = trajectory_to_instance(traj, element_table=allowed_elems)
+                    mol = inst.graph
+                    mols[idx] = mol
+                    valid_mask_np[idx] = True
+                    valid_indices.append(idx)
+                    valid_mols.append(mol)
+                    clean_q = is_clean_organic_charge_state(mol)
+                    clean_charge_np[idx] = clean_q
+                    if not clean_q:
+                        valid_scores_np[idx] = -0.35
+                        seen_charge_np[idx] = False
+                    elif self.seen_charge_signatures is not None:
+                        sig = formal_charge_signature(mol)
+                        is_seen = sig in self.seen_charge_signatures
+                        seen_charge_np[idx] = is_seen
+                        valid_scores_np[idx] = 1.0 if is_seen else 0.75
+                    else:
+                        valid_scores_np[idx] = 1.0
+                except ValueError:
+                    pass
+
+            phys_scores_np = np.zeros(total_b, dtype=np.float32)
+            f_max_np = np.full(total_b, np.nan, dtype=np.float64)
+            f_rms_np = np.full(total_b, np.nan, dtype=np.float64)
+            if self.potential_slot is not None and valid_mols:
+                phys_out = self.potential_slot.evaluate_molecules(valid_mols, chunk_size=32)
+                r_phys_valid = zero_step_physical_reward(phys_out["f_rms_eV_A"], phys_out["f_max_eV_A"]).numpy()
+                for local_i, global_i in enumerate(valid_indices):
+                    f_max_np[global_i] = phys_out["f_max_eV_A"][local_i]
+                    f_rms_np[global_i] = phys_out["f_rms_eV_A"][local_i]
+                    if np.isfinite(r_phys_valid[local_i]):
+                        phys_scores_np[global_i] = r_phys_valid[local_i]
+
+            mols_for_prop = [m if clean_charge_np[i] else None for i, m in enumerate(mols)]
+            preds_all, _, eval_mask_np, _ = self.reward_oracle.evaluate_candidates(mols_for_prop, batch_size=32)
+            preds_aligned = preds_all[:, self.oracle_col_indices]  # (B, num_props)
+
+            prop_scores_np = np.zeros(total_b, dtype=np.float32)
+            abs_err_np = np.full(total_b, np.nan, dtype=np.float64)
+            hits_np = np.zeros(total_b, dtype=bool)
+            for idx in range(total_b):
+                if eval_mask_np[idx]:
+                    act = rep_mask_np[idx]
+                    if act.any():
+                        diffs = np.abs(preds_aligned[idx, act] - rep_targets_eV[idx, act])
+                        mean_err = float(np.mean(diffs))
+                        max_err = float(np.max(diffs))
+                        abs_err_np[idx] = mean_err
+                        hits_np[idx] = max_err <= self.tolerance_eV
+                        prop_scores_np[idx] = float(
+                            property_distance_reward(
+                                mean_err, self.tolerance_eV, sharp_concentration=self.sharp_concentration
+                            ).item()
+                        )
+
+            valid_scores_t = torch.as_tensor(valid_scores_np, device=self.device)
+            valid_mask_t = torch.as_tensor(valid_mask_np, device=self.device)
+            phys_scores_t = torch.as_tensor(phys_scores_np, device=self.device)
+            eval_mask_t = torch.as_tensor(eval_mask_np, device=self.device)
+            prop_scores_t = torch.as_tensor(prop_scores_np, device=self.device)
+
+            adv_all = torch.zeros(total_b, device=self.device, dtype=torch.float32)
+            for p_idx in range(p_count):
+                s = p_idx * group_size
+                e = s + group_size
+                adv_g, _ = compute_disentangled_group_advantages(
+                    valid_scores_t[s:e],
+                    valid_mask_t[s:e],
+                    phys_scores_t[s:e],
+                    eval_mask_t[s:e],
+                    prop_scores_t[s:e],
+                    w_valid=self.w_valid,
+                    w_phys=self.w_phys,
+                    w_prop=self.w_prop,
+                )
+                adv_all[s:e] = adv_g
 
         # 5b. Optional v1.1 Online Relaxed-Coordinate Distillation (`L_relax_SFT`)
         relax_packed: Optional[Dict[str, torch.Tensor]] = None
@@ -429,8 +460,14 @@ class LoomGRPOTrainer:
                         kept_masks.append(rep_mask_np[orig_i])
                         kept_req_targets.append(rep_targets_eV[orig_i])
                 if kept_mols:
-                    rel_preds, _, rel_ok, _ = self.reward_oracle.evaluate_candidates(kept_mols, batch_size=16)
-                    rel_aligned = rel_preds[:, self.oracle_col_indices]
+                    if self.critic_bus is not None:
+                        rel_ev = self.critic_bus.evaluate_molecules(kept_mols, for_training=True, batch_size=16)
+                        rel_aligned = rel_ev["objective_preds"]
+                        rel_ok = rel_ev["evaluated_mask"] & rel_ev["hard_constraints_met"]
+                    else:
+                        assert self.reward_oracle is not None
+                        rel_preds, _, rel_ok, _ = self.reward_oracle.evaluate_candidates(kept_mols, batch_size=16)
+                        rel_aligned = rel_preds[:, self.oracle_col_indices]
                     temp_ds = OctreeDataset(
                         kept_mols, self.generator.backbone, training=False, seed=self.seed + step_index
                     )
@@ -563,6 +600,7 @@ class LoomGRPOTrainer:
             "evaluated": int(eval_mask_np.sum()),
             "hits": int(hits_np.sum()),
             "hit_yield": float(hits_np.mean()),
+            "constraints_met_rate_among_valid": float(constraints_met_rate),
             "clean_charge_rate_among_valid": float(clean_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
             "exotic_charge_rate_among_valid": float(1.0 - clean_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
             "unseen_charge_rate": float(1.0 - seen_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,

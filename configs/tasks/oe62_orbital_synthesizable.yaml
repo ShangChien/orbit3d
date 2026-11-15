@@ -1,0 +1,59 @@
+task_name: oe62_orbital_synthesizable
+description: >-
+  Enterprise multi-asset weaving example: zero-retrain alignment combining an
+  external 3D electronic predictor (Uni-Mol2 / ResidualCalibratedAsset) with
+  synthesizability (SA_Score <= 3.5), reactive-group suppression, and zero
+  exotic zwitterions via ValenceReconciler.
+potential_asset_id: mlip_dpa4
+reconcile_valence: true
+unphysical_pair_rule: null
+
+objectives:
+  - name: homo
+    asset_id: ext_unimol2
+    asset_channel: homo
+    mode: point
+    tolerance: 0.25
+    unit: eV
+    weight: 1.0
+  - name: lumo
+    asset_id: ext_unimol2
+    asset_channel: lumo
+    mode: point
+    tolerance: 0.25
+    unit: eV
+    weight: 1.0
+
+constraints:
+  - name: synthesizable_sa
+    asset_id: builtin_rules
+    asset_channel: sa_score
+    op: leq
+    threshold: 3.5
+    soft_margin: 0.60
+    weight: 0.75
+    hard_gate: true
+  - name: mol_weight_cap
+    asset_id: builtin_rules
+    asset_channel: mol_weight
+    op: leq
+    threshold: 550.0
+    soft_margin: 60.0
+    weight: 0.30
+    hard_gate: false
+  - name: reactive_smarts_clean
+    asset_id: builtin_rules
+    asset_channel: smarts_alert
+    op: leq
+    threshold: 0.0
+    soft_margin: 0.50
+    weight: 0.40
+    hard_gate: true
+
+auditors:
+  - name: dpa4_homo_audit
+    objective_name: homo
+    mode: cross_oracle
+    auditor_asset_id: audit_dpa4
+    auditor_channel: homo
+    disagreement_cap: 0.35

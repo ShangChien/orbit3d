@@ -1,3 +1,3 @@
-"""Uni-Loom (`loom`): Weaving Generative, Potential, and Property Foundation Models for 3D Molecular Design."""
+"""Uni-Loom (`loom`): Predictor-Agnostic 3-Layer Weaving & Grounded RSI Platform for 3D Molecular Design."""
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"
