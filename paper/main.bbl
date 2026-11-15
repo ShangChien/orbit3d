@@ -1,0 +1,120 @@
+\begin{thebibliography}{21}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax\else\urlstyle{same}\fi
+
+\bibitem[Stuke et~al.(2020)]{stuke2020oe62}
+A.~Stuke, C.~Kunkel, D.~Golze, M.~Todorovi{\'c}, J. T.~Margraf, K.~Reuter, et~al.
+\newblock Atomic Structures and Orbital Energies of 61,489 Crystal-Forming Organic Molecules.
+\newblock \emph{Scientific Data}, 7:58, 2020.
+\newblock DOI: \href{https://doi.org/10.1038/s41597-020-0385-y}{\texttt{10.1038/s41597-020-0385-y}}.
+
+\bibitem[Bhat et~al.(2023)]{bhat2023ocelot}
+V.~Bhat, P.~Sornberger, B. S. S.~Pokuri, R.~Duke, B.~Ganapathysubramanian, and C.~Risko.
+\newblock Electronic, Redox, and Optical Property Prediction of Organic $\pi$-Conjugated Molecules Through a Hierarchy of Machine Learning Approaches.
+\newblock \emph{Chemical Science}, 14:203--213, 2023.
+
+\bibitem[Zhao et~al.(2026)]{zhao2026o2gen}
+G.~Zhao, Z.~Cheng, K.~Xu, T.~Wan, M.~Feng, S.~Lu, et~al.
+\newblock Fast and Flexible 3{D} Molecular Design Framework for Novel Organic Optoelectronic Materials.
+\newblock \emph{JACS Au}, 2026.
+\newblock DOI: \href{https://doi.org/10.1021/jacsau.5c01756}{\texttt{10.1021/jacsau.5c01756}}.
+
+\bibitem[Hoogeboom et~al.(2022)]{hoogeboom2022edm}
+E.~Hoogeboom, V. G.~Satorras, C.~Vignac, and M.~Welling.
+\newblock Equivariant Diffusion for Molecule Generation in 3{D}.
+\newblock \emph{Proceedings of the 39th International Conference on Machine Learning}, 162:8867--8887, 2022.
+
+\bibitem[Xu et~al.(2023)]{xu2023geoldm}
+M.~Xu, A. S.~Powers, R. O.~Dror, S.~Ermon, and J.~Leskovec.
+\newblock Geometric Latent Diffusion Models for 3{D} Molecule Generation.
+\newblock \emph{Proceedings of the 40th International Conference on Machine Learning}, 202:38592--38610, 2023.
+
+\bibitem[Zeng et~al.(2026)]{zeng2026propmolflow}
+C.~Zeng, J.~Jin, C.~Ambrose, G.~Karypis, M.~Transtrum, E. B.~Tadmor, et~al.
+\newblock {PropMolFlow}: Property-Guided Molecule Generation with Geometry-Complete Flow Matching.
+\newblock \emph{Nature Computational Science}, 6:233--242, 2026.
+\newblock DOI: \href{https://doi.org/10.1038/s43588-025-00946-y}{\texttt{10.1038/s43588-025-00946-y}}.
+
+\bibitem[Ertl and Schuffenhauer(2009)]{ertl2009sa}
+P.~Ertl and A.~Schuffenhauer.
+\newblock Estimation of Synthetic Accessibility Score of Drug-Like Molecules Based on Molecular Complexity and Fragment Contributions.
+\newblock \emph{Journal of Cheminformatics}, 1:8, 2009.
+
+\bibitem[Lu et~al.(2025)]{lu2025uni3dar}
+S.~Lu, H.~Lin, L.~Yao, Z.~Gao, X.~Ji, Y.~Liang, et~al.
+\newblock Unified Cross-Scale 3D Generation and Understanding via Autoregressive Modeling.
+\newblock \emph{arXiv preprint arXiv:2503.16278}, 2025.
+\newblock URL: \url{https://arxiv.org/abs/2503.16278}.
+
+\bibitem[RDKit Contributors(2026)]{rdkit2026bonds}
+RDKit Contributors.
+\newblock {RDKit} {rdDetermineBonds} {API} Documentation.
+\newblock 2026.
+\newblock URL: \url{https://www.rdkit.org/docs/source/rdkit.Chem.rdDetermineBonds.html}.
+
+\bibitem[Ji et~al.(2024)]{ji2024unimol2}
+X.~Ji, Z.~Wang, Z.~Gao, H.~Zheng, L.~Zhang, G.~Ke, et~al.
+\newblock {Uni-Mol2}: Exploring Molecular Pretraining Model at Scale.
+\newblock \emph{Advances in Neural Information Processing Systems}, 37, 2024.
+
+\bibitem[Zhou et~al.(2023)]{zhou2023unimol}
+G.~Zhou, Z.~Gao, Q.~Ding, H.~Zheng, H.~Xu, Z.~Wei, et~al.
+\newblock {Uni-Mol}: A Universal 3D Molecular Representation Learning Framework.
+\newblock \emph{International Conference on Learning Representations}, 2023.
+\newblock URL: \url{https://github.com/dptech-corp/Uni-Mol}.
+
+\bibitem[Bickerton et~al.(2012)]{bickerton2012qed}
+G. R.~Bickerton, G. V.~Paolini, J.~Besnard, S.~Muresan, and A. L.~Hopkins.
+\newblock Quantifying the Chemical Beauty of Drugs.
+\newblock \emph{Nature Chemistry}, 4:90--98, 2012.
+
+\bibitem[DeePMD-kit Developers(2026)]{deepmodeling2026dpa4}
+DeePMD-kit Developers.
+\newblock {DPA4/SeZM} Model Documentation.
+\newblock \emph{DeePMD-kit Documentation}, 2026.
+\newblock URL: \url{https://github.com/deepmodeling/deepmd-kit/blob/master/doc/model/dpa4.md}.
+
+\bibitem[Tencent Hunyuan Hyra Team(2026)]{hyra2026hyff}
+Tencent Hunyuan Hyra Team.
+\newblock {HyFF}: Molecular Force Fields and Inference Runtime.
+\newblock \emph{Hyra Research Artifacts (v0.2.0)}, 2026.
+\newblock URL: \url{https://github.com/Tencent-Hunyuan/Hyra-results/tree/main/AI4Science/hyff}.
+
+\bibitem[Rasmussen and Williams(2006)]{rasmussen2006gp}
+C. E.~Rasmussen and C. K. I.~Williams.
+\newblock Gaussian Processes for Machine Learning.
+\newblock \emph{MIT Press}, 2006.
+
+\bibitem[Bemis and Murcko(1996)]{bemis1996murcko}
+G. W.~Bemis and M. A.~Murcko.
+\newblock The Properties of Known Drugs. 1. Molecular Frameworks.
+\newblock \emph{Journal of Medicinal Chemistry}, 39:2887--2893, 1996.
+
+\bibitem[Sun et~al.(2020)]{sun2020pyscf}
+Q.~Sun et~al.
+\newblock Recent Developments in the {PySCF} Program Package.
+\newblock \emph{The Journal of Chemical Physics}, 153:024109, 2020.
+\newblock DOI: \href{https://doi.org/10.1063/5.0006074}{\texttt{10.1063/5.0006074}}.
+
+\bibitem[Li et~al.(2024)]{li2024gpu4pyscf}
+R.~Li, Q.~Sun, X.~Zhang, and G. K.~Chan.
+\newblock Introducing {GPU}-Acceleration into the Python-Based Simulations of Chemistry Framework.
+\newblock \emph{arXiv preprint arXiv:2407.09700}, 2024.
+
+\bibitem[Hu et~al.(2022)]{hu2022lora}
+E. J.~Hu, Y.~Shen, P.~Wallis, Z.~Allen-Zhu, Y.~Li, S.~Wang, et~al.
+\newblock Lo{RA}: Low-Rank Adaptation of Large Language Models.
+\newblock \emph{International Conference on Learning Representations}, 2022.
+
+\bibitem[Ho and Salimans(2022)]{ho2022cfg}
+J.~Ho and T.~Salimans.
+\newblock Classifier-Free Diffusion Guidance.
+\newblock \emph{arXiv preprint arXiv:2207.12598}, 2022.
+
+\bibitem[Shao et~al.(2024)]{shao2024grpo}
+Z.~Shao, P.~Wang, Q.~Zhu, R.~Xu, J.~Song, X.~Bi, et~al.
+\newblock {DeepSeekMath}: Pushing the Limits of Mathematical Reasoning in Open Language Models.
+\newblock \emph{arXiv preprint arXiv:2402.03300}, 2024.
+
+\end{thebibliography}

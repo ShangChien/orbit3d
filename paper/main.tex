@@ -1,0 +1,442 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=0.88in]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs,multirow,array}
+\usepackage[section]{placeins}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    citecolor=teal!55!black,
+    urlcolor=blue!50!black,
+    pdftitle={Uni-Loom: Predictor-Agnostic 3D Molecular Weaving with Dual-Track Valence Purity and Grounded Recursive Self-Improvement},
+    pdfauthor={Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, Zhifeng Gao}
+}
+
+\setlength{\emergencystretch}{2em}
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+\setlength{\parskip}{0.32em}
+\setlength{\parindent}{1.2em}
+\setlength{\belowcaptionskip}{5pt}
+\renewcommand{\topfraction}{0.90}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.82}
+
+\title{\textbf{Uni-Loom: Predictor-Agnostic 3D Molecular Weaving with Dual-Track Valence Purity and Grounded Recursive Self-Improvement}}
+
+\author{
+Shangqian Chen, Guojiang Zhao, Zheng Cheng,\\
+Jiankun Wang, Hongshuai Wang, Zhifeng Gao\\[4pt]
+\small DP Technology, Beijing, China\\
+\small\texttt{\{chensq, zhaogj, chengz, wangjk, wanghs, gaozf\}@dp.tech}
+}
+
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Training a single monolithic 3D molecular generator from scratch to simultaneously master covalent valence grammar, equilibrium interatomic mechanics, synthetic accessibility, and calibrated multi-property control across diverse chemical regimes remains prohibitively expensive. Meanwhile, specialized foundation models for 3D autoregressive generation (\texttt{Uni-3DAR}), 3D/2D property prediction (\texttt{Uni-Mol}, \texttt{Uni-Mol2}, enterprise QSAR ensembles), and universal machine-learning interatomic potentials (\texttt{DPA-4}, \texttt{HyFF}) have matured independently. Here we introduce \textbf{Uni-Loom}, a four-layer predictor-agnostic weaving and grounded recursive self-improvement (RSI) framework that binds heterogeneous pretrained 3D generators, external property predictors, analytical chemistry rules, and interatomic potentials into a calibrated, anti-reward-hacking discovery loop without retraining external predictors. First, we resolve two structural pathologies of bondless 3D point-cloud generation---cross-scale policy-gradient interference and exotic zwitterionic artifacts (\texttt{[C-]}, \texttt{[O+]}, \texttt{[B-]}, halonium)---via scale-decoupled alignment (coarse-topology \texttt{TopoGRPO} paired with detached $0.01\,\text{\AA}$ sub-voxel equilibrium coordinate distillation) and a dual-track valence engine combining generation-side bond-order-aware neutral coordination guards with a zero-heavy-atom-RMSD \texttt{ValenceReconciler}. Second, we design a declarative \texttt{TaskWeavingSpec} and \texttt{CompositeCriticBus} supporting zero-retrain mounting of differentiable 3D predictors, black-box QSAR models, inequality constraints (e.g., $\text{SA\_Score} \le 3.5$, reactive \texttt{SMARTS}), and applicability-domain auditors. Third, we formulate a heteroscedastic dual-uncertainty atlas (\texttt{GPAtlas}) that orthogonally decomposes generative control spread $\sigma_{\text{gen}}(t)$ from epistemic calibration uncertainty $\sigma_{\text{cal}}(t)$, driving a four-quadrant \textbf{Grounded RSI} engine that freezes reinforcement learning in predictor blindspots while routing diverse scaffolds to external quantum-chemical calibration via a zero-retrain \texttt{ResidualCalibratedAsset}. Across strict scaffold-disjoint evaluations on \texttt{OE62} ($47{,}807$ 3D conformers; $1{,}792$ end-to-end proposals per benchmark), \textbf{Uni-Loom} lifts conditional calibration slope from $0.409$ to $1.00$, accelerates single-GPU decoding $7.29\times$ to $32.5\,\text{mol/s}$, raises 3D covalent legality to $98.5\%\text{--}99.3\%$ ($95.2\%\text{--}97.4\%$ on raw unedited point clouds), eliminates exotic zwitterions from $25.7\%$ to $0.00\%$ ($3.6\%\text{--}8.3\%$ raw) at exact $0.0000\,\text{\AA}$ heavy-atom RMSD, boosts synthesizable clean hits by $+66.1\%$ while shrinking cross-foundation surrogate hacking gaps $4.6\times$ ($0.655 \to 0.143\,\text{eV}$), and achieves a $4.40\times$ monotonic gain in blind-audited constrained clean hits ($52 \to 229 / 1{,}792$) over two Grounded RSI rounds while cutting blind deep-\texttt{HOMO} \texttt{DFT} error by $33.8\%$ with zero base-predictor weights modified.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Inverse design of functional three-dimensional (3D) organic molecules---spanning optoelectronic semiconductors \citep{stuke2020oe62,bhat2023ocelot,zhao2026o2gen}, catalysts, and drug-like scaffolds \citep{hoogeboom2022edm,xu2023geoldm,zeng2026propmolflow}---requires satisfying a stringent conjunction of criteria: valid closed-shell Lewis bonding, low-strain 3D equilibrium geometry, synthetic accessibility \citep{ertl2009sa}, and precise targeting of continuous electronic or physicochemical properties. While recent equivariant diffusion \citep{hoogeboom2022edm,xu2023geoldm}, flow-matching \citep{zeng2026propmolflow}, and octree-based 3D autoregressive models \citep{lu2025uni3dar} have substantially improved unconditional 3D structure generation, deploying conditional 3D molecular generation as a reliable industrial platform faces three fundamental bottlenecks:
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt,topsep=3pt]
+    \item \textbf{Bondless Point-Cloud Valence Fragility and Surrogate Reward Hacking.} Modern 3D generators emit unbonded atomic point clouds $\mathcal{M} = \{(Z_i, \mathbf{r}_i)\}_{i=1}^N$ and rely on post-hoc distance-based bond perception such as \texttt{RDKit DetermineBonds} \citep{rdkit2026bonds}. Because hydrogen has a covalent radius of only $0.31\,\text{\AA}$, omitting or misplacing a single peripheral hydrogen across spatial octree boundaries---or placing a third neighbor near carbonyl/ether oxygen---forces neutral closed-shell bond perception ($\sum_i q_i = 0$) to assign high-energy zwitterionic formal charges such as \texttt{[C-]...[O+]}, \texttt{[B-]}, or halonium ions ($15\%\text{--}46\%$ of legal proposals in unaligned policies). Critically, we find on $4{,}737$ quantum-chemically evaluated generated conformers that large 3D property foundation models (\texttt{Uni-Mol2 1.1B} \citep{ji2024unimol2}) suffer severe out-of-distribution (OOD) error on such zwitterionic and strained geometries ($\text{MAE} = 0.720\,\text{eV}$ vs.\ \texttt{PBE0/def2-TZVP} \texttt{DFT}), turning online reinforcement learning (RL) into an adversarial exploit engine unless valence grammar and interatomic forces are internalized.
+    \item \textbf{Siloed Predictor Assets and Task-Specific Coupling.} In practical pharmaceutical and materials pipelines, organizations already maintain mature, validated property predictors---including coordinate-differentiable 3D networks (\texttt{Uni-Mol} \citep{zhou2023unimol}), large 3D black-box ensembles (\texttt{Uni-Mol2} \citep{ji2024unimol2}), 2D fingerprint QSAR models, and analytical medicinal chemistry filters (\texttt{SA\_Score} \citep{ertl2009sa}, \texttt{QED} \citep{bickerton2012qed}, reactive \texttt{SMARTS}). Existing conditional 3D pipelines typically hard-code specific benchmark labels (e.g., \texttt{QM9} or \texttt{OE62} orbital energies) into bespoke training scripts or require joint retraining across targets that lack co-labeled training tables.
+    \item \textbf{Blindspot-Induced Policy Collapse vs.\ Unguided Active Learning.} When a user requests targets near or beyond the support of historical training data, poor hit yield can stem from three distinct causes: (i) \emph{generator under-exploration} within a region where the predictor is trustworthy, (ii) \emph{predictor epistemic blindness} where the surrogate itself is uncalibrated, or (iii) \emph{chemical prior ceilings} where covalent organic density vanishes. Applying uniform RL across these regimes causes catastrophic reward hacking inside predictor blindspots, whereas naive active learning wastes expensive \texttt{DFT} or wet-lab budgets on strained or synthetically intractable molecules.
+\end{enumerate}
+
+To address these challenges cohesively, we present \textbf{Uni-Loom} (\texttt{loom v2.0}), a modular 3D molecular weaving architecture and grounded recursive self-improvement (RSI) platform (Figure~\ref{fig:architecture}). Rather than training a monolithic model from scratch, \textbf{Uni-Loom} weaves a pretrained 3D octree autoregressive generator (\texttt{Uni-3DAR} \citep{lu2025uni3dar}), plug-and-play external property assets, hot-swappable universal machine-learning interatomic potentials (\texttt{DPA-4} \citep{deepmodeling2026dpa4} and \texttt{HyFF} \citep{hyra2026hyff}), and an isolated cross-foundation audit oracle into a closed-loop system. Our main contributions are fourfold:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt,topsep=3pt]
+    \item \textbf{Predictor-Agnostic Three-Layer Weaving Bus:} We introduce a unified \texttt{PredictorAsset} protocol, declarative \texttt{TaskWeavingSpec}, and \texttt{CompositeCriticBus} that mount heterogeneous 3D differentiable predictors (exposing $\nabla_{\mathbf{R}}\hat{y}$ to a \texttt{PhysicsConstrainedCoordRefiner}), 3D/2D black-box QSAR models, and zero-conditioner-overhead inequality constraints (e.g., $\text{SA\_Score} \le 3.5$), backed by cross-oracle disagreement or single-oracle applicability-domain (\texttt{AD}) Tanimoto auditing.
+    \item \textbf{Scale-Decoupled Alignment and Dual-Track Valence Purity:} We diagnose cross-scale gradient interference between coarse octree topology tokens and $0.01\,\text{\AA}$ sub-voxel coordinate tokens, decoupling coarse-topology policy optimization (\texttt{Stage 2.5A TopoGRPO}) from detached equilibrium coordinate distillation (\texttt{Stage 2.5B}, achieving $0.046\text{--}0.053\,\text{\AA}$ Kabsch relaxation RMSD). Paired with generation-side bond-order-aware neutral valence guards, an auxiliary \texttt{HeavyAtomValenceHead}, and a deterministic zero-heavy-RMSD \texttt{ValenceReconciler}, \textbf{Uni-Loom} achieves $95.2\%\text{--}97.4\%$ raw point-cloud legality and $98.5\%\text{--}99.3\%$ reconciled legality with $0.00\%$ exotic zwitterions.
+    \item \textbf{Orthogonal Dual-Uncertainty \texttt{GPAtlas}:} We construct 1D and 2D heteroscedastic Gaussian-process atlases \citep{rasmussen2006gp} that separate generator spread $\sigma_{\text{gen}}(t)$ from empirical cross-foundation calibration uncertainty $\sigma_{\text{cal}}(t)$, exposing generative drift vector fields alongside narrow-gap OOD predictor divergence surfaces and providing a pre-generation gatekeeper for unreachable targets.
+    \item \textbf{Grounded Recursive Self-Improvement (RSI) Engine:} Using a four-quadrant weak-zone state machine (\texttt{CONVERGED}, \texttt{INNER\_UNDEREXPLORED}, \texttt{OUTER\_BLINDSPOT}, \texttt{PRIOR\_CEILING}), \textbf{Uni-Loom} safely restricts zero-cost inner-loop RL to trusted intervals ($0\%$ RL weight on blindspots), exports Murcko-diverse \citep{bemis1996murcko} blindspot candidates for external \texttt{DFT} labeling, and updates a zero-retrain \texttt{ResidualCalibratedAsset} whose noise-subtracted epistemic variance causally unlocks blindspots for subsequent alignment rounds.
+\end{itemize}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig1_uniloom_architecture.pdf}
+    \caption{\textbf{Overview of the four-layer Uni-Loom (\texttt{loom v2.0}) architecture.} \textbf{Layers 1 \& 2} wrap heterogeneous external 3D/2D predictors, zero-cost analytical rules (\texttt{SA\_Score}, \texttt{QED}, \texttt{SMARTS}), Bayesian residual calibrators (\texttt{ResidualCalibratedAsset}), and hot-swappable interatomic potentials (\texttt{DPA-4} $\leftrightarrow$ \texttt{HyFF}) into a declarative \texttt{CompositeCriticBus}. \textbf{Layer 3} suppresses exotic zwitterions at the source via bond-order-aware neutral valence guards and \texttt{HeavyAtomValenceHead} (Track A), eliminates residual peripheral-H formal-charge artifacts at $0.00\,\text{\AA}$ heavy-atom RMSD via \texttt{ValenceReconciler} (Track B), and decouples coarse-topology \texttt{TopoGRPO} from detached $0.01\,\text{\AA}$ sub-voxel equilibrium distillation. \textbf{Layer 4} fits a heteroscedastic \texttt{GPAtlas} to classify target intervals into four diagnostic states, executing zero-cost curriculum RL on \texttt{INNER\_UNDEREXPLORED} zones while routing frozen \texttt{OUTER\_BLINDSPOT} scaffolds to external \texttt{DFT} acquisition and zero-retrain residual calibration.}
+    \label{fig:architecture}
+\end{figure}
+
+\section{Preliminaries and Problem Formulation}
+\label{sec:prelim}
+
+\subsection{Constrained Conditional 3D Molecular Generation}
+Let $\mathcal{M} = (\mathbf{Z}, \mathbf{R}, \mathcal{G})$ denote a 3D molecular instance comprising $N$ atoms with atomic numbers $\mathbf{Z} \in \mathbb{Z}_+^N$, Cartesian coordinates $\mathbf{R} \in \mathbb{R}^{N \times 3}$, and an inferred closed-shell Lewis molecular graph $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \mathbf{b}, \mathbf{q})$ with integer bond orders $\mathbf{b}$ and formal charges $\mathbf{q} \in \mathbb{Z}^N$ satisfying $\sum_{i=1}^N q_i = 0$. Given a vector of requested target specifications $\mathbf{t} = (t_1, \dots, t_K) \in \mathbb{R}^K$ with missingness mask $\mathbf{m} \in \{0,1\}^K$ and tolerances $\boldsymbol{\tau} = (\tau_1, \dots, \tau_K)$, together with $M$ auxiliary inequality constraints $\{g_j(\mathcal{M}) \le c_j\}_{j=1}^M$ (such as synthetic accessibility $\text{SA}(\mathcal{M}) \le 3.5$ or reactive-group count $\text{SMARTS}(\mathcal{M}) \le 0$), our goal is to learn a conditional generative policy $\pi_\theta(\mathcal{M} \mid \mathbf{t}, \mathbf{m})$ that maximizes the \emph{calibrated, constraint-satisfying, valence-clean hit yield}:
+\begin{equation}
+\label{eq:problem}
+\begin{aligned}
+\mathcal{Y}_{\text{clean}}(\mathbf{t}) = \mathbb{E}_{\mathcal{M} \sim \pi_\theta(\cdot \mid \mathbf{t}, \mathbf{m})} \!\Bigg[ \mathbb{I}\!\Bigg(
+&\mathcal{M} \in \mathcal{V}_{\text{3D}} \;\land\; \mathcal{Q}_{\text{exotic}}(\mathcal{M}) = \emptyset \\
+&\land\; \bigcap_{j=1}^M \{g_j(\mathcal{M}) \le c_j\} \;\land\; \bigcap_{k: m_k=1} \big\{|y_k^\star(\mathcal{M}) - t_k| \le \tau_k\big\}
+\Bigg) \Bigg],
+\end{aligned}
+\end{equation}
+where $\mathcal{V}_{\text{3D}}$ denotes single-component 3D covalent validity surviving interatomic potential relaxation without bond-graph rearrangement, $\mathcal{Q}_{\text{exotic}}(\mathcal{M})$ denotes unauthorized non-zero formal charges outside benign dipolar functional groups, and $y_k^\star(\mathcal{M})$ is the true quantum-chemical or experimental observable.
+
+\subsection{Quantum Reference Consolidation and Surrogate Discrepancy Diagnosis}
+\label{sec:quantum_audit}
+A central premise of \textbf{Uni-Loom} is that a single surrogate oracle used to optimize $\pi_\theta$ cannot simultaneously serve as its own unbiased evaluator. To quantify surrogate vulnerability on generated 3D geometries, we consolidated historical \texttt{PBE0/def2-TZVP/DF} \texttt{DFT} single-point calculations \citep{sun2020pyscf,li2024gpu4pyscf,stuke2020oe62} across diverse generated and reference cohorts, strictly excluding all canonical molecular graphs and Murcko scaffolds overlapping held-out validation and test splits. This yielded $4{,}737$ leak-free generated 3D \texttt{DFT} structures ($3{,}949$ train, $398$ validation, $390$ test), which we merged with the scaffold-disjoint \texttt{OE62} training split ($43{,}858$ molecules) into a unified $47{,}807$-conformer pool (\texttt{oe62\_master\_train\_B}).
+
+Evaluating two structurally distinct 3D foundation families on the $390$ held-out generated \texttt{DFT} test conformers reveals a striking fidelity gap: frozen \texttt{Uni-Mol2 1.1B} \citep{ji2024unimol2} (\texttt{RewardOracle}) exhibits test $\text{HOMO}/\text{LUMO}$ mean absolute errors (MAEs) of $0.720 / 0.778\,\text{eV}$ ($\text{RMSE} = 1.106 / 1.253\,\text{eV}$) due to sensitivity to subtle bond-length strain and formal-charge artifacts, whereas an independent \texttt{DFT}-calibrated \texttt{DPA-4} electronic head \citep{deepmodeling2026dpa4} (\texttt{AuditOracle}) achieves $0.186 / 0.183\,\text{eV}$ MAE ($\text{RMSE} = 0.268 / 0.268\,\text{eV}$). Throughout this work, \texttt{Uni-Mol2} (or a restricted historical QSAR ensemble in Section~\ref{sec:exp_rsi}) serves exclusively on the training side, while the calibrated \texttt{DPA-4} electronic head is strictly isolated as a blind \texttt{AuditOracle} that never participates in relabeling, filtering, or policy gradients.
+
+\section{The Uni-Loom Architecture}
+\label{sec:method}
+
+\subsection{Layers 1 \& 2: Predictor-Agnostic Asset Hub and Declarative Critic Bus}
+\label{sec:asset_bus}
+
+\paragraph{Unified \texttt{PredictorAsset} Registry.}
+To eliminate task-specific hard-coding and reuse mature industrial models without retraining, Layer~1 (\texttt{src/loom/weaving/registry.py}) wraps arbitrary property evaluators under a common \texttt{PredictorAsset} interface exposing machine-readable \texttt{AssetCapabilities} (\texttt{modality}, \texttt{is\_3d\_differentiable}, \texttt{has\_uncertainty}, \texttt{target\_names}, \texttt{units}). Four asset families mount out of the box:
+\begin{enumerate}[leftmargin=1.6em,itemsep=1pt,topsep=2pt]
+    \item \textbf{Differentiable 3D Deep Models (\texttt{UniMol3DAsset}):} Wraps coordinate-differentiable 3D backbones \citep{zhou2023unimol} to provide both batched scalar predictions $\hat{\mathbf{y}}(\mathcal{M})$ and analytical Cartesian gradients $\nabla_{\mathbf{R}}\hat{y}_k(\mathbf{Z}, \mathbf{R})$ via autograd on pairwise distance encodings;
+    \item \textbf{Black-Box 3D \& 2D QSAR Assets (\texttt{SlotOracleAsset}, \texttt{FingerprintQSARAsset}, \texttt{CallablePredictorAsset}):} Wraps frozen 3D foundation models (\texttt{Uni-Mol2}), $K$-fold Morgan fingerprint ensembles (returning epistemic ensemble standard deviation $\sigma_{\text{ens}}$), or external \texttt{ONNX}/\texttt{scikit-learn} callables;
+    \item \textbf{Zero-Cost Analytical Chemistry Rules (\texttt{BuiltInRuleAsset}):} Computes exact topological and medicinal descriptors including \texttt{SA\_Score} \citep{ertl2009sa}, \texttt{QED} \citep{bickerton2012qed}, molecular weight, rotatable-bond count, maximum ring size, strained $3/4$-membered ring counts, and reactive/unstable functional-group \texttt{SMARTS} alerts (peroxides, acyl halides, nitroso, strained heterocycles);
+    \item \textbf{Hot-Swappable Interatomic Potentials (\texttt{PotentialSlot}):} Unifies \texttt{DPA-4} \citep{deepmodeling2026dpa4} and \texttt{HyFF vivace} \citep{hyra2026hyff} behind precision-safe \texttt{float64} spatially separated batch packing (reducing batch-$32$ packing force numerical drift from $7.09 \times 10^{-3}$ to $7.89 \times 10^{-6}\,\text{eV/\AA}$), providing zero-step maximum atomic force $F_{\max}$, batched \texttt{FIRE} relaxation, graph-preservation checks, and Kabsch-aligned relaxation deformation $\text{RMSD}_{\text{Kabsch}}$ (with graceful \texttt{NaN} fallback on unsupported heavy elements such as $\text{Te}$).
+\end{enumerate}
+
+\paragraph{Physics-Constrained Differentiable Coordinate Refinement.}
+When a mounted objective asset exposes \texttt{is\_3d\_differentiable=True}, \texttt{PhysicsConstrainedCoordRefiner} jointly optimizes conformer coordinates on the composite potential surface:
+\begin{equation}
+\label{eq:coord_refine}
+\min_{\mathbf{R} \in \mathbb{R}^{N \times 3}} \; E_{\text{MLIP}}(\mathbf{Z}, \mathbf{R}) + \lambda \sum_{k=1}^K w_k \, \mathcal{L}_{\text{obj}, k}\!\big(\hat{y}_k(\mathbf{Z}, \mathbf{R}); t_k, \tau_k\big),
+\end{equation}
+where clipped interatomic forces $-\nabla_{\mathbf{R}} E_{\text{MLIP}}$ lock covalent bond lengths and angles inside physical equilibrium basins while $-\lambda \nabla_{\mathbf{R}}\mathcal{L}_{\text{obj}, k}$ steers soft torsional degrees of freedom toward the target window, guarded by a strict graph-preservation and maximum-force acceptance check relative to both initial and current coordinates.
+
+\paragraph{Declarative \texttt{TaskWeavingSpec} and Monotonic \texttt{CompositeCriticBus}.}
+Layer~2 (\texttt{spec.py}, \texttt{critic\_bus.py}) compiles declarative YAML specifications into three orthogonal channels:
+(i) \textbf{Objectives} (\texttt{point}, \texttt{interval}, \texttt{max}, or \texttt{min}), which automatically configure the generator's conditioning dimension $K$ and impute missing multi-model pseudo-labels across unlabeled 3D conformer pools;
+(ii) \textbf{Inequality Constraints} ($g_j(\mathcal{M}) \le c_j$ with soft margin $s_j$ and hard-gate flag), which shape feasibility without consuming conditioning dimensions; and
+(iii) \textbf{Anti-Hacking Auditors}. Crucially, when a second foundation oracle is unavailable---the norm in proprietary industrial QSAR deployments---the bus automatically activates \texttt{single\_oracle\_ad} mode, combining nearest-neighbor Morgan fingerprint Tanimoto applicability-domain distance $d_{\text{AD}}(\mathcal{M}) = 1 - \max_{\mathcal{M}' \in \mathcal{D}_{\text{ref}}} \text{Sim}(\mathcal{M}, \mathcal{M}')$, ensemble standard deviation $\sigma_{\text{ens}}(\mathcal{M})$, target-range extrapolation penalties, and 3D potential strain gates. Across online rollouts, \texttt{CompositeCriticBus} enforces a strict monotonic reward hierarchy:
+\begin{equation}
+\label{eq:hierarchy}
+R_{\text{clean+constr+hit}} > R_{\text{clean+constr+miss}} > R_{\text{soft-constr-viol}} > R_{\text{exotic-charge / high-strain}} > R_{\text{illegal-3D}},
+\end{equation}
+ensuring that no property-surrogate outlier can ever outscore a valence-clean, low-strain, constraint-satisfying molecule.
+
+\subsection{Layer 3: Scale-Decoupled 3D Weaving}
+\label{sec:scale_decoupled}
+
+\paragraph{Removing Conditioning Bottlenecks and Accelerating Octree Decoding.}
+We bind \texttt{Uni-3DAR} \citep{lu2025uni3dar} as \texttt{GeneratorSlot} (\texttt{LoomUni3DARGenerator}). Inspection of early adapter baselines revealed that per-layer adaptive LayerNorm modulation had been hard-clipped by $0.08 \tanh(\cdot)$ with frozen attention layers, capping conditional calibration slope at $0.41\text{--}0.54$. We remove the $\tanh$ bottleneck, inject continuous Fourier features of $(\mathbf{t}, \mathbf{m})$ alongside rank-$16$ \texttt{LoRA} adapters \citep{hu2022lora} across all $24$ Transformer blocks, train with paired conditional/unconditional dropout ($p_{\text{drop}} = 0.15$) plus a contrastive conditioning auxiliary loss, and apply tree-depth annealed classifier-free guidance (\texttt{CFG} \citep{ho2022cfg}) at inference:
+\begin{equation}
+\label{eq:cfg}
+\ell_{\text{CFG}}(u \mid d) = \ell_{\text{uncond}}(u) + \Big(1 + (s_{\text{CFG}} - 1)\,\gamma^{\max(d - d_0, 0)}\Big)\big(\ell_{\text{cond}}(u) - \ell_{\text{uncond}}(u)\big),
+\end{equation}
+which concentrates strong target steering at coarse scaffold-determining octree levels ($d \le d_0$) while annealing guidance at fine leaf levels to preserve local bond geometry. Vectorized dual-branch \texttt{BF16} batching with fused scaled dot-product attention increases single-\texttt{A800} generation throughput from $4.46\,\text{mol/s}$ to $32.52\,\text{mol/s}$ ($7.29\times$ speedup at batch $256$, and $22.3\text{--}29.5\,\text{mol/s}$ with dual-pass \texttt{CFG} and GPU geometric guards enabled).
+
+\paragraph{Why Coarse Topology RL and Sub-Voxel Coordinate Distillation Must Be Decoupled.}
+In octree autoregressive decoding, each leaf atom emits \emph{four} tokens across disparate length scales: one coarse chemical-identity token ($Z_i$, sampled at $T_Z = 0.30$) and three $0.01\,\text{\AA}$ sub-voxel coordinate offset tokens ($\Delta x_i, \Delta y_i, \Delta z_i$, sampled at $T_{xyz} = 0.25$). Propagating a molecule-level scalar electronic reward advantage $A_{\text{prop}}$ through all tokens (\emph{coupled RL}) injects $3\times$ token-count credit-assignment variance into shared Transformer representations: empirically (Section~\ref{sec:exp_progression}), coupled RL + online relaxation distillation achieves excellent local mechanics ($\text{RMSD}_{\text{Kabsch}} = 0.049\,\text{\AA}$, legality $88.6\%$) but degrades within-target property spread $\sigma_{\text{in}}$ from $0.439$ to $0.534\,\text{eV}$.
+
+\textbf{Uni-Loom} resolves this conflict by decoupling the two spatial scales:
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt,topsep=2pt]
+    \item \textbf{Stage 2.5A (\texttt{TopoGRPO}):} Group-relative policy optimization \citep{shao2024grpo} ($G = 8\text{--}16$ proposals per target prompt) restricts the policy-gradient mask exclusively to coarse octree-subdivision and element-type tokens ($\mathcal{T}_{\text{topo}}$), zeroing policy gradients on fine \texttt{XYZ} tokens and computing exact dual-finite token-level KL divergence against the reference policy (eliminating all \texttt{NaN} KL instabilities induced by hard logit masks):
+    \begin{equation}
+    \label{eq:topogrpo}
+    \begin{aligned}
+    \mathcal{L}_{\text{TopoGRPO}}(\theta) = -\mathbb{E}_{g, i}\!\Bigg[\frac{1}{|\mathcal{T}_{\text{topo}}^{(i)}|} \sum_{u \in \mathcal{T}_{\text{topo}}^{(i)}} \Big( &\min\!\big(\rho_u A_i, \text{clip}(\rho_u, 1-\epsilon, 1+\epsilon)A_i\big) \\
+    &-\; \beta_{\text{KL}} D_{\text{KL}}^{\text{finite}}(\pi_\theta \| \pi_{\text{ref}})_u \Big)\Bigg] + \lambda_{\text{rep}} \mathcal{L}_{\text{SFT}}^{\text{replay}}.
+    \end{aligned}
+    \end{equation}
+    \item \textbf{Stage 2.5B (Detached Sub-Voxel Equilibrium Distillation):} Freezing the conditioner, 24-layer Transformer, and topology/element heads via \texttt{hidden.detach()}, we attach lightweight rank-$8$ \texttt{LoRA} adapters ($111{,}744$ parameters) solely to the three $0.01\,\text{\AA}$ \texttt{XYZ} heads and supervise them on $40$-step \texttt{MLIP}-relaxed graph-preserving equilibrium conformers, compressing zero-step atomic strain without perturbing coarse property calibration.
+\end{enumerate}
+
+\subsection{Dual-Track Elimination of Exotic Zwitterions}
+\label{sec:valence}
+
+\paragraph{Root-Cause Analysis.}
+Why do unaligned 3D point-cloud policies produce $15\%\text{--}26\%$ exotic formal charges (\texttt{[C-]}, \texttt{[O+]}, \texttt{[B-]}, halonium) despite trained exclusively on neutral closed-shell molecules? In \texttt{Uni-3DAR}, heavy-atom skeletons are often geometrically sound, but (i) an oxygen atom placed within $< 1.65\,\text{\AA}$ of three heavy/H neighbors becomes trivalent oxonium \texttt{[O+]}, or (ii) missing one peripheral hydrogen on an $sp^3$/$sp^2$ carbon while placing an extra hydrogen near a carbonyl oxygen forces \texttt{DetermineBonds(..., charge=0)} \citep{rdkit2026bonds} to pair \texttt{[C-]} with \texttt{[O+]} to conserve total neutrality and even electron count. We eliminate this artifact via two synergistic tracks (always reporting \emph{Raw Point-Cloud} and \emph{Valence-Reconciled} metrics side by side):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt,topsep=2pt]
+    \item \textbf{Track A (Generation-Side Suppression in \texttt{uni3dar\_slot.py}):} During GPU batched octree decoding, we enforce a \emph{Bond-Order-Aware Neutral Valence Coordination Guard} directly on pre-softmax element logits \citep{lu2025uni3dar}: if an existing oxygen already has one short double-bond neighbor ($d < 1.28\,\text{\AA}$, e.g., $\text{C=O}$) or two covalent neighbors, any new atom falling within covalent bonding distance of that oxygen has its bonding logits masked before \texttt{softmax}; halogens ($\text{F, Cl, Br, I}$) lock immediately at coordination $1$, and boron ($\text{B}$) locks at neutral trivalent coordination $3$, blocking oxonium, halonium, and \texttt{[B-]} formation at sampling time. Simultaneously, we mount a lightweight linear \texttt{HeavyAtomValenceHead} ($< 30\text{K}$ parameters) on \texttt{atom\_heads[0]} hidden states during SFT and replay to predict each heavy atom's canonical attached hydrogen count $n_{\text{H}} \in \{0,\dots,4\}$ and formal charge state $q \in \{-1, 0, +1\}$, forcing the trunk representation to internalize local valence conservation.
+    \item \textbf{Track B (Zero-Heavy-RMSD \texttt{ValenceReconciler} in \texttt{valence\_reconciler.py}):} At point-cloud reconstruction, we inspect formal charges against a strict whitelist of benign neutral dipolar motifs (nitro \texttt{[N+](=O)[O-]}, $N$-oxide, sulfoxide, and diazo/azide). Any raw point cloud that is already covalently valid and clean is returned \emph{completely untouched} (\texttt{clean\_raw}). Only when an unauthorized zwitterion or isolated peripheral-H count mismatch occurs on an intact, collision-free, single-component heavy-atom skeleton, \texttt{ValenceReconciler} freezes all heavy-atom 3D coordinates ($\text{RMSD}_{\text{heavy}} \equiv 0.0000\,\text{\AA}$), infers a neutral closed-shell integer Lewis bond-order assignment from 3D interatomic distances and bond angles, rebuilds ideal-geometry explicit hydrogens, and executes $10$ batched H-only \texttt{MLIP} relaxation steps with frozen heavy atoms before re-verifying connectivity and closed-shell sanitization.
+\end{itemize}
+
+\subsection{Layer 4: Heteroscedastic \texttt{GPAtlas} and Grounded RSI Engine}
+\label{sec:rsi}
+
+\paragraph{Orthogonal Dual-Uncertainty Decomposition (\texttt{GPAtlas}).}
+Given a target grid $\mathcal{T} \subset \mathbb{R}^D$ ($D \in \{1, 2\}$), \texttt{HeteroscedasticGPAtlas} fits three smooth Gaussian-process surfaces over empirical proposal cohorts: (i) achieved conditional mean $\hat{\mu}_{\text{gen}}(\mathbf{t})$, (ii) intrinsic generator dispersion $\sigma_{\text{gen}}(\mathbf{t})$, and (iii) epistemic calibration uncertainty $\sigma_{\text{cal}}(\mathbf{t})$ (measured via cross-foundation disagreement RMSE when an audit oracle is available, or via \texttt{ResidualCalibratedAsset} posterior uncertainty / applicability-domain proxy in single-oracle mode), alongside empirical evaluability probability $p_{\text{eval}}(\mathbf{t})$. The calibrated probability of achieving a true hit within window $[t_k - \tau_k, t_k + \tau_k]$ integrates over total orthogonal variance $\sigma_{\text{total}}^2(\mathbf{t}) = \sigma_{\text{gen}}^2(\mathbf{t}) + \sigma_{\text{cal}}^2(\mathbf{t})$:
+\begin{equation}
+\label{eq:phit}
+P_{\text{hit}}^{\text{cal}}(\mathbf{t}) = p_{\text{eval}}(\mathbf{t}) \prod_{k=1}^D \left[ \Phi\!\left(\frac{t_k + \tau_k - \hat{\mu}_{\text{gen}, k}(\mathbf{t})}{\sqrt{\sigma_{\text{gen}, k}^2(\mathbf{t}) + \sigma_{\text{cal}, k}^2(\mathbf{t})}}\right) - \Phi\!\left(\frac{t_k - \tau_k - \hat{\mu}_{\text{gen}, k}(\mathbf{t})}{\sqrt{\sigma_{\text{gen}, k}^2(\mathbf{t}) + \sigma_{\text{cal}, k}^2(\mathbf{t})}}\right) \right].
+\end{equation}
+Mounted at inference as a \emph{Pre-Generation Gatekeeper} (\texttt{recommend\_target}), \texttt{GPAtlas} intercepts queries where $P_{\text{hit}}^{\text{cal}}(\mathbf{t})$ or $\sigma_{\text{cal}}(\mathbf{t})$ violates trust thresholds and recommends the nearest reachable Pareto target.
+
+\paragraph{Four-Quadrant Diagnostic State Machine and Dual-Loop Flywheel.}
+At each RSI round, \texttt{RSIDiagnoser} classifies every target cell $\mathbf{t} \in \mathcal{T}$ into four actionable causal states:
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt,topsep=2pt]
+    \item \textbf{\texttt{PRIOR\_CEILING}:} Vanishing source KDE density $\rho_{\text{src}}(\mathbf{t}) < \rho_{\min}$ accompanied by severe prior pull $|\hat{\mu}_{\text{gen}}(\mathbf{t}) - \mathbf{t}| > \tau_{\text{ceil}}$ $\implies$ \emph{curriculum RL weight set to $0\%$}, flagging need for novel chemical element/scaffold priors;
+    \item \textbf{\texttt{OUTER\_BLINDSPOT}:} Calibration uncertainty exceeds trust cap $\sigma_{\text{cal}}(\mathbf{t}) > \tau_{\text{cal}}$ $\implies$ \emph{inner-loop RL weight frozen at $0\%$} to prevent surrogate reward hacking, triggering \texttt{OuterRSIAcquisition} to rank clean, low-strain, constraint-satisfying candidates by Murcko-scaffold-diversified \citep{bemis1996murcko} utility:
+    \begin{equation}
+    \label{eq:acq}
+    u(\mathcal{M}) = \sigma_{\text{cal}}(\mathcal{M}) \cdot \mathbb{I}\big[\text{Clean}(\mathcal{M}) \land \text{ConstraintsMet}(\mathcal{M})\big] \cdot d_{\text{Murcko}}(\mathcal{M}, \mathcal{S}_{\text{selected}}),
+    \end{equation}
+    exporting \texttt{acquisition\_batch.sdf} for high-precision \texttt{DFT} or experimental measurement;
+    \item \textbf{\texttt{INNER\_UNDEREXPLORED}:} Predictor is trusted ($\sigma_{\text{cal}}(\mathbf{t}) \le \tau_{\text{cal}}$) but $P_{\text{hit}}^{\text{cal}}(\mathbf{t}) < p_{\text{conv}}$ $\implies$ receives $80\%$ of adaptive curriculum probability weighted by hit-deficit $(1 - P_{\text{hit}}^{\text{cal}}(\mathbf{t}))$ for zero-external-cost \texttt{InnerRSIRunner} (\texttt{Hindsight} relabeling + \texttt{Stage 2.5A/B}), guarded by a non-regression acceptance gate;
+    \item \textbf{\texttt{CONVERGED}:} Trusted ($\sigma_{\text{cal}}(\mathbf{t}) \le \tau_{\text{cal}}$) and $P_{\text{hit}}^{\text{cal}}(\mathbf{t}) \ge p_{\text{conv}}$ $\implies$ retains $20\%$ anchor replay budget to mitigate catastrophic forgetting.
+\end{enumerate}
+
+\paragraph{Zero-Retrain Bayesian Residual Calibration (\texttt{ResidualCalibratedAsset}).}
+When external ground-truth labels $\{(\mathcal{M}_i, y_i^{\text{true}})\}_{i=1}^{N_{\text{fb}}}$ return from the outer loop while the external base predictor $\hat{y}_{\text{base}}$ remains a frozen black box, \texttt{IncrementalCalibrator} maps each molecule to a compact $20$-dimensional normalized descriptor $\boldsymbol{\phi}(\mathcal{M}) \in \mathbb{R}^{20}$ ($16$-channel folded Morgan bit-density fingerprint plus molecular weight, heavy-atom fraction, aromatic-carbon fraction, and heteroatom ratio) and fits a global \texttt{Ridge} bias-trend estimator $f_{\text{ridge}}(\boldsymbol{\phi})$ plus a fixed-prior-amplitude $\text{Mat\'ern}(\nu=3/2) + \text{WhiteKernel}$ Gaussian process $\delta_{\text{GP}}(\boldsymbol{\phi})$ on the detrended residuals $r_i = y_i^{\text{true}} - \hat{y}_{\text{base}}(\mathcal{M}_i) - f_{\text{ridge}}(\boldsymbol{\phi}_i)$:
+\begin{equation}
+\label{eq:rescal}
+\begin{aligned}
+\hat{y}_{\text{cal}}(\mathcal{M}) &= \hat{y}_{\text{base}}(\mathcal{M}) + f_{\text{ridge}}\!\big(\boldsymbol{\phi}(\mathcal{M})\big) + \delta_{\text{GP}}\!\big(\boldsymbol{\phi}(\mathcal{M})\big), \\
+\sigma_{\text{epistemic}}(\mathcal{M}) &= \sqrt{\max\!\Big(\sigma_{\text{GP}}^2\big(\boldsymbol{\phi}(\mathcal{M})\big) - \sigma_{\text{noise}}^2,\, 0\Big)}.
+\end{aligned}
+\end{equation}
+Separating the global OOD bias shift $f_{\text{ridge}}$ from the fixed-prior local GP kernel and subtracting estimated observation noise $\sigma_{\text{noise}}^2$ guarantees that ingesting authentic \texttt{DFT} anchors monotonically contracts $\sigma_{\text{cal}}(\mathbf{t})$ below $\tau_{\text{cal}}$, causally transitioning \texttt{OUTER\_BLINDSPOT} intervals into \texttt{INNER\_UNDEREXPLORED}/\texttt{CONVERGED} for the next inner-loop alignment round without modifying a single weight of $\hat{y}_{\text{base}}$.
+
+\section{Experimental Validation}
+\label{sec:experiments}
+
+\subsection{Experimental Setup, Benchmarks, and Throughput Scaling}
+\label{sec:exp_setup}
+
+All primary benchmarks are conducted on the scaffold-disjoint \texttt{OE62} crystal-forming organic semiconductor dataset \citep{stuke2020oe62} augmented with our leak-free consolidated quantum pool ($47{,}807$ training conformers up to $80$ atoms spanning $11$ elements: $\text{H, B, C, N, O, F, Si, P, S, Cl, Br, I}$). Every end-to-end conditional evaluation uses the identical held-out protocol and deterministic random streams (\texttt{seeds [24411, 24412]}): $7$ quantile targets ($P_{10}, P_{25}, P_{35}, P_{50}, P_{65}, P_{75}, P_{90}$) $\times$ $256$ proposals $= 1{,}792$ uncurated end-to-end proposals per evaluation, with hit tolerance $\tau = \pm 0.25\,\text{eV}$. Following strict denominator transparency, failed or non-evaluable proposals are never discarded from hit-yield denominators.
+
+Table~\ref{tab:speed} summarizes single-\texttt{NVIDIA A800-80GB} decoding and training throughput. Replacing legacy \texttt{FP32} per-row stream loops with vectorized \texttt{BF16} octree decoding and fused attention delivers $32.52\,\text{mol/s}$ at batch $256$ ($5.07\times$ over matched batch-$32$ \texttt{FP32} and $7.29\times$ over the legacy $4.46\,\text{mol/s}$ pipeline) while consuming only $3.23\,\text{GB}$ peak VRAM; training throughput increases to $80.92\,\text{mol/s}$ even with $2\times$-pass contrastive conditioning enabled.
+
+\begin{table}[!t]
+\centering
+\caption{Single-\texttt{NVIDIA A800-80GB} generation and training throughput scaling (\texttt{speed\_benchmark.json}, $256$ molecules per sampling arm).}
+\label{tab:speed}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Pipeline Configuration & Precision & Batch & CFG Scale & Peak VRAM (GB) & Throughput (mol/s) \\
+\midrule
+Legacy baseline pipeline (per-row \texttt{FP32} loop) & \texttt{FP32} & 32 & 1.00 & --- & 4.46 \\
+Vectorized \texttt{FP32} row-streams baseline & \texttt{FP32} & 32 & 1.00 & --- & 6.41 \\
+\textbf{Uni-Loom} (\texttt{BF16} fused octree decoding) & \texttt{BF16} & 64 & 1.00 & 1.92 & 11.75 \\
+\textbf{Uni-Loom} (\texttt{BF16} fused octree decoding) & \texttt{BF16} & 128 & 1.00 & 2.39 & 20.19 \\
+\textbf{Uni-Loom} (\texttt{BF16} fused octree decoding) & \texttt{BF16} & 256 & 1.00 & 3.23 & \textbf{32.52} ($7.29\times$) \\
+\textbf{Uni-Loom} (dual-branch \texttt{CFG} + geometric guard) & \texttt{BF16} & 128--256 & 1.75--2.00 & 3.36 & \textbf{22.25--29.51} \\
+\midrule
+Training: Legacy \texttt{FP32} SFT (single pass, no contrast) & \texttt{FP32} & 32 & --- & --- & 72.85 \\
+Training: \textbf{Uni-Loom} \texttt{BF16} \texttt{LoRA-16} + $2\times$ contrastive pass & \texttt{BF16} & 32 & --- & --- & \textbf{80.92} ($1.11\times$) \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{End-to-End Stage Progression, Anti-Reward-Hacking Audit, and Potential Hot-Swap}
+\label{sec:exp_progression}
+
+Table~\ref{tab:progression} and Figure~\ref{fig:progression} track end-to-end \texttt{OE62 HOMO} generation across legacy baselines and \textbf{Uni-Loom} Stages $0 \to 2.5$ ($1{,}792$ proposals). Removing the $0.08\tanh$ conditioning bottleneck in Stage~0 immediately lifts calibration slope from $0.409$ to $0.934$ and compresses within-target spread $\sigma_{\text{in}}$ from $0.570$ to $0.420\,\text{eV}$, yet raw zero-step legality is only $59.6\%$ with $60.8\%$ exotic charges and blind \texttt{AuditOracle} MAE of $1.536\,\text{eV}$. Incorporating \texttt{DPA-4} graph-preserving Hindsight relabeling (Stage~1) and monotonic disentangled \texttt{GRPO} (Stage~2) raises end-to-end hit yield to $34.60\%$ ($620/1{,}792$) while slashing post-relaxation blind \texttt{AuditOracle} MAE from $1.536$ to $0.757\,\text{eV}$.
+
+\begin{table}[!t]
+\centering
+\caption{End-to-end \texttt{OE62 HOMO} conditional generation progression across $1{,}792$ proposals ($7$ quantiles $\times 256$, tolerance $\pm 0.25\,\text{eV}$, raw unedited point-cloud evaluation prior to \texttt{v2.0} reconciliation). \texttt{Audit MAE} is evaluated by the strictly isolated \texttt{DFT}-calibrated \texttt{DPA-4} electronic oracle.}
+\label{tab:progression}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Method / Stage & Hits / 1792 & Hit Yield & Clean Hits & 3D Legal & Slope & $\sigma_{\text{in}}$ (eV) & Reward MAE & Blind Audit MAE \\
+\midrule
+Legacy Frozen SFT & 371 & 20.70\% & --- & 72.1\% & 0.409 & 0.570 & 0.521 & --- \\
+Legacy Margin + \texttt{GRPO-1024} & 441 & 24.61\% & --- & 70.0\% & 0.535 & 0.542 & 0.451 & --- \\
+\textbf{Uni-Loom} Stage 0 (\texttt{LoRA-16} + \texttt{CFG=1.75}) & 470 & 26.23\% & 184 (10.3\%) & 59.6\% & 0.934 & 0.420 & 0.347 & 1.536 \\
+\textbf{Uni-Loom} Stage 1 (\texttt{DPA-4} Hindsight) & 528 & 29.46\% & 286 (16.0\%) & 63.6\% & 0.933 & \textbf{0.418} & \textbf{0.339} & 1.137 \\
+\textbf{Uni-Loom v1.0} Stage 2 (\texttt{GRPO-1024}, \texttt{CFG=2.0}) & 620 & 34.60\% & 449 (25.1\%) & 80.5\% & 1.045 & 0.439 & 0.364 & 0.757 \\
+\textbf{Uni-Loom v1.1} \texttt{GRPO-1024} + Guard + \texttt{XYZ} Distill & 625 & 34.88\% & 450 (25.1\%) & 80.1\% & 1.037 & 0.427 & 0.353 & 0.825 \\
+\textbf{Uni-Loom v1.1} Stage 2.5A (\texttt{Guard+TopoGRPO}, \texttt{CFG=1.75}) & 604 & 33.71\% & 436 (24.3\%) & 84.6\% & \textbf{0.986} & 0.480 & 0.403 & \textbf{0.744} \\
+\textbf{Uni-Loom v1.1} Stage 2.5A (\texttt{Guard+TopoGRPO}, \texttt{CFG=2.0}) & \textbf{631} & \textbf{35.21\%} & \textbf{451 (25.2\%)} & 83.5\% & 1.100 & 0.471 & 0.393 & 0.755 \\
+\textbf{Uni-Loom v1.1} Stage 2.5A+2.5B (\texttt{TopoGRPO+XYZ}, \texttt{CFG=1.75}) & 615 & 34.32\% & 447 (24.9\%) & \textbf{85.4\%} & 0.985 & 0.475 & 0.400 & 0.903 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig2_stage_progression.pdf}
+    \caption{\textbf{End-to-end \texttt{OE62 HOMO} progression across stages ($1{,}792$ proposals).} (\textbf{A}) End-to-end hit yield within $\pm 0.25\,\text{eV}$ rises $+70.1\%$ relative to Legacy Frozen SFT ($20.7\% \to 35.2\%$, $621$ novel unique molecular graphs). (\textbf{B}) Removing per-layer $\tanh$ clipping restores unit calibration slope ($\approx 1.0$) while tightening within-target spread $\sigma_{\text{in}}$. (\textbf{C}) Strictly isolated cross-foundation \texttt{AuditOracle} (\texttt{DFT}-calibrated \texttt{DPA-4}) MAE drops monotonically alongside \texttt{RewardOracle} alignment ($1.536 \to 0.755\,\text{eV}$), confirming genuine physical improvement rather than surrogate exploitation.}
+    \label{fig:progression}
+\end{figure}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig3_audit_and_hotswap.pdf}
+    \caption{\textbf{Online RL anti-reward-hacking trajectory ($0 \to 1{,}184$ groups) and zero-code \texttt{PotentialSlot} hot-swap.} (\textbf{A}) Total and zwitterion-clean hit yields rise monotonically with \texttt{GRPO} budget. (\textbf{B}) Independent post-relaxation \texttt{AuditOracle} MAE decreases steadily from $1.137$ to $0.755\,\text{eV}$ while \texttt{RewardOracle} MAE remains stable ($\approx 0.36\text{--}0.39\,\text{eV}$). (\textbf{C}) Exotic formal-charge rate and zero-step median $F_{\max}$ ($7.41 \to 5.09\,\text{eV/\AA}$) drop concurrently. Switching \texttt{PotentialSlot} at $512$ groups from \texttt{DPA-4} to \texttt{HyFF vivace} with zero code changes achieves lower zero-step forces ($5.27$ vs.\ $5.80\,\text{eV/\AA}$), higher graph-preserving relaxation ($88.3\%$ vs.\ $81.6\%$), and superior blind \texttt{Audit} MAE ($0.939$ vs.\ $1.000\,\text{eV}$).}
+    \label{fig:audit_hotswap}
+\end{figure}
+
+\paragraph{Anti-Reward-Hacking Curve, Potential Hot-Swapping, and Scale-Decoupling Ablation.}
+Figure~\ref{fig:audit_hotswap} evaluates checkpoints every $256$ \texttt{GRPO} groups from $0$ to $1{,}184$ groups. Rather than diverging---the classic signature of Goodhart's law---blind \texttt{AuditOracle} MAE drops monotonically ($1.137 \to 1.010 \to 1.000 \to 0.876 \to 0.757 \to 0.755\,\text{eV}$) as zero-step median force $F_{\max}$ falls from $7.41$ to $5.09\,\text{eV/\AA}$ and graph-preserving relaxation rises from $75.8\%$ to $90.6\%$. Hot-swapping \texttt{PotentialSlot} from \texttt{DPA-4} to \texttt{HyFF vivace} \citep{hyra2026hyff} at $512$ groups via a single CLI flag achieves $32.09\%$ hit yield ($575/1{,}792$) with lower $F_{\max}$ ($5.27\,\text{eV/\AA}$) and lower blind \texttt{Audit} MAE ($0.939\,\text{eV}$).
+
+Table~\ref{tab:v11_ablation} isolates the effect of spatial scale decoupling (Section~\ref{sec:scale_decoupled}). Coupled online training (propagating scalar electronic rewards into $3\times$ sub-voxel \texttt{XYZ} tokens alongside online relaxation distillation) achieves remarkable mechanical equilibrium ($\text{RMSD}_{\text{Kabsch}} = 0.0495\,\text{\AA}$, $88.62\%$ legality, $F_{\max} = 4.19\,\text{eV/\AA}$) but inflates within-target electronic dispersion $\sigma_{\text{in}}$ to $0.534\,\text{eV}$, lowering hit count to $526$. By contrast, \texttt{Stage 2.5A TopoGRPO} restricts policy gradients to coarse topology/element tokens to achieve peak hit count ($631/1{,}792$, $621$ novel unique hit graphs, $0.744\,\text{eV}$ blind \texttt{Audit} MAE at \texttt{CFG=1.75}), while detached \texttt{Stage 2.5B} sub-voxel distillation compresses $\text{RMSD}_{\text{Kabsch}}$ to $0.0533\text{--}0.0579\,\text{\AA}$ and boosts raw legality to $85.38\%$.
+
+\begin{table}[!t]
+\centering
+\caption{Ablation of spatial scale decoupling vs.\ coupled coordinate RL on \texttt{OE62 HOMO} ($1{,}792$ proposals, raw unedited point clouds). $\text{RMSD}_{\text{Kabsch}}$ measures heavy-and-H intrinsic conformational shift after $20$-step \texttt{DPA-4} relaxation.}
+\label{tab:v11_ablation}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+Ablation Arm & Hits (Clean) & 3D Legal & Exotic $Q$ & $\sigma_{\text{in}}$ (eV) & Median $F_{\max}$ (eV/\AA) & $\text{RMSD}_{\text{Kabsch}}$ (\AA) & Post-Relax Audit MAE \\
+\midrule
+\texttt{v1.0} Baseline (no guard, frozen \texttt{XYZ}) & 620 (449) & 80.47\% & 25.7\% & 0.439 & 5.09 & 0.0613 & 0.757 \\
+$+$ Zero-shot 3D geometric guard + tree \texttt{CFG} & 622 (444) & 81.75\% & 25.5\% & 0.436 & 5.12 & 0.0586 & 0.811 \\
+$+$ Detached $0.01\,\text{\AA}$ \texttt{XYZ} equilibrium distillation & 625 (450) & 81.81\% & 25.8\% & \textbf{0.427} & 5.19 & 0.0581 & 0.825 \\
+\textbf{Stage 2.5A} (\texttt{Guard + TopoGRPO}, coarse tokens only) & \textbf{631 (451)} & 84.60\% & 25.3\% & 0.471 & 5.10 & 0.0559 & \textbf{0.744} \\
+\textbf{Stage 2.5A + 2.5B} (cascaded decoupled) & 615 (447) & 85.38\% & 26.1\% & 0.475 & 5.18 & 0.0533 & 0.903 \\
+Control: \emph{Coupled RL} (\texttt{XYZ} in policy + online distill) & 526 (402) & \textbf{88.62\%} & \textbf{17.2\%} & 0.534 & \textbf{4.19} & \textbf{0.0495} & 0.786 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Joint Multi-Property Generation and Orthogonal 1D/2D \texttt{GPAtlas}}
+\label{sec:exp_atlas}
+
+Conditioning a single unified generator on $[\text{HOMO}, \text{LUMO}]$ simultaneously with missingness masks supports marginal and joint orbital design within one checkpoint. On marginal \texttt{LUMO} generation ($1{,}792$ proposals), upgrading from \texttt{v1.0} to \texttt{v1.1} ($40$-step \texttt{DPA-4} equilibrium pool + 3D geometric guard) elevates 3D covalent legality by $+12.0\,\text{pp}$ ($75.3\% \to 87.33\%$), cuts raw exotic charges from $27.1\%$ to $16.2\%$, reduces zero-step $F_{\max}$ by $25\%$ ($5.04 \to 3.79\,\text{eV/\AA}$), achieves $94.1\%$ graph-preserving relaxation with $\text{RMSD}_{\text{Kabsch}} = 0.0469\,\text{\AA}$, and reaches unit calibration slope ($1.002$ at \texttt{CFG=2.0}).
+
+Figures~\ref{fig:atlas1d} and~\ref{fig:atlas2d} illustrate the 1D and 2D heteroscedastic \texttt{GPAtlas} built over $1{,}764$ relaxed, clean 3D proposals across a $7 \times 7$ $(\text{HOMO}, \text{LUMO})$ grid audited by the blind \texttt{DPA-4} oracle. In 1D (Figure~\ref{fig:atlas1d}), \texttt{GPAtlas} identifies the trusted reachable interval $[-8.85, -5.77]\,\text{eV}$ where $\hat{\mu}_{\text{gen}}(t)$ tracks $\mu = t$, and flags prior saturation above $-5.77\,\text{eV}$. In 2D (Figure~\ref{fig:atlas2d}), replacing constant calibration heuristics with empirical cross-foundation disagreement yields two genuinely orthogonal diagnostic maps: Panel~A reveals clean joint hit yield peaking at $22.0\%$ alongside the generative drift vector field $\hat{\boldsymbol{\mu}}(\mathbf{t}) - \mathbf{t}$ pulling extreme queries toward the high-density organic semiconductor manifold, whereas Panel~B exposes a pronounced spatial gradient in cross-foundation uncertainty $\sigma_{\text{cal,2D}}$---ranging from $0.83\,\text{eV}$ in data-rich wide-gap regions ($t_{\text{H}} \in [-8.0, -7.0], t_{\text{L}} \in [-0.8, +0.2]\,\text{eV}$) to $1.14\,\text{eV}$ in narrow-gap push--pull donor--acceptor regimes ($t_{\text{H}} \in [-6.3, -5.7], t_{\text{L}} \in [-2.7, -1.5]\,\text{eV}$), pinpointing exactly where surrogate predictions require \texttt{DFT} verification.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.84\textwidth]{figures/fig4_gp_atlas_1d_homo.pdf}
+    \caption{\textbf{1D heteroscedastic \texttt{GPAtlas} profile for \texttt{HOMO}.} \emph{Top:} Posterior conditional mean $\hat{\mu}_{\text{gen}}(t)$ tracks the ideal $\mu=t$ diagonal across $[-8.85, -5.77]\,\text{eV}$, decomposed into intrinsic generator spread $\pm \sigma_{\text{gen}}(t)$ (green) and total calibrated spread $\pm \sigma_{\text{total}}(t)$ (orange). \emph{Bottom:} Surrogate clean+relaxed hit probability vs.\ conservatively calibrated hit probability overlaid on scaled \texttt{OE62} source prior density.}
+    \label{fig:atlas1d}
+\end{figure}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig5_gp_atlas_2d_joint.pdf}
+    \caption{\textbf{Orthogonal 2D $(\text{HOMO}, \text{LUMO})$ joint reachability and cross-foundation uncertainty atlas ($49$ grid cells, $1{,}764$ relaxed clean 3D molecules).} (\textbf{A}) Joint clean+relaxed hit yield surface (peaking at $22.0\%$) with \texttt{OE62} source KDE contours (white) and generative drift vectors $\hat{\boldsymbol{\mu}}(\mathbf{t}) - \mathbf{t}$ (gold). (\textbf{B}) Empirical cross-foundation disagreement surface $\sigma_{\text{cal,2D}}(t_{\text{H}}, t_{\text{L}})$ between \texttt{Uni-Mol2} and calibrated \texttt{DPA-4}, rising from $0.83\,\text{eV}$ in wide-gap regions to $1.14\,\text{eV}$ in narrow-gap donor--acceptor regions.}
+    \label{fig:atlas2d}
+\end{figure}
+
+\subsection{Dual-Track Zwitterion Elimination and Multi-Asset Synthesizable Weaving}
+\label{sec:exp_v20_synth}
+
+To evaluate \textbf{Uni-Loom v2.0}'s dual-track valence purity engine and predictor-agnostic multi-asset bus (\texttt{configs/tasks/oe62\_orbital\_synthesizable.yaml}), we mounted frozen external \texttt{Uni-Mol2} (\texttt{ext\_unimol2}) alongside \texttt{BuiltInRuleAsset} inequality constraints ($\text{SA\_Score} \le 3.5$ hard gate, reactive $\text{smarts\_alert} \le 0$ hard gate, $\text{MolWt} \le 550\,\text{Da}$ soft margin) and the isolated \texttt{DPA-4} blind auditor (\texttt{audit\_dpa4}) with zero predictor retraining. Table~\ref{tab:v20_synth} and Figure~\ref{fig:v20_synth} report \emph{Raw Point-Cloud} and \emph{Valence-Reconciled} metrics side by side across $1{,}792$ proposals (\texttt{v20\_synthesizable\_homo\_eval.json}).
+
+\begin{table}[!t]
+\centering
+\caption{Side-by-side \emph{Raw Point-Cloud} vs.\ \emph{Valence-Reconciled} ($\text{RMSD}_{\text{heavy}} = 0.0000\,\text{\AA}$) comparison of dual-track zwitterion elimination and zero-retrain synthesizable weaving ($\text{SA\_Score} \le 3.5$ \& $\text{SMARTS} = 0$) across $1{,}792$ \texttt{OE62 HOMO} proposals.}
+\label{tab:v20_synth}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Policy Checkpoint & Evaluation View & 3D Legal & Exotic $Q$ & Median SA ($\downarrow$) & Constr.\ Met & Median $F_{\max}$ & Synth.\ Clean Hits & Blind Audit Hits & Audit$-$Reward Gap \\
+\midrule
+Pre-Align \texttt{v1.1} & \textbf{Raw Point-Cloud} & 81.92\% (1468) & 25.75\% & 4.87 & 21.05\% & 5.07 & 118 (6.58\%) & 250 (13.95\%) & 0.655 eV \\
+Pre-Align \texttt{v1.1} & \textbf{Valence-Reconciled} & 89.23\% (1599) & \textbf{0.00\%} & 4.70 & 20.95\% & 5.89 & 127 (7.09\%) & 292 (16.29\%) & 0.555 eV \\
+\midrule
+\textbf{Uni-Loom v2.0} & \textbf{Raw Point-Cloud} & \textbf{95.20\% (1706)} & \textbf{8.26\%} & \textbf{3.04} & \textbf{58.32\%} & \textbf{1.79} & \textbf{184 (10.27\%)} & \textbf{338 (18.86\%)} & \textbf{0.190 eV} \\
+\textbf{Uni-Loom v2.0} & \textbf{Valence-Reconciled} & \textbf{98.49\% (1765)} & \textbf{0.00\%} & \textbf{3.04} & \textbf{58.87\%} & \textbf{1.91} & \textbf{196 (10.94\%)} & \textbf{360 (20.09\%)} & \textbf{0.143 eV} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig6_zwitterion_and_synthesizability.pdf}
+    \caption{\textbf{Dual-track zwitterion elimination and declarative multi-asset synthesizable weaving ($1{,}792$ proposals).} (\textbf{A}) Generation-side coordination guards + \texttt{HeavyAtomValenceHead} + \texttt{TopoGRPO} cut raw unedited exotic formal charges $3.1\times$ ($25.7\% \to 8.3\%$), while zero-heavy-RMSD \texttt{ValenceReconciler} eliminates the remaining peripheral-H artifacts to $0.00\%$. (\textbf{B}) Raw point-cloud legality rises from $81.9\%$ to $95.2\%$ ($98.5\%$ reconciled), while constraint satisfaction ($\text{SA\_Score} \le 3.5$, clean reactive \texttt{SMARTS}, zero exotic charge) jumps $2.80\times$ from $21.0\%$ to $58.9\%$. (\textbf{C}) Synthesizable clean hit yield grows $+66.1\%$ ($6.6\% \to 10.9\%$, $196$ hits) and blind cross-foundation \texttt{DPA-4} audit yield grows $+44.0\%$ ($14.0\% \to 20.1\%$, $360$ hits).}
+    \label{fig:v20_synth}
+\end{figure}
+
+Three key findings emerge from Table~\ref{tab:v20_synth}:
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt,topsep=2pt]
+    \item \textbf{Intrinsic Generation Purity (Track A) + Exact Reconstruction Purity (Track B):} Even \emph{without any post-hoc reconciliation} (\textbf{Raw Point-Cloud}), \textbf{Uni-Loom v2.0} increases raw 3D covalent legality by $+13.28\,\text{pp}$ ($81.92\% \to 95.20\%$), slashes disconnected heavy skeletons $6.1\times$ ($110 \to 18$) and heavy-atom over-coordination $13.2\times$ ($66 \to 5$), boosts untouched natively clean proposals (\texttt{clean\_raw}) from $1{,}090$ to $1{,}565 / 1{,}792$, and cuts raw exotic charges $3.1\times$ ($25.75\% \to 8.26\%$). Applying \texttt{ValenceReconciler} repairs the residual $200$ peripheral-H/resonance cases ($60$ peripheral-H count mismatches and $140$ neutral Lewis reassignments) at exact $\max \text{RMSD}_{\text{heavy}} = 0.0000\,\text{\AA}$, delivering $98.49\%$ ($1{,}765/1{,}792$) legality and $0.00\%$ exotic zwitterions.
+    \item \textbf{Synthesizability Constraints Suppress Surrogate Reward Hacking:} Unconstrained \texttt{v1.1} frequently exploited polycyclic, bridged, high-strain cages ($\text{median SA} = 4.87$, $F_{\max} = 5.07\,\text{eV/\AA}$) to score narrow \texttt{Uni-Mol2} hits, incurring a large $0.655\,\text{eV}$ \texttt{Audit}--\texttt{Reward} MAE gap. Enforcing $\text{SA\_Score} \le 3.5$ and $\text{SMARTS} = 0$ shifts generation onto unstrained, synthetically tractable $\pi$-scaffolds ($\text{median SA} = 3.04$, $F_{\max} = 1.79\text{--}1.91\,\text{eV/\AA}$), raising synthesizable clean hits $+66.1\%$ ($118 \to 196$, comprising $137$ unique molecular graphs and $120$ novel structures absent from training) \emph{and} boosting strictly isolated \texttt{DPA-4} blind audit hits $+44.0\%$ ($250 \to 360$), compressing the cross-foundation \texttt{Audit}--\texttt{Reward} MAE gap $4.6\times$ to $0.143\,\text{eV}$.
+    \item \textbf{Intrinsic Pareto Trade-Off Between Easy Synthesizability and Shallow Donor Energies:} While calibration slope remains near-ideal ($1.028$), admitting only $\text{SA} \le 3.5$ molecules into the replay buffer ($25.5\%$ of the unconstrained pool) shifts the conditional mean downward by $-0.43\,\text{eV}$ (lowering raw \texttt{Uni-Mol2} unconstrained hits from $664$ to $378$). Physically, shallow-\texttt{HOMO} ($-5.85\,\text{eV}$) strong electron donors in \texttt{OE62} predominantly require complex fused heteroaromatic rings with $\text{SA} > 3.8$, illustrating how \textbf{Uni-Loom} exposes genuine multi-objective chemical Pareto frontiers rather than masking them.
+\end{enumerate}
+
+\FloatBarrier
+\subsection{Two-Round Grounded RSI Closed-Loop Validation}
+\label{sec:exp_rsi}
+
+Finally, we validate the complete four-quadrant \textbf{Grounded RSI} flywheel in a strict blindspot simulation (\texttt{v20\_grounded\_rsi\_2round\_eval.json}) mirroring industrial deployment with an incomplete historical predictor:
+(i) a $5$-fold enterprise QSAR predictor wrapped in \texttt{Residual\allowbreak Calibrated\allowbreak Asset} is trained \emph{exclusively} on $3{,}086$ molecules with $\text{HOMO} > -6.92\,\text{eV}$ ($\approx P_{28}$), rendering the deep electron-withdrawing regime ($\text{HOMO} \le -6.92\,\text{eV}$, covering $P_{10} = -7.45\,\text{eV}$) a complete zero-data \textbf{OOD blindspot}, paired with \texttt{single\_oracle\_ad} auditing (testing single-predictor anti-collapse) and $\text{SA\_Score} \le 3.8$;
+(ii) an isolated external \texttt{DFT} lab pool ($73$ deep-\texttt{HOMO} structures from held-out \texttt{quantum\_valid\_dft.sdf}) returns authentic \texttt{PBE0/def2-TZVP} labels only when queried by \texttt{OuterRSIAcquisition};
+(iii) $73$ untouched deep-\texttt{HOMO} \texttt{DFT} structures in \texttt{quantum\_test\_dft.sdf} form a strictly blind predictor calibration test set; and
+(iv) the isolated \texttt{DPA-4} \texttt{AuditOracle} evaluates all $1{,}792$ generated 3D proposals per round across mid-range ($P_{35}\text{--}P_{90}$) and deep-blindspot ($P_{10}\text{--}P_{25}$) quantiles.
+
+\suppressfloats[t]
+\begin{table}[ht]
+\centering
+\caption{Two-round \textbf{Grounded RSI} closed-loop progression ($1{,}792$ proposals per round; historical predictor trained only on $\text{HOMO} > -6.92\,\text{eV}$; $\tau_{\text{cal}} = 0.35\,\text{eV}$). All hit yields in the rightmost three columns are evaluated by the strictly blind cross-foundation \texttt{DPA-4 AuditOracle} on clean, constraint-satisfying ($\text{SA} \le 3.8$) 3D molecules.}
+\label{tab:rsi}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrr}
+\toprule
+RSI Stage & Grid Zone Counts & $P_{10}$ $\sigma_{\text{cal}}$ & 3D Legal & Raw Exotic $Q$ & Constr.\ Met & Mid-Zone Audit & Deep-Zone Audit & Total Blind Audit \\
+ & \texttt{(Conv/Inner/Blind/Ceil)} & ($-7.45$ eV) & (\texttt{Raw} / \texttt{Rec}) & (\texttt{Rec} $=0\%$) & ($\text{SA}\le 3.8$) & ($P_{35}\text{--}P_{90}$) & ($P_{10}\text{--}P_{25}$) & Clean Hits / 1792 \\
+\midrule
+\textbf{Round 0} (Initial Diagnosis) & \texttt{0 / 6 / 1 / 1} & 0.490 eV & 66.0\% / 76.1\% & 38.88\% & 13.27\% & 2.11\% & 4.88\% & \textbf{52 (2.90\%)} \\
+\textbf{Round 1A} (Inner RSI Only, 0 DFT) & \texttt{3 / 3 / 1 / 1} & 0.483 eV & 94.9\% / 98.4\% & 7.35\% & 57.06\% & \textbf{8.59\%} ($4.07\times$) & 5.47\% & \textbf{138 (7.70\%, $2.65\times$)} \\
+\textbf{Round 1B} (64 DFT + Zero-Retrain Cal) & \textbf{\texttt{2 / 5 / 0 / 1}} & \textbf{0.291 eV} & \multicolumn{5}{c}{\emph{Untouched Blind Deep-DFT Test ($n=73$) MAE: $0.990 \to 0.655$ eV (\textbf{$-33.8\%$}, $0$ base weights modified)}} & \emph{Unlocks $P_{10}\text{--}P_{25}$} \\
+\textbf{Round 2} (Unlocked Inner RSI) & \textbf{\texttt{3 / 4 / 0 / 1}} & \textbf{0.285 eV} & \textbf{97.4\% / 99.3\%} & \textbf{3.61\%} & \textbf{75.04\%} & \textbf{14.69\%} ($6.96\times$) & \textbf{8.01\%} ($+64.1\%$) & \textbf{229 (12.78\%, $4.40\times$)} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig7_grounded_rsi_closed_loop.pdf}
+    \caption{\textbf{Causal validation of the two-round Grounded RSI closed loop.} (\textbf{A}) In Round~0, \texttt{GPAtlas} detects elevated calibration uncertainty $\sigma_{\text{cal}}(t) = 0.490\,\text{eV} > \tau_{\text{cal}}$ inside the historical blindspot ($t \le -6.92\,\text{eV}$) and freezes its RL weight at $0\%$. Ingesting $64$ outer-loop \texttt{DFT} labels into \texttt{ResidualCalibratedAsset} (with zero base-model weights modified) cuts untouched blind deep-\texttt{DFT} test MAE by $33.8\%$ ($0.990 \to 0.655\,\text{eV}$) and contracts $\sigma_{\text{cal}}(t)$ to $\le 0.291\,\text{eV}$ across the grid. (\textbf{B}) Weak-zone state counts across stages: Round~1A graduates $3$ mid-range intervals to \texttt{CONVERGED} while keeping \texttt{OUTER\_BLINDSPOT} safely frozen; Round~1B eliminates \texttt{OUTER\_BLINDSPOT} ($1 \to 0$), unlocking deep intervals for Round~2. (\textbf{C}) Strictly blind \texttt{DPA-4 AuditOracle} constrained clean hit yield climbs $4.40\times$ overall ($2.9\% \to 7.7\% \to 12.8\%$), with deep-blindspot yield surging $+46.4\%$ ($5.5\% \to 8.0\%$) immediately after outer-loop unlocking.}
+    \label{fig:rsi}
+\end{figure}
+
+Table~\ref{tab:rsi} and Figure~\ref{fig:rsi} demonstrate each link of the causal RSI chain:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt,topsep=2pt]
+    \item \textbf{Round 0 (Blindspot Detection \& Gatekeeper Protection):} \texttt{RSIDiagnoser} classifies the extreme $-8.55\,\text{eV}$ probe as \texttt{PRIOR\_CEILING} ($\rho_{\text{src}} = 0.013$, prior pull $+2.06\,\text{eV}$) and $P_{10} = -7.45\,\text{eV}$ as \texttt{OUTER\_BLINDSPOT} ($\sigma_{\text{cal}} = 0.490\,\text{eV} > 0.35\,\text{eV}$), assigning $0.00\%$ RL sampling probability to both. Querying \texttt{recommend\_target(-7.446)} triggers \texttt{status="rerouted\_warning"} (\texttt{predictor\_blindspot}, $P_{\text{hit}}^{\text{cal}} = 5.6\%$).
+    \item \textbf{Round 1A (Zero-External-Cost Inner-Loop RSI):} Focusing $100\%$ of curriculum updates on the $6$ trusted \texttt{INNER\_UNDEREXPLORED} targets passes the acceptance gate ($2.57\% \to 19.03\%$ surrogate constrained yield), lifting blind-audited mid-zone clean hit yield $4.07\times$ ($2.11\% \to 8.59\%$) and graduating $3$ intervals to \texttt{CONVERGED}, while the frozen blindspot suffers zero adversarial collapse ($4.88\% \to 5.47\%$).
+    \item \textbf{Round 1B (Active Acquisition \& Zero-Retrain Residual Calibration):} \texttt{Outer\allowbreak RSI\allowbreak Acquisition} exports $64$ clean, low-strain blindspot candidates spanning $12$ distinct Murcko scaffolds ($\bar{\sigma}_{\text{cal}} = 0.453\,\text{eV}$). Ingesting $64$ external \texttt{DFT} labels into \texttt{Residual\allowbreak Calibrated\allowbreak Asset} (where the uncalibrated historical predictor had $\text{MAE} = 1.187\,\text{eV}$) reduces MAE on the \textbf{$73$ untouched blind \texttt{quantum\_test\_dft.sdf} deep-\texttt{HOMO} molecules from $0.990$ to $0.655\,\text{eV}$ ($-33.8\%$)} without modifying a single base-model parameter. Re-diagnosis contracts $\sigma_{\text{cal}}(-7.45\,\text{eV})$ from $0.483$ to $0.291\,\text{eV} < 0.35\,\text{eV}$, reducing \texttt{OUTER\_BLINDSPOT} count from $1$ to $0$.
+    \item \textbf{Round 2 (Post-Calibration Unlocked Alignment):} With deep intervals unlocked into the curriculum, Round~2 elevates deep-blindspot blind-audited clean yield from $5.47\%$ to $8.01\%$ ($+64.1\%$ over Round~0; deep blindspot \texttt{Audit} MAE $1.030 \to 0.955\,\text{eV}$), pushes mid-zone blind-audited yield to $14.69\%$ ($6.96\times$ over Round~0), and achieves $229 / 1{,}792$ ($12.78\%$, $4.40\times$ monotonic gain) total blind-audited constrained clean hits. Simultaneously, raw point-cloud legality reaches $97.38\%$ ($99.27\%$ reconciled), raw exotic charges fall to just $3.61\%$ ($0.00\%$ reconciled), median zero-step $F_{\max}$ reaches $0.93\,\text{eV/\AA}$, and \texttt{recommend\_target(-7.446)} transitions automatically to \texttt{status="trusted"} ($\sigma_{\text{cal}} = 0.285\,\text{eV}$, $P_{\text{hit}}^{\text{cal}} = 44.85\%$).
+\end{itemize}
+
+\section{Discussion and Limitations}
+\label{sec:limitations}
+
+While \textbf{Uni-Loom} closes the architectural loop between 3D molecular generation, heterogeneous enterprise predictors, interatomic potentials, and active self-improvement, four practical boundaries merit transparent discussion:
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=2pt,topsep=2pt]
+    \item \textbf{Controlled Split Retrieval vs.\ Live On-the-Fly \texttt{DFT} Execution in Outer-Loop RSI:} In Section~\ref{sec:exp_rsi}, outer-loop feedback matched exported blindspot candidates against an isolated held-out \texttt{PBE0/def2-TZVP} pool (\texttt{quantum\_valid\_dft.sdf}) to enable deterministic, reproducible benchmarking, while evaluating proposal hit rates via the \texttt{DFT}-calibrated \texttt{DPA-4} audit oracle ($0.186\,\text{eV}$ test MAE vs.\ \texttt{DFT}). Coupling \texttt{OuterRSIAcquisition}'s exported \texttt{SDF} batches directly to automated \texttt{GPU4PySCF} \citep{li2024gpu4pyscf} geometry optimization and single-point queues is a straightforward operational extension.
+    \item \textbf{Curriculum Anchor Stratification Under Strong Distributional Shifts:} In Round~2 of Table~\ref{tab:rsi}, after unlocking deep-\texttt{HOMO} intervals ($-7.45$ and $-7.04\,\text{eV}$, where calibrated hit rates surged from $0\%$ to $78.1\%$ and $58.2\%$), allocating the $20\%$ anchor replay budget only across currently \texttt{CONVERGED} deep cells allowed the shallowest target ($-5.85\,\text{eV}$) to drift toward deeper energies ($\hat{\mu}_{\text{gen}} = -6.86\,\text{eV}$). Stratifying the $20\%$ anchor budget uniformly across \emph{all} previously trusted quantiles prevents tail forgetting during aggressive blindspot expansion.
+    \item \textbf{Net-Neutral Closed-Shell Default Scope:} \texttt{ValenceReconciler} targets net-neutral ($\sum_i q_i = 0$) closed-shell organic molecules while whitelisting standard dipolar groups (nitro, $N$-oxide, sulfoxide, azide). Designing permanent organic salts (e.g., quaternary ammonium electrolytes), physiological-pH amino-acid zwitterions, open-shell radicals, or transition-metal complexes requires declaring explicit target net charges and coordination budgets in \texttt{TaskWeavingSpec}.
+    \item \textbf{Continuous Conformer Refinement vs.\ Discrete Graph Jumps:} When mounting differentiable 3D predictors (\texttt{UniMol3DAsset}), \texttt{PhysicsConstrainedCoordRefiner} ($\nabla_{\mathbf{R}}\hat{y}$) optimizes continuous torsional and local geometric degrees of freedom within a fixed covalent graph; discrete scaffold exploration continues to rely on \texttt{Stage 2.5A TopoGRPO}, reinforcing the complementarity of our scale-decoupled formulation.
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented \textbf{Uni-Loom}, a predictor-agnostic 3D molecular weaving and grounded recursive self-improvement platform that transforms standalone 3D generators, external property models, analytical chemistry rules, and universal interatomic potentials into a unified, self-diagnosing discovery engine. By decoupling coarse topological policy optimization from sub-voxel equilibrium coordinate distillation, eliminating exotic zwitterions at both decoding and zero-heavy-RMSD reconstruction stages, separating generative spread from epistemic surrogate uncertainty in \texttt{GPAtlas}, and closing the active calibration loop via zero-retrain Bayesian residual wrappers, \textbf{Uni-Loom} establishes a practical blueprint for trustworthy, continuously improving 3D molecular design.
+
+\section*{Data and Code Availability}
+The modular \textbf{Uni-Loom} (\texttt{loom 2.0.0}) Python package (\texttt{src/loom/\allowbreak chemistry/} and \texttt{src/loom/\allowbreak weaving/}), declarative task specifications (\texttt{configs/\allowbreak tasks/*.yaml}), evaluation and RSI cycle runners (\texttt{scripts/}), unit test suite ($321$ passing tests), and complete JSON experimental records (\texttt{docs/\allowbreak experiments/}) are maintained in the project repository.
+
+\begingroup
+\small
+\raggedright
+\input{main.bbl}
+\endgroup
+
+\end{document}
