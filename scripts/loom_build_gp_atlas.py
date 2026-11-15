@@ -23,7 +23,7 @@ from loom.weaving import (
 from scripts.loom_train_sft import load_sdf_with_targets
 
 
-def _prepare_clean_relaxed_mols(mols_all: list, pot_slot: PotentialSlot | None) -> list:
+def _prepare_clean_relaxed_mols(mols_all: list, pot_slot: PotentialSlot | None, n_steps: int = 20) -> list:
     clean_idx = [
         i for i, m in enumerate(mols_all) if m is not None and is_clean_organic_charge_state(m)
     ]
@@ -35,7 +35,7 @@ def _prepare_clean_relaxed_mols(mols_all: list, pot_slot: PotentialSlot | None) 
             out_mols[i] = mols_all[i]
         return out_mols
     sub_mols = [mols_all[i] for i in clean_idx]
-    rel = pot_slot.relax_molecules(sub_mols, n_steps=15, chunk_size=32)
+    rel = pot_slot.relax_molecules(sub_mols, n_steps=n_steps, chunk_size=32)
     for loc_i, glob_i in enumerate(clean_idx):
         if rel["graph_preserved"][loc_i] and rel["relaxed_mols"][loc_i] is not None:
             out_mols[glob_i] = rel["relaxed_mols"][loc_i]
@@ -51,6 +51,9 @@ def run_1d_grid(
     grid_eV: np.ndarray,
     proposals_per_point: int,
     cfg_scale: float,
+    cfg_tree_decay: float,
+    geometric_guard: bool,
+    relax_steps: int,
     source_vals_eV: np.ndarray,
     cal_sigma_eV: float,
     seed: int,
@@ -72,6 +75,8 @@ def run_1d_grid(
             m_act,
             cfg_scale=cfg_scale,
             xyz_cfg_scale=1.0,
+            cfg_tree_decay=cfg_tree_decay,
+            geometric_guard=geometric_guard,
             seed=seed + g_idx * 97,
             use_bf16=(device.type == "cuda"),
             electron_parity=0,
@@ -83,7 +88,7 @@ def run_1d_grid(
             except ValueError:
                 mols_all.append(None)
 
-    eval_mols = _prepare_clean_relaxed_mols(mols_all, pot_slot)
+    eval_mols = _prepare_clean_relaxed_mols(mols_all, pot_slot, n_steps=relax_steps)
     rew_full, _, rew_ev, _ = reward_slot.evaluate_candidates(eval_mols, batch_size=32)
     aud_1d = None
     if audit_slot is not None:
@@ -115,6 +120,9 @@ def main() -> None:
     parser.add_argument("--proposals-per-1d-point", type=int, default=64)
     parser.add_argument("--proposals-per-2d-cell", type=int, default=32)
     parser.add_argument("--cfg-scale", type=float, default=1.75)
+    parser.add_argument("--cfg-tree-decay", type=float, default=0.0)
+    parser.add_argument("--geometric-guard", action="store_true")
+    parser.add_argument("--relax-steps", type=int, default=20)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", type=str, default="cuda:0")
     args = parser.parse_args()
@@ -155,13 +163,22 @@ def main() -> None:
     print(f"[GP-Atlas] Evaluating 1D HOMO grid ({len(homo_grid)} pts × {args.proposals_per_1d_point} mols)...", flush=True)
     homo_1d = run_1d_grid(
         gen_h, reward_slot, audit_slot, pot_slot, "homo", homo_grid, args.proposals_per_1d_point,
-        args.cfg_scale, src_labels[:, 0], cal_sigma_eV=0.19, seed=71001
+        args.cfg_scale, args.cfg_tree_decay, args.geometric_guard, args.relax_steps,
+        src_labels[:, 0], cal_sigma_eV=0.19, seed=71001
     )
 
     out_data: dict = {
         "homo_1d_atlas": homo_1d,
         "lumo_1d_atlas": None,
         "joint_2d_atlas": None,
+        "config": {
+            "homo_checkpoint": str(args.homo_checkpoint),
+            "joint_checkpoint": str(args.joint_checkpoint) if args.joint_checkpoint else None,
+            "cfg_scale": args.cfg_scale,
+            "cfg_tree_decay": args.cfg_tree_decay,
+            "geometric_guard": args.geometric_guard,
+            "relax_steps": args.relax_steps,
+        },
     }
 
     if args.joint_checkpoint is not None and args.joint_checkpoint.exists():
@@ -175,7 +192,8 @@ def main() -> None:
         print(f"[GP-Atlas] Evaluating 1D LUMO grid ({len(lumo_grid)} pts × {args.proposals_per_1d_point} mols)...", flush=True)
         out_data["lumo_1d_atlas"] = run_1d_grid(
             gen_j, reward_slot, audit_slot, pot_slot, "lumo", lumo_grid, args.proposals_per_1d_point,
-            args.cfg_scale, src_labels[:, 1], cal_sigma_eV=0.21, seed=72001
+            args.cfg_scale, args.cfg_tree_decay, args.geometric_guard, args.relax_steps,
+            src_labels[:, 1], cal_sigma_eV=0.21, seed=72001
         )
 
         # 2D (HOMO, LUMO) 7×7 grid = 49 cells (including OOD & near-diagonal cells!)
@@ -199,6 +217,8 @@ def main() -> None:
                 m_act,
                 cfg_scale=args.cfg_scale,
                 xyz_cfg_scale=1.0,
+                cfg_tree_decay=args.cfg_tree_decay,
+                geometric_guard=args.geometric_guard,
                 seed=73001 + c_idx * 53,
                 use_bf16=(device.type == "cuda"),
                 electron_parity=0,
@@ -210,12 +230,17 @@ def main() -> None:
                 except ValueError:
                     mols_2d.append(None)
 
-        eval_mols_2d = _prepare_clean_relaxed_mols(mols_2d, pot_slot)
+        eval_mols_2d = _prepare_clean_relaxed_mols(mols_2d, pot_slot, n_steps=args.relax_steps)
         rew_2d, _, ev_2d, _ = reward_slot.evaluate_candidates(eval_mols_2d, batch_size=32)
+        aud_2d_cols = None
+        if audit_slot is not None:
+            aud_2d_full, _, _, _ = audit_slot.evaluate_candidates(eval_mols_2d, batch_size=32)
+            aud_2d_cols = aud_2d_full[:, [audit_slot.target_cols.index("homo"), audit_slot.target_cols.index("lumo")]]
         atlas_2d = HeteroscedasticGPAtlas2D.fit_from_proposals(
             np.asarray(req_2d_list, dtype=np.float64),
             rew_2d[:, [reward_slot.target_cols.index("homo"), reward_slot.target_cols.index("lumo")]],
             ev_2d,
+            audit_or_dft_preds_2d_eV=aud_2d_cols,
             source_2d_eV=src_labels,
             constant_cal_sigma_eV=(0.19, 0.21),
         )

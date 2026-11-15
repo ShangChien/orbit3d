@@ -11,6 +11,7 @@ Combines:
 from __future__ import annotations
 
 import copy
+import math
 import time
 from typing import Any, Callable, Dict, FrozenSet, List, Optional, Sequence, Tuple
 import numpy as np
@@ -116,11 +117,21 @@ def compute_disentangled_group_advantages(
     }
 
 
-def property_distance_reward(distance_eV: np.ndarray | torch.Tensor, tolerance_eV: float = 0.25) -> torch.Tensor:
+def property_distance_reward(
+    distance_eV: np.ndarray | torch.Tensor,
+    tolerance_eV: float = 0.25,
+    *,
+    sharp_concentration: bool = False,
+) -> torch.Tensor:
     """Hybrid Cauchy (long-range pull) + Gaussian (concentration) + smooth hit-window bonus in `(0, 1]`."""
     d = torch.as_tensor(distance_eV, dtype=torch.float32)
     tol = max(tolerance_eV, 1e-4)
     u = d / tol
+    if sharp_concentration:
+        # Tighter Gaussian core (`sigma = 0.65 * tol`) + steeper window edge to compress `sigma_in`
+        base = 0.30 / (1.0 + u.square()) + 0.40 * torch.exp(-0.5 * (d / (0.65 * tol)).square())
+        hit_bonus = 0.30 * torch.sigmoid((tol - d) / (0.12 * tol))
+        return base + hit_bonus
     base = 0.40 / (1.0 + u) + 0.35 * torch.exp(-0.5 * u.square())
     hit_bonus = 0.25 * torch.sigmoid((tol - d) / (0.16 * tol))
     return base + hit_bonus
@@ -158,8 +169,16 @@ class LoomGRPOTrainer:
         w_phys: float = 0.25,
         w_prop: float = 1.00,
         tolerance_eV: float = 0.25,
+        sharp_concentration: bool = False,
         cfg_scale: float = 1.0,
         xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.0,
+        geometric_guard: bool = False,
+        topology_only_policy: bool = False,
+        relax_distill_weight: float = 0.0,
+        relax_distill_steps: int = 30,
+        relax_distill_max_mols: int = 12,
+        relax_distill_max_fmax: float = 1.5,
         temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
         electron_parity: Optional[int] = 0,
         seed: int = 42,
@@ -189,8 +208,16 @@ class LoomGRPOTrainer:
         self.w_phys = float(w_phys) if potential_slot is not None else 0.0
         self.w_prop = float(w_prop)
         self.tolerance_eV = float(tolerance_eV)
+        self.sharp_concentration = bool(sharp_concentration)
         self.cfg_scale = float(cfg_scale)
         self.xyz_cfg_scale = float(xyz_cfg_scale)
+        self.cfg_tree_decay = float(cfg_tree_decay)
+        self.geometric_guard = bool(geometric_guard)
+        self.topology_only_policy = bool(topology_only_policy)
+        self.relax_distill_weight = float(relax_distill_weight) if potential_slot is not None else 0.0
+        self.relax_distill_steps = int(relax_distill_steps)
+        self.relax_distill_max_mols = int(relax_distill_max_mols)
+        self.relax_distill_max_fmax = float(relax_distill_max_fmax)
         self.temperatures = temperatures
         self.electron_parity = electron_parity
         self.seed = int(seed)
@@ -236,6 +263,8 @@ class LoomGRPOTrainer:
             active_mask,
             cfg_scale=self.cfg_scale,
             xyz_cfg_scale=self.xyz_cfg_scale,
+            cfg_tree_decay=self.cfg_tree_decay,
+            geometric_guard=self.geometric_guard,
             temperatures=self.temperatures,
             seed=self.seed * 100003 + step_index * 997,
             use_bf16=(self.device.type == "cuda"),
@@ -249,6 +278,9 @@ class LoomGRPOTrainer:
                 temperatures=self.temperatures,
                 cfg_scale=self.cfg_scale,
                 xyz_cfg_scale=self.xyz_cfg_scale,
+                cfg_tree_decay=self.cfg_tree_decay,
+                geometric_guard=self.geometric_guard,
+                topology_only_policy=self.topology_only_policy,
                 electron_parity=self.electron_parity,
             )
             ref_packets = (
@@ -259,6 +291,9 @@ class LoomGRPOTrainer:
                     temperatures=self.temperatures,
                     cfg_scale=self.cfg_scale,
                     xyz_cfg_scale=self.xyz_cfg_scale,
+                    cfg_tree_decay=self.cfg_tree_decay,
+                    geometric_guard=self.geometric_guard,
+                    topology_only_policy=self.topology_only_policy,
                     electron_parity=self.electron_parity,
                 )
                 if self.reference is not None
@@ -328,7 +363,11 @@ class LoomGRPOTrainer:
                     max_err = float(np.max(diffs))
                     abs_err_np[idx] = mean_err
                     hits_np[idx] = max_err <= self.tolerance_eV
-                    prop_scores_np[idx] = float(property_distance_reward(mean_err, self.tolerance_eV).item())
+                    prop_scores_np[idx] = float(
+                        property_distance_reward(
+                            mean_err, self.tolerance_eV, sharp_concentration=self.sharp_concentration
+                        ).item()
+                    )
 
         # 5. Per-prompt disentangled group-normalized advantages
         valid_scores_t = torch.as_tensor(valid_scores_np, device=self.device)
@@ -353,13 +392,94 @@ class LoomGRPOTrainer:
             )
             adv_all[s:e] = adv_g
 
-        # 6. Clipped PPO/GRPO policy updates + KL + Supervised Replay Anchor
+        # 5b. Optional v1.1 Online Relaxed-Coordinate Distillation (`L_relax_SFT`)
+        relax_packed: Optional[Dict[str, torch.Tensor]] = None
+        relax_targets_norm: Optional[torch.Tensor] = None
+        relax_mask_t: Optional[torch.Tensor] = None
+        n_relax_admitted = 0
+        if self.relax_distill_weight > 0.0 and self.potential_slot is not None:
+            clean_eval_idx = [
+                i
+                for i in range(total_b)
+                if eval_mask_np[i]
+                and mols[i] is not None
+                and np.isfinite(abs_err_np[i])
+                and float(abs_err_np[i]) <= 1.20 * self.tolerance_eV
+            ]
+            clean_eval_idx.sort(key=lambda i: float(abs_err_np[i]))
+            cand_idx = clean_eval_idx[: self.relax_distill_max_mols]
+            if cand_idx:
+                cand_mols = [mols[i] for i in cand_idx if mols[i] is not None]
+                rel_out = self.potential_slot.relax_molecules(
+                    cand_mols, n_steps=self.relax_distill_steps, chunk_size=16
+                )
+                kept_mols: List[Chem.Mol] = []
+                kept_masks: List[np.ndarray] = []
+                kept_req_targets: List[np.ndarray] = []
+                for loc_i, orig_i in enumerate(cand_idx):
+                    rm = rel_out["relaxed_mols"][loc_i]
+                    if (
+                        rel_out["graph_preserved"][loc_i]
+                        and rm is not None
+                        and np.isfinite(rel_out["final_f_max_eV_A"][loc_i])
+                        and rel_out["final_f_max_eV_A"][loc_i] <= self.relax_distill_max_fmax
+                        and is_clean_organic_charge_state(rm)
+                    ):
+                        kept_mols.append(rm)
+                        kept_masks.append(rep_mask_np[orig_i])
+                        kept_req_targets.append(rep_targets_eV[orig_i])
+                if kept_mols:
+                    rel_preds, _, rel_ok, _ = self.reward_oracle.evaluate_candidates(kept_mols, batch_size=16)
+                    rel_aligned = rel_preds[:, self.oracle_col_indices]
+                    temp_ds = OctreeDataset(
+                        kept_mols, self.generator.backbone, training=False, seed=self.seed + step_index
+                    )
+                    ok_local: List[int] = []
+                    target_rows: List[np.ndarray] = []
+                    for loc_j in range(len(kept_mols)):
+                        if not rel_ok[loc_j]:
+                            continue
+                        req_j = kept_req_targets[loc_j]
+                        msk_j = kept_masks[loc_j]
+                        post_err = float(np.max(np.abs(rel_aligned[loc_j][msk_j] - req_j[msk_j]))) if msk_j.any() else 999.0
+                        if post_err > 1.25 * self.tolerance_eV:
+                            continue
+                        try:
+                            temp_ds.collate([loc_j])
+                            ok_local.append(loc_j)
+                            # Condition directly on requested prompt target if post-relax stays inside ±tol, else hindsight
+                            target_rows.append(req_j if post_err <= self.tolerance_eV else rel_aligned[loc_j])
+                        except ValueError:
+                            continue
+                    if ok_local:
+                        try:
+                            relax_packed = {
+                                k: (v.to(self.device) if isinstance(v, torch.Tensor) else v)
+                                for k, v in temp_ds.collate(ok_local).items()
+                            }
+                            relax_targets_norm = self.generator.normalize_targets(np.asarray(target_rows, dtype=np.float32))
+                            relax_mask_t = torch.as_tensor(
+                                np.asarray([kept_masks[j] for j in ok_local], dtype=bool),
+                                dtype=torch.bool,
+                                device=self.device,
+                            )
+                            n_relax_admitted = len(ok_local)
+                        except ValueError:
+                            relax_packed = None
+
+        # 6. Clipped PPO/GRPO policy updates + KL + Supervised Replay Anchor + Relaxed-Coord Distillation
         self.generator.train()
-        has_signal = bool((adv_all.abs() > 1e-6).any().item()) or self.kl_beta > 0.0 or self.replay_dataset is not None
+        has_signal = (
+            bool((adv_all.abs() > 1e-6).any().item())
+            or self.kl_beta > 0.0
+            or self.replay_dataset is not None
+            or relax_packed is not None
+        )
         n_updates = self.ppo_epochs if has_signal else 0
         last_loss = 0.0
         last_policy_loss = 0.0
         last_replay_loss = 0.0
+        last_relax_distill_loss = 0.0
         last_kl = 0.0
         grad_norm = 0.0
 
@@ -373,6 +493,9 @@ class LoomGRPOTrainer:
                     temperatures=self.temperatures,
                     cfg_scale=self.cfg_scale,
                     xyz_cfg_scale=self.xyz_cfg_scale,
+                    cfg_tree_decay=self.cfg_tree_decay,
+                    geometric_guard=self.geometric_guard,
+                    topology_only_policy=self.topology_only_policy,
                     electron_parity=self.electron_parity,
                 )
                 p_loss = categorical_policy_loss(
@@ -384,27 +507,48 @@ class LoomGRPOTrainer:
                     with torch.no_grad():
                         kl_terms = []
                         for (logp, _, _), (ref_logp, _, _) in zip(cur_packets, ref_packets):
-                            delta = torch.where(torch.isfinite(logp), logp - ref_logp, torch.zeros_like(logp))
-                            kl_terms.append((logp.exp() * delta).sum(-1))
+                            both_fin = torch.isfinite(logp) & torch.isfinite(ref_logp)
+                            s_lp = torch.where(both_fin, logp, torch.zeros_like(logp))
+                            s_rf = torch.where(both_fin, ref_logp, torch.zeros_like(ref_logp))
+                            pr = torch.where(both_fin, s_lp.exp(), torch.zeros_like(logp))
+                            kl_terms.append((pr * (s_lp - s_rf).clamp(-30.0, 30.0)).sum(-1))
                         last_kl = float(torch.cat(kl_terms).mean().item())
 
                 if self.replay_dataset is not None and self.replay_targets_eV is not None:
-                    r_indices = self.rng.integers(0, len(self.replay_dataset), size=self.replay_batch_size)
-                    r_packed = self.replay_dataset.collate(r_indices)
-                    r_targets_norm = self.generator.normalize_targets(self.replay_targets_eV[r_indices])
-                    # Match active mask distribution of current prompt batch
-                    r_mask_idx = self.rng.integers(0, p_count, size=self.replay_batch_size)
-                    r_mask = torch.as_tensor(prompt_active_mask[r_mask_idx], dtype=torch.bool, device=self.device)
-                    r_loss, _ = self.generator.compute_sft_loss(r_packed, r_targets_norm, r_mask, cfg_dropout_prob=0.10)
-                    total_loss = total_loss + self.replay_weight * r_loss
-                    last_replay_loss = float(r_loss.detach().item())
+                    r_packed = None
+                    r_indices = None
+                    for _ in range(5):
+                        cand_r = self.rng.integers(0, len(self.replay_dataset), size=self.replay_batch_size)
+                        try:
+                            r_packed = self.replay_dataset.collate(cand_r)
+                            r_indices = cand_r
+                            break
+                        except ValueError:
+                            continue
+                    if r_packed is not None and r_indices is not None:
+                        r_targets_norm = self.generator.normalize_targets(self.replay_targets_eV[r_indices])
+                        r_mask_idx = self.rng.integers(0, p_count, size=self.replay_batch_size)
+                        r_mask = torch.as_tensor(prompt_active_mask[r_mask_idx], dtype=torch.bool, device=self.device)
+                        r_loss, _ = self.generator.compute_sft_loss(r_packed, r_targets_norm, r_mask, cfg_dropout_prob=0.05)
+                        total_loss = total_loss + self.replay_weight * r_loss
+                        last_replay_loss = float(r_loss.detach().item())
 
-            self.optimizer.zero_grad(set_to_none=True)
-            total_loss.backward()
-            grad_norm = float(torch.nn.utils.clip_grad_norm_(self.trainable_params, 1.0).item())
-            self.optimizer.step()
-            last_loss = float(total_loss.detach().item())
-            last_policy_loss = float(p_loss.detach().item())
+                if relax_packed is not None and relax_targets_norm is not None and relax_mask_t is not None:
+                    d_loss, _ = self.generator.compute_sft_loss(
+                        relax_packed, relax_targets_norm, relax_mask_t, cfg_dropout_prob=0.0
+                    )
+                    total_loss = total_loss + self.relax_distill_weight * d_loss
+                    last_relax_distill_loss = float(d_loss.detach().item())
+
+            if torch.isfinite(total_loss):
+                self.optimizer.zero_grad(set_to_none=True)
+                total_loss.backward()
+                gn = float(torch.nn.utils.clip_grad_norm_(self.trainable_params, 1.0).item())
+                if math.isfinite(gn):
+                    self.optimizer.step()
+                    grad_norm = gn
+                    last_loss = float(total_loss.detach().item())
+                    last_policy_loss = float(p_loss.detach().item())
 
         valid_f = f_max_np[valid_mask_np & np.isfinite(f_max_np)]
         valid_err = abs_err_np[eval_mask_np & np.isfinite(abs_err_np)]
@@ -426,9 +570,11 @@ class LoomGRPOTrainer:
             "f_max_median_eV_A": float(np.median(valid_f)) if len(valid_f) > 0 else float("nan"),
             "prop_reward_mean": float(prop_scores_np[eval_mask_np].mean()) if eval_mask_np.any() else 0.0,
             "phys_reward_mean": float(phys_scores_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
+            "relax_distill_admitted": n_relax_admitted,
             "loss_total": last_loss,
             "loss_policy": last_policy_loss,
             "loss_replay": last_replay_loss,
+            "loss_relax_distill": last_relax_distill_loss,
             "kl": last_kl,
             "grad_norm": grad_norm,
             "wall_seconds": elapsed,

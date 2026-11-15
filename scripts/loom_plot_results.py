@@ -85,50 +85,127 @@ def plot_gp_atlas(atlas_json: Path, out_dir: Path) -> None:
     if j2 is not None:
         from matplotlib.lines import Line2D
 
-        fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(11.2, 4.8))
+        fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(12.0, 5.0))
         h_g = np.asarray(j2["homo_grid_eV"])
         l_g = np.asarray(j2["lumo_grid_eV"])
         p_j = np.asarray(j2["p_joint_hit_reward"]).T * 100.0
         p_d = np.asarray(j2["p_joint_hit_dft_calibrated"]).T * 100.0
         kde_2d = np.asarray(j2["source_kde_density"]).T
 
+        # Left Panel: Joint Reachability + Generative Drift Field (mu_gen(t) - t) + Source Density Contours
         im1 = ax_l.contourf(h_g, l_g, p_j, levels=16, cmap="viridis")
         legend_handles = []
         if kde_2d.max() > 0:
-            ax_l.contour(h_g, l_g, kde_2d, levels=5, colors="white", linewidths=0.9, alpha=0.75)
-            legend_handles.append(Line2D([0], [0], color="white", lw=1.1, label="OE62 Source Density Contours"))
+            ax_l.contour(h_g, l_g, kde_2d, levels=5, colors="white", linewidths=0.9, alpha=0.78)
+            legend_handles.append(Line2D([0], [0], color="white", lw=1.1, label="OE62 Source Density"))
+
+        hh_m, ll_m = np.meshgrid(h_g, l_g, indexing="xy")
+        if "drift_homo_eV" in j2 and "drift_lumo_eV" in j2:
+            dh = np.asarray(j2["drift_homo_eV"]).T
+            dl = np.asarray(j2["drift_lumo_eV"]).T
+        elif "mu_homo_eV" in j2 and "mu_lumo_eV" in j2:
+            dh = np.asarray(j2["mu_homo_eV"]).T - hh_m
+            dl = np.asarray(j2["mu_lumo_eV"]).T - ll_m
+        else:
+            dh = dl = None
+
+        if dh is not None and dl is not None:
+            step_q = max(len(h_g) // 8, 1)
+            sl_q = (slice(step_q // 2, None, step_q), slice(step_q // 2, None, step_q))
+            hq, lq = hh_m[sl_q], ll_m[sl_q]
+            uh, vl = dh[sl_q], dl[sl_q]
+            phys_q = hq < (lq - 0.35)
+            ax_l.quiver(
+                hq[phys_q],
+                lq[phys_q],
+                uh[phys_q],
+                vl[phys_q],
+                color="#ffd166",
+                angles="xy",
+                scale_units="xy",
+                scale=2.2,
+                width=0.0044,
+                headwidth=3.8,
+                alpha=0.92,
+                zorder=4,
+            )
+            legend_handles.append(Line2D([0], [0], color="#ffd166", lw=1.6, label="Generative Drift $\\hat{\\mu}(t) - t$"))
+
         if h_g.max() >= l_g.min():
             ax_l.plot(h_g, h_g, "r--", lw=1.2)
             legend_handles.append(Line2D([0], [0], color="red", ls="--", lw=1.2, label="Forbidden $E_{\\mathrm{HOMO}} = E_{\\mathrm{LUMO}}$"))
         ax_l.set_xlim(h_g.min(), h_g.max())
         ax_l.set_ylim(l_g.min(), l_g.max())
-        ax_l.set_xlabel("Requested HOMO (eV)")
-        ax_l.set_ylabel("Requested LUMO (eV)")
-        ax_l.set_title("Joint (HOMO, LUMO) Clean Hit Yield $P_{\\mathrm{hit}}(\\pm 0.25\\,\\mathrm{eV})$ (%)")
+        ax_l.set_xlabel("Requested HOMO $t_{\\mathrm{H}}$ (eV)")
+        ax_l.set_ylabel("Requested LUMO $t_{\\mathrm{L}}$ (eV)")
+        ax_l.set_title("A. Joint Clean Hit Yield (%) & Generative Drift Field")
         if legend_handles:
-            ax_l.legend(handles=legend_handles, loc="lower right", frameon=True, facecolor="black", labelcolor="white", framealpha=0.55)
-        fig.colorbar(im1, ax=ax_l, fraction=0.046, pad=0.04)
-
-        im2 = ax_r.contourf(h_g, l_g, p_d, levels=16, cmap="magma")
-        if kde_2d.max() > 0:
-            ax_r.contour(h_g, l_g, kde_2d, levels=5, colors="cyan", linewidths=0.9, alpha=0.75)
-        if h_g.max() >= l_g.min():
-            ax_r.plot(h_g, h_g, "w--", lw=1.2)
-        ax_r.set_xlim(h_g.min(), h_g.max())
-        ax_r.set_ylim(l_g.min(), l_g.max())
-        ax_r.set_xlabel("Requested HOMO (eV)")
-        ax_r.set_ylabel("Requested LUMO (eV)")
-        ax_r.set_title("DFT-Calibrated Joint Confidence Surface (%)")
-        if kde_2d.max() > 0:
-            ax_r.legend(
-                handles=[Line2D([0], [0], color="cyan", lw=1.1, label="OE62 Source Density Contours")],
+            ax_l.legend(
+                handles=legend_handles,
                 loc="lower right",
                 frameon=True,
-                facecolor="black",
+                facecolor="#111827",
                 labelcolor="white",
-                framealpha=0.55,
+                framealpha=0.68,
+                fontsize=8.0,
             )
-        fig.colorbar(im2, ax=ax_r, fraction=0.046, pad=0.04)
+        cb1 = fig.colorbar(im1, ax=ax_l, fraction=0.046, pad=0.04)
+        cb1.set_label("Clean+Relaxed Hit Yield (%)")
+
+        # Right Panel: Spatially-Varying Cross-Foundation Disagreement RMSE (eV) + DFT-Calibrated Iso-Hit Contours
+        if "sigma_cal_2d_eV" in j2:
+            cal_2d = np.asarray(j2["sigma_cal_2d_eV"]).T
+        else:
+            cal_2d = np.sqrt(0.5 * (0.19 ** 2 + 0.21 ** 2)) * np.ones_like(p_d)
+
+        c_lo = float(np.nanmin(cal_2d))
+        c_hi = float(np.nanmax(cal_2d))
+        if c_hi - c_lo < 0.04:
+            c_lo = max(0.05, c_lo - 0.03)
+            c_hi = c_hi + 0.03
+        cal_levels = np.linspace(c_lo, c_hi, 17)
+        im2 = ax_r.contourf(h_g, l_g, cal_2d, levels=cal_levels, cmap="YlOrRd")
+        right_handles = []
+        p_d_max = float(np.nanmax(p_d))
+        if p_d_max >= 2.0:
+            raw_levels = [lv for lv in [3.0, 6.0, 10.0, 14.0, 18.0, 24.0] if lv < p_d_max * 0.94]
+            use_dec = False
+            if len(raw_levels) < 3:
+                raw_levels = list(np.round(np.linspace(max(1.2, 0.30 * p_d_max), 0.86 * p_d_max, 4), 1))
+                use_dec = True
+            cs_cal = ax_r.contour(h_g, l_g, p_d, levels=raw_levels, colors="#0b2545", linestyles="--", linewidths=1.35)
+            ax_r.clabel(cs_cal, inline=True, fmt="%.1f%%" if use_dec else "%.0f%%", fontsize=7.8)
+            right_handles.append(Line2D([0], [0], color="#0b2545", ls="--", lw=1.35, label="DFT-Calibrated Hit Prob (%)"))
+
+        emp_cells = j2.get("empirical_cells") or []
+        if emp_cells:
+            eh = [c["homo_target_eV"] for c in emp_cells if c.get("evaluated", 0) >= 2]
+            el = [c["lumo_target_eV"] for c in emp_cells if c.get("evaluated", 0) >= 2]
+            if eh:
+                ax_r.scatter(eh, el, s=18, facecolors="white", edgecolors="#1f2937", linewidths=0.75, alpha=0.80, zorder=5)
+                right_handles.append(
+                    Line2D([0], [0], marker="o", color="none", markerfacecolor="white", markeredgecolor="#1f2937", markersize=4.8, label="Audited 2D Grid Cells")
+                )
+
+        if h_g.max() >= l_g.min():
+            ax_r.plot(h_g, h_g, "k:", lw=1.2)
+        ax_r.set_xlim(h_g.min(), h_g.max())
+        ax_r.set_ylim(l_g.min(), l_g.max())
+        ax_r.set_xlabel("Requested HOMO $t_{\\mathrm{H}}$ (eV)")
+        ax_r.set_ylabel("Requested LUMO $t_{\\mathrm{L}}$ (eV)")
+        ax_r.set_title("B. Predictor Disagreement $\\sigma_{\\mathrm{cal,2D}}$ (eV) & Calibrated Contours")
+        if right_handles:
+            ax_r.legend(
+                handles=right_handles,
+                loc="lower right",
+                frameon=True,
+                facecolor="white",
+                edgecolor="#d1d5db",
+                framealpha=0.86,
+                fontsize=8.0,
+            )
+        cb2 = fig.colorbar(im2, ax=ax_r, fraction=0.046, pad=0.04, format="%.2f")
+        cb2.set_label("Oracle–Audit RMSE $\\sigma_{\\mathrm{cal,2D}}$ (eV)")
 
         fig.tight_layout()
         fig.savefig(out_dir / "fig_gp_atlas_2d_joint.pdf", bbox_inches="tight")
@@ -153,7 +230,10 @@ def plot_stage_progression(summary_json: Path, out_dir: Path) -> None:
     fig, axes = plt.subplots(1, 3, figsize=(13.2, 4.2))
 
     # Panel A: Hit Yield (%)
-    colors = ["#8d99ae" if "Legacy" in n else "#2a9d8f" for n in names]
+    colors = [
+        "#8d99ae" if "Legacy" in n else ("#1d3557" if "v1.1" in n else "#2a9d8f")
+        for n in names
+    ]
     bars = axes[0].bar(x, hit_yield, color=colors, width=0.58)
     for b, v in zip(bars, hit_yield):
         axes[0].text(b.get_x() + b.get_width() / 2, v + 0.8, f"{v:.1f}%", ha="center", va="bottom", fontsize=8.5)

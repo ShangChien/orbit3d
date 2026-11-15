@@ -177,6 +177,7 @@ def main() -> None:
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--lora-rank", type=int, default=16)
     parser.add_argument("--lora-alpha", type=float, default=32.0)
+    parser.add_argument("--enable-v11-xyz-heads", action="store_true")
     parser.add_argument("--num-prefix-tokens", type=int, default=0)
     parser.add_argument("--cfg-dropout", type=float, default=0.15)
     parser.add_argument("--contrast-weight", type=float, default=0.35)
@@ -231,7 +232,10 @@ def main() -> None:
         lora_include_ffn=True,
         lora_include_heads=True,
     )
-    trainable = gen.configure_trainable(train_conditioner=True, train_lora=True)
+    if args.enable_v11_xyz_heads:
+        trainable = gen.enable_v11_xyz_heads()
+    else:
+        trainable = gen.configure_trainable(train_conditioner=True, train_lora=True)
     n_trainable = sum(p.numel() for p in trainable)
     n_total = sum(p.numel() for p in gen.parameters())
     print(f"[Loom-SFT] Trainable parameters: {n_trainable:,} / {n_total:,} ({100.0*n_trainable/n_total:.2f}%)", flush=True)

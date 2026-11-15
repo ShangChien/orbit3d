@@ -85,6 +85,7 @@ def inject_uni3dar_lora(
     dropout: float = 0.0,
     include_ffn: bool = True,
     include_heads: bool = False,
+    include_xyz_heads: bool = False,
 ) -> List[str]:
     """Attach `LoRALinear` adapters across all Transformer attention (and optional FFN/head) projections."""
     injected: List[str] = []
@@ -111,12 +112,31 @@ def inject_uni3dar_lora(
                     injected.append(f"tree_heads.{t_idx}.{h_name}")
         for t_idx, ahead in enumerate(getattr(model, "atom_heads", [])):
             for p_idx, phead in enumerate(getattr(ahead, "pred_heads", [])):
-                if p_idx == 0:  # Element classification head only; leave fine XYZ heads pristine
+                if p_idx == 0 or include_xyz_heads:
                     for h_name in ("dense", "out"):
                         sub = getattr(phead, h_name, None)
                         if isinstance(sub, nn.Linear) and not isinstance(sub, LoRALinear):
                             setattr(phead, h_name, LoRALinear(sub, rank=rank, alpha=alpha, dropout=dropout))
-                            injected.append(f"atom_heads.{t_idx}.pred_heads.0.{h_name}")
+                            injected.append(f"atom_heads.{t_idx}.pred_heads.{p_idx}.{h_name}")
+    return injected
+
+
+def inject_xyz_head_lora(
+    model: nn.Module,
+    rank: int = 16,
+    alpha: float = 32.0,
+    dropout: float = 0.0,
+) -> List[str]:
+    """Upgrade an already-loaded `v1.0` backbone by attaching zero-init `LoRALinear` to fine `XYZ` heads (`pred_heads[1..3]`)."""
+    injected: List[str] = []
+    for t_idx, ahead in enumerate(getattr(model, "atom_heads", [])):
+        for p_idx, phead in enumerate(getattr(ahead, "pred_heads", [])):
+            if p_idx >= 1:
+                for h_name in ("dense", "out"):
+                    sub = getattr(phead, h_name, None)
+                    if isinstance(sub, nn.Linear) and not isinstance(sub, LoRALinear):
+                        setattr(phead, h_name, LoRALinear(sub, rank=rank, alpha=alpha, dropout=dropout))
+                        injected.append(f"atom_heads.{t_idx}.pred_heads.{p_idx}.{h_name}")
     return injected
 
 

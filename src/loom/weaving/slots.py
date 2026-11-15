@@ -71,6 +71,8 @@ class GeneratorSlot(nn.Module, ABC):
         *,
         cfg_scale: float = 1.0,
         xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.0,
+        geometric_guard: bool = False,
         temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
         seed: Optional[int] = None,
         use_bf16: bool = True,
@@ -99,6 +101,8 @@ class GeneratorSlot(nn.Module, ABC):
         temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
         cfg_scale: float = 1.0,
         xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.0,
+        geometric_guard: bool = False,
         electron_parity: Optional[int] = 0,
     ) -> List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
         """Return exact step/token log-probability packets `(log_probs, actions, owner_idx)` for GRPO."""
@@ -179,20 +183,26 @@ class PotentialSlot(nn.Module):
             empty = np.zeros((0,), dtype=np.float64)
             return {"energy_eV": empty, "energy_per_atom_eV": empty, "f_max_eV_A": empty, "f_rms_eV_A": empty}
 
-        energies = np.empty(n, dtype=np.float64)
-        e_per_atom = np.empty(n, dtype=np.float64)
-        f_max = np.empty(n, dtype=np.float64)
-        f_rms = np.empty(n, dtype=np.float64)
+        energies = np.full(n, np.nan, dtype=np.float64)
+        e_per_atom = np.full(n, np.nan, dtype=np.float64)
+        f_max = np.full(n, np.nan, dtype=np.float64)
+        f_rms = np.full(n, np.nan, dtype=np.float64)
+        type_set = set(self.atom_types)
+        sup_pairs = [
+            (idx, mol)
+            for idx, mol in enumerate(mols)
+            if mol is not None and all(a.GetSymbol() in type_set for a in mol.GetAtoms())
+        ]
 
-        for start in range(0, n, chunk_size):
-            sub = mols[start : start + chunk_size]
+        for start in range(0, len(sup_pairs), chunk_size):
+            sub_pairs = sup_pairs[start : start + chunk_size]
+            sub = [m for _, m in sub_pairs]
             coords, atypes, b_idx = self._pack_molecules(sub)
             mol_e, forces = self.engine.compute_energy_and_forces(
                 coords, atypes, b_idx, clip_forces=False, zero_com_forces=True
             )
             f_norms = torch.norm(forces.float(), dim=-1)
-            for local_i, mol in enumerate(sub):
-                g_i = start + local_i
+            for local_i, (g_i, mol) in enumerate(sub_pairs):
                 mask = b_idx == local_i
                 n_atoms = max(mol.GetNumAtoms(), 1)
                 e_val = float(mol_e[local_i].item())
@@ -231,13 +241,20 @@ class PotentialSlot(nn.Module):
 
         relaxed_mols: List[Optional[Chem.Mol]] = [None] * n
         graph_preserved = np.zeros(n, dtype=bool)
-        init_e = np.empty(n, dtype=np.float64)
-        final_e = np.empty(n, dtype=np.float64)
-        final_f_max = np.empty(n, dtype=np.float64)
+        init_e = np.full(n, np.nan, dtype=np.float64)
+        final_e = np.full(n, np.nan, dtype=np.float64)
+        final_f_max = np.full(n, np.nan, dtype=np.float64)
         elem_tuple = tuple(self.atom_types)
+        type_set = set(self.atom_types)
+        sup_pairs = [
+            (idx, mol)
+            for idx, mol in enumerate(mols)
+            if mol is not None and all(a.GetSymbol() in type_set for a in mol.GetAtoms())
+        ]
 
-        for start in range(0, n, chunk_size):
-            sub = mols[start : start + chunk_size]
+        for start in range(0, len(sup_pairs), chunk_size):
+            sub_pairs = sup_pairs[start : start + chunk_size]
+            sub = [m for _, m in sub_pairs]
             coords, atypes, b_idx = self._pack_molecules(sub)
             best_x, e0, e1 = self.engine.relax_conformers(
                 coords,
@@ -252,8 +269,7 @@ class PotentialSlot(nn.Module):
             )
             f_norms = torch.norm(forces_after.float(), dim=-1)
 
-            for local_i, orig_mol in enumerate(sub):
-                g_i = start + local_i
+            for local_i, (g_i, orig_mol) in enumerate(sub_pairs):
                 mask = b_idx == local_i
                 init_e[g_i] = float(e0[local_i].item())
                 final_e[g_i] = float(e1[local_i].item())

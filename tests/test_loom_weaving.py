@@ -19,7 +19,10 @@ from loom.weaving import (
     HeteroscedasticGPAtlas2D,
     LoRALinear,
     LoomConditioner,
+    LoomGRPOTrainer,
     LoomUni3DARGenerator,
+    PotentialSlot,
+    RewardOracleSlot,
     assert_not_audit_oracle,
     compute_disentangled_group_advantages,
     compute_loom_metrics,
@@ -272,15 +275,209 @@ def test_disentangled_advantages_metrics_and_gp_atlas():
     assert len(q1["p_hit_reward"]) == 25
     assert q1["trusted_reachable_interval_eV"] is not None
 
-    # 2D HOMO-LUMO GP Atlas test
+    # 2D HOMO-LUMO GP Atlas test (including spatially-varying cross-foundation audit RMSE)
     h_vals = np.linspace(-7.0, -5.0, 4)
     l_vals = np.linspace(-3.0, -1.0, 4)
     hh, ll = np.meshgrid(h_vals, l_vals, indexing="ij")
     cells_2d = np.repeat(np.stack([hh.ravel(), ll.ravel()], axis=-1), 16, axis=0)
     preds_2d = cells_2d + rng.normal(0.0, 0.20, size=cells_2d.shape)
+    ood_scale = 0.14 + 0.18 * (np.abs(cells_2d[:, 0] + 6.0) + np.abs(cells_2d[:, 1] + 2.0))[:, None]
+    aud_2d = preds_2d + rng.normal(0.0, 1.0, size=cells_2d.shape) * ood_scale
     ev_2d = np.ones(len(cells_2d), dtype=bool)
     src_2d = np.column_stack([rng.normal(-6.0, 0.6, 300), rng.normal(-2.0, 0.6, 300)])
 
-    atlas_2d = HeteroscedasticGPAtlas2D.fit_from_proposals(cells_2d, preds_2d, ev_2d, source_2d_eV=src_2d)
+    atlas_2d = HeteroscedasticGPAtlas2D.fit_from_proposals(
+        cells_2d, preds_2d, ev_2d, audit_or_dft_preds_2d_eV=aud_2d, source_2d_eV=src_2d
+    )
     q2 = atlas_2d.query_grid(np.linspace(-7.5, -4.5, 10), np.linspace(-3.5, -0.5, 10))
     assert np.asarray(q2["p_joint_hit_reward"]).shape == (10, 10)
+    assert q2["has_heteroscedastic_cal_gp"] is True
+    cal_grid = np.asarray(q2["sigma_cal_2d_eV"])
+    assert cal_grid.shape == (10, 10)
+    # Corner OOD disagreement should exceed central well-supported disagreement
+    assert float(cal_grid[0, 0]) > float(cal_grid[5, 5])
+
+
+def test_v11_xyz_heads_and_geometric_guard_logprob_match(tmp_path: Path):
+    """Verify v1.1 fine-XYZ LoRA upgrade, roundtrip checkpointing, and exact log-prob match under guard+tree_decay."""
+    torch.manual_seed(19)
+    gen = _make_small_generator(num_props=2, num_prefix_tokens=2)
+    n_v10 = sum(p.numel() for p in gen.parameters() if p.requires_grad)
+    trainable_v11 = gen.enable_v11_xyz_heads()
+    n_v11 = sum(p.numel() for p in trainable_v11)
+    assert n_v11 > n_v10
+    assert gen.loom_config["lora_include_xyz_heads"] is True
+    assert gen.loom_config["train_xyz_embeddings"] is True
+
+    ckpt = tmp_path / "loom_v11.pt"
+    gen.save_checkpoint(ckpt)
+    loaded, _ = LoomUni3DARGenerator.load_checkpoint(ckpt, device="cpu")
+    assert loaded.loom_config["lora_include_xyz_heads"] is True
+
+    t_norm = torch.tensor([[-0.8, 0.5], [0.7, -0.6]], dtype=torch.float32)
+    m_act = torch.ones((2, 2), dtype=torch.bool)
+    loaded.eval()
+    trajs = loaded.sample(
+        t_norm,
+        m_act,
+        cfg_scale=1.8,
+        xyz_cfg_scale=1.0,
+        cfg_tree_decay=0.30,
+        geometric_guard=True,
+        temperatures=(1.0, 1.0, 1.0),
+        seed=2026,
+        use_bf16=False,
+        electron_parity=0,
+    )
+    packets = loaded.trajectory_distributions(
+        trajs,
+        t_norm,
+        m_act,
+        cfg_scale=1.8,
+        xyz_cfg_scale=1.0,
+        cfg_tree_decay=0.30,
+        geometric_guard=True,
+        electron_parity=0,
+    )
+    for b_i, tr in enumerate(trajs):
+        dist_sum = sum(
+            float(log_p[s_ids == b_i].gather(-1, acts[s_ids == b_i].unsqueeze(-1)).sum().item())
+            for log_p, acts, s_ids in packets
+            if bool((s_ids == b_i).any().item())
+        )
+        sample_sum = float(tr["scores"].sum().item())
+        tol = max(1e-4, 2e-6 * abs(sample_sum))
+        assert abs(dist_sum - sample_sum) < tol, f"Mismatch on mol {b_i}: {dist_sum} vs {sample_sum}"
+
+    from loom.generator.octree_backend import OctreeDataset
+
+    ds_mol = OctreeDataset([_make_3d_mol("CCO", seed=1), _make_3d_mol("CC=O", seed=2)], loaded.backbone, training=False, seed=0)
+    packed_real = ds_mol.collate([0, 1])
+    orig_pack = loaded.pack_sampled_trajectories
+    loaded.pack_sampled_trajectories = lambda _t, dev: {
+        k: (v.to(dev) if isinstance(v, torch.Tensor) else v) for k, v in packed_real.items()
+    }
+    try:
+        full_real = loaded.trajectory_distributions(trajs, t_norm, m_act, topology_only_policy=False, electron_parity=0)
+        topo_real = loaded.trajectory_distributions(trajs, t_norm, m_act, topology_only_policy=True, electron_parity=0)
+        assert len(full_real) == 5  # tree + element + x + y + z
+        assert len(topo_real) == 2  # tree + element only
+    finally:
+        loaded.pack_sampled_trajectories = orig_pack
+
+
+def test_grpo_trainer_v11_step_with_relax_distill(monkeypatch):
+    """Verify LoomGRPOTrainer.step end-to-end with v1.1 guard, sharp concentration, replay, and relax distillation."""
+    torch.manual_seed(31)
+    gen = _make_small_generator(num_props=2, num_prefix_tokens=2)
+    gen.enable_v11_xyz_heads()
+
+    clean_mols = [_make_3d_mol("CCO", seed=1), _make_3d_mol("CC=O", seed=2), _make_3d_mol("c1ccccc1", seed=3)]
+    replay_y = np.array([[-6.2, -1.5], [-5.8, -2.1], [-6.5, -1.2]], dtype=np.float32)
+
+    class _DummyReward(RewardOracleSlot):
+        def __init__(self):
+            self.target_cols = ["homo", "lumo"]
+
+        def check_support(self, mol):
+            return None
+
+        def evaluate_candidates(self, mols, batch_size=32):
+            n = len(mols)
+            preds = np.column_stack([np.full(n, -6.1), np.full(n, -1.8)])
+            ok = np.array([m is not None for m in mols], dtype=bool)
+            return preds, np.zeros_like(preds), ok, [None] * n
+
+    class _DummyPotential(PotentialSlot):
+        def __init__(self):
+            pass
+
+        def evaluate_molecules(self, mols, chunk_size=32):
+            n = len(mols)
+            return {"f_rms_eV_A": np.full(n, 0.25), "f_max_eV_A": np.full(n, 0.70)}
+
+        def relax_molecules(self, mols, n_steps=30, chunk_size=16):
+            n = len(mols)
+            return {
+                "relaxed_mols": [Chem.Mol(m) for m in mols],
+                "graph_preserved": np.ones(n, dtype=bool),
+                "init_energy_eV": np.zeros(n),
+                "final_energy_eV": np.full(n, -0.2),
+                "final_f_max_eV_A": np.full(n, 0.12),
+            }
+
+    # Ensure trajectory_to_instance yields valid clean molecules on half the rollouts so relax_distill triggers
+    import loom.weaving.grpo as grpo_mod
+    from types import SimpleNamespace
+
+    call_counter = {"i": 0}
+
+    def _fake_traj_to_inst(tr, element_table):
+        idx = call_counter["i"]
+        call_counter["i"] += 1
+        if idx % 2 == 0:
+            m = Chem.Mol(clean_mols[idx % len(clean_mols)])
+            return SimpleNamespace(graph=m, smiles=Chem.MolToSmiles(Chem.RemoveHs(m)))
+        raise ValueError("synthetic invalid graph")
+
+    monkeypatch.setattr(grpo_mod, "trajectory_to_instance", _fake_traj_to_inst)
+
+    trainer = LoomGRPOTrainer(
+        generator=gen,
+        reward_oracle=_DummyReward(),
+        potential_slot=_DummyPotential(),
+        seen_charge_signatures=frozenset({formal_charge_signature(m) for m in clean_mols}),
+        replay_molecules=clean_mols,
+        replay_targets_eV=replay_y,
+        lr=1e-4,
+        kl_beta=0.025,
+        replay_weight=0.20,
+        replay_batch_size=2,
+        sharp_concentration=True,
+        cfg_scale=1.6,
+        cfg_tree_decay=0.30,
+        geometric_guard=True,
+        relax_distill_weight=0.25,
+        relax_distill_steps=10,
+        relax_distill_max_mols=3,
+        seed=7,
+    )
+    prompts = np.array([[-6.15, -1.85], [-6.40, -1.30]], dtype=np.float32)
+    pmask = np.array([[True, False], [True, True]], dtype=bool)
+    res = trainer.step(prompts, pmask, group_size=2, step_index=0)
+    assert np.isfinite(res["loss_total"])
+    assert np.isfinite(res["kl"])
+    assert res["relax_distill_admitted"] >= 1
+    assert res["loss_relax_distill"] > 0.0
+
+
+def test_potential_slot_unsupported_element_graceful_nan():
+    """Ensure molecules with out-of-type-map heavy elements (e.g. Te) yield NaN/False instead of crashing batches."""
+    from types import SimpleNamespace
+
+    slot = PotentialSlot.__new__(PotentialSlot)
+    slot.backend_name = "dpa4"
+    slot.atom_types = ["H", "C", "N", "O"]
+    slot.device_str = "cpu"
+    slot.engine = SimpleNamespace(
+        compute_energy_and_forces=lambda coords, atypes, b_idx, **kw: (
+            torch.full((int(b_idx.max().item()) + 1,) if b_idx.numel() else (0,), -1.5),
+            torch.full_like(coords, 0.1),
+        ),
+        relax_conformers=lambda coords, atypes, b_idx, **kw: (
+            coords,
+            torch.full((int(b_idx.max().item()) + 1,), -1.0),
+            torch.full((int(b_idx.max().item()) + 1,), -1.2),
+        ),
+    )
+
+    m_ok = _make_3d_mol("CCO", seed=1)
+    m_te = _make_3d_mol("C[Te]C", seed=2)
+    ev = slot.evaluate_molecules([m_ok, m_te], chunk_size=4)
+    assert np.isfinite(ev["f_max_eV_A"][0])
+    assert np.isnan(ev["f_max_eV_A"][1])
+
+    rel = slot.relax_molecules([m_ok, m_te], n_steps=3, chunk_size=4)
+    assert bool(rel["graph_preserved"][0]) is True
+    assert bool(rel["graph_preserved"][1]) is False
+    assert np.isnan(rel["final_f_max_eV_A"][1])

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "loom"
-version = "1.0.0"
+version = "1.1.0"
 description = "Uni-Loom: Weaving Generative, Potential, and Property Foundation Models for Calibrated 3D Molecular Generation"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"

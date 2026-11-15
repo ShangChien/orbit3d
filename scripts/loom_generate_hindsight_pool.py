@@ -48,10 +48,13 @@ def main() -> None:
     parser.add_argument("--potential-backend", choices=["none", "dpa4", "hyff"], default="dpa4")
     parser.add_argument("--potential-weights", type=Path, default=None)
     parser.add_argument("--max-fmax-eV-A", type=float, default=3.5)
+    parser.add_argument("--relax-steps", type=int, default=15)
     parser.add_argument("--mode", choices=["homo", "lumo", "joint"], default="homo")
     parser.add_argument("--total-proposals", type=int, default=4096)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--cfg-scale", type=float, default=1.75)
+    parser.add_argument("--cfg-tree-decay", type=float, default=0.0)
+    parser.add_argument("--geometric-guard", action="store_true")
     parser.add_argument("--seed", type=int, default=91001)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--device", type=str, default="cuda:0")
@@ -156,6 +159,8 @@ def main() -> None:
             torch.as_tensor(mask_np, dtype=torch.bool, device=device),
             cfg_scale=args.cfg_scale,
             xyz_cfg_scale=1.0,
+            cfg_tree_decay=args.cfg_tree_decay,
+            geometric_guard=args.geometric_guard,
             seed=args.seed * 1009 + start,
             use_bf16=(device.type == "cuda"),
             electron_parity=0,
@@ -196,7 +201,7 @@ def main() -> None:
         fmax_vals = np.zeros(len(c_mols), dtype=np.float64)
         final_mols: List[Chem.Mol] = list(c_mols)
         if pot_slot is not None:
-            rel_out = pot_slot.relax_molecules(c_mols, n_steps=15, chunk_size=32)
+            rel_out = pot_slot.relax_molecules(c_mols, n_steps=args.relax_steps, chunk_size=32)
             fmax_vals = rel_out["final_f_max_eV_A"]
             pres = rel_out["graph_preserved"]
             keep_phys = pres & np.isfinite(fmax_vals) & (fmax_vals <= args.max_fmax_eV_A)
@@ -240,6 +245,9 @@ def main() -> None:
         "checkpoint": str(args.checkpoint),
         "mode": args.mode,
         "cfg_scale": args.cfg_scale,
+        "cfg_tree_decay": args.cfg_tree_decay,
+        "geometric_guard": args.geometric_guard,
+        "relax_steps": args.relax_steps,
         "max_fmax_eV_A": args.max_fmax_eV_A,
         "counts": dict(counts),
         "admitted_unique_molecules": len(admitted_mols),

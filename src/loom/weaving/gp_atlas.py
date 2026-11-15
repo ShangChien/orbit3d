@@ -233,6 +233,8 @@ class HeteroscedasticGPAtlas2D:
         self.gp_log_sd_h: Optional[GaussianProcessRegressor] = None
         self.gp_log_sd_l: Optional[GaussianProcessRegressor] = None
         self.gp_logit_eval: Optional[GaussianProcessRegressor] = None
+        self.gp_log_cal_h: Optional[GaussianProcessRegressor] = None
+        self.gp_log_cal_l: Optional[GaussianProcessRegressor] = None
         self.source_kde: Optional[gaussian_kde] = None
         self.empirical_cells: List[Dict[str, Any]] = []
 
@@ -243,6 +245,7 @@ class HeteroscedasticGPAtlas2D:
         reward_preds_2d_eV: np.ndarray,
         evaluated_mask: Sequence[bool],
         *,
+        audit_or_dft_preds_2d_eV: Optional[np.ndarray] = None,
         source_2d_eV: Optional[np.ndarray] = None,
         constant_cal_sigma_eV: Tuple[float, float] = (0.19, 0.21),
     ) -> "HeteroscedasticGPAtlas2D":
@@ -250,6 +253,7 @@ class HeteroscedasticGPAtlas2D:
         req = np.asarray(requested_targets_2d_eV, dtype=np.float64)
         rew = np.asarray(reward_preds_2d_eV, dtype=np.float64)
         ev = np.asarray(evaluated_mask, dtype=bool) & np.isfinite(rew).all(axis=-1)
+        aud = np.asarray(audit_or_dft_preds_2d_eV, dtype=np.float64) if audit_or_dft_preds_2d_eV is not None else None
 
         if source_2d_eV is not None and len(source_2d_eV) >= 20:
             s2 = np.asarray(source_2d_eV, dtype=np.float64)
@@ -270,6 +274,8 @@ class HeteroscedasticGPAtlas2D:
         lsd_h_list, lsd_l_list = [], []
         X_all: List[np.ndarray] = []
         logit_ev_list: List[float] = []
+        X_cal: List[np.ndarray] = []
+        lcal_h_list, lcal_l_list = [], []
 
         for cell in unique_cells:
             m = np.isclose(req[:, 0], cell[0], atol=1e-3) & np.isclose(req[:, 1], cell[1], atol=1e-3)
@@ -297,6 +303,17 @@ class HeteroscedasticGPAtlas2D:
                 mh = ml = sh = sl = float("nan")
                 hits_2d = 0
 
+            cal_h = float(constant_cal_sigma_eV[0])
+            cal_l = float(constant_cal_sigma_eV[1])
+            if aud is not None:
+                m_both = m_ev & np.isfinite(aud).all(axis=-1)
+                if int(m_both.sum()) >= 2:
+                    cal_h = float(max(np.sqrt(np.mean((rew[m_both, 0] - aud[m_both, 0]) ** 2)), 0.03))
+                    cal_l = float(max(np.sqrt(np.mean((rew[m_both, 1] - aud[m_both, 1]) ** 2)), 0.03))
+                    X_cal.append(cell)
+                    lcal_h_list.append(float(np.log(cal_h)))
+                    lcal_l_list.append(float(np.log(cal_l)))
+
             atlas.empirical_cells.append(
                 {
                     "homo_target_eV": float(cell[0]),
@@ -308,6 +325,9 @@ class HeteroscedasticGPAtlas2D:
                     "mean_lumo_eV": ml,
                     "std_homo_eV": sh,
                     "std_lumo_eV": sl,
+                    "cal_rmse_homo_eV": cal_h,
+                    "cal_rmse_lumo_eV": cal_l,
+                    "cal_rmse_2d_eV": float(np.sqrt(0.5 * (cal_h ** 2 + cal_l ** 2))),
                     "joint_hits_025eV": hits_2d,
                     "joint_hit_yield": hits_2d / max(n_att, 1),
                 }
@@ -343,6 +363,15 @@ class HeteroscedasticGPAtlas2D:
             kernel=_make_2d_kernel(True), normalize_y=True, n_restarts_optimizer=2, random_state=0
         ).fit(Xa_arr, np.asarray(logit_ev_list))
 
+        if len(X_cal) >= 4:
+            Xc_arr = np.asarray(X_cal, dtype=np.float64)
+            atlas.gp_log_cal_h = GaussianProcessRegressor(
+                kernel=_make_2d_kernel(True), normalize_y=True, n_restarts_optimizer=2, random_state=0
+            ).fit(Xc_arr, np.asarray(lcal_h_list))
+            atlas.gp_log_cal_l = GaussianProcessRegressor(
+                kernel=_make_2d_kernel(True), normalize_y=True, n_restarts_optimizer=2, random_state=0
+            ).fit(Xc_arr, np.asarray(lcal_l_list))
+
         return atlas
 
     def query_grid(
@@ -369,13 +398,24 @@ class HeteroscedasticGPAtlas2D:
         sd_l = np.exp(np.clip(self.gp_log_sd_l.predict(pts), np.log(0.02), np.log(5.0)))
         p_eval = expit(self.gp_logit_eval.predict(pts))
 
+        if self.gp_log_cal_h is not None and self.gp_log_cal_l is not None:
+            cal_h = np.exp(np.clip(self.gp_log_cal_h.predict(pts), np.log(0.03), np.log(3.0)))
+            cal_l = np.exp(np.clip(self.gp_log_cal_l.predict(pts), np.log(0.03), np.log(3.0)))
+        else:
+            cal_h = np.full(len(pts), self.constant_cal_sigma_eV[0], dtype=np.float64)
+            cal_l = np.full(len(pts), self.constant_cal_sigma_eV[1], dtype=np.float64)
+        cal_2d = np.sqrt(0.5 * (cal_h ** 2 + cal_l ** 2))
+
+        drift_h = mu_h - pts[:, 0]
+        drift_l = mu_l - pts[:, 1]
+
         unphysical = pts[:, 0] >= pts[:, 1]  # HOMO >= LUMO is physically forbidden for ground-state closed-shell molecules
         p_h_rew = _gaussian_box_hit_prob(mu_h, pts[:, 0], np.sqrt(sd_h ** 2 + ep_h ** 2), tolerance_eV)
         p_l_rew = _gaussian_box_hit_prob(mu_l, pts[:, 1], np.sqrt(sd_l ** 2 + ep_l ** 2), tolerance_eV)
         p_joint_reward = np.where(unphysical, 0.0, p_eval * p_h_rew * p_l_rew)
 
-        tot_h = np.sqrt(sd_h ** 2 + ep_h ** 2 + self.constant_cal_sigma_eV[0] ** 2)
-        tot_l = np.sqrt(sd_l ** 2 + ep_l ** 2 + self.constant_cal_sigma_eV[1] ** 2)
+        tot_h = np.sqrt(sd_h ** 2 + ep_h ** 2 + cal_h ** 2)
+        tot_l = np.sqrt(sd_l ** 2 + ep_l ** 2 + cal_l ** 2)
         p_joint_dft = np.where(
             unphysical,
             0.0,
@@ -389,8 +429,14 @@ class HeteroscedasticGPAtlas2D:
             "lumo_grid_eV": l_vec.tolist(),
             "mu_homo_eV": mu_h.reshape(shape).tolist(),
             "mu_lumo_eV": mu_l.reshape(shape).tolist(),
+            "drift_homo_eV": drift_h.reshape(shape).tolist(),
+            "drift_lumo_eV": drift_l.reshape(shape).tolist(),
             "sigma_gen_homo_eV": sd_h.reshape(shape).tolist(),
             "sigma_gen_lumo_eV": sd_l.reshape(shape).tolist(),
+            "sigma_cal_homo_eV": cal_h.reshape(shape).tolist(),
+            "sigma_cal_lumo_eV": cal_l.reshape(shape).tolist(),
+            "sigma_cal_2d_eV": cal_2d.reshape(shape).tolist(),
+            "has_heteroscedastic_cal_gp": bool(self.gp_log_cal_h is not None),
             "p_eval": p_eval.reshape(shape).tolist(),
             "p_joint_hit_reward": p_joint_reward.reshape(shape).tolist(),
             "p_joint_hit_dft_calibrated": p_joint_dft.reshape(shape).tolist(),

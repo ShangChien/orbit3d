@@ -43,14 +43,21 @@ def categorical_policy_loss(current, previous, reference, advantages, beta=0.02,
     for decision, ((logp, labels, owner), (old, _, _)) in enumerate(zip(current, previous)):
         selected = logp.gather(1, labels[:, None]).squeeze(1)
         old_selected = old.gather(1, labels[:, None]).squeeze(1)
-        ratio = (selected - old_selected).clamp(-20, 20).exp()
+        safe_sel = torch.where(torch.isfinite(selected), selected, torch.zeros_like(selected))
+        safe_old = torch.where(torch.isfinite(old_selected), old_selected, safe_sel.detach())
+        valid_step = torch.isfinite(selected) & torch.isfinite(old_selected)
+        ratio = torch.where(valid_step, (safe_sel - safe_old).clamp(-20, 20).exp(), torch.ones_like(selected))
         adv = advantages[owner]
         surrogate = torch.minimum(ratio * adv, ratio.clamp(1 - clip, 1 + clip) * adv)
-        objective = -surrogate
+        objective = torch.where(valid_step, -surrogate, torch.zeros_like(surrogate))
         if beta:
             ref = reference[decision][0]
-            delta = torch.where(torch.isfinite(logp), logp - ref, torch.zeros_like(logp))
-            objective = objective + beta * (logp.exp() * delta).sum(-1)
+            both_finite = torch.isfinite(logp) & torch.isfinite(ref)
+            safe_logp = torch.where(both_finite, logp, torch.zeros_like(logp))
+            safe_ref = torch.where(both_finite, ref, torch.zeros_like(ref))
+            prob = torch.where(both_finite, safe_logp.exp(), torch.zeros_like(logp))
+            delta = (safe_logp - safe_ref).clamp(-30.0, 30.0)
+            objective = objective + beta * (prob * delta).sum(-1)
         total.index_add_(0, owner, objective)
         counts.index_add_(0, owner, torch.ones_like(selected))
     return (total / counts.clamp_min(1)).mean()

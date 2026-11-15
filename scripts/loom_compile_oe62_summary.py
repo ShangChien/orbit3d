@@ -33,6 +33,8 @@ def _extract_cfg(eval_json: Path, preferred_cfg: str | None = None) -> Dict[str,
         "conditional_mae_eV": m["conditional_mae_eV"],
         "exotic_charge_rate": exotic,
         "f_max_median_eV_A": m.get("zero_step_f_max_median_eV_A"),
+        "median_relax_rmsd_A": rel.get("median_relax_rmsd_A"),
+        "median_strain_drop_eV": rel.get("median_strain_drop_eV"),
         "raw_audit_mae_eV": aud.get("audit_mae_eV"),
         "audit_slope": aud.get("audit_slope"),
         "post_relax_audit_mae_eV": rel.get("post_relax_audit_mae_eV", rel.get("post_relax_audit_mae_on_subset_eV")),
@@ -109,10 +111,38 @@ def main() -> None:
 
     if best_s2 is not None:
         stages.append({
-            "label": f"Loom Stage 2 (GRPO-{best_s2['groups']})",
+            "label": f"Loom v1.0 (GRPO-{best_s2['groups']})",
             **best_s2,
             "audit_mae_eV": best_s2["post_relax_audit_mae_eV"] or best_s2["raw_audit_mae_eV"],
         })
+
+    v11_ablation: Dict[str, Any] = {}
+    for k_tag, fname in [
+        ("v10_rmsd_ref", "v10_homo_rmsd_ref_eval.json"),
+        ("v10_plus_guard", "stage2_homo_v10_plus_guard_eval.json"),
+        ("v10_guard_xyzdistill", "stage2_homo_v10_guard_xyzdistill_eval.json"),
+        ("stage15_ref_reset", "stage15_homo_v11_eval.json"),
+        ("stage25_sftreset_coupled", "stage25_homo_v11_sftreset_eval.json"),
+        ("stage25_direct_coupled_g0128", "stage25_homo_v11_direct_g0128_eval.json"),
+        ("stage25_direct_coupled_g0256", "stage25_homo_v11_direct_g0256_eval.json"),
+        ("stage25a_topogrpo", "stage25a_homo_topogrpo_eval.json"),
+        ("stage25_v11_decoupled", "stage25_homo_v11_decoupled_eval.json"),
+        ("stage25_v11_online", "stage25_homo_v11_eval.json"),
+        ("joint_v11_homo", "stage25_joint_v11_homo_eval.json"),
+        ("joint_v11_lumo", "stage25_joint_v11_lumo_eval.json"),
+    ]:
+        f_ab = exp / fname
+        if f_ab.exists():
+            v11_ablation[k_tag] = _extract_cfg(f_ab)
+
+    if "stage25_v11_online" in v11_ablation:
+        v11_m = v11_ablation["stage25_v11_online"]
+        stages.append({
+            "label": "Loom v1.1 (Guard+TopoGRPO)",
+            **v11_m,
+            "audit_mae_eV": v11_m["post_relax_audit_mae_eV"] or v11_m["raw_audit_mae_eV"],
+        })
+        budget_curve.append({"groups": 1184, **v11_m})
 
     hyff_pt = None
     hyff_f = exp / "stage2_homo_hyff_g0512_dpa4audit_eval.json"
@@ -120,11 +150,19 @@ def main() -> None:
         hyff_pt = {"groups": 512, **_extract_cfg(hyff_f)}
 
     prog_out = exp / "oe62_progression_summary.json"
-    prog_out.write_text(json.dumps({"stages": stages}, indent=2) + "\n")
+    prog_out.write_text(json.dumps({"stages": stages, "v11_ablation": v11_ablation}, indent=2) + "\n")
 
     curve_out = exp / "oe62_audit_curve.json"
     curve_out.write_text(
-        json.dumps({"dpa4_budget_curve": budget_curve, "hyff_hotswap_512": hyff_pt}, indent=2) + "\n"
+        json.dumps(
+            {
+                "dpa4_budget_curve": budget_curve,
+                "hyff_hotswap_512": hyff_pt,
+                "v11_upgrade": v11_ablation.get("stage25_v11_online"),
+            },
+            indent=2,
+        )
+        + "\n"
     )
     print(f"Wrote {prog_out} ({len(stages)} stages) and {curve_out} ({len(budget_curve)} budget pts).")
 

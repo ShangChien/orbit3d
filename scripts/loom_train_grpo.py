@@ -45,7 +45,16 @@ def main() -> None:
     parser.add_argument("--w-valid", type=float, default=0.75)
     parser.add_argument("--w-phys", type=float, default=0.30)
     parser.add_argument("--w-prop", type=float, default=1.00)
+    parser.add_argument("--sharp-concentration", action="store_true")
     parser.add_argument("--cfg-scale", type=float, default=1.65)
+    parser.add_argument("--cfg-tree-decay", type=float, default=0.0)
+    parser.add_argument("--geometric-guard", action="store_true")
+    parser.add_argument("--topology-only-policy", action="store_true")
+    parser.add_argument("--enable-v11-xyz-heads", action="store_true")
+    parser.add_argument("--relax-distill-weight", type=float, default=0.0)
+    parser.add_argument("--relax-distill-steps", type=int, default=30)
+    parser.add_argument("--relax-distill-max-mols", type=int, default=12)
+    parser.add_argument("--relax-distill-max-fmax", type=float, default=1.5)
     parser.add_argument("--save-every", type=int, default=64)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -60,7 +69,11 @@ def main() -> None:
     gen, _ = LoomUni3DARGenerator.load_checkpoint(
         args.init_checkpoint, device=args.device, batch_size=args.prompts_per_step * args.group_size
     )
-    gen.configure_trainable(train_conditioner=True, train_lora=True)
+    if args.enable_v11_xyz_heads:
+        trainable = gen.enable_v11_xyz_heads()
+    else:
+        trainable = gen.configure_trainable(train_conditioner=True, train_lora=True)
+    print(f"[Loom-GRPO] Trainable params: {sum(p.numel() for p in trainable):,}", flush=True)
 
     reward_slot = RewardOracleSlot(
         backend="unimol2",
@@ -126,8 +139,16 @@ def main() -> None:
         w_valid=args.w_valid,
         w_phys=args.w_phys,
         w_prop=args.w_prop,
+        sharp_concentration=args.sharp_concentration,
         cfg_scale=args.cfg_scale,
         xyz_cfg_scale=1.0,
+        cfg_tree_decay=args.cfg_tree_decay,
+        geometric_guard=args.geometric_guard,
+        topology_only_policy=args.topology_only_policy,
+        relax_distill_weight=args.relax_distill_weight,
+        relax_distill_steps=args.relax_distill_steps,
+        relax_distill_max_mols=args.relax_distill_max_mols,
+        relax_distill_max_fmax=args.relax_distill_max_fmax,
         seed=args.seed,
     )
 

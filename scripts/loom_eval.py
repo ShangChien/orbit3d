@@ -61,6 +61,9 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--cfg-scales", type=float, nargs="+", default=[1.0, 1.75])
     parser.add_argument("--xyz-cfg-scale", type=float, default=1.0)
+    parser.add_argument("--cfg-tree-decay", type=float, default=0.0)
+    parser.add_argument("--geometric-guard", action="store_true")
+    parser.add_argument("--relax-audit-steps", type=int, default=15)
     parser.add_argument("--check-relaxation", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--save-proposals-npz", type=Path, default=None)
@@ -143,6 +146,8 @@ def main() -> None:
                         m_act,
                         cfg_scale=cfg_val,
                         xyz_cfg_scale=args.xyz_cfg_scale,
+                        cfg_tree_decay=args.cfg_tree_decay,
+                        geometric_guard=args.geometric_guard,
                         temperatures=(0.85, 0.30, 0.25),
                         seed=int(sd) * 10007 + int(q) * 131 + offset,
                         use_bf16=(device.type == "cuda"),
@@ -192,13 +197,27 @@ def main() -> None:
                 f_max_all[glob_i] = p_out["f_max_eV_A"][loc_i]
 
             if args.check_relaxation:
-                # Subsample up to 256 valid molecules evenly to audit zero-step vs 15-step MLIP relaxation
+                # Subsample up to 256 valid molecules evenly to audit zero-step vs MLIP relaxation
                 step_sub = max(len(valid_mols) // 256, 1)
                 sub_idx = valid_indices[::step_sub][:256]
                 sub_mols = [mols_all[i] for i in sub_idx]  # type: ignore[misc]
-                rel = pot_slot.relax_molecules(sub_mols, n_steps=15, chunk_size=32)
+                rel = pot_slot.relax_molecules(sub_mols, n_steps=args.relax_audit_steps, chunk_size=32)
                 preserved_mask = rel["graph_preserved"]
                 rel_mols_eval = [rm if ok else None for rm, ok in zip(rel["relaxed_mols"], preserved_mask)]
+                rmsd_vals = []
+                for m_init, m_rel, ok in zip(sub_mols, rel["relaxed_mols"], preserved_mask):
+                    if ok and m_init is not None and m_rel is not None:
+                        p0 = np.asarray(m_init.GetConformer().GetPositions(), dtype=np.float64)
+                        p1 = np.asarray(m_rel.GetConformer().GetPositions(), dtype=np.float64)
+                        if p0.shape == p1.shape and len(p0) > 0:
+                            # Kabsch-aligned RMSD to measure true internal bond/angle deformation
+                            c0 = p0 - p0.mean(axis=0, keepdims=True)
+                            c1 = p1 - p1.mean(axis=0, keepdims=True)
+                            u_m, _, vt_m = np.linalg.svd(c0.T @ c1)
+                            det_s = np.linalg.det(u_m @ vt_m)
+                            d_mat = np.diag([1.0, 1.0, 1.0 if det_s >= 0 else -1.0])
+                            r_opt = u_m @ d_mat @ vt_m
+                            rmsd_vals.append(float(np.sqrt(np.mean(np.sum((c0 @ r_opt - c1) ** 2, axis=-1)))))
                 rel_rew_full, _, rel_ev, _ = reward_slot.evaluate_candidates(rel_mols_eval, batch_size=32)
                 sub_orig_rew = rew_preds_1d[sub_idx]
                 sub_req = np.asarray(req_list)[sub_idx]
@@ -222,10 +241,13 @@ def main() -> None:
                         )
                 relax_summary = {
                     "audited_subset": len(sub_mols),
+                    "relax_steps": int(args.relax_audit_steps),
                     "graph_preserved_rate": float(np.mean(preserved_mask)),
-                    "median_strain_drop_eV": float(np.median(rel["init_energy_eV"] - rel["final_energy_eV"])),
-                    "init_f_max_median_eV_A": float(np.median(f_max_all[sub_idx])),
-                    "relaxed_f_max_median_eV_A": float(np.median(rel["final_f_max_eV_A"])),
+                    "median_relax_rmsd_A": float(np.median(rmsd_vals)) if rmsd_vals else None,
+                    "mean_relax_rmsd_A": float(np.mean(rmsd_vals)) if rmsd_vals else None,
+                    "median_strain_drop_eV": float(np.nanmedian(rel["init_energy_eV"] - rel["final_energy_eV"])),
+                    "init_f_max_median_eV_A": float(np.nanmedian(f_max_all[sub_idx])),
+                    "relaxed_f_max_median_eV_A": float(np.nanmedian(rel["final_f_max_eV_A"])),
                     "zero_step_mae_on_subset_eV": float(np.mean(np.abs(sub_orig_rew[both_rel] - sub_req[both_rel]))) if both_rel.any() else None,
                     "post_relax_mae_on_subset_eV": float(np.mean(np.abs(rel_rew_full[both_rel, rew_col_idx] - sub_req[both_rel]))) if both_rel.any() else None,
                     "mean_abs_pred_shift_from_relaxation_eV": float(np.mean(np.abs(rel_rew_full[both_rel, rew_col_idx] - sub_orig_rew[both_rel]))) if both_rel.any() else None,
@@ -263,6 +285,8 @@ def main() -> None:
         loom_m.update({
             "cfg_scale": cfg_val,
             "xyz_cfg_scale": args.xyz_cfg_scale,
+            "cfg_tree_decay": args.cfg_tree_decay,
+            "geometric_guard": args.geometric_guard,
             "clean_hits": int(clean_hit_count),
             "clean_hit_yield": float(clean_hit_count / max(len(req_list), 1)),
             "unique_hit_graphs": len(unique_hits),

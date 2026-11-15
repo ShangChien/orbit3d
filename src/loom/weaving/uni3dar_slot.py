@@ -29,8 +29,59 @@ from ..vendor.uni3dar.models.uni3dar_sampler import (
     Uni3DARSampler,
 )
 from .conditioner import LoomConditioner
-from .lora import inject_uni3dar_lora, iter_lora_parameters
+from .lora import inject_uni3dar_lora, inject_xyz_head_lora, iter_lora_parameters
 from .slots import GeneratorSlot
+
+
+_ELEMENT_RCOV_A: Dict[str, float] = {
+    "H": 0.31,
+    "B": 0.84,
+    "C": 0.76,
+    "N": 0.71,
+    "O": 0.66,
+    "F": 0.57,
+    "Si": 1.11,
+    "P": 1.07,
+    "S": 1.05,
+    "Cl": 1.02,
+    "As": 1.19,
+    "Se": 1.20,
+    "Br": 1.20,
+    "I": 1.39,
+}
+
+_ELEMENT_MAX_COORD: Dict[str, int] = {
+    "H": 1,
+    "F": 1,
+    "Cl": 1,
+    "Br": 1,
+    "I": 1,
+    "O": 2,
+    "B": 4,
+    "C": 4,
+    "N": 4,
+    "Si": 4,
+    "Se": 4,
+    "P": 5,
+    "As": 5,
+    "S": 6,
+}
+
+
+@lru_cache(maxsize=32)
+def _atom_geometry_tables(num_atom: int, device_str: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Cached `(rcov_table, max_coord_table)` tensors of shape `(num_atom,)` on `device`."""
+    device = torch.device(device_str)
+    rcov = torch.full((num_atom,), 0.80, dtype=torch.float32, device=device)
+    max_c = torch.full((num_atom,), 8, dtype=torch.int32, device=device)
+    for idx, sym in enumerate(atom_list):
+        if idx >= num_atom:
+            break
+        if sym in _ELEMENT_RCOV_A:
+            rcov[idx] = _ELEMENT_RCOV_A[sym]
+        if sym in _ELEMENT_MAX_COORD:
+            max_c[idx] = _ELEMENT_MAX_COORD[sym]
+    return rcov, max_c
 
 
 @lru_cache(maxsize=256)
@@ -116,6 +167,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         lora_dropout: float = 0.0,
         lora_include_ffn: bool = True,
         lora_include_heads: bool = True,
+        lora_include_xyz_heads: bool = False,
+        train_xyz_embeddings: bool = False,
     ) -> None:
         super().__init__()
         if len(target_cols) != len(target_units) or len(mean) != len(target_cols) or len(scale) != len(target_cols):
@@ -145,6 +198,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
             "lora_dropout": float(lora_dropout),
             "lora_include_ffn": bool(lora_include_ffn),
             "lora_include_heads": bool(lora_include_heads),
+            "lora_include_xyz_heads": bool(lora_include_xyz_heads),
+            "train_xyz_embeddings": bool(train_xyz_embeddings),
         }
 
         self.conditioner = LoomConditioner(
@@ -166,6 +221,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 dropout=lora_dropout,
                 include_ffn=lora_include_ffn,
                 include_heads=lora_include_heads,
+                include_xyz_heads=lora_include_xyz_heads,
             )
 
         self.register_buffer("_subcell_shifts", torch.tensor(subcell_orders, dtype=torch.int32), persistent=False)
@@ -311,14 +367,155 @@ class LoomUni3DARGenerator(GeneratorSlot):
         *,
         train_conditioner: bool = True,
         train_lora: bool = True,
+        train_xyz_embeddings: Optional[bool] = None,
         unfreeze_full_backbone: bool = False,
     ) -> List[nn.Parameter]:
+        if train_xyz_embeddings is None:
+            train_xyz_embeddings = bool(self.loom_config.get("train_xyz_embeddings", False))
         self.backbone.requires_grad_(unfreeze_full_backbone)
         if train_lora and not unfreeze_full_backbone:
             for _, param in iter_lora_parameters(self.backbone):
                 param.requires_grad_(True)
+        if train_xyz_embeddings and not unfreeze_full_backbone:
+            for ahead in getattr(self.backbone, "atom_heads", []):
+                for emb in getattr(ahead, "emb_layers", []):
+                    emb.requires_grad_(True)
         self.conditioner.requires_grad_(train_conditioner)
         return [p for p in self.parameters() if p.requires_grad]
+
+    def enable_v11_xyz_heads(
+        self,
+        *,
+        rank: Optional[int] = None,
+        alpha: Optional[float] = None,
+        train_xyz_embeddings: bool = True,
+    ) -> List[nn.Parameter]:
+        """Seamlessly upgrade a `v1.0` checkpoint in-place to `loom v1.1`:
+        attaches zero-initialized LoRA adapters (`lora_B=0`) to fine `0.01 Å` `XYZ` coordinate heads
+        (`atom_heads.0.pred_heads[1..3]`) and unfreezes intra-voxel coordinate embeddings.
+        """
+        r = int(rank if rank is not None else self.loom_config.get("lora_rank", 16))
+        a = float(alpha if alpha is not None else self.loom_config.get("lora_alpha", 32.0))
+        d = float(self.loom_config.get("lora_dropout", 0.0))
+        added = inject_xyz_head_lora(self.backbone, rank=r, alpha=a, dropout=d)
+        self.injected_lora_modules.extend(added)
+        self.loom_config["lora_include_xyz_heads"] = True
+        self.loom_config["train_xyz_embeddings"] = bool(train_xyz_embeddings)
+        device = self.target_mean.device
+        self.backbone.to(device)
+        return self.configure_trainable(train_xyz_embeddings=train_xyz_embeddings)
+
+    def _prepare_placed_geometry(
+        self,
+        placed_pos: torch.Tensor,
+        placed_types: torch.Tensor,
+        placed_valid: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Compute `(p_rcov, p_saturated)` of shape `(N, K)` for already-placed atoms."""
+        device = placed_pos.device
+        n_rows, k_atoms, _ = placed_pos.shape
+        rcov_table, max_c_table = _atom_geometry_tables(self.backbone.num_atom, str(device))
+        safe_types = placed_types.clamp(0, self.backbone.num_atom - 1).long()
+        p_rcov = rcov_table[safe_types]
+        p_maxc = max_c_table[safe_types]
+        if k_atoms <= 1 or not bool(placed_valid.any().item()):
+            p_deg = torch.zeros((n_rows, k_atoms), dtype=torch.int32, device=device)
+        else:
+            d_kk = torch.cdist(placed_pos.float(), placed_pos.float())
+            not_self = ~torch.eye(k_atoms, dtype=torch.bool, device=device).unsqueeze(0)
+            bonded = (
+                (d_kk <= 1.26 * (p_rcov.unsqueeze(2) + p_rcov.unsqueeze(1)))
+                & placed_valid.unsqueeze(2)
+                & placed_valid.unsqueeze(1)
+                & not_self
+            )
+            p_deg = bonded.sum(dim=-1).to(torch.int32)
+        p_sat = placed_valid & (p_deg >= p_maxc)
+        return p_rcov, p_sat
+
+    def _element_guard_logit_bias(
+        self,
+        vox_origin: torch.Tensor,
+        placed_pos: torch.Tensor,
+        placed_valid: torch.Tensor,
+        p_rcov: torch.Tensor,
+        p_sat: torch.Tensor,
+    ) -> torch.Tensor:
+        """Finite steric & max-coordination logit bias `(N, num_atom)` for element prediction (`axis=0`)."""
+        device = vox_origin.device
+        n_rows = vox_origin.shape[0]
+        bias = torch.zeros((n_rows, self.backbone.num_atom), dtype=torch.float32, device=device)
+        if placed_pos.shape[1] == 0 or not bool(placed_valid.any().item()):
+            return bias
+
+        rcov_table, max_c_table = _atom_geometry_tables(self.backbone.num_atom, str(device))
+        allowed_ids = torch.tensor(
+            [self.dictionary[s] for s in self.args.allow_atoms.split(",")], dtype=torch.long, device=device
+        )
+        r_allow = rcov_table[allowed_ids].view(1, 1, -1)
+        v_allow = max_c_table[allowed_ids].view(1, -1)
+        grid_len = float(self.args.grid_len)
+
+        dx_max = torch.maximum(
+            (vox_origin[:, None, :] - placed_pos).abs(),
+            (vox_origin[:, None, :] + grid_len - placed_pos).abs(),
+        )
+        d_max = torch.linalg.norm(dx_max, dim=-1)
+        d_cen = torch.linalg.norm((vox_origin[:, None, :] + 0.5 * grid_len) - placed_pos, dim=-1)
+        r_sum = p_rcov.unsqueeze(-1) + r_allow
+
+        clash_elem = (placed_valid.unsqueeze(-1) & (d_max.unsqueeze(-1) < 0.61 * r_sum)).any(dim=1)
+        sat_intrude = (p_sat.unsqueeze(-1) & (d_cen.unsqueeze(-1) < 1.22 * r_sum)).any(dim=1)
+        new_deg = (placed_valid.unsqueeze(-1) & (d_cen.unsqueeze(-1) < 1.24 * r_sum)).sum(dim=1)
+        over_coord = new_deg > v_allow
+
+        sub_bias = (
+            -16.0 * clash_elem.float()
+            - 12.0 * sat_intrude.float()
+            - 14.0 * over_coord.float()
+        )
+        bias[:, allowed_ids] = sub_bias
+        return bias
+
+    def _zbin_guard_logit_bias(
+        self,
+        vox_origin: torch.Tensor,
+        chosen_elem: torch.Tensor,
+        chosen_xy_bins: torch.Tensor,
+        placed_pos: torch.Tensor,
+        placed_valid: torch.Tensor,
+        p_rcov: torch.Tensor,
+        p_sat: torch.Tensor,
+        num_bins: int,
+    ) -> torch.Tensor:
+        """Finite steric & saturated-valence logit bias `(N, num_bins)` for exact 3D `Z` bin selection (`axis=3`)."""
+        device = vox_origin.device
+        n_rows = vox_origin.shape[0]
+        if placed_pos.shape[1] == 0 or not bool(placed_valid.any().item()):
+            return torch.zeros((n_rows, num_bins), dtype=torch.float32, device=device)
+
+        rcov_table, _ = _atom_geometry_tables(self.backbone.num_atom, str(device))
+        r_new = rcov_table[chosen_elem.clamp(0, self.backbone.num_atom - 1).long()].view(n_rows, 1, 1)
+        r_sum_z = p_rcov.unsqueeze(-1) + r_new
+        xyz_res = float(self.args.xyz_resolution)
+
+        xy_a = vox_origin[:, :2] + chosen_xy_bins.float() * xyz_res
+        z_a = vox_origin[:, 2:3] + torch.arange(num_bins, device=device, dtype=torch.float32).view(1, -1) * xyz_res
+        d2_xy = ((xy_a[:, None, :] - placed_pos[:, :, :2]) ** 2).sum(dim=-1, keepdim=True)
+        dz = z_a[:, None, :] - placed_pos[:, :, 2:3]
+        d_3d = torch.sqrt((d2_xy + dz ** 2).clamp_min(1e-8))
+
+        clash_pen = torch.where(
+            placed_valid.unsqueeze(-1) & (d_3d < 0.63 * r_sum_z),
+            -25.0 * (0.63 * r_sum_z - d_3d) - 8.0,
+            torch.zeros_like(d_3d),
+        ).sum(dim=1)
+        sat_pen = torch.where(
+            p_sat.unsqueeze(-1) & (d_3d < 1.24 * r_sum_z),
+            -12.0 * (1.24 * r_sum_z - d_3d) - 4.0,
+            torch.zeros_like(d_3d),
+        ).sum(dim=1)
+        return (clash_pen + sat_pen).clamp_min(-40.0)
 
     def normalize_targets(self, targets_eV: np.ndarray | torch.Tensor) -> torch.Tensor:
         device = self.target_mean.device
@@ -752,6 +949,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         *,
         cfg_scale: float = 1.0,
         xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.0,
+        geometric_guard: bool = False,
         temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
         seed: Optional[int] = None,
         use_bf16: bool = True,
@@ -905,13 +1104,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         sub_xyz = torch.zeros((n_sub, 4), dtype=torch.int32, device=device)
                         sub_sc = torch.zeros((n_sub,), dtype=torch.float32, device=device)
 
-                        if electron_parity is not None and parities is not None:
+                        if (electron_parity is not None and parities is not None) or geometric_guard:
                             types_all = decoder_feat[:, :, IDX_TYPE]
                             actual = (
                                 (decoder_feat[:, :, IDX_LEVEL] == self.backbone.atom_level_index)
                                 & (types_all < len(atom_list))
                                 & (types_all >= 0)
                             )
+                        else:
+                            types_all = None
+                            actual = None
+
+                        if electron_parity is not None and parities is not None and actual is not None and types_all is not None:
                             safe = torch.where(actual, types_all, self.backbone.atom_null_id)
                             acc_par = (parities[safe].sum(-1) % 2)[is_pred_atom]
                             term_flags = torch.tensor(
@@ -920,6 +1124,23 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         else:
                             acc_par = None
                             term_flags = None
+
+                        if geometric_guard and actual is not None and types_all is not None:
+                            vox_origin = next_feat[is_pred_atom, :3].float() * float(self.args.grid_len)
+                            sub_actual = actual[is_pred_atom]
+                            any_col = sub_actual.any(dim=0)
+                            if bool(any_col.any().item()):
+                                p_valid = sub_actual[:, any_col]
+                                p_pos = decoder_phy_pos[is_pred_atom][:, any_col, :3].float()
+                                p_types = types_all[is_pred_atom][:, any_col].long()
+                                p_rcov, p_sat = self._prepare_placed_geometry(p_pos, p_types, p_valid)
+                            else:
+                                p_valid = torch.zeros((n_sub, 0), dtype=torch.bool, device=device)
+                                p_pos = torch.zeros((n_sub, 0, 3), dtype=torch.float32, device=device)
+                                p_rcov = torch.zeros((n_sub, 0), dtype=torch.float32, device=device)
+                                p_sat = torch.zeros((n_sub, 0), dtype=torch.bool, device=device)
+                        else:
+                            vox_origin = p_pos = p_valid = p_rcov = p_sat = None
 
                         ahead = self.backbone.atom_heads[0]
                         for axis in range(4):
@@ -932,6 +1153,10 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                 cur_logits = logits_c
 
                             if axis == 0:
+                                if geometric_guard and vox_origin is not None and p_pos is not None and p_valid is not None and p_rcov is not None and p_sat is not None:
+                                    cur_logits = cur_logits + self._element_guard_logit_bias(
+                                        vox_origin, p_pos, p_valid, p_rcov, p_sat
+                                    )
                                 cur_logits = cur_logits.masked_fill(forbidden_atom_mask, -torch.inf)
                                 if electron_parity is not None and parities is not None and acc_par is not None and term_flags is not None:
                                     cur_logits = mask_terminal_element_logits(
@@ -939,6 +1164,17 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                     )
                                 temp_axis = atom_temp
                             else:
+                                if axis == 3 and geometric_guard and vox_origin is not None and p_pos is not None and p_valid is not None and p_rcov is not None and p_sat is not None:
+                                    cur_logits = cur_logits + self._zbin_guard_logit_bias(
+                                        vox_origin,
+                                        sub_xyz[:, 0],
+                                        sub_xyz[:, 1:3],
+                                        p_pos,
+                                        p_valid,
+                                        p_rcov,
+                                        p_sat,
+                                        cur_logits.shape[-1],
+                                    )
                                 temp_axis = xyz_temp
 
                             sampled_id, cur_sc = _gpu_multinomial_sample(cur_logits, temp_axis, rng_gen)
@@ -959,7 +1195,13 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         tree_c = self.backbone.tree_heads[0](dec_y_last[is_pred_tree]).float()
                         if dec_u_last is not None and cfg_scale != 1.0:
                             tree_u = self.backbone.tree_heads[0](dec_u_last[is_pred_tree]).float()
-                            tree_logits = tree_u + cfg_scale * (tree_c - tree_u)
+                            if cfg_tree_decay != 0.0:
+                                tree_lvl = next_level[is_pred_tree].float()
+                                decay_mult = 1.0 - float(cfg_tree_decay) * ((3.0 - tree_lvl).clamp(0.0, 2.0) / 2.0)
+                                eff_cfg = (1.0 + (cfg_scale - 1.0) * decay_mult).unsqueeze(-1)
+                                tree_logits = tree_u + eff_cfg * (tree_c - tree_u)
+                            else:
+                                tree_logits = tree_u + cfg_scale * (tree_c - tree_u)
                         else:
                             tree_logits = tree_c
                         t_pred, t_sc = _gpu_multinomial_sample(tree_logits, tree_temp, rng_gen)
@@ -1149,6 +1391,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
         temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
         cfg_scale: float = 1.0,
         xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.0,
+        geometric_guard: bool = False,
+        topology_only_policy: bool = False,
         electron_parity: Optional[int] = 0,
     ) -> List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
         device = targets_norm.device
@@ -1165,8 +1410,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
             else None
         )
 
-        def _guide(val_c: torch.Tensor, val_u: torch.Tensor, scale: float) -> torch.Tensor:
-            if scale == 1.0:
+        def _guide(val_c: torch.Tensor, val_u: torch.Tensor, scale: float | torch.Tensor) -> torch.Tensor:
+            if isinstance(scale, (int, float)) and scale == 1.0:
                 return val_c.float()
             return val_u.float() + scale * (val_c.float() - val_u.float())
 
@@ -1179,7 +1424,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
         if tree.any():
             logits_t = self.backbone.tree_heads[0](hidden[tree]).float()
             if uncond is not None and cfg_scale != 1.0:
-                logits_t = _guide(logits_t, self.backbone.tree_heads[0](uncond[tree]), cfg_scale)
+                tree_u = self.backbone.tree_heads[0](uncond[tree]).float()
+                if cfg_tree_decay != 0.0:
+                    tree_lvl = decoder_input.level[tree].float()
+                    decay_mult = 1.0 - float(cfg_tree_decay) * ((3.0 - tree_lvl).clamp(0.0, 2.0) / 2.0)
+                    eff_cfg = (1.0 + (cfg_scale - 1.0) * decay_mult).unsqueeze(-1)
+                    logits_t = _guide(logits_t, tree_u, eff_cfg)
+                else:
+                    logits_t = _guide(logits_t, tree_u, cfg_scale)
             logits_t = logits_t / temperatures[0]
             labels_t = (target.type[tree] - self.backbone.tree0_split_id - 1).long()
             packets.append((logits_t.log_softmax(-1), labels_t, owner[tree]))
@@ -1187,17 +1439,57 @@ class LoomUni3DARGenerator(GeneratorSlot):
         atom = target.is_gen_atom
         if atom.any():
             labels_a = [v.long() for v in target.to_list(atom)]
-            logits_a = self.backbone.atom_heads[0](hidden[atom], labels_a)
+            logits_a = [t.float() for t in self.backbone.atom_heads[0](hidden[atom], labels_a)]
             if uncond is not None:
                 null_logits_a = self.backbone.atom_heads[0](uncond[atom], labels_a)
                 logits_a = [
                     _guide(x, u, cfg_scale if ax == 0 else xyz_cfg_scale)
                     for ax, (x, u) in enumerate(zip(logits_a, null_logits_a))
                 ]
+
+            atom_owner = owner[atom]
+            if geometric_guard:
+                counts_per_traj = torch.bincount(atom_owner, minlength=len(trajectories))
+                max_k = int(counts_per_traj.max().item()) if counts_per_traj.numel() > 0 else 0
+                vox_origins = decoder_input.phy_pos[atom].float() - 0.5 * float(self.args.grid_len)
+                if max_k > 1:
+                    cum_starts = torch.zeros(len(trajectories), dtype=torch.long, device=device)
+                    cum_starts[1:] = counts_per_traj.cumsum(0)[:-1]
+                    local_m = torch.arange(atom_owner.shape[0], device=device) - cum_starts[atom_owner]
+                    xyz_bins = torch.stack(labels_a[1:4], dim=-1).float()
+                    atom_pos_all = vox_origins + xyz_bins * float(self.args.xyz_resolution)
+
+                    traj_pos = torch.zeros((len(trajectories), max_k, 3), dtype=torch.float32, device=device)
+                    traj_typ = torch.zeros((len(trajectories), max_k), dtype=torch.long, device=device)
+                    traj_pos[atom_owner, local_m] = atom_pos_all
+                    traj_typ[atom_owner, local_m] = labels_a[0]
+
+                    p_pos = traj_pos[atom_owner]
+                    p_types = traj_typ[atom_owner]
+                    p_valid = (
+                        (torch.arange(max_k, device=device).unsqueeze(0) < local_m.unsqueeze(1))
+                        & (p_types < len(atom_list))
+                        & (p_types >= 0)
+                    )
+                    p_rcov, p_sat = self._prepare_placed_geometry(p_pos, p_types, p_valid)
+
+                    logits_a[0] = logits_a[0] + self._element_guard_logit_bias(
+                        vox_origins, p_pos, p_valid, p_rcov, p_sat
+                    )
+                    logits_a[3] = logits_a[3] + self._zbin_guard_logit_bias(
+                        vox_origins,
+                        labels_a[0],
+                        torch.stack(labels_a[1:3], dim=-1),
+                        p_pos,
+                        p_valid,
+                        p_rcov,
+                        p_sat,
+                        logits_a[3].shape[-1],
+                    )
+
             allowed = self.allowed_atom_mask(device)
             if electron_parity is not None:
                 parities = atom_electron_parities(self.backbone, device)
-                atom_owner = owner[atom]
                 terminal = torch.ones_like(atom_owner, dtype=torch.bool)
                 terminal[:-1] = atom_owner[:-1] != atom_owner[1:]
                 accumulated = torch.zeros(len(trajectories), dtype=torch.long, device=device)
@@ -1205,10 +1497,15 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 logits_a[0] = mask_terminal_element_logits(
                     logits_a[0], accumulated[atom_owner] % 2, terminal, electron_parity, parities
                 )
+            real_atom = (labels_a[0] >= 0) & (labels_a[0] < len(atom_list))
             for axis, vals in enumerate(logits_a):
+                if topology_only_policy and axis > 0:
+                    continue
                 vals_f = vals.float() / (temperatures[1] if axis == 0 else temperatures[2])
                 if axis == 0:
                     vals_f = vals_f.masked_fill(~allowed, -torch.inf)
-                packets.append((vals_f.log_softmax(-1), labels_a[axis], owner[atom]))
+                    packets.append((vals_f.log_softmax(-1), labels_a[axis], atom_owner))
+                elif bool(real_atom.any().item()):
+                    packets.append((vals_f[real_atom].log_softmax(-1), labels_a[axis][real_atom], atom_owner[real_atom]))
 
         return packets
