@@ -11,7 +11,7 @@ This directory contains the self-contained English arXiv LaTeX/Markdown manuscri
 |---|---|
 | `main.tex` | Primary single-column arXiv LaTeX manuscript |
 | `main.bbl` | Synchronized `thebibliography` file included directly by `main.tex` (arXiv AutoTeX compatible) |
-| `references.bib` | BibTeX bibliography database (`25` entries; `21` cited) |
+| `references.bib` | BibTeX bibliography database (`26` entries; `22` cited) |
 | `UniLoom_arXiv_Paper.md` | Complete English Markdown edition of the arXiv preprint embedding `figures/fig1..fig7*.png` |
 | `draw_architecture.py` | Vector PDF / 300-DPI PNG / SVG generator for `figures/fig1_uniloom_architecture.{pdf,png,svg}` in a minimalist horizontal Codex architectural style |
 | `sync_bbl.py` | Regenerates `main.bbl` in exact citation order from `main.tex` and `references.bib` |

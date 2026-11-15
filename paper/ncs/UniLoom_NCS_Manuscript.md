@@ -7,7 +7,7 @@
 Correspondence: `{chensq, zhaogj, chengz, wangjk, wanghs, gaozf}@dp.tech`
 
 > **Target format:** *Nature Computational Science* (`Article`)  
-> **Word & display-item budget compliance:** Title 11 words (limit ≤ 15); Abstract 155 words, 0 citations, 0 math (recommended 150–185); Main Text 1,803 words (limit ≤ 3,500); Methods 1,043 words (limit ≤ 3,000); Main Display Items 6 (5 Figures + 1 two-part Table; limit ≤ 6); Extended Data Items 5 (2 Figures + 3 Tables; limit ≤ 10).
+> **Word & display-item budget compliance:** Title 11 words (limit ≤ 15); Abstract 155 words, 0 citations, 0 math (recommended 150–185); Main Text 1,930 words (limit ≤ 3,500); Methods 1,104 words (limit ≤ 3,000); Main Display Items 6 (5 Figures + 1 two-part Table; limit ≤ 6); Extended Data Items 7 (2 Figures + 5 Tables; limit ≤ 10).
 
 ---
 
@@ -123,6 +123,12 @@ Unlocked in Round 2 by the newly calibrated predictor, inner RL resumes across d
 
 **Figure 5 | Two-round Grounded Recursive Self-Improvement (RSI) causal flywheel.** Round 1A harvests trusted under-explored targets ($4.07\times$ mid-range blind audit gain at zero DFT cost) while freezing outer blindspots. Round 1B actively acquires 64 Murcko-diverse DFT measurements to cut untouched blind test error ($0.990 \to 0.655\text{ eV}$) and unlock the blindspot ($\sigma_{\text{cal}} < 0.35\text{ eV}$), enabling Round 2 to push overall blind clean constrained hits $4.40\times$ higher ($2.90\% \to 12.78\%$) at 99.27% reconciled 3D legality.
 
+### Live DFT anchoring and public benchmark generalization
+
+To verify that cross-oracle divergence hotspots in the 2D $(\text{HOMO},\text{LUMO})$ reachability atlas (**Fig. 3**) capture genuine quantum-mechanical breakdown rather than surrogate noise, we evaluated a stratified sample of 80 unique DPA-4-relaxed clean molecules (5 per cell across the 8 lowest-divergence cells, $\text{cal.\ RMSE}_{2\text{D}} = 0.620\text{--}0.764\text{ eV}$, and the 8 highest-divergence cells, $1.239\text{--}1.434\text{ eV}$) with live `GPU4PySCF` single-point $\text{PBE0/def2-TZVP/DF}$ calculations alongside full $\text{PBE-D3BJ/def2-TZVP/DF}$ `geomeTRIC` geometry optimizations on 16 cell representatives (**Extended Data Table 4**) [20,21]. All 80/80 single-point calculations (100.0%) converged via DIIS without Newton fallback. Against true $\text{PBE0}$, calibrated DPA-4 [12] remains closely aligned ($\text{HOMO MAE}=0.1893\text{ eV}$, $r=0.9822$, $\rho=0.9767$; $\text{LUMO MAE}=0.2879\text{ eV}$, $r=0.9755$, $\rho=0.9712$; joint 2D MAE $0.2386\text{ eV}$), whereas frozen Uni-Mol2 [10] errors are $3\text{--}4\times$ larger ($\text{HOMO MAE}=0.7235\text{ eV}$, $r=0.7110$; $\text{LUMO MAE}=0.8677\text{ eV}$, $r=0.7449$; joint 2D MAE $0.7956\text{ eV}$). Crucially, moving from Low-Divergence ($n=40$) to High-Divergence ($n=40$) cells increases empirical $|\text{Uni-Mol2}-\text{DPA-4}|$ HOMO discrepancy ($0.5180 \to 0.9512\text{ eV}$), driving a $+78.0\%$ jump in Uni-Mol2 $\text{PBE0}$ HOMO MAE ($0.5205 \to 0.9265\text{ eV}$; $\rho: 0.7964 \to 0.4914$), whereas LUMO error tracks per-channel empirical disagreement across extreme-LUMO Low-Divergence cells ($0.8366$ vs. $0.6094\text{ eV}$). All 16/16 (100.0%) DFT geometry optimizations converge, preserving molecular bond graphs in 15/16 structures (93.75%) with tight geometric fidelity to DPA-4 equilibria ($0.0540\text{ \AA}$ median / $0.1578\text{ \AA}$ mean heavy-atom Kabsch RMSD; $0.1582 / 0.2698\text{ \AA}$ all-atom) and modest adiabatic $\text{PBE0}$ orbital shifts ($0.3056\text{ eV}$ HOMO, $0.1785\text{ eV}$ LUMO).
+
+To test multi-property portability outside OE62, we next evaluated a single unified $K=6$ Uni-Loom SFT checkpoint initialized from unconditional Uni-3DAR [9] on the leakage-free 50k/50k disjoint QM9 protocol (44,453 matched training conformers, 0 overlap with `gvp_rQM_v0`, 6,000 SFT steps in 58.1 min on one A800 GPU, without RL or Track A guards; $N=1{,}000$ proposals/property scored via frozen `GVPRegressor` oracles; **Extended Data Table 5**) [8,22]. Decoded at $59.29\text{--}79.72\text{ mol s}^{-1}$ (`BF16`, 99.88%–100.0% uniqueness, 93.03%–95.22% novelty), this single model captures strong monotonic conditioning on $\alpha$ ($r=0.8043$ raw / $0.7816$ reconciled), $C_v$ ($0.8831 / 0.8618$), $\varepsilon_{\text{LUMO}}$ ($0.6698 / 0.6812$), $\Delta\varepsilon$ ($0.6280 / 0.6153$) and $\varepsilon_{\text{HOMO}}$ ($0.5165 / 0.5011$), substantially outperforming Random targets while Track B `ValenceReconciler` boosts 3D legality across every task ($64.4\%\text{--}69.6\% \to 85.7\%\text{--}89.1\%$) and eliminates exotic formal charges ($11.14\%\text{--}14.44\% \to 0.00\%$) at $0.0000\text{ \AA}$ heavy-atom RMSD. At the same time, its higher MAE relative to six separate single-property diffusion or flow-matching models [6–8]—most visibly on dipole magnitude $\mu$ ($1.59\text{ D}$, $r=0.1804$)—confirms why online policy optimization and source-side coordination guards are essential beyond multi-property SFT alone.
+
 ---
 
 ## Discussion
@@ -203,13 +209,13 @@ exports active-learning `.sdf` manifests, and integrates returned quantum calcul
 
 ### Datasets and computational hardware
 
-Scaffold-disjoint OE62 structures [1] (43,858 conformers, $\le 80$ atoms across H, B, C, N, O, F, Si, P, S, Cl, Br and I) and consolidated $\text{PBE0/def2-TZVP/DF}$ generated molecules (3,949 train / 398 validation / 390 test) constitute the 47,807-conformer training dataset. Batched MLIP spatial packing uses `float64` coordinates to hold batch-32 force evaluation drift at $7.89\times 10^{-6}\text{ eV Å}^{-1}$ (versus $7.09\times 10^{-3}\text{ eV Å}^{-1}$ in naive single-precision packing), and safely masks unsupported elements outside potential parameter tables (returning NaN guards without halting batch execution). Hardware throughput benchmarks evaluate 256 molecules per arm on a single NVIDIA A800-SXM4-80GB GPU across batch sizes 32, 64, 128 and 256 (1.67–3.36 GB peak VRAM), lifting training-step speed from 72.85 to $80.92\text{ mol s}^{-1}$ alongside `BF16` sampling up to $32.52\text{ mol s}^{-1}$. All Stage and v2.0 evaluations sample seven held-out quantile targets across seeds 24411 and 24412 (1,792 proposals/arm). For 2D orbital mapping, 49 target cells yield 1,764 graph-preserved clean relaxed molecules scored on both Uni-Mol2 1.1B and calibrated DPA-4. For the two-round Grounded RSI experiment, 3,086 historical training molecules ($\text{HOMO} > -6.92\text{ eV}$), 73 external acquisition-pool validation DFT molecules and 73 untouched blind deep-DFT test molecules remain strictly disjoint across scaffolds.
+Scaffold-disjoint OE62 structures [1] (43,858 conformers, $\le 80$ atoms across H, B, C, N, O, F, Si, P, S, Cl, Br and I) and consolidated $\text{PBE0/def2-TZVP/DF}$ generated molecules (3,949 train / 398 validation / 390 test) constitute the 47,807-conformer training dataset. Batched MLIP spatial packing uses `float64` coordinates to hold batch-32 force evaluation drift at $7.89\times 10^{-6}\text{ eV Å}^{-1}$ (versus $7.09\times 10^{-3}\text{ eV Å}^{-1}$ in naive single-precision packing), and safely masks unsupported elements outside potential parameter tables (returning NaN guards without halting batch execution). Hardware throughput benchmarks evaluate 256 molecules per arm on a single NVIDIA A800-SXM4-80GB GPU across batch sizes 32, 64, 128 and 256 (1.67–3.36 GB peak VRAM), lifting training-step speed from 72.85 to $80.92\text{ mol s}^{-1}$ alongside `BF16` sampling up to $32.52\text{ mol s}^{-1}$. All Stage and v2.0 evaluations sample seven held-out quantile targets across seeds 24411 and 24412 (1,792 proposals/arm). For 2D orbital mapping, 49 target cells yield 1,764 graph-preserved clean relaxed molecules scored on both Uni-Mol2 1.1B and calibrated DPA-4; live DFT anchoring selects 80 stratified unique molecules across the 8 lowest-divergence and 8 highest-divergence cells (5 per cell) for `GPU4PySCF` $\text{PBE0/def2-TZVP/DF}$ (`def2-universal-jkfit`, grid level 3, SCF threshold $10^{-8}\text{ Ha}$) single points alongside 16 `geomeTRIC` $\text{PBE-D3BJ/def2-TZVP/DF}$ full relaxations (1 per cell). For the two-round Grounded RSI experiment, 3,086 historical training molecules ($\text{HOMO} > -6.92\text{ eV}$), 73 external acquisition-pool validation DFT molecules and 73 untouched blind deep-DFT test molecules remain strictly disjoint across scaffolds. For public QM9 cross-benchmarking, 44,453 training and 1,500 development conformers matched from `train_rQM_v0` remain strictly disjoint (0 overlap) from `gvp_rQM_v0` and feed 6,000 unified $K=6$ SFT steps (31,597,337 / 120,737,561 trainable parameters, batch size 128), evaluated on 1,000 holdout sanity conformers (973 evaluable) and 1,000 generated proposals per property using frozen `GVPRegressor` oracles at dev-selected guidance scales ($s_0=1.5$ for $\alpha,\varepsilon_{\text{HOMO}}$ and $2.5$ for $\Delta\varepsilon,\varepsilon_{\text{LUMO}},\mu,C_v$).
 
 ---
 
 ## Data availability
 
-Public base conformers derive from the OE62 dataset [1]. Consolidated leakage-free split manifests, evaluation JSON artifacts and acquired RSI batches are archived in the project repository (`docs/experiments/`) and will be released upon publication.
+Public base conformers derive from the OE62 [1] and QM9 [22] datasets. Consolidated leakage-free split manifests, evaluation JSON artifacts (`atlas2d_dft_anchor_eval.json`, `qm9_conditional_benchmark.json`) and acquired RSI batches are archived in the project repository (`docs/experiments/`) and will be released upon publication.
 
 ## Code availability
 
@@ -240,6 +246,7 @@ The Uni-Loom package (`loom v2.0.0`; regression suite 321 passed, 5 skipped), de
 19. Bemis, G. W. & Murcko, M. A. The Properties of Known Drugs. 1. Molecular Frameworks. *Journal of Medicinal Chemistry* **39**, 2887–2893 (1996).
 20. Sun, Q. et al. Recent Developments in the PySCF Program Package. *The Journal of Chemical Physics* **153**, 024109 (2020). https://doi.org/10.1063/5.0006074.
 21. Li, R., Sun, Q., Zhang, X. & Chan, G. K.-L. Introducing GPU-Acceleration into the Python-Based Simulations of Chemistry Framework. *arXiv preprint arXiv:2407.09700* (2024).
+22. Ramakrishnan, R., Dral, P. O., Rupp, M. & von Lilienfeld, O. A. Quantum chemistry structures and properties of 134 kilo molecules. *Scientific Data* **1**, 140022 (2014). https://doi.org/10.1038/sdata.2014.22.
 
 ---
 
@@ -265,7 +272,7 @@ The authors declare no competing interests.
 
 ![Extended Data Figure 2: Univariate 1D HOMO heteroscedastic Gaussian process reachability atlas](../figures/fig4_gp_atlas_1d_homo.png)
 
-**Extended Data Fig. 2 | Univariate 1D HOMO heteroscedastic Gaussian process reachability atlas.** Posterior conditional mean $\hat{\mu}_{\text{gen}}(t)$ closely tracks the ideal $y=t$ diagonal across the trusted reachable band $[-8.85, -5.77]\text{ eV}$ while decomposing conditional generation variance $\sigma_{\text{gen}}^2$ from calibrated epistemic variance $\sigma_{\text{cal}}^2$ to identify prior boundaries.
+**Extended Data Fig. 2 | Univariate 1D HOMO heteroscedastic Gaussian process reachability atlas.** **a**, Equal-scale square reachability calibration ($[-9.5, -4.5]\text{ eV}$ on both target and generated axes, 1:1 diagonal $y=t$): posterior conditional mean $\hat{\mu}_{\text{gen}}(t)$ closely tracks unit slope across the trusted reachable band while separating intrinsic generative dispersion $\pm\sigma_{\text{gen}}$ from total uncertainty $\pm\sigma_{\text{total}}$. **b**, Independent viability and prior-support axis contrasting surrogate versus calibrated hit probability across the amber-shaded trusted reachable interval ($[-8.85, -5.77]\text{ eV}$) against the distinct indigo-shaded OE62 source prior density curve.
 
 ---
 
@@ -306,3 +313,34 @@ The authors declare no competing interests.
 | Round 1A (Inner) | 3/3/1/1 | 0.483 | 94.9 / 98.4 | 7.35 | 57.06 | 8.59 | 5.47 | 138 (7.70%) |
 | Round 1B (64 DFT) | 2/5/0/1 | 0.291 | *0 base edits; $n=73$ blind MAE $0.990 \to 0.655\text{ eV}$ ($-33.8\%$)* | — | — | — | — | Unlocks P10–P25 |
 | Round 2 (Inner) | 3/4/0/1 | **0.285** | **97.4 / 99.3** | **3.61** | **75.04** | **14.69** | **8.01** | **229 (12.78%)** |
+
+---
+
+**Extended Data Table 4 | Stratified 2D `(HOMO, LUMO)` GP-Atlas live `PBE0/def2-TZVP/DF` anchor verification (`n = 80` single points, `n = 16` full DFT relaxations).**
+
+| Cohort / Stratum | Oracle vs. PBE0 | 2D MAE (eV) | HOMO MAE / RMSE (eV) | HOMO `r / ρ` | LUMO MAE / RMSE (eV) | LUMO `r / ρ` |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| Overall (`n=80`, SCF `100%`, emp diff `0.8133 eV`) | **DPA-4** | **0.2386** | **0.1893 / 0.2497** | **0.9822 / 0.9767** | **0.2879 / 0.4005** | **0.9755 / 0.9712** |
+| Overall (`n=80`, emp diff `0.8133 eV`) | Uni-Mol2 | 0.7956 | 0.7235 / 1.0279 | 0.7110 / 0.7292 | 0.8677 / 1.1631 | 0.7449 / 0.8120 |
+| Low-Divergence (`n=40`, emp diff `0.7624 eV`) | **DPA-4** | **0.2011** | **0.1498 / 0.2038** | **0.9798 / 0.9702** | **0.2523 / 0.3542** | **0.9787 / 0.9341** |
+| Low-Divergence (`n=40`, emp diff `0.7624 eV`) | Uni-Mol2 | 0.7639 | 0.5205 / 0.7209 | 0.7569 / 0.7964 | 1.0073 / 1.3140 | 0.6578 / 0.8139 |
+| High-Divergence (`n=40`, emp diff `0.8641 eV`) | **DPA-4** | **0.2761** | **0.2288 / 0.2883** | **0.9778 / 0.9728** | **0.3235 / 0.4420** | **0.9661 / 0.9722** |
+| High-Divergence (`n=40`, emp diff `0.8641 eV`) | Uni-Mol2 | 0.8273 | 0.9265 / 1.2624 | 0.5573 / 0.4914 | 0.7281 / 0.9895 | 0.7751 / 0.7587 |
+
+*Full `PBE-D3BJ/def2-TZVP/DF` relaxation (`n=16`, `1/cell`):* `16/16 (100.0%)` converged; `15/16 (93.75%)` graph preserved; heavy Kabsch RMSD `0.0540 Å` median (`0.1578 Å` mean); all-atom RMSD `0.1582 Å` median (`0.2698 Å` mean); adiabatic `PBE0` shift `0.3056 / 0.1785 eV`.
+
+---
+
+**Extended Data Table 5 | Public QM9 conditional generation benchmark on the zero-overlap 50k/50k `PropMolFlow` split (`N = 1,000` proposals per property).**
+
+| Method / Protocol | $\alpha$ ($\text{Bohr}^3$) | $\Delta\varepsilon$ (meV) | $\varepsilon_{\text{HOMO}}$ (meV) | $\varepsilon_{\text{LUMO}}$ (meV) | $\mu$ (D) | $C_v$ ($\text{cal/mol}\cdot\text{K}$) | Legal (%) / Exotic $Q$ (%) |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| GVP Oracle Lower-Bound (`n=973`) | 0.5544 | 190.08 | 83.78 | 135.89 | 0.1422 | 0.1726 | 94.9 → 97.3 / — |
+| Random Target Baseline | 9.3116 | 1423.78 | 653.09 | 1481.53 | 1.5177 | 4.5040 | — |
+| EDM (6 single-prop models) [6] | 2.76 | 655.0 | 356.0 | 584.0 | 1.111 | 1.101 | — |
+| GeoLDM (6 single-prop models) [7] | 2.37 | 587.0 | 340.0 | 522.0 | 1.108 | 1.025 | — |
+| PropMolFlow (6 single-prop models) [8] | 1.3115 | 390.98 | 253.99 | 314.52 | 0.6202 | 0.6259 | — |
+| **Uni-Loom (`1` model, $K=6$ SFT, Raw)** | 5.4282 | 1089.15 | 571.26 | 1099.58 | 1.7187 | 2.9330 | 64.4–69.6 / 11.1–14.4 |
+| **Uni-Loom (`1` model, $K=6$ SFT, Reconciled)** | 5.6612 | 1074.26 | 532.14 | 1053.71 | 1.5898 | 3.1136 | **85.7–89.1 / 0.00** |
+
+*Unified $K=6$ Pearson $r$ (Raw / Reconciled):* $\alpha$ `0.804 / 0.782`, $\Delta\varepsilon$ `0.628 / 0.615`, $\varepsilon_{\text{HOMO}}$ `0.517 / 0.501`, $\varepsilon_{\text{LUMO}}$ `0.670 / 0.681`, $\mu$ `0.103 / 0.180`, $C_v$ `0.883 / 0.862`.

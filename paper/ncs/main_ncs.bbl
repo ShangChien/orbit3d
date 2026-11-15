@@ -1,4 +1,4 @@
-\begin{thebibliography}{21}
+\begin{thebibliography}{22}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax\else\urlstyle{same}\fi
 
@@ -64,5 +64,8 @@ Sun, Q. et~al. Recent Developments in the PySCF Program Package. \emph{The Journ
 
 \bibitem{li2024gpu4pyscf}
 Li, R., Sun, Q., Zhang, X. \& Chan, G. K.-L. Introducing GPU-Acceleration into the Python-Based Simulations of Chemistry Framework. \emph{arXiv preprint arXiv:2407.09700} (2024).
+
+\bibitem{ramakrishnan2014qm9}
+Ramakrishnan, R., Dral, P. O., Rupp, M. \& von Lilienfeld, O. A. Quantum chemistry structures and properties of 134 kilo molecules. \emph{Scientific Data} \textbf{1}, 140022 (2014). \href{https://doi.org/10.1038/sdata.2014.22}{https://doi.org/10.1038/sdata.2014.22}.
 
 \end{thebibliography}

@@ -152,11 +152,28 @@ Across `0 → 1,184` online `GRPO` groups (**Figure 3**), every structural and b
 
 ### 3.4 Joint `[HOMO, LUMO]` Weaving and Orthogonalized `1D/2D GPAtlas`
 
-Within a single multi-property `v1.1` conditional model, marginal `LUMO` generation improves substantially over `v1.0`: 3D legality jumps from `75.3%` to `87.33%`, exotic charge rate falls from `27.1%` to `16.2%`, median zero-step force decreases from `5.04` to `3.79 eV/Å`, MLIP graph preservation reaches `94.1%`, Kabsch RMSD contracts to `0.0469 Å`, and calibration slope reaches `1.002`. Evaluated over a `7 × 7 = 49`-cell joint `(HOMO, LUMO)` grid (`1,764` clean relaxed molecules), the orthogonalized `GPAtlas` (**Figures 4–5**) maps: (i) an unbiased `1D HOMO` trusted reachable window `[-8.85, -5.77] eV`, (ii) `2D` joint clean hit yields peaking at `22.0%` alongside drift vectors $\hat{\mu}(\mathbf{t}) - \mathbf{t}$, and (iii) an empirical cross-foundation predictor divergence surface $\sigma_{\text{cal,2D}}(t_{\text{H}}, t_{\text{L}})$ ranging smoothly from `0.83 eV` in well-populated wide-gap regions to `1.14 eV` in narrow-gap donor–acceptor corners.
+Within a single multi-property `v1.1` conditional model, marginal `LUMO` generation improves substantially over `v1.0`: 3D legality jumps from `75.3%` to `87.33%`, exotic charge rate falls from `27.1%` to `16.2%`, median zero-step force decreases from `5.04` to `3.79 eV/Å`, MLIP graph preservation reaches `94.1%`, Kabsch RMSD contracts to `0.0469 Å`, and calibration slope reaches `1.002`. Evaluated over a `7 × 7 = 49`-cell joint `(HOMO, LUMO)` grid (`1,764` clean relaxed molecules), the orthogonalized `GPAtlas` (**Figures 4–5**) maps: (i) in `1D HOMO` (**Figure 4**), an equal-scale square reachability calibration plot over `[-9.5, -4.5] eV` (**Panel A**) paired with an independent viability-vs-prior plot contrasting the amber trusted reachable interval `[-8.85, -5.77] eV` against the indigo `OE62` source prior KDE (**Panel B**); (ii) `2D` joint clean hit yields peaking at `22.0%` alongside drift vectors $\hat{\mu}(\mathbf{t}) - \mathbf{t}$; and (iii) an empirical cross-foundation predictor divergence surface $\sigma_{\text{cal,2D}}(t_{\text{H}}, t_{\text{L}})$ ranging smoothly from `0.83 eV` in well-populated wide-gap regions to `1.14 eV` in narrow-gap donor–acceptor corners.
 
-![Figure 4: 1D HOMO heteroscedastic GPAtlas mapping generative mean drift, total dispersion vs predictor calibration uncertainty, and trusted reachable bounds from -8.85 to -5.77 eV.](figures/fig4_gp_atlas_1d_homo.png)
+![Figure 4: Univariate 1D HOMO heteroscedastic GPAtlas split into two independent panels—Panel A: 1:1 equal-scale square calibration across [-9.5, -4.5] eV; Panel B: standalone target-HOMO axis contrasting amber trusted reachable bounds [-8.85, -5.77] eV against indigo OE62 source prior density.](figures/fig4_gp_atlas_1d_homo.png)
 
 ![Figure 5: Orthogonalized 2D (HOMO, LUMO) navigation atlas showing empirical clean joint yield (`22.0%` peak) with drift vectors (left) and measured cross-oracle disagreement surface (`0.83–1.14 eV`) over 49 grid cells (`1,764` molecules, right).](figures/fig5_gp_atlas_2d_joint.png)
+
+### 3.4 Stratified 2D GP-Atlas Live `PBE0/def2-TZVP` Quantum Anchor
+
+To test whether cross-oracle disagreement hotspots in **Figure 5** flag genuine quantum-mechanical breakdown rather than surrogate noise, we evaluated a stratified sample of `80` unique DPA-4-relaxed clean molecules (`5` per cell across the `8` lowest-divergence cells, `cal_rmse_2d = 0.620–0.764 eV`, and the `8` highest-divergence cells, `1.239–1.434 eV`) via live `GPU4PySCF` single-point `PBE0/def2-TZVP/DF` (`def2-universal-jkfit`, grid level 3, SCF threshold `1e-8 Ha`) calculations alongside full `PBE-D3BJ/def2-TZVP/DF` `geomeTRIC` geometry optimizations on `16` cell representatives (`1` per cell; **Table 4**) [10,13,17,18]. All `80/80` single points (`100.0%`) converged via DIIS with zero Newton fallbacks. Against true `PBE0`, calibrated `DPA-4` [13] tracks quantum orbital energies tightly (`HOMO MAE = 0.1893 eV`, `r = 0.9822`, `ρ = 0.9767`; `LUMO MAE = 0.2879 eV`, `r = 0.9755`, `ρ = 0.9712`; joint 2D `MAE = 0.2386 eV`), whereas frozen `Uni-Mol2` [10] exhibits `3–4×` higher error (`HOMO MAE = 0.7235 eV`, `r = 0.7110`; `LUMO MAE = 0.8677 eV`, `r = 0.7449`; joint 2D `MAE = 0.7956 eV`). Crucially, moving from Low-Divergence (`n=40`) to High-Divergence (`n=40`) cells pushes empirical `|Uni-Mol2 - DPA-4|` HOMO discrepancy from `0.5180` to `0.9512 eV`, triggering a `+78.0%` jump in `Uni-Mol2` `PBE0` HOMO MAE (`0.5205 → 0.9265 eV`, RMSE `0.7209 → 1.2624 eV`) and a drop in Spearman rank correlation from `0.7964` to `0.4914` (`r: 0.7569 → 0.5573`), while LUMO error tracks per-channel empirical disagreement across extreme-LUMO Low-Divergence cells (`0.8366` vs. `0.6094 eV`). Moreover, `16/16` (`100.0%`) full DFT relaxations converge, preserving molecular bond graphs in `15/16` cases (`93.75%`) with tight conformational agreement (`0.0540 Å` median / `0.1578 Å` mean heavy-atom Kabsch RMSD; `0.1582 / 0.2698 Å` all-atom) and modest adiabatic `PBE0` orbital shifts (`0.3056 eV` HOMO, `0.1785 eV` LUMO).
+
+**Table 4: Stratified 2D `(HOMO, LUMO)` GP-Atlas live quantum chemical anchor verification (`PBE0/def2-TZVP/DF`).**
+
+| Cohort / Stratum | Oracle vs. `PBE0` | Joint 2D MAE (eV) | HOMO MAE / RMSE (eV) | HOMO `r / ρ` | LUMO MAE / RMSE (eV) | LUMO `r / ρ` |
+|---|---|---:|---:|---:|---:|---:|
+| Overall (`n=80`, SCF `100%`, emp diff `0.8133 eV`) | **DPA-4** | **0.2386** | **0.1893 / 0.2497** | **0.9822 / 0.9767** | **0.2879 / 0.4005** | **0.9755 / 0.9712** |
+| Overall (`n=80`, emp diff `0.8133 eV`) | Uni-Mol2 | 0.7956 | 0.7235 / 1.0279 | 0.7110 / 0.7292 | 0.8677 / 1.1631 | 0.7449 / 0.8120 |
+| Low-Divergence (`n=40`, emp diff `0.7624 eV`) | **DPA-4** | **0.2011** | **0.1498 / 0.2038** | **0.9798 / 0.9702** | **0.2523 / 0.3542** | **0.9787 / 0.9341** |
+| Low-Divergence (`n=40`, emp diff `0.7624 eV`) | Uni-Mol2 | 0.7639 | 0.5205 / 0.7209 | 0.7569 / 0.7964 | 1.0073 / 1.3140 | 0.6578 / 0.8139 |
+| High-Divergence (`n=40`, emp diff `0.8641 eV`) | **DPA-4** | **0.2761** | **0.2288 / 0.2883** | **0.9778 / 0.9728** | **0.3235 / 0.4420** | **0.9661 / 0.9722** |
+| High-Divergence (`n=40`, emp diff `0.8641 eV`) | Uni-Mol2 | 0.8273 | 0.9265 / 1.2624 | 0.5573 / 0.4914 | 0.7281 / 0.9895 | 0.7751 / 0.7587 |
+
+*Full `PBE-D3BJ/def2-TZVP/DF` DFT Relaxation (`n=16`, `1/cell`):* `16/16 (100.0%)` converged; `15/16 (93.75%)` bond graphs preserved; heavy-atom Kabsch RMSD `0.0540 Å` median (`0.1578 Å` mean), all-atom RMSD `0.1582 Å` median (`0.2698 Å` mean); mean adiabatic `PBE0` HOMO/LUMO shifts `0.3056 / 0.1785 eV`.
 
 ---
 
@@ -164,9 +181,9 @@ Within a single multi-property `v1.1` conditional model, marginal `LUMO` generat
 
 ### 4.1 Experimental Protocol and Dual-Track Honest Reporting
 
-To evaluate arbitrary predictor-agnostic constraints without altering foundation property weights, we configured `TaskWeavingSpec` (`configs/tasks/oe62_orbital_synthesizable.yaml`) combining frozen external `ext_unimol2` (`HOMO ±0.25 eV`) with three analytical chemistry inequality constraints consuming zero conditioner inputs (`SA_Score <= 3.5`, `smarts_alert == 0`, `MolWt <= 550 Da`) and a strictly blinded `audit_dpa4` examiner. **Table 4** reports identically sampled `1,792`-molecule cohorts side-by-side under both **Raw Point-Cloud** (zero post-processing) and **Valence-Reconciled** (`0.0000 Å` heavy-atom freeze) evaluation.
+To evaluate arbitrary predictor-agnostic constraints without altering foundation property weights, we configured `TaskWeavingSpec` (`configs/tasks/oe62_orbital_synthesizable.yaml`) combining frozen external `ext_unimol2` (`HOMO ±0.25 eV`) with three analytical chemistry inequality constraints consuming zero conditioner inputs (`SA_Score <= 3.5`, `smarts_alert == 0`, `MolWt <= 550 Da`) and a strictly blinded `audit_dpa4` examiner. **Table 5** reports identically sampled `1,792`-molecule cohorts side-by-side under both **Raw Point-Cloud** (zero post-processing) and **Valence-Reconciled** (`0.0000 Å` heavy-atom freeze) evaluation.
 
-**Table 4: Dual-Track valence purity and declarative synthesizable weaving (`SA_Score ≤ 3.5 & SMARTS = 0`, `1,792` proposals).**
+**Table 5: Dual-Track valence purity and declarative synthesizable weaving (`SA_Score ≤ 3.5 & SMARTS = 0`, `1,792` proposals).**
 
 | Model & Evaluation Track | 3D Legality (Count) | Exotic `Q` Rate | Median `SA_Score` | Constraints Met (%) | $F_{\max}$ (eV/Å) | Synth Clean Hits (%) | Blind Audit Hits (%) | `Audit - Reward` Gap (eV) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -191,7 +208,7 @@ To evaluate arbitrary predictor-agnostic constraints without altering foundation
 
 We constructed a strictly segregated industrial simulation (`1,792` proposals/round): (1) a restricted historical 5-fold enterprise QSAR asset wrapped in `ResidualCalibratedAsset` trained exclusively on `3,086` molecules with `HOMO > -6.92 eV` (leaving deep acceptors `HOMO ≤ -6.92 eV` as an explicit OOD blindspot), monitored only by `single_oracle_ad` and `SA_Score <= 3.8 & SMARTS = 0` constraints (`τ_cal = 0.35 eV`); (2) an isolated external `PBE0/def2-TZVP` pool (`73` molecules) supplying true DFT labels exclusively upon active query selection without editing any base predictor weights; (3) an untouched blind deep-DFT test set (`73` molecules); and (4) an independent blind `DPA-4 AuditOracle` scoring every generated molecule across mid-range under-explored (`P35–P90`) and deep blindspot (`P10–P25`) targets.
 
-**Table 5: Two-round Grounded RSI closed-loop metrics (`1,792` proposals/round, `τ_cal = 0.35 eV`).**
+**Table 6: Two-round Grounded RSI closed-loop metrics (`1,792` proposals/round, `τ_cal = 0.35 eV`).**
 
 | Cycle Stage | Zones (`C/I/B/P`) | `P10` $\sigma_{\text{cal}}$ (eV) | Legality (`Raw / Rec`) | Raw Exotic `Q` | Constraints Met | Mid (`P35–P90`) Audit Hit | Deep (`P10–P25`) Audit Hit | Blind `DPA-4` Clean Hits |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -211,7 +228,29 @@ We constructed a strictly segregated industrial simulation (`1,792` proposals/ro
 
 ---
 
-## 6. Discussion and Conclusion
+## 6. Public QM9 Multi-Property Conditional Generation Benchmark
+
+To assess portability outside our internal OE62/DFT pipeline under standard public splits, we evaluated a single unified `K=6` Uni-Loom SFT checkpoint initialized from unconditional `Uni-3DAR` (`qm9.pt`) [8] on the leakage-free `50k/50k` disjoint QM9 protocol [6,22] (`44,453` matched training and `1,500` development conformers strictly disjoint from the `50,000`-molecule `gvp_rQM_v0` oracle split, verified at `0` training and `0` holdout overlap; `31.60M / 120.74M` trainable parameters trained for `6,000` SFT steps in `58.1 min` on one A800 GPU without RL or Track A masks). Conditional targets (`alpha`, `gap`, `homo`, `lumo`, `mu`, `cv`) are scored over `N = 1,000` generated proposals per property using frozen `PropMolFlow` `GVPRegressor` property predictors at dev-selected per-property guidance scales (`s_0 = 1.5` for `α, ε_HOMO` and `2.5` for `Δε, ε_LUMO, μ, C_v`; **Table 7**).
+
+Holdout sanity checks (`N = 1,000`, `973` evaluable) cleanly separate the `GVP` Oracle Lower-Bound (`α = 0.5544 Bohr^3`, `Δε = 190.08 meV`, `ε_HOMO = 83.78 meV`, `ε_LUMO = 135.89 meV`, `μ = 0.1422 D`, `C_v = 0.1726 cal/(mol·K)`) from the Random Baseline (`9.3116`, `1,423.78`, `653.09`, `1,481.53`, `1.5177`, `4.5040`). Across all six QM9 tasks, this unified `K=6` SFT model decodes at `59.29–79.72 mol/s` in `BF16` with `99.88%–100.0%` SMILES uniqueness and `93.03%–95.22%` novelty, achieving strong monotonic conditioning correlations on polarizability (`α` `r = 0.8043` raw / `0.7816` reconciled), heat capacity (`C_v` `r = 0.8831` / `0.8618`), `ε_LUMO` (`r = 0.6698` / `0.6812`), HOMO–LUMO gap (`r = 0.6280` / `0.6153`), and `ε_HOMO` (`r = 0.5165` / `0.5011`). Deterministic Track B `ValenceReconciler` raises 3D legality across every property by `+18.1` to `+21.3 pp` (`64.4%–69.6% → 85.7%–89.1%`) and eliminates exotic formal charges (`11.14%–14.44% → 0.00%`) at `0.0000 Å` heavy-atom RMSD while reducing orbital and dipole errors (`ε_HOMO -39.1 meV`, `ε_LUMO -45.9 meV`, `Δε -14.9 meV`, `μ -0.129 D`). At the same time, reporting MAE transparently highlights a substantial gap between this SFT-only `K=6` checkpoint and six separate single-property diffusion or flow-matching models (`EDM` [4], `GeoLDM` [5], `PropMolFlow` [6]), particularly on dipole magnitude `μ` (`1.59 D`, `r = 0.1804`), underscoring why SFT conditioning alone is insufficient without Uni-Loom's Stage 2/2.5A online RL and Track A source-side guards.
+
+**Table 7: Public QM9 conditional generation benchmark on the zero-overlap `50k/50k` `PropMolFlow` split (`N = 1,000` proposals/property).**
+
+| Method / Protocol | `α` (`Bohr^3`) | `Δε` (meV) | `ε_HOMO` (meV) | `ε_LUMO` (meV) | `μ` (D) | `C_v` (`cal/mol·K`) | Legal (%) / Exotic `Q` (%) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| GVP Oracle Lower-Bound (`n=973`) | 0.5544 | 190.08 | 83.78 | 135.89 | 0.1422 | 0.1726 | 94.9 → 97.3 / — |
+| Random Target Baseline | 9.3116 | 1423.78 | 653.09 | 1481.53 | 1.5177 | 4.5040 | — |
+| EDM (`6` single-prop models) [4] | 2.76 | 655.0 | 356.0 | 584.0 | 1.111 | 1.101 | — |
+| GeoLDM (`6` single-prop models) [5] | 2.37 | 587.0 | 340.0 | 522.0 | 1.108 | 1.025 | — |
+| PropMolFlow (`6` single-prop models) [6] | 1.3115 | 390.98 | 253.99 | 314.52 | 0.6202 | 0.6259 | — |
+| **Uni-Loom (`1` model, `K=6` SFT, Raw)** | 5.4282 | 1089.15 | 571.26 | 1099.58 | 1.7187 | 2.9330 | 64.4–69.6 / 11.1–14.4 |
+| **Uni-Loom (`1` model, `K=6` SFT, Reconciled)** | 5.6612 | 1074.26 | 532.14 | 1053.71 | 1.5898 | 3.1136 | **85.7–89.1 / 0.00** |
+
+*Unified `K=6` Pearson `r` (Raw / Reconciled):* `α` `0.804 / 0.782`, `Δε` `0.628 / 0.615`, `ε_HOMO` `0.517 / 0.501`, `ε_LUMO` `0.670 / 0.681`, `μ` `0.103 / 0.180`, `C_v` `0.883 / 0.862`.
+
+---
+
+## 7. Discussion and Conclusion
 
 Uni-Loom demonstrates that industrial 3D molecular generation does not require training a monolithic predictor–generator supermodel from scratch. By isolating predictor capabilities behind a declarative critic bus, protecting discrete topological reinforcement learning from fine-grained coordinate gradient variance, combining source-side valence supervision with zero-displacement Lewis reconciliation, and gating self-improvement through calibrated epistemic uncertainty, heterogeneous pretrained backbones compose reliably without reward collapse.
 
@@ -221,7 +260,7 @@ Several limitations motivate future extensions. First, although raw point-cloud 
 
 ## Data and Code Availability
 
-The `loom` codebase (`v2.0.0`, test suite `321 passed, 5 skipped`), YAML task configurations (`configs/tasks/oe62_orbital_weaving.yaml`, `configs/tasks/oe62_orbital_synthesizable.yaml`), consolidated DFT split manifests (`consolidation_manifest.json`), evaluation outputs (`speed_benchmark.json`, `oe62_audit_curve.json`, `gp_atlas.json`, `v20_synthesizable_homo_eval.json`, `v20_grounded_rsi_2round_eval.json`, `v20_rsi_acquisition_batch_r1.manifest.json`), and manuscript build scripts are hosted in the project repository. Underlying benchmark molecules derive from the public `OE62` dataset [1].
+The `loom` codebase (`v2.0.0`, test suite `321 passed, 5 skipped`), YAML task configurations (`configs/tasks/oe62_orbital_weaving.yaml`, `configs/tasks/oe62_orbital_synthesizable.yaml`), consolidated DFT split manifests (`consolidation_manifest.json`), evaluation outputs (`speed_benchmark.json`, `oe62_audit_curve.json`, `gp_atlas.json`, `atlas2d_dft_anchor_eval.json`, `v20_synthesizable_homo_eval.json`, `v20_grounded_rsi_2round_eval.json`, `v20_rsi_acquisition_batch_r1.manifest.json`, `qm9_conditional_benchmark.json`), and manuscript build scripts are hosted in the project repository. Underlying benchmark molecules derive from the public `OE62` [1] and `QM9` [22] datasets.
 
 ---
 
@@ -247,4 +286,5 @@ The `loom` codebase (`v2.0.0`, test suite `321 passed, 5 skipped`), YAML task co
 [18] R. Li, Q. Sun, X. Zhang, and G. K.-L. Chan. Introducing GPU-acceleration into the Python-based Simulations of Chemistry Framework. *arXiv preprint arXiv:2407.09700*, 2024.  
 [19] E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen. LoRA: Low-rank adaptation of large language models. *International Conference on Learning Representations*, 2022.  
 [20] J. Ho and T. Salimans. Classifier-free diffusion guidance. *arXiv preprint arXiv:2207.12598*, 2022.  
-[21] Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. K. Li, Y. Wu, and D. Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models. *arXiv preprint arXiv:2402.03300*, 2024.
+[21] Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. K. Li, Y. Wu, and D. Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models. *arXiv preprint arXiv:2402.03300*, 2024.  
+[22] R. Ramakrishnan, P. O. Dral, M. Rupp, and O. A. von Lilienfeld. Quantum chemistry structures and properties of 134 kilo molecules. *Scientific Data*, 1:140022, 2014. DOI: `10.1038/sdata.2014.22`.

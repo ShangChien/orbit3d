@@ -281,6 +281,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         mean: Sequence[float],
         scale: Sequence[float],
         *,
+        allowed_elements: Optional[Sequence[str]] = None,
         device: str = "cuda:0",
         batch_size: int = 32,
         **loom_kwargs: Any,
@@ -290,22 +291,26 @@ class LoomUni3DARGenerator(GeneratorSlot):
             model, _ = cls.load_checkpoint(parent_ckpt_path, device=device, batch_size=batch_size)
             return model
 
+        default_allowed = ("H", "B", "C", "N", "O", "F", "Si", "P", "S", "Cl", "As", "Se", "Br", "I")
         if isinstance(raw, dict) and "ema" in raw and "params" in raw["ema"]:
             backbone_state = raw["ema"]["params"]
             depth = int(backbone_state["cur_level.weight"].shape[0]) - 2
-            allowed = ("H", "B", "C", "N", "O", "F", "Si", "P", "S", "Cl", "As", "Se", "Br", "I")
+            allowed = tuple(allowed_elements) if allowed_elements is not None else default_allowed
         elif isinstance(raw, dict) and "model_state_dict" in raw:
             rep = raw.get("representation_config", {})
             full_sd = raw["model_state_dict"]
             depth = int(rep.get("merge_level", int(full_sd["cur_level.weight"].shape[0]) - 2))
-            allowed = tuple(
-                rep.get(
-                    "allowed_elements",
-                    raw.get("contract", {})
-                    .get("semantics", {})
-                    .get("allowed_elements", ("H", "B", "C", "N", "O", "F", "Si", "P", "S", "Cl", "As", "Se", "Br", "I")),
+            if allowed_elements is not None:
+                allowed = tuple(allowed_elements)
+            else:
+                allowed = tuple(
+                    rep.get(
+                        "allowed_elements",
+                        raw.get("contract", {})
+                        .get("semantics", {})
+                        .get("allowed_elements", default_allowed),
+                    )
                 )
-            )
             skip_prefixes = ("interval_conditioner.", "prop_understanding_head.")
             backbone_state = {k: v for k, v in full_sd.items() if not k.startswith(skip_prefixes)}
         else:

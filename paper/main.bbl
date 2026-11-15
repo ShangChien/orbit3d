@@ -1,4 +1,4 @@
-\begin{thebibliography}{21}
+\begin{thebibliography}{22}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax\else\urlstyle{same}\fi
@@ -116,5 +116,11 @@ J.~Ho and T.~Salimans.
 Z.~Shao, P.~Wang, Q.~Zhu, R.~Xu, J.~Song, X.~Bi, et~al.
 \newblock {DeepSeekMath}: Pushing the Limits of Mathematical Reasoning in Open Language Models.
 \newblock \emph{arXiv preprint arXiv:2402.03300}, 2024.
+
+\bibitem[Ramakrishnan et~al.(2014)]{ramakrishnan2014qm9}
+R.~Ramakrishnan, P. O.~Dral, M.~Rupp, and O. A.~von Lilienfeld.
+\newblock Quantum chemistry structures and properties of 134 kilo molecules.
+\newblock \emph{Scientific Data}, 1:140022, 2014.
+\newblock DOI: \href{https://doi.org/10.1038/sdata.2014.22}{\texttt{10.1038/sdata.2014.22}}.
 
 \end{thebibliography}

@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any, Dict, List
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.ticker import MultipleLocator
 import numpy as np
 
 
@@ -50,7 +52,6 @@ def plot_gp_atlas(atlas_json: Path, out_dir: Path) -> None:
         unit = str(a1.get("unit", "eV"))
         tol = float(a1.get("tolerance", a1.get("tolerance_eV", 0.25)))
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7.6, 6.2), sharex=True, gridspec_kw={"height_ratios": [1.35, 1.0]})
         t = np.asarray(a1.get("targets", a1["targets_eV"]))
         mu = np.asarray(a1.get("mu_gen", a1["mu_gen_eV"]))
         sd_gen = np.asarray(a1.get("sigma_gen", a1["sigma_gen_eV"]))
@@ -59,37 +60,114 @@ def plot_gp_atlas(atlas_json: Path, out_dir: Path) -> None:
         p_dft = np.asarray(a1["p_hit_dft_calibrated"]) * 100.0
         kde = np.asarray(a1["source_kde_density"])
 
-        ax1.plot(t, t, "--", color="#555555", lw=1.2, label="Ideal slope = 1 ($\\mu = t$)")
-        ax1.fill_between(t, mu - sd_tot, mu + sd_tot, color="#f4a261", alpha=0.25, label="Total spread $\\pm\\sigma_{\\mathrm{total}}(t)$ (Gen + Cal)")
-        ax1.fill_between(t, mu - sd_gen, mu + sd_gen, color="#2a9d8f", alpha=0.35, label="Generator spread $\\pm\\sigma_{\\mathrm{gen}}(t)$")
-        ax1.plot(t, mu, color="#1d3557", lw=2.0, label="GP Posterior Mean $\\hat{\\mu}_{\\mathrm{gen}}(t)$")
+        # Shared numeric range when both axes represent the same physical unit (`eV`)
+        v_min = math.floor(min(float(t.min()), float((mu - sd_tot).min())) * 2.0) / 2.0
+        v_max = math.ceil(max(float(t.max()), float(mu.max())) * 2.0) / 2.0
+        interval = a1.get("trusted_reachable_interval", a1.get("trusted_reachable_interval_eV"))
+
+        # Separate side-by-side panels (Panel A: exact 1:1 square calibration; Panel B: independent reachability)
+        fig, (ax1, ax2) = plt.subplots(
+            1,
+            2,
+            figsize=(11.8, 5.15),
+            layout="constrained",
+            gridspec_kw={"width_ratios": [1.0, 1.28]},
+        )
+
+        # Panel A: Strict 1:1 Equal-Scale Calibration Plot
+        ax1.plot([v_min, v_max], [v_min, v_max], "--", color="#1f2937", lw=1.3, label="Ideal slope = 1 ($\\mu = t$)")
+        ax1.fill_between(
+            t,
+            mu - sd_tot,
+            mu + sd_tot,
+            color="#93c5fd",
+            alpha=0.28,
+            label="Total spread $\\pm\\sigma_{\\mathrm{total}}(t)$ (Gen + Cal)",
+        )
+        ax1.fill_between(
+            t,
+            mu - sd_gen,
+            mu + sd_gen,
+            color="#3b82f6",
+            alpha=0.34,
+            label="Generator spread $\\pm\\sigma_{\\mathrm{gen}}(t)$",
+        )
+        ax1.plot(t, mu, color="#1e3a8a", lw=2.2, label="GP Posterior Mean $\\hat{\\mu}_{\\mathrm{gen}}(t)$")
 
         emp_t = [g["target_eV"] for g in a1["empirical_grid"] if np.isfinite(g["mean_pred_eV"])]
         emp_m = [g["mean_pred_eV"] for g in a1["empirical_grid"] if np.isfinite(g["mean_pred_eV"])]
-        ax1.scatter(emp_t, emp_m, color="#e63946", s=24, zorder=5, label="Sampled 3D cohort means")
-        ax1.set_ylabel(f"Achieved {axis_name} ({unit})")
-        ax1.set_title(f"Uni-Loom 1D Heteroscedastic GP Calibration & Dual-Uncertainty Profile ({axis_name})")
-        ax1.legend(loc="upper left", frameon=False)
-        ax1.grid(alpha=0.2)
-
-        ax2.plot(t, p_rew, color="#2a9d8f", lw=2.1, label=f"Clean+Relaxed Hit Yield $P_{{\\mathrm{{hit}}}}(\\pm {tol:.2f}\\,\\mathrm{{{unit}}})$")
-        ax2.plot(t, p_dft, color="#e76f51", lw=1.8, ls="-.", label="Calibrated Hit Probability")
-        if kde.max() > 0:
-            kde_scaled = (kde / kde.max()) * max(p_rew.max(), 35.0) * 0.85
-            ax2.fill_between(t, 0, kde_scaled, color="#a8dadc", alpha=0.28, label="Source Prior Density (scaled KDE)")
-        interval = a1.get("trusted_reachable_interval", a1.get("trusted_reachable_interval_eV"))
+        ax1.scatter(emp_t, emp_m, color="#dc2626", s=24, zorder=5, label="Sampled 3D cohort means")
         if interval:
             lo, hi = interval
-            ax2.axvspan(lo, hi, color="#2a9d8f", alpha=0.09, label=f"Trusted Reachable [{lo:.2f}, {hi:.2f}] {unit}")
-            ax1.axvline(lo, color="#2a9d8f", ls=":", lw=1.1, alpha=0.7)
-            ax1.axvline(hi, color="#2a9d8f", ls=":", lw=1.1, alpha=0.7)
-        ax2.set_xlabel(f"Requested {axis_name} Target $t$ ({unit})")
-        ax2.set_ylabel("Clean Hit Probability (%)")
-        ax2.set_ylim(0, max(float(p_rew.max()) * 1.38, 45.0))
-        ax2.legend(loc="upper right", frameon=False, fontsize=8.0)
-        ax2.grid(alpha=0.2)
+            ax1.axvline(lo, color="#d97706", ls="--", lw=1.35, alpha=0.85, label="Trusted zone bounds")
+            ax1.axvline(hi, color="#d97706", ls="--", lw=1.35, alpha=0.85)
+        ax1.set_xlim(v_min, v_max)
+        ax1.set_ylim(v_min, v_max)
+        ax1.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax1.yaxis.set_major_locator(MultipleLocator(1.0))
+        ax1.xaxis.set_minor_locator(MultipleLocator(0.5))
+        ax1.yaxis.set_minor_locator(MultipleLocator(0.5))
+        ax1.set_aspect("equal", adjustable="box")
+        ax1.set_box_aspect(1.0)
+        ax1.set_xlabel(f"Requested {axis_name} Target $t$ ({unit})")
+        ax1.set_ylabel(f"Achieved {axis_name} ({unit})")
+        ax1.set_title(f"A. 1D {axis_name} Calibration (1:1 Equal Scale)", loc="left", pad=8)
+        ax1.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="#e5e7eb", framealpha=0.94, fontsize=7.8)
+        ax1.grid(alpha=0.22)
 
-        fig.tight_layout()
+        # Panel B: Independent X-Axis Reachability, Hit Probability & Prior Density (distinct colors)
+        if interval:
+            lo, hi = interval
+            ax2.axvspan(
+                lo,
+                hi,
+                facecolor="#fef08a",
+                alpha=0.38,
+                zorder=1,
+                label=f"Trusted Reachable [{lo:.2f}, {hi:.2f}] {unit}",
+            )
+            ax2.axvline(lo, color="#d97706", ls="--", lw=1.35, alpha=0.90, zorder=2)
+            ax2.axvline(hi, color="#d97706", ls="--", lw=1.35, alpha=0.90, zorder=2)
+        if kde.max() > 0:
+            kde_scaled = (kde / kde.max()) * max(float(p_rew.max()), 35.0) * 0.85
+            ax2.fill_between(t, 0, kde_scaled, facecolor="#6366f1", alpha=0.26, zorder=2)
+            ax2.plot(
+                t,
+                kde_scaled,
+                color="#4338ca",
+                lw=1.7,
+                ls=":",
+                zorder=3,
+                label="Source Prior Density (scaled KDE)",
+            )
+        ax2.plot(
+            t,
+            p_rew,
+            color="#0f766e",
+            lw=2.25,
+            zorder=4,
+            label=f"Clean+Relaxed Hit Yield $P_{{\\mathrm{{hit}}}}(\\pm {tol:.2f}\\,\\mathrm{{{unit}}})$",
+        )
+        ax2.plot(
+            t,
+            p_dft,
+            color="#dc2626",
+            lw=1.95,
+            ls="-.",
+            zorder=5,
+            label="Calibrated Hit Probability (with $\\sigma_{\\mathrm{cal}}$)",
+        )
+        ax2.set_xlim(v_min, v_max)
+        ax2.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax2.xaxis.set_minor_locator(MultipleLocator(0.5))
+        ax2.set_ylim(0, max(float(p_rew.max()) * 1.42, 55.0))
+        ax2.set_box_aspect(1.0 / 1.28)
+        ax2.set_xlabel(f"Requested {axis_name} Target $t$ ({unit})")
+        ax2.set_ylabel("Clean Hit Probability / Scaled Prior (%)")
+        ax2.set_title(f"B. {axis_name} Reachability & Source Prior Density", loc="left", pad=8)
+        ax2.legend(loc="upper right", frameon=True, facecolor="white", edgecolor="#e5e7eb", framealpha=0.94, fontsize=8.0)
+        ax2.grid(alpha=0.22)
+
         fig.savefig(out_dir / f"fig_gp_atlas_1d_{tag}.pdf", bbox_inches="tight")
         fig.savefig(out_dir / f"fig_gp_atlas_1d_{tag}.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
