@@ -1,0 +1,8 @@
+{
+  "checkpoint": "/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs/qm9_uniloom_k6/qm9_uniloom_k6_best.pt",
+  "batch_size": 128,
+  "n_timed": 512,
+  "wall_seconds": 12.202,
+  "mol_per_sec_bs128": 41.96,
+  "ms_per_mol_bs128": 23.832
+}

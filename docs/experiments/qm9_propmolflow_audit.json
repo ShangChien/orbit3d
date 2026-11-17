@@ -1,0 +1,379 @@
+{
+  "audit": "PropMolFlow_Official_6Models_Direct_A800",
+  "training_benchmark": {
+    "batch_size": 128,
+    "n_warmup_steps": 5,
+    "n_timed_steps": 20,
+    "total_params": 7088512,
+    "trainable_params": 7088512,
+    "sec_per_step": 0.12848,
+    "steps_per_sec": 7.783,
+    "train_mol_per_sec": 996.25,
+    "official_mean_steps_per_model": 728354.0,
+    "official_total_steps_6_models": 4370124,
+    "estimated_a800_hours_per_model": 25.99,
+    "estimated_a800_hours_6_models": 155.97
+  },
+  "summary": {
+    "device_name": "NVIDIA A800-SXM4-80GB",
+    "sampling_mol_per_sec_min": 28.14,
+    "sampling_mol_per_sec_max": 29.27,
+    "sampling_mol_per_sec_mean": 28.73,
+    "native_sanitized_pct_range": [
+      95.0,
+      98.9
+    ],
+    "native_connected_neutral_pct_range": [
+      94.3,
+      98.2
+    ],
+    "native_exotic_charge_pct_range": [
+      0.0,
+      1.11
+    ],
+    "coord_raw_legal_pct_range": [
+      85.7,
+      93.0
+    ],
+    "coord_raw_exotic_pct_range": [
+      0.0,
+      0.23
+    ],
+    "coord_reconciled_legal_pct_range": [
+      96.1,
+      98.5
+    ]
+  },
+  "per_property": {
+    "alpha": {
+      "checkpoint": "epoch=1845-step=721785.ckpt",
+      "properties_handle_method": "sum",
+      "published_epochs": 1846,
+      "published_steps": 721785,
+      "published_mae": 1.3115,
+      "n_requested": 1000,
+      "n_timesteps": 100,
+      "max_batch_size": 128,
+      "sampling_wall_seconds": 34.159,
+      "sampling_mol_per_sec": 29.27,
+      "peak_vram_gb": 0.367,
+      "native_graph": {
+        "sanitized_count": 950,
+        "sanitized_pct": 95.0,
+        "connected_neutral_count": 943,
+        "connected_neutral_pct": 94.3,
+        "disconnected_count": 4,
+        "nonzero_net_charge_count": 3,
+        "exotic_charge_total_count": 3,
+        "exotic_charge_pct_of_sanitized": 0.32,
+        "exotic_zwitterion_neutral_count": 0,
+        "unique_smiles": 945,
+        "uniqueness_pct_of_sanitized": 99.47,
+        "gvp_sanitized": {
+          "n_evaluable": 950,
+          "mae": 1.2688,
+          "rmse": 1.6914,
+          "slope": 0.9857,
+          "pearson_r": 0.9793
+        },
+        "gvp_connected_neutral": {
+          "n_evaluable": 943,
+          "mae": 1.2692,
+          "rmse": 1.6936,
+          "slope": 0.9857,
+          "pearson_r": 0.9792
+        }
+      },
+      "coord_only_perception": {
+        "raw_legal_count": 857,
+        "raw_legal_pct": 85.7,
+        "raw_exotic_charge_count": 1,
+        "raw_exotic_charge_pct_of_legal": 0.12,
+        "raw_mae": 1.2877,
+        "raw_pearson_r": 0.9779,
+        "reconciled_legal_count": 965,
+        "reconciled_legal_pct": 96.5,
+        "reconciled_exotic_charge_count": 0,
+        "reconciled_exotic_charge_pct_of_legal": 0.0,
+        "max_heavy_rmsd_A": 0.0,
+        "reconciled_mae": 1.4364,
+        "reconciled_pearson_r": 0.9719
+      }
+    },
+    "gap": {
+      "checkpoint": "epoch=1867-step=730387.ckpt",
+      "properties_handle_method": "concatenate_sum",
+      "published_epochs": 1868,
+      "published_steps": 730387,
+      "published_mae": 390.98,
+      "n_requested": 1000,
+      "n_timesteps": 100,
+      "max_batch_size": 128,
+      "sampling_wall_seconds": 34.669,
+      "sampling_mol_per_sec": 28.84,
+      "peak_vram_gb": 0.383,
+      "native_graph": {
+        "sanitized_count": 978,
+        "sanitized_pct": 97.8,
+        "connected_neutral_count": 973,
+        "connected_neutral_pct": 97.3,
+        "disconnected_count": 4,
+        "nonzero_net_charge_count": 1,
+        "exotic_charge_total_count": 3,
+        "exotic_charge_pct_of_sanitized": 0.31,
+        "exotic_zwitterion_neutral_count": 2,
+        "unique_smiles": 970,
+        "uniqueness_pct_of_sanitized": 99.18,
+        "gvp_sanitized": {
+          "n_evaluable": 978,
+          "mae": 367.2196,
+          "rmse": 506.1154,
+          "slope": 0.9428,
+          "pearson_r": 0.9219
+        },
+        "gvp_connected_neutral": {
+          "n_evaluable": 973,
+          "mae": 367.5062,
+          "rmse": 506.5127,
+          "slope": 0.9423,
+          "pearson_r": 0.9215
+        }
+      },
+      "coord_only_perception": {
+        "raw_legal_count": 908,
+        "raw_legal_pct": 90.8,
+        "raw_exotic_charge_count": 1,
+        "raw_exotic_charge_pct_of_legal": 0.11,
+        "raw_mae": 363.2434,
+        "raw_pearson_r": 0.9242,
+        "reconciled_legal_count": 973,
+        "reconciled_legal_pct": 97.3,
+        "reconciled_exotic_charge_count": 0,
+        "reconciled_exotic_charge_pct_of_legal": 0.0,
+        "max_heavy_rmsd_A": 0.0,
+        "reconciled_mae": 410.6099,
+        "reconciled_pearson_r": 0.8886
+      }
+    },
+    "homo": {
+      "checkpoint": "epoch=1927-step=753691.ckpt",
+      "properties_handle_method": "concatenate",
+      "published_epochs": 1928,
+      "published_steps": 753691,
+      "published_mae": 253.99,
+      "n_requested": 1000,
+      "n_timesteps": 100,
+      "max_batch_size": 128,
+      "sampling_wall_seconds": 34.837,
+      "sampling_mol_per_sec": 28.7,
+      "peak_vram_gb": 0.376,
+      "native_graph": {
+        "sanitized_count": 982,
+        "sanitized_pct": 98.2,
+        "connected_neutral_count": 979,
+        "connected_neutral_pct": 97.9,
+        "disconnected_count": 3,
+        "nonzero_net_charge_count": 0,
+        "exotic_charge_total_count": 0,
+        "exotic_charge_pct_of_sanitized": 0.0,
+        "exotic_zwitterion_neutral_count": 0,
+        "unique_smiles": 974,
+        "uniqueness_pct_of_sanitized": 99.19,
+        "gvp_sanitized": {
+          "n_evaluable": 982,
+          "mae": 256.4333,
+          "rmse": 339.784,
+          "slope": 0.8551,
+          "pearson_r": 0.8462
+        },
+        "gvp_connected_neutral": {
+          "n_evaluable": 979,
+          "mae": 256.0729,
+          "rmse": 339.5201,
+          "slope": 0.8566,
+          "pearson_r": 0.8462
+        }
+      },
+      "coord_only_perception": {
+        "raw_legal_count": 930,
+        "raw_legal_pct": 93.0,
+        "raw_exotic_charge_count": 0,
+        "raw_exotic_charge_pct_of_legal": 0.0,
+        "raw_mae": 255.8325,
+        "raw_pearson_r": 0.849,
+        "reconciled_legal_count": 985,
+        "reconciled_legal_pct": 98.5,
+        "reconciled_exotic_charge_count": 0,
+        "reconciled_exotic_charge_pct_of_legal": 0.0,
+        "max_heavy_rmsd_A": 0.0,
+        "reconciled_mae": 262.2334,
+        "reconciled_pearson_r": 0.8477
+      }
+    },
+    "lumo": {
+      "checkpoint": "epoch=1930-step=754942.ckpt",
+      "properties_handle_method": "concatenate_sum",
+      "published_epochs": 1931,
+      "published_steps": 754942,
+      "published_mae": 314.52,
+      "n_requested": 1000,
+      "n_timesteps": 100,
+      "max_batch_size": 128,
+      "sampling_wall_seconds": 35.533,
+      "sampling_mol_per_sec": 28.14,
+      "peak_vram_gb": 0.38,
+      "native_graph": {
+        "sanitized_count": 989,
+        "sanitized_pct": 98.9,
+        "connected_neutral_count": 982,
+        "connected_neutral_pct": 98.2,
+        "disconnected_count": 5,
+        "nonzero_net_charge_count": 2,
+        "exotic_charge_total_count": 2,
+        "exotic_charge_pct_of_sanitized": 0.2,
+        "exotic_zwitterion_neutral_count": 0,
+        "unique_smiles": 988,
+        "uniqueness_pct_of_sanitized": 99.9,
+        "gvp_sanitized": {
+          "n_evaluable": 989,
+          "mae": 322.8206,
+          "rmse": 475.9797,
+          "slope": 0.9468,
+          "pearson_r": 0.9289
+        },
+        "gvp_connected_neutral": {
+          "n_evaluable": 982,
+          "mae": 322.503,
+          "rmse": 476.0758,
+          "slope": 0.9465,
+          "pearson_r": 0.9285
+        }
+      },
+      "coord_only_perception": {
+        "raw_legal_count": 914,
+        "raw_legal_pct": 91.4,
+        "raw_exotic_charge_count": 0,
+        "raw_exotic_charge_pct_of_legal": 0.0,
+        "raw_mae": 313.2936,
+        "raw_pearson_r": 0.9328,
+        "reconciled_legal_count": 982,
+        "reconciled_legal_pct": 98.2,
+        "reconciled_exotic_charge_count": 0,
+        "reconciled_exotic_charge_pct_of_legal": 0.0,
+        "max_heavy_rmsd_A": 0.0,
+        "reconciled_mae": 336.5917,
+        "reconciled_pearson_r": 0.9195
+      }
+    },
+    "mu": {
+      "checkpoint": "epoch=1868-step=730778.ckpt",
+      "properties_handle_method": "multiply",
+      "published_epochs": 1869,
+      "published_steps": 730778,
+      "published_mae": 0.6202,
+      "n_requested": 1000,
+      "n_timesteps": 100,
+      "max_batch_size": 128,
+      "sampling_wall_seconds": 34.808,
+      "sampling_mol_per_sec": 28.73,
+      "peak_vram_gb": 0.377,
+      "native_graph": {
+        "sanitized_count": 966,
+        "sanitized_pct": 96.6,
+        "connected_neutral_count": 954,
+        "connected_neutral_pct": 95.4,
+        "disconnected_count": 4,
+        "nonzero_net_charge_count": 8,
+        "exotic_charge_total_count": 9,
+        "exotic_charge_pct_of_sanitized": 0.93,
+        "exotic_zwitterion_neutral_count": 1,
+        "unique_smiles": 961,
+        "uniqueness_pct_of_sanitized": 99.48,
+        "gvp_sanitized": {
+          "n_evaluable": 966,
+          "mae": 0.6189,
+          "rmse": 0.8165,
+          "slope": 0.8056,
+          "pearson_r": 0.8621
+        },
+        "gvp_connected_neutral": {
+          "n_evaluable": 954,
+          "mae": 0.6169,
+          "rmse": 0.8142,
+          "slope": 0.8071,
+          "pearson_r": 0.8627
+        }
+      },
+      "coord_only_perception": {
+        "raw_legal_count": 875,
+        "raw_legal_pct": 87.5,
+        "raw_exotic_charge_count": 2,
+        "raw_exotic_charge_pct_of_legal": 0.23,
+        "raw_mae": 0.6182,
+        "raw_pearson_r": 0.8639,
+        "reconciled_legal_count": 961,
+        "reconciled_legal_pct": 96.1,
+        "reconciled_exotic_charge_count": 0,
+        "reconciled_exotic_charge_pct_of_legal": 0.0,
+        "max_heavy_rmsd_A": 0.0,
+        "reconciled_mae": 0.653,
+        "reconciled_pearson_r": 0.8107
+      }
+    },
+    "cv": {
+      "checkpoint": "epoch=1735-step=678541.ckpt",
+      "properties_handle_method": "sum",
+      "published_epochs": 1736,
+      "published_steps": 678541,
+      "published_mae": 0.6259,
+      "n_requested": 1000,
+      "n_timesteps": 100,
+      "max_batch_size": 128,
+      "sampling_wall_seconds": 34.819,
+      "sampling_mol_per_sec": 28.72,
+      "peak_vram_gb": 0.382,
+      "native_graph": {
+        "sanitized_count": 988,
+        "sanitized_pct": 98.8,
+        "connected_neutral_count": 976,
+        "connected_neutral_pct": 97.6,
+        "disconnected_count": 1,
+        "nonzero_net_charge_count": 11,
+        "exotic_charge_total_count": 11,
+        "exotic_charge_pct_of_sanitized": 1.11,
+        "exotic_zwitterion_neutral_count": 0,
+        "unique_smiles": 984,
+        "uniqueness_pct_of_sanitized": 99.6,
+        "gvp_sanitized": {
+          "n_evaluable": 988,
+          "mae": 0.6004,
+          "rmse": 0.7897,
+          "slope": 0.9959,
+          "pearson_r": 0.9823
+        },
+        "gvp_connected_neutral": {
+          "n_evaluable": 976,
+          "mae": 0.5999,
+          "rmse": 0.7898,
+          "slope": 0.9957,
+          "pearson_r": 0.9823
+        }
+      },
+      "coord_only_perception": {
+        "raw_legal_count": 899,
+        "raw_legal_pct": 89.9,
+        "raw_exotic_charge_count": 1,
+        "raw_exotic_charge_pct_of_legal": 0.11,
+        "raw_mae": 0.5911,
+        "raw_pearson_r": 0.9832,
+        "reconciled_legal_count": 968,
+        "reconciled_legal_pct": 96.8,
+        "reconciled_exotic_charge_count": 0,
+        "reconciled_exotic_charge_pct_of_legal": 0.0,
+        "max_heavy_rmsd_A": 0.0,
+        "reconciled_mae": 0.6255,
+        "reconciled_pearson_r": 0.9813
+      }
+    }
+  }
+}

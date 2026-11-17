@@ -1,0 +1,30 @@
+{
+  "checkpoint": "/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs/qm9_surrogate/qm9_train_unimol_surrogate.pt",
+  "n_train": 44453,
+  "n_dev": 1500,
+  "epochs": 18,
+  "best_dev_std_mae": 0.0432,
+  "dev_maes_eval_unit": {
+    "alpha": 0.1801,
+    "gap": 64.1931,
+    "homo": 43.3282,
+    "lumo": 46.5847,
+    "mu": 0.0829,
+    "cv": 0.0896
+  },
+  "train_wall_seconds": 214.25,
+  "split_audit": {
+    "total_gdb9_rows": 133885,
+    "train_rQM_v0_size": 50000,
+    "gvp_rQM_v0_size": 50000,
+    "problematic_v0_size": 935,
+    "matched_train_records": 44453,
+    "matched_dev_records": 1500,
+    "holdout_sanity_available": 30521,
+    "holdout_sanity_used": 1000,
+    "ambiguous_7tuple_skipped": 170,
+    "overlap_train_with_gvp_rQM_v0": 0,
+    "overlap_holdout_with_gvp_rQM_v0": 0
+  },
+  "zero_gvp_overlap_verified": true
+}

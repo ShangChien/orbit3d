@@ -1,0 +1,1426 @@
+{
+  "experiment": "QM9 Octree Process Critic Coarse-to-Fine Tree-Pruning Pareto",
+  "zero_gvp_overlap_verified": true,
+  "generator_checkpoint": "/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs/qm9_uniloom_k6/qm9_uniloom_k6_best.pt",
+  "process_critic_meta": {
+    "total_rollouts": 18000,
+    "clean_rate": 0.8722,
+    "critic_params": 2064142,
+    "rollout_and_surrogate_wall_sec": 1010.05,
+    "critic_fit_wall_sec": 19.26,
+    "train_stats": {
+      "epochs": 24,
+      "train_loss": 0.16666,
+      "val_prop_mae_norm": 0.56119,
+      "val_legal_acc": 0.8656,
+      "val_constr_acc": 0.8644
+    }
+  },
+  "eval_n": 1000,
+  "per_property": {
+    "alpha": {
+      "P_8_to_1_nosurr": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 93.8,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.89,
+          "novelty_pct": 92.96,
+          "mean_natoms_abs_err": 2.129,
+          "gen_wall_seconds": 83.489,
+          "reconcile_wall_seconds": 2.097,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 85.586,
+          "effective_output_mol_per_sec": 11.68,
+          "gvp": {
+            "n_evaluable": 938,
+            "mae": 5.0229,
+            "rmse": 6.6495,
+            "slope": 1.0281,
+            "pearson_r": 0.8163
+          }
+        }
+      },
+      "P_16_to_1_nosurr": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 93.3,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 100.0,
+          "novelty_pct": 92.5,
+          "mean_natoms_abs_err": 2.199,
+          "gen_wall_seconds": 153.079,
+          "reconcile_wall_seconds": 2.142,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 155.222,
+          "effective_output_mol_per_sec": 6.44,
+          "gvp": {
+            "n_evaluable": 933,
+            "mae": 4.9759,
+            "rmse": 6.6133,
+            "slope": 1.0636,
+            "pearson_r": 0.8338
+          }
+        }
+      },
+      "P_8_to_2": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 98.9,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.7,
+          "novelty_pct": 92.82,
+          "mean_natoms_abs_err": 2.087,
+          "gen_wall_seconds": 97.423,
+          "reconcile_wall_seconds": 4.128,
+          "surrogate_wall_seconds": 0.296,
+          "end_to_end_wall_seconds": 101.847,
+          "effective_output_mol_per_sec": 9.82,
+          "gvp": {
+            "n_evaluable": 989,
+            "mae": 4.2119,
+            "rmse": 5.8111,
+            "slope": 1.0876,
+            "pearson_r": 0.8636
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 98.9,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.7,
+          "novelty_pct": 92.42,
+          "mean_natoms_abs_err": 1.91,
+          "gen_wall_seconds": 97.423,
+          "reconcile_wall_seconds": 4.128,
+          "surrogate_wall_seconds": 0.296,
+          "end_to_end_wall_seconds": 101.847,
+          "effective_output_mol_per_sec": 9.82,
+          "gvp": {
+            "n_evaluable": 989,
+            "mae": 4.0856,
+            "rmse": 5.6182,
+            "slope": 1.0582,
+            "pearson_r": 0.8624
+          }
+        }
+      },
+      "P_16_to_2": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.8,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.08,
+          "mean_natoms_abs_err": 2.107,
+          "gen_wall_seconds": 168.002,
+          "reconcile_wall_seconds": 4.207,
+          "surrogate_wall_seconds": 0.31,
+          "end_to_end_wall_seconds": 172.519,
+          "effective_output_mol_per_sec": 5.8,
+          "gvp": {
+            "n_evaluable": 998,
+            "mae": 4.3239,
+            "rmse": 6.0957,
+            "slope": 1.1077,
+            "pearson_r": 0.8698
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.8,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 91.48,
+          "mean_natoms_abs_err": 1.917,
+          "gen_wall_seconds": 168.002,
+          "reconcile_wall_seconds": 4.207,
+          "surrogate_wall_seconds": 0.31,
+          "end_to_end_wall_seconds": 172.519,
+          "effective_output_mol_per_sec": 5.8,
+          "gvp": {
+            "n_evaluable": 998,
+            "mae": 4.2318,
+            "rmse": 5.9504,
+            "slope": 1.0842,
+            "pearson_r": 0.8665
+          }
+        }
+      },
+      "P_16_to_4": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.3,
+          "mean_natoms_abs_err": 2.088,
+          "gen_wall_seconds": 198.784,
+          "reconcile_wall_seconds": 8.425,
+          "surrogate_wall_seconds": 0.598,
+          "end_to_end_wall_seconds": 207.807,
+          "effective_output_mol_per_sec": 4.81,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 3.7996,
+            "rmse": 5.4377,
+            "slope": 1.1266,
+            "pearson_r": 0.8967
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.2,
+          "mean_natoms_abs_err": 1.625,
+          "gen_wall_seconds": 198.784,
+          "reconcile_wall_seconds": 8.425,
+          "surrogate_wall_seconds": 0.598,
+          "end_to_end_wall_seconds": 207.807,
+          "effective_output_mol_per_sec": 4.81,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 3.4371,
+            "rmse": 4.8286,
+            "slope": 1.0747,
+            "pearson_r": 0.9013
+          }
+        }
+      },
+      "P_32_to_4": {
+        "target_only": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 90.2,
+          "mean_natoms_abs_err": 2.082,
+          "gen_wall_seconds": 332.15,
+          "reconcile_wall_seconds": 8.542,
+          "surrogate_wall_seconds": 0.568,
+          "end_to_end_wall_seconds": 341.26,
+          "effective_output_mol_per_sec": 2.93,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 3.5841,
+            "rmse": 5.1382,
+            "slope": 1.1132,
+            "pearson_r": 0.9053
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.2,
+          "mean_natoms_abs_err": 1.638,
+          "gen_wall_seconds": 332.15,
+          "reconcile_wall_seconds": 8.542,
+          "surrogate_wall_seconds": 0.568,
+          "end_to_end_wall_seconds": 341.26,
+          "effective_output_mol_per_sec": 2.93,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 3.5028,
+            "rmse": 5.0295,
+            "slope": 1.0738,
+            "pearson_r": 0.8963
+          }
+        }
+      }
+    },
+    "gap": {
+      "P_8_to_1_nosurr": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 94.7,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.68,
+          "novelty_pct": 89.12,
+          "mean_natoms_abs_err": 2.816,
+          "gen_wall_seconds": 87.268,
+          "reconcile_wall_seconds": 2.104,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 89.371,
+          "effective_output_mol_per_sec": 11.19,
+          "gvp": {
+            "n_evaluable": 947,
+            "mae": 855.0888,
+            "rmse": 1132.309,
+            "slope": 0.7965,
+            "pearson_r": 0.7031
+          }
+        }
+      },
+      "P_16_to_1_nosurr": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 94.4,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.58,
+          "novelty_pct": 87.5,
+          "mean_natoms_abs_err": 2.911,
+          "gen_wall_seconds": 162.829,
+          "reconcile_wall_seconds": 1.686,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 164.515,
+          "effective_output_mol_per_sec": 6.08,
+          "gvp": {
+            "n_evaluable": 944,
+            "mae": 834.4095,
+            "rmse": 1108.6812,
+            "slope": 0.8305,
+            "pearson_r": 0.7082
+          }
+        }
+      },
+      "P_8_to_2": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.6,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 88.76,
+          "mean_natoms_abs_err": 2.95,
+          "gen_wall_seconds": 105.171,
+          "reconcile_wall_seconds": 3.747,
+          "surrogate_wall_seconds": 0.307,
+          "end_to_end_wall_seconds": 109.225,
+          "effective_output_mol_per_sec": 9.16,
+          "gvp": {
+            "n_evaluable": 996,
+            "mae": 641.5366,
+            "rmse": 910.9776,
+            "slope": 0.8471,
+            "pearson_r": 0.7868
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.6,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 88.96,
+          "mean_natoms_abs_err": 2.655,
+          "gen_wall_seconds": 105.171,
+          "reconcile_wall_seconds": 3.747,
+          "surrogate_wall_seconds": 0.307,
+          "end_to_end_wall_seconds": 109.225,
+          "effective_output_mol_per_sec": 9.16,
+          "gvp": {
+            "n_evaluable": 996,
+            "mae": 644.9144,
+            "rmse": 908.1468,
+            "slope": 0.8507,
+            "pearson_r": 0.7874
+          }
+        }
+      },
+      "P_16_to_2": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 88.24,
+          "mean_natoms_abs_err": 2.95,
+          "gen_wall_seconds": 177.011,
+          "reconcile_wall_seconds": 3.6,
+          "surrogate_wall_seconds": 0.322,
+          "end_to_end_wall_seconds": 180.934,
+          "effective_output_mol_per_sec": 5.53,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 601.9961,
+            "rmse": 833.556,
+            "slope": 0.9001,
+            "pearson_r": 0.8183
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 88.34,
+          "mean_natoms_abs_err": 2.636,
+          "gen_wall_seconds": 177.011,
+          "reconcile_wall_seconds": 3.6,
+          "surrogate_wall_seconds": 0.322,
+          "end_to_end_wall_seconds": 180.934,
+          "effective_output_mol_per_sec": 5.53,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 609.4083,
+            "rmse": 833.6389,
+            "slope": 0.9026,
+            "pearson_r": 0.8177
+          }
+        }
+      },
+      "P_16_to_4": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 89.0,
+          "mean_natoms_abs_err": 2.992,
+          "gen_wall_seconds": 208.615,
+          "reconcile_wall_seconds": 7.306,
+          "surrogate_wall_seconds": 0.596,
+          "end_to_end_wall_seconds": 216.517,
+          "effective_output_mol_per_sec": 4.62,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 462.4203,
+            "rmse": 668.8549,
+            "slope": 0.9536,
+            "pearson_r": 0.881
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 87.8,
+          "mean_natoms_abs_err": 2.296,
+          "gen_wall_seconds": 208.615,
+          "reconcile_wall_seconds": 7.306,
+          "surrogate_wall_seconds": 0.596,
+          "end_to_end_wall_seconds": 216.517,
+          "effective_output_mol_per_sec": 4.62,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 475.0558,
+            "rmse": 673.26,
+            "slope": 0.9435,
+            "pearson_r": 0.8776
+          }
+        }
+      },
+      "P_32_to_4": {
+        "target_only": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 86.6,
+          "mean_natoms_abs_err": 2.923,
+          "gen_wall_seconds": 350.723,
+          "reconcile_wall_seconds": 7.228,
+          "surrogate_wall_seconds": 0.606,
+          "end_to_end_wall_seconds": 358.558,
+          "effective_output_mol_per_sec": 2.79,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 425.4628,
+            "rmse": 620.1869,
+            "slope": 0.9902,
+            "pearson_r": 0.9011
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 87.9,
+          "mean_natoms_abs_err": 2.215,
+          "gen_wall_seconds": 350.723,
+          "reconcile_wall_seconds": 7.228,
+          "surrogate_wall_seconds": 0.606,
+          "end_to_end_wall_seconds": 358.558,
+          "effective_output_mol_per_sec": 2.79,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 458.5669,
+            "rmse": 660.2624,
+            "slope": 0.9921,
+            "pearson_r": 0.8897
+          }
+        }
+      }
+    },
+    "homo": {
+      "P_8_to_1_nosurr": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 95.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.47,
+          "novelty_pct": 88.53,
+          "mean_natoms_abs_err": 2.956,
+          "gen_wall_seconds": 81.147,
+          "reconcile_wall_seconds": 1.918,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 83.065,
+          "effective_output_mol_per_sec": 12.04,
+          "gvp": {
+            "n_evaluable": 950,
+            "mae": 420.5766,
+            "rmse": 564.5794,
+            "slope": 0.9834,
+            "pearson_r": 0.7389
+          }
+        }
+      },
+      "P_16_to_1_nosurr": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 94.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.58,
+          "novelty_pct": 88.15,
+          "mean_natoms_abs_err": 2.977,
+          "gen_wall_seconds": 148.513,
+          "reconcile_wall_seconds": 1.719,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 150.232,
+          "effective_output_mol_per_sec": 6.66,
+          "gvp": {
+            "n_evaluable": 945,
+            "mae": 402.7712,
+            "rmse": 544.3018,
+            "slope": 0.8613,
+            "pearson_r": 0.715
+          }
+        }
+      },
+      "P_8_to_2": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.3,
+          "novelty_pct": 87.64,
+          "mean_natoms_abs_err": 2.789,
+          "gen_wall_seconds": 94.153,
+          "reconcile_wall_seconds": 3.639,
+          "surrogate_wall_seconds": 0.276,
+          "end_to_end_wall_seconds": 98.068,
+          "effective_output_mol_per_sec": 10.2,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 297.8309,
+            "rmse": 417.6199,
+            "slope": 0.968,
+            "pearson_r": 0.826
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.4,
+          "novelty_pct": 87.84,
+          "mean_natoms_abs_err": 2.51,
+          "gen_wall_seconds": 94.153,
+          "reconcile_wall_seconds": 3.639,
+          "surrogate_wall_seconds": 0.276,
+          "end_to_end_wall_seconds": 98.068,
+          "effective_output_mol_per_sec": 10.2,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 302.6823,
+            "rmse": 421.6503,
+            "slope": 0.9548,
+            "pearson_r": 0.8198
+          }
+        }
+      },
+      "P_16_to_2": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.7,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 88.37,
+          "mean_natoms_abs_err": 2.911,
+          "gen_wall_seconds": 162.013,
+          "reconcile_wall_seconds": 3.59,
+          "surrogate_wall_seconds": 0.277,
+          "end_to_end_wall_seconds": 165.88,
+          "effective_output_mol_per_sec": 6.03,
+          "gvp": {
+            "n_evaluable": 997,
+            "mae": 290.7377,
+            "rmse": 398.0997,
+            "slope": 0.9331,
+            "pearson_r": 0.8293
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.7,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 88.97,
+          "mean_natoms_abs_err": 2.686,
+          "gen_wall_seconds": 162.013,
+          "reconcile_wall_seconds": 3.59,
+          "surrogate_wall_seconds": 0.277,
+          "end_to_end_wall_seconds": 165.88,
+          "effective_output_mol_per_sec": 6.03,
+          "gvp": {
+            "n_evaluable": 997,
+            "mae": 292.2679,
+            "rmse": 398.3652,
+            "slope": 0.9269,
+            "pearson_r": 0.8277
+          }
+        }
+      },
+      "P_16_to_4": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.5,
+          "novelty_pct": 89.1,
+          "mean_natoms_abs_err": 2.882,
+          "gen_wall_seconds": 186.051,
+          "reconcile_wall_seconds": 7.148,
+          "surrogate_wall_seconds": 0.535,
+          "end_to_end_wall_seconds": 193.733,
+          "effective_output_mol_per_sec": 5.16,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 221.1829,
+            "rmse": 312.622,
+            "slope": 1.0057,
+            "pearson_r": 0.8975
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.5,
+          "novelty_pct": 88.5,
+          "mean_natoms_abs_err": 2.246,
+          "gen_wall_seconds": 186.051,
+          "reconcile_wall_seconds": 7.148,
+          "surrogate_wall_seconds": 0.535,
+          "end_to_end_wall_seconds": 193.733,
+          "effective_output_mol_per_sec": 5.16,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 221.5478,
+            "rmse": 299.7771,
+            "slope": 0.9908,
+            "pearson_r": 0.9017
+          }
+        }
+      },
+      "P_32_to_4": {
+        "target_only": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 87.1,
+          "mean_natoms_abs_err": 2.781,
+          "gen_wall_seconds": 322.035,
+          "reconcile_wall_seconds": 6.845,
+          "surrogate_wall_seconds": 0.529,
+          "end_to_end_wall_seconds": 329.409,
+          "effective_output_mol_per_sec": 3.04,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 221.5053,
+            "rmse": 327.0089,
+            "slope": 1.0635,
+            "pearson_r": 0.9011
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.7,
+          "novelty_pct": 87.2,
+          "mean_natoms_abs_err": 2.195,
+          "gen_wall_seconds": 322.035,
+          "reconcile_wall_seconds": 6.845,
+          "surrogate_wall_seconds": 0.529,
+          "end_to_end_wall_seconds": 329.409,
+          "effective_output_mol_per_sec": 3.04,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 225.4079,
+            "rmse": 325.2447,
+            "slope": 1.0489,
+            "pearson_r": 0.8988
+          }
+        }
+      }
+    },
+    "lumo": {
+      "P_8_to_1_nosurr": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 93.1,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.89,
+          "novelty_pct": 89.47,
+          "mean_natoms_abs_err": 2.788,
+          "gen_wall_seconds": 85.289,
+          "reconcile_wall_seconds": 2.006,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 87.295,
+          "effective_output_mol_per_sec": 11.46,
+          "gvp": {
+            "n_evaluable": 931,
+            "mae": 812.2303,
+            "rmse": 1084.8798,
+            "slope": 0.9069,
+            "pearson_r": 0.7422
+          }
+        }
+      },
+      "P_16_to_1_nosurr": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 94.8,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.68,
+          "novelty_pct": 89.77,
+          "mean_natoms_abs_err": 2.854,
+          "gen_wall_seconds": 156.445,
+          "reconcile_wall_seconds": 1.889,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 158.334,
+          "effective_output_mol_per_sec": 6.32,
+          "gvp": {
+            "n_evaluable": 948,
+            "mae": 835.9907,
+            "rmse": 1095.4091,
+            "slope": 0.9581,
+            "pearson_r": 0.7546
+          }
+        }
+      },
+      "P_8_to_2": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 98.7,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.59,
+          "novelty_pct": 91.19,
+          "mean_natoms_abs_err": 2.817,
+          "gen_wall_seconds": 100.159,
+          "reconcile_wall_seconds": 3.66,
+          "surrogate_wall_seconds": 0.304,
+          "end_to_end_wall_seconds": 104.123,
+          "effective_output_mol_per_sec": 9.6,
+          "gvp": {
+            "n_evaluable": 987,
+            "mae": 617.2157,
+            "rmse": 861.6677,
+            "slope": 0.9441,
+            "pearson_r": 0.8178
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 98.7,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.59,
+          "novelty_pct": 91.08,
+          "mean_natoms_abs_err": 2.591,
+          "gen_wall_seconds": 100.159,
+          "reconcile_wall_seconds": 3.66,
+          "surrogate_wall_seconds": 0.304,
+          "end_to_end_wall_seconds": 104.123,
+          "effective_output_mol_per_sec": 9.6,
+          "gvp": {
+            "n_evaluable": 987,
+            "mae": 626.027,
+            "rmse": 868.5629,
+            "slope": 0.9489,
+            "pearson_r": 0.8161
+          }
+        }
+      },
+      "P_16_to_2": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.7,
+          "novelty_pct": 89.85,
+          "mean_natoms_abs_err": 2.781,
+          "gen_wall_seconds": 170.299,
+          "reconcile_wall_seconds": 3.806,
+          "surrogate_wall_seconds": 0.3,
+          "end_to_end_wall_seconds": 174.405,
+          "effective_output_mol_per_sec": 5.73,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 595.7274,
+            "rmse": 801.8586,
+            "slope": 0.9804,
+            "pearson_r": 0.8431
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 90.15,
+          "mean_natoms_abs_err": 2.503,
+          "gen_wall_seconds": 170.299,
+          "reconcile_wall_seconds": 3.806,
+          "surrogate_wall_seconds": 0.3,
+          "end_to_end_wall_seconds": 174.405,
+          "effective_output_mol_per_sec": 5.73,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 596.9449,
+            "rmse": 799.1287,
+            "slope": 0.9689,
+            "pearson_r": 0.8414
+          }
+        }
+      },
+      "P_16_to_4": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 90.9,
+          "mean_natoms_abs_err": 2.758,
+          "gen_wall_seconds": 201.025,
+          "reconcile_wall_seconds": 7.502,
+          "surrogate_wall_seconds": 0.561,
+          "end_to_end_wall_seconds": 209.087,
+          "effective_output_mol_per_sec": 4.78,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 448.4555,
+            "rmse": 632.797,
+            "slope": 0.9973,
+            "pearson_r": 0.8952
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 91.6,
+          "mean_natoms_abs_err": 2.179,
+          "gen_wall_seconds": 201.025,
+          "reconcile_wall_seconds": 7.502,
+          "surrogate_wall_seconds": 0.561,
+          "end_to_end_wall_seconds": 209.087,
+          "effective_output_mol_per_sec": 4.78,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 471.7828,
+            "rmse": 656.9755,
+            "slope": 0.9933,
+            "pearson_r": 0.8883
+          }
+        }
+      },
+      "P_32_to_4": {
+        "target_only": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 90.7,
+          "mean_natoms_abs_err": 2.721,
+          "gen_wall_seconds": 341.972,
+          "reconcile_wall_seconds": 7.581,
+          "surrogate_wall_seconds": 0.582,
+          "end_to_end_wall_seconds": 350.135,
+          "effective_output_mol_per_sec": 2.86,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 412.8626,
+            "rmse": 585.4224,
+            "slope": 1.0107,
+            "pearson_r": 0.909
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 90.5,
+          "mean_natoms_abs_err": 2.095,
+          "gen_wall_seconds": 341.972,
+          "reconcile_wall_seconds": 7.581,
+          "surrogate_wall_seconds": 0.582,
+          "end_to_end_wall_seconds": 350.135,
+          "effective_output_mol_per_sec": 2.86,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 425.1759,
+            "rmse": 589.9356,
+            "slope": 1.0029,
+            "pearson_r": 0.906
+          }
+        }
+      }
+    },
+    "mu": {
+      "P_8_to_1_nosurr": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 93.6,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.89,
+          "novelty_pct": 92.63,
+          "mean_natoms_abs_err": 3.083,
+          "gen_wall_seconds": 88.507,
+          "reconcile_wall_seconds": 2.106,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 90.613,
+          "effective_output_mol_per_sec": 11.04,
+          "gvp": {
+            "n_evaluable": 936,
+            "mae": 1.4236,
+            "rmse": 2.0035,
+            "slope": 0.3805,
+            "pearson_r": 0.3612
+          }
+        }
+      },
+      "P_16_to_1_nosurr": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 93.2,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 100.0,
+          "novelty_pct": 91.42,
+          "mean_natoms_abs_err": 3.153,
+          "gen_wall_seconds": 160.167,
+          "reconcile_wall_seconds": 1.943,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 162.11,
+          "effective_output_mol_per_sec": 6.17,
+          "gvp": {
+            "n_evaluable": 932,
+            "mae": 1.3333,
+            "rmse": 1.9162,
+            "slope": 0.461,
+            "pearson_r": 0.4235
+          }
+        }
+      },
+      "P_8_to_2": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.8,
+          "novelty_pct": 90.85,
+          "mean_natoms_abs_err": 3.069,
+          "gen_wall_seconds": 102.57,
+          "reconcile_wall_seconds": 3.767,
+          "surrogate_wall_seconds": 0.309,
+          "end_to_end_wall_seconds": 106.645,
+          "effective_output_mol_per_sec": 9.38,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 0.9611,
+            "rmse": 1.4627,
+            "slope": 0.5645,
+            "pearson_r": 0.6021
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.56,
+          "mean_natoms_abs_err": 2.888,
+          "gen_wall_seconds": 102.57,
+          "reconcile_wall_seconds": 3.767,
+          "surrogate_wall_seconds": 0.309,
+          "end_to_end_wall_seconds": 106.645,
+          "effective_output_mol_per_sec": 9.38,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 0.9794,
+            "rmse": 1.4724,
+            "slope": 0.5633,
+            "pearson_r": 0.5985
+          }
+        }
+      },
+      "P_16_to_2": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.3,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 90.43,
+          "mean_natoms_abs_err": 3.213,
+          "gen_wall_seconds": 171.819,
+          "reconcile_wall_seconds": 4.054,
+          "surrogate_wall_seconds": 0.304,
+          "end_to_end_wall_seconds": 176.177,
+          "effective_output_mol_per_sec": 5.68,
+          "gvp": {
+            "n_evaluable": 993,
+            "mae": 0.9661,
+            "rmse": 1.4552,
+            "slope": 0.5823,
+            "pearson_r": 0.6108
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.3,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 100.0,
+          "novelty_pct": 90.63,
+          "mean_natoms_abs_err": 2.991,
+          "gen_wall_seconds": 171.819,
+          "reconcile_wall_seconds": 4.054,
+          "surrogate_wall_seconds": 0.304,
+          "end_to_end_wall_seconds": 176.177,
+          "effective_output_mol_per_sec": 5.68,
+          "gvp": {
+            "n_evaluable": 993,
+            "mae": 0.9747,
+            "rmse": 1.4642,
+            "slope": 0.5798,
+            "pearson_r": 0.6074
+          }
+        }
+      },
+      "P_16_to_4": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.1,
+          "mean_natoms_abs_err": 3.144,
+          "gen_wall_seconds": 206.029,
+          "reconcile_wall_seconds": 7.655,
+          "surrogate_wall_seconds": 0.606,
+          "end_to_end_wall_seconds": 214.29,
+          "effective_output_mol_per_sec": 4.67,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 0.6333,
+            "rmse": 1.0883,
+            "slope": 0.6832,
+            "pearson_r": 0.7709
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 90.9,
+          "mean_natoms_abs_err": 2.589,
+          "gen_wall_seconds": 206.029,
+          "reconcile_wall_seconds": 7.655,
+          "surrogate_wall_seconds": 0.606,
+          "end_to_end_wall_seconds": 214.29,
+          "effective_output_mol_per_sec": 4.67,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 0.6443,
+            "rmse": 1.0931,
+            "slope": 0.6736,
+            "pearson_r": 0.7672
+          }
+        }
+      },
+      "P_32_to_4": {
+        "target_only": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 89.1,
+          "mean_natoms_abs_err": 3.087,
+          "gen_wall_seconds": 344.516,
+          "reconcile_wall_seconds": 7.871,
+          "surrogate_wall_seconds": 0.597,
+          "end_to_end_wall_seconds": 352.984,
+          "effective_output_mol_per_sec": 2.83,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 0.671,
+            "rmse": 1.1529,
+            "slope": 0.6547,
+            "pearson_r": 0.7388
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.6,
+          "novelty_pct": 89.2,
+          "mean_natoms_abs_err": 2.529,
+          "gen_wall_seconds": 344.516,
+          "reconcile_wall_seconds": 7.871,
+          "surrogate_wall_seconds": 0.597,
+          "end_to_end_wall_seconds": 352.984,
+          "effective_output_mol_per_sec": 2.83,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 0.6958,
+            "rmse": 1.1734,
+            "slope": 0.6495,
+            "pearson_r": 0.7299
+          }
+        }
+      }
+    },
+    "cv": {
+      "P_8_to_1_nosurr": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 91.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 100.0,
+          "novelty_pct": 91.54,
+          "mean_natoms_abs_err": 2.097,
+          "gen_wall_seconds": 91.43,
+          "reconcile_wall_seconds": 2.144,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 93.574,
+          "effective_output_mol_per_sec": 10.69,
+          "gvp": {
+            "n_evaluable": 910,
+            "mae": 2.5869,
+            "rmse": 3.345,
+            "slope": 1.2186,
+            "pearson_r": 0.8771
+          }
+        }
+      },
+      "P_16_to_1_nosurr": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 1,
+          "use_terminal_surrogate": false,
+          "legal_pct": 93.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.68,
+          "novelty_pct": 93.12,
+          "mean_natoms_abs_err": 2.132,
+          "gen_wall_seconds": 162.676,
+          "reconcile_wall_seconds": 2.062,
+          "surrogate_wall_seconds": 0.0,
+          "end_to_end_wall_seconds": 164.738,
+          "effective_output_mol_per_sec": 6.07,
+          "gvp": {
+            "n_evaluable": 930,
+            "mae": 2.5388,
+            "rmse": 3.2997,
+            "slope": 1.1932,
+            "pearson_r": 0.8711
+          }
+        }
+      },
+      "P_8_to_2": {
+        "target_only": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.1,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.12,
+          "mean_natoms_abs_err": 2.121,
+          "gen_wall_seconds": 104.863,
+          "reconcile_wall_seconds": 3.902,
+          "surrogate_wall_seconds": 0.294,
+          "end_to_end_wall_seconds": 109.059,
+          "effective_output_mol_per_sec": 9.17,
+          "gvp": {
+            "n_evaluable": 991,
+            "mae": 2.3264,
+            "rmse": 3.1785,
+            "slope": 1.269,
+            "pearson_r": 0.9051
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 8,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.1,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.62,
+          "mean_natoms_abs_err": 1.927,
+          "gen_wall_seconds": 104.863,
+          "reconcile_wall_seconds": 3.902,
+          "surrogate_wall_seconds": 0.294,
+          "end_to_end_wall_seconds": 109.059,
+          "effective_output_mol_per_sec": 9.17,
+          "gvp": {
+            "n_evaluable": 991,
+            "mae": 2.3055,
+            "rmse": 3.1214,
+            "slope": 1.2575,
+            "pearson_r": 0.9054
+          }
+        }
+      },
+      "P_16_to_2": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 100.0,
+          "novelty_pct": 92.06,
+          "mean_natoms_abs_err": 2.092,
+          "gen_wall_seconds": 177.425,
+          "reconcile_wall_seconds": 4.181,
+          "surrogate_wall_seconds": 0.317,
+          "end_to_end_wall_seconds": 181.923,
+          "effective_output_mol_per_sec": 5.5,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 2.256,
+            "rmse": 3.0751,
+            "slope": 1.2481,
+            "pearson_r": 0.9127
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 2,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.5,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.96,
+          "mean_natoms_abs_err": 1.889,
+          "gen_wall_seconds": 177.425,
+          "reconcile_wall_seconds": 4.181,
+          "surrogate_wall_seconds": 0.317,
+          "end_to_end_wall_seconds": 181.923,
+          "effective_output_mol_per_sec": 5.5,
+          "gvp": {
+            "n_evaluable": 995,
+            "mae": 2.2566,
+            "rmse": 3.0587,
+            "slope": 1.2255,
+            "pearson_r": 0.9092
+          }
+        }
+      },
+      "P_16_to_4": {
+        "target_only": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.9,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 100.0,
+          "novelty_pct": 91.39,
+          "mean_natoms_abs_err": 2.018,
+          "gen_wall_seconds": 213.776,
+          "reconcile_wall_seconds": 8.237,
+          "surrogate_wall_seconds": 0.579,
+          "end_to_end_wall_seconds": 222.591,
+          "effective_output_mol_per_sec": 4.49,
+          "gvp": {
+            "n_evaluable": 999,
+            "mae": 2.013,
+            "rmse": 2.877,
+            "slope": 1.2526,
+            "pearson_r": 0.9261
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 16,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 99.9,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 91.19,
+          "mean_natoms_abs_err": 1.621,
+          "gen_wall_seconds": 213.776,
+          "reconcile_wall_seconds": 8.237,
+          "surrogate_wall_seconds": 0.579,
+          "end_to_end_wall_seconds": 222.591,
+          "effective_output_mol_per_sec": 4.49,
+          "gvp": {
+            "n_evaluable": 999,
+            "mae": 2.0055,
+            "rmse": 2.8299,
+            "slope": 1.2195,
+            "pearson_r": 0.9207
+          }
+        }
+      },
+      "P_32_to_4": {
+        "target_only": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 93.4,
+          "mean_natoms_abs_err": 2.061,
+          "gen_wall_seconds": 363.672,
+          "reconcile_wall_seconds": 8.281,
+          "surrogate_wall_seconds": 0.593,
+          "end_to_end_wall_seconds": 372.546,
+          "effective_output_mol_per_sec": 2.68,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 1.9649,
+            "rmse": 2.8413,
+            "slope": 1.2233,
+            "pearson_r": 0.9244
+          }
+        },
+        "target_plus_natoms": {
+          "m_init": 32,
+          "m_keep": 4,
+          "use_terminal_surrogate": true,
+          "legal_pct": 100.0,
+          "exotic_charge_pct": 0.0,
+          "uniqueness_pct": 99.9,
+          "novelty_pct": 93.0,
+          "mean_natoms_abs_err": 1.584,
+          "gen_wall_seconds": 363.672,
+          "reconcile_wall_seconds": 8.281,
+          "surrogate_wall_seconds": 0.593,
+          "end_to_end_wall_seconds": 372.546,
+          "effective_output_mol_per_sec": 2.68,
+          "gvp": {
+            "n_evaluable": 1000,
+            "mae": 1.896,
+            "rmse": 2.705,
+            "slope": 1.1856,
+            "pearson_r": 0.9222
+          }
+        }
+      }
+    }
+  }
+}
