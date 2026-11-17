@@ -87,7 +87,7 @@ class LoomConditioner(nn.Module):
                 nn.SiLU(),
                 proj_out,
             )
-            self.null_prefix = nn.Parameter(torch.zeros(self.num_prefix_tokens, emb_dim))
+            self.null_prefix = nn.Parameter(torch.randn(self.num_prefix_tokens, emb_dim) * 0.02)
         else:
             self.prefix_queries = None
             self.prefix_proj = None

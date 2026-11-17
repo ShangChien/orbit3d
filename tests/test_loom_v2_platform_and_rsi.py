@@ -455,6 +455,90 @@ def test_task_spec_yaml_and_composite_critic_bus_with_grpo(tmp_path: Path, monke
     assert np.isfinite(res_2p["loss_total"])
 
 
+def test_size_anchored_grpo_and_critic_bus_no_col_aliasing():
+    reg = AssetRegistry(register_builtin_rules=True)
+    reg.register_predictor(
+        CallablePredictorAsset(
+            "ext_hl",
+            lambda ms: (np.tile(np.array([-6.10, -1.50]), (len(ms), 1)), np.full((len(ms), 2), 0.10)),
+            target_names=["homo", "lumo"],
+            units=["eV", "eV"],
+        )
+    )
+    spec_2obj = TaskWeavingSpec(
+        task_name="oe62_like_homo_lumo",
+        objectives=(
+            ObjectiveChannelSpec(name="homo", asset_id="ext_hl", asset_channel="homo", tolerance=0.25),
+            ObjectiveChannelSpec(name="lumo", asset_id="ext_hl", asset_channel="lumo", tolerance=0.25),
+        ),
+        constraints=(
+            ConstraintChannelSpec(name="sa_ok", asset_id="builtin_rules", asset_channel="sa_score", op="leq", threshold=3.5),
+        ),
+    )
+    bus_2obj = CompositeCriticBus(spec_2obj, reg)
+
+    args = build_default_uni3dar_args(batch_size=4)
+    args.emb_dim = 64
+    args.num_head = 4
+    args.layer = 3
+    args.merge_level = 6
+    args.random_rotation_prob = 0.0
+    backbone = Uni3DARSampler(args, AtomFeatDict(args))
+    gen_sz = LoomUni3DARGenerator(
+        backbone=backbone,
+        target_cols=["homo", "n_atoms"],
+        target_units=["eV", "atoms"],
+        mean=[-6.0, 15.0],
+        scale=[0.8, 6.0],
+        num_rbf=16,
+        num_freqs=8,
+        num_prefix_tokens=2,
+        lora_rank=8,
+        lora_alpha=16.0,
+    )
+    gen_sz.enable_v20_valence_head()
+
+    benzene = _make_3d_mol("c1ccccc1", seed=1)        # 12 total atoms
+    naphthalene = _make_3d_mol("c1ccc2ccccc2c1", seed=2)  # 18 total atoms
+    trainer = LoomGRPOTrainer(
+        generator=gen_sz,
+        critic_bus=bus_2obj,
+        replay_molecules=[benzene, naphthalene],
+        replay_targets_eV=np.array([[-6.10, 12.0], [-6.10, 18.0]], dtype=np.float32),
+        size_anchored_cfg=True,
+        size_adherence_weight=0.80,
+        lr=5e-5,
+        seed=101,
+    )
+    assert trainer.size_col_idx == 1
+    uncond = trainer._build_uncond_active_mask(torch.tensor([[True, True], [False, True]]))
+    assert uncond is not None and uncond.tolist() == [[False, True], [False, True]]
+
+    # Unit-level size reward ordering: target n_atoms=18 prefers 18-atom naphthalene over 12-atom benzene
+    nat_act, nat_err, sz_sc, sz_ok, adv_sz = trainer._compute_size_metrics_and_advantages(
+        [benzene, naphthalene],
+        np.array([True, True]),
+        np.array([[-6.10, 18.0], [-6.10, 18.0]], dtype=np.float32),
+        np.array([[True, True], [True, True]], dtype=bool),
+        group_size=2,
+    )
+    assert nat_act.tolist() == [12.0, 18.0]
+    assert nat_err.tolist() == [6.0, 0.0]
+    assert bool(sz_ok.all())
+    assert float(sz_sc[1]) > float(sz_sc[0])
+    assert float(adv_sz[1]) > float(adv_sz[0])
+
+    # End-to-end step verifying no lumo<-n_atoms aliasing and finite loss + size logging
+    res = trainer.step(
+        np.array([[-6.10, 18.0]], dtype=np.float32),
+        np.array([[True, True]], dtype=bool),
+        group_size=2,
+        step_index=0,
+    )
+    assert np.isfinite(res["loss_total"])
+    assert "mean_legal_atoms" in res and "mean_natoms_abs_err" in res and "size_reward_mean" in res
+
+
 # ==============================================================================
 # Phase 3 Tests: Generalized GPAtlas Gatekeepers & Grounded RSI Engine
 # ==============================================================================

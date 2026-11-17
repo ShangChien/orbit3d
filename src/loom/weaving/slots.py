@@ -62,6 +62,33 @@ class GeneratorSlot(nn.Module, ABC):
     """Unified contract for 3D molecular generators (autoregressive, diffusion, or flow matching)."""
 
     slot_role: str = "generator"
+    supports_exact_trajectory_logprob: bool = True
+    generator_family: str = "autoregressive"
+
+    @property
+    def allowed_elements(self) -> Tuple[str, ...]:
+        """Element symbols permitted by this generator backend."""
+        if hasattr(self, "_allowed_elements") and getattr(self, "_allowed_elements"):
+            return tuple(getattr(self, "_allowed_elements"))
+        if hasattr(self, "args") and hasattr(self.args, "allow_atoms"):
+            return tuple(str(self.args.allow_atoms).split(","))
+        if hasattr(self, "atom_type_map"):
+            return tuple(getattr(self, "atom_type_map"))
+        return DEFAULT_SUPPORTED_ELEMENTS
+
+    def build_replay_dataset(self, mols: Sequence[Chem.Mol], *, seed: int = 42) -> Any:
+        """Build an iterable/collated dataset over curated 3D replay molecules."""
+        raise NotImplementedError(f"{type(self).__name__} does not implement build_replay_dataset")
+
+    def encode_molecules_batch(
+        self,
+        mols: Sequence[Chem.Mol],
+        *,
+        seed: int = 42,
+        repeat_k: int = 1,
+    ) -> Tuple[Optional[Dict[str, Any]], List[int]]:
+        """Encode admitted 3D molecules into a collated batch + original index mapping `(packed, kept_indices)`."""
+        raise NotImplementedError(f"{type(self).__name__} does not implement encode_molecules_batch")
 
     @abstractmethod
     def sample(
@@ -83,13 +110,15 @@ class GeneratorSlot(nn.Module, ABC):
     @abstractmethod
     def compute_sft_loss(
         self,
-        packed_batch: Dict[str, torch.Tensor],
+        packed_batch: Dict[str, Any],
         targets_norm: torch.Tensor,
         active_mask: torch.Tensor,
         *,
+        cfg_dropout_prob: float = 0.0,
         return_per_molecule: bool = False,
+        **kwargs: Any,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
-        """Supervised / hindsight maximum-likelihood training step."""
+        """Supervised / hindsight / weighted maximum-likelihood training step."""
 
     @abstractmethod
     def trajectory_distributions(
@@ -371,7 +400,14 @@ class RewardOracleSlot(PropertyOracleBase):
         if mol.GetNumAtoms() > self.max_atoms:
             return f"more_than_{self.max_atoms}_total_atoms"
         unseen = sorted({a.GetSymbol() for a in mol.GetAtoms()} - set(self.supported_elements))
-        return ("unsupported_elements:" + ",".join(unseen)) if unseen else None
+        if unseen:
+            return "unsupported_elements:" + ",".join(unseen)
+        if hasattr(self.oracle, "validate_molecule"):
+            try:
+                self.oracle.validate_molecule(mol)
+            except ValueError as exc:
+                return str(exc)
+        return None
 
     @torch.no_grad()
     def predict_3d_mols(self, mols: List[Chem.Mol], batch_size: int = 32) -> Tuple[np.ndarray, np.ndarray]:
@@ -432,3 +468,26 @@ def assert_not_audit_oracle(oracle: Any) -> None:
         raise RuntimeError(
             "SECURITY/AUDIT VIOLATION: AuditOracleSlot must never be passed into training, relabeling, or RL loops!"
         )
+
+
+def build_generator_slot(
+    backend: str,
+    checkpoint_path: Path | str,
+    *,
+    device: str = "cuda:0",
+    **kwargs: Any,
+) -> GeneratorSlot:
+    """Plug-and-play factory instantiating either an autoregressive octree or flow-matching `GeneratorSlot`."""
+    key = str(backend).strip().lower()
+    if key in ("uni3dar", "octree", "loom_uni3dar"):
+        from .uni3dar_slot import LoomUni3DARGenerator
+
+        gen, _ = LoomUni3DARGenerator.load_checkpoint(checkpoint_path, device=device, **kwargs)
+        return gen
+    if key in ("propmolflow", "flowmol", "ctmc_flow"):
+        from .flowmol_slot import LoomFlowMolGenerator
+
+        return LoomFlowMolGenerator.from_propmolflow_checkpoint(checkpoint_path, device=device, **kwargs)
+    raise ValueError(
+        f"Unsupported generator backend '{backend}'. Expected one of: 'uni3dar', 'propmolflow', 'flowmol'."
+    )

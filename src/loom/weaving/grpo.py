@@ -24,7 +24,7 @@ from ..chemistry.valence_reconciler import (
     is_clean_organic_charge_state,
 )
 from ..generator.octree_alignment import categorical_policy_loss
-from ..generator.octree_backend import OctreeDataset, trajectory_to_instance
+from ..generator.octree_backend import trajectory_to_instance
 from .slots import GeneratorSlot, PotentialSlot, RewardOracleSlot, assert_not_audit_oracle
 
 
@@ -157,6 +157,17 @@ class LoomGRPOTrainer:
         relax_distill_max_fmax: float = 1.5,
         temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
         electron_parity: Optional[int] = 0,
+        size_anchored_cfg: bool = False,
+        size_col_name: str = "n_atoms",
+        size_adherence_weight: float = 0.0,
+        size_tolerance_atoms: float = 4.0,
+        size_tolerance_frac: float = 0.12,
+        alignment_mode: str = "auto",
+        awr_temperature: float = 0.45,
+        awr_max_weight: float = 6.0,
+        awr_repeat_k: int = 2,
+        awr_hindsight_fallback: bool = True,
+        grad_clip_mode: str = "norm",
         seed: int = 42,
     ) -> None:
         if reward_oracle is None and critic_bus is None:
@@ -174,11 +185,26 @@ class LoomGRPOTrainer:
         self.potential_slot = potential_slot
         self.seen_charge_signatures = seen_charge_signatures
 
+        mode = str(alignment_mode).strip().lower()
+        if mode == "auto":
+            mode = "grpo" if bool(getattr(generator, "supports_exact_trajectory_logprob", True)) else "awr_sft"
+        if mode not in ("grpo", "awr_sft"):
+            raise ValueError(f"Unsupported alignment_mode '{alignment_mode}'. Expected 'auto', 'grpo', or 'awr_sft'.")
+        self.alignment_mode = mode
+        if self.alignment_mode == "grpo" and not bool(getattr(generator, "supports_exact_trajectory_logprob", True)):
+            raise ValueError(f"{type(generator).__name__} does not support exact trajectory log-probs for 'grpo'.")
+        self.awr_temperature = max(float(awr_temperature), 1e-4)
+        self.awr_max_weight = max(float(awr_max_weight), 1.0)
+        self.awr_repeat_k = max(1, int(awr_repeat_k))
+        self.awr_hindsight_fallback = bool(awr_hindsight_fallback)
+        self.grad_clip_mode = str(grad_clip_mode).strip().lower()
+
         self.device = next(generator.parameters()).device
-        self.reference = copy.deepcopy(generator).eval().requires_grad_(False) if kl_beta > 0.0 else None
+        use_ref = (self.alignment_mode == "grpo") and (kl_beta > 0.0)
+        self.reference = copy.deepcopy(generator).eval().requires_grad_(False) if use_ref else None
         self.trainable_params = [p for p in generator.parameters() if p.requires_grad]
         if not self.trainable_params:
-            raise ValueError("Generator has no trainable parameters enabled for GRPO")
+            raise ValueError("Generator has no trainable parameters enabled for alignment")
 
         self.optimizer = torch.optim.AdamW(self.trainable_params, lr=lr, weight_decay=weight_decay)
         self.kl_beta = float(kl_beta)
@@ -202,6 +228,13 @@ class LoomGRPOTrainer:
         self.relax_distill_max_fmax = float(relax_distill_max_fmax)
         self.temperatures = temperatures
         self.electron_parity = electron_parity
+        self.size_anchored_cfg = bool(size_anchored_cfg)
+        self.size_col_name = str(size_col_name)
+        self.size_adherence_weight = float(size_adherence_weight)
+        self.size_tolerance_atoms = float(size_tolerance_atoms)
+        self.size_tolerance_frac = float(size_tolerance_frac)
+        gen_cols = list(getattr(self.generator, "target_cols", []))
+        self.size_col_idx: Optional[int] = gen_cols.index(self.size_col_name) if self.size_col_name in gen_cols else None
         self.seed = int(seed)
         self.rng = np.random.default_rng(self.seed)
 
@@ -212,11 +245,101 @@ class LoomGRPOTrainer:
             else list(range(len(self.generator.target_cols)))
         )
 
-        self.replay_dataset: Optional[OctreeDataset] = None
+        self.replay_dataset: Optional[Any] = None
         self.replay_targets_eV: Optional[np.ndarray] = None
         if replay_molecules is not None and replay_targets_eV is not None and self.replay_weight > 0.0:
-            self.replay_dataset = OctreeDataset(list(replay_molecules), self.generator.backbone, training=True, seed=seed)
+            self.replay_dataset = self.generator.build_replay_dataset(list(replay_molecules), seed=seed)
             self.replay_targets_eV = np.asarray(replay_targets_eV, dtype=np.float32)
+
+    def _build_uncond_active_mask(self, active_mask: torch.Tensor) -> Optional[torch.Tensor]:
+        """Return size-anchored unconditional CFG mask keeping `size_col_idx` active."""
+        if not self.size_anchored_cfg or self.size_col_idx is None:
+            return None
+        uncond_mask = torch.zeros_like(active_mask, dtype=torch.bool)
+        uncond_mask[:, self.size_col_idx] = active_mask[:, self.size_col_idx]
+        return uncond_mask
+
+    def _sample_replay_active_mask(self, prompt_active_mask: np.ndarray) -> torch.Tensor:
+        """Sample supervised replay masks (`75% full / 15% size-only / 10% uncond` when size-anchored)."""
+        r_mask_idx = self.rng.integers(0, prompt_active_mask.shape[0], size=self.replay_batch_size)
+        r_mask_np = prompt_active_mask[r_mask_idx].astype(bool).copy()
+        if self.size_anchored_cfg and self.size_col_idx is not None:
+            u = self.rng.random(size=self.replay_batch_size)
+            size_only = (u >= 0.75) & (u < 0.90)
+            full_drop = u >= 0.90
+            if size_only.any():
+                keep_sz = r_mask_np[size_only, self.size_col_idx].copy()
+                r_mask_np[size_only] = False
+                r_mask_np[size_only, self.size_col_idx] = keep_sz
+            if full_drop.any():
+                r_mask_np[full_drop] = False
+        return torch.as_tensor(r_mask_np, dtype=torch.bool, device=self.device)
+
+    def _compute_size_metrics_and_advantages(
+        self,
+        mols: Sequence[Optional[Chem.Mol]],
+        valid_mask_np: np.ndarray,
+        rep_targets_eV: np.ndarray,
+        rep_mask_np: np.ndarray,
+        group_size: int,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, torch.Tensor]:
+        """Compute atom counts, absolute size errors, adherence scores, and normalized group advantages."""
+        total_b = len(mols)
+        natoms_actual = np.full(total_b, np.nan, dtype=np.float64)
+        natoms_abs_err = np.full(total_b, np.nan, dtype=np.float64)
+        size_scores = np.zeros(total_b, dtype=np.float32)
+        size_eval_mask = np.zeros(total_b, dtype=bool)
+        adv_size = torch.zeros(total_b, device=self.device, dtype=torch.float32)
+
+        for idx, mol in enumerate(mols):
+            if mol is not None and valid_mask_np[idx]:
+                natoms_actual[idx] = float(mol.GetNumAtoms())
+
+        if self.size_col_idx is None:
+            return natoms_actual, natoms_abs_err, size_scores, size_eval_mask, adv_size
+
+        size_active = rep_mask_np[:, self.size_col_idx]
+        target_nat = rep_targets_eV[:, self.size_col_idx]
+        for idx in range(total_b):
+            if valid_mask_np[idx] and size_active[idx] and np.isfinite(natoms_actual[idx]):
+                n_req = float(target_nat[idx])
+                err = abs(float(natoms_actual[idx]) - n_req)
+                tol = max(self.size_tolerance_atoms, self.size_tolerance_frac * max(n_req, 1.0))
+                u = err / tol
+                score = 0.50 * math.exp(-0.5 * u * u) + 0.50 / (1.0 + u * u) - 0.15 * max(0.0, u - 1.0)
+                natoms_abs_err[idx] = err
+                size_scores[idx] = float(np.clip(score, -1.5, 1.0))
+                size_eval_mask[idx] = True
+
+        if self.size_adherence_weight <= 0.0:
+            return natoms_actual, natoms_abs_err, size_scores, size_eval_mask, adv_size
+
+        p_count = total_b // group_size
+        for p_idx in range(p_count):
+            s = p_idx * group_size
+            e = s + group_size
+            if not size_active[s:e].any():
+                continue
+            ok = torch.as_tensor(size_eval_mask[s:e], dtype=torch.bool, device=self.device)
+            n_ok = int(ok.sum().item())
+            if n_ok == 0:
+                continue
+            g_adv = torch.zeros(group_size, device=self.device, dtype=torch.float32)
+            scores_t = torch.as_tensor(size_scores[s:e], dtype=torch.float32, device=self.device)
+            if n_ok >= 2:
+                vals = scores_t[ok]
+                std = vals.std(unbiased=False)
+                if float(std.item()) > 1e-6:
+                    g_adv[ok] = ((vals - vals.mean()) / std.clamp_min(0.05)).clamp(-1.5, 2.0)
+            else:
+                g_adv[ok] = scores_t[ok].clamp(-1.0, 1.0)
+            if n_ok < group_size:
+                inv_act = (~ok) & torch.as_tensor(size_active[s:e], dtype=torch.bool, device=self.device)
+                g_adv[inv_act] = -0.85
+            g_adv = g_adv - g_adv.mean()
+            adv_size[s:e] = g_adv
+
+        return natoms_actual, natoms_abs_err, size_scores, size_eval_mask, adv_size
 
     def step(
         self,
@@ -244,6 +367,8 @@ class LoomGRPOTrainer:
 
         # 1. Batched rollout + old/ref policy distributions
         self.generator.eval()
+        uncond_mask = self._build_uncond_active_mask(active_mask)
+        cfg_extra = {"uncond_active_mask": uncond_mask} if uncond_mask is not None else {}
         trajectories = self.generator.sample(
             targets_norm,
             active_mask,
@@ -255,22 +380,11 @@ class LoomGRPOTrainer:
             seed=self.seed * 100003 + step_index * 997,
             use_bf16=(self.device.type == "cuda"),
             electron_parity=self.electron_parity,
+            **cfg_extra,
         )
-        with torch.no_grad():
-            old_packets = self.generator.trajectory_distributions(
-                trajectories,
-                targets_norm,
-                active_mask,
-                temperatures=self.temperatures,
-                cfg_scale=self.cfg_scale,
-                xyz_cfg_scale=self.xyz_cfg_scale,
-                cfg_tree_decay=self.cfg_tree_decay,
-                geometric_guard=self.geometric_guard,
-                topology_only_policy=self.topology_only_policy,
-                electron_parity=self.electron_parity,
-            )
-            ref_packets = (
-                self.reference.trajectory_distributions(
+        if self.alignment_mode == "grpo":
+            with torch.no_grad():
+                old_packets = self.generator.trajectory_distributions(
                     trajectories,
                     targets_norm,
                     active_mask,
@@ -281,10 +395,28 @@ class LoomGRPOTrainer:
                     geometric_guard=self.geometric_guard,
                     topology_only_policy=self.topology_only_policy,
                     electron_parity=self.electron_parity,
+                    **cfg_extra,
                 )
-                if self.reference is not None
-                else None
-            )
+                ref_packets = (
+                    self.reference.trajectory_distributions(
+                        trajectories,
+                        targets_norm,
+                        active_mask,
+                        temperatures=self.temperatures,
+                        cfg_scale=self.cfg_scale,
+                        xyz_cfg_scale=self.xyz_cfg_scale,
+                        cfg_tree_decay=self.cfg_tree_decay,
+                        geometric_guard=self.geometric_guard,
+                        topology_only_policy=self.topology_only_policy,
+                        electron_parity=self.electron_parity,
+                        **cfg_extra,
+                    )
+                    if self.reference is not None
+                    else None
+                )
+        else:
+            old_packets = None
+            ref_packets = None
 
         # 2-5. Evaluation & Advantage Routing (`CompositeCriticBus` OR legacy `RewardOracleSlot`)
         constraints_met_rate = 1.0
@@ -297,12 +429,13 @@ class LoomGRPOTrainer:
                 bus_req = rep_targets_eV
                 bus_act = rep_mask_np
             else:
-                obj_col_indices = [
-                    gen_cols.index(nm) if nm in gen_cols else min(i, rep_targets_eV.shape[-1] - 1)
-                    for i, nm in enumerate(bus_obj_names)
-                ]
-                bus_req = rep_targets_eV[:, obj_col_indices]
-                bus_act = rep_mask_np[:, obj_col_indices]
+                bus_req = np.zeros((total_b, len(bus_obj_names)), dtype=np.float32)
+                bus_act = np.zeros((total_b, len(bus_obj_names)), dtype=bool)
+                for i, nm in enumerate(bus_obj_names):
+                    if nm in gen_cols:
+                        gi = gen_cols.index(nm)
+                        bus_req[:, i] = rep_targets_eV[:, gi]
+                        bus_act[:, i] = rep_mask_np[:, gi]
             ev_bundle = self.critic_bus.evaluate_molecules(
                 mols,
                 requested_targets=bus_req,
@@ -335,7 +468,7 @@ class LoomGRPOTrainer:
             )
         else:
             assert self.reward_oracle is not None
-            allowed_elems = tuple(self.generator.args.allow_atoms.split(","))
+            allowed_elems = self.generator.allowed_elements
             mols = [None] * total_b
             valid_mask_np = np.zeros(total_b, dtype=bool)
             clean_charge_np = np.zeros(total_b, dtype=bool)
@@ -423,6 +556,12 @@ class LoomGRPOTrainer:
                 )
                 adv_all[s:e] = adv_g
 
+        natoms_actual_np, natoms_abs_err_np, size_scores_np, size_eval_mask_np, adv_size = (
+            self._compute_size_metrics_and_advantages(mols, valid_mask_np, rep_targets_eV, rep_mask_np, group_size)
+        )
+        if self.size_adherence_weight > 0.0 and self.size_col_idx is not None:
+            adv_all = adv_all + self.size_adherence_weight * adv_size
+
         # 5b. Optional v1.1 Online Relaxed-Coordinate Distillation (`L_relax_SFT`)
         relax_packed: Optional[Dict[str, torch.Tensor]] = None
         relax_targets_norm: Optional[torch.Tensor] = None
@@ -468,50 +607,142 @@ class LoomGRPOTrainer:
                         assert self.reward_oracle is not None
                         rel_preds, _, rel_ok, _ = self.reward_oracle.evaluate_candidates(kept_mols, batch_size=16)
                         rel_aligned = rel_preds[:, self.oracle_col_indices]
-                    temp_ds = OctreeDataset(
-                        kept_mols, self.generator.backbone, training=False, seed=self.seed + step_index
-                    )
-                    ok_local: List[int] = []
-                    target_rows: List[np.ndarray] = []
+                    pass_mols: List[Chem.Mol] = []
+                    pass_targets: List[np.ndarray] = []
+                    pass_masks: List[np.ndarray] = []
+                    gen_cols = list(self.generator.target_cols)
+                    bus_names = list(self.critic_bus.spec.objective_names) if self.critic_bus is not None else []
                     for loc_j in range(len(kept_mols)):
                         if not rel_ok[loc_j]:
                             continue
                         req_j = kept_req_targets[loc_j]
                         msk_j = kept_masks[loc_j]
-                        post_err = float(np.max(np.abs(rel_aligned[loc_j][msk_j] - req_j[msk_j]))) if msk_j.any() else 999.0
+                        if self.critic_bus is not None:
+                            errs = [
+                                abs(float(rel_aligned[loc_j, b_i]) - float(req_j[gen_cols.index(nm)]))
+                                for b_i, nm in enumerate(bus_names)
+                                if nm in gen_cols and bool(msk_j[gen_cols.index(nm)])
+                            ]
+                            post_err = max(errs) if errs else 999.0
+                        else:
+                            post_err = float(np.max(np.abs(rel_aligned[loc_j][msk_j] - req_j[msk_j]))) if msk_j.any() else 999.0
                         if post_err > 1.25 * self.tolerance_eV:
                             continue
-                        try:
-                            temp_ds.collate([loc_j])
-                            ok_local.append(loc_j)
-                            # Condition directly on requested prompt target if post-relax stays inside ±tol, else hindsight
-                            target_rows.append(req_j if post_err <= self.tolerance_eV else rel_aligned[loc_j])
-                        except ValueError:
-                            continue
-                    if ok_local:
-                        try:
-                            relax_packed = {
-                                k: (v.to(self.device) if isinstance(v, torch.Tensor) else v)
-                                for k, v in temp_ds.collate(ok_local).items()
-                            }
-                            relax_targets_norm = self.generator.normalize_targets(np.asarray(target_rows, dtype=np.float32))
+                        pass_mols.append(kept_mols[loc_j])
+                        if post_err <= self.tolerance_eV:
+                            pass_targets.append(req_j)
+                        elif self.critic_bus is not None:
+                            mapped_t = req_j.copy()
+                            for gc_i, gc_nm in enumerate(gen_cols):
+                                if gc_nm in bus_names:
+                                    mapped_t[gc_i] = rel_aligned[loc_j, bus_names.index(gc_nm)]
+                            pass_targets.append(mapped_t)
+                        else:
+                            pass_targets.append(rel_aligned[loc_j])
+                        pass_masks.append(msk_j)
+                    if pass_mols:
+                        relax_packed, kept_rel = self.generator.encode_molecules_batch(
+                            pass_mols, seed=self.seed + step_index, repeat_k=1
+                        )
+                        if relax_packed is not None and kept_rel:
+                            relax_targets_norm = self.generator.normalize_targets(
+                                np.asarray([pass_targets[j] for j in kept_rel], dtype=np.float32)
+                            )
                             relax_mask_t = torch.as_tensor(
-                                np.asarray([kept_masks[j] for j in ok_local], dtype=bool),
+                                np.asarray([pass_masks[j] for j in kept_rel], dtype=bool),
                                 dtype=torch.bool,
                                 device=self.device,
                             )
-                            n_relax_admitted = len(ok_local)
-                        except ValueError:
+                            n_relax_admitted = len(kept_rel)
+                        else:
                             relax_packed = None
 
-        # 6. Clipped PPO/GRPO policy updates + KL + Supervised Replay Anchor + Relaxed-Coord Distillation
+        # 5c. Advantage-Weighted Flow/ML SFT batch construction (when `alignment_mode == 'awr_sft'`)
+        awr_packed: Optional[Dict[str, Any]] = None
+        awr_weights_t: Optional[torch.Tensor] = None
+        awr_targets_norm: Optional[torch.Tensor] = None
+        awr_mask_t: Optional[torch.Tensor] = None
+        n_awr_admitted = 0
+        if self.alignment_mode == "awr_sft":
+            pos_idx = [
+                i
+                for i in range(total_b)
+                if valid_mask_np[i]
+                and clean_charge_np[i]
+                and mols[i] is not None
+                and float(adv_all[i].item()) > 1e-5
+            ]
+            cand_mols: List[Chem.Mol] = []
+            cand_raw_w: List[float] = []
+            cand_targets: List[np.ndarray] = []
+            cand_masks: List[np.ndarray] = []
+            for i in pos_idx:
+                adv_val = float(adv_all[i].item())
+                w_i = min(math.exp(adv_val / self.awr_temperature), self.awr_max_weight)
+                cand_mols.append(mols[i])  # type: ignore[arg-type]
+                cand_raw_w.append(w_i)
+                cand_targets.append(rep_targets_eV[i])
+                cand_masks.append(rep_mask_np[i])
+
+            if len(cand_mols) < 2 and self.awr_hindsight_fallback and self.critic_bus is not None:
+                used_set = set(pos_idx)
+                gen_cols = list(self.generator.target_cols)
+                bus_names = list(self.critic_bus.spec.objective_names)
+                her_cands = [
+                    i
+                    for i in range(total_b)
+                    if i not in used_set
+                    and valid_mask_np[i]
+                    and clean_charge_np[i]
+                    and mols[i] is not None
+                    and bool(eval_mask_np[i])
+                    and bool(ev_bundle["constraints_met"][i])
+                ]
+                for i in her_cands[:4]:
+                    mapped_t = rep_targets_eV[i].copy()
+                    for gc_i, gc_nm in enumerate(gen_cols):
+                        if gc_nm in bus_names:
+                            val = float(ev_bundle["objective_preds"][i, bus_names.index(gc_nm)])
+                            if math.isfinite(val):
+                                mapped_t[gc_i] = val
+                    cand_mols.append(mols[i])  # type: ignore[arg-type]
+                    cand_raw_w.append(0.5)
+                    cand_targets.append(mapped_t)
+                    cand_masks.append(rep_mask_np[i])
+
+            if cand_mols:
+                awr_packed, kept_local = self.generator.encode_molecules_batch(
+                    cand_mols, seed=self.seed + step_index, repeat_k=self.awr_repeat_k
+                )
+                if awr_packed is not None and kept_local:
+                    w_arr = np.asarray([cand_raw_w[j] for j in kept_local], dtype=np.float32)
+                    w_arr = w_arr / max(float(w_arr.sum()), 1e-8)
+                    awr_weights_t = torch.as_tensor(w_arr, dtype=torch.float32, device=self.device)
+                    awr_targets_norm = self.generator.normalize_targets(
+                        np.asarray([cand_targets[j] for j in kept_local], dtype=np.float32)
+                    )
+                    awr_mask_t = torch.as_tensor(
+                        np.asarray([cand_masks[j] for j in kept_local], dtype=bool),
+                        dtype=torch.bool,
+                        device=self.device,
+                    )
+                    n_awr_admitted = len(set(kept_local))
+
+        # 6. Policy updates (`grpo` clipped PPO OR `awr_sft` Online RWR) + Replay Anchor + Relaxed-Coord Distillation
         self.generator.train()
-        has_signal = (
-            bool((adv_all.abs() > 1e-6).any().item())
-            or self.kl_beta > 0.0
-            or self.replay_dataset is not None
-            or relax_packed is not None
-        )
+        if self.alignment_mode == "grpo":
+            has_signal = (
+                bool((adv_all.abs() > 1e-6).any().item())
+                or self.kl_beta > 0.0
+                or self.replay_dataset is not None
+                or relax_packed is not None
+            )
+        else:
+            has_signal = (
+                awr_packed is not None
+                or self.replay_dataset is not None
+                or relax_packed is not None
+            )
         n_updates = self.ppo_epochs if has_signal else 0
         last_loss = 0.0
         last_policy_loss = 0.0
@@ -520,36 +751,53 @@ class LoomGRPOTrainer:
         last_kl = 0.0
         grad_norm = 0.0
 
-        autocast_train = self.device.type == "cuda"
+        autocast_train = (self.device.type == "cuda") and bool(
+            getattr(self.generator, "supports_exact_trajectory_logprob", True)
+        )
         for _ in range(n_updates):
             with torch.autocast(device_type=self.device.type, dtype=torch.bfloat16, enabled=autocast_train):
-                cur_packets = self.generator.trajectory_distributions(
-                    trajectories,
-                    targets_norm,
-                    active_mask,
-                    temperatures=self.temperatures,
-                    cfg_scale=self.cfg_scale,
-                    xyz_cfg_scale=self.xyz_cfg_scale,
-                    cfg_tree_decay=self.cfg_tree_decay,
-                    geometric_guard=self.geometric_guard,
-                    topology_only_policy=self.topology_only_policy,
-                    electron_parity=self.electron_parity,
-                )
-                p_loss = categorical_policy_loss(
-                    cur_packets, old_packets, ref_packets, adv_all, beta=self.kl_beta, clip=self.clip_eps
-                )
-                total_loss = p_loss
+                if self.alignment_mode == "grpo":
+                    cur_packets = self.generator.trajectory_distributions(
+                        trajectories,
+                        targets_norm,
+                        active_mask,
+                        temperatures=self.temperatures,
+                        cfg_scale=self.cfg_scale,
+                        xyz_cfg_scale=self.xyz_cfg_scale,
+                        cfg_tree_decay=self.cfg_tree_decay,
+                        geometric_guard=self.geometric_guard,
+                        topology_only_policy=self.topology_only_policy,
+                        electron_parity=self.electron_parity,
+                        **cfg_extra,
+                    )
+                    p_loss = categorical_policy_loss(
+                        cur_packets, old_packets, ref_packets, adv_all, beta=self.kl_beta, clip=self.clip_eps
+                    )
+                    total_loss = p_loss
 
-                if ref_packets is not None:
-                    with torch.no_grad():
-                        kl_terms = []
-                        for (logp, _, _), (ref_logp, _, _) in zip(cur_packets, ref_packets):
-                            both_fin = torch.isfinite(logp) & torch.isfinite(ref_logp)
-                            s_lp = torch.where(both_fin, logp, torch.zeros_like(logp))
-                            s_rf = torch.where(both_fin, ref_logp, torch.zeros_like(ref_logp))
-                            pr = torch.where(both_fin, s_lp.exp(), torch.zeros_like(logp))
-                            kl_terms.append((pr * (s_lp - s_rf).clamp(-30.0, 30.0)).sum(-1))
-                        last_kl = float(torch.cat(kl_terms).mean().item())
+                    if ref_packets is not None:
+                        with torch.no_grad():
+                            kl_terms = []
+                            for (logp, _, _), (ref_logp, _, _) in zip(cur_packets, ref_packets):
+                                both_fin = torch.isfinite(logp) & torch.isfinite(ref_logp)
+                                s_lp = torch.where(both_fin, logp, torch.zeros_like(logp))
+                                s_rf = torch.where(both_fin, ref_logp, torch.zeros_like(ref_logp))
+                                pr = torch.where(both_fin, s_lp.exp(), torch.zeros_like(logp))
+                                kl_terms.append((pr * (s_lp - s_rf).clamp(-30.0, 30.0)).sum(-1))
+                            last_kl = float(torch.cat(kl_terms).mean().item())
+                else:
+                    if awr_packed is not None and awr_targets_norm is not None and awr_mask_t is not None and awr_weights_t is not None:
+                        per_mol_loss, _ = self.generator.compute_sft_loss(
+                            awr_packed,
+                            awr_targets_norm,
+                            awr_mask_t,
+                            cfg_dropout_prob=0.0,
+                            return_per_molecule=True,
+                        )
+                        p_loss = (per_mol_loss.float() * awr_weights_t).sum()
+                    else:
+                        p_loss = torch.zeros((), device=self.device, dtype=torch.float32)
+                    total_loss = p_loss
 
                 if self.replay_dataset is not None and self.replay_targets_eV is not None:
                     r_packed = None
@@ -564,9 +812,13 @@ class LoomGRPOTrainer:
                             continue
                     if r_packed is not None and r_indices is not None:
                         r_targets_norm = self.generator.normalize_targets(self.replay_targets_eV[r_indices])
-                        r_mask_idx = self.rng.integers(0, p_count, size=self.replay_batch_size)
-                        r_mask = torch.as_tensor(prompt_active_mask[r_mask_idx], dtype=torch.bool, device=self.device)
-                        r_loss, _ = self.generator.compute_sft_loss(r_packed, r_targets_norm, r_mask, cfg_dropout_prob=0.05)
+                        r_mask = self._sample_replay_active_mask(prompt_active_mask)
+                        r_drop = (
+                            0.0
+                            if (self.alignment_mode == "awr_sft" or (self.size_anchored_cfg and self.size_col_idx is not None))
+                            else 0.05
+                        )
+                        r_loss, _ = self.generator.compute_sft_loss(r_packed, r_targets_norm, r_mask, cfg_dropout_prob=r_drop)
                         total_loss = total_loss + self.replay_weight * r_loss
                         last_replay_loss = float(r_loss.detach().item())
 
@@ -577,10 +829,19 @@ class LoomGRPOTrainer:
                     total_loss = total_loss + self.relax_distill_weight * d_loss
                     last_relax_distill_loss = float(d_loss.detach().item())
 
-            if torch.isfinite(total_loss):
+            if torch.isfinite(total_loss) and total_loss.requires_grad:
                 self.optimizer.zero_grad(set_to_none=True)
                 total_loss.backward()
-                gn = float(torch.nn.utils.clip_grad_norm_(self.trainable_params, 1.0).item())
+                if self.grad_clip_mode == "value":
+                    torch.nn.utils.clip_grad_value_(self.trainable_params, 1.0)
+                    sq_sum = sum(
+                        float(p.grad.detach().float().pow(2).sum().item())
+                        for p in self.trainable_params
+                        if p.grad is not None
+                    )
+                    gn = math.sqrt(sq_sum)
+                else:
+                    gn = float(torch.nn.utils.clip_grad_norm_(self.trainable_params, 1.0).item())
                 if math.isfinite(gn):
                     self.optimizer.step()
                     grad_norm = gn
@@ -589,9 +850,12 @@ class LoomGRPOTrainer:
 
         valid_f = f_max_np[valid_mask_np & np.isfinite(f_max_np)]
         valid_err = abs_err_np[eval_mask_np & np.isfinite(abs_err_np)]
+        legal_atoms = natoms_actual_np[valid_mask_np & np.isfinite(natoms_actual_np)]
+        valid_size_err = natoms_abs_err_np[size_eval_mask_np & np.isfinite(natoms_abs_err_np)]
         elapsed = time.perf_counter() - t0
         return {
             "step": step_index + 1,
+            "alignment_mode": self.alignment_mode,
             "prompts": p_count,
             "group_size": group_size,
             "proposals": total_b,
@@ -605,9 +869,13 @@ class LoomGRPOTrainer:
             "exotic_charge_rate_among_valid": float(1.0 - clean_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
             "unseen_charge_rate": float(1.0 - seen_charge_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
             "conditional_mae_eV": float(np.mean(valid_err)) if len(valid_err) > 0 else float("nan"),
+            "mean_legal_atoms": float(np.mean(legal_atoms)) if len(legal_atoms) > 0 else float("nan"),
+            "mean_natoms_abs_err": float(np.mean(valid_size_err)) if len(valid_size_err) > 0 else float("nan"),
+            "size_reward_mean": float(size_scores_np[size_eval_mask_np].mean()) if size_eval_mask_np.any() else 0.0,
             "f_max_median_eV_A": float(np.median(valid_f)) if len(valid_f) > 0 else float("nan"),
             "prop_reward_mean": float(prop_scores_np[eval_mask_np].mean()) if eval_mask_np.any() else 0.0,
             "phys_reward_mean": float(phys_scores_np[valid_mask_np].mean()) if valid_mask_np.any() else 0.0,
+            "awr_admitted": n_awr_admitted,
             "relax_distill_admitted": n_relax_admitted,
             "loss_total": last_loss,
             "loss_policy": last_policy_loss,
@@ -633,14 +901,20 @@ class LoomGRPOTrainer:
             metrics = self.step(p_targets, p_mask, group_size=group_size, step_index=s_idx)
             history.append(metrics)
             if (s_idx + 1) % log_every == 0 or s_idx == 0 or (s_idx + 1) == total_steps:
+                tag = "Loom-AWR" if self.alignment_mode == "awr_sft" else "Loom-GRPO"
+                tail = (
+                    f"awr={metrics['awr_admitted']} loss={metrics['loss_total']:.4f}"
+                    if self.alignment_mode == "awr_sft"
+                    else f"KL={metrics['kl']:.4f}"
+                )
                 print(
-                    f"[Loom-GRPO {metrics['step']:04d}/{total_steps:04d}] "
+                    f"[{tag} {metrics['step']:04d}/{total_steps:04d}] "
                     f"hits={metrics['hits']}/{metrics['proposals']} ({metrics['hit_yield']*100:.1f}%) "
                     f"MAE={metrics['conditional_mae_eV']:.3f}eV "
                     f"valid={metrics['valid_rate']*100:.1f}% "
-                    f"exoticQ={metrics['exotic_charge_rate_among_valid']*100:.1f}% "
+                    f"SA_ok={metrics['constraints_met_rate_among_valid']*100:.1f}% "
                     f"Fmax={metrics['f_max_median_eV_A']:.2f} "
-                    f"KL={metrics['kl']:.4f} ({metrics['wall_seconds']:.1f}s)",
+                    f"{tail} ({metrics['wall_seconds']:.1f}s)",
                     flush=True,
                 )
             if checkpoint_fn is not None:

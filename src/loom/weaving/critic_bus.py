@@ -88,6 +88,30 @@ class CompositeCriticBus:
         raw_clean_q = np.zeros(n, dtype=bool)
 
         for i, tr in enumerate(trajectories):
+            rdkit_cand = tr.get("rdkit_mol")
+            if rdkit_cand is not None:
+                try:
+                    pos_np = np.asarray(tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)), dtype=np.float32)
+                    min_dist = 99.0
+                    if pos_np.ndim == 2 and pos_np.shape[0] >= 2:
+                        diff = pos_np[:, None, :] - pos_np[None, :, :]
+                        dmat = np.linalg.norm(diff, axis=-1)
+                        np.fill_diagonal(dmat, 99.0)
+                        min_dist = float(dmat.min())
+                    cand = Chem.Mol(rdkit_cand)
+                    if (
+                        min_dist >= 0.65
+                        and all(a.GetSymbol() in self.allowed_elements for a in cand.GetAtoms())
+                    ):
+                        Chem.SanitizeMol(cand)
+                        if len(Chem.GetMolFrags(cand)) == 1:
+                            raw_mols[i] = cand
+                            raw_legal[i] = True
+                            has_rad = any(a.GetNumRadicalElectrons() > 0 for a in cand.GetAtoms())
+                            raw_clean_q[i] = bool(is_clean_organic_charge_state(cand)) and (not has_rad)
+                except Exception:
+                    pass
+                continue
             try:
                 inst = trajectory_to_instance(tr, element_table=self.allowed_elements)
                 mol = inst.graph

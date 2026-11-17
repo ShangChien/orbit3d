@@ -2,6 +2,7 @@
 
 from .conditioner import LoomConditioner
 from .critic_bus import CompositeCriticBus
+from .flowmol_slot import FlowMolReplayDataset, LoomFlowMolGenerator
 from .gp_atlas import HeteroscedasticGPAtlas1D, HeteroscedasticGPAtlas2D
 from .grpo import (
     LoomGRPOTrainer,
@@ -13,6 +14,13 @@ from .grpo import (
 )
 from .lora import LoRALinear, inject_uni3dar_lora, iter_lora_parameters
 from .metrics import compute_loom_metrics
+from .octree_process_critic import (
+    NUM_COARSE_GEOM_FEATS,
+    OctreeProcessCritic,
+    ProcessCriticTrainStats,
+    compute_coarse_voxel_geometry,
+    fit_octree_process_critic,
+)
 from .registry import (
     AssetCapabilities,
     AssetRegistry,
@@ -38,6 +46,7 @@ from .slots import (
     PotentialSlot,
     RewardOracleSlot,
     assert_not_audit_oracle,
+    build_generator_slot,
     check_unimol2_support,
 )
 from .spec import (
@@ -58,6 +67,7 @@ __all__ = [
     "CompositeCriticBus",
     "ConstraintChannelSpec",
     "FingerprintQSARAsset",
+    "FlowMolReplayDataset",
     "GeneratorSlot",
     "HeavyAtomValenceHead",
     "HeteroscedasticGPAtlas1D",
@@ -66,13 +76,17 @@ __all__ = [
     "InnerRSIRunner",
     "LoRALinear",
     "LoomConditioner",
+    "LoomFlowMolGenerator",
     "LoomGRPOTrainer",
     "LoomUni3DARGenerator",
+    "NUM_COARSE_GEOM_FEATS",
     "ObjectiveChannelSpec",
+    "OctreeProcessCritic",
     "OuterRSIAcquisition",
     "PhysicsConstrainedCoordRefiner",
     "PotentialSlot",
     "PredictorAsset",
+    "ProcessCriticTrainStats",
     "RSIDiagnoser",
     "RSIDiagnosticThresholds",
     "ResidualCalibratedAsset",
@@ -81,9 +95,12 @@ __all__ = [
     "TaskWeavingSpec",
     "UniMol3DAsset",
     "assert_not_audit_oracle",
+    "build_generator_slot",
     "check_unimol2_support",
+    "compute_coarse_voxel_geometry",
     "compute_disentangled_group_advantages",
     "compute_loom_metrics",
+    "fit_octree_process_critic",
     "formal_charge_signature",
     "inject_uni3dar_lora",
     "is_clean_organic_charge_state",
