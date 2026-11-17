@@ -1,0 +1,15 @@
+{
+  "total_rollouts": 8192,
+  "clean_rate": 0.9781,
+  "clean_and_synthesizable_rate": 0.5815,
+  "critic_params": 2061062,
+  "rollout_and_surrogate_wall_sec": 801.81,
+  "critic_fit_wall_sec": 6.94,
+  "train_stats": {
+    "epochs": 24,
+    "train_loss": 0.30815,
+    "val_prop_mae_norm": 0.47164,
+    "val_legal_acc": 0.9829,
+    "val_constr_acc": 0.8071
+  }
+}
