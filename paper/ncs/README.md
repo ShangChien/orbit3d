@@ -9,9 +9,9 @@ This directory holds the submission-ready *Nature Computational Science* (`Artic
 | Section / Item | Limit (*Nature Computational Science* `Article`) | Verified Count |
 |---|---|---|
 | Title | $\le 15$ words | **11 words** |
-| Abstract | Unstructured single paragraph ($\sim$150–185 words, 0 citations, 0 math) | **155 words** (0 citations, 0 math) |
-| Main Text (`Introduction` + `Results` + `Discussion`) | $\le 3{,}500$ words (excl. Abstract, Methods, floats) | **1,930 words** |
-| Methods | $\le 3{,}000$ words | **1,104 words** |
+| Abstract | Unstructured single paragraph ($\sim$150–185 words, 0 citations, 0 math) | **179 words** (0 citations, 0 math) |
+| Main Text (`Introduction` + `Results` + `Discussion`) | $\le 3{,}500$ words (excl. Abstract, Methods, floats) | **2,041 words** |
+| Methods | $\le 3{,}000$ words | **1,275 words** |
 | Main Display Items | $\le 6$ total | **6** (Figures 1–5 + two-part Table 1a/b) |
 | Extended Data Items | $\le 10$ total | **7** (Extended Data Figs. 1–2 + Extended Data Tables 1–5) |
 
@@ -19,13 +19,13 @@ This directory holds the submission-ready *Nature Computational Science* (`Artic
 
 | File | Description |
 |---|---|
-| `main_ncs.tex` | *Nature Computational Science* `Article` LaTeX manuscript (`super,sort&compress,comma` Nature citations, 18 pages compiled) |
+| `main_ncs.tex` | *Nature Computational Science* `Article` LaTeX manuscript (`super,sort&compress,comma` Nature citations, 19 pages compiled) |
 | `main_ncs.bbl` | Synchronized 22-entry Nature `thebibliography` included directly by `main_ncs.tex` |
 | `references.bib` | BibTeX bibliography synchronized with the main preprint |
 | `sync_ncs_bbl.py` | Regenerates Nature-formatted `main_ncs.bbl` in exact citation order from `main_ncs.tex` and `references.bib` |
 | `build_ncs_submission.py` | Packages the 10 source files (`main_ncs.tex`, `main_ncs.bbl`, `references.bib`, and `figures/*.pdf`) into `UniLoom_NCS_Submission.tar.gz` |
 | `figures/` | Staged 7 vector PDFs (`fig1..fig5` main + `ed_fig1..ed_fig2` Extended Data) |
-| `main_ncs.pdf` | Compiled 18-page PDF manuscript (zero LaTeX warnings) |
+| `main_ncs.pdf` | Compiled 19-page PDF manuscript (zero LaTeX Overfull/Undefined warnings) |
 | `UniLoom_NCS_Submission.tar.gz` | Upload-ready source tarball containing the 10 LaTeX/figure files |
 | `UniLoom_NCS_Manuscript.md` | Complete Markdown mirror of the NCS manuscript with relative `../figures/*.png` embeds |
 

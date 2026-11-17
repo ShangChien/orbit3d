@@ -17,7 +17,7 @@ This directory contains the self-contained English arXiv LaTeX/Markdown manuscri
 | `sync_bbl.py` | Regenerates `main.bbl` in exact citation order from `main.tex` and `references.bib` |
 | `build_arxiv_submission.py` | Packages `main.tex`, `main.bbl`, `references.bib`, and `figures/fig1..fig7*.pdf` into `UniLoom_arXiv_Submission.tar.gz` |
 | `figures/` | All 7 main-paper figures as vector `.pdf` and raster `.png` (plus `.svg` for Figure 1) |
-| `main.pdf` | Compiled arXiv PDF manuscript |
+| `main.pdf` | Compiled 19-page arXiv PDF manuscript |
 | `UniLoom_arXiv_Submission.tar.gz` | Upload-ready arXiv source archive |
 | `ncs/` | Complete *Nature Computational Science* (`Article`) submission directory (`main_ncs.tex`, `main_ncs.bbl`, `sync_ncs_bbl.py`, `build_ncs_submission.py`, `main_ncs.pdf`, `UniLoom_NCS_Submission.tar.gz`, `UniLoom_NCS_Manuscript.md`, `figures/*.pdf`, `README.md`) |
 
