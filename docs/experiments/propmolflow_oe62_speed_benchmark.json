@@ -1,0 +1,72 @@
+{
+  "experiment": "PropMolFlow-OE62 (12 elements, up to 80 atoms, O(N^2) complete DGL graph) Single-A800 Speed & VRAM Benchmark",
+  "preprocess_meta": {
+    "train_molecules": 47138,
+    "val_molecules": 883,
+    "train_skipped": 669,
+    "mean_n_atoms": 39.0,
+    "median_n_atoms": 37.0,
+    "max_n_atoms": 80,
+    "mean_complete_edges_per_mol": 1675.0,
+    "max_complete_edges_per_mol": 6320,
+    "homo_mean_eV": -6.6408,
+    "homo_std_eV": 0.6476,
+    "preprocess_wall_sec": 37.84
+  },
+  "train_throughput": {
+    "bs16": {
+      "status": "ok",
+      "sec_per_step": 0.1287,
+      "train_mol_per_sec": 124.28,
+      "peak_vram_gb": 4.873,
+      "total_params": 7093895
+    },
+    "bs32": {
+      "status": "ok",
+      "sec_per_step": 0.1316,
+      "train_mol_per_sec": 243.17,
+      "peak_vram_gb": 8.43,
+      "total_params": 7093895
+    },
+    "bs64": {
+      "status": "ok",
+      "sec_per_step": 0.161,
+      "train_mol_per_sec": 397.42,
+      "peak_vram_gb": 17.209,
+      "total_params": 7093895
+    },
+    "bs128": {
+      "status": "ok",
+      "sec_per_step": 0.2906,
+      "train_mol_per_sec": 440.49,
+      "peak_vram_gb": 32.518,
+      "total_params": 7093895
+    }
+  },
+  "infer_100step_ode_throughput": {
+    "bs16": {
+      "status": "ok",
+      "n_timesteps": 100,
+      "infer_mol_per_sec": 4.19,
+      "peak_vram_gb": 0.346
+    },
+    "bs32": {
+      "status": "ok",
+      "n_timesteps": 100,
+      "infer_mol_per_sec": 8.04,
+      "peak_vram_gb": 0.519
+    },
+    "bs64": {
+      "status": "ok",
+      "n_timesteps": 100,
+      "infer_mol_per_sec": 10.88,
+      "peak_vram_gb": 0.864
+    },
+    "bs128": {
+      "status": "ok",
+      "n_timesteps": 100,
+      "infer_mol_per_sec": 12.4,
+      "peak_vram_gb": 1.595
+    }
+  }
+}
