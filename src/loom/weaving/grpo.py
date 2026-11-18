@@ -167,6 +167,9 @@ class LoomGRPOTrainer:
         awr_max_weight: float = 6.0,
         awr_repeat_k: int = 2,
         awr_hindsight_fallback: bool = True,
+        awr_require_native_legal: bool = False,
+        awr_relax_steps: int = 0,
+        awr_max_fmax: float = 2.5,
         grad_clip_mode: str = "norm",
         seed: int = 42,
     ) -> None:
@@ -197,6 +200,9 @@ class LoomGRPOTrainer:
         self.awr_max_weight = max(float(awr_max_weight), 1.0)
         self.awr_repeat_k = max(1, int(awr_repeat_k))
         self.awr_hindsight_fallback = bool(awr_hindsight_fallback)
+        self.awr_require_native_legal = bool(awr_require_native_legal)
+        self.awr_relax_steps = max(0, int(awr_relax_steps))
+        self.awr_max_fmax = float(awr_max_fmax)
         self.grad_clip_mode = str(grad_clip_mode).strip().lower()
 
         self.device = next(generator.parameters()).device
@@ -422,7 +428,16 @@ class LoomGRPOTrainer:
         constraints_met_rate = 1.0
         if self.critic_bus is not None:
             admit_out = self.critic_bus.admit_trajectories(trajectories)
-            mols = admit_out["mols"]
+            raw_legal_np = np.asarray(admit_out.get("raw_legal_mask", admit_out["legal_mask"]), dtype=bool)
+            raw_clean_np = np.asarray(admit_out.get("raw_clean_charge_mask", admit_out["clean_charge_mask"]), dtype=bool)
+            if self.alignment_mode == "awr_sft" and self.awr_require_native_legal:
+                raw_mols_list = admit_out.get("raw_mols", admit_out["mols"])
+                mols = [
+                    raw_mols_list[k] if (bool(raw_legal_np[k]) and bool(raw_clean_np[k])) else None
+                    for k in range(total_b)
+                ]
+            else:
+                mols = admit_out["mols"]
             bus_obj_names = self.critic_bus.spec.objective_names
             gen_cols = list(self.generator.target_cols)
             if len(bus_obj_names) == rep_targets_eV.shape[-1] and tuple(bus_obj_names) == tuple(gen_cols):
@@ -555,6 +570,7 @@ class LoomGRPOTrainer:
                     w_prop=self.w_prop,
                 )
                 adv_all[s:e] = adv_g
+            raw_legal_np = valid_mask_np.copy()
 
         natoms_actual_np, natoms_abs_err_np, size_scores_np, size_eval_mask_np, adv_size = (
             self._compute_size_metrics_and_advantages(mols, valid_mask_np, rep_targets_eV, rep_mask_np, group_size)
@@ -630,15 +646,17 @@ class LoomGRPOTrainer:
                             continue
                         pass_mols.append(kept_mols[loc_j])
                         if post_err <= self.tolerance_eV:
-                            pass_targets.append(req_j)
+                            mapped_t = req_j.copy()
                         elif self.critic_bus is not None:
                             mapped_t = req_j.copy()
                             for gc_i, gc_nm in enumerate(gen_cols):
                                 if gc_nm in bus_names:
                                     mapped_t[gc_i] = rel_aligned[loc_j, bus_names.index(gc_nm)]
-                            pass_targets.append(mapped_t)
                         else:
-                            pass_targets.append(rel_aligned[loc_j])
+                            mapped_t = rel_aligned[loc_j].copy()
+                        if self.size_col_idx is not None:
+                            mapped_t[self.size_col_idx] = float(kept_mols[loc_j].GetNumAtoms())
+                        pass_targets.append(mapped_t)
                         pass_masks.append(msk_j)
                     if pass_mols:
                         relax_packed, kept_rel = self.generator.encode_molecules_batch(
@@ -709,6 +727,67 @@ class LoomGRPOTrainer:
                     cand_raw_w.append(0.5)
                     cand_targets.append(mapped_t)
                     cand_masks.append(rep_mask_np[i])
+
+            if cand_mols and self.awr_relax_steps > 0 and self.potential_slot is not None:
+                rel_out = self.potential_slot.relax_molecules(
+                    cand_mols, n_steps=self.awr_relax_steps, chunk_size=16
+                )
+                kept_rm: List[Chem.Mol] = []
+                kept_w: List[float] = []
+                kept_t: List[np.ndarray] = []
+                kept_m: List[np.ndarray] = []
+                for loc_k, rm in enumerate(rel_out["relaxed_mols"]):
+                    f_end = float(rel_out["final_f_max_eV_A"][loc_k])
+                    if (
+                        rel_out["graph_preserved"][loc_k]
+                        and rm is not None
+                        and math.isfinite(f_end)
+                        and f_end <= self.awr_max_fmax
+                        and is_clean_organic_charge_state(rm)
+                    ):
+                        kept_rm.append(rm)
+                        kept_w.append(cand_raw_w[loc_k])
+                        kept_t.append(cand_targets[loc_k])
+                        kept_m.append(cand_masks[loc_k])
+                if kept_rm and self.critic_bus is not None:
+                    rel_ev = self.critic_bus.evaluate_molecules(kept_rm, for_training=True, batch_size=16)
+                    rel_aligned = rel_ev["objective_preds"]
+                    rel_ok = rel_ev["evaluated_mask"] & rel_ev["hard_constraints_met"]
+                    gen_cols = list(self.generator.target_cols)
+                    bus_names = list(self.critic_bus.spec.objective_names)
+                    v_mols: List[Chem.Mol] = []
+                    v_w: List[float] = []
+                    v_t: List[np.ndarray] = []
+                    v_m: List[np.ndarray] = []
+                    for j_rm in range(len(kept_rm)):
+                        if not bool(rel_ok[j_rm]):
+                            continue
+                        req_j = kept_t[j_rm]
+                        msk_j = kept_m[j_rm]
+                        errs = [
+                            abs(float(rel_aligned[j_rm, b_i]) - float(req_j[gen_cols.index(nm)]))
+                            for b_i, nm in enumerate(bus_names)
+                            if nm in gen_cols and bool(msk_j[gen_cols.index(nm)])
+                        ]
+                        post_err = max(errs) if errs else 0.0
+                        if post_err > 1.40 * self.tolerance_eV:
+                            continue
+                        mapped_t = req_j.copy()
+                        w_mult = 1.0
+                        if post_err > self.tolerance_eV:
+                            w_mult = 0.75
+                            for gc_i, gc_nm in enumerate(gen_cols):
+                                if gc_nm in bus_names:
+                                    mapped_t[gc_i] = float(rel_aligned[j_rm, bus_names.index(gc_nm)])
+                        if self.size_col_idx is not None:
+                            mapped_t[self.size_col_idx] = float(kept_rm[j_rm].GetNumAtoms())
+                        v_mols.append(kept_rm[j_rm])
+                        v_w.append(kept_w[j_rm] * w_mult)
+                        v_t.append(mapped_t)
+                        v_m.append(msk_j)
+                    cand_mols, cand_raw_w, cand_targets, cand_masks = v_mols, v_w, v_t, v_m
+                else:
+                    cand_mols, cand_raw_w, cand_targets, cand_masks = kept_rm, kept_w, kept_t, kept_m
 
             if cand_mols:
                 awr_packed, kept_local = self.generator.encode_molecules_batch(
@@ -861,6 +940,7 @@ class LoomGRPOTrainer:
             "proposals": total_b,
             "valid": int(valid_mask_np.sum()),
             "valid_rate": float(valid_mask_np.mean()),
+            "raw_valid_rate": float(raw_legal_np.mean()),
             "evaluated": int(eval_mask_np.sum()),
             "hits": int(hits_np.sum()),
             "hit_yield": float(hits_np.mean()),

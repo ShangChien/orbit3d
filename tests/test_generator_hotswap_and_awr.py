@@ -303,3 +303,43 @@ def test_generator_slot_hotswap_and_awr_auto_dispatch(monkeypatch: pytest.Monkey
         assert row["grad_norm"] > 0.0
 
     assert not torch.allclose(w_before, g_fl.backbone.proj.weight.detach())
+
+    # Verify repaired native-legal + MLIP-relaxation AWR gating blocks radical/charged native defects (idx=2,3)
+    class _MockPotential:
+        is_audit_only = False
+
+        def evaluate_molecules(self, ms, chunk_size=32):
+            del chunk_size
+            n_m = len(ms)
+            return {
+                "f_max_eV_A": np.full(n_m, 1.8, dtype=np.float64),
+                "f_rms_eV_A": np.full(n_m, 0.7, dtype=np.float64),
+            }
+
+        def relax_molecules(self, ms, n_steps=20, chunk_size=16):
+            del n_steps, chunk_size
+            return {
+                "relaxed_mols": [Chem.Mol(m) for m in ms],
+                "graph_preserved": np.ones(len(ms), dtype=bool),
+                "final_f_max_eV_A": np.full(len(ms), 0.95, dtype=np.float64),
+            }
+
+    trainer_strict = LoomGRPOTrainer(
+        generator=g_fl,
+        critic_bus=bus,
+        potential_slot=_MockPotential(),  # type: ignore[arg-type]
+        replay_molecules=replay_mols,
+        replay_targets_eV=replay_y,
+        alignment_mode="awr_sft",
+        lr=1e-3,
+        awr_require_native_legal=True,
+        awr_relax_steps=10,
+        awr_max_fmax=2.0,
+        ppo_epochs=1,
+        seed=11,
+    )
+    res_strict = trainer_strict.step(np.array([[-7.10]], dtype=np.float32), np.array([[True]]), group_size=4, step_index=0)
+    # Out of 4 mock trajectories, idx=2 (radical) and idx=3 (net-charged) must be excluded from native valid_rate
+    assert res_strict["valid"] == 2
+    assert abs(res_strict["valid_rate"] - 0.5) < 1e-6
+    assert np.isfinite(res_strict["loss_total"])

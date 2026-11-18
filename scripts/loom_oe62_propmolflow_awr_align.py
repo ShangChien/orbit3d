@@ -5,8 +5,10 @@ Demonstrates plug-and-play base `GeneratorSlot` hot-swapping (`Uni-3DAR` <-> `Pr
   - Mounts the exact OE62 declarative `CompositeCriticBus` (`Uni-Mol2` HOMO + `SA_Score <= 3.5`
     + `smarts_alert <= 0` + `mol_weight <= 550` + `DPA-4` `F_phys`, strictly WITHOUT `AuditOracleSlot`).
   - Runs `LoomGRPOTrainer(alignment_mode="auto")` which automatically resolves to
-    `Online Advantage-Weighted Flow SFT` (`awr_sft`) with `ValenceReconciler` + MLIP relaxed-coordinate
-    distillation + curated replay anchor (default `96` steps x `4` prompts x `8` rollouts = `384` groups).
+    `Online Advantage-Weighted Flow SFT` (`awr_sft`) with strict native-legality gating,
+    20-step `DPA-4` coordinate relaxation + post-relaxation critic re-verification, and a
+    curated `SA_Score <= 3.5`, `F_max <= 2.2 eV/A` equilibrium replay anchor
+    (default `56` steps x `4` prompts x `8` rollouts = `224` groups).
   - Saves `ckpt_52p0gpuh_loom_awr.pt` compatible with `loom_oe62_propmolflow_head2head.py --phase eval_checkpoint`.
 """
 
@@ -32,6 +34,7 @@ if str(ROOT / "src") not in sys.path:
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from loom.chemistry.valence_reconciler import is_clean_organic_charge_state
 from loom.oracles.unimol2_task import B_WEIGHT_SHA256
 from loom.weaving import (
     AssetRegistry,
@@ -65,7 +68,7 @@ def main() -> None:
     p.add_argument(
         "--replay-sdf",
         type=Path,
-        default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/data/oe62_consolidated/quantum_train_B.sdf"),
+        default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/data/oe62_consolidated/oe62_master_train_B.sdf"),
     )
     p.add_argument(
         "--reward-oracle-dir",
@@ -79,20 +82,28 @@ def main() -> None:
     )
     p.add_argument("--propmolflow-root", type=Path, default=Path("/sjtu-combustion/wjw/chensq/PropMolFlow"))
     p.add_argument("--device", type=str, default="cuda:0")
-    p.add_argument("--awr-steps", type=int, default=96)
+    p.add_argument("--awr-steps", type=int, default=56)
     p.add_argument("--prompts-per-step", type=int, default=4)
     p.add_argument("--group-size", type=int, default=8)
-    p.add_argument("--ppo-epochs", type=int, default=2)
-    p.add_argument("--lr", type=float, default=4e-5)
-    p.add_argument("--replay-weight", type=float, default=0.35)
-    p.add_argument("--replay-batch-size", type=int, default=8)
-    p.add_argument("--relax-distill-weight", type=float, default=0.25)
+    p.add_argument("--ppo-epochs", type=int, default=1)
+    p.add_argument("--lr", type=float, default=1.8e-5)
+    p.add_argument("--replay-weight", type=float, default=0.45)
+    p.add_argument("--replay-batch-size", type=int, default=32)
+    p.add_argument("--replay-max-fmax", type=float, default=2.2)
+    p.add_argument("--relax-distill-weight", type=float, default=0.0)
+    p.add_argument("--w-valid", type=float, default=1.00)
+    p.add_argument("--w-phys", type=float, default=0.55)
+    p.add_argument("--w-prop", type=float, default=1.05)
+    p.add_argument("--grad-clip-mode", type=str, default="norm")
     p.add_argument("--awr-temperature", type=float, default=0.45)
-    p.add_argument("--awr-max-weight", type=float, default=6.0)
+    p.add_argument("--awr-max-weight", type=float, default=5.0)
     p.add_argument("--awr-repeat-k", type=int, default=2)
-    p.add_argument("--sft-time-draws", type=int, default=2)
+    p.add_argument("--awr-require-native-legal", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--awr-relax-steps", type=int, default=20)
+    p.add_argument("--awr-max-fmax", type=float, default=2.2)
+    p.add_argument("--sft-time-draws", type=int, default=4)
     p.add_argument("--sample-timesteps", type=int, default=100)
-    p.add_argument("--max-replay-pool", type=int, default=0)
+    p.add_argument("--max-replay-pool", type=int, default=4096)
     p.add_argument(
         "--output-ckpt",
         type=Path,
@@ -143,19 +154,32 @@ def main() -> None:
     registry.register_predictor(BuiltInRuleAsset(asset_id="builtin_rules"))
     registry.register_potential("mlip_dpa4", pot_slot)
 
-    replay_mols_all, _ = load_sdf_with_targets(args.replay_sdf, ["homo", "lumo"])
-    # Restrict replay admission & reconciler to PropMolFlow's 12-element alphabet & charge range
+    replay_mols_all, _ = load_sdf_with_targets(args.replay_sdf, ["homo"])
+    # Restrict replay admission & reconciler to PropMolFlow's 12-element alphabet & clean SA<=3.5 equilibrium conformers
     replay_mols_12 = [
         m
         for m in replay_mols_all
         if m is not None
         and 2 <= m.GetNumAtoms() <= 80
+        and is_clean_organic_charge_state(m)
         and all(a.GetSymbol() in allowed_set for a in m.GetAtoms())
         and all(-2 <= a.GetFormalCharge() <= 3 for a in m.GetAtoms())
     ]
-    if int(args.max_replay_pool) > 0:
-        replay_mols_12 = replay_mols_12[: int(args.max_replay_pool)]
     seen_charges = frozenset(formal_charge_signature(m) for m in replay_mols_12)
+    rule_filter = BuiltInRuleAsset(asset_id="builtin_rules_prefilter")
+    r_out = rule_filter.predict_mols(replay_mols_12, batch_size=256)
+    sa_col = r_out["mean"][:, rule_filter.channel_index("sa_score")]
+    mw_col = r_out["mean"][:, rule_filter.channel_index("mol_weight")]
+    sm_col = r_out["mean"][:, rule_filter.channel_index("smarts_alert")]
+    replay_mols_12 = [
+        replay_mols_12[k]
+        for k in range(len(replay_mols_12))
+        if (sa_col[k] <= 3.5) and (mw_col[k] <= 550.0) and (sm_col[k] <= 0.0)
+    ]
+    if int(args.max_replay_pool) > 0 and len(replay_mols_12) > int(args.max_replay_pool):
+        sub_rng = np.random.default_rng(2026)
+        pick_idx = sub_rng.choice(len(replay_mols_12), size=int(args.max_replay_pool), replace=False)
+        replay_mols_12 = [replay_mols_12[int(i)] for i in pick_idx]
     bus = CompositeCriticBus(
         spec=spec,
         registry=registry,
@@ -163,7 +187,9 @@ def main() -> None:
         allowed_elements=gen.allowed_elements,
     )
 
-    replay_mols, replay_labels_2d, relabel_summary = bus.relabel_conformer_pool(replay_mols_12, max_fmax_eV_A=4.5)
+    replay_mols, replay_labels_2d, relabel_summary = bus.relabel_conformer_pool(
+        replay_mols_12, max_fmax_eV_A=float(args.replay_max_fmax)
+    )
     homo_obj_idx = bus.spec.objective_names.index("homo")
     replay_labels_homo = replay_labels_2d[:, [homo_obj_idx]].astype(np.float32)
     print(f"[PropMolFlow-AWR] Declarative Replay Admission: {relabel_summary}", flush=True)
@@ -192,9 +218,9 @@ def main() -> None:
         ppo_epochs=int(args.ppo_epochs),
         replay_weight=float(args.replay_weight),
         replay_batch_size=int(args.replay_batch_size),
-        w_valid=0.85,
-        w_phys=0.35,
-        w_prop=1.05,
+        w_valid=float(args.w_valid),
+        w_phys=float(args.w_phys),
+        w_prop=float(args.w_prop),
         sharp_concentration=True,
         relax_distill_weight=float(args.relax_distill_weight),
         relax_distill_steps=20,
@@ -204,7 +230,10 @@ def main() -> None:
         awr_max_weight=float(args.awr_max_weight),
         awr_repeat_k=int(args.awr_repeat_k),
         awr_hindsight_fallback=True,
-        grad_clip_mode="value",
+        awr_require_native_legal=bool(args.awr_require_native_legal),
+        awr_relax_steps=int(args.awr_relax_steps),
+        awr_max_fmax=float(args.awr_max_fmax),
+        grad_clip_mode=str(args.grad_clip_mode),
         seed=2026,
     )
     assert trainer.alignment_mode == "awr_sft"
@@ -237,10 +266,18 @@ def main() -> None:
             "ppo_epochs": int(args.ppo_epochs),
             "replay_weight": float(args.replay_weight),
             "replay_batch_size": int(args.replay_batch_size),
+            "replay_max_fmax": float(args.replay_max_fmax),
             "relax_distill_weight": float(args.relax_distill_weight),
+            "w_valid": float(args.w_valid),
+            "w_phys": float(args.w_phys),
+            "w_prop": float(args.w_prop),
+            "grad_clip_mode": str(args.grad_clip_mode),
             "awr_temperature": float(args.awr_temperature),
             "awr_max_weight": float(args.awr_max_weight),
             "awr_repeat_k": int(args.awr_repeat_k),
+            "awr_require_native_legal": bool(args.awr_require_native_legal),
+            "awr_relax_steps": int(args.awr_relax_steps),
+            "awr_max_fmax": float(args.awr_max_fmax),
             "sft_time_draws": int(args.sft_time_draws),
             "sample_timesteps": int(args.sample_timesteps),
         },
