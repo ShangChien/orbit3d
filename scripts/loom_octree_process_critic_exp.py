@@ -1038,8 +1038,12 @@ def main() -> None:
     p.add_argument("--oe62-potential-weights", type=Path, default=Path("/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"))
     p.add_argument("--oe62-rollouts", type=int, default=8192)
     p.add_argument("--oe62-output-json", type=Path, default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/results/oe62_octree_process_critic.json"))
+    p.add_argument("--allow-tf32", action="store_true", help="Enable Ampere TF32 Tensor Core matmuls fairly.")
 
     args = p.parse_args()
+    if args.allow_tf32 and torch.cuda.is_available():
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
     if args.phase == "train_qm9":
         run_train_qm9(args)
     elif args.phase == "eval_qm9":
