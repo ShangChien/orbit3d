@@ -1,0 +1,16 @@
+{
+  "total_rollouts": 12288,
+  "selected_leaf_budget_tol": null,
+  "clean_rate": 0.8253,
+  "clean_and_synthesizable_rate": 0.2999,
+  "rollout_mean_clean_atoms": 34.62,
+  "critic_fit_wall_sec": 5.91,
+  "total_wall_sec": 675.55,
+  "train_stats": {
+    "epochs": 24,
+    "train_loss": 0.13902,
+    "val_prop_mae_norm": 0.29255,
+    "val_legal_acc": 0.8259,
+    "val_constr_acc": 0.8161
+  }
+}

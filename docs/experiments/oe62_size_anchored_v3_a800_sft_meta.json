@@ -1,0 +1,67 @@
+{
+  "v3_mode": true,
+  "best_val_loss": 0.8778839608033498,
+  "sft_steps": 6400,
+  "wall_seconds": 4709.0,
+  "probe_legal": 44,
+  "probe_mean_target_atoms": 36.52,
+  "probe_mean_gen_atoms": 33.18,
+  "probe_natoms_mae": 2.39,
+  "val_history": [
+    {
+      "step": 600,
+      "val_loss": 0.8879,
+      "wall_s": 444.1
+    },
+    {
+      "step": 1200,
+      "val_loss": 0.87879,
+      "wall_s": 884.2
+    },
+    {
+      "step": 1800,
+      "val_loss": 0.87788,
+      "wall_s": 1326.8
+    },
+    {
+      "step": 2400,
+      "val_loss": 0.88388,
+      "wall_s": 1769.7
+    },
+    {
+      "step": 3000,
+      "val_loss": 0.895,
+      "wall_s": 2210.1
+    },
+    {
+      "step": 3600,
+      "val_loss": 0.90909,
+      "wall_s": 2650.6
+    },
+    {
+      "step": 4200,
+      "val_loss": 0.93337,
+      "wall_s": 3089.8
+    },
+    {
+      "step": 4800,
+      "val_loss": 0.95259,
+      "wall_s": 3528.2
+    },
+    {
+      "step": 5400,
+      "val_loss": 0.97587,
+      "wall_s": 3968.9
+    },
+    {
+      "step": 6000,
+      "val_loss": 0.99367,
+      "wall_s": 4408.6
+    },
+    {
+      "step": 6400,
+      "val_loss": 1.00917,
+      "wall_s": 4700.6
+    }
+  ]
+}
