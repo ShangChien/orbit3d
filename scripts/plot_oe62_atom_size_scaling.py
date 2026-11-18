@@ -136,6 +136,8 @@ def main() -> None:
         ROOT / "docs" / "figures" / "oe62_atom_scaling_speed_and_mae.png",
         ROOT / "paper" / "figures" / "fig9_oe62_atom_size_scaling.png",
         ROOT / "paper" / "figures" / "fig9_oe62_atom_size_scaling.pdf",
+        ROOT / "paper" / "ncs" / "figures" / "ed_fig4_oe62_atom_size_scaling.png",
+        ROOT / "paper" / "ncs" / "figures" / "ed_fig4_oe62_atom_size_scaling.pdf",
         *args.extra_out,
     ]
     render_atom_scaling_figure(targets)
