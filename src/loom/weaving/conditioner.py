@@ -171,3 +171,20 @@ class LoomConditioner(nn.Module):
 
     def modulate_out(self, h: torch.Tensor, global_c: torch.Tensor) -> torch.Tensor:
         return self._apply_mod(self.out_mod, h, global_c)
+
+    def precompute_modulations(
+        self, global_c: torch.Tensor, dtype: torch.dtype
+    ) -> tuple[list[tuple[torch.Tensor, torch.Tensor]], tuple[torch.Tensor, torch.Tensor]]:
+        """Precompute `(1 + scale, shift)` across all layers + output norm once per trajectory."""
+        c_fp32 = global_c.float()
+
+        def _one(mod_net: nn.Module) -> tuple[torch.Tensor, torch.Tensor]:
+            raw = mod_net(c_fp32)
+            if self.modulation_cap > 0:
+                raw = self.modulation_cap * torch.tanh(raw / self.modulation_cap)
+            scale, shift = raw.to(dtype).chunk(2, dim=-1)
+            return (1.0 + scale), shift
+
+        layer_pairs = [_one(mod) for mod in self.layer_mods]
+        out_pair = _one(self.out_mod)
+        return layer_pairs, out_pair

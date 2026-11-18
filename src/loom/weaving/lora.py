@@ -56,19 +56,24 @@ class LoRALinear(nn.Module):
         self._clear_eval_cache()
         super()._load_from_state_dict(*args, **kwargs)
 
+    def get_merged_weight_and_bias(self, dtype: torch.dtype) -> Tuple[torch.Tensor, torch.Tensor | None]:
+        """Return `(weight, bias)` with LoRA merged in `dtype` (inference-only helper)."""
+        if self._eval_weight is None or self._eval_weight.device != self.base.weight.device:
+            with torch.no_grad():
+                merged = (self.base.weight + (self.lora_B @ self.lora_A) * self.scaling).detach()
+                self._eval_weight = merged
+                self._eval_weight_bf16 = merged.to(torch.bfloat16) if merged.is_cuda else None
+        if dtype == torch.bfloat16 and self._eval_weight_bf16 is not None:
+            w = self._eval_weight_bf16
+        else:
+            w = self._eval_weight.to(dtype)
+        b = self.base.bias.to(dtype) if self.base.bias is not None else None
+        return w, b
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         need_lora_grad = torch.is_grad_enabled() and (self.lora_A.requires_grad or self.lora_B.requires_grad)
         if not self.training and not need_lora_grad:
-            if self._eval_weight is None or self._eval_weight.device != self.base.weight.device:
-                with torch.no_grad():
-                    merged = (self.base.weight + (self.lora_B @ self.lora_A) * self.scaling).detach()
-                    self._eval_weight = merged
-                    self._eval_weight_bf16 = merged.to(torch.bfloat16) if merged.is_cuda else None
-            if x.dtype == torch.bfloat16 and self._eval_weight_bf16 is not None:
-                w = self._eval_weight_bf16
-            else:
-                w = self._eval_weight.to(x.dtype)
-            b = self.base.bias.to(x.dtype) if self.base.bias is not None else None
+            w, b = self.get_merged_weight_and_bias(x.dtype)
             return F.linear(x, w, b)
 
         self._clear_eval_cache()
@@ -76,6 +81,18 @@ class LoRALinear(nn.Module):
         x_drop = self.dropout(x)
         delta = F.linear(F.linear(x_drop, self.lora_A.to(x_drop.dtype)), self.lora_B.to(x_drop.dtype)) * self.scaling
         return base_out + delta.to(base_out.dtype)
+
+
+def extract_linear_weight_bias(mod: nn.Module, dtype: torch.dtype) -> Tuple[torch.Tensor, torch.Tensor | None]:
+    """Extract `(weight, bias)` in `dtype` from either `LoRALinear` or `nn.Linear`."""
+    if isinstance(mod, LoRALinear):
+        return mod.get_merged_weight_and_bias(dtype)
+    assert isinstance(mod, nn.Linear)
+    w = mod.weight.detach()
+    if w.dtype != dtype:
+        w = w.to(dtype)
+    b = mod.bias.detach().to(dtype) if mod.bias is not None else None
+    return w, b
 
 
 def inject_uni3dar_lora(

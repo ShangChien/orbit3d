@@ -175,3 +175,79 @@ def test_octree_process_critic_fit_and_branch_prune_sampling(tmp_path) -> None:
         for tr in group:
             assert "atom_symbols" in tr and "positions_np" in tr
             assert int((tr["decoder_feat"][:, 4] == -99).sum().item()) == 0
+
+
+def test_zero_replay_kv_continuation_logprob_parity_and_leaf_budget() -> None:
+    torch.manual_seed(77)
+    gen = _make_tiny_generator()
+    gen.eval()
+    critic = OctreeProcessCritic(emb_dim=64, num_targets=2, hidden_dim=128)
+    critic.set_normalization([-6.5, 18.0], [0.8, 4.0])
+    critic.eval()
+
+    prompts_raw = np.array(
+        [[-6.8, 14.0], [-6.1, 22.0], [-7.2, 11.0], [-5.9, 26.0], [-6.4, 18.0]], dtype=np.float32
+    )
+    t_norm = gen.normalize_targets(prompts_raw)
+    cond_mask = torch.ones((5, 2), dtype=torch.bool)
+    uncond_mask = torch.tensor([[False, True]] * 5, dtype=torch.bool)
+    budgets = torch.tensor([14.0, 22.0, 11.0, 26.0, 18.0])
+
+    grouped = gen.sample_with_process_critic(
+        t_norm,
+        cond_mask,
+        critic,
+        m_init=5,
+        m_keep=2,
+        cfg_scale=1.8,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        electron_parity=0,
+        uncond_active_mask=uncond_mask,
+        seed=42,
+        use_bf16=False,
+        max_decode_steps=256,
+    )
+    flat_trajs = [tr for g in grouped for tr in g]
+    t_rep = t_norm.repeat_interleave(2, dim=0)
+    m_rep = cond_mask.repeat_interleave(2, dim=0)
+    u_rep = uncond_mask.repeat_interleave(2, dim=0)
+    packets = gen.trajectory_distributions(
+        flat_trajs,
+        t_rep,
+        m_rep,
+        temperatures=(1.0, 1.0, 1.0),
+        cfg_scale=1.8,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        electron_parity=0,
+        topology_only_policy=True,
+        uncond_active_mask=u_rep,
+    )
+    tot_tf = torch.zeros(len(flat_trajs))
+    for logp, labels, owner in packets:
+        chosen = logp.gather(-1, labels.unsqueeze(-1)).squeeze(-1)
+        assert torch.isfinite(chosen).all()
+        tot_tf.index_add_(0, owner, chosen)
+    samp_scores = torch.tensor([float(tr["scores"].sum().item()) for tr in flat_trajs])
+    assert float((tot_tf - samp_scores).abs().max().item()) < 5e-4
+
+    # Verify leaf_atom_budget + length-sorting preserves prompt order
+    grouped_b = gen.sample_with_process_critic(
+        t_norm.repeat(2, 1),
+        cond_mask.repeat(2, 1),
+        critic,
+        m_init=4,
+        m_keep=2,
+        cfg_scale=1.6,
+        geometric_guard=True,
+        electron_parity=0,
+        uncond_active_mask=uncond_mask.repeat(2, 1),
+        seed=99,
+        use_bf16=False,
+        max_decode_steps=160,
+        leaf_atom_budget=budgets.repeat(2),
+        leaf_budget_tol=2.0,
+        sort_by_budget=True,
+    )
+    assert len(grouped_b) == 10 and all(len(g) == 2 for g in grouped_b)
