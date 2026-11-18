@@ -29,6 +29,7 @@ import json
 import math
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import time
@@ -702,18 +703,149 @@ def run_step2_rollout_shard(args: argparse.Namespace) -> None:
     )
 
 
+@torch.no_grad()
+def _probe_step2_ckpt_and_prompt_map(
+    ckpt_path: Path,
+    cal_unimol2: Any,
+    rule_asset: Any,
+    clean_targets: np.ndarray,
+    sa_target: float,
+    device_str: str,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Zero-leakage `256`-prompt generative dev evaluation + affine prompt centering (`0` `audit_dpa4` calls)."""
+    device = torch.device(device_str)
+    gen, _ = LoomUni3DARGenerator.load_checkpoint(ckpt_path, device=device_str, batch_size=256)
+    gen.eval()
+
+    rng = np.random.default_rng(202629)
+    sub = clean_targets[(clean_targets[:, 1] >= 22.0) & (clean_targets[:, 1] <= 44.0)]
+    picks = rng.choice(len(sub), size=256, replace=False)
+    h_req = sub[picks, 0].astype(np.float32)
+    n_req = np.round(sub[picks, 1]).astype(np.float32)
+
+    cond_2d = np.stack([h_req, np.full(len(h_req), float(sa_target), dtype=np.float32)], axis=-1)
+    tn = gen.normalize_targets(cond_2d)
+    cm = torch.ones((len(h_req), 2), dtype=torch.bool, device=device)
+    um = torch.tensor([[False, True]] * len(h_req), dtype=torch.bool, device=device)
+
+    trajs = gen.sample(
+        tn,
+        cm,
+        uncond_active_mask=um,
+        cfg_scale=2.00,
+        xyz_cfg_scale=1.0,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        temperatures=(0.85, 0.30, 0.25),
+        seed=717171,
+        use_bf16=(device.type == "cuda"),
+        electron_parity=0,
+        leaf_atom_budget=n_req,
+    )
+    reconciler = ValenceReconciler(allowed_elements=tuple(gen.args.allow_atoms.split(",")))
+    mols: List[Optional[Chem.Mol]] = []
+    clean_m = np.zeros(len(trajs), dtype=bool)
+    for i, tr in enumerate(trajs):
+        res = reconciler.reconcile_point_cloud(tr["atom_symbols"], tr["positions_np"], potential_slot=None)
+        if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
+            mols.append(res.mol)
+            clean_m[i] = True
+        else:
+            mols.append(None)
+
+    u_out = cal_unimol2.predict_mols(mols, batch_size=64)
+    r_out = rule_asset.predict_mols(mols, batch_size=256)
+    sa_v = r_out["mean"][:, rule_asset.channel_index("sa_score")]
+    ok = clean_m & u_out["valid_mask"] & np.isfinite(u_out["mean"][:, 0]) & np.isfinite(sa_v)
+
+    if int(ok.sum()) < 40:
+        return (
+            {"composite": -9.9, "clean_rate": float(clean_m.mean()), "mae_eV": 9.9, "synth_hit_yield": 0.0},
+            {"applied": False, "slope": 1.0, "intercept": 0.0, "bias_eV": 0.0},
+        )
+
+    x = h_req[ok].astype(np.float64)
+    y = u_out["mean"][ok, 0].astype(np.float64)
+    mae = float(np.mean(np.abs(y - x)))
+    bias = float(np.mean(y - x))
+    xc = float(np.mean(x))
+    yc = float(np.mean(y))
+    slope = float(np.clip(np.sum((x - xc) * (y - yc)) / max(float(np.sum((x - xc) ** 2)), 1e-6), 0.72, 1.25))
+    intercept = float(yc - slope * xc)
+
+    # Evaluate centered hit yield so checkpoint comparison reflects calibrated controllability (`R^2` / `sigma_in`)
+    cen_err = np.abs((y - intercept) / max(slope, 0.72) - x)
+    hit_all = np.zeros(len(trajs), dtype=bool)
+    hit_all[ok] = (cen_err <= 0.25) & (sa_v[ok] <= 3.5)
+    hit_y = float(hit_all.mean())
+    cen_mae = float(np.mean(cen_err))
+    comp = hit_y - 0.35 * cen_mae + 0.15 * float(clean_m.mean())
+
+    apply_map = (abs(bias) >= 0.035) or (abs(slope - 1.0) >= 0.06)
+    return (
+        {
+            "composite": round(comp, 5),
+            "clean_rate": round(float(clean_m.mean()), 4),
+            "raw_mae_eV": round(mae, 4),
+            "centered_mae_eV": round(cen_mae, 4),
+            "synth_hit_yield": round(hit_y, 4),
+        },
+        {
+            "applied": bool(apply_map),
+            "n_valid": int(ok.sum()),
+            "bias_eV": round(bias, 4),
+            "slope": round(slope, 4),
+            "intercept": round(intercept, 4),
+        },
+    )
+
+
+def _apply_step2_prompt_map(homo_1d: np.ndarray, dev_cal: Dict[str, Any]) -> np.ndarray:
+    if not dev_cal.get("applied", False):
+        return homo_1d.astype(np.float32)
+    s = float(dev_cal["slope"])
+    b = float(dev_cal["intercept"])
+    shifted = (homo_1d.astype(np.float64) - b) / max(s, 0.72)
+    blended = 0.80 * shifted + 0.20 * (homo_1d.astype(np.float64) - float(dev_cal["bias_eV"]))
+    return np.clip(blended, -8.3, -4.6).astype(np.float32)
+
+
 def run_fit_critic_and_eval(args: argparse.Namespace) -> None:
     """Fit Step-2 `TwoStageOctreeProcessCritic` & run Fair 30-Atom + Multi-Atom-Bucket benchmarks."""
     device = torch.device(args.device)
     step2_dir = args.work_dir / args.run_name
     calib_cache = step2_dir / "residual_calibrated_unimol2.pt"
     ckpt_p = step2_dir / "v4_step2_ema_best.pt"
+    last_ckpt_p = step2_dir / "v4_step2_ema_last.pt"
     critic_ckpt = step2_dir / "v4_step2_two_stage_critic.pt"
     sdf_dir = step2_dir / "cohorts_sdf"
 
+    bus_eval, cal_unimol2, calib_diag = _build_calibrated_oe62_bus(
+        args, include_blind_auditor=True, calib_cache_path=calib_cache
+    )
+    rule_asset = bus_eval.registry.get_predictor("builtin_rules")
+    _, clean_targets = _get_clean_oe62_pool(args, None)
+
+    best_probe, dev_cal = _probe_step2_ckpt_and_prompt_map(
+        ckpt_p, cal_unimol2, rule_asset, clean_targets, args.eval_sa_target, args.device
+    )
+    print(f"[Step2 Ckpt Probe: ema_best] {best_probe} | map={dev_cal}", flush=True)
+    if last_ckpt_p.exists():
+        last_probe, last_cal = _probe_step2_ckpt_and_prompt_map(
+            last_ckpt_p, cal_unimol2, rule_asset, clean_targets, args.eval_sa_target, args.device
+        )
+        print(f"[Step2 Ckpt Probe: ema_last] {last_probe} | map={last_cal}", flush=True)
+        if last_probe["composite"] > best_probe["composite"]:
+            print("[Step2 Ckpt Select] Promoting ema_last -> v4_step2_ema_best.pt based on generative dev composite!", flush=True)
+            shutil.copy2(last_ckpt_p, ckpt_p)
+            best_probe = last_probe
+            dev_cal = last_cal
+
     gen, gen_payload = LoomUni3DARGenerator.load_checkpoint(ckpt_p, device=args.device, batch_size=512)
     gen.eval()
-    gen_meta = gen_payload.get("metadata") or {}
+    gen_meta = dict(gen_payload.get("metadata") or {})
+    gen_meta["selected_generative_dev_probe"] = best_probe
+    gen_meta["dev_prompt_centering"] = dev_cal
 
     gpu_list = [g.strip() for g in args.rollout_gpus.split(",") if g.strip()]
     n_shards = len(gpu_list)
@@ -862,18 +994,14 @@ def run_fit_critic_and_eval(args: argparse.Namespace) -> None:
         two_stage_critic.save_checkpoint(critic_ckpt, extra=critic_meta)
         print(f"[Step2 Critic DONE] {critic_meta}", flush=True)
 
-    # Fit optional 2-param dev prompt centering on `oe62_master_valid_sdf` (`0` `audit_dpa4` calls)
-    bus_eval, cal_unimol2, calib_diag = _build_calibrated_oe62_bus(
-        args, include_blind_auditor=True, calib_cache_path=calib_cache
-    )
     source_graphs, source_scaffolds = _get_source_novelty_sets(args)
-    _, clean_targets = _get_clean_oe62_pool(args, None)
     reconciler = ValenceReconciler(allowed_elements=tuple(gen.args.allow_atoms.split(",")))
     obj_col_mask = torch.tensor([True, False], dtype=torch.bool, device=device)
 
     def _encode_homo_sa(homo_1d: np.ndarray) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         nb = len(homo_1d)
-        mat = np.stack([homo_1d.astype(np.float32), np.full(nb, float(args.eval_sa_target), dtype=np.float32)], axis=-1)
+        h_mapped = _apply_step2_prompt_map(homo_1d, dev_cal)
+        mat = np.stack([h_mapped, np.full(nb, float(args.eval_sa_target), dtype=np.float32)], axis=-1)
         tn = gen.normalize_targets(mat)
         ma = torch.ones((nb, 2), dtype=torch.bool, device=device)
         um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
