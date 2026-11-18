@@ -1,20 +1,23 @@
-"""Step 3 of `Uni-3DAR v4 + Uni-Loom` Speed-Preserving Overtake Plan (`~2 GPU-h` total).
+"""Step 3 of `Uni-3DAR v4 + Uni-Loom` Speed-Preserving Overtake Plan (`~1.5 GPU-h` Step 3, `~7.0 GPU-h` total).
 
-Executes:
-  1. `distill_refiner` (`~0.3 GPU-h`):
-     Distills `PostTreeGraphRefiner` + `BilinearBondHead` on `oe62_v4_train_eq.sdf` equilibrium
-     conformers perturbed by octree Morton-seam noise (`0.01 A` quantization + octant boundary shifts).
-     At inference, runs a single `< 0.5 ms` batched SE(3)-equivariant pass (`<= 0.08 A` radial-tanh shift
-     + 5-class explicit bond-order priors into `ValenceReconciler`) with **ZERO** iterative MLIP / diffusion loops!
-  2. `align_vine_grpo` (`~1.0 GPU-h`):
-     Loads `v4_step2_ema_best.pt`, unfreezes top 4 Transformer layers + norm + heads + conditioner +
-     `ScaleFreeCountHead`, and runs online Tree-Vine GRPO (`m_trunks = 4, k_leaves = 2`, counterfactual
-     trunk vs leaf advantage routing, `kl_beta = 0.035`, `replay_weight = 0.25`, EMA shadow weights)
-     under zero-leakage `ResidualCalibratedAsset(ext_unimol2)` + `DPA-4` zero-step `F_max` + `SA <= 3.5`
-     (**0 `audit_dpa4` calls!**).
-  3. `eval_final` (`1` uncontended GPU `cuda:0` for wall-clock timing):
+Executes four synergistic sub-stages seamlessly:
+  1. `sft_synth` (`~0.28 GPU-h`, 2-GPU DDP via `torchrun` `8` epochs):
+     Adapts the universal Step-2 `v4_step2_ema_best.pt` foundation checkpoint onto the synthesizable
+     (`SA_Score <= 3.25`, `smarts_alert == 0`) equilibrium OE62 conformer manifold with pure discrete
+     `0.01 A` sub-voxel CE (`xyz_loss_weight = 0.35`, `geom_dist_loss_weight = 0.0`) and balanced CFG
+     dropout (`65% [T,T], 15% [T,F], 20% [F,F]`), eliminating high-SA crystal-cage / sub-voxel bimodal
+     strain while preserving full SO(3) generality and exact `Delta N == 0` `ScaleFreeCountHead`.
+  2. `distill_refiner` (`~0.08 GPU-h`):
+     Distills `PostTreeGraphRefiner` + `BilinearBondHead` on synthesizable equilibrium conformers perturbed
+     by octree Morton-seam noise (`< 0.5 ms` batched SE(3)-equivariant pass, ZERO iterative MLIP loops).
+  3. `align_vine_grpo` (`~0.55 GPU-h`):
+     Runs `180` steps of online Tree-Vine GRPO (`topology_only_policy=True`, `m_trunks=4, k_leaves=2`,
+     `uncond_active_mask=None` so CFG guides BOTH `homo` and `sa_score=1.85`, counterfactual trunk vs leaf
+     advantages, EMA shadow weights) under zero-leakage `ResidualCalibratedAsset(ext_unimol2)` + `DPA-4`
+     zero-step `F_max` + `SA <= 3.5` (`0` `audit_dpa4` calls!).
+  4. `eval_final` (`1` uncontended GPU `cuda:0` for wall-clock timing):
      Fits Step-3 `TwoStageOctreeProcessCritic` (`16,384` rollouts across `GPU 0,1`), measures optional
-     zero-leakage dev prompt centering (`0` `audit_dpa4` calls), and runs:
+     zero-leakage mean-bias prompt centering (`0` `audit_dpa4` calls), and runs:
        - Fair Fixed-Per-Prompt `30.4`-Atom OE62 Benchmark (`N = 1,792`, seed `20261118`):
          `Outcome_M1`, `TwoStage_8_to_4_to_1`, `TwoStage_8_to_4_to_2`, `TwoStage_16_to_6_to_2`,
          `TwoStage_24_to_8_to_2`, `TwoStage_32_to_8_to_2`
@@ -27,6 +30,7 @@ import argparse
 from copy import deepcopy
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -36,6 +40,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from rdkit import Chem, RDLogger
 import torch
+import torch.distributed as dist
+from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
 
 RDLogger.DisableLog("rdApp.*")
 
@@ -48,6 +55,7 @@ for cand in (ROOT / "src" / "compat", ROOT / "src", ROOT, MOLGEN_COMPAT_DEFAULT)
 
 from loom.chemistry.valence_reconciler import ValenceReconciler  # noqa: E402
 from loom.weaving import (  # noqa: E402
+    BuiltInRuleAsset,
     LoomGRPOTrainer,
     LoomUni3DARGenerator,
     OctreeElementProcessCritic,
@@ -69,11 +77,227 @@ from scripts.loom_uni3dar_v4_step1_eval import (  # noqa: E402
     _select_v4_step1_from_pool,
     _sync,
 )
-from scripts.loom_uni3dar_v4_step2_train import _load_prepared_v4_sdf  # noqa: E402
+from scripts.loom_uni3dar_v4_step2_train import (  # noqa: E402
+    _CollateStep2Octree,
+    _Step2OctreeTorchDataset,
+    _load_prepared_v4_sdf,
+)
+
+
+def _load_synthesizable_v4_subset(sdf_path: Path, max_sa: float = 3.25) -> Tuple[List[Chem.Mol], np.ndarray]:
+    """Filter `oe62_v4_train_eq.sdf` purely by deterministic RDKit `SA_Score <= max_sa` & `smarts_alert == 0`."""
+    all_mols, all_t = _load_prepared_v4_sdf(sdf_path)
+    rule_asset = BuiltInRuleAsset(asset_id="synth_filter")
+    r_out = rule_asset.predict_mols(all_mols, batch_size=512)
+    sm_idx = rule_asset.channel_index("smarts_alert")
+    sm_alerts = r_out["mean"][:, sm_idx]
+    keep = (all_t[:, 1] <= float(max_sa)) & r_out["valid_mask"] & (sm_alerts <= 0.0)
+    kept_mols = [all_mols[i] for i in range(len(all_mols)) if bool(keep[i])]
+    kept_t = all_t[keep]
+    return kept_mols, kept_t
+
+
+def _sample_synth_sft_masks(batch_size: int, rng: np.random.Generator, device: torch.device) -> torch.Tensor:
+    """Balanced CFG mask supporting full `[F,F]` unconditional guidance (`65% [T,T], 15% [T,F], 20% [F,F]`)."""
+    u = rng.random(size=batch_size)
+    mask = np.ones((batch_size, 2), dtype=bool)
+    mask[(u >= 0.65) & (u < 0.80), 1] = False
+    mask[u >= 0.80] = False
+    return torch.as_tensor(mask, dtype=torch.bool, device=device)
+
+
+def run_sft_synth_ddp_worker(args: argparse.Namespace) -> None:
+    """2-GPU DDP synthesizable low-strain manifold refinement (`8` epochs, `0.28 GPU-h`)."""
+    is_ddp = "RANK" in os.environ and "WORLD_SIZE" in os.environ
+    if is_ddp:
+        local_rank = int(os.environ["LOCAL_RANK"])
+        rank = int(os.environ["RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
+        torch.cuda.set_device(local_rank)
+        dist.init_process_group(backend="nccl")
+        device = torch.device(f"cuda:{local_rank}")
+    else:
+        rank = 0
+        world_size = 1
+        device = torch.device(args.device)
+
+    step3_dir = args.work_dir / args.run_name
+    step3_dir.mkdir(parents=True, exist_ok=True)
+    out_ckpt = step3_dir / "v4_step3_synth_sft.pt"
+
+    train_sdf = args.step2_dir / "oe62_v4_train_eq.sdf"
+    synth_mols, synth_targets = _load_synthesizable_v4_subset(train_sdf, max_sa=float(args.synth_max_sa))
+    if rank == 0:
+        print(
+            f"[Step3 Synth-SFT] Loaded {len(synth_mols)} synthesizable equilibrium conformers (SA <= {args.synth_max_sa})",
+            flush=True,
+        )
+
+    step2_ckpt = args.step2_dir / "v4_step2_ema_best.pt"
+    gen, step2_payload = LoomUni3DARGenerator.load_checkpoint(step2_ckpt, device=str(device), batch_size=64)
+    step2_meta = step2_payload.get("metadata") or {}
+    gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=True)
+
+    ema_gen = deepcopy(gen).eval()
+    for p in ema_gen.parameters():
+        p.requires_grad_(False)
+
+    ds = _Step2OctreeTorchDataset(synth_mols, synth_targets, gen.backbone, training=True, seed=202630)
+    sampler = DistributedSampler(ds, num_replicas=world_size, rank=rank, shuffle=True, seed=202630) if is_ddp else None
+    loader = DataLoader(
+        ds,
+        batch_size=64,
+        sampler=sampler,
+        shuffle=(sampler is None),
+        num_workers=4,
+        collate_fn=_CollateStep2Octree(ds.octree_ds.grid.collater),
+        pin_memory=True,
+        drop_last=True,
+    )
+
+    head_prefixes = ("conditioner.", "valence_head.", "budget_emb.", "scale_free_count_head.")
+    backbone_params: List[torch.nn.Parameter] = []
+    head_params: List[torch.nn.Parameter] = []
+    for name, p in gen.named_parameters():
+        if not p.requires_grad:
+            continue
+        if name.startswith(head_prefixes):
+            head_params.append(p)
+        else:
+            backbone_params.append(p)
+
+    opt = torch.optim.AdamW(
+        [
+            {"params": backbone_params, "lr": 2.0e-5, "weight_decay": 1e-2},
+            {"params": head_params, "lr": 1.0e-4, "weight_decay": 1e-4},
+        ],
+        betas=(0.9, 0.95),
+    )
+    n_ep = int(args.synth_sft_epochs)
+    total_steps = max(1, len(loader) * n_ep)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=total_steps, eta_min=2.0e-6)
+    contrast_col_mask = torch.tensor([True, True], dtype=torch.bool, device=device)
+
+    t0 = time.perf_counter()
+    g_step = 0
+    for ep in range(1, n_ep + 1):
+        ep_t0 = time.perf_counter()
+        ds.set_epoch(ep)
+        if sampler is not None:
+            sampler.set_epoch(ep)
+        gen.train()
+        rng_ep = np.random.default_rng(202640 + ep * 97 + rank * 13)
+        l_sum, xyz_sum, cnt_sum, nb = 0.0, 0.0, 0.0, 0
+        for packed, raw_t in loader:
+            t_norm = gen.normalize_targets(raw_t.to(device, non_blocking=True))
+            act_m = _sample_synth_sft_masks(int(raw_t.shape[0]), rng_ep, device)
+            opt.zero_grad(set_to_none=True)
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=(device.type == "cuda")):
+                loss, info = gen.compute_sft_loss(
+                    packed,
+                    t_norm,
+                    act_m,
+                    cfg_dropout_prob=0.0,
+                    contrast_weight=0.08,
+                    contrast_margin=0.06,
+                    contrast_min_gap_eV=0.35,
+                    contrast_col_mask=contrast_col_mask,
+                    xyz_loss_weight=0.35,
+                    valence_loss_weight=0.15,
+                    count_loss_weight=0.25,
+                    geom_dist_loss_weight=0.0,
+                    budget_dropout_prob=0.10,
+                )
+            loss.backward()
+            if is_ddp:
+                flat_grads = [
+                    (p.grad if p.grad is not None else torch.zeros_like(p))
+                    for p in gen.parameters()
+                    if p.requires_grad
+                ]
+                coal = torch._utils._flatten_dense_tensors(flat_grads)
+                dist.all_reduce(coal, op=dist.ReduceOp.AVG)
+                for p, gs in zip(
+                    (p for p in gen.parameters() if p.requires_grad),
+                    torch._utils._unflatten_dense_tensors(coal, flat_grads),
+                ):
+                    p.grad = gs
+            torch.nn.utils.clip_grad_norm_(gen.parameters(), 1.2)
+            opt.step()
+            sched.step()
+            g_step += 1
+            with torch.no_grad():
+                for pe, pc in zip(ema_gen.parameters(), gen.parameters()):
+                    pe.lerp_(pc, 1.0 - 0.996)
+            l_sum += float(info["loss_total"])
+            xyz_sum += float(info["loss_xyz"])
+            cnt_sum += float(info["loss_count"])
+            nb += 1
+        if rank == 0:
+            print(
+                f"[Step3 Synth-SFT Ep {ep:02d}/{n_ep:02d}] loss={l_sum/max(nb,1):.4f} "
+                f"(xyz={xyz_sum/max(nb,1):.4f}, cnt={cnt_sum/max(nb,1):.4f}) wall={time.perf_counter()-ep_t0:.1f}s",
+                flush=True,
+            )
+
+    synth_gpuh = ((time.perf_counter() - t0) * world_size) / 3600.0
+    if rank == 0:
+        ema_gen.save_checkpoint(
+            out_ckpt,
+            extra_metadata={
+                "step2_metadata": step2_meta,
+                "synth_sft_epochs": n_ep,
+                "synth_sft_mols": len(synth_mols),
+                "synth_sft_gpuh": round(synth_gpuh, 4),
+            },
+        )
+        print(f"[Step3 Synth-SFT DONE] gpuh={synth_gpuh:.4f} -> {out_ckpt}", flush=True)
+    if is_ddp:
+        dist.barrier()
+        dist.destroy_process_group()
+
+
+def ensure_sft_synth(args: argparse.Namespace) -> Path:
+    """Launch 2-GPU `torchrun` for `sft_synth_ddp` if `v4_step3_synth_sft.pt` is not yet built."""
+    step3_dir = args.work_dir / args.run_name
+    step3_dir.mkdir(parents=True, exist_ok=True)
+    out_ckpt = step3_dir / "v4_step3_synth_sft.pt"
+    if args.reuse_synth_sft and out_ckpt.exists():
+        print(f"[Step3 Synth-SFT] Reusing {out_ckpt}", flush=True)
+        return out_ckpt
+
+    gpu_list = [g.strip() for g in args.rollout_gpus.split(",") if g.strip()]
+    nproc = max(1, len(gpu_list))
+    torchrun_bin = Path(sys.executable).parent / "torchrun"
+    if nproc >= 2 and torchrun_bin.exists():
+        cmd = [
+            str(torchrun_bin),
+            f"--nproc_per_node={nproc}",
+            "--master_port=29523",
+            str(Path(__file__).resolve()),
+            "--phase",
+            "sft_synth_ddp",
+            "--synth-sft-epochs",
+            str(args.synth_sft_epochs),
+            "--synth-max-sa",
+            str(args.synth_max_sa),
+            "--work-dir",
+            str(args.work_dir),
+            "--run-name",
+            str(args.run_name),
+            "--step2-dir",
+            str(args.step2_dir),
+        ]
+        if args.allow_tf32:
+            cmd.append("--allow-tf32")
+        subprocess.run(cmd, check=True)
+    else:
+        run_sft_synth_ddp_worker(args)
+    return out_ckpt
 
 
 def run_distill_refiner(args: argparse.Namespace) -> Path:
-    """Distill `PostTreeGraphRefiner` + `BilinearBondHead` on `oe62_v4_train_eq.sdf`."""
+    """Distill `PostTreeGraphRefiner` + `BilinearBondHead` on synthesizable equilibrium conformers."""
     device = torch.device(args.device)
     step3_dir = args.work_dir / args.run_name
     step3_dir.mkdir(parents=True, exist_ok=True)
@@ -83,7 +307,7 @@ def run_distill_refiner(args: argparse.Namespace) -> Path:
         return ref_ckpt
 
     train_sdf = args.step2_dir / "oe62_v4_train_eq.sdf"
-    train_mols, _ = _load_prepared_v4_sdf(train_sdf)
+    synth_mols, _ = _load_synthesizable_v4_subset(train_sdf, max_sa=3.40)
     t0 = time.perf_counter()
     refiner = PostTreeGraphRefiner(
         num_atom_classes=128,
@@ -97,7 +321,7 @@ def run_distill_refiner(args: argparse.Namespace) -> Path:
     ).to(device)
     stats = fit_post_tree_graph_refiner(
         refiner,
-        train_mols,
+        synth_mols,
         epochs=int(args.refiner_epochs),
         batch_size=int(args.refiner_batch_size),
         lr=1.5e-3,
@@ -114,8 +338,8 @@ def run_distill_refiner(args: argparse.Namespace) -> Path:
     return ref_ckpt
 
 
-def _configure_v4_grpo_trainable(gen: LoomUni3DARGenerator, top_k_layers: int = 4) -> int:
-    """Freeze lower Transformer blocks while unfreezing top-K layers + norm + heads + conditioner + count head."""
+def _configure_v4_grpo_trainable(gen: LoomUni3DARGenerator, top_k_layers: int = 5) -> int:
+    """Freeze lower Transformer blocks while unfreezing top-K layers + norm + tree/atom heads + conditioner."""
     gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=False)
     n_layers = len(gen.backbone.decoder.layers)
     k = max(0, min(int(top_k_layers), n_layers))
@@ -123,7 +347,7 @@ def _configure_v4_grpo_trainable(gen: LoomUni3DARGenerator, top_k_layers: int = 
         gen.backbone.decoder.layers[l_idx].requires_grad_(True)
     gen.backbone.norm.requires_grad_(True)
     gen.backbone.tree_heads.requires_grad_(True)
-    gen.backbone.atom_heads.requires_grad_(True)
+    gen.backbone.atom_heads[0].pred_heads[0].requires_grad_(True)
     return sum(p.numel() for p in gen.parameters() if p.requires_grad)
 
 
@@ -135,6 +359,7 @@ def _zero_leakage_dev_score(
     dev_homo: np.ndarray,
     dev_natoms: np.ndarray,
     sa_target: float,
+    cfg_scale: float,
     device: torch.device,
 ) -> Dict[str, float]:
     """Evaluate `gen` on `256` dev prompts strictly under training `bus_train` (`0` `audit_dpa4` calls)."""
@@ -143,15 +368,14 @@ def _zero_leakage_dev_score(
     cond_2d = np.stack([dev_homo.astype(np.float32), np.full(nb, float(sa_target), dtype=np.float32)], axis=-1)
     tn = gen.normalize_targets(cond_2d)
     cm = torch.ones((nb, 2), dtype=torch.bool, device=device)
-    um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
 
     trajs = gen.sample(
         tn,
         cm,
-        uncond_active_mask=um,
-        cfg_scale=2.00,
+        uncond_active_mask=None,
+        cfg_scale=float(cfg_scale),
         xyz_cfg_scale=1.0,
-        cfg_tree_decay=0.25,
+        cfg_tree_decay=0.20,
         geometric_guard=True,
         temperatures=(0.85, 0.30, 0.25),
         seed=880123,
@@ -178,20 +402,22 @@ def _zero_leakage_dev_score(
     mae = float(np.mean(np.abs(ev["objective_preds"][eval_m, 0] - dev_homo[eval_m]))) if eval_m.any() else 9.9
     hit_y = float(ev["constrained_clean_hits"].mean())
     legal_r = float(ev["legal_mask"].mean())
+    sa_ok = float(ev["constraints_met"][ev["legal_mask"]].mean()) if ev["legal_mask"].any() else 0.0
     valid_f = ev["f_max_eV_A"][ev["legal_mask"] & np.isfinite(ev["f_max_eV_A"])]
     fmax_med = float(np.median(valid_f)) if len(valid_f) > 0 else 9.9
-    composite = hit_y - 0.35 * mae + 0.15 * legal_r - 0.02 * min(fmax_med, 5.0)
+    composite = hit_y - 0.30 * mae + 0.15 * legal_r + 0.15 * sa_ok - 0.015 * min(fmax_med, 6.0)
     return {
         "composite": round(composite, 5),
         "dev_synth_hit_yield": round(hit_y, 4),
         "dev_surr_mae_eV": round(mae, 4),
         "dev_legal_rate": round(legal_r, 4),
+        "dev_sa_ok_rate": round(sa_ok, 4),
         "dev_fmax_median": round(fmax_med, 3),
     }
 
 
 def run_align_vine_grpo(args: argparse.Namespace) -> Path:
-    """Run online Tree-Vine GRPO (`m_trunks=4, k_leaves=2`) on top of `v4_step2_ema_best.pt`."""
+    """Run online Tree-Vine GRPO (`topology_only_policy=True`, `m_trunks=4, k_leaves=2`) on `v4_step3_synth_sft.pt`."""
     device = torch.device(args.device)
     step3_dir = args.work_dir / args.run_name
     step3_dir.mkdir(parents=True, exist_ok=True)
@@ -200,40 +426,41 @@ def run_align_vine_grpo(args: argparse.Namespace) -> Path:
         print(f"[Step3 GRPO] Reusing {final_ckpt}", flush=True)
         return final_ckpt
 
+    synth_ckpt = ensure_sft_synth(args)
     ref_ckpt = run_distill_refiner(args)
     refiner, ref_meta = PostTreeGraphRefiner.load_checkpoint(ref_ckpt, device=args.device)
     refiner.eval()
 
-    step2_ckpt = args.step2_dir / "v4_step2_ema_best.pt"
-    gen, step2_payload = LoomUni3DARGenerator.load_checkpoint(step2_ckpt, device=args.device, batch_size=128)
-    step2_meta = step2_payload.get("metadata") or {}
+    gen, synth_payload = LoomUni3DARGenerator.load_checkpoint(synth_ckpt, device=args.device, batch_size=128)
+    synth_meta = synth_payload.get("metadata") or {}
     n_trainable = _configure_v4_grpo_trainable(gen, top_k_layers=int(args.grpo_top_layers))
-    print(f"[Step3 GRPO] Loaded {step2_ckpt} | trainable_params={n_trainable:,}", flush=True)
+    print(f"[Step3 GRPO] Loaded {synth_ckpt} | trainable_params={n_trainable:,}", flush=True)
 
     calib_cache = args.step2_dir / "residual_calibrated_unimol2.pt"
-    bus_train, cal_unimol2, _ = _build_calibrated_oe62_bus(
+    bus_train, _, _ = _build_calibrated_oe62_bus(
         args, include_blind_auditor=False, calib_cache_path=calib_cache
     )
 
-    # Load replay conformers (`oe62_v4_train_eq.sdf` subset of 4,096 molecules for fast replay collation)
+    # Strictly synthesizable (`SA <= 3.15`) equilibrium conformer replay anchor!
     train_sdf = args.step2_dir / "oe62_v4_train_eq.sdf"
-    all_tr_mols, all_tr_targets = _load_prepared_v4_sdf(train_sdf)
+    synth_mols_all, synth_targets_all = _load_synthesizable_v4_subset(train_sdf, max_sa=3.15)
     r_rng = np.random.default_rng(202632)
-    rep_sel = r_rng.choice(len(all_tr_mols), size=min(4096, len(all_tr_mols)), replace=False)
-    replay_mols = [all_tr_mols[int(i)] for i in rep_sel]
-    replay_targets = all_tr_targets[rep_sel]
-    del all_tr_mols
+    rep_sel = r_rng.choice(len(synth_mols_all), size=min(4096, len(synth_mols_all)), replace=False)
+    replay_mols = [synth_mols_all[int(i)] for i in rep_sel]
+    replay_targets = synth_targets_all[rep_sel]
+    del synth_mols_all
 
     _, clean_targets = _get_clean_oe62_pool(args, None)
     pool_sub = clean_targets[(clean_targets[:, 1] >= 18.0) & (clean_targets[:, 1] <= 54.0)]
 
-    # Fixed 256-prompt zero-leakage dev slice for model selection (`0` `audit_dpa4` calls)
     dev_idx = r_rng.choice(len(pool_sub), size=256, replace=False)
     dev_homo = pool_sub[dev_idx, 0].astype(np.float32)
     dev_natoms = np.round(pool_sub[dev_idx, 1]).astype(np.float32)
 
-    base_dev = _zero_leakage_dev_score(gen, refiner, bus_train, dev_homo, dev_natoms, args.eval_sa_target, device)
-    print(f"[Step3 GRPO] Baseline Step2 EMA dev={base_dev}", flush=True)
+    base_dev = _zero_leakage_dev_score(
+        gen, refiner, bus_train, dev_homo, dev_natoms, args.eval_sa_target, args.cfg_scale, device
+    )
+    print(f"[Step3 GRPO] Baseline Synth-SFT dev={base_dev}", flush=True)
 
     ema_gen = deepcopy(gen).eval()
     for p in ema_gen.parameters():
@@ -250,24 +477,23 @@ def run_align_vine_grpo(args: argparse.Namespace) -> Path:
         lr=float(args.grpo_lr),
         weight_decay=1e-4,
         kl_beta=float(args.kl_beta),
-        clip_eps=0.18,
+        clip_eps=0.20,
         ppo_epochs=1,
         replay_weight=float(args.replay_weight),
         replay_batch_size=12,
-        w_valid=0.75,
-        w_phys=0.30,
-        w_prop=1.05,
+        w_valid=0.85,
+        w_phys=0.35,
+        w_prop=1.10,
         tolerance_eV=0.25,
         sharp_concentration=True,
-        cfg_scale=2.00,
+        cfg_scale=float(args.cfg_scale),
         xyz_cfg_scale=1.0,
-        cfg_tree_decay=0.25,
+        cfg_tree_decay=0.20,
         geometric_guard=True,
-        topology_only_policy=False,
+        topology_only_policy=True,
         temperatures=(0.85, 0.30, 0.25),
         electron_parity=0,
-        size_anchored_cfg=True,
-        size_col_name="sa_score",
+        size_anchored_cfg=False,
         use_vine_rollouts=True,
         m_trunks=int(args.m_trunks),
         k_leaves=int(args.k_leaves),
@@ -299,9 +525,9 @@ def run_align_vine_grpo(args: argparse.Namespace) -> Path:
                 p_ema.data.mul_(ema_decay).add_(p_cur.data, alpha=1.0 - ema_decay)
             for b_ema, b_cur in zip(ema_gen.buffers(), cur_gen.buffers()):
                 b_ema.copy_(b_cur)
-        if step_num % 35 == 0 or step_num == int(args.grpo_steps):
+        if step_num % 45 == 0 or step_num == int(args.grpo_steps):
             cur_dev = _zero_leakage_dev_score(
-                ema_gen, refiner, bus_train, dev_homo, dev_natoms, args.eval_sa_target, device
+                ema_gen, refiner, bus_train, dev_homo, dev_natoms, args.eval_sa_target, args.cfg_scale, device
             )
             print(f"[Step3 GRPO Dev@{step_num}] {cur_dev} (best={best_dev['composite']})", flush=True)
             if cur_dev["composite"] >= best_dev["composite"]:
@@ -319,18 +545,28 @@ def run_align_vine_grpo(args: argparse.Namespace) -> Path:
     grpo_wall = time.perf_counter() - t0
     grpo_gpuh = grpo_wall / 3600.0
 
+    # Also evaluate raw final policy vs EMA policy on the zero-leakage dev slice!
+    raw_dev = _zero_leakage_dev_score(
+        gen, refiner, bus_train, dev_homo, dev_natoms, args.eval_sa_target, args.cfg_scale, device
+    )
+    print(f"[Step3 GRPO Final Raw Policy Dev] {raw_dev}", flush=True)
+    if raw_dev["composite"] > best_dev["composite"]:
+        best_dev = raw_dev
+        best_state = {k: v.detach().cpu().clone() for k, v in gen.state_dict().items()}
+
     ema_gen.load_state_dict(best_state, strict=True)
     ema_gen.save_checkpoint(
         final_ckpt,
         extra_metadata={
-            "sft_metadata": step2_meta,
+            "sft_metadata": synth_meta.get("step2_metadata") or {},
+            "synth_sft_metadata": synth_meta,
             "refiner_metadata": ref_meta,
             "grpo_steps": int(args.grpo_steps),
             "m_trunks": int(args.m_trunks),
             "k_leaves": int(args.k_leaves),
             "grpo_wall_sec": round(grpo_wall, 2),
             "grpo_gpuh": round(grpo_gpuh, 4),
-            "baseline_step2_dev": base_dev,
+            "baseline_synth_sft_dev": base_dev,
             "selected_step3_dev": best_dev,
             "grpo_tail_metrics": history[-1] if history else {},
         },
@@ -342,7 +578,7 @@ def run_align_vine_grpo(args: argparse.Namespace) -> Path:
 
 @torch.no_grad()
 def run_step3_rollout_shard(args: argparse.Namespace) -> None:
-    """Collect 1 shard of Step-3 rollouts WITH `PostTreeGraphRefiner` + `bond_order_priors`."""
+    """Collect 1 shard of Step-3 rollouts WITH `uncond_active_mask=None` + `PostTreeGraphRefiner`."""
     device = torch.device(args.device)
     step3_dir = args.work_dir / args.run_name
     calib_cache = args.step2_dir / "residual_calibrated_unimol2.pt"
@@ -391,15 +627,14 @@ def run_step3_rollout_shard(args: argparse.Namespace) -> None:
         nb = e - s
         tn = gen.normalize_targets(cond_2d[s:e])
         cm = torch.ones((nb, 2), dtype=torch.bool, device=device)
-        um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
 
         roll = gen.sample_rollouts_with_two_stage_features(
             tn,
             cm,
-            uncond_active_mask=um,
-            cfg_scale=2.00,
+            uncond_active_mask=None,
+            cfg_scale=float(args.cfg_scale),
             xyz_cfg_scale=1.0,
-            cfg_tree_decay=0.25,
+            cfg_tree_decay=0.20,
             geometric_guard=True,
             temperatures=(0.85, 0.30, 0.25),
             seed=660000 + int(args.shard_id) * 50000 + s,
@@ -494,9 +729,10 @@ def _fit_step3_dev_prompt_centering(
     cal_unimol2: Any,
     clean_targets: np.ndarray,
     sa_target: float,
+    cfg_scale: float,
     device: torch.device,
 ) -> Dict[str, Any]:
-    """Optional zero-leakage affine prompt centering on `256` dev rollouts (`0` `audit_dpa4` calls)."""
+    """Optional zero-leakage mean-bias prompt centering on `256` dev rollouts (`0` `audit_dpa4` calls)."""
     rng = np.random.default_rng(202634)
     sub = clean_targets[(clean_targets[:, 1] >= 22.0) & (clean_targets[:, 1] <= 44.0)]
     picks = rng.choice(len(sub), size=256, replace=False)
@@ -506,15 +742,14 @@ def _fit_step3_dev_prompt_centering(
     cond_2d = np.stack([h_req, np.full(len(h_req), float(sa_target), dtype=np.float32)], axis=-1)
     tn = gen.normalize_targets(cond_2d)
     cm = torch.ones((len(h_req), 2), dtype=torch.bool, device=device)
-    um = torch.tensor([[False, True]] * len(h_req), dtype=torch.bool, device=device)
 
     trajs = gen.sample(
         tn,
         cm,
-        uncond_active_mask=um,
-        cfg_scale=2.00,
+        uncond_active_mask=None,
+        cfg_scale=float(cfg_scale),
         xyz_cfg_scale=1.0,
-        cfg_tree_decay=0.25,
+        cfg_tree_decay=0.20,
         geometric_guard=True,
         temperatures=(0.85, 0.30, 0.25),
         seed=777111,
@@ -537,7 +772,7 @@ def _fit_step3_dev_prompt_centering(
     out = cal_unimol2.predict_mols(mols, batch_size=64)
     ok = out["valid_mask"] & np.isfinite(out["mean"][:, 0])
     if int(ok.sum()) < 48:
-        return {"applied": False, "slope": 1.0, "intercept": 0.0, "center": -6.35, "bias_eV": 0.0}
+        return {"applied": False, "bias_eV": 0.0}
 
     x = h_req[ok].astype(np.float64)
     y = out["mean"][ok, 0].astype(np.float64)
@@ -597,6 +832,8 @@ def run_eval_final(args: argparse.Namespace) -> None:
                 str(args.critic_rollouts),
                 "--eval-sa-target",
                 str(args.eval_sa_target),
+                "--cfg-scale",
+                str(args.cfg_scale),
                 "--work-dir",
                 str(args.work_dir),
                 "--run-name",
@@ -731,25 +968,24 @@ def run_eval_final(args: argparse.Namespace) -> None:
     obj_col_mask = torch.tensor([True, False], dtype=torch.bool, device=device)
 
     dev_cal = _fit_step3_dev_prompt_centering(
-        gen, refiner, cal_unimol2, clean_targets, args.eval_sa_target, device
+        gen, refiner, cal_unimol2, clean_targets, args.eval_sa_target, args.cfg_scale, device
     )
     print(f"[Step3 Dev Prompt Centering] {dev_cal}", flush=True)
 
-    def _encode_homo_sa(homo_1d: np.ndarray) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _encode_homo_sa(homo_1d: np.ndarray) -> Tuple[torch.Tensor, torch.Tensor]:
         nb = len(homo_1d)
         h_mapped = _apply_prompt_map(homo_1d, dev_cal)
         mat = np.stack([h_mapped, np.full(nb, float(args.eval_sa_target), dtype=np.float32)], axis=-1)
         tn = gen.normalize_targets(mat)
         ma = torch.ones((nb, 2), dtype=torch.bool, device=device)
-        um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
-        return tn, ma, um
+        return tn, ma
 
     # Warmup (`PostTreeGraphRefiner` + `TwoStageOctreeProcessCritic`)
-    wt, wm, wu = _encode_homo_sa(np.full(16, -6.4, dtype=np.float32))
+    wt, wm = _encode_homo_sa(np.full(16, -6.4, dtype=np.float32))
     w_grps = gen.sample_with_two_stage_process_critic(
         wt, wm, two_stage_critic, m_stage1=8, m_stage2=4, m_keep=2, objective_col_mask=obj_col_mask,
-        cfg_scale=2.0, cfg_tree_decay=0.25, geometric_guard=True, seed=31, use_bf16=True,
-        uncond_active_mask=wu, leaf_atom_budget=np.full(16, 30.0, dtype=np.float32),
+        cfg_scale=float(args.cfg_scale), cfg_tree_decay=0.20, geometric_guard=True, seed=31, use_bf16=True,
+        uncond_active_mask=None, leaf_atom_budget=np.full(16, 30.0, dtype=np.float32),
     )
     refiner.refine_trajectories_batch([tr for g in w_grps for tr in g])
     _sync(device)
@@ -773,15 +1009,15 @@ def run_eval_final(args: argparse.Namespace) -> None:
         p_chunk = 512 if ms1 == 1 else 256
         for s in range(0, n_p30, p_chunk):
             e = min(s + p_chunk, n_p30)
-            bt, bm, bu = _encode_homo_sa(req_30[s:e, 0])
+            bt, bm = _encode_homo_sa(req_30[s:e, 0])
             groups_all.extend(
                 gen.sample_with_two_stage_process_critic(
                     bt, bm, two_stage_critic, m_stage1=ms1, m_stage2=ms2, m_keep=mkeep,
                     objective_col_mask=obj_col_mask, stage1_legal_weight=0.80, stage1_constr_weight=0.55,
                     stage2_legal_weight=1.05, stage2_constr_weight=0.70, coarse_chunk_size=1024,
-                    cfg_scale=2.00, xyz_cfg_scale=1.0, cfg_tree_decay=0.25, geometric_guard=True,
+                    cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0, cfg_tree_decay=0.20, geometric_guard=True,
                     temperatures=(0.85, 0.30, 0.25), seed=970000 + ms1 * 409 + ms2 * 61 + mkeep * 7 + s,
-                    use_bf16=True, electron_parity=0, uncond_active_mask=bu, leaf_atom_budget=req_30[s:e, 1],
+                    use_bf16=True, electron_parity=0, uncond_active_mask=None, leaf_atom_budget=req_30[s:e, 1],
                 )
             )
         flat_arm = [tr for g in groups_all for tr in g]
@@ -826,11 +1062,12 @@ def run_eval_final(args: argparse.Namespace) -> None:
             flush=True,
         )
 
-    sft_gpuh = float((step3_meta.get("sft_metadata") or {}).get("sft_gpuh", 0.0))
+    sft_gpuh = float((step3_meta.get("sft_metadata") or {}).get("sft_gpuh", 4.974))
+    synth_sft_gpuh = float((step3_meta.get("synth_sft_metadata") or {}).get("synth_sft_gpuh", 0.0))
     ref_gpuh = float(ref_meta.get("refiner_gpuh", 0.0))
     grpo_gpuh = float(step3_meta.get("grpo_gpuh", 0.0))
     crit_gpuh = float(critic_meta.get("rollout_gpuh", 0.0))
-    total_gpuh = round(sft_gpuh + ref_gpuh + grpo_gpuh + crit_gpuh, 4)
+    total_gpuh = round(sft_gpuh + synth_sft_gpuh + ref_gpuh + grpo_gpuh + crit_gpuh, 4)
 
     fair_payload = {
         "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4: Full-SO(3) 90M SFT + ScaleFreeCountHead (Delta N=0) + SE(3) PostTreeGraphRefiner + Tree-Vine GRPO + TwoStage 32->8->2]",
@@ -840,6 +1077,7 @@ def run_eval_final(args: argparse.Namespace) -> None:
         "total_training_gpuh": total_gpuh,
         "gpuh_breakdown": {
             "step2_ddp_sft_gpuh": round(sft_gpuh, 4),
+            "step3_synth_manifold_sft_gpuh": round(synth_sft_gpuh, 4),
             "step3_post_tree_refiner_gpuh": round(ref_gpuh, 4),
             "step3_vine_grpo_gpuh": round(grpo_gpuh, 4),
             "step3_two_stage_critic_gpuh": round(crit_gpuh, 4),
@@ -863,7 +1101,7 @@ def run_eval_final(args: argparse.Namespace) -> None:
             [(float(q_points[str(q)]), float(n_exact)) for q in quantiles for _ in range(40)], dtype=np.float32
         )
         nb = len(req_b)
-        bt, bm, bu = _encode_homo_sa(req_b[:, 0])
+        bt, bm = _encode_homo_sa(req_b[:, 0])
         b_arms: Dict[str, Any] = {}
         for b_tag, ms1, ms2, mk, use_s in (
             ("Uni3DAR_v4_M1", 1, 1, 1, False),
@@ -874,9 +1112,9 @@ def run_eval_final(args: argparse.Namespace) -> None:
             t0 = time.perf_counter()
             grps = gen.sample_with_two_stage_process_critic(
                 bt, bm, two_stage_critic, m_stage1=ms1, m_stage2=ms2, m_keep=mk,
-                objective_col_mask=obj_col_mask, coarse_chunk_size=1024, cfg_scale=2.00, xyz_cfg_scale=1.0,
-                cfg_tree_decay=0.25, geometric_guard=True, seed=72000 + ms1 * 43 + n_exact,
-                use_bf16=True, electron_parity=0, uncond_active_mask=bu, leaf_atom_budget=req_b[:, 1],
+                objective_col_mask=obj_col_mask, coarse_chunk_size=1024, cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0,
+                cfg_tree_decay=0.20, geometric_guard=True, seed=72000 + ms1 * 43 + n_exact,
+                use_bf16=True, electron_parity=0, uncond_active_mask=None, leaf_atom_budget=req_b[:, 1],
             )
             refiner.refine_trajectories_batch([tr for g in grps for tr in g], batch_size=256)
             _sync(device)
@@ -931,26 +1169,30 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "--phase",
-        choices=["distill_refiner", "align_vine_grpo", "rollout_shard", "eval_final", "all"],
+        choices=["sft_synth_ddp", "distill_refiner", "align_vine_grpo", "rollout_shard", "eval_final", "all"],
         required=True,
     )
     p.add_argument("--device", type=str, default="cuda:0")
     p.add_argument("--rollout-gpus", type=str, default="0,1")
     p.add_argument("--shard-id", type=int, default=0)
     p.add_argument("--num-shards", type=int, default=2)
+    p.add_argument("--synth-sft-epochs", type=int, default=8)
+    p.add_argument("--synth-max-sa", type=float, default=3.25)
     p.add_argument("--refiner-epochs", type=int, default=14)
     p.add_argument("--refiner-batch-size", type=int, default=192)
-    p.add_argument("--grpo-steps", type=int, default=140)
-    p.add_argument("--grpo-top-layers", type=int, default=4)
-    p.add_argument("--grpo-lr", type=float, default=1.5e-5)
-    p.add_argument("--kl-beta", type=float, default=0.035)
-    p.add_argument("--replay-weight", type=float, default=0.25)
+    p.add_argument("--grpo-steps", type=int, default=180)
+    p.add_argument("--grpo-top-layers", type=int, default=5)
+    p.add_argument("--grpo-lr", type=float, default=2.2e-5)
+    p.add_argument("--kl-beta", type=float, default=0.025)
+    p.add_argument("--replay-weight", type=float, default=0.20)
     p.add_argument("--prompts-per-step", type=int, default=8)
     p.add_argument("--m-trunks", type=int, default=4)
     p.add_argument("--k-leaves", type=int, default=2)
     p.add_argument("--grpo-ema-decay", type=float, default=0.992)
     p.add_argument("--critic-rollouts", type=int, default=16384)
-    p.add_argument("--eval-sa-target", type=float, default=2.40)
+    p.add_argument("--eval-sa-target", type=float, default=1.85)
+    p.add_argument("--cfg-scale", type=float, default=2.20)
+    p.add_argument("--reuse-synth-sft", action="store_true")
     p.add_argument("--reuse-refiner", action="store_true")
     p.add_argument("--reuse-grpo", action="store_true")
     p.add_argument("--reuse-critic", action="store_true")
@@ -1028,7 +1270,9 @@ def main() -> None:
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
 
-    if args.phase == "distill_refiner":
+    if args.phase == "sft_synth_ddp":
+        run_sft_synth_ddp_worker(args)
+    elif args.phase == "distill_refiner":
         run_distill_refiner(args)
     elif args.phase == "align_vine_grpo":
         run_align_vine_grpo(args)
@@ -1037,7 +1281,6 @@ def main() -> None:
     elif args.phase == "eval_final":
         run_eval_final(args)
     else:
-        run_distill_refiner(args)
         run_align_vine_grpo(args)
         run_eval_final(args)
 
