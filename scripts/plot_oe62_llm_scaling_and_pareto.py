@@ -206,14 +206,14 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
         y52_base = pmf_m8_blind[-1]
         rel_txt = "Surpasses 52h Base at 4.3× less GPU-h" if y12_awr >= y52_base else "Matches 52h Base at 4.3× less GPU-h"
         ax0.annotate(f"12h + Loom-AWR: {y12_awr:.1f}%\n({rel_txt})",
-                     xy=(12.12, y12_awr), xytext=(5.6, 58.2),
+                     xy=(12.12, y12_awr), xytext=(4.6, 58.6),
                      fontsize=7.4, fontweight="bold", color=c_pmf_awr,
                      bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
                      arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9))
 
     y52_awr = awr_blinds[-1]
     ax0.annotate(f"52h + Loom-AWR\n{y52_awr:.1f}% Blind",
-                 xy=(52.12, y52_awr), xytext=(25.0, 61.2),
+                 xy=(52.12, y52_awr), xytext=(26.8, 61.5),
                  fontsize=7.5, fontweight="bold", color=c_pmf_awr,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
                  arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9))
@@ -260,10 +260,12 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     for x, y, lb in zip(sx_pr, sy_pr, sz_pr_lbl):
         if lb == "16→4":
             ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(-7, 6), ha="right", fontsize=7.4, color=c_sz_30, fontweight="bold")
+        elif lb == "8→4":
+            ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(9, -12), ha="left", fontsize=7.4, color=c_sz_30, fontweight="bold")
         else:
             ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(6, -9), ha="left", fontsize=7.4, color=c_sz_30, fontweight="bold")
     for x, y, lb in zip(ux_pr, uy_pr, ul_pr_lbl):
-        off = (-4, 7)
+        off = (-9, 7) if lb == "8→1*" else (-4, 7)
         ax1.annotate(lb, (x, y), textcoords="offset points", xytext=off, ha="center", fontsize=7.5, color=c_ul_proc, fontweight="bold")
     for x, y, lb in zip(px_52awr, py_52awr, awr_lbl):
         ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(5, 4), ha="left", fontsize=7.3, color=c_pmf_awr, fontweight="bold")
