@@ -133,10 +133,36 @@ def run_sft_synth_ddp_worker(args: argparse.Namespace) -> None:
             flush=True,
         )
 
-    step2_ckpt = args.step2_dir / "v4_step2_ema_best.pt"
-    gen, step2_payload = LoomUni3DARGenerator.load_checkpoint(step2_ckpt, device=str(device), batch_size=64)
-    step2_meta = step2_payload.get("metadata") or {}
-    gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=True)
+    data_meta = json.loads((args.step2_dir / "oe62_v4_data_meta.json").read_text())
+    gen = LoomUni3DARGenerator.from_parent_checkpoint(
+        args.parent_ckpt,
+        target_cols=["homo", "sa_score"],
+        target_units=["eV", "sa"],
+        mean=data_meta["mean"],
+        scale=data_meta["scale"],
+        device=str(device),
+        batch_size=64,
+        num_rbf=32,
+        num_freqs=16,
+        num_prefix_tokens=8,
+        lora_rank=32,
+        lora_alpha=64.0,
+        lora_dropout=0.05,
+        lora_include_xyz_heads=True,
+        use_valence_head=True,
+        use_scale_free_count=True,
+        rope_center_prefix=True,
+        random_rotation_prob=0.80,
+    )
+    gen.configure_trainable(
+        train_conditioner=True,
+        train_lora=True,
+        train_xyz_embeddings=True,
+        unfreeze_full_backbone=False,
+    )
+    gen.backbone.tree_heads.requires_grad_(True)
+    gen.backbone.atom_heads[0].pred_heads[0].requires_grad_(True)
+    step2_meta = {"init_source": "parent_ckpt_lora_r32_so3_scale_free"}
 
     ema_gen = deepcopy(gen).eval()
     for p in ema_gen.parameters():
@@ -168,8 +194,8 @@ def run_sft_synth_ddp_worker(args: argparse.Namespace) -> None:
 
     opt = torch.optim.AdamW(
         [
-            {"params": backbone_params, "lr": 2.0e-5, "weight_decay": 1e-2},
-            {"params": head_params, "lr": 1.0e-4, "weight_decay": 1e-4},
+            {"params": backbone_params, "lr": 1.8e-4, "weight_decay": 1e-4},
+            {"params": head_params, "lr": 3.0e-4, "weight_decay": 1e-4},
         ],
         betas=(0.9, 0.95),
     )
@@ -227,8 +253,9 @@ def run_sft_synth_ddp_worker(args: argparse.Namespace) -> None:
             sched.step()
             g_step += 1
             with torch.no_grad():
+                eff_ema = min(0.996, (1.0 + g_step) / (10.0 + g_step))
                 for pe, pc in zip(ema_gen.parameters(), gen.parameters()):
-                    pe.lerp_(pc, 1.0 - 0.996)
+                    pe.lerp_(pc, 1.0 - eff_ema)
             l_sum += float(info["loss_total"])
             xyz_sum += float(info["loss_xyz"])
             cnt_sum += float(info["loss_count"])
@@ -287,6 +314,8 @@ def ensure_sft_synth(args: argparse.Namespace) -> Path:
             str(args.run_name),
             "--step2-dir",
             str(args.step2_dir),
+            "--parent-ckpt",
+            str(args.parent_ckpt),
         ]
         if args.allow_tf32:
             cmd.append("--allow-tf32")
@@ -339,12 +368,16 @@ def run_distill_refiner(args: argparse.Namespace) -> Path:
 
 
 def _configure_v4_grpo_trainable(gen: LoomUni3DARGenerator, top_k_layers: int = 5) -> int:
-    """Freeze lower Transformer blocks while unfreezing top-K layers + norm + tree/atom heads + conditioner."""
-    gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=False)
-    n_layers = len(gen.backbone.decoder.layers)
-    k = max(0, min(int(top_k_layers), n_layers))
-    for l_idx in range(n_layers - k, n_layers):
-        gen.backbone.decoder.layers[l_idx].requires_grad_(True)
+    """Enable Rank-32 LoRA + conditioner + valence/count heads + tree/element output heads for Tree-Vine GRPO."""
+    has_lora = int(gen.loom_config.get("lora_rank", 0)) > 0
+    if has_lora:
+        gen.configure_trainable(train_conditioner=True, train_lora=True, unfreeze_full_backbone=False)
+    else:
+        gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=False)
+        n_layers = len(gen.backbone.decoder.layers)
+        k = max(0, min(int(top_k_layers), n_layers))
+        for l_idx in range(n_layers - k, n_layers):
+            gen.backbone.decoder.layers[l_idx].requires_grad_(True)
     gen.backbone.norm.requires_grad_(True)
     gen.backbone.tree_heads.requires_grad_(True)
     gen.backbone.atom_heads[0].pred_heads[0].requires_grad_(True)
@@ -1062,7 +1095,7 @@ def run_eval_final(args: argparse.Namespace) -> None:
             flush=True,
         )
 
-    sft_gpuh = float((step3_meta.get("sft_metadata") or {}).get("sft_gpuh", 4.974))
+    sft_gpuh = float((step3_meta.get("sft_metadata") or {}).get("sft_gpuh", 0.0))
     synth_sft_gpuh = float((step3_meta.get("synth_sft_metadata") or {}).get("synth_sft_gpuh", 0.0))
     ref_gpuh = float(ref_meta.get("refiner_gpuh", 0.0))
     grpo_gpuh = float(step3_meta.get("grpo_gpuh", 0.0))
@@ -1176,8 +1209,8 @@ def main() -> None:
     p.add_argument("--rollout-gpus", type=str, default="0,1")
     p.add_argument("--shard-id", type=int, default=0)
     p.add_argument("--num-shards", type=int, default=2)
-    p.add_argument("--synth-sft-epochs", type=int, default=8)
-    p.add_argument("--synth-max-sa", type=float, default=3.25)
+    p.add_argument("--synth-sft-epochs", type=int, default=14)
+    p.add_argument("--synth-max-sa", type=float, default=3.35)
     p.add_argument("--refiner-epochs", type=int, default=14)
     p.add_argument("--refiner-batch-size", type=int, default=192)
     p.add_argument("--grpo-steps", type=int, default=180)
@@ -1203,6 +1236,11 @@ def main() -> None:
         "--step2-dir",
         type=Path,
         default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs/uni3dar_v4_step2"),
+    )
+    p.add_argument(
+        "--parent-ckpt",
+        type=Path,
+        default=Path("/sjtu-combustion/wjw/chensq/orbit_e13_e14_20261113/full_homo_27000/weights/octree_conditional.pt"),
     )
     p.add_argument("--oe62-task-spec", type=Path, default=Path("configs/tasks/oe62_orbital_synthesizable.yaml"))
     p.add_argument(
