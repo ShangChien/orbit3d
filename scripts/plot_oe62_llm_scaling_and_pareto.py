@@ -79,14 +79,28 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     sz_30 = _load_json("oe62_uni3dar_v3_fair_30atom.json") or _load_json("oe62_size_anchored_v3_a800_eval.json")
     sz_30_dft = _load_json("oe62_uni3dar_v3_fair_30atom_dft_unbiased.json") or _load_json("oe62_size_anchored_v3_dft_unbiased.json")
 
-    # Prefer strictly fair fixed-prompt 30-atom PMF JSONs when present, falling back cleanly
-    pmf_map = {
-        3.0: _load_json("oe62_pmf_3h_fair_30atom.json") or _load_json("oe62_propmolflow_3gpuh.json"),
-        6.0: _load_json("oe62_propmolflow_6gpuh.json"),
-        12.0: _load_json("oe62_pmf_12h_fair_30atom.json") or _load_json("oe62_propmolflow_12gpuh.json"),
-        24.0: _load_json("oe62_propmolflow_24gpuh.json"),
-        52.0: _load_json("oe62_pmf_52h_fair_30atom.json") or _load_json("oe62_propmolflow_52gpuh.json"),
-    }
+    # Prefer strictly fair fixed-prompt 30-atom PMF JSONs when present; never mix variable-N and fixed-N protocols on one curve
+    has_fair_pmf = (
+        _load_json("oe62_pmf_3h_fair_30atom.json") is not None
+        and _load_json("oe62_pmf_12h_fair_30atom.json") is not None
+        and _load_json("oe62_pmf_52h_fair_30atom.json") is not None
+    )
+    if has_fair_pmf:
+        pmf_map = {
+            3.0: _load_json("oe62_pmf_3h_fair_30atom.json"),
+            6.0: _load_json("oe62_pmf_6h_fair_30atom.json"),
+            12.0: _load_json("oe62_pmf_12h_fair_30atom.json"),
+            24.0: _load_json("oe62_pmf_24h_fair_30atom.json"),
+            52.0: _load_json("oe62_pmf_52h_fair_30atom.json"),
+        }
+    else:
+        pmf_map = {
+            3.0: _load_json("oe62_propmolflow_3gpuh.json"),
+            6.0: _load_json("oe62_propmolflow_6gpuh.json"),
+            12.0: _load_json("oe62_propmolflow_12gpuh.json"),
+            24.0: _load_json("oe62_propmolflow_24gpuh.json"),
+            52.0: _load_json("oe62_propmolflow_52gpuh.json"),
+        }
     awr_map = {
         3.12: _load_json("oe62_pmf_3h_awr_fair_30atom.json") or _load_json("oe62_propmolflow_3gpuh_loom_awr.json"),
         12.12: _load_json("oe62_pmf_12h_awr_fair_30atom.json") or _load_json("oe62_propmolflow_12gpuh_loom_awr.json"),

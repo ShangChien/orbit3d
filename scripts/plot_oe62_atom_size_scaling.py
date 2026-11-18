@@ -56,9 +56,9 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
         ("Uni3DAR_M1", "Uni-Loom [Uni-3DAR M=1] (2.45h)", "#0D9488", "--s", 1.9, 6.2),
         ("Uni3DAR_Process_8_to_4", "Uni-Loom [Uni-3DAR 8→4] (2.45h)", "#7C3AED", "-^", 2.2, 6.8),
         ("Uni3DAR_Process_16_to_4", "Uni-Loom [Uni-3DAR 16→4] (2.45h)", "#5B21B6", "-P", 2.6, 7.8),
-        ("PMF_52h_M1", "PropMolFlow 52h [M=1]", "#94A3B8", "--o", 1.8, 5.8),
-        ("PMF_52h_M8", "PropMolFlow 52h + Loom-Critic [M=8]", "#334155", "-o", 2.3, 6.6),
-        ("PMF_52h_LoomAWR_M8", "PropMolFlow 52.12h + Loom-AWR [M=8]", "#E11D48", "-D", 2.4, 6.4),
+        ("PMF_52h_M1", "Vanilla PropMolFlow @ 52h [M=1, No Loom]", "#94A3B8", "--o", 1.8, 5.8),
+        ("PMF_52h_M8", "PropMolFlow @ 52h + Loom-Critic [M=8]", "#334155", "-o", 2.3, 6.6),
+        ("PMF_52h_LoomAWR_M8", "Uni-Loom [PMF @ 52.12h + Loom-AWR, M=8]", "#E11D48", "-D", 2.4, 6.4),
     ]
 
     # Panel A: Latency (GPU-sec per 1,000 proposals)
