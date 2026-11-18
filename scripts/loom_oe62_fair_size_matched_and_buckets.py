@@ -39,7 +39,7 @@ for cand in (ROOT / "src" / "compat", ROOT / "src", ROOT, MOLGEN_COMPAT_DEFAULT,
     if cand.exists() and cstr not in sys.path:
         sys.path.insert(0, cstr)
 
-from loom.chemistry.valence_reconciler import ValenceReconciler  # noqa: E402
+from loom.chemistry.valence_reconciler import ValenceReconciler, is_clean_organic_charge_state  # noqa: E402
 from loom.weaving import LoomUni3DARGenerator, OctreeProcessCritic  # noqa: E402
 from scripts.loom_octree_process_critic_exp import (  # noqa: E402
     _build_oe62_critic_bus,
@@ -48,7 +48,8 @@ from scripts.loom_octree_process_critic_exp import (  # noqa: E402
 )
 from scripts.loom_oe62_propmolflow_head2head import (  # noqa: E402
     FlowMol,
-    _flowmol_to_rdkit_native,
+    OE62_ATOM_SET,
+    _min_pair_dist,
 )
 from scripts.loom_oe62_size_anchored import (  # noqa: E402
     _build_oe62_bus,
@@ -57,6 +58,24 @@ from scripts.loom_oe62_size_anchored import (  # noqa: E402
     _score_oe62_size_cohort,
     _select_oe62_size_from_pool,
 )
+
+
+def _flowmol_to_rdkit_native(sm: Any) -> Tuple[Optional[Chem.Mol], bool, bool]:
+    pos_np = sm.positions.detach().cpu().numpy().astype(np.float32) if torch.is_tensor(sm.positions) else np.asarray(sm.positions, dtype=np.float32)
+    if _min_pair_dist(pos_np) < 0.65 or getattr(sm, "rdkit_mol", None) is None:
+        return None, False, False
+    try:
+        cand = Chem.Mol(sm.rdkit_mol)
+        if any(a.GetSymbol() not in OE62_ATOM_SET for a in cand.GetAtoms()):
+            return None, False, False
+        Chem.SanitizeMol(cand)
+        if len(Chem.GetMolFrags(cand)) != 1:
+            return None, False, False
+        has_rad = any(a.GetNumRadicalElectrons() > 0 for a in cand.GetAtoms())
+        is_exo = (not bool(is_clean_organic_charge_state(cand))) or has_rad
+        return cand, True, is_exo
+    except Exception:
+        return None, False, False
 
 
 def _sync(device: torch.device) -> None:
