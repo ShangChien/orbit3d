@@ -56,8 +56,14 @@ class RSIDiagnosticThresholds:
 class RSIDiagnoser:
     """Four-quadrant weak-zone causal classifier & safe curriculum constructor."""
 
-    def __init__(self, thresholds: Optional[RSIDiagnosticThresholds] = None) -> None:
+    def __init__(
+        self,
+        thresholds: Optional[RSIDiagnosticThresholds] = None,
+        *,
+        uniform_trusted_anchor: bool = False,
+    ) -> None:
         self.thresholds = thresholds or RSIDiagnosticThresholds()
+        self.uniform_trusted_anchor = bool(uniform_trusted_anchor)
 
     def diagnose_1d(self, atlas_query: Dict[str, Any]) -> Dict[str, Any]:
         th = self.thresholds
@@ -107,7 +113,12 @@ class RSIDiagnoser:
         ceil_mask = np.array([lb == "PRIOR_CEILING" for lb in labels], dtype=bool)
 
         probs = np.zeros(n, dtype=np.float64)
-        if inner_mask.any() and conv_mask.any():
+        trusted_mask = (~blind_mask) & (~ceil_mask)
+        if self.uniform_trusted_anchor and inner_mask.any() and trusted_mask.any():
+            w_in = deficits[inner_mask]
+            probs[inner_mask] = 0.78 * (w_in / np.sum(w_in))
+            probs[trusted_mask] += 0.22 / int(trusted_mask.sum())
+        elif inner_mask.any() and conv_mask.any():
             w_in = deficits[inner_mask]
             probs[inner_mask] = 0.80 * (w_in / np.sum(w_in))
             probs[conv_mask] = 0.20 / int(conv_mask.sum())

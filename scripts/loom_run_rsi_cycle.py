@@ -18,8 +18,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import shutil
+import subprocess
 import time
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
 import torch
 from rdkit import Chem, DataStructs
@@ -281,8 +283,160 @@ def match_external_dft_lab_pool(
         matched_mols,
         np.stack(matched_targets, axis=0),
         {
+            "mode": "pool_nearest_neighbor",
             "matched_dft_molecules": len(matched_mols),
             "mean_tanimoto_to_acquisition_batch": float(np.mean(sims_selected)) if sims_selected else 0.0,
+        },
+    )
+
+
+SUPPORTED_ALL_ELECTRON_TZVP_Z: frozenset[int] = frozenset({1, 5, 6, 7, 8, 9, 14, 15, 16, 17, 35})
+
+_LIVE_DFT_WORKER_CODE = """
+import json, sys, time
+from pathlib import Path
+import numpy as np
+from rdkit import Chem
+from gpu4pyscf.dft.rks import RKS
+from pyscf import gto, lib
+
+HARTREE_TO_EV = 27.211386245988
+lib.num_threads(4)
+in_sdf = Path(sys.argv[1])
+work_dir = Path(sys.argv[2])
+out_json = Path(sys.argv[3])
+work_dir.mkdir(parents=True, exist_ok=True)
+ptable = Chem.GetPeriodicTable()
+
+def _arr(x):
+    return x.get() if hasattr(x, "get") else np.asarray(x)
+
+def _build_mf(mol):
+    mf = RKS(mol).density_fit(auxbasis="def2-universal-jkfit")
+    mf.xc = "pbe0"
+    mf.grids.level = 3
+    mf.conv_tol = 1e-8
+    mf.max_cycle = 100
+    return mf
+
+mols = list(Chem.SDMolSupplier(str(in_sdf), removeHs=False))
+rows = []
+for idx, m in enumerate(mols):
+    if m is None:
+        rows.append({"idx": idx, "status": "invalid_mol"})
+        continue
+    sp_dir = work_dir / f"mol_{idx:04d}"
+    res_p = sp_dir / "result.json"
+    if res_p.exists():
+        prev = json.loads(res_p.read_text())
+        if prev.get("status") == "completed":
+            rows.append(prev)
+            continue
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    syms = [a.GetSymbol() for a in m.GetAtoms()]
+    coords = m.GetConformer().GetPositions()
+    t0 = time.perf_counter()
+    try:
+        ecp = {s: "def2-tzvp" for s in set(syms) if ptable.GetAtomicNumber(s) > 36}
+        gmol = gto.M(
+            atom=list(zip(syms, coords.tolist())),
+            basis="def2-tzvp",
+            ecp=ecp,
+            unit="Angstrom",
+            charge=0,
+            spin=0,
+            verbose=4,
+            output=str(sp_dir / "singlepoint.log"),
+        )
+        mf = _build_mf(gmol)
+        mf.kernel()
+        used_newton = False
+        if not mf.converged:
+            used_newton = True
+            dm0 = _arr(mf.make_rdm1())
+            mf = _build_mf(gmol).newton()
+            mf.max_cycle = 80
+            mf.conv_tol = 1e-8
+            mf.kernel(dm0=dm0)
+        if not mf.converged:
+            raise RuntimeError("SCF did not converge")
+        e = _arr(mf.mo_energy)
+        occ = _arr(mf.mo_occ)
+        occ_idx = np.where(occ > 0.5)[0]
+        homo_ev = float(e[int(occ_idx[-1])] * HARTREE_TO_EV)
+        lumo_ev = float(e[int(occ_idx[-1]) + 1] * HARTREE_TO_EV) if (int(occ_idx[-1]) + 1) < len(e) else None
+        dt = round(time.perf_counter() - t0, 3)
+        rec = {
+            "idx": idx,
+            "status": "completed",
+            "n_atoms": len(syms),
+            "homo_eV": homo_ev,
+            "lumo_eV": lumo_ev,
+            "used_newton": used_newton,
+            "wall_sec": dt,
+        }
+        res_p.write_text(json.dumps(rec, indent=2) + "\\n")
+        rows.append(rec)
+        if (idx + 1) % 8 == 0 or (idx + 1) == len(mols):
+            print(f"[Live-RSI-DFT {idx+1}/{len(mols)}] homo={homo_ev:.4f} eV atoms={len(syms)} ({dt:.2f}s)", flush=True)
+    except Exception as exc:
+        rec = {"idx": idx, "status": "failed", "error": str(exc), "wall_sec": round(time.perf_counter() - t0, 3)}
+        res_p.write_text(json.dumps(rec, indent=2) + "\\n")
+        rows.append(rec)
+out_json.write_text(json.dumps(rows, indent=2) + "\\n")
+"""
+
+
+def execute_live_gpu4pyscf_dft_batch(
+    acquisition_mols: Sequence[Chem.Mol],
+    pot_slot: PotentialSlot,
+    dft_python: Path,
+    work_dir: Path,
+) -> Tuple[List[Chem.Mol], np.ndarray, Dict[str, Any]]:
+    """Relax exported `OuterRSIAcquisition` molecules on `DPA-4` and run live `GPU4PySCF PBE0/def2-TZVP/DF`."""
+    work_dir.mkdir(parents=True, exist_ok=True)
+    t0 = time.perf_counter()
+    relaxed_mols: List[Chem.Mol] = []
+    relax_res = pot_slot.relax_molecules(list(acquisition_mols), steps=25, fmax=0.05)
+    for orig_m, r_item in zip(acquisition_mols, relax_res):
+        rm = r_item.get("mol") if isinstance(r_item, dict) else getattr(r_item, "mol", None)
+        relaxed_mols.append(Chem.Mol(rm) if rm is not None else Chem.Mol(orig_m))
+
+    rel_sdf = work_dir / "acquisition_batch_r1_relaxed.sdf"
+    w = Chem.SDWriter(str(rel_sdf))
+    for m in relaxed_mols:
+        w.write(m)
+    w.close()
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    res_json = work_dir / "live_pbe0_results.json"
+    subprocess.run(
+        [str(dft_python), "-u", "-c", _LIVE_DFT_WORKER_CODE, str(rel_sdf), str(work_dir / "sp"), str(res_json)],
+        check=True,
+    )
+    rows = json.loads(res_json.read_text())
+    conv_mols: List[Chem.Mol] = []
+    conv_targets: List[List[float]] = []
+    scf_walls: List[float] = []
+    for idx, rec in enumerate(rows):
+        if rec.get("status") == "completed" and rec.get("homo_eV") is not None:
+            conv_mols.append(relaxed_mols[idx])
+            conv_targets.append([float(rec["homo_eV"])])
+            scf_walls.append(float(rec.get("wall_sec", 0.0)))
+
+    total_wall = round(time.perf_counter() - t0, 2)
+    return (
+        conv_mols,
+        np.asarray(conv_targets, dtype=np.float64),
+        {
+            "mode": "live_gpu4pyscf_pbe0_def2_tzvp_df",
+            "attempted_dft_molecules": len(relaxed_mols),
+            "scf_converged_molecules": len(conv_mols),
+            "scf_convergence_rate": round(len(conv_mols) / max(len(relaxed_mols), 1), 4),
+            "mean_scf_wall_sec": round(float(np.mean(scf_walls)), 3) if scf_walls else 0.0,
+            "total_dft_stage_wall_sec": total_wall,
         },
     )
 
@@ -301,7 +455,19 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--device", type=str, default="cuda:0")
+    parser.add_argument("--live-gpu4pyscf", action="store_true", help="Run live GPU4PySCF PBE0/def2-TZVP/DF on exported acquisition molecules")
+    parser.add_argument(
+        "--gpu4pyscf-python",
+        type=Path,
+        default=Path("/sjtu-combustion/wjw/chensq/orbit3d_quantum_20261111/gpu_venv/bin/python"),
+    )
+    parser.add_argument("--reuse-frozen-qsar-dir", type=Path, default=None)
+    parser.add_argument("--uniform-trusted-anchor", action="store_true", help="Stratify 22% anchor budget uniformly across all trusted quantiles")
+    parser.add_argument("--allow-tf32", action="store_true")
     args = parser.parse_args()
+    if args.allow_tf32 and torch.cuda.is_available():
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
 
     t_start = time.perf_counter()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -342,6 +508,8 @@ def main() -> None:
 
     # Train frozen historical enterprise QSAR asset once (base weights NEVER modified afterward!)
     base_qsar_dir = args.output_dir / "frozen_enterprise_qsar"
+    if args.reuse_frozen_qsar_dir is not None and (args.reuse_frozen_qsar_dir / "metadata.json").exists() and not (base_qsar_dir / "metadata.json").exists():
+        shutil.copytree(args.reuse_frozen_qsar_dir, base_qsar_dir)
     if (base_qsar_dir / "metadata.json").exists():
         frozen_base_asset = FingerprintQSARAsset.from_checkpoint_dir(
             base_qsar_dir, asset_id="enterprise_qsar_base"
@@ -421,7 +589,8 @@ def main() -> None:
             spread_cap=0.46,
             eval_floor=0.35,
             ceiling_bias_cap=0.52,
-        )
+        ),
+        uniform_trusted_anchor=bool(args.uniform_trusted_anchor),
     )
 
     gen, _ = LoomUni3DARGenerator.load_checkpoint(args.init_checkpoint, device=args.device, batch_size=128)
@@ -478,8 +647,22 @@ def main() -> None:
     # ==================================================================
     print("[RSI Round 1B] Exporting active acquisition batch from OUTER_BLINDSPOT...", flush=True)
     acq_engine = OuterRSIAcquisition(max_fmax_eV_A=3.5)
+    cand_mols_r1: List[Optional[Chem.Mol]] = list(r1_bundle["mols"])
+    if args.live_gpu4pyscf:
+        ptable = Chem.GetPeriodicTable()
+        cand_mols_r1 = [
+            m
+            if (
+                m is not None
+                and Chem.GetFormalCharge(m) == 0
+                and not any(a.GetNumRadicalElectrons() > 0 for a in m.GetAtoms())
+                and all(ptable.GetAtomicNumber(a.GetSymbol()) in SUPPORTED_ALL_ELECTRON_TZVP_Z for a in m.GetAtoms())
+            )
+            else None
+            for m in cand_mols_r1
+        ]
     acq_mols, acq_records = acq_engine.select_acquisition_batch(
-        r1_bundle["mols"],
+        cand_mols_r1,
         r1_bundle["req_mat"],
         r1_bundle["preds_1d"],
         r1_bundle["sigma_cal_1d"],
@@ -492,9 +675,14 @@ def main() -> None:
     acq_sdf_path = args.output_dir / "acquisition_batch_r1.sdf"
     acq_manifest = acq_engine.export_sdf(acq_mols, acq_records, acq_sdf_path)
 
-    dft_fb_mols, dft_fb_targets, match_info = match_external_dft_lab_pool(
-        acq_mols, ext_lab_mols, ext_lab_targets, budget=min(args.acquisition_budget, len(ext_lab_mols))
-    )
+    if args.live_gpu4pyscf:
+        dft_fb_mols, dft_fb_targets, match_info = execute_live_gpu4pyscf_dft_batch(
+            acq_mols, pot_slot, args.gpu4pyscf_python, args.output_dir / "live_dft_r1"
+        )
+    else:
+        dft_fb_mols, dft_fb_targets, match_info = match_external_dft_lab_pool(
+            acq_mols, ext_lab_mols, ext_lab_targets, budget=min(args.acquisition_budget, len(ext_lab_mols))
+        )
     cal_stats = IncrementalCalibrator.ingest_labeled_feedback(
         calibrated_asset,
         dft_fb_mols,
