@@ -442,3 +442,117 @@ def test_two_stage_process_critic_fit_save_and_logprob_parity(tmp_path) -> None:
     )
     assert len(grouped_b) == 10 and all(len(g) == 2 for g in grouped_b)
 
+
+def test_v4_step2_scale_free_exact_count_conservation_and_expected_xyz_loss(tmp_path) -> None:
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+
+    torch.manual_seed(4040)
+    backbone = LoomUni3DARGenerator._build_backbone(
+        merge_level=6,
+        allowed_elements=("H", "C", "N", "O", "F"),
+        batch_size=4,
+        emb_dim=64,
+        num_head=4,
+        layer=2,
+        ffn_multiple=2,
+        dropout=0.05,
+        random_rotation_prob=0.8,
+    )
+    gen = LoomUni3DARGenerator(
+        backbone=backbone,
+        target_cols=["homo", "sa_score"],
+        target_units=["eV", "sa"],
+        mean=[-6.5, 2.8],
+        scale=[0.8, 0.7],
+        num_rbf=16,
+        num_freqs=8,
+        num_prefix_tokens=8,
+        lora_rank=0,
+        use_valence_head=True,
+        use_scale_free_count=True,
+        rope_center_prefix=True,
+    )
+
+    # 1. Verify exact Delta N == 0 conservation across N in [9, 17, 29, 44, 95] (> 80 unbounded!)
+    gen.eval()
+    target_counts = [9, 17, 29, 44, 95]
+    prompts = np.array([[-6.6, 2.5]] * len(target_counts), dtype=np.float32)
+    t_norm = gen.normalize_targets(prompts)
+    c_mask = torch.ones((len(target_counts), 2), dtype=torch.bool)
+    budgets = torch.tensor(target_counts, dtype=torch.float32)
+
+    trajs = gen.sample(
+        t_norm,
+        c_mask,
+        cfg_scale=1.6,
+        geometric_guard=True,
+        electron_parity=None,
+        seed=1234,
+        use_bf16=False,
+        max_decode_steps=400,
+        leaf_atom_budget=budgets,
+    )
+    assert [len(tr["atom_symbols"]) for tr in trajs] == target_counts
+
+    # Also verify exact Delta N == 0 inside TwoStage funnel (`4 -> 3 -> 2`)
+    s1 = OctreeProcessCritic(emb_dim=64, num_targets=2, hidden_dim=64)
+    s2 = OctreeElementProcessCritic(emb_dim=64, num_targets=2, d_node=64, hidden_dim=64)
+    ts_critic = TwoStageOctreeProcessCritic(s1, s2)
+    grouped = gen.sample_with_two_stage_process_critic(
+        t_norm[:4],
+        c_mask[:4],
+        ts_critic,
+        m_stage1=4,
+        m_stage2=3,
+        m_keep=2,
+        coarse_chunk_size=8,
+        cfg_scale=1.6,
+        geometric_guard=True,
+        electron_parity=None,
+        seed=5678,
+        use_bf16=False,
+        max_decode_steps=200,
+        leaf_atom_budget=budgets[:4],
+    )
+    for idx, n_goal in enumerate(target_counts[:4]):
+        assert [len(tr["atom_symbols"]) for tr in grouped[idx]] == [n_goal, n_goal]
+
+    # 2. Verify full-backbone SFT loss (`loss_count` + `loss_geom`) & SO(3) OctreeDataset epoch rotation
+    mols = []
+    for smi in ("c1ccccc1O", "CC(=O)Nc1ccc(F)cc1"):
+        m = Chem.AddHs(Chem.MolFromSmiles(smi))
+        AllChem.EmbedMolecule(m, randomSeed=17)
+        mols.append(m)
+
+    ds = gen.build_replay_dataset(mols, seed=99)
+    ds.set_grid_epoch(3)
+    packed = ds.collate([0, 1])
+
+    gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=True)
+    gen.train()
+    loss, info = gen.compute_sft_loss(
+        packed,
+        t_norm[:2],
+        c_mask[:2],
+        cfg_dropout_prob=0.10,
+        contrast_weight=0.05,
+        xyz_loss_weight=0.20,
+        valence_loss_weight=0.15,
+        count_loss_weight=0.25,
+        geom_dist_loss_weight=1.50,
+    )
+    loss.backward()
+    assert info["loss_geom"] > 0.0
+    assert info["loss_count"] >= 0.0
+    assert gen.scale_free_count_head is not None
+    assert gen.scale_free_count_head.mlp[0].weight.grad is not None
+
+    ckpt = tmp_path / "v4_step2_gen.pt"
+    gen.save_checkpoint(ckpt, extra_metadata={"v4_step2": True})
+    loaded_gen, payload = LoomUni3DARGenerator.load_checkpoint(ckpt, device="cpu")
+    assert payload["loom_config"]["use_scale_free_count"] is True
+    assert payload["loom_config"]["rope_center_prefix"] is True
+    assert loaded_gen.scale_free_count_head is not None
+
+

@@ -12,14 +12,19 @@ from .molecular_state import ATOM_TYPES, Mol3DInstance, mol3d_to_validated_rdkit
 
 
 class OctreeDataset:
-    def __init__(self, molecules, model, training=True, seed=42):
+    def __init__(self, molecules, model, training=True, seed=42, random_rotation_prob=None):
         self.molecules = molecules
         self.allowed_elements = set(model.args.allow_atoms.split(','))
         args = copy(model.args)
         if not training:
             args.random_rotation_prob = 0.0
+        elif random_rotation_prob is not None:
+            args.random_rotation_prob = float(random_rotation_prob)
         self.grid = GridDataset(self, seed, model.dictionary, "atom_type", "atom_pos", training, args)
         self.grid.set_epoch(1)
+
+    def set_grid_epoch(self, epoch: int) -> None:
+        self.grid.set_epoch(int(epoch))
 
     def __len__(self):
         return len(self.molecules)

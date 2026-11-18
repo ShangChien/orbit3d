@@ -60,7 +60,12 @@ from .spec import (
     ObjectiveChannelSpec,
     TaskWeavingSpec,
 )
-from .uni3dar_slot import HeavyAtomValenceHead, LoomUni3DARGenerator
+from .uni3dar_slot import (
+    HeavyAtomValenceHead,
+    LoomUni3DARGenerator,
+    ScaleFreeBudgetEmbedding,
+    ScaleFreeCountHead,
+)
 
 __all__ = [
     "AssetCapabilities",
@@ -98,6 +103,8 @@ __all__ = [
     "RSIDiagnosticThresholds",
     "ResidualCalibratedAsset",
     "RewardOracleSlot",
+    "ScaleFreeBudgetEmbedding",
+    "ScaleFreeCountHead",
     "SlotOracleAsset",
     "TaskWeavingSpec",
     "TwoStageOctreeProcessCritic",

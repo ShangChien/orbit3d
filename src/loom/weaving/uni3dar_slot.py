@@ -92,6 +92,105 @@ class HeavyAtomValenceHead(nn.Module):
         return self.proj_num_h(h), self.proj_charge(h)
 
 
+def compute_scale_free_budget_features(
+    level: torch.Tensor,
+    remaining_atoms: torch.Tensor,
+    remaining_tokens: torch.Tensor,
+    count: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """Compute 6-D unbounded dimensionless atom-budget features `(..., 6)`.
+
+    Extrapolates smoothly from `N = 5` to `N = 2,000+` atoms without any bounded
+    lookup `Embedding(max_num_atom + 1)`.
+    """
+    with torch.autocast(device_type=level.device.type, enabled=False):
+        rem_a = remaining_atoms.float().clamp_min(0.0)
+        rem_t_raw = remaining_tokens.float().clamp_min(0.0)
+        rem_t = rem_t_raw.clamp_min(1.0)
+        has_b = (remaining_atoms > 0).float()
+        lvl_pos = level.float().clamp(0.0, 7.0)
+
+        f0 = has_b
+        f1 = torch.log1p(rem_a) / 4.0
+        f2 = torch.log1p(rem_t_raw) / 4.0
+        f3 = torch.log1p(rem_a / rem_t) * has_b
+        f4 = ((rem_a / rem_t) / torch.pow(8.0, lvl_pos)).clamp(0.0, 2.0) * has_b
+        if count is not None:
+            has_c = (count >= 0).float()
+            f5 = (torch.log1p(count.float().clamp_min(0.0)) / 4.0) * has_c
+        else:
+            f5 = torch.zeros_like(f0)
+        return torch.stack([f0, f1, f2, f3, f4, f5], dim=-1)
+
+
+def compute_exact_cell_count_bounds(
+    level: torch.Tensor,
+    remaining_atoms: torch.Tensor,
+    remaining_tokens: torch.Tensor,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Exact integer bounds `[c_min, c_max]` on cell atom count for breadth-first conservation."""
+    lvl_clamped = level.long().clamp(1, 7)
+    cap_cell = 1 << (3 * lvl_clamped)  # 8^level
+    rem_a = remaining_atoms.long().clamp_min(1)
+    rem_other = (remaining_tokens.long() - 1).clamp_min(0)
+    c_min = torch.maximum(torch.ones_like(rem_a), rem_a - cap_cell * rem_other)
+    c_max = torch.minimum(cap_cell, rem_a - rem_other)
+    c_max = torch.maximum(c_max, c_min)
+    return c_min, c_max
+
+
+class ScaleFreeBudgetEmbedding(nn.Module):
+    """Zero-initialized continuous remaining-atom budget residual embedding (`0` perturbation at step 0)."""
+
+    def __init__(self, emb_dim: int, hidden_dim: int = 256) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(6, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, emb_dim),
+        )
+        nn.init.zeros_(self.net[-1].weight)
+        nn.init.zeros_(self.net[-1].bias)
+
+    def forward(self, decoder_input: DecoderInputFeat, out_dtype: torch.dtype) -> torch.Tensor:
+        feats = compute_scale_free_budget_features(
+            decoder_input.level,
+            decoder_input.remaining_atoms,
+            decoder_input.remaining_tokens,
+            decoder_input.count,
+        )
+        return self.net(feats).to(out_dtype)
+
+
+class ScaleFreeCountHead(nn.Module):
+    """Unbounded continuous proportion head predicting `u in (0, 1)` inside `[c_min, c_max]`."""
+
+    def __init__(self, emb_dim: int, hidden_dim: int = 256) -> None:
+        super().__init__()
+        self.norm_h = nn.LayerNorm(emb_dim)
+        self.mlp = nn.Sequential(
+            nn.Linear(emb_dim + 6, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, 1),
+        )
+        nn.init.zeros_(self.mlp[-1].weight)
+        nn.init.zeros_(self.mlp[-1].bias)
+
+    def forward(
+        self,
+        dec_y_tree: torch.Tensor,
+        level: torch.Tensor,
+        remaining_atoms: torch.Tensor,
+        remaining_tokens: torch.Tensor,
+    ) -> torch.Tensor:
+        with torch.autocast(device_type=dec_y_tree.device.type, enabled=False):
+            bf = compute_scale_free_budget_features(level, remaining_atoms, remaining_tokens, None)
+            x = torch.cat([self.norm_h(dec_y_tree.float()), bf], dim=-1)
+            return torch.sigmoid(self.mlp(x).squeeze(-1))
+
+
 @lru_cache(maxsize=32)
 def _atom_geometry_tables(num_atom: int, device_str: str) -> Tuple[torch.Tensor, torch.Tensor]:
     """Cached `(rcov_table, max_coord_table)` tensors of shape `(num_atom,)` on `device`."""
@@ -204,6 +303,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         lora_include_xyz_heads: bool = False,
         train_xyz_embeddings: bool = False,
         use_valence_head: bool = False,
+        use_scale_free_count: bool = False,
+        rope_center_prefix: bool = False,
     ) -> None:
         super().__init__()
         if len(target_cols) != len(target_units) or len(mean) != len(target_cols) or len(scale) != len(target_cols):
@@ -236,6 +337,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
             "lora_include_xyz_heads": bool(lora_include_xyz_heads),
             "train_xyz_embeddings": bool(train_xyz_embeddings),
             "use_valence_head": bool(use_valence_head),
+            "use_scale_free_count": bool(use_scale_free_count),
+            "rope_center_prefix": bool(rope_center_prefix),
         }
 
         self.conditioner = LoomConditioner(
@@ -249,6 +352,12 @@ class LoomUni3DARGenerator(GeneratorSlot):
         )
         self.valence_head: Optional[HeavyAtomValenceHead] = (
             HeavyAtomValenceHead(self.args.emb_dim) if use_valence_head else None
+        )
+        self.budget_emb: Optional[ScaleFreeBudgetEmbedding] = (
+            ScaleFreeBudgetEmbedding(self.args.emb_dim) if use_scale_free_count else None
+        )
+        self.scale_free_count_head: Optional[ScaleFreeCountHead] = (
+            ScaleFreeCountHead(self.args.emb_dim) if use_scale_free_count else None
         )
 
         self.injected_lora_modules: List[str] = []
@@ -289,6 +398,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         num_head: int = 12,
         layer: int = 12,
         ffn_multiple: int = 4,
+        dropout: float = 0.0,
+        random_rotation_prob: float = 0.5,
     ) -> Uni3DARSampler:
         args = build_default_uni3dar_args(batch_size=batch_size)
         args.merge_level = int(merge_level)
@@ -297,6 +408,10 @@ class LoomUni3DARGenerator(GeneratorSlot):
         args.num_head = int(num_head)
         args.layer = int(layer)
         args.ffn_multiple = int(ffn_multiple)
+        args.residual_dropout = float(dropout)
+        args.attn_dropout = float(dropout)
+        args.emb_dropout = float(dropout)
+        args.random_rotation_prob = float(random_rotation_prob)
         return Uni3DARSampler(args, AtomFeatDict(args))
 
     @classmethod
@@ -343,7 +458,15 @@ class LoomUni3DARGenerator(GeneratorSlot):
         else:
             raise ValueError(f"Unsupported parent checkpoint format at {parent_ckpt_path}")
 
-        backbone = cls._build_backbone(merge_level=depth, allowed_elements=allowed, batch_size=batch_size)
+        backbone_dropout = float(loom_kwargs.pop("backbone_dropout", 0.0))
+        backbone_rot_prob = float(loom_kwargs.pop("random_rotation_prob", 0.5))
+        backbone = cls._build_backbone(
+            merge_level=depth,
+            allowed_elements=allowed,
+            batch_size=batch_size,
+            dropout=backbone_dropout,
+            random_rotation_prob=backbone_rot_prob,
+        )
         missing, unexpected = backbone.load_state_dict(backbone_state, strict=False)
         if missing or unexpected:
             raise ValueError(f"Backbone state mismatch when loading {parent_ckpt_path}: missing={missing}, unexpected={unexpected}")
@@ -436,6 +559,10 @@ class LoomUni3DARGenerator(GeneratorSlot):
         self.conditioner.requires_grad_(train_conditioner)
         if self.valence_head is not None:
             self.valence_head.requires_grad_(True)
+        if self.budget_emb is not None:
+            self.budget_emb.requires_grad_(True)
+        if self.scale_free_count_head is not None:
+            self.scale_free_count_head.requires_grad_(True)
         return [p for p in self.parameters() if p.requires_grad]
 
     def enable_v20_valence_head(self) -> List[nn.Parameter]:
@@ -617,8 +744,64 @@ class LoomUni3DARGenerator(GeneratorSlot):
         if p <= 0:
             return None
         cls_grid = self.backbone.get_cls_phy_pos(self.args.merge_level) / self.args.xyz_resolution
+        if bool(self.loom_config.get("rope_center_prefix", False)):
+            return torch.full((batch_size, p, 3), float(cls_grid), dtype=torch.float32, device=device)
         offsets = (torch.arange(p, device=device, dtype=torch.float32) - p) * 16.0
         return (cls_grid + offsets).view(1, p, 1).expand(batch_size, p, 3).contiguous()
+
+    def _embed_decoder_input(self, decoder_input: DecoderInputFeat) -> torch.Tensor:
+        emb = self.backbone.input_embedding(decoder_input)
+        if self.budget_emb is not None:
+            emb = emb + self.budget_emb(decoder_input, emb.dtype)
+        return emb
+
+    def _apply_exact_tree_conservation(
+        self,
+        dec_y_tree: torch.Tensor,
+        tree_logits: torch.Tensor,
+        tree_lvl: torch.Tensor,
+        rem_a_tree: torch.Tensor,
+        rem_t_tree: torch.Tensor,
+        budget_tree: torch.Tensor,
+        pops_1d: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Enforce exact top-down octree atom conservation (`Delta N == 0`) across all coarse levels."""
+        assert self.scale_free_count_head is not None
+        has_b = budget_tree > 0
+        if not bool(has_b.any().item()):
+            return tree_logits, torch.zeros_like(rem_a_tree, dtype=torch.int32), has_b
+
+        c_min, c_max = compute_exact_cell_count_bounds(tree_lvl, rem_a_tree, rem_t_tree)
+        u_hat = self.scale_free_count_head(dec_y_tree, tree_lvl, rem_a_tree, rem_t_tree)
+        c_hat_f = c_min.float() + u_hat * (c_max - c_min).float()
+        c_alloc = c_hat_f.round().long().clamp(c_min, c_max)
+
+        pops_row = pops_1d.unsqueeze(0)  # (1, 255)
+        is_l1 = tree_lvl == (self.backbone.atom_level_index + 1)
+
+        # Level >= 2: child capacity is `8^(lvl - 1)`; mask split popcount to `[ceil(c_alloc / 8^(lvl-1)), min(8, c_alloc)]`
+        cap_child = 1 << (3 * (tree_lvl.long() - 1).clamp(0, 6))
+        p_min_hi = ((c_alloc + cap_child - 1) // cap_child).clamp(1, 8)
+        p_max_hi = c_alloc.clamp(1, 8)
+
+        # Level == 1: child capacity is `1` atom; split popcount IS `c_cell in [c_min, c_max]`
+        p_min = torch.where(is_l1, c_min.clamp(1, 8), p_min_hi)
+        p_max = torch.where(is_l1, c_max.clamp(1, 8), p_max_hi)
+
+        feas = (pops_row >= p_min.unsqueeze(-1).float() - 0.1) & (pops_row <= p_max.unsqueeze(-1).float() + 0.1)
+        has_feas = feas.any(dim=-1, keepdim=True)
+        infeas_mask = has_b.unsqueeze(-1) & (~feas) & has_feas
+
+        guided = tree_logits.clone()
+        # Smooth preference around `c_hat_f` on level == 1 while strictly forbidding infeasible popcounts
+        l1_prior = torch.where(
+            (has_b & is_l1).unsqueeze(-1),
+            -0.30 * (pops_row - c_hat_f.unsqueeze(-1)).square(),
+            torch.zeros_like(guided),
+        )
+        guided = guided + l1_prior
+        guided = guided.masked_fill(infeas_mask, -1e9)
+        return guided, c_alloc.to(torch.int32), has_b
 
     # ------------------------------------------------------------------
     # Batched Fused Causal SDPA Sequence Pass (Zero Syncs)
@@ -797,7 +980,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         """Right-padded parallel sequence forward returning flat `(N_tokens, emb_dim)` octree states."""
         device = targets_norm.device
         bsz = targets_norm.shape[0]
-        dec_flat = self.backbone.input_embedding(decoder_input)
+        dec_flat = self._embed_decoder_input(decoder_input)
         global_c, has_any = self.conditioner.encode_condition(targets_norm, active_mask)
 
         root_indices = cu_lens[:-1].long()
@@ -899,6 +1082,90 @@ class LoomUni3DARGenerator(GeneratorSlot):
         loss_q = F.cross_entropy(logits_q.float(), gt_charge_cls_all[heavy_mask])
         return loss_h + 0.5 * loss_q
 
+    def _compute_scale_free_count_loss(
+        self,
+        dec_y_tree: torch.Tensor,
+        decoder_input: DecoderInputFeat,
+        decoder_gen_target: Any,
+    ) -> torch.Tensor:
+        """Supervise `ScaleFreeCountHead` on exact breadth-first subcell atom counts."""
+        assert self.scale_free_count_head is not None
+        device = dec_y_tree.device
+        is_gen_tree = decoder_gen_target.is_gen_tree
+        if not bool(is_gen_tree.any().item()):
+            return torch.zeros((), device=device)
+
+        lvl = decoder_input.level[is_gen_tree]
+        rem_a = decoder_input.remaining_atoms[is_gen_tree]
+        rem_t = decoder_input.remaining_tokens[is_gen_tree]
+        gt_cnt = decoder_gen_target.count[is_gen_tree].long()
+
+        # Supervise non-trivial tree splits (`rem_a > 0` and `c_max > c_min`)
+        c_min, c_max = compute_exact_cell_count_bounds(lvl, rem_a, rem_t)
+        active = (rem_a > 0) & (c_max > c_min) & (gt_cnt >= c_min) & (gt_cnt <= c_max)
+        if not bool(active.any().item()):
+            return torch.zeros((), device=device)
+
+        u_hat = self.scale_free_count_head(dec_y_tree[active], lvl[active], rem_a[active], rem_t[active])
+        span = (c_max[active] - c_min[active]).float().clamp_min(1.0)
+        u_gt = ((gt_cnt[active] - c_min[active]).float() / span).clamp(0.0, 1.0)
+        c_hat = c_min[active].float() + u_hat * span
+        loss_u = F.smooth_l1_loss(u_hat, u_gt, beta=0.08)
+        loss_logc = F.smooth_l1_loss(torch.log1p(c_hat), torch.log1p(gt_cnt[active].float()), beta=0.10)
+        return loss_u + 0.5 * loss_logc
+
+    def _compute_expected_xyz_geom_loss(
+        self,
+        preds_xyz: List[torch.Tensor],
+        gts_xyz: List[torch.Tensor],
+        atom_vox_phy_pos: torch.Tensor,
+        cu_lens: torch.Tensor,
+        is_gen_atom: torch.Tensor,
+        bsz: int,
+    ) -> torch.Tensor:
+        """Training-only differentiable expected-XYZ coordinate & 1-2/1-3 bonded distance loss (`0%` inference cost)."""
+        device = atom_vox_phy_pos.device
+        elem_ids = gts_xyz[0]
+        real_mask = (elem_ids >= 0) & (elem_ids < len(atom_list))
+        if int(real_mask.sum().item()) < 2:
+            return torch.zeros((), device=device)
+
+        num_bins = int(preds_xyz[1].shape[-1])
+        xyz_res = float(self.args.xyz_resolution)
+        bin_vals = torch.arange(num_bins, device=device, dtype=torch.float32) * xyz_res
+
+        exp_x = (torch.softmax(preds_xyz[1][real_mask].float(), dim=-1) * bin_vals).sum(dim=-1)
+        exp_y = (torch.softmax(preds_xyz[2][real_mask].float(), dim=-1) * bin_vals).sum(dim=-1)
+        exp_z = (torch.softmax(preds_xyz[3][real_mask].float(), dim=-1) * bin_vals).sum(dim=-1)
+
+        vox_origins = atom_vox_phy_pos[real_mask].float() - 0.5 * float(self.args.grid_len)
+        pred_pos = vox_origins + torch.stack([exp_x, exp_y, exp_z], dim=-1)
+        gt_bins = torch.stack([gts_xyz[1][real_mask], gts_xyz[2][real_mask], gts_xyz[3][real_mask]], dim=-1).float()
+        gt_pos = vox_origins + gt_bins * xyz_res
+
+        loss_coord = F.smooth_l1_loss(pred_pos, gt_pos, beta=0.02)
+
+        owners_all = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
+        atom_owners = owners_all[is_gen_atom][real_mask]
+        same_mol = atom_owners.unsqueeze(1) == atom_owners.unsqueeze(0)
+        upper_tri = torch.triu(torch.ones_like(same_mol, dtype=torch.bool), diagonal=1)
+
+        d_gt = torch.cdist(gt_pos, gt_pos, p=2.0)
+        # Supervise 1-2 covalent bond lengths + 1-3 geminal bond angles (`d_gt < 2.65 A`)
+        local_pairs = same_mol & upper_tri & (d_gt < 2.65)
+        if bool(local_pairs.any().item()):
+            diff_vec = pred_pos.unsqueeze(1) - pred_pos.unsqueeze(0)
+            d_pred = torch.sqrt((diff_vec.square().sum(dim=-1)).clamp_min(1e-8))
+            # Upweight direct covalent bonds (`d_gt < 1.85 A`) 2x relative to 1-3 angle distances
+            is_cov = d_gt[local_pairs] < 1.85
+            pair_err = F.smooth_l1_loss(d_pred[local_pairs], d_gt[local_pairs], beta=0.02, reduction="none")
+            weights = torch.where(is_cov, torch.full_like(pair_err, 2.0), torch.ones_like(pair_err))
+            loss_dist = (pair_err * weights).sum() / weights.sum().clamp_min(1.0)
+        else:
+            loss_dist = torch.zeros((), device=device)
+
+        return 0.35 * loss_coord + loss_dist
+
     def _nll_from_hidden(
         self,
         dec_y: torch.Tensor,
@@ -909,6 +1176,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         decoder_input: Optional[DecoderInputFeat] = None,
         xyz_loss_weight: float = 0.1,
         valence_loss_weight: float = 0.15,
+        count_loss_weight: float = 0.25,
+        geom_dist_loss_weight: float = 0.0,
         atom_class_weights: Optional[torch.Tensor] = None,
         return_per_molecule: bool = False,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
@@ -917,16 +1186,20 @@ class LoomUni3DARGenerator(GeneratorSlot):
         is_gen_atom = decoder_gen_target.is_gen_atom
 
         loss_tree = torch.zeros((), device=device)
+        loss_count = torch.zeros((), device=device)
         logits_tree = None
         gt_tree = None
         if is_gen_tree.any():
             logits_tree = self.backbone.tree_heads[0](dec_y[is_gen_tree]).float()
             gt_tree = (decoder_gen_target.type[is_gen_tree] - self.backbone.tree0_split_id - 1).long()
             loss_tree = F.cross_entropy(logits_tree, gt_tree)
+            if self.scale_free_count_head is not None and decoder_input is not None and count_loss_weight > 0.0:
+                loss_count = self._compute_scale_free_count_loss(dec_y[is_gen_tree], decoder_input, decoder_gen_target)
 
         loss_atom = torch.zeros((), device=device)
         loss_xyz = torch.zeros((), device=device)
         loss_valence = torch.zeros((), device=device)
+        loss_geom = torch.zeros((), device=device)
         atom_logits = None
         preds_xyz = None
         gts_xyz = None
@@ -945,14 +1218,27 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 loss_valence = self._compute_valence_aux_loss(
                     dec_y[is_gen_atom], gts_xyz, decoder_input.phy_pos[is_gen_atom], cu_lens, is_gen_atom, bsz
                 )
+            if decoder_input is not None and geom_dist_loss_weight > 0.0:
+                loss_geom = self._compute_expected_xyz_geom_loss(
+                    preds_xyz, gts_xyz, decoder_input.phy_pos[is_gen_atom], cu_lens, is_gen_atom, bsz
+                )
 
-        gen_loss = loss_tree + loss_atom + xyz_loss_weight * loss_xyz + valence_loss_weight * loss_valence
+        gen_loss = (
+            loss_tree
+            + loss_atom
+            + xyz_loss_weight * loss_xyz
+            + valence_loss_weight * loss_valence
+            + count_loss_weight * loss_count
+            + geom_dist_loss_weight * loss_geom
+        )
         info: Dict[str, Any] = {
             "loss_gen": float(gen_loss.detach().item()),
             "loss_tree": float(loss_tree.detach().item()),
             "loss_atom": float(loss_atom.detach().item()),
             "loss_xyz": float(loss_xyz.detach().item()),
             "loss_valence": float(loss_valence.detach().item()),
+            "loss_count": float(loss_count.detach().item()),
+            "loss_geom": float(loss_geom.detach().item()),
         }
 
         if return_per_molecule:
@@ -1001,6 +1287,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
         contrast_col_mask: Optional[torch.Tensor] = None,
         xyz_loss_weight: float = 0.1,
         valence_loss_weight: float = 0.15,
+        count_loss_weight: float = 0.25,
+        geom_dist_loss_weight: float = 0.0,
+        budget_dropout_prob: float = 0.15,
         atom_class_weights: Optional[torch.Tensor] = None,
         return_per_molecule: bool = False,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
@@ -1012,6 +1301,24 @@ class LoomUni3DARGenerator(GeneratorSlot):
         decoder_input, decoder_gen_target, _ = self.backbone.get_feat_from_dataloader(bd)
         cu_lens = bd["decoder_input_len"].to(device, dtype=torch.int32)
         max_len = int(bd["decoder_input_max_len"].item())
+
+        if self.budget_emb is not None:
+            # Expose exact total atom budget at root token (`intra_pos == 0`), with `budget_dropout_prob` dropout
+            # during training so both exact-budget and unbudgeted sampling modes are well-calibrated.
+            root_idx = cu_lens[:-1].long()
+            root_tot = decoder_gen_target.count[root_idx].to(decoder_input.remaining_atoms.dtype)
+            if self.training and budget_dropout_prob > 0.0:
+                keep_b = torch.rand((bsz,), device=device) >= float(budget_dropout_prob)
+                owners_tok = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
+                rem_a_mod = decoder_input.remaining_atoms.clone()
+                rem_a_mod[root_idx] = root_tot
+                decoder_input.remaining_atoms = torch.where(
+                    keep_b[owners_tok], rem_a_mod, torch.zeros_like(rem_a_mod)
+                )
+            else:
+                rem_a_mod = decoder_input.remaining_atoms.clone()
+                rem_a_mod[root_idx] = root_tot
+                decoder_input.remaining_atoms = rem_a_mod
 
         train_mask = active_mask.bool().clone()
         if self.training and cfg_dropout_prob > 0.0:
@@ -1028,6 +1335,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
             decoder_input=decoder_input,
             xyz_loss_weight=xyz_loss_weight,
             valence_loss_weight=valence_loss_weight,
+            count_loss_weight=count_loss_weight,
+            geom_dist_loss_weight=geom_dist_loss_weight,
             atom_class_weights=atom_class_weights,
             return_per_molecule=need_per_mol,
         )
@@ -1400,6 +1709,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
             budget_vec: Optional[torch.Tensor] = None
             if leaf_atom_budget is not None:
                 budget_vec = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device).view(batch_size)
+                if self.scale_free_count_head is not None and budget_vec.numel() > 0:
+                    max_decode_steps = max(int(max_decode_steps), 3 * int(budget_vec.max().item()) + 64)
             pops_1d = _split_popcount_table(str(device))
 
             autocast_enabled = bool(use_bf16 and device.type == "cuda")
@@ -1484,6 +1795,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
                 cur_feat = dec_feat_buf[:, dec_len - 1, :]
                 cur_phy_pos = dec_pos_buf[:, dec_len - 1, :]
+                use_exact_cnt = (self.scale_free_count_head is not None) and (budget_vec is not None)
+                init_rem_a = (
+                    torch.where(
+                        budget_vec > 0,
+                        budget_vec.round().clamp_min(1).to(torch.int32),
+                        torch.zeros_like(cur_feat[:, IDX_TYPE]).int(),
+                    )
+                    if use_exact_cnt and budget_vec is not None
+                    else torch.zeros_like(cur_feat[:, IDX_TYPE]).int()
+                )
+                if use_exact_cnt:
+                    count_vars["total_atoms"] = init_rem_a.clone()
                 cur_input = DecoderInputFeat(
                     cur_feat[:, IDX_TYPE],
                     cur_feat[:, :3],
@@ -1491,7 +1814,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     cur_phy_pos,
                     cur_feat[:, IDX_SPACE],
                     cur_feat[:, IDX_TREE],
-                    torch.zeros_like(cur_feat[:, IDX_TYPE]).int(),
+                    init_rem_a,
                     torch.ones_like(cur_feat[:, IDX_TYPE]).int(),
                     cur_feat[:, IDX_CNT],
                 ).add_seq_dim()
@@ -1523,7 +1846,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 b_active = batch_size
 
                 while b_active > 0:
-                    step_emb = self.backbone.input_embedding(cur_input)
+                    step_emb = self._embed_decoder_input(cur_input)
                     step_grid = cur_input.phy_pos.float() / self.args.xyz_resolution
 
                     if step_idx == 0:
@@ -1679,6 +2002,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                         vox_origin, p_pos, p_valid, p_rcov, p_sat
                                     )
                                 cur_logits = cur_logits.masked_fill(forbidden_atom_mask, -torch.inf)
+                                if use_exact_cnt:
+                                    b_at = count_vars["total_atoms"][is_pred_atom] > 0
+                                    if bool(b_at.any().item()):
+                                        cur_logits = cur_logits.clone()
+                                        cur_logits[b_at, self.backbone.atom_null_id] = -torch.inf
                                 if electron_parity is not None and parities is not None and acc_par is not None and term_flags is not None:
                                     cur_logits = mask_terminal_element_logits(
                                         cur_logits, acc_par, term_flags, electron_parity, parities
@@ -1745,8 +2073,20 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         else:
                             tree_logits = tree_c
 
-                        # Native Uni-3DAR level == 1 leaf-slot budget guidance
-                        if budget_vec is not None and _replay_coarse_actions is None:
+                        # Exact scale-free tree count conservation (`v4`) or legacy `level == 1` leaf-slot guidance
+                        exact_c_alloc: Optional[torch.Tensor] = None
+                        exact_has_b: Optional[torch.Tensor] = None
+                        if use_exact_cnt and budget_vec is not None and _replay_coarse_actions is None:
+                            tree_logits, exact_c_alloc, exact_has_b = self._apply_exact_tree_conservation(
+                                dec_y_last[is_pred_tree],
+                                tree_logits,
+                                tree_lvl,
+                                last_rem_atoms[is_pred_tree],
+                                last_rem_tokens[is_pred_tree],
+                                budget_vec[is_pred_tree],
+                                pops_1d,
+                            )
+                        elif budget_vec is not None and _replay_coarse_actions is None:
                             is_l1_sub = (tree_lvl == (self.backbone.atom_level_index + 1)) & (budget_vec[is_pred_tree] > 0)
                             if bool(is_l1_sub.any().item()):
                                 tree_rows_idx = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
@@ -1812,6 +2152,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
                         pred_type[is_pred_tree] = t_pred.int() + self.backbone.tree0_split_id + 1
                         score_temp[is_pred_tree] = score_temp[is_pred_tree] + t_sc
+                        if exact_c_alloc is not None and exact_has_b is not None:
+                            is_l1_cnt = tree_lvl == (self.backbone.atom_level_index + 1)
+                            chosen_cnt = torch.where(
+                                is_l1_cnt, pops_1d[t_pred].round().to(torch.int32), exact_c_alloc
+                            )
+                            pred_count[is_pred_tree] = torch.where(
+                                exact_has_b, chosen_cnt, pred_count[is_pred_tree]
+                            )
 
                     scores_buf[:, dec_len] = score_temp
                     count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
@@ -2258,7 +2606,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             cur_kv_len = max_kv_0
 
             while b_active > 0:
-                step_emb = self.backbone.input_embedding(cur_input)
+                step_emb = self._embed_decoder_input(cur_input)
                 step_grid = cur_input.phy_pos.float() / self.args.xyz_resolution
                 if use_cfg:
                     x_run = step_emb.repeat(2, 1, 1)
@@ -2385,6 +2733,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                     vox_origin, p_pos, p_valid, p_rcov, p_sat
                                 )
                             cur_logits = cur_logits.masked_fill(forbidden_atom_mask, -torch.inf)
+                            if self.scale_free_count_head is not None:
+                                b_at_c = count_vars["total_atoms"][is_pred_atom] > 0
+                                if bool(b_at_c.any().item()):
+                                    cur_logits = cur_logits.clone()
+                                    cur_logits[b_at_c, self.backbone.atom_null_id] = -torch.inf
                             if electron_parity is not None and parities is not None and acc_par is not None and term_flags is not None:
                                 cur_logits = mask_terminal_element_logits(
                                     cur_logits, acc_par, term_flags, electron_parity, parities
@@ -2941,6 +3294,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
             cur_feat = dec_feat_s1[:, init_len - 1, :]
             cur_phy_pos = dec_pos_s1[:, init_len - 1, :]
+            use_exact_cnt = (self.scale_free_count_head is not None) and (budget_vec is not None)
+            init_rem_a_s1 = (
+                torch.where(
+                    budget_vec > 0,
+                    budget_vec.round().clamp_min(1).to(torch.int32),
+                    torch.zeros_like(cur_feat[:, IDX_TYPE]).int(),
+                )
+                if use_exact_cnt and budget_vec is not None
+                else torch.zeros_like(cur_feat[:, IDX_TYPE]).int()
+            )
+            if use_exact_cnt:
+                count_vars["total_atoms"] = init_rem_a_s1.clone()
             cur_input = DecoderInputFeat(
                 cur_feat[:, IDX_TYPE],
                 cur_feat[:, :3],
@@ -2948,7 +3313,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 cur_phy_pos,
                 cur_feat[:, IDX_SPACE],
                 cur_feat[:, IDX_TREE],
-                torch.zeros_like(cur_feat[:, IDX_TYPE]).int(),
+                init_rem_a_s1,
                 torch.ones_like(cur_feat[:, IDX_TYPE]).int(),
                 cur_feat[:, IDX_CNT],
             ).add_seq_dim()
@@ -2970,7 +3335,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             # ---------------- Stage 1: Coarse (`level >= 1`) Paused Batch Loop ----------------
             while True:
                 active = ~paused
-                step_emb = self.backbone.input_embedding(cur_input)
+                step_emb = self._embed_decoder_input(cur_input)
                 step_grid = cur_input.phy_pos.float() / self.args.xyz_resolution
 
                 if step_idx == 0:
@@ -3087,7 +3452,19 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     else:
                         tree_logits = tree_c
 
-                    if budget_vec is not None:
+                    exact_c_alloc_s1: Optional[torch.Tensor] = None
+                    exact_has_b_s1: Optional[torch.Tensor] = None
+                    if use_exact_cnt and budget_vec is not None:
+                        tree_logits, exact_c_alloc_s1, exact_has_b_s1 = self._apply_exact_tree_conservation(
+                            dec_y_last[is_pred_tree],
+                            tree_logits,
+                            tree_lvl,
+                            last_rem_atoms[is_pred_tree],
+                            last_rem_tokens[is_pred_tree],
+                            budget_vec[is_pred_tree],
+                            pops_1d,
+                        )
+                    elif budget_vec is not None:
                         is_l1_sub = (tree_lvl == (self.backbone.atom_level_index + 1)) & (budget_vec[is_pred_tree] > 0)
                         if bool(is_l1_sub.any().item()):
                             tree_rows_idx = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
@@ -3124,6 +3501,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
                     pred_type[is_pred_tree] = t_pred.int() + self.backbone.tree0_split_id + 1
                     score_temp[is_pred_tree] = score_temp[is_pred_tree] + t_sc
+                    if exact_c_alloc_s1 is not None and exact_has_b_s1 is not None:
+                        is_l1_cnt_s1 = tree_lvl == (self.backbone.atom_level_index + 1)
+                        chosen_cnt_s1 = torch.where(
+                            is_l1_cnt_s1, pops_1d[t_pred].round().to(torch.int32), exact_c_alloc_s1
+                        )
+                        pred_count[is_pred_tree] = torch.where(
+                            exact_has_b_s1, chosen_cnt_s1, pred_count[is_pred_tree]
+                        )
 
                 count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
                 if has_tree:
@@ -3430,7 +3815,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
                 kv_len_s2 = cur_kv_len
                 while b_active > 0:
-                    step_emb = self.backbone.input_embedding(cur_input)
+                    step_emb = self._embed_decoder_input(cur_input)
                     step_grid = cur_input.phy_pos.float() / self.args.xyz_resolution
                     if use_cfg:
                         x_run = step_emb.repeat(2, 1, 1)
@@ -3557,6 +3942,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                         vox_origin, p_pos, p_valid, p_rcov, p_sat
                                     )
                                 cur_logits = cur_logits.masked_fill(forbidden_atom_mask, -torch.inf)
+                                if use_exact_cnt:
+                                    b_at = count_s2["total_atoms"][is_pred_atom] > 0
+                                    if bool(b_at.any().item()):
+                                        cur_logits = cur_logits.clone()
+                                        cur_logits[b_at, self.backbone.atom_null_id] = -torch.inf
                                 if electron_parity is not None and parities is not None and acc_par is not None and term_flags is not None:
                                     cur_logits = mask_terminal_element_logits(
                                         cur_logits, acc_par, term_flags, electron_parity, parities
@@ -3863,6 +4253,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 if objective_col_mask is not None and objective_col_mask.ndim == 2:
                     objective_col_mask = objective_col_mask[perm]
                 leaf_atom_budget = b_p[perm]
+
+            if leaf_atom_budget is not None and self.scale_free_count_head is not None:
+                b_tmp = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device)
+                if b_tmp.numel() > 0:
+                    max_decode_steps = max(int(max_decode_steps), 3 * int(b_tmp.max().item()) + 64)
 
             eff_coarse_chunk = min(int(coarse_chunk_size), 512) if int(self.args.recycle) >= 3 else int(coarse_chunk_size)
             prompts_per_chunk = max(1, eff_coarse_chunk // int(m_stage1))
