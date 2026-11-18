@@ -22,6 +22,7 @@ def build_arxiv_tarball() -> Path:
         "figures/fig5_gp_atlas_2d_joint.pdf",
         "figures/fig6_zwitterion_and_synthesizability.pdf",
         "figures/fig7_grounded_rsi_closed_loop.pdf",
+        "figures/fig8_oe62_cross_paradigm_scaling.pdf",
     ]
 
     with tarfile.open(out_path, "w:gz") as tar:

@@ -15,6 +15,7 @@ def main() -> None:
         "references.bib",
         "figures/ed_fig1_stage_progression.pdf",
         "figures/ed_fig2_gp_atlas_1d_homo.pdf",
+        "figures/ed_fig3_oe62_cross_paradigm_scaling.pdf",
         "figures/fig1_uniloom_architecture.pdf",
         "figures/fig2_audit_and_hotswap.pdf",
         "figures/fig3_gp_atlas_2d_joint.pdf",
