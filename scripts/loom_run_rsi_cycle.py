@@ -295,10 +295,12 @@ def match_external_dft_lab_pool(
 SUPPORTED_ALL_ELECTRON_TZVP_Z: frozenset[int] = frozenset({1, 5, 6, 7, 8, 9, 14, 15, 16, 17, 35})
 
 _LIVE_DFT_WORKER_CODE = """
-import json, sys, time
+import ctypes, ctypes.util, json, sys, time
 from pathlib import Path
 import numpy as np
 from rdkit import Chem
+if ctypes.util.find_library("cusolver") is None:
+    ctypes.CDLL("libcusolver.so.11", mode=ctypes.RTLD_GLOBAL)
 from gpu4pyscf.dft.rks import RKS
 from pyscf import gto, lib
 
