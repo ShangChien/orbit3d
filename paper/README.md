@@ -12,11 +12,11 @@ This directory contains the self-contained English arXiv LaTeX/Markdown manuscri
 | `main.tex` | Primary single-column arXiv LaTeX manuscript |
 | `main.bbl` | Synchronized `thebibliography` file included directly by `main.tex` (arXiv AutoTeX compatible) |
 | `references.bib` | BibTeX bibliography database (`26` entries; `22` cited) |
-| `UniLoom_arXiv_Paper.md` | Complete English Markdown edition of the arXiv preprint embedding `figures/fig1..fig8*.png` |
+| `UniLoom_arXiv_Paper.md` | Complete English Markdown edition of the arXiv preprint embedding `figures/fig1..fig9*.png` |
 | `draw_architecture.py` | Vector PDF / 300-DPI PNG / SVG generator for `figures/fig1_uniloom_architecture.{pdf,png,svg}` in a minimalist horizontal Codex architectural style |
 | `sync_bbl.py` | Regenerates `main.bbl` in exact citation order from `main.tex` and `references.bib` |
-| `build_arxiv_submission.py` | Packages `main.tex`, `main.bbl`, `references.bib`, and `figures/fig1..fig8*.pdf` into `UniLoom_arXiv_Submission.tar.gz` |
-| `figures/` | All 8 main-paper figures as vector `.pdf` and raster `.png` (plus `.svg` for Figure 1) |
+| `build_arxiv_submission.py` | Packages `main.tex`, `main.bbl`, `references.bib`, and `figures/fig1..fig9*.pdf` into `UniLoom_arXiv_Submission.tar.gz` |
+| `figures/` | All 9 main-paper figures as vector `.pdf` and raster `.png` (plus `.svg` for Figure 1) |
 | `main.pdf` | Compiled arXiv PDF manuscript |
 | `UniLoom_arXiv_Submission.tar.gz` | Upload-ready arXiv source archive |
 | `ncs/` | Complete *Nature Computational Science* (`Article`) submission directory (`main_ncs.tex`, `main_ncs.bbl`, `sync_ncs_bbl.py`, `build_ncs_submission.py`, `main_ncs.pdf`, `UniLoom_NCS_Submission.tar.gz`, `UniLoom_NCS_Manuscript.md`, `figures/*.pdf`, `README.md`) |

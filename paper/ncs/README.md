@@ -13,7 +13,7 @@ This directory holds the submission-ready *Nature Computational Science* (`Artic
 | Main Text (`Introduction` + `Results` + `Discussion`) | $\le 3{,}500$ words (excl. Abstract, Methods, floats) | **~2,300 words** |
 | Methods | $\le 3{,}000$ words | **~1,506 words** |
 | Main Display Items | $\le 6$ total | **6** (Figures 1–5 + two-part Table 1a/b) |
-| Extended Data Items | $\le 10$ total | **9** (Extended Data Figs. 1–3 + Extended Data Tables 1–6) |
+| Extended Data Items | $\le 10$ total | **10** (Extended Data Figs. 1–4 + Extended Data Tables 1–6) |
 
 ## Directory Contents
 
@@ -23,10 +23,10 @@ This directory holds the submission-ready *Nature Computational Science* (`Artic
 | `main_ncs.bbl` | Synchronized 22-entry Nature `thebibliography` included directly by `main_ncs.tex` |
 | `references.bib` | BibTeX bibliography synchronized with the main preprint |
 | `sync_ncs_bbl.py` | Regenerates Nature-formatted `main_ncs.bbl` in exact citation order from `main_ncs.tex` and `references.bib` |
-| `build_ncs_submission.py` | Packages the 11 source files (`main_ncs.tex`, `main_ncs.bbl`, `references.bib`, and `figures/*.pdf`) into `UniLoom_NCS_Submission.tar.gz` |
-| `figures/` | Staged 8 vector PDFs (`fig1..fig5` main + `ed_fig1..ed_fig3` Extended Data) |
+| `build_ncs_submission.py` | Packages the 12 source files (`main_ncs.tex`, `main_ncs.bbl`, `references.bib`, and `figures/*.pdf`) into `UniLoom_NCS_Submission.tar.gz` |
+| `figures/` | Staged 9 vector PDFs (`fig1..fig5` main + `ed_fig1..ed_fig4` Extended Data) |
 | `main_ncs.pdf` | Compiled PDF manuscript (zero LaTeX Overfull/Undefined warnings) |
-| `UniLoom_NCS_Submission.tar.gz` | Upload-ready source tarball containing the 11 LaTeX/figure files |
+| `UniLoom_NCS_Submission.tar.gz` | Upload-ready source tarball containing the 12 LaTeX/figure files |
 | `UniLoom_NCS_Manuscript.md` | Complete Markdown mirror of the NCS manuscript with relative `../figures/*.png` embeds |
 
 ## Rebuilding the Bibliography, PDF, and Submission Tarball
