@@ -542,29 +542,19 @@ def _fit_step3_dev_prompt_centering(
     x = h_req[ok].astype(np.float64)
     y = out["mean"][ok, 0].astype(np.float64)
     bias = float(np.mean(y - x))
-    xc = float(np.mean(x))
-    yc = float(np.mean(y))
-    slope = float(np.clip(np.sum((x - xc) * (y - yc)) / max(float(np.sum((x - xc) ** 2)), 1e-6), 0.72, 1.25))
-    intercept = float(yc - slope * xc)
-    apply_it = (abs(bias) >= 0.035) or (abs(slope - 1.0) >= 0.06)
+    apply_it = abs(bias) >= 0.03
     return {
         "applied": bool(apply_it),
         "n_valid": int(ok.sum()),
         "bias_eV": round(bias, 4),
-        "slope": round(slope, 4),
-        "intercept": round(intercept, 4),
-        "center": round(xc, 4),
     }
 
 
 def _apply_prompt_map(homo_1d: np.ndarray, dev_cal: Dict[str, Any]) -> np.ndarray:
     if not dev_cal.get("applied", False):
         return homo_1d.astype(np.float32)
-    s = float(dev_cal["slope"])
-    b = float(dev_cal["intercept"])
-    shifted = (homo_1d.astype(np.float64) - b) / max(s, 0.72)
-    blended = 0.80 * shifted + 0.20 * (homo_1d.astype(np.float64) - float(dev_cal["bias_eV"]))
-    return np.clip(blended, -8.3, -4.6).astype(np.float32)
+    shifted = homo_1d.astype(np.float64) - float(dev_cal.get("bias_eV", 0.0))
+    return np.clip(shifted, -8.3, -4.6).astype(np.float32)
 
 
 def run_eval_final(args: argparse.Namespace) -> None:

@@ -123,6 +123,23 @@ def compute_scale_free_budget_features(
         return torch.stack([f0, f1, f2, f3, f4, f5], dim=-1)
 
 
+def compute_steric_cell_capacity(level: torch.Tensor) -> torch.Tensor:
+    """Physical 3D steric atom-packing capacity of a `(0.24 * 2^level A)^3` cell in organic molecules.
+
+    Guarantees `cap(lvl) <= 8 * cap(lvl - 1)` across all `lvl >= 1` while preventing unphysical multi-atom
+    pile-ups inside `0.48 A` (`lvl=1`, body diagonal `0.81 A < 0.96 A` covalent bond -> `cap=1`) and
+    `0.96 A` (`lvl=2` -> `cap=2`) cells, scaling unboundedly as `8^(lvl - 3)` for `lvl >= 6`.
+    """
+    lvl = level.long()
+    cap_hi = 1 << (3 * (lvl - 3).clamp(0, 6))  # 512 at lvl=6, 4096 at lvl=7, ...
+    cap = torch.where(lvl <= 1, torch.ones_like(lvl), cap_hi)
+    cap = torch.where(lvl == 2, torch.full_like(lvl, 2), cap)
+    cap = torch.where(lvl == 3, torch.full_like(lvl, 4), cap)
+    cap = torch.where(lvl == 4, torch.full_like(lvl, 14), cap)
+    cap = torch.where(lvl == 5, torch.full_like(lvl, 64), cap)
+    return cap
+
+
 def compute_exact_cell_count_bounds(
     level: torch.Tensor,
     remaining_atoms: torch.Tensor,
@@ -765,42 +782,33 @@ class LoomUni3DARGenerator(GeneratorSlot):
         budget_tree: torch.Tensor,
         pops_1d: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Enforce exact top-down octree atom conservation (`Delta N == 0`) across all coarse levels."""
+        """Enforce steric-aware exact top-down octree atom conservation (`Delta N == 0`) across all levels."""
         assert self.scale_free_count_head is not None
         has_b = budget_tree > 0
         if not bool(has_b.any().item()):
             return tree_logits, torch.zeros_like(rem_a_tree, dtype=torch.int32), has_b
 
-        c_min, c_max = compute_exact_cell_count_bounds(tree_lvl, rem_a_tree, rem_t_tree)
+        c_min_oct, c_max_oct = compute_exact_cell_count_bounds(tree_lvl, rem_a_tree, rem_t_tree)
         u_hat = self.scale_free_count_head(dec_y_tree, tree_lvl, rem_a_tree, rem_t_tree)
-        c_hat_f = c_min.float() + u_hat * (c_max - c_min).float()
-        c_alloc = c_hat_f.round().long().clamp(c_min, c_max)
+        c_hat_f = c_min_oct.float() + u_hat * (c_max_oct - c_min_oct).float()
+
+        cap_cur = compute_steric_cell_capacity(tree_lvl)
+        cap_child = compute_steric_cell_capacity(tree_lvl.long() - 1)
+        rem_a = rem_a_tree.long().clamp_min(1)
+        rem_other = (rem_t_tree.long() - 1).clamp_min(0)
+        c_min_phys = torch.maximum(torch.ones_like(rem_a), rem_a - cap_cur * rem_other)
+        c_max_phys = torch.maximum(c_min_phys, torch.minimum(cap_cur, rem_a - rem_other))
+        c_alloc = c_hat_f.round().long().clamp(c_min_phys, c_max_phys)
 
         pops_row = pops_1d.unsqueeze(0)  # (1, 255)
-        is_l1 = tree_lvl == (self.backbone.atom_level_index + 1)
-
-        # Level >= 2: child capacity is `8^(lvl - 1)`; mask split popcount to `[ceil(c_alloc / 8^(lvl-1)), min(8, c_alloc)]`
-        cap_child = 1 << (3 * (tree_lvl.long() - 1).clamp(0, 6))
-        p_min_hi = ((c_alloc + cap_child - 1) // cap_child).clamp(1, 8)
-        p_max_hi = c_alloc.clamp(1, 8)
-
-        # Level == 1: child capacity is `1` atom; split popcount IS `c_cell in [c_min, c_max]`
-        p_min = torch.where(is_l1, c_min.clamp(1, 8), p_min_hi)
-        p_max = torch.where(is_l1, c_max.clamp(1, 8), p_max_hi)
+        p_min = ((c_alloc + cap_child - 1) // cap_child).clamp(1, 8)
+        p_max = torch.maximum(c_alloc.clamp(1, 8), p_min)
 
         feas = (pops_row >= p_min.unsqueeze(-1).float() - 0.1) & (pops_row <= p_max.unsqueeze(-1).float() + 0.1)
         has_feas = feas.any(dim=-1, keepdim=True)
         infeas_mask = has_b.unsqueeze(-1) & (~feas) & has_feas
 
-        guided = tree_logits.clone()
-        # Smooth preference around `c_hat_f` on level == 1 while strictly forbidding infeasible popcounts
-        l1_prior = torch.where(
-            (has_b & is_l1).unsqueeze(-1),
-            -0.30 * (pops_row - c_hat_f.unsqueeze(-1)).square(),
-            torch.zeros_like(guided),
-        )
-        guided = guided + l1_prior
-        guided = guided.masked_fill(infeas_mask, -1e9)
+        guided = tree_logits.masked_fill(infeas_mask, -1e9)
         return guided, c_alloc.to(torch.int32), has_b
 
     # ------------------------------------------------------------------

@@ -768,20 +768,16 @@ def _probe_step2_ckpt_and_prompt_map(
     y = u_out["mean"][ok, 0].astype(np.float64)
     mae = float(np.mean(np.abs(y - x)))
     bias = float(np.mean(y - x))
-    xc = float(np.mean(x))
-    yc = float(np.mean(y))
-    slope = float(np.clip(np.sum((x - xc) * (y - yc)) / max(float(np.sum((x - xc) ** 2)), 1e-6), 0.72, 1.25))
-    intercept = float(yc - slope * xc)
 
-    # Evaluate centered hit yield so checkpoint comparison reflects calibrated controllability (`R^2` / `sigma_in`)
-    cen_err = np.abs((y - intercept) / max(slope, 0.72) - x)
+    # Pure unit-gain mean-bias shift (`y - bias` vs `x`) avoids noise amplification on single-sample M=1 probes
+    cen_err = np.abs((y - bias) - x)
     hit_all = np.zeros(len(trajs), dtype=bool)
     hit_all[ok] = (cen_err <= 0.25) & (sa_v[ok] <= 3.5)
     hit_y = float(hit_all.mean())
     cen_mae = float(np.mean(cen_err))
-    comp = hit_y - 0.35 * cen_mae + 0.15 * float(clean_m.mean())
+    comp = hit_y - 0.35 * cen_mae + 0.20 * float(clean_m.mean())
 
-    apply_map = (abs(bias) >= 0.035) or (abs(slope - 1.0) >= 0.06)
+    apply_map = abs(bias) >= 0.03
     return (
         {
             "composite": round(comp, 5),
@@ -794,8 +790,6 @@ def _probe_step2_ckpt_and_prompt_map(
             "applied": bool(apply_map),
             "n_valid": int(ok.sum()),
             "bias_eV": round(bias, 4),
-            "slope": round(slope, 4),
-            "intercept": round(intercept, 4),
         },
     )
 
@@ -803,11 +797,8 @@ def _probe_step2_ckpt_and_prompt_map(
 def _apply_step2_prompt_map(homo_1d: np.ndarray, dev_cal: Dict[str, Any]) -> np.ndarray:
     if not dev_cal.get("applied", False):
         return homo_1d.astype(np.float32)
-    s = float(dev_cal["slope"])
-    b = float(dev_cal["intercept"])
-    shifted = (homo_1d.astype(np.float64) - b) / max(s, 0.72)
-    blended = 0.80 * shifted + 0.20 * (homo_1d.astype(np.float64) - float(dev_cal["bias_eV"]))
-    return np.clip(blended, -8.3, -4.6).astype(np.float32)
+    shifted = homo_1d.astype(np.float64) - float(dev_cal["bias_eV"])
+    return np.clip(shifted, -8.3, -4.6).astype(np.float32)
 
 
 def run_fit_critic_and_eval(args: argparse.Namespace) -> None:
