@@ -1,0 +1,41 @@
+{
+  "best_val_loss": 0.9488702714443207,
+  "sft_steps": 2400,
+  "wall_seconds": 1815.0,
+  "probe_legal": 55,
+  "probe_mean_target_atoms": 36.52,
+  "probe_mean_gen_atoms": 31.64,
+  "probe_natoms_mae": 5.45,
+  "val_history": [
+    {
+      "step": 400,
+      "val_loss": 0.95922,
+      "wall_s": 302.1
+    },
+    {
+      "step": 800,
+      "val_loss": 0.94988,
+      "wall_s": 605.2
+    },
+    {
+      "step": 1200,
+      "val_loss": 0.94887,
+      "wall_s": 908.0
+    },
+    {
+      "step": 1600,
+      "val_loss": 0.94975,
+      "wall_s": 1210.5
+    },
+    {
+      "step": 2000,
+      "val_loss": 0.95102,
+      "wall_s": 1507.4
+    },
+    {
+      "step": 2400,
+      "val_loss": 0.94977,
+      "wall_s": 1806.6
+    }
+  ]
+}
