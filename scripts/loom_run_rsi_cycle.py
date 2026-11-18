@@ -17,9 +17,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
@@ -412,9 +414,22 @@ def execute_live_gpu4pyscf_dft_batch(
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
+    child_env = dict(os.environ)
+    nv_lib_dirs: List[str] = []
+    for sp_entry in sys.path:
+        nv_root = Path(sp_entry) / "nvidia"
+        if nv_root.is_dir():
+            for sub_lib in sorted(nv_root.glob("*/lib")):
+                if sub_lib.is_dir():
+                    nv_lib_dirs.append(str(sub_lib))
+    if nv_lib_dirs:
+        prev_ld = child_env.get("LD_LIBRARY_PATH", "")
+        child_env["LD_LIBRARY_PATH"] = ":".join(nv_lib_dirs + ([prev_ld] if prev_ld else []))
+
     res_json = work_dir / "live_pbe0_results.json"
     subprocess.run(
         [str(dft_python), "-u", "-c", _LIVE_DFT_WORKER_CODE, str(rel_sdf), str(work_dir / "sp"), str(res_json)],
+        env=child_env,
         check=True,
     )
     rows = json.loads(res_json.read_text())
