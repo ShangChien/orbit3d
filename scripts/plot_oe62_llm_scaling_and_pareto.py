@@ -190,28 +190,30 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
                 label=f"Uni-Loom [Uni-3DAR 16→4, {sz_atoms:.0f}-Atom Matched]")
 
     ax0.annotate(f"Uni-Loom [Uni-3DAR, Unanchored]\n{ul_16_4_blind:.1f}% Blind | {ul_eff:.1f} mol/s (3.0h)",
-                 xy=(3.0, ul_16_4_blind), xytext=(2.05, 52.5),
+                 xy=(3.0, ul_16_4_blind), xytext=(2.05, 54.0),
                  fontsize=7.5, fontweight="bold", color=c_ul_proc,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_ul_proc, alpha=0.93, lw=0.8),
                  arrowprops=dict(arrowstyle="->", color=c_ul_proc, lw=0.9))
 
     ax0.annotate(f"Uni-Loom [Uni-3DAR, {sz_atoms:.0f}-Atom] (2.45h)\n{sz_top_blind:.1f}% Blind | {sz_eff:.2f} mol/s",
-                 xy=(sz_h, sz_top_blind), xytext=(1.92, 16.5),
+                 xy=(sz_h, sz_top_blind), xytext=(1.88, 22.0),
                  fontsize=7.5, fontweight="bold", color=c_sz_30,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_sz_30, alpha=0.94, lw=0.85),
                  arrowprops=dict(arrowstyle="->", color=c_sz_30, lw=0.95))
 
     if 12.12 in awr_hrs:
         y12_awr = awr_blinds[awr_hrs.index(12.12)]
-        ax0.annotate(f"12h + Loom-AWR: {y12_awr:.1f}%\n(Matches 52h Base at 4.3× less GPU-h)",
-                     xy=(12.12, y12_awr), xytext=(7.8, 53.5),
+        y52_base = pmf_m8_blind[-1]
+        rel_txt = "Surpasses 52h Base at 4.3× less GPU-h" if y12_awr >= y52_base else "Matches 52h Base at 4.3× less GPU-h"
+        ax0.annotate(f"12h + Loom-AWR: {y12_awr:.1f}%\n({rel_txt})",
+                     xy=(12.12, y12_awr), xytext=(5.6, 58.2),
                      fontsize=7.4, fontweight="bold", color=c_pmf_awr,
                      bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
                      arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9))
 
     y52_awr = awr_blinds[-1]
     ax0.annotate(f"52h + Loom-AWR\n{y52_awr:.1f}% Blind",
-                 xy=(52.12, y52_awr), xytext=(26.0, 56.8),
+                 xy=(52.12, y52_awr), xytext=(25.0, 61.2),
                  fontsize=7.5, fontweight="bold", color=c_pmf_awr,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
                  arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9))
@@ -221,7 +223,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax0.set_xticklabels(["2.5", "6", "12", "24", "52"])
     ax0.get_xaxis().set_minor_formatter(NullFormatter())
     ax0.set_xlim(1.8, 68.0)
-    ax0.set_ylim(2.0, 63.0)
+    ax0.set_ylim(2.0, 67.5)
     ax0.set_xlabel("Task Training / Alignment Compute (A800 GPU-hours, log)", fontsize=9.7, fontweight="bold", color="#1E293B")
     ax0.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=10.1, fontweight="bold", color="#1E293B")
     ax0.set_title("A. Compute Scaling & Universal Loom-AWR Lift", fontsize=10.8, fontweight="bold", color="#1E293B", loc="left", pad=10)
@@ -256,8 +258,10 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax1.plot(ux_pr, uy_pr, "-o", color=c_ul_proc, lw=2.6, ms=7.0, zorder=8, label="Uni-Loom [Uni-3DAR + ProcessCritic, Unanchored]")
 
     for x, y, lb in zip(sx_pr, sy_pr, sz_pr_lbl):
-        off = (-8, 8) if lb in ("8→4", "16→4") else (5, -10)
-        ax1.annotate(lb, (x, y), textcoords="offset points", xytext=off, ha="left", fontsize=7.4, color=c_sz_30, fontweight="bold")
+        if lb == "16→4":
+            ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(-7, 6), ha="right", fontsize=7.4, color=c_sz_30, fontweight="bold")
+        else:
+            ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(6, -9), ha="left", fontsize=7.4, color=c_sz_30, fontweight="bold")
     for x, y, lb in zip(ux_pr, uy_pr, ul_pr_lbl):
         off = (-4, 7)
         ax1.annotate(lb, (x, y), textcoords="offset points", xytext=off, ha="center", fontsize=7.5, color=c_ul_proc, fontweight="bold")
@@ -268,8 +272,8 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax1.set_xticks([25, 50, 100, 200, 400, 800])
     ax1.get_xaxis().set_major_formatter(ScalarFormatter())
     ax1.get_xaxis().set_minor_formatter(NullFormatter())
-    ax1.set_xlim(22, 1080)
-    ax1.set_ylim(2.0, 58.0)
+    ax1.set_xlim(22, 920)
+    ax1.set_ylim(2.0, 64.5)
     ax1.set_xlabel("Inference Compute per 1,000 Proposals (A800 GPU-sec, log)", fontsize=9.7, fontweight="bold", color="#1E293B")
     ax1.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=10.1, fontweight="bold", color="#1E293B")
     ax1.set_title("B. Test-Time Compute Frontier (Matched Fixed-Prompt Size)", fontsize=10.8, fontweight="bold", color="#1E293B", loc="left", pad=10)
@@ -297,7 +301,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     sz_cost_top = _campaign_gpuh(sz_h, sx_pr)[-1]
 
     ax2.annotate(f"Uni-Loom [Uni-3DAR, Unanchored]\n{u_cost_top:.1f} GPU-h | PBE0 Unbiased: 50.0%",
-                 xy=(u_cost_top, uy_pr[-1]), xytext=(2.25, 51.5),
+                 xy=(u_cost_top, uy_pr[-1]), xytext=(2.20, 53.5),
                  fontsize=7.3, fontweight="bold", color=c_ul_proc,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_ul_proc, alpha=0.93, lw=0.8),
                  arrowprops=dict(arrowstyle="->", color=c_ul_proc, lw=0.9))
@@ -307,13 +311,13 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
         pbe0_raw = sz_30_dft["arms"]["UniLoom_v20_Process_16_to_4"]["end_to_end_pbe0_synth_clean_yield_raw"] * 100.0
         dft_line = f" | PBE0: {pbe0_raw:.1f}%"
     ax2.annotate(f"Uni-Loom [Uni-3DAR, {sz_atoms:.0f}-Atom] ({sz_cost_top:.1f}h)\n{sz_top_blind:.1f}% Blind{dft_line}",
-                 xy=(sz_cost_top, sy_pr[-1]), xytext=(5.5, 42.0),
+                 xy=(sz_cost_top, sy_pr[-1]), xytext=(7.2, 43.0),
                  fontsize=7.3, fontweight="bold", color=c_sz_30,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_sz_30, alpha=0.94, lw=0.85),
                  arrowprops=dict(arrowstyle="->", color=c_sz_30, lw=0.95))
 
-    ax2.annotate(f"Uni-Loom [PMF 52h + Loom-AWR] ({pawr_cost_top:.1f}h)\nPBE0 Unbiased: 54.8% (MAE 0.270–0.288 eV)",
-                 xy=(pawr_cost_top, py_52awr[-1]), xytext=(16.5, 52.0),
+    ax2.annotate(f"Uni-Loom [PMF 52h + Loom-AWR] ({pawr_cost_top:.1f}h)\n{py_52awr[-1]:.1f}% Blind | PBE0 Unbiased: 54.8%",
+                 xy=(pawr_cost_top, py_52awr[-1]), xytext=(11.2, 59.8),
                  fontsize=7.3, fontweight="bold", color=c_pmf_awr,
                  bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
                  arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9))
@@ -323,7 +327,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax2.set_xticklabels(["2", "3", "5", "10", "20", "40", "70"])
     ax2.get_xaxis().set_minor_formatter(NullFormatter())
     ax2.set_xlim(2.0, 88.0)
-    ax2.set_ylim(2.0, 59.5)
+    ax2.set_ylim(2.0, 65.5)
     ax2.set_xlabel("Total 50k-Molecule Campaign Compute (Train/Adapt + Infer, A800 GPU-h, log)", fontsize=9.7, fontweight="bold", color="#1E293B")
     ax2.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=10.1, fontweight="bold", color="#1E293B")
     ax2.set_title("C. 50k-Campaign Pareto Frontier & PBE0 Quantum Anchor", fontsize=10.8, fontweight="bold", color="#1E293B", loc="left", pad=10)
