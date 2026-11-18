@@ -720,8 +720,29 @@ def _score_oe62_selected_cohort(
             )
             writer.write(cm)
         writer.close()
+    from rdkit.Chem.Scaffolds import MurckoScaffold
+
+    leg_atoms: List[float] = []
+    leg_smis: set[str] = set()
+    leg_scafs: set[str] = set()
+    for i in range(n_total):
+        m_i = selected_mols[i]
+        if bool(selected_legal[i]) and m_i is not None:
+            leg_atoms.append(float(m_i.GetNumAtoms()))
+            leg_smis.add(mol_to_clean_smiles(m_i))
+            try:
+                sc_smi = Chem.MolToSmiles(MurckoScaffold.GetScaffoldForMol(Chem.RemoveHs(Chem.Mol(m_i))))
+                if sc_smi:
+                    leg_scafs.add(sc_smi)
+            except Exception:
+                pass
+
     metrics.update(
         {
+            "mean_total_atoms": round(float(np.mean(leg_atoms)), 2) if leg_atoms else None,
+            "median_total_atoms": round(float(np.median(leg_atoms)), 1) if leg_atoms else None,
+            "unique_smiles_count": len(leg_smis),
+            "unique_murcko_scaffolds": len(leg_scafs),
             "clean_hits": reward_clean_hits,
             "clean_hit_yield": round(reward_clean_hits / n_total, 5),
             "synthesizable_clean_hits": synth_clean_hits,
@@ -863,6 +884,7 @@ def run_eval_oe62(args: argparse.Namespace) -> None:
     results_arms: Dict[str, Any] = {}
 
     # 1. Outcome Best-of-M pool (`M_max = 8`, slicing `M in {1, 2, 4, 8}`)
+    sd_off = int(getattr(args, "seed_offset", 0)) * 1000003
     m_max = 8
     round_trajs: List[List[Dict[str, Any]]] = []
     round_gen_walls: List[float] = []
@@ -881,7 +903,7 @@ def run_eval_oe62(args: argparse.Namespace) -> None:
                 cfg_tree_decay=0.30,
                 geometric_guard=True,
                 temperatures=(0.85, 0.30, 0.25),
-                seed=2441100 + m_i * 9973 + s,
+                seed=sd_off + 2441100 + m_i * 9973 + s,
                 use_bf16=(device.type == "cuda"),
                 electron_parity=0,
             )
@@ -959,7 +981,7 @@ def run_eval_oe62(args: argparse.Namespace) -> None:
                 xyz_cfg_scale=1.0,
                 cfg_tree_decay=0.30,
                 geometric_guard=True,
-                seed=770000 + m_init * 313 + m_keep * 37 + s,
+                seed=sd_off + 770000 + m_init * 313 + m_keep * 37 + s,
                 use_bf16=(device.type == "cuda"),
             )
             groups_all.extend(grp)
@@ -1039,6 +1061,7 @@ def main() -> None:
     p.add_argument("--oe62-rollouts", type=int, default=8192)
     p.add_argument("--oe62-output-json", type=Path, default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/results/oe62_octree_process_critic.json"))
     p.add_argument("--allow-tf32", action="store_true", help="Enable Ampere TF32 Tensor Core matmuls fairly.")
+    p.add_argument("--seed-offset", type=int, default=0, help="Independent sampling seed offset for multi-seed CI repeats.")
 
     args = p.parse_args()
     if args.allow_tf32 and torch.cuda.is_available():

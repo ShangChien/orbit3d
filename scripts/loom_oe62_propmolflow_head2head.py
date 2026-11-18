@@ -818,7 +818,11 @@ def run_eval_checkpoint(args: argparse.Namespace) -> None:
             req_list.extend([float(q_points[str(q)])] * attempts_per_seed)
     n_prompts = len(req_list)  # 1,792
 
-    rng = np.random.default_rng(202611)
+    sd_off = int(getattr(args, "seed_offset", 0))
+    torch.manual_seed(202611 + sd_off * 10007)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(202611 + sd_off * 10007)
+    rng = np.random.default_rng(202611 + sd_off * 10007)
     m_max = int(args.m_max)
     natoms_rounds: List[List[int]] = []
     for _m in range(m_max):
@@ -1028,6 +1032,7 @@ def main() -> None:
     p.add_argument("--oe62-audit-oracle-dir", type=Path, default=Path("/sjtu-combustion/wjw/chensq/orbit_e15_calibration_20261114/full_fit/oracle"))
     p.add_argument("--oe62-potential-weights", type=Path, default=Path("/sjtu-combustion/wjw/chensq/pretrained/DPA4-Mini-OMol25-100M-v20260820.pt"))
     p.add_argument("--allow-tf32", action="store_true", help="Enable Ampere TF32 Tensor Core matmuls fairly.")
+    p.add_argument("--seed-offset", type=int, default=0, help="Independent sampling seed offset for multi-seed CI repeats.")
 
     args = p.parse_args()
     if args.allow_tf32 and torch.cuda.is_available():

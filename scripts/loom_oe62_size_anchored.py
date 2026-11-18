@@ -1667,6 +1667,7 @@ def run_eval_all(args: argparse.Namespace, ctx: Optional[Dict[str, Any]] = None)
 
     results_arms: Dict[str, Any] = {}
 
+    sd_off = int(getattr(args, "seed_offset", 0)) * 1000003
     # 1. Outcome Best-of-M (`M in {1, 2, 4, 8}`)
     m_max = 8
     round_trajs: List[List[Dict[str, Any]]] = []
@@ -1688,7 +1689,7 @@ def run_eval_all(args: argparse.Namespace, ctx: Optional[Dict[str, Any]] = None)
                     cfg_tree_decay=0.30,
                     geometric_guard=True,
                     temperatures=(0.85, 0.30, 0.25),
-                    seed=2441100 + m_i * 9973 + s,
+                    seed=sd_off + 2441100 + m_i * 9973 + s,
                     use_bf16=(device.type == "cuda"),
                     electron_parity=0,
                     leaf_atom_budget=(req_targets[s:e, 1] if leaf_tol is not None else None),
@@ -1776,7 +1777,7 @@ def run_eval_all(args: argparse.Namespace, ctx: Optional[Dict[str, Any]] = None)
                     xyz_cfg_scale=1.0,
                     cfg_tree_decay=0.30,
                     geometric_guard=True,
-                    seed=770000 + m_init * 313 + m_keep * 37 + s,
+                    seed=sd_off + 770000 + m_init * 313 + m_keep * 37 + s,
                     use_bf16=(device.type == "cuda"),
                     uncond_active_mask=bu,
                     coarse_chunk_size=int(args.coarse_chunk_size),
@@ -1937,6 +1938,7 @@ def main() -> None:
     p.add_argument("--fine-batch-size", type=int, default=512)
     p.add_argument("--eval-leaf-budget-tol", type=float, default=None)
     p.add_argument("--disable-eval-leaf-budget", action="store_true")
+    p.add_argument("--seed-offset", type=int, default=0, help="Independent sampling seed offset for multi-seed CI repeats.")
     p.add_argument(
         "--output-json",
         type=Path,
