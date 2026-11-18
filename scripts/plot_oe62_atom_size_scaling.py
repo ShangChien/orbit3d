@@ -92,22 +92,52 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
         ax2.plot(xs_valid, hit_list, fmt, color=color, lw=lw, ms=ms, label=label)
 
     ax0.set_xticks(ns)
+    ax0.set_ylim(-40, 1680)
     ax0.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
     ax0.set_ylabel("End-to-End Latency per 1,000 Proposals (A800 GPU-sec)", fontsize=9.8, fontweight="bold", color="#1E293B")
     ax0.set_title("A. Inference Latency Scaling: Sparse Octree vs Dense O(N²) ODE", fontsize=10.4, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax0.legend(loc="upper left", fontsize=7.2, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax0.legend(loc="upper left", fontsize=7.1, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+
+    lat60_pmf = 1000.0 / float(b_map["60"]["arms"]["PMF_52h_M8"]["effective_output_mol_per_sec"])
+    lat60_u16 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_Process_16_to_4"]["effective_output_mol_per_sec"])
+    lat60_u8 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_Process_8_to_4"]["effective_output_mol_per_sec"])
+    ax0.annotate(
+        f"N=60 Speedup:\n{lat60_pmf/lat60_u16:.1f}× faster (16→4)\n{lat60_pmf/lat60_u8:.1f}× faster (8→4)",
+        xy=(60, lat60_u16),
+        xytext=(43.5, 760),
+        fontsize=7.6,
+        fontweight="bold",
+        color="#5B21B6",
+        bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#5B21B6", alpha=0.94, lw=0.85),
+        arrowprops=dict(arrowstyle="->", color="#5B21B6", lw=1.0),
+    )
 
     ax1.set_xticks(ns)
+    ax1.set_ylim(0.15, 1.62)
     ax1.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
     ax1.set_ylabel("Blind DPA-4 HOMO MAE (eV, lower is better)", fontsize=9.8, fontweight="bold", color="#1E293B")
     ax1.set_title("B. Blind Orbital Accuracy vs Molecular Size", fontsize=10.4, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax1.legend(loc="upper left", fontsize=7.2, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax1.legend(loc="upper left", fontsize=7.1, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
     ax2.set_xticks(ns)
+    ax2.set_ylim(-3, 80)
     ax2.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
     ax2.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=9.8, fontweight="bold", color="#1E293B")
     ax2.set_title("C. Synthesizable Clean Hit Yield (SA ≤ 3.5) vs Molecular Size", fontsize=10.4, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax2.legend(loc="upper right", fontsize=7.2, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax2.legend(loc="upper right", fontsize=7.1, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+
+    h50_base = float(b_map["50"]["arms"]["PMF_52h_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
+    h50_awr = float(b_map["50"]["arms"]["PMF_52h_LoomAWR_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
+    ax2.annotate(
+        f"Loom-AWR @ N=50:\n{h50_base:.1f}% → {h50_awr:.1f}% ({h50_awr/max(h50_base,1e-6):.1f}×)",
+        xy=(50, h50_awr),
+        xytext=(38.5, 45.0),
+        fontsize=7.6,
+        fontweight="bold",
+        color="#E11D48",
+        bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#E11D48", alpha=0.94, lw=0.85),
+        arrowprops=dict(arrowstyle="->", color="#E11D48", lw=1.0),
+    )
 
     fig.text(
         0.5,
