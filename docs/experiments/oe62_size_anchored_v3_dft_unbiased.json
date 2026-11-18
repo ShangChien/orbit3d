@@ -1,0 +1,82 @@
+{
+  "experiment": "OE62 Head-to-Head Matched PBE0/def2-TZVP Ab Initio Single-Point Verification",
+  "dft_protocol": "PBE0/def2-TZVP/DF(def2-universal-jkfit), grid level3, SCF 1e-8 (gas phase GPU4PySCF)",
+  "arms": {
+    "UniLoom_v20_Process_16_to_4": {
+      "n_prompts_attempted": 42,
+      "n_selected": 42,
+      "n_tier0_synth_hits": 25,
+      "n_scf_converged": 42,
+      "scf_convergence_pct": 100.0,
+      "sa_leq_3_5_count": 35,
+      "end_to_end_pbe0_synth_clean_hits_raw": 11,
+      "end_to_end_pbe0_synth_clean_yield_raw": 0.2619,
+      "end_to_end_pbe0_synth_clean_hits_centered": 13,
+      "end_to_end_pbe0_synth_clean_yield_centered": 0.3095,
+      "mean_n_atoms": 35.4,
+      "median_sa_score": 2.7422,
+      "median_f_max_eV_A": 3.1596,
+      "mean_scf_wall_sec": 4.2,
+      "pbe0_vs_target_homo": {
+        "n": 42,
+        "mae_eV": 0.6761,
+        "rmse_eV": 0.8579,
+        "mean_bias_eV": 0.5685,
+        "centered_mae_eV": 0.4889,
+        "centered_rmse_eV": 0.6425,
+        "hit_rate_025eV_raw": 0.2619,
+        "hit_rate_025eV_centered": 0.381,
+        "pearson_r": 0.6687,
+        "spearman_rho": 0.7062
+      },
+      "unimol2_vs_pbe0_homo": {
+        "n": 42,
+        "mae_eV": 0.5694,
+        "rmse_eV": 0.8455,
+        "mean_bias_eV": -0.5037,
+        "centered_mae_eV": 0.541,
+        "centered_rmse_eV": 0.6791,
+        "hit_rate_025eV_raw": 0.4286,
+        "hit_rate_025eV_centered": 0.2619,
+        "pearson_r": 0.6132,
+        "spearman_rho": 0.6974
+      },
+      "dpa4_vs_pbe0_homo": {
+        "n": 42,
+        "mae_eV": 0.1286,
+        "rmse_eV": 0.1998,
+        "mean_bias_eV": -0.0315,
+        "centered_mae_eV": 0.1327,
+        "centered_rmse_eV": 0.1973,
+        "hit_rate_025eV_raw": 0.9048,
+        "hit_rate_025eV_centered": 0.9048,
+        "pearson_r": 0.9747,
+        "spearman_rho": 0.981
+      },
+      "unimol2_vs_target_homo": {
+        "n": 42,
+        "mae_eV": 0.2757,
+        "rmse_eV": 0.4003,
+        "mean_bias_eV": 0.0648,
+        "centered_mae_eV": 0.2781,
+        "centered_rmse_eV": 0.3951,
+        "hit_rate_025eV_raw": 0.7143,
+        "hit_rate_025eV_centered": 0.5952,
+        "pearson_r": 0.6994,
+        "spearman_rho": 0.6355
+      },
+      "dpa4_vs_target_homo": {
+        "n": 42,
+        "mae_eV": 0.641,
+        "rmse_eV": 0.7894,
+        "mean_bias_eV": 0.537,
+        "centered_mae_eV": 0.4612,
+        "centered_rmse_eV": 0.5786,
+        "hit_rate_025eV_raw": 0.2381,
+        "hit_rate_025eV_centered": 0.3333,
+        "pearson_r": 0.6844,
+        "spearman_rho": 0.7209
+      }
+    }
+  }
+}
