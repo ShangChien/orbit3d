@@ -12,7 +12,12 @@ import torch
 from loom.weaving import (
     LoomUni3DARGenerator,
     NUM_COARSE_GEOM_FEATS,
+    NUM_ELEM_CLOUD_FEATS,
+    OctreeElementProcessCritic,
     OctreeProcessCritic,
+    TwoStageOctreeProcessCritic,
+    compute_element_cloud_features,
+    fit_octree_element_process_critic,
     fit_octree_process_critic,
 )
 
@@ -251,3 +256,189 @@ def test_zero_replay_kv_continuation_logprob_parity_and_leaf_budget() -> None:
         sort_by_budget=True,
     )
     assert len(grouped_b) == 10 and all(len(g) == 2 for g in grouped_b)
+
+
+def test_element_process_critic_so3_invariance() -> None:
+    torch.manual_seed(314)
+    elem_ids = torch.tensor([[5, 5, 6, 7, 0, 0, 0, 0], [5, 5, 5, 8, 0, 0, 0, 0]], dtype=torch.long)
+    leaf_pos = torch.randn(2, 8, 3) * 1.6
+    leaf_valid = torch.tensor(
+        [[True, True, True, True, True, True, False, False], [True, True, True, True, True, True, True, False]],
+        dtype=torch.bool,
+    )
+    coarse_geom = torch.randn(2, NUM_COARSE_GEOM_FEATS)
+    h_s2 = torch.randn(2, 6 * 64)
+    t_norm = torch.randn(2, 2)
+    a_mask = torch.ones((2, 2), dtype=torch.bool)
+
+    # Arbitrary proper 3D rotation Q (det = +1) + 3D translation shift
+    q_mat, _ = torch.linalg.qr(torch.randn(3, 3))
+    if torch.linalg.det(q_mat) < 0:
+        q_mat[:, 0] = -q_mat[:, 0]
+    shift = torch.tensor([[[12.5, -7.3, 4.1]]])
+    leaf_pos_rt = leaf_pos @ q_mat.T + shift
+
+    cloud_1 = compute_element_cloud_features(elem_ids, leaf_pos, leaf_valid, coarse_geom)
+    cloud_2 = compute_element_cloud_features(elem_ids, leaf_pos_rt, leaf_valid, coarse_geom)
+    assert cloud_1.shape == (2, NUM_ELEM_CLOUD_FEATS)
+    assert torch.allclose(cloud_1, cloud_2, atol=1e-5)
+
+    s2_critic = OctreeElementProcessCritic(emb_dim=64, num_targets=2, d_node=64, hidden_dim=128)
+    s2_critic.eval()
+    u1 = s2_critic.score_utilities(h_s2, elem_ids, leaf_pos, leaf_valid, cloud_1, t_norm, a_mask)
+    u2 = s2_critic.score_utilities(h_s2, elem_ids, leaf_pos_rt, leaf_valid, cloud_2, t_norm, a_mask)
+    assert torch.allclose(u1, u2, atol=1e-5)
+
+
+def test_two_stage_process_critic_fit_save_and_logprob_parity(tmp_path) -> None:
+    torch.manual_seed(2027)
+    gen = _make_tiny_generator()
+    gen.eval()
+
+    prompts_raw = np.array(
+        [[-6.8, 15.0], [-6.1, 20.0], [-7.2, 13.0], [-5.9, 23.0], [-6.4, 17.0]], dtype=np.float32
+    )
+    t_norm = gen.normalize_targets(prompts_raw)
+    cond_mask = torch.ones((5, 2), dtype=torch.bool)
+    uncond_mask = torch.tensor([[False, True]] * 5, dtype=torch.bool)
+    budgets = torch.tensor([15.0, 20.0, 13.0, 23.0, 17.0])
+
+    roll = gen.sample_rollouts_with_two_stage_features(
+        t_norm.repeat(3, 1),
+        cond_mask.repeat(3, 1),
+        cfg_scale=1.75,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        electron_parity=0,
+        seed=555,
+        use_bf16=False,
+        max_decode_steps=96,
+        uncond_active_mask=uncond_mask.repeat(3, 1),
+        leaf_atom_budget=budgets.repeat(3),
+    )
+    assert len(roll["trajectories"]) == 15
+    assert roll["s1_h_concat"].shape == (15, 4 * 64)
+    assert roll["s2_h_stage2"].shape == (15, 6 * 64)
+    assert roll["s2_cloud_feats"].shape == (15, NUM_ELEM_CLOUD_FEATS)
+
+    s1 = OctreeProcessCritic(emb_dim=64, num_targets=2, hidden_dim=128)
+    s1.set_normalization([-6.5, 18.0], [0.8, 4.0])
+    s2 = OctreeElementProcessCritic(emb_dim=64, num_targets=2, d_node=64, hidden_dim=128)
+    s2.set_normalization([-6.5, 18.0], [0.8, 4.0])
+
+    t_rep_tr = t_norm.repeat(3, 1)
+    m_rep_tr = cond_mask.repeat(3, 1)
+    y_surr_norm = t_rep_tr + 0.1 * torch.randn(15, 2)
+    y_ok = torch.tensor([i % 4 != 0 for i in range(15)], dtype=torch.bool)
+    is_leg = y_ok.clone()
+    is_con = torch.tensor([i % 2 == 0 for i in range(15)], dtype=torch.bool)
+
+    st1 = fit_octree_process_critic(
+        s1,
+        h_concat=roll["s1_h_concat"],
+        geom_feats=roll["s1_geom_feats"],
+        targets_norm=t_rep_tr,
+        active_mask=m_rep_tr,
+        y_surrogate_norm=y_surr_norm,
+        y_valid_mask=y_ok,
+        is_legal=is_leg,
+        is_constr_met=is_con,
+        epochs=5,
+        batch_size=8,
+    )
+    st2 = fit_octree_element_process_critic(
+        s2,
+        h_stage2=roll["s2_h_stage2"],
+        elem_ids=roll["s2_elem_ids"],
+        leaf_pos=roll["s2_leaf_pos"],
+        leaf_valid=roll["s2_leaf_valid"],
+        cloud_feats=roll["s2_cloud_feats"],
+        targets_norm=t_rep_tr,
+        active_mask=m_rep_tr,
+        y_surrogate_norm=y_surr_norm,
+        y_valid_mask=y_ok,
+        is_legal=is_leg,
+        is_constr_met=is_con,
+        epochs=5,
+        batch_size=8,
+    )
+    assert np.isfinite(st1.train_loss) and np.isfinite(st2.train_loss)
+
+    two_stage = TwoStageOctreeProcessCritic(s1, s2)
+    ckpt_p = tmp_path / "two_stage_critic.pt"
+    two_stage.save_checkpoint(ckpt_p, extra={"step": "v4_step1"})
+    loaded_ts, meta = TwoStageOctreeProcessCritic.load_checkpoint(ckpt_p)
+    assert meta["step"] == "v4_step1"
+
+    # 1. Verify vectorized GPU pause-and-gather funnel `6 -> 4 -> 2` & exact teacher-forcing logprob parity
+    grouped = gen.sample_with_two_stage_process_critic(
+        t_norm,
+        cond_mask,
+        loaded_ts,
+        m_stage1=6,
+        m_stage2=4,
+        m_keep=2,
+        objective_col_mask=torch.tensor([True, True], dtype=torch.bool),
+        coarse_chunk_size=12,  # Forces multi-chunk execution (`2` prompts/chunk)
+        cfg_scale=1.8,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        electron_parity=0,
+        temperatures=(1.0, 1.0, 1.0),
+        seed=808,
+        use_bf16=False,
+        max_decode_steps=192,
+        uncond_active_mask=uncond_mask,
+    )
+    assert len(grouped) == 5
+    for g in grouped:
+        assert len(g) == 2
+        assert g[0]["process_utility"] >= g[1]["process_utility"] - 1e-6
+        for tr in g:
+            assert "atom_symbols" in tr and "positions_np" in tr
+            assert int((tr["decoder_feat"][:, 4] == -99).sum().item()) == 0
+
+    flat_trajs = [tr for g in grouped for tr in g]
+    packets = gen.trajectory_distributions(
+        flat_trajs,
+        t_norm.repeat_interleave(2, dim=0),
+        cond_mask.repeat_interleave(2, dim=0),
+        temperatures=(1.0, 1.0, 1.0),
+        cfg_scale=1.8,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        electron_parity=0,
+        topology_only_policy=True,
+        uncond_active_mask=uncond_mask.repeat_interleave(2, dim=0),
+    )
+    tot_tf = torch.zeros(len(flat_trajs))
+    for logp, labels, owner in packets:
+        chosen = logp.gather(-1, labels.unsqueeze(-1)).squeeze(-1)
+        assert torch.isfinite(chosen).all()
+        tot_tf.index_add_(0, owner, chosen)
+    samp_scores = torch.tensor([float(tr["scores"].sum().item()) for tr in flat_trajs])
+    assert float((tot_tf - samp_scores).abs().max().item()) < 5e-4
+
+    # 2. Verify `leaf_atom_budget` + `sort_by_budget=True` preserves exact prompt order & funnel shape
+    grouped_b = gen.sample_with_two_stage_process_critic(
+        t_norm.repeat(2, 1),
+        cond_mask.repeat(2, 1),
+        loaded_ts,
+        m_stage1=6,
+        m_stage2=4,
+        m_keep=2,
+        coarse_chunk_size=18,
+        cfg_scale=1.8,
+        cfg_tree_decay=0.25,
+        geometric_guard=True,
+        electron_parity=0,
+        seed=909,
+        use_bf16=False,
+        max_decode_steps=160,
+        uncond_active_mask=uncond_mask.repeat(2, 1),
+        leaf_atom_budget=budgets.repeat(2),
+        leaf_budget_tol=2.0,
+        sort_by_budget=True,
+    )
+    assert len(grouped_b) == 10 and all(len(g) == 2 for g in grouped_b)
+
