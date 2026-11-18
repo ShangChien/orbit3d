@@ -397,10 +397,11 @@ def execute_live_gpu4pyscf_dft_batch(
     work_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
     relaxed_mols: List[Chem.Mol] = []
-    relax_res = pot_slot.relax_molecules(list(acquisition_mols), steps=25, fmax=0.05)
-    for orig_m, r_item in zip(acquisition_mols, relax_res):
-        rm = r_item.get("mol") if isinstance(r_item, dict) else getattr(r_item, "mol", None)
-        relaxed_mols.append(Chem.Mol(rm) if rm is not None else Chem.Mol(orig_m))
+    relax_res = pot_slot.relax_molecules(list(acquisition_mols), n_steps=25)
+    for orig_m, rm, gp in zip(
+        acquisition_mols, relax_res["relaxed_mols"], relax_res["graph_preserved"]
+    ):
+        relaxed_mols.append(Chem.Mol(rm) if (bool(gp) and rm is not None) else Chem.Mol(orig_m))
 
     rel_sdf = work_dir / "acquisition_batch_r1_relaxed.sdf"
     w = Chem.SDWriter(str(rel_sdf))
