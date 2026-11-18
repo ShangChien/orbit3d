@@ -79,6 +79,7 @@ class CompositeCriticBus:
         trajectories: Sequence[Dict[str, Any]],
         *,
         reconcile_valence: Optional[bool] = None,
+        polish_hydrogens_mlip: bool = True,
     ) -> Dict[str, Any]:
         """Admit sampled octree trajectories, returning both raw and reconciled molecule lists & stats."""
         use_rec = self.spec.reconcile_valence if reconcile_valence is None else bool(reconcile_valence)
@@ -164,6 +165,7 @@ class CompositeCriticBus:
                     tr.get("atom_symbols", []),
                     tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)),
                     potential_slot=None,
+                    bond_order_priors=tr.get("bond_order_probs"),
                 )
                 rec_results.append(res)
                 if res.reconciled_legal and res.mol is not None:
@@ -172,7 +174,7 @@ class CompositeCriticBus:
                     rec_clean_q[i] = not res.reconciled_exotic_charge
                     rec_flags[i] = res.was_reconciled
 
-        if self.potential_slot is not None and rec_flags.any():
+        if polish_hydrogens_mlip and self.potential_slot is not None and rec_flags.any():
             reconciled_subset = [final_mols[i] for i in range(n) if rec_flags[i] and final_mols[i] is not None]
             self.reconciler.batch_polish_hydrogens_mlip(reconciled_subset, self.potential_slot, n_steps=5, chunk_size=32)
 

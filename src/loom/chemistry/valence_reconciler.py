@@ -22,6 +22,7 @@ Design contract:
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
 import torch
@@ -231,6 +232,7 @@ class ValenceReconciler:
         coords: np.ndarray,
         *,
         potential_slot: Optional[Any] = None,
+        bond_order_priors: Optional[np.ndarray] = None,
     ) -> ReconciliationResult:
         """Reconcile a single `(symbols, coords)` 3D proposal transparently."""
         pos = np.asarray(coords, dtype=np.float64)
@@ -298,6 +300,11 @@ class ValenceReconciler:
 
         heavy_syms = [syms[i] for i in heavy_indices]
         heavy_pos = pos[heavy_indices].copy()
+        heavy_bo_priors: Optional[np.ndarray] = None
+        if bond_order_priors is not None:
+            bop = np.asarray(bond_order_priors, dtype=np.float64)
+            if bop.ndim == 3 and bop.shape[0] == len(syms) and bop.shape[1] == len(syms) and bop.shape[2] >= 5:
+                heavy_bo_priors = bop[np.ix_(heavy_indices, heavy_indices)]
 
         if n_heavy > 1:
             d_hh = np.linalg.norm(heavy_pos[:, None, :] - heavy_pos[None, :, :], axis=-1)
@@ -337,6 +344,23 @@ class ValenceReconciler:
             except Exception:
                 return self._fail_fallback(raw_mol, raw_legal, raw_exotic, "rejected_heavy_connectivity")
 
+        if heavy_bo_priors is not None and n_heavy > 1:
+            rw_aug = Chem.RWMol(heavy_mol)
+            added_prior_edge = False
+            for u in range(n_heavy):
+                for v in range(u + 1, n_heavy):
+                    if rw_aug.GetBondBetweenAtoms(u, v) is not None:
+                        continue
+                    p_bonded = float(1.0 - heavy_bo_priors[u, v, 0])
+                    if p_bonded >= 0.55:
+                        dist_uv = float(d_hh[u, v])
+                        r_cov_uv = _ideal_bond_length(heavy_syms[u], heavy_syms[v], 1)
+                        if 0.58 * r_cov_uv <= dist_uv <= 1.38 * r_cov_uv:
+                            rw_aug.AddBond(u, v, Chem.BondType.SINGLE)
+                            added_prior_edge = True
+            if added_prior_edge:
+                heavy_mol = rw_aug.GetMol()
+
         if len(Chem.GetMolFrags(heavy_mol)) != 1:
             return self._fail_fallback(raw_mol, raw_legal, raw_exotic, "rejected_disconnected_heavy_skeleton")
 
@@ -375,6 +399,7 @@ class ValenceReconciler:
             atom_states=atom_states,
             max_atom_val=max_atom_val,
             raw_h_counts=raw_h_counts,
+            heavy_bo_priors=heavy_bo_priors,
         )
         if solved is None:
             return self._fail_fallback(raw_mol, raw_legal, raw_exotic, "rejected_no_clean_lewis_assignment")
@@ -448,6 +473,7 @@ class ValenceReconciler:
         atom_states: Sequence[Sequence[Tuple[int, int, float]]],
         max_atom_val: np.ndarray,
         raw_h_counts: np.ndarray,
+        heavy_bo_priors: Optional[np.ndarray] = None,
     ) -> Optional[Tuple[List[int], List[int], List[int]]]:
         n_heavy = len(heavy_syms)
         n_edges = len(edges)
@@ -469,22 +495,43 @@ class ValenceReconciler:
             if su in ("F", "Cl", "Br", "I") or sv in ("F", "Cl", "Br", "I"):
                 max_bo = 1
             mu1 = _ideal_bond_length(su, sv, 1)
-            # Long bonds (> 1.07 * single covalent length) cannot plausibly be double/triple
-            if dist > 1.07 * mu1:
+
+            p_bo_map: Optional[Dict[int, float]] = None
+            has_multi_prior = False
+            if heavy_bo_priors is not None:
+                pv = heavy_bo_priors[u, v]
+                p_bo_map = {
+                    1: float(pv[1] + 0.5 * pv[4]),
+                    2: float(pv[2] + 0.5 * pv[4]),
+                    3: float(pv[3]),
+                }
+                has_multi_prior = (p_bo_map[2] > 0.25) or (p_bo_map[3] > 0.25)
+
+            # Long bonds (> 1.07 * single covalent length, or > 1.14 * with strong neural pi-prior) cannot be double/triple
+            long_cap = (1.14 * mu1) if has_multi_prior else (1.07 * mu1)
+            if dist > long_cap:
                 max_bo = 1
+
+            bo2_tol = 0.14 if (p_bo_map is not None and p_bo_map[2] > 0.25) else 0.06
+            bo3_tol = 0.10 if (p_bo_map is not None and p_bo_map[3] > 0.25) else 0.05
 
             cands: List[Tuple[int, float]] = []
             for bo in range(1, max_bo + 1):
                 mu_b = _ideal_bond_length(su, sv, bo)
-                if bo >= 2 and dist > mu1 + 0.06:
+                if bo >= 2 and dist > mu1 + bo2_tol:
                     continue
-                if bo == 3 and dist > _ideal_bond_length(su, sv, 2) + 0.05:
+                if bo == 3 and dist > _ideal_bond_length(su, sv, 2) + bo3_tol:
                     continue
                 err = (dist - mu_b) / 0.065
                 cost = float(err * err)
+                if p_bo_map is not None:
+                    cost += -1.2 * math.log(max(p_bo_map.get(bo, 1e-4), 1e-4))
                 cands.append((bo, cost))
             if not cands:
-                cands.append((1, float(((dist - mu1) / 0.065) ** 2)))
+                base_c = float(((dist - mu1) / 0.065) ** 2)
+                if p_bo_map is not None:
+                    base_c += -1.2 * math.log(max(p_bo_map.get(1, 1e-4), 1e-4))
+                cands.append((1, base_c))
             cands.sort(key=lambda item: item[1])
             edge_candidates.append(cands)
 

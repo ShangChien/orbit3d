@@ -26,6 +26,14 @@ from .octree_process_critic import (
     fit_octree_element_process_critic,
     fit_octree_process_critic,
 )
+from .post_tree_refiner import (
+    BilinearBondHead,
+    PostTreeGraphRefiner,
+    PostTreeRefinerTrainStats,
+    extract_mol_bond_targets,
+    fit_post_tree_graph_refiner,
+    simulate_morton_seam_perturbation,
+)
 from .registry import (
     AssetCapabilities,
     AssetRegistry,
@@ -72,6 +80,7 @@ __all__ = [
     "AssetRegistry",
     "AuditOracleSlot",
     "AuditorChannelSpec",
+    "BilinearBondHead",
     "BuiltInRuleAsset",
     "CallablePredictorAsset",
     "CompositeCriticBus",
@@ -96,6 +105,8 @@ __all__ = [
     "OctreeProcessCritic",
     "OuterRSIAcquisition",
     "PhysicsConstrainedCoordRefiner",
+    "PostTreeGraphRefiner",
+    "PostTreeRefinerTrainStats",
     "PotentialSlot",
     "PredictorAsset",
     "ProcessCriticTrainStats",
@@ -116,12 +127,15 @@ __all__ = [
     "compute_disentangled_group_advantages",
     "compute_element_cloud_features",
     "compute_loom_metrics",
+    "extract_mol_bond_targets",
     "fit_octree_element_process_critic",
     "fit_octree_process_critic",
+    "fit_post_tree_graph_refiner",
     "formal_charge_signature",
     "inject_uni3dar_lora",
     "is_clean_organic_charge_state",
     "iter_lora_parameters",
     "property_distance_reward",
+    "simulate_morton_seam_perturbation",
     "zero_step_physical_reward",
 ]

@@ -556,3 +556,158 @@ def test_v4_step2_scale_free_exact_count_conservation_and_expected_xyz_loss(tmp_
     assert loaded_gen.scale_free_count_head is not None
 
 
+def test_post_tree_refiner_se3_equivariance_and_priors(tmp_path) -> None:
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+    from loom.chemistry.valence_reconciler import ValenceReconciler
+    from loom.weaving import PostTreeGraphRefiner, fit_post_tree_graph_refiner
+
+    torch.manual_seed(777)
+    mols = []
+    for smi in ("c1ccccc1", "c1ccncc1", "CC(=O)Nc1ccc(F)cc1", "c1ccc2c(c1)cccc2"):
+        m = Chem.AddHs(Chem.MolFromSmiles(smi))
+        AllChem.EmbedMolecule(m, randomSeed=42)
+        AllChem.MMFFOptimizeMolecule(m)
+        mols.append(m)
+
+    refiner = PostTreeGraphRefiner(d_model=64, n_heads=4, n_layers=2, n_rbf=16, d_pair=64, max_disp_A=0.08)
+    stats = fit_post_tree_graph_refiner(refiner, mols * 6, epochs=4, batch_size=8, lr=2e-3, seed=2026)
+    assert stats.val_bond_dist_mae_A <= stats.val_noisy_bond_dist_mae_A + 1e-3
+
+    # Verify exact SE(3) equivariance of refined_pos and SE(3) invariance + symmetry of bond_logits
+    refiner.eval()
+    elem_ids = torch.tensor([[5, 5, 6, 7, 0, 0], [5, 5, 5, 8, 0, 0]], dtype=torch.long)
+    pos = torch.randn(2, 6, 3) * 1.4
+    valid = torch.tensor([[True, True, True, True, True, False], [True, True, True, True, True, True]], dtype=torch.bool)
+
+    q_mat, _ = torch.linalg.qr(torch.randn(3, 3))
+    if torch.linalg.det(q_mat) < 0:
+        q_mat[:, 0] = -q_mat[:, 0]
+    shift = torch.tensor([[[8.2, -5.1, 3.7]]])
+    pos_rt = pos @ q_mat.T + shift
+
+    out1 = refiner(elem_ids, pos, valid)
+    out2 = refiner(elem_ids, pos_rt, valid)
+
+    ref1_rt = out1["refined_pos"] @ q_mat.T + shift
+    assert torch.allclose(ref1_rt[valid], out2["refined_pos"][valid], atol=1e-5)
+    assert torch.allclose(out1["bond_logits"], out2["bond_logits"], atol=1e-5)
+    assert torch.allclose(out1["bond_logits"], out1["bond_logits"].transpose(1, 2), atol=1e-5)
+
+    ckpt = tmp_path / "post_tree_refiner.pt"
+    refiner.save_checkpoint(ckpt, extra={"bond_acc": stats.val_bond_order_acc})
+    loaded_ref, extra = PostTreeGraphRefiner.load_checkpoint(ckpt, device="cpu")
+    assert "bond_acc" in extra
+
+    # Verify ValenceReconciler accepts bond_order_priors cleanly
+    benz = mols[0]
+    syms = [a.GetSymbol() for a in benz.GetAtoms()]
+    coords = np.asarray(benz.GetConformer().GetPositions(), dtype=np.float32).copy()
+    # Drop one H to force reconciliation & stretch one aromatic C-C bond slightly
+    syms_drop = syms[:-1]
+    coords_drop = coords[:-1]
+    n_rem = len(syms_drop)
+    priors = np.zeros((n_rem, n_rem, 5), dtype=np.float32)
+    priors[:, :, 0] = 0.90
+    for b in benz.GetBonds():
+        u, v = b.GetBeginAtomIdx(), b.GetEndAtomIdx()
+        if u < n_rem and v < n_rem:
+            priors[u, v] = priors[v, u] = [0.02, 0.08, 0.10, 0.0, 0.80] if b.GetIsAromatic() else [0.02, 0.95, 0.03, 0.0, 0.0]
+    rec = ValenceReconciler(mmff_h_iters=16)
+    res = rec.reconcile_point_cloud(syms_drop, coords_drop, potential_slot=None, bond_order_priors=priors)
+    assert res.reconciled_legal and res.mol is not None
+
+
+def test_vine_rollouts_exact_budget_logprob_parity_and_grpo() -> None:
+    from loom.weaving.grpo import compute_vine_counterfactual_advantages
+
+    torch.manual_seed(909)
+    backbone = LoomUni3DARGenerator._build_backbone(
+        merge_level=6,
+        allowed_elements=("H", "C", "N", "O", "F"),
+        batch_size=4,
+        emb_dim=64,
+        num_head=4,
+        layer=2,
+        ffn_multiple=2,
+        dropout=0.05,
+        random_rotation_prob=0.8,
+    )
+    gen = LoomUni3DARGenerator(
+        backbone=backbone,
+        target_cols=["homo", "sa_score"],
+        target_units=["eV", "sa"],
+        mean=[-6.5, 2.8],
+        scale=[0.8, 0.7],
+        num_rbf=16,
+        num_freqs=8,
+        num_prefix_tokens=8,
+        lora_rank=0,
+        use_valence_head=True,
+        use_scale_free_count=True,
+        rope_center_prefix=True,
+    )
+    gen.eval()
+
+    prompts_raw = np.array([[-6.6, 2.40], [-5.9, 2.40]], dtype=np.float32)
+    t_norm = gen.normalize_targets(prompts_raw)
+    c_mask = torch.ones((2, 2), dtype=torch.bool)
+    budgets = torch.tensor([12.0, 16.0], dtype=torch.float32)
+
+    trajs = gen.sample_vine_rollouts(
+        t_norm,
+        c_mask,
+        m_trunks=3,
+        k_leaves=2,
+        cfg_scale=1.6,
+        geometric_guard=True,
+        temperatures=(1.0, 1.0, 1.0),
+        electron_parity=0,
+        seed=42,
+        use_bf16=False,
+        leaf_atom_budget=budgets,
+    )
+    assert len(trajs) == 2 * 3 * 2
+    assert [len(tr["atom_symbols"]) for tr in trajs[:6]] == [12] * 6
+    assert [len(tr["atom_symbols"]) for tr in trajs[6:]] == [16] * 6
+
+    # Siblings sharing a trunk (`k_leaves=2`) must share identical coarse `level >= 1` decisions!
+    for t_idx in range(0, len(trajs), 2):
+        df0 = trajs[t_idx]["decoder_feat"]
+        df1 = trajs[t_idx + 1]["decoder_feat"]
+        c0 = df0[df0[:, 4] > gen.backbone.atom_level_index]
+        c1 = df1[df1[:, 4] > gen.backbone.atom_level_index]
+        assert torch.equal(c0, c1)
+
+    # Verify exact teacher-forcing logprob parity WITH `scale_free_count_head` + `leaf_atom_budget`!
+    t_rep = t_norm.repeat_interleave(6, dim=0)
+    m_rep = c_mask.repeat_interleave(6, dim=0)
+    packets = gen.trajectory_distributions(
+        trajs,
+        t_rep,
+        m_rep,
+        temperatures=(1.0, 1.0, 1.0),
+        cfg_scale=1.6,
+        geometric_guard=True,
+        electron_parity=0,
+        topology_only_policy=True,
+    )
+    tot_tf = torch.zeros(len(trajs))
+    for logp, labels, owner in packets:
+        chosen = logp.gather(-1, labels.unsqueeze(-1)).squeeze(-1)
+        assert torch.isfinite(chosen).all()
+        tot_tf.index_add_(0, owner, chosen)
+    samp_scores = torch.tensor([float(tr["scores"].sum().item()) for tr in trajs])
+    assert float((tot_tf - samp_scores).abs().max().item()) < 5e-4
+
+    # Verify counterfactual Tree-Vine advantage decomposition
+    fake_adv = torch.tensor([1.2, 0.8, -0.4, -0.6, -0.5, -0.5, 0.9, -0.9, 0.2, 0.1, -0.2, -0.1])
+    adv_tree, adv_leaf = compute_vine_counterfactual_advantages(fake_adv, m_trunks=3, k_leaves=2)
+    assert adv_tree.shape == fake_adv.shape
+    assert adv_leaf.shape == fake_adv.shape
+    # Sibling leaves of trunk 0 share identical `adv_tree` while differing in `adv_leaf`!
+    assert float(adv_tree[0].item()) == float(adv_tree[1].item())
+    assert float(adv_leaf[6].item()) > float(adv_leaf[7].item())
+
+
+

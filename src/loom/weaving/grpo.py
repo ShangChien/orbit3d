@@ -92,6 +92,44 @@ def compute_disentangled_group_advantages(
     }
 
 
+def compute_vine_counterfactual_advantages(
+    group_adv: torch.Tensor,
+    m_trunks: int,
+    k_leaves: int,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Decompose flat `(P * m_trunks * k_leaves,)` advantages into `(adv_tree, adv_leaf)` for Tree-Vine GRPO."""
+    total_b = int(group_adv.shape[0])
+    g = int(m_trunks * k_leaves)
+    if m_trunks <= 1 or k_leaves <= 1 or total_b % g != 0:
+        return group_adv, group_adv
+
+    p_count = total_b // g
+    adv_tree = torch.zeros_like(group_adv)
+    adv_leaf = torch.zeros_like(group_adv)
+    for p_idx in range(p_count):
+        s = p_idx * g
+        e = s + g
+        gp = group_adv[s:e]
+        mat = gp.view(m_trunks, k_leaves)
+        t_mean = mat.mean(dim=1)
+        t_std = t_mean.std(unbiased=False)
+        if float(t_std.item()) > 1e-5:
+            t_norm = ((t_mean - t_mean.mean()) / t_std.clamp_min(0.10)).clamp(-2.0, 2.0)
+        else:
+            t_norm = torch.zeros_like(t_mean)
+        adv_tree[s:e] = t_norm.repeat_interleave(k_leaves)
+
+        intra = mat - t_mean.unsqueeze(1)
+        intra_std = intra.reshape(-1).std(unbiased=False)
+        if float(intra_std.item()) > 1e-5:
+            intra_norm = (intra.reshape(-1) / intra_std.clamp_min(0.10)).clamp(-2.0, 2.0)
+            leaf_p = 0.60 * gp + 0.40 * intra_norm
+        else:
+            leaf_p = gp
+        adv_leaf[s:e] = leaf_p
+    return adv_tree, adv_leaf
+
+
 def property_distance_reward(
     distance_eV: np.ndarray | torch.Tensor,
     tolerance_eV: float = 0.25,
@@ -171,6 +209,11 @@ class LoomGRPOTrainer:
         awr_relax_steps: int = 0,
         awr_max_fmax: float = 2.5,
         grad_clip_mode: str = "norm",
+        use_vine_rollouts: bool = False,
+        m_trunks: int = 4,
+        k_leaves: int = 2,
+        post_tree_refiner: Optional[Any] = None,
+        polish_hydrogens_mlip: bool = True,
         seed: int = 42,
     ) -> None:
         if reward_oracle is None and critic_bus is None:
@@ -204,6 +247,11 @@ class LoomGRPOTrainer:
         self.awr_relax_steps = max(0, int(awr_relax_steps))
         self.awr_max_fmax = float(awr_max_fmax)
         self.grad_clip_mode = str(grad_clip_mode).strip().lower()
+        self.use_vine_rollouts = bool(use_vine_rollouts)
+        self.m_trunks = max(1, int(m_trunks))
+        self.k_leaves = max(1, int(k_leaves))
+        self.post_tree_refiner = post_tree_refiner
+        self.polish_hydrogens_mlip = bool(polish_hydrogens_mlip)
 
         self.device = next(generator.parameters()).device
         use_ref = (self.alignment_mode == "grpo") and (kl_beta > 0.0)
@@ -354,6 +402,7 @@ class LoomGRPOTrainer:
         *,
         group_size: int = 8,
         step_index: int = 0,
+        prompt_atom_budgets: Optional[np.ndarray] = None,
     ) -> Dict[str, Any]:
         """Run one multi-prompt batched GRPO rollout + policy update step.
 
@@ -363,6 +412,8 @@ class LoomGRPOTrainer:
         """
         t0 = time.perf_counter()
         p_count = prompt_targets_eV.shape[0]
+        if self.use_vine_rollouts:
+            group_size = self.m_trunks * self.k_leaves
         total_b = p_count * group_size
 
         rep_targets_eV = np.repeat(prompt_targets_eV, group_size, axis=0)
@@ -375,19 +426,55 @@ class LoomGRPOTrainer:
         self.generator.eval()
         uncond_mask = self._build_uncond_active_mask(active_mask)
         cfg_extra = {"uncond_active_mask": uncond_mask} if uncond_mask is not None else {}
-        trajectories = self.generator.sample(
-            targets_norm,
-            active_mask,
-            cfg_scale=self.cfg_scale,
-            xyz_cfg_scale=self.xyz_cfg_scale,
-            cfg_tree_decay=self.cfg_tree_decay,
-            geometric_guard=self.geometric_guard,
-            temperatures=self.temperatures,
-            seed=self.seed * 100003 + step_index * 997,
-            use_bf16=(self.device.type == "cuda"),
-            electron_parity=self.electron_parity,
-            **cfg_extra,
-        )
+        step_seed = self.seed * 100003 + step_index * 997
+
+        if self.use_vine_rollouts and hasattr(self.generator, "sample_vine_rollouts"):
+            p_targets_norm = self.generator.normalize_targets(prompt_targets_eV)
+            p_mask_t = torch.as_tensor(prompt_active_mask.astype(bool), dtype=torch.bool, device=self.device)
+            p_uncond = self._build_uncond_active_mask(p_mask_t)
+            p_budgets_t = (
+                torch.as_tensor(prompt_atom_budgets, dtype=torch.float32, device=self.device)
+                if prompt_atom_budgets is not None
+                else None
+            )
+            trajectories = self.generator.sample_vine_rollouts(
+                p_targets_norm,
+                p_mask_t,
+                m_trunks=self.m_trunks,
+                k_leaves=self.k_leaves,
+                cfg_scale=self.cfg_scale,
+                xyz_cfg_scale=self.xyz_cfg_scale,
+                cfg_tree_decay=self.cfg_tree_decay,
+                geometric_guard=self.geometric_guard,
+                temperatures=self.temperatures,
+                seed=step_seed,
+                use_bf16=(self.device.type == "cuda"),
+                electron_parity=self.electron_parity,
+                uncond_active_mask=p_uncond,
+                leaf_atom_budget=p_budgets_t,
+            )
+        else:
+            sample_extra = dict(cfg_extra)
+            if prompt_atom_budgets is not None:
+                rep_b = np.repeat(np.asarray(prompt_atom_budgets, dtype=np.float32), group_size, axis=0)
+                sample_extra["leaf_atom_budget"] = torch.as_tensor(rep_b, dtype=torch.float32, device=self.device)
+                sample_extra["sort_by_budget"] = False
+            trajectories = self.generator.sample(
+                targets_norm,
+                active_mask,
+                cfg_scale=self.cfg_scale,
+                xyz_cfg_scale=self.xyz_cfg_scale,
+                cfg_tree_decay=self.cfg_tree_decay,
+                geometric_guard=self.geometric_guard,
+                temperatures=self.temperatures,
+                seed=step_seed,
+                use_bf16=(self.device.type == "cuda"),
+                electron_parity=self.electron_parity,
+                **sample_extra,
+            )
+
+        if self.post_tree_refiner is not None:
+            self.post_tree_refiner.refine_trajectories_batch(trajectories)
         if self.alignment_mode == "grpo":
             with torch.no_grad():
                 old_packets = self.generator.trajectory_distributions(
@@ -427,7 +514,9 @@ class LoomGRPOTrainer:
         # 2-5. Evaluation & Advantage Routing (`CompositeCriticBus` OR legacy `RewardOracleSlot`)
         constraints_met_rate = 1.0
         if self.critic_bus is not None:
-            admit_out = self.critic_bus.admit_trajectories(trajectories)
+            admit_out = self.critic_bus.admit_trajectories(
+                trajectories, polish_hydrogens_mlip=self.polish_hydrogens_mlip
+            )
             raw_legal_np = np.asarray(admit_out.get("raw_legal_mask", admit_out["legal_mask"]), dtype=bool)
             raw_clean_np = np.asarray(admit_out.get("raw_clean_charge_mask", admit_out["clean_charge_mask"]), dtype=bool)
             if self.alignment_mode == "awr_sft" and self.awr_require_native_legal:
@@ -577,6 +666,14 @@ class LoomGRPOTrainer:
         )
         if self.size_adherence_weight > 0.0 and self.size_col_idx is not None:
             adv_all = adv_all + self.size_adherence_weight * adv_size
+
+        if self.use_vine_rollouts:
+            adv_tree_all, adv_leaf_all = compute_vine_counterfactual_advantages(
+                adv_all, self.m_trunks, self.k_leaves
+            )
+        else:
+            adv_tree_all = None
+            adv_leaf_all = adv_all
 
         # 5b. Optional v1.1 Online Relaxed-Coordinate Distillation (`L_relax_SFT`)
         relax_packed: Optional[Dict[str, torch.Tensor]] = None
@@ -850,7 +947,13 @@ class LoomGRPOTrainer:
                         **cfg_extra,
                     )
                     p_loss = categorical_policy_loss(
-                        cur_packets, old_packets, ref_packets, adv_all, beta=self.kl_beta, clip=self.clip_eps
+                        cur_packets,
+                        old_packets,
+                        ref_packets,
+                        adv_leaf_all,
+                        beta=self.kl_beta,
+                        clip=self.clip_eps,
+                        tree_advantages=adv_tree_all,
                     )
                     total_loss = p_loss
 
@@ -969,7 +1072,7 @@ class LoomGRPOTrainer:
     def train_loop(
         self,
         total_steps: int,
-        prompt_sampler_fn: Callable[[int, np.random.Generator], Tuple[np.ndarray, np.ndarray]],
+        prompt_sampler_fn: Callable[[int, np.random.Generator], Any],
         *,
         group_size: int = 8,
         checkpoint_fn: Optional[Callable[[int, GeneratorSlot, List[Dict[str, Any]]], None]] = None,
@@ -977,8 +1080,19 @@ class LoomGRPOTrainer:
     ) -> List[Dict[str, Any]]:
         history: List[Dict[str, Any]] = []
         for s_idx in range(total_steps):
-            p_targets, p_mask = prompt_sampler_fn(s_idx, self.rng)
-            metrics = self.step(p_targets, p_mask, group_size=group_size, step_index=s_idx)
+            sampled = prompt_sampler_fn(s_idx, self.rng)
+            if len(sampled) == 3:
+                p_targets, p_mask, p_budgets = sampled
+            else:
+                p_targets, p_mask = sampled
+                p_budgets = None
+            metrics = self.step(
+                p_targets,
+                p_mask,
+                group_size=group_size,
+                step_index=s_idx,
+                prompt_atom_budgets=p_budgets,
+            )
             history.append(metrics)
             if (s_idx + 1) % log_every == 0 or s_idx == 0 or (s_idx + 1) == total_steps:
                 tag = "Loom-AWR" if self.alignment_mode == "awr_sft" else "Loom-GRPO"

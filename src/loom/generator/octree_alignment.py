@@ -35,7 +35,7 @@ def group_relative_advantages(reward, eligible, mode="joint"):
     return combined/normalizer, (eligibility/normalizer, property_signal/normalizer)
 
 
-def categorical_policy_loss(current, previous, reference, advantages, beta=0.02, clip=0.2):
+def categorical_policy_loss(current, previous, reference, advantages, beta=0.02, clip=0.2, tree_advantages=None):
     if beta and reference is None:
         raise ValueError('A nonzero KL weight requires a reference policy')
     total = torch.zeros_like(advantages)
@@ -47,7 +47,8 @@ def categorical_policy_loss(current, previous, reference, advantages, beta=0.02,
         safe_old = torch.where(torch.isfinite(old_selected), old_selected, safe_sel.detach())
         valid_step = torch.isfinite(selected) & torch.isfinite(old_selected)
         ratio = torch.where(valid_step, (safe_sel - safe_old).clamp(-20, 20).exp(), torch.ones_like(selected))
-        adv = advantages[owner]
+        adv_src = tree_advantages if (tree_advantages is not None and decision == 0) else advantages
+        adv = adv_src[owner]
         surrogate = torch.minimum(ratio * adv, ratio.clamp(1 - clip, 1 + clip) * adv)
         objective = torch.where(valid_step, -surrogate, torch.zeros_like(surrogate))
         if beta:
