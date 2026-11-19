@@ -1748,11 +1748,12 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
         # (rel_lvl, divisor, k_hi_ideal, reach_hi, pop_cap, w_quad, infeas_pen, slack_frac)
         level_specs = (
-            (5, 3.10, 5.5, 6.0, 8.5, 0.30, -5.0, 0.22),
-            (4, 1.40, 4.8, 5.2, 7.5, 0.40, -6.0, 0.16),
-            (3, 1.01, 3.2, 3.5, 4.5, 0.55, -8.0, 0.10),
-            (2, 1.00, 2.0, 2.0, 2.5, 0.70, -10.0, 0.0),
-            (1, 1.00, 1.8, 2.0, 2.5, 0.85, -12.0, 0.0),
+            (6, 7.20, 8.0, 8.0, 8.5, 0.22, -3.0, 0.20),
+            (5, 3.00, 6.0, 6.5, 8.5, 0.35, -5.0, 0.20),
+            (4, 1.36, 5.0, 5.5, 7.5, 0.45, -6.0, 0.14),
+            (3, 0.99, 3.4, 3.6, 4.5, 0.60, -8.0, 0.08),
+            (2, 0.99, 2.0, 2.0, 2.5, 0.75, -10.0, 0.0),
+            (1, 0.99, 1.8, 2.0, 2.5, 0.90, -12.0, 0.0),
         )
         for rel, div, k_hi, reach_hi, pop_cap, w_q, inf_p, slack_f in level_specs:
             if rel >= n_slots:
@@ -1764,7 +1765,10 @@ class LoomUni3DARGenerator(GeneratorSlot):
             rem_after = (rem_lvl_cells[r_idx, rel] - 1.0).clamp_min(0.0).unsqueeze(-1)
             cur_child = rem_lvl_cells[r_idx, rel - 1].unsqueeze(-1)
             goal_n = budget_vec[r_idx].unsqueeze(-1)
-            goal_c = (goal_n / float(div)).clamp_min(2.0 if rel >= 4 else 1.0)
+            if rel == 6:
+                goal_c = (goal_n / float(div)).clamp(4.0, 8.0)
+            else:
+                goal_c = (goal_n / float(div)).clamp_min(2.0 if rel >= 4 else 1.0)
             tol_c = (float(slack_f) * goal_c).clamp_min(tol_base) if slack_f > 0.0 else tol_base
 
             ideal_k = ((goal_c - cur_child) / (rem_after + 1.0)).clamp(1.0, float(k_hi))
