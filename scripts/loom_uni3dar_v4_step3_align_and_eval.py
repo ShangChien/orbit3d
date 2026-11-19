@@ -161,7 +161,7 @@ def run_relax_synth_shard(args: argparse.Namespace) -> None:
         lora_rank=0,
     )
 
-    rel_out = pot_slot.relax_molecules(sub_mols, n_steps=20, chunk_size=128)
+    rel_out = pot_slot.relax_molecules(sub_mols, n_steps=20, chunk_size=48)
     admitted: List[Chem.Mol] = []
     for i, rm in enumerate(rel_out["relaxed_mols"]):
         f_fin = float(rel_out["final_f_max_eV_A"][i])
@@ -618,7 +618,7 @@ def _collect_and_relax_onpolicy_batch(
     rel_mols: List[Chem.Mol] = []
     paired_records: List[Tuple[np.ndarray, Chem.Mol]] = []
     if sub_mols and pot_slot is not None:
-        rel_out = pot_slot.relax_molecules(sub_mols, n_steps=24, chunk_size=96)
+        rel_out = pot_slot.relax_molecules(sub_mols, n_steps=24, chunk_size=48)
         for loc_i, rm in enumerate(rel_out["relaxed_mols"]):
             f_fin = float(rel_out["final_f_max_eV_A"][loc_i])
             if (

@@ -223,8 +223,20 @@ class PotentialSlot(nn.Module):
             if mol is not None and all(a.GetSymbol() in type_set for a in mol.GetAtoms())
         ]
 
-        for start in range(0, len(sup_pairs), chunk_size):
-            sub_pairs = sup_pairs[start : start + chunk_size]
+        start = 0
+        while start < len(sup_pairs):
+            sub_pairs = []
+            acc_atoms = 0
+            idx_cur = start
+            while idx_cur < len(sup_pairs) and len(sub_pairs) < chunk_size:
+                m_cur = sup_pairs[idx_cur][1]
+                na_cur = m_cur.GetNumAtoms()
+                if sub_pairs and (acc_atoms + na_cur > 3200):
+                    break
+                sub_pairs.append(sup_pairs[idx_cur])
+                acc_atoms += na_cur
+                idx_cur += 1
+            start = idx_cur
             sub = [m for _, m in sub_pairs]
             coords, atypes, b_idx = self._pack_molecules(sub)
             mol_e, forces = self.engine.compute_energy_and_forces(
@@ -281,8 +293,20 @@ class PotentialSlot(nn.Module):
             if mol is not None and all(a.GetSymbol() in type_set for a in mol.GetAtoms())
         ]
 
-        for start in range(0, len(sup_pairs), chunk_size):
-            sub_pairs = sup_pairs[start : start + chunk_size]
+        start = 0
+        while start < len(sup_pairs):
+            sub_pairs = []
+            acc_atoms = 0
+            idx_cur = start
+            while idx_cur < len(sup_pairs) and len(sub_pairs) < chunk_size:
+                m_cur = sup_pairs[idx_cur][1]
+                na_cur = m_cur.GetNumAtoms()
+                if sub_pairs and (acc_atoms + na_cur > 3200):
+                    break
+                sub_pairs.append(sup_pairs[idx_cur])
+                acc_atoms += na_cur
+                idx_cur += 1
+            start = idx_cur
             sub = [m for _, m in sub_pairs]
             coords, atypes, b_idx = self._pack_molecules(sub)
             best_x, e0, e1 = self.engine.relax_conformers(
