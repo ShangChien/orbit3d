@@ -105,8 +105,8 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
     ax0.annotate(
         f"N=60 Speedup vs PMF M=8:\n{lat60_pmf/lat60_u4:.1f}× faster (M=4)\n{lat60_pmf/lat60_u8:.1f}× faster (M=8)",
         xy=(60, lat60_u4),
-        xytext=(38.5, 860),
-        fontsize=7.5,
+        xytext=(23.0, 960),
+        fontsize=7.4,
         fontweight="bold",
         color="#0F766E",
         bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#0F766E", alpha=0.94, lw=0.85),
@@ -132,8 +132,8 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
     ax2.annotate(
         f"N=50 Large-Molecule Lead:\nUni-3DAR M=8: {h50_u8:.1f}%\nvs PMF 52h+AWR M=8: {h50_awr:.1f}%",
         xy=(50, h50_u8),
-        xytext=(31.5, max(48.0, h50_u8 + 8.0)),
-        fontsize=7.5,
+        xytext=(38.0, 50.0),
+        fontsize=7.4,
         fontweight="bold",
         color="#065F46",
         bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#065F46", alpha=0.94, lw=0.85),

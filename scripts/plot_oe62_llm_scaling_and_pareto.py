@@ -180,8 +180,8 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax0.annotate(
         f"Uni-Loom [Uni-3DAR, M=8] ({u3d_h:.2f}h)\n{u_m8_blind:.1f}% Blind | {u_m8_eff:.2f} mol/s",
         xy=(u3d_h, u_m8_blind),
-        xytext=(max(1.75, u3d_h * 1.15), min(66.5, u_m8_blind + 4.5)),
-        fontsize=7.5,
+        xytext=(3.15, 62.6),
+        fontsize=7.4,
         fontweight="bold",
         color=c_u3d,
         bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_u3d, alpha=0.95, lw=0.9),
@@ -190,7 +190,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax0.annotate(
         f"Uni-Loom [Uni-3DAR, M=4]\n{u_m4_blind:.1f}% | {u_m4_eff:.2f} mol/s",
         xy=(u3d_h, u_m4_blind),
-        xytext=(max(2.9, u3d_h * 1.45), max(18.0, u_m4_blind - 12.5)),
+        xytext=(3.8, 22.0),
         fontsize=7.3,
         fontweight="bold",
         color=c_u3d_med,
@@ -202,7 +202,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax0.annotate(
         f"PMF 52h + Loom-AWR (M=8)\n{y52_awr:.1f}% Blind | 2.08 mol/s",
         xy=(52.12, y52_awr),
-        xytext=(19.5, max(44.0, y52_awr - 11.5)),
+        xytext=(15.5, 36.5),
         fontsize=7.4,
         fontweight="bold",
         color=c_pmf_awr,
@@ -242,8 +242,8 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
              label=f"Uni-Loom [Uni-3DAR] ({u3d_h:.2f}h)")
 
     for x, y, lb in zip(ux, uy, u_lbl):
-        off = (-8, 6) if lb in ("M=4", "M=8") else (6, 5)
-        ha = "right" if lb in ("M=4", "M=8") else "left"
+        off = (-8, 6) if lb in ("M=2", "M=4", "M=8") else (6, 5)
+        ha = "right" if lb in ("M=2", "M=4", "M=8") else "left"
         ax1.annotate(lb, (x, y), textcoords="offset points", xytext=off, ha=ha, fontsize=7.6, color=c_u3d, fontweight="bold")
     for x, y, lb in zip(px_52awr, py_52awr, awr_lbl):
         ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(6, -10), ha="left", fontsize=7.3, color=c_pmf_awr, fontweight="bold")
@@ -290,7 +290,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax2.annotate(
         f"Uni-Loom [Uni-3DAR, M=8] ({u_camp[-1]:.1f}h total)\n{uy[-1]:.1f}% Blind{dft_txt}",
         xy=(u_camp[-1], uy[-1]),
-        xytext=(max(2.0, u_camp[-1] * 0.65), min(ymax_all - 3.5, uy[-1] + 4.8)),
+        xytext=(2.1, 62.6),
         fontsize=7.3,
         fontweight="bold",
         color=c_u3d,
@@ -302,11 +302,11 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     ax2.annotate(
         f"PMF 52h + Loom-AWR ({pawr_cost_top:.1f}h total)\n{py_52awr[-1]:.1f}% Blind | PBE0: 54.8%",
         xy=(pawr_cost_top, py_52awr[-1]),
-        xytext=(13.5, max(44.0, py_52awr[-1] - 11.5)),
-        fontsize=7.3,
+        xytext=(15.2, 28.5),
+        fontsize=6.8,
         fontweight="bold",
         color=c_pmf_awr,
-        bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
+        bbox=dict(boxstyle="round,pad=0.20", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
         arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9),
     )
 

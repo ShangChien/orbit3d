@@ -1,0 +1,325 @@
+{
+  "experiment": "Self-Driving Lab Multi-Objective (HOMO, LUMO) 4-Quadrant Epistemic Diagnosis & Asynchronous Partial-Assay Calibration",
+  "grid_targets_eV": [
+    [
+      -6.3,
+      -2.0
+    ],
+    [
+      -6.55,
+      -2.35
+    ],
+    [
+      -6.8,
+      -2.6
+    ],
+    [
+      -7.65,
+      -2.2
+    ],
+    [
+      -6.4,
+      -3.65
+    ],
+    [
+      -7.8,
+      -3.8
+    ]
+  ],
+  "pre_acquisition_nd_diagnosis": {
+    "axis_names": [
+      "homo",
+      "lumo"
+    ],
+    "units": [
+      "eV",
+      "eV"
+    ],
+    "tolerances": [
+      0.25,
+      0.25
+    ],
+    "targets": [
+      [
+        -6.3,
+        -2.0
+      ],
+      [
+        -6.55,
+        -2.35
+      ],
+      [
+        -6.8,
+        -2.6
+      ],
+      [
+        -7.65,
+        -2.2
+      ],
+      [
+        -6.4,
+        -3.65
+      ],
+      [
+        -7.8,
+        -3.8
+      ]
+    ],
+    "rsi_zones": [
+      "INNER_UNDEREXPLORED",
+      "INNER_UNDEREXPLORED",
+      "INNER_UNDEREXPLORED",
+      "PRIOR_CEILING",
+      "PRIOR_CEILING",
+      "PRIOR_CEILING"
+    ],
+    "blindspot_channels": [
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+    ],
+    "zone_counts": {
+      "CONVERGED": 0,
+      "INNER_UNDEREXPLORED": 3,
+      "OUTER_BLINDSPOT": 0,
+      "PRIOR_CEILING": 3
+    },
+    "curriculum_sampling_probs": [
+      0.12596249606475127,
+      0.19111148480909743,
+      0.6829260191261513,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "inner_deficit_scores": [
+      0.31000793280243316,
+      0.47034695398554455,
+      1.6807580832429825,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "outer_acquisition_priority": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "joint_reward_hit_prob": [
+      0.09272015661794777,
+      0.056130983581005586,
+      0.010549009614421612,
+      0.024629758255206715,
+      9.205354421354799e-05,
+      4.049593234710137e-06
+    ],
+    "joint_calibrated_hit_prob": [
+      0.07612739203305768,
+      0.04759500209000527,
+      0.010095246013496649,
+      0.023387318661365394,
+      0.00019919410859156296,
+      1.1852950813329448e-05
+    ],
+    "mean_calibrated_hit_prob": 0.02623600097622165,
+    "mean_max_sigma_cal_ratio": 0.8798395121043017,
+    "inner_target_vectors": [
+      [
+        -6.3,
+        -2.0
+      ],
+      [
+        -6.55,
+        -2.35
+      ],
+      [
+        -6.8,
+        -2.6
+      ]
+    ],
+    "outer_blindspot_targets": [],
+    "prior_ceiling_targets": [
+      [
+        -7.65,
+        -2.2
+      ],
+      [
+        -6.4,
+        -3.65
+      ],
+      [
+        -7.8,
+        -3.8
+      ]
+    ]
+  },
+  "partial_assay_calibration_stats": {
+    "ingested_this_round": 96,
+    "ingested_per_channel": [
+      64,
+      64
+    ],
+    "total_feedback_samples": 96,
+    "base_uncalibrated_mae_on_batch": [
+      0.8020006323013729,
+      0.9495355558969183
+    ],
+    "pre_calibration_blindspot_mae": [
+      0.7764007356290502,
+      1.2990034852876924
+    ],
+    "post_calibration_blindspot_mae": [
+      0.7117407366357167,
+      1.12609780957533
+    ],
+    "pre_calibration_mean_std": [
+      0.21593661270796558,
+      0.22863921744578525
+    ],
+    "post_calibration_mean_std": [
+      0.29338290181437804,
+      0.26042036238045246
+    ]
+  },
+  "post_acquisition_nd_diagnosis": {
+    "axis_names": [
+      "homo",
+      "lumo"
+    ],
+    "units": [
+      "eV",
+      "eV"
+    ],
+    "tolerances": [
+      0.25,
+      0.25
+    ],
+    "targets": [
+      [
+        -6.3,
+        -2.0
+      ],
+      [
+        -6.55,
+        -2.35
+      ],
+      [
+        -6.8,
+        -2.6
+      ],
+      [
+        -7.65,
+        -2.2
+      ],
+      [
+        -6.4,
+        -3.65
+      ],
+      [
+        -7.8,
+        -3.8
+      ]
+    ],
+    "rsi_zones": [
+      "INNER_UNDEREXPLORED",
+      "INNER_UNDEREXPLORED",
+      "OUTER_BLINDSPOT",
+      "INNER_UNDEREXPLORED",
+      "INNER_UNDEREXPLORED",
+      "INNER_UNDEREXPLORED"
+    ],
+    "blindspot_channels": [
+      [],
+      [],
+      [
+        1
+      ],
+      [],
+      [],
+      []
+    ],
+    "zone_counts": {
+      "CONVERGED": 0,
+      "INNER_UNDEREXPLORED": 5,
+      "OUTER_BLINDSPOT": 1,
+      "PRIOR_CEILING": 0
+    },
+    "curriculum_sampling_probs": [
+      0.031087098791293344,
+      0.21215504972626134,
+      0.0,
+      0.15752968781600757,
+      0.2437843381260857,
+      0.355443825540352
+    ],
+    "inner_deficit_scores": [
+      0.11418130145014098,
+      0.779234493691268,
+      0.0,
+      0.5785983726761861,
+      0.8954072294515205,
+      1.3055267352250002
+    ],
+    "outer_acquisition_priority": [
+      0.0,
+      0.0,
+      0.022356772732343197,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "joint_reward_hit_prob": [
+      0.12846826287298604,
+      0.033756513256634306,
+      0.007967438426518904,
+      0.018799233745897065,
+      1.2606909430365622e-05,
+      0.00031873939731099504
+    ],
+    "joint_calibrated_hit_prob": [
+      0.09010026139789012,
+      0.02874001947558528,
+      0.0069531747422684155,
+      0.01868410187766617,
+      0.0020684066272153383,
+      0.000528339858861729
+    ],
+    "mean_calibrated_hit_prob": 0.024512383996581174,
+    "mean_max_sigma_cal_ratio": 1.1865583551641354,
+    "inner_target_vectors": [
+      [
+        -6.3,
+        -2.0
+      ],
+      [
+        -6.55,
+        -2.35
+      ],
+      [
+        -7.65,
+        -2.2
+      ],
+      [
+        -6.4,
+        -3.65
+      ],
+      [
+        -7.8,
+        -3.8
+      ]
+    ],
+    "outer_blindspot_targets": [
+      [
+        -6.8,
+        -2.6
+      ]
+    ],
+    "prior_ceiling_targets": []
+  }
+}

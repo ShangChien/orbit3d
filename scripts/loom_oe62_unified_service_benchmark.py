@@ -684,6 +684,8 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
     pro_meta = gen_payload.get("metadata") or {}
     ref_meta = pro_meta.get("final_refiner_metadata") or {}
     critic_meta = pro_meta.get("bundled_critic_meta") or {}
+    if not critic_meta and (pro_dir / "v4_pro_two_stage_critic.pt").exists():
+        _, critic_meta = TwoStageOctreeProcessCritic.load_checkpoint(pro_dir / "v4_pro_two_stage_critic.pt", device="cpu")
     total_gpuh, _ = _compute_total_uni3dar_gpuh(pro_meta, ref_meta, critic_meta)
 
     bus_eval, _, _ = _build_calibrated_oe62_bus(args, include_blind_auditor=True, calib_cache_path=calib_cache)
