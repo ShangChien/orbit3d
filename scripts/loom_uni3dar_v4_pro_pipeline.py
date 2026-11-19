@@ -52,7 +52,8 @@ if str(ROOT / "src") not in sys.path:
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from loom.chemistry import ValenceReconciler, is_clean_organic_charge_state
+from loom.chemistry import ValenceReconciler
+from loom.chemistry.valence_reconciler import is_clean_organic_charge_state
 from loom.weaving import (
     LoomGRPOTrainer,
     LoomUni3DARGenerator,
@@ -1558,7 +1559,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "--phase",
-        choices=["relax_pro_shard", "sft_pro_ddp", "align_pro", "rollout_pro_shard", "train_critic", "eval_pro", "all"],
+        choices=["build_relax_pool", "relax_pro_shard", "sft_pro_ddp", "align_pro", "rollout_pro_shard", "train_critic", "eval_pro", "all"],
         required=True,
     )
     p.add_argument("--device", type=str, default="cuda:0")
@@ -1611,7 +1612,9 @@ def main() -> None:
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
 
-    if args.phase == "relax_pro_shard":
+    if args.phase == "build_relax_pool":
+        ensure_pro_relaxed_pool(args)
+    elif args.phase == "relax_pro_shard":
         run_relax_pro_shard(args)
     elif args.phase == "sft_pro_ddp":
         run_sft_pro_ddp_worker(args)
