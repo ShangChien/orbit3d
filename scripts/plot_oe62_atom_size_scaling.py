@@ -1,12 +1,9 @@
-"""Plot Controlled Multi-Atom-Count Scaling (N=20..60): Uni-3DAR vs PropMolFlow Latency, MAE & Yield.
+"""Plot Controlled Multi-Atom-Count Scaling (N=20..60): Standardized `M=1, 4, 8` Tiers (`Uni-3DAR` vs `PropMolFlow`).
 
-Reads `docs/experiments/oe62_atom_size_buckets_scaling.json` (`280` prompts/bucket across exact
-atom counts `N in {20, 30, 40, 50, 60}`) and renders a 3-panel comparison:
-  - Panel A: End-to-End Inference Latency (`GPU-sec per 1,000 proposals`) vs Exact Atom Count `N`
-             (highlighting `O(N)` sparse octree scaling in `Uni-3DAR` vs `O(N^2)` dense complete-graph
-              ODE scaling in `PropMolFlow`).
-  - Panel B: Blind `DPA-4` HOMO MAE (`eV`) vs Exact Atom Count `N`.
-  - Panel C: Blind `DPA-4` Synthesizable Clean Hit Yield (`%`, `|y-t|<=0.25 eV` & `SA<=3.5`) vs `N`.
+Merges `docs/experiments/oe62_uni3dar_v4_pro_atom_buckets.json` (`Uni-Loom [Uni-3DAR]` standardized
+`base: M=1`, `medium: M=4`, `high: M=8` service tiers) with `docs/experiments/oe62_atom_size_buckets_scaling.json`
+(`PropMolFlow @ 52h` `M=1`, `M=8`, and `Uni-Loom [PMF @ 52.12h + Loom-AWR, M=8]`) across exact requested
+atom counts `N in {20, 30, 40, 50, 60}` (`280` prompts/bucket).
 """
 
 from __future__ import annotations
@@ -22,12 +19,21 @@ import matplotlib.pyplot as plt
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXP_JSON = ROOT / "docs" / "experiments" / "oe62_atom_size_buckets_scaling.json"
+PMF_BUCKETS_JSON = ROOT / "docs" / "experiments" / "oe62_atom_size_buckets_scaling.json"
+U3D_BUCKETS_JSON = ROOT / "docs" / "experiments" / "oe62_uni3dar_v4_pro_atom_buckets.json"
 
 
 def render_atom_scaling_figure(out_paths: List[Path]) -> None:
-    d = json.loads(EXP_JSON.read_text())
-    b_map: Dict[str, Any] = d["buckets"]
+    pmf_d = json.loads(PMF_BUCKETS_JSON.read_text())
+    u3d_d = json.loads(U3D_BUCKETS_JSON.read_text())
+    u3d_h = float(u3d_d.get("total_training_gpuh", 2.25))
+
+    b_map: Dict[str, Dict[str, Any]] = {}
+    for n_str, blk in pmf_d["buckets"].items():
+        b_map[n_str] = {"arms": dict(blk["arms"])}
+    for n_str, blk in u3d_d["buckets"].items():
+        b_map.setdefault(n_str, {"arms": {}})["arms"].update(blk["arms"])
+
     ns = sorted(int(k) for k in b_map.keys())
 
     plt.rcParams.update(
@@ -41,7 +47,7 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
 
     bg_fig = "#FAFCFB"
     bg_ax = "#FFFFFF"
-    fig, axes = plt.subplots(1, 3, figsize=(18.6, 5.8), dpi=220)
+    fig, axes = plt.subplots(1, 3, figsize=(18.8, 5.8), dpi=220)
     fig.patch.set_facecolor(bg_fig)
     for ax in axes:
         ax.set_facecolor(bg_ax)
@@ -53,21 +59,15 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
         ax.grid(True, which="major", linestyle="--", linewidth=0.65, color="#E4ECE9", alpha=0.85)
 
     series = [
-        ("Uni3DAR_M1", "Uni-Loom [Uni-3DAR M=1] (2.45h)", "#0D9488", "--s", 1.9, 6.2),
-        ("Uni3DAR_Process_8_to_4", "Uni-Loom [Uni-3DAR 8→4] (2.45h)", "#7C3AED", "-^", 2.2, 6.8),
-        ("Uni3DAR_Process_16_to_4", "Uni-Loom [Uni-3DAR 16→4] (2.45h)", "#5B21B6", "-P", 2.6, 7.8),
-        ("PMF_52h_M1", "Vanilla PropMolFlow @ 52h [M=1, No Loom]", "#94A3B8", "--o", 1.8, 5.8),
-        ("PMF_52h_M8", "PropMolFlow @ 52h + Loom-Critic [M=8]", "#334155", "-o", 2.3, 6.6),
+        ("Uni3DAR_base_M1", f"Uni-Loom [Uni-3DAR, M=1] ({u3d_h:.2f}h)", "#14B8A6", "--s", 1.9, 6.0),
+        ("Uni3DAR_medium_M4", f"Uni-Loom [Uni-3DAR, M=4] ({u3d_h:.2f}h)", "#0F766E", "-^", 2.3, 6.8),
+        ("Uni3DAR_high_M8", f"Uni-Loom [Uni-3DAR, M=8] ({u3d_h:.2f}h)", "#065F46", "-o", 2.7, 7.4),
+        ("PMF_52h_M1", "Vanilla PropMolFlow @ 52h [M=1, No Loom]", "#94A3B8", "--o", 1.8, 5.6),
+        ("PMF_52h_M8", "PropMolFlow @ 52h + Loom-Critic [M=8]", "#334155", "-o", 2.2, 6.4),
         ("PMF_52h_LoomAWR_M8", "Uni-Loom [PMF @ 52.12h + Loom-AWR, M=8]", "#E11D48", "-D", 2.4, 6.4),
     ]
 
-    # Panel A: Latency (GPU-sec per 1,000 proposals)
-    ax0 = axes[0]
-    # Panel B: Blind DPA-4 HOMO MAE (eV)
-    ax1 = axes[1]
-    # Panel C: Blind DPA-4 Synthesizable Clean Hit Yield (%)
-    ax2 = axes[2]
-
+    ax0, ax1, ax2 = axes
     for key, label, color, fmt, lw, ms in series:
         xs_valid: List[int] = []
         lat_1k: List[float] = []
@@ -87,63 +87,64 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
             mae_list.append(float(bmae))
             hit_list.append(float(r["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0)
 
-        ax0.plot(xs_valid, lat_1k, fmt, color=color, lw=lw, ms=ms, label=label)
-        ax1.plot(xs_valid, mae_list, fmt, color=color, lw=lw, ms=ms, label=label)
-        ax2.plot(xs_valid, hit_list, fmt, color=color, lw=lw, ms=ms, label=label)
+        if xs_valid:
+            ax0.plot(xs_valid, lat_1k, fmt, color=color, lw=lw, ms=ms, label=label)
+            ax1.plot(xs_valid, mae_list, fmt, color=color, lw=lw, ms=ms, label=label)
+            ax2.plot(xs_valid, hit_list, fmt, color=color, lw=lw, ms=ms, label=label)
 
     ax0.set_xticks(ns)
     ax0.set_ylim(-40, 1680)
     ax0.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
-    ax0.set_ylabel("End-to-End Latency per 1,000 Proposals (A800 GPU-sec)", fontsize=9.8, fontweight="bold", color="#1E293B")
-    ax0.set_title("A. Inference Latency Scaling: Sparse Octree vs Dense O(N²) ODE", fontsize=10.4, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax0.legend(loc="upper left", fontsize=7.1, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax0.set_ylabel("Measured Latency per 1,000 Prompts (A800 GPU-sec)", fontsize=9.8, fontweight="bold", color="#1E293B")
+    ax0.set_title("A. Inference Latency Scaling: Sparse Octree vs Dense O(N²) ODE", fontsize=10.3, fontweight="bold", color="#1E293B", loc="left", pad=10)
+    ax0.legend(loc="upper left", fontsize=6.9, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
     lat60_pmf = 1000.0 / float(b_map["60"]["arms"]["PMF_52h_M8"]["effective_output_mol_per_sec"])
-    lat60_u16 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_Process_16_to_4"]["effective_output_mol_per_sec"])
-    lat60_u8 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_Process_8_to_4"]["effective_output_mol_per_sec"])
+    lat60_u4 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_medium_M4"]["effective_output_mol_per_sec"])
+    lat60_u8 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_high_M8"]["effective_output_mol_per_sec"])
     ax0.annotate(
-        f"N=60 Speedup:\n{lat60_pmf/lat60_u16:.1f}× faster (16→4)\n{lat60_pmf/lat60_u8:.1f}× faster (8→4)",
-        xy=(60, lat60_u16),
-        xytext=(43.5, 760),
-        fontsize=7.6,
+        f"N=60 Speedup vs PMF M=8:\n{lat60_pmf/lat60_u4:.1f}× faster (M=4)\n{lat60_pmf/lat60_u8:.1f}× faster (M=8)",
+        xy=(60, lat60_u4),
+        xytext=(38.5, 860),
+        fontsize=7.5,
         fontweight="bold",
-        color="#5B21B6",
-        bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#5B21B6", alpha=0.94, lw=0.85),
-        arrowprops=dict(arrowstyle="->", color="#5B21B6", lw=1.0),
+        color="#0F766E",
+        bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#0F766E", alpha=0.94, lw=0.85),
+        arrowprops=dict(arrowstyle="->", color="#0F766E", lw=1.0),
     )
 
     ax1.set_xticks(ns)
-    ax1.set_ylim(0.15, 1.62)
+    ax1.set_ylim(0.15, 1.55)
     ax1.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
     ax1.set_ylabel("Blind DPA-4 HOMO MAE (eV, lower is better)", fontsize=9.8, fontweight="bold", color="#1E293B")
-    ax1.set_title("B. Blind Orbital Accuracy vs Molecular Size", fontsize=10.4, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax1.legend(loc="upper left", fontsize=7.1, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax1.set_title("B. Blind Orbital Accuracy vs Molecular Size", fontsize=10.3, fontweight="bold", color="#1E293B", loc="left", pad=10)
+    ax1.legend(loc="upper left", fontsize=6.9, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
     ax2.set_xticks(ns)
-    ax2.set_ylim(-3, 80)
+    ax2.set_ylim(-3, 82)
     ax2.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
     ax2.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=9.8, fontweight="bold", color="#1E293B")
-    ax2.set_title("C. Synthesizable Clean Hit Yield (SA ≤ 3.5) vs Molecular Size", fontsize=10.4, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax2.legend(loc="upper right", fontsize=7.1, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax2.set_title("C. Synthesizable Clean Hit Yield (SA ≤ 3.5) vs Molecular Size", fontsize=10.3, fontweight="bold", color="#1E293B", loc="left", pad=10)
+    ax2.legend(loc="upper right", fontsize=6.9, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
-    h50_base = float(b_map["50"]["arms"]["PMF_52h_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
     h50_awr = float(b_map["50"]["arms"]["PMF_52h_LoomAWR_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
+    h50_u8 = float(b_map["50"]["arms"]["Uni3DAR_high_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
     ax2.annotate(
-        f"Loom-AWR @ N=50:\n{h50_base:.1f}% → {h50_awr:.1f}% ({h50_awr/max(h50_base,1e-6):.1f}×)",
-        xy=(50, h50_awr),
-        xytext=(38.5, 45.0),
-        fontsize=7.6,
+        f"N=50 Large-Molecule Lead:\nUni-3DAR M=8: {h50_u8:.1f}%\nvs PMF 52h+AWR M=8: {h50_awr:.1f}%",
+        xy=(50, h50_u8),
+        xytext=(31.5, max(48.0, h50_u8 + 8.0)),
+        fontsize=7.5,
         fontweight="bold",
-        color="#E11D48",
-        bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#E11D48", alpha=0.94, lw=0.85),
-        arrowprops=dict(arrowstyle="->", color="#E11D48", lw=1.0),
+        color="#065F46",
+        bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#065F46", alpha=0.94, lw=0.85),
+        arrowprops=dict(arrowstyle="->", color="#065F46", lw=1.0),
     )
 
     fig.text(
         0.5,
         0.01,
         "Controlled Fixed-Size OE62 Benchmark (280 prompts = 7 HOMO quantiles × 40 per exact atom count N ∈ {20, 30, 40, 50, 60}; "
-        "identical N held fixed across all M candidates on single uncontended NVIDIA A800-SXM4-80GB with Fair TF32).",
+        "identical N held fixed across all M ∈ {1, 4, 8} candidates on single uncontended NVIDIA A800-SXM4-80GB with Fair TF32).",
         ha="center",
         fontsize=8.1,
         color="#475569",
