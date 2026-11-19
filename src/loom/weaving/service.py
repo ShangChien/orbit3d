@@ -29,7 +29,7 @@ from rdkit import Chem
 import torch
 
 from .critic_bus import CompositeCriticBus
-from .gp_atlas import HeteroscedasticGPAtlas1D
+from .gp_atlas import HeteroscedasticGPAtlas1D, _gaussian_box_hit_prob
 from .grpo import LoomGRPOTrainer, is_clean_organic_charge_state
 from .rsi import RSIDiagnoser
 from .slots import EFFORT_TO_M, GeneratorSlot, resolve_effort_candidates
@@ -282,13 +282,17 @@ class LoomService:
         batch_size: int = 64,
     ) -> Dict[str, Any]:
         """Evaluate objectives & rule constraints with ZERO `PotentialSlot` (`DPA-4`) and ZERO `AuditOracleSlot` calls."""
+        req_norm: Optional[np.ndarray] = None
+        act_norm: Optional[np.ndarray] = None
+        if requested_targets is not None:
+            req_norm, act_norm = self._normalize_request_shape(requested_targets, active_mask, dtype=np.float64)
         saved_pot = self.critic_bus.potential_slot
         try:
             self.critic_bus.potential_slot = None
             return self.critic_bus.evaluate_molecules(
                 mols,
-                requested_targets=requested_targets,
-                active_mask=active_mask,
+                requested_targets=req_norm,
+                active_mask=act_norm,
                 include_audit=False,
                 for_training=False,
                 batch_size=batch_size,
@@ -351,11 +355,31 @@ class LoomService:
                     u_val = float(c_scores[g_idx]) - 50.0
                 else:
                     tier = 2 if bool(hard_ok[g_idx]) else 1
-                    err_vec = (
-                        np.abs(pred_row - req[i]) + self.uncertainty_penalty_weight * stds[g_idx]
-                    ) / tols
+                    # Closed-form Bayesian box-hit probability under calibrated epistemic uncertainty (anti-Goodhart)
+                    ch_losses = np.zeros(len(tols), dtype=np.float64)
+                    for j_c in range(len(tols)):
+                        if not bool(act_i[j_c]):
+                            continue
+                        mu_j = float(pred_row[j_c])
+                        t_j = float(req[i, j_c])
+                        tol_j = float(tols[j_c])
+                        sd_j = max(float(stds[g_idx, j_c]), 0.48 * tol_j)
+                        p_hit_j = float(
+                            _gaussian_box_hit_prob(
+                                np.array([mu_j], dtype=np.float64),
+                                np.array([t_j], dtype=np.float64),
+                                np.array([sd_j], dtype=np.float64),
+                                tol_j,
+                            )[0]
+                        )
+                        neg_log_p = -math.log(max(p_hit_j, 1e-6))
+                        ch_losses[j_c] = (
+                            neg_log_p
+                            + 0.35 * (abs(mu_j - t_j) / tol_j)
+                            + self.uncertainty_penalty_weight * (sd_j / tol_j)
+                        )
                     denom_w = float(np.sum(weights[act_i])) if act_i.any() else 1.0
-                    norm_loss = float(np.sum(weights[act_i] * err_vec[act_i])) / max(denom_w, 1e-6)
+                    norm_loss = float(np.sum(weights[act_i] * ch_losses[act_i])) / max(denom_w, 1e-6)
                     strain_pen = _analytic_conformer_strain_penalty(mol_k) / 0.25
                     disp_pen = 0.0
                     if mol_k.HasProp("_loom_refiner_disp_rms_A"):
@@ -367,7 +391,7 @@ class LoomService:
                         err_n = abs(float(mol_k.GetNumAtoms()) - float(b_1d[i]))
                         tol_n = max(3.5, 0.10 * float(b_1d[i]))
                         size_pen = (max(0.0, err_n - tol_n) * 0.04 + err_n * 0.012) / 0.25
-                    u_val = -norm_loss + 0.15 * float(c_scores[g_idx]) - strain_pen - disp_pen - size_pen
+                    u_val = -norm_loss + 0.12 * float(c_scores[g_idx]) - strain_pen - disp_pen - size_pen
 
                 if (tier > best_tier) or (tier == best_tier and u_val > best_utility):
                     best_tier = tier
@@ -437,9 +461,9 @@ class LoomService:
             preds_0 = ev["objective_preds"][:, 0]
             ok_0 = leg & np.isfinite(preds_0)
             mae_0 = float(np.mean(np.abs(preds_0[ok_0] - req[ok_0, 0]))) if ok_0.any() else 2.5
-            # Strongly reward >=90% SA/constraint satisfaction + constrained hit yield - surrogate MAE
+            # Enforce >=90% SA/constraint satisfaction without over-tightening into OOD ultra-low-SA motifs
             sa_shortfall = max(0.0, 0.90 - hard_rate)
-            sc = hits + 0.35 * hard_rate - 0.80 * sa_shortfall - 0.35 * mae_0
+            sc = hits + 0.25 * min(hard_rate, 0.94) - 0.90 * sa_shortfall - 0.45 * mae_0
             sweep_logs.append(
                 {
                     "auxiliary_anchors": dict(aux_map),
