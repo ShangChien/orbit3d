@@ -501,7 +501,7 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
         dev_h,
         dev_atom_budget=dev_n,
         calib_effort="medium",
-        sa_anchor_candidates=(1.75, 1.85, 1.95, 2.05, 2.15),
+        sa_anchor_candidates=(1.65, 1.75, 1.85, 1.95, 2.05, 2.15),
         cfg_scale=float(args.cfg_scale),
         high_stage1=int(args.high_stage1),
         seed=2026901,
@@ -696,7 +696,7 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
         dev_h,
         dev_atom_budget=dev_n,
         calib_effort="medium",
-        sa_anchor_candidates=(1.75, 1.85, 1.95, 2.05, 2.15),
+        sa_anchor_candidates=(1.65, 1.75, 1.85, 1.95, 2.05, 2.15),
         cfg_scale=float(args.cfg_scale),
         high_stage1=int(args.high_stage1),
         seed=2026901,
@@ -782,7 +782,7 @@ def run_ablation_m4(args: argparse.Namespace) -> None:
         dev_h,
         dev_atom_budget=dev_n,
         calib_effort="medium",
-        sa_anchor_candidates=(1.75, 1.85, 1.95, 2.05, 2.15),
+        sa_anchor_candidates=(1.65, 1.75, 1.85, 1.95, 2.05, 2.15),
         cfg_scale=float(args.cfg_scale),
         seed=2026901,
     )
@@ -845,10 +845,19 @@ def run_multi_objective_sdl(args: argparse.Namespace) -> None:
     def _read_dft_sdf_2d(sdf_p: Path) -> Tuple[List[Chem.Mol], np.ndarray]:
         ms, ys = [], []
         for m in Chem.SDMolSupplier(str(sdf_p), removeHs=False, sanitize=True):
-            if m is None or not m.HasProp("dft_homo_eV") or not m.HasProp("dft_lumo_eV"):
+            if m is None:
                 continue
-            h_v = float(m.GetProp("dft_homo_eV"))
-            l_v = float(m.GetProp("dft_lumo_eV"))
+            if m.HasProp("DFT_homo") and m.HasProp("DFT_lumo"):
+                h_v = float(m.GetProp("DFT_homo"))
+                l_v = float(m.GetProp("DFT_lumo"))
+            elif m.HasProp("dft_homo_eV") and m.HasProp("dft_lumo_eV"):
+                h_v = float(m.GetProp("dft_homo_eV"))
+                l_v = float(m.GetProp("dft_lumo_eV"))
+            elif m.HasProp("homo") and m.HasProp("lumo"):
+                h_v = float(m.GetProp("homo"))
+                l_v = float(m.GetProp("lumo"))
+            else:
+                continue
             if math.isfinite(h_v) and math.isfinite(l_v):
                 ms.append(m)
                 ys.append([h_v, l_v])

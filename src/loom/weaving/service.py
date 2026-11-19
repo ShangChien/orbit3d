@@ -35,6 +35,60 @@ from .rsi import RSIDiagnoser
 from .slots import EFFORT_TO_M, GeneratorSlot, resolve_effort_candidates
 
 
+_COV_RADII_A: Dict[str, float] = {
+    "H": 0.31,
+    "B": 0.84,
+    "C": 0.76,
+    "N": 0.71,
+    "O": 0.66,
+    "F": 0.57,
+    "Si": 1.11,
+    "P": 1.07,
+    "S": 1.05,
+    "Cl": 1.02,
+    "As": 1.19,
+    "Se": 1.20,
+    "Br": 1.20,
+    "I": 1.39,
+}
+
+
+def _analytic_conformer_strain_penalty(mol: Chem.Mol) -> float:
+    """Fast (`<0.02 ms`) pure-CPU covalent stretch + steric clash penalty (`0` MLIP calls)."""
+    if mol.GetNumConformers() == 0 or mol.GetNumAtoms() < 2:
+        return 0.0
+    pos = mol.GetConformer().GetPositions().astype(np.float64)
+    syms = [a.GetSymbol() for a in mol.GetAtoms()]
+    rcov = np.array([_COV_RADII_A.get(s, 0.77) for s in syms], dtype=np.float64)
+    n = len(syms)
+    dmat = np.linalg.norm(pos[:, None, :] - pos[None, :, :], axis=-1)
+    np.fill_diagonal(dmat, 99.0)
+
+    bonded = np.zeros((n, n), dtype=bool)
+    max_stretch = 0.0
+    sum_sq_stretch = 0.0
+    n_bonds = max(mol.GetNumBonds(), 1)
+    for b in mol.GetBonds():
+        i, j = b.GetBeginAtomIdx(), b.GetEndAtomIdx()
+        bonded[i, j] = bonded[j, i] = True
+        bo = float(b.GetBondTypeAsDouble())
+        shrink = 0.90 if bo >= 2.5 else (0.93 if bo >= 1.8 else (0.96 if bo >= 1.4 else 1.01))
+        d_eq = shrink * (rcov[i] + rcov[j])
+        stretch = abs(float(dmat[i, j]) - d_eq)
+        if stretch > max_stretch:
+            max_stretch = stretch
+        sum_sq_stretch += stretch * stretch
+
+    rms_stretch = math.sqrt(sum_sq_stretch / float(n_bonds))
+    r_sum = rcov[:, None] + rcov[None, :]
+    nonbond = ~bonded
+    np.fill_diagonal(nonbond, False)
+    min_nb_ratio = float((dmat[nonbond] / np.maximum(r_sum[nonbond], 0.5)).min()) if nonbond.any() else 2.0
+    clash_pen = max(0.0, 1.32 - min_nb_ratio) * 0.45
+    stretch_pen = max(0.0, max_stretch - 0.16) * 0.35 + max(0.0, rms_stretch - 0.07) * 0.25
+    return float(clash_pen + stretch_pen)
+
+
 ZONE_TO_SERVICE_STATUS: Dict[str, Dict[str, str]] = {
     "CONVERGED": {
         "epistemic_status": "CONFIDENT",
@@ -218,6 +272,7 @@ class LoomService:
         requested_targets: np.ndarray,
         active_mask: Optional[np.ndarray] = None,
         *,
+        atom_budget: Optional[np.ndarray | Sequence[float]] = None,
         batch_size: int = 64,
     ) -> Tuple[List[Optional[Chem.Mol]], Dict[str, Any]]:
         """Select Top-1 molecule per prompt using outer `CompositeCriticBus` (`0` MLIP calls, `0` audit calls)."""
@@ -238,6 +293,7 @@ class LoomService:
             if active_mask is not None
             else np.ones((bsz, k_obj), dtype=bool)
         )
+        b_1d = np.asarray(atom_budget, dtype=np.float64).reshape(bsz) if atom_budget is not None else None
 
         self._sync_device()
         t_s0 = time.perf_counter()
@@ -278,12 +334,18 @@ class LoomService:
                     ) / tols
                     denom_w = float(np.sum(weights[act_i])) if act_i.any() else 1.0
                     norm_loss = float(np.sum(weights[act_i] * err_vec[act_i])) / max(denom_w, 1e-6)
+                    strain_pen = _analytic_conformer_strain_penalty(mol_k) / 0.25
                     disp_pen = 0.0
                     if mol_k.HasProp("_loom_refiner_disp_rms_A"):
                         disp_rms = float(mol_k.GetDoubleProp("_loom_refiner_disp_rms_A"))
                         if math.isfinite(disp_rms):
-                            disp_pen = self.refiner_disp_penalty_weight * max(0.0, disp_rms - 0.06)
-                    u_val = -norm_loss + 0.20 * float(c_scores[g_idx]) - disp_pen
+                            disp_pen = (self.refiner_disp_penalty_weight * max(0.0, disp_rms - 0.10)) / 0.25
+                    size_pen = 0.0
+                    if b_1d is not None and b_1d[i] > 0:
+                        err_n = abs(float(mol_k.GetNumAtoms()) - float(b_1d[i]))
+                        tol_n = max(3.5, 0.10 * float(b_1d[i]))
+                        size_pen = (max(0.0, err_n - tol_n) * 0.04 + err_n * 0.012) / 0.25
+                    u_val = -norm_loss + 0.15 * float(c_scores[g_idx]) - strain_pen - disp_pen - size_pen
 
                 if (tier > best_tier) or (tier == best_tier and u_val > best_utility):
                     best_tier = tier
@@ -352,7 +414,7 @@ class LoomService:
                 seed=int(seed) + idx_a * 97,
                 **gen_kwargs,
             )
-            sel_mols, _ = self.select_best_of_m(c_grid, req, act)
+            sel_mols, _ = self.select_best_of_m(c_grid, req, act, atom_budget=dev_atom_budget)
             ev = self._evaluate_surrogate_zero_mlip(sel_mols, req, act)
             leg = ev["legal_mask"] & ev["clean_charge_mask"]
             hits = float(np.mean(ev["constrained_clean_hits"])) if bsz > 0 else 0.0
@@ -503,7 +565,9 @@ class LoomService:
         self._sync_device()
         gen_wall = time.perf_counter() - t_g0
 
-        selected_mols, sel_info = self.select_best_of_m(candidates_grid, req, active_mask)
+        selected_mols, sel_info = self.select_best_of_m(
+            candidates_grid, req, active_mask, atom_budget=atom_budget
+        )
         surr_wall = float(sel_info["surrogate_wall_sec"])
         total_wall = gen_wall + surr_wall
         eff_mol_s = float(bsz) / max(total_wall, 1e-6)
