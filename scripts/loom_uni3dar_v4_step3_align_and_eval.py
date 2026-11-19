@@ -1786,79 +1786,6 @@ def run_eval_final(args: argparse.Namespace) -> None:
     refiner.refine_trajectories_batch([tr for g in w_grps for tr in g])
     _sync(device)
 
-    # ---------------- A. Fair Fixed-Prompt `30.4`-Atom Benchmark (`N = 1,792`) ----------------
-    req_30 = build_fair_30atom_prompts(clean_targets, args.oe62_targets_json, per_quantile=256, seed=20261118)
-    n_p30 = len(req_30)
-    arms_30: Dict[str, Any] = {}
-    funnels_30: List[Tuple[str, int, int, int, bool]] = [
-        ("Outcome_M1", 1, 1, 1, False),
-        ("TwoStage_8_to_4_to_1", 8, 4, 1, False),
-        ("TwoStage_8_to_4_to_2", 8, 4, 2, True),
-        ("TwoStage_16_to_6_to_2", 16, 6, 2, True),
-        ("TwoStage_24_to_8_to_2", 24, 8, 2, True),
-        ("TwoStage_32_to_8_to_2", 32, 8, 2, True),
-        ("TwoStage_32_to_8_to_3", 32, 8, 3, True),
-    ]
-    for arm_name, ms1, ms2, mkeep, use_surr in funnels_30:
-        _sync(device)
-        tg0 = time.perf_counter()
-        groups_all: List[List[Dict[str, Any]]] = []
-        p_chunk = 512 if ms1 == 1 else 256
-        for s in range(0, n_p30, p_chunk):
-            e = min(s + p_chunk, n_p30)
-            bt, bm = _encode_homo_sa(req_30[s:e, 0])
-            groups_all.extend(
-                gen.sample_with_two_stage_process_critic(
-                    bt, bm, two_stage_critic, m_stage1=ms1, m_stage2=ms2, m_keep=mkeep,
-                    objective_col_mask=obj_col_mask, stage1_legal_weight=0.80, stage1_constr_weight=0.55,
-                    stage2_legal_weight=1.05, stage2_constr_weight=0.70, coarse_chunk_size=1024,
-                    cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0, cfg_tree_decay=0.20, geometric_guard=True,
-                    temperatures=(0.85, 0.30, 0.25), seed=970000 + ms1 * 409 + ms2 * 61 + mkeep * 7 + s,
-                    use_bf16=True, electron_parity=0, uncond_active_mask=None, leaf_atom_budget=req_30[s:e, 1],
-                )
-            )
-        flat_arm = [tr for g in groups_all for tr in g]
-        refiner.refine_trajectories_batch(flat_arm, batch_size=256)
-        _sync(device)
-        gen_w = time.perf_counter() - tg0
-
-        tr0 = time.perf_counter()
-        p_grid: List[List[Optional[Chem.Mol]]] = [[None] * mkeep for _ in range(n_p30)]
-        p_leg = np.zeros((n_p30, mkeep), dtype=bool)
-        p_exo = np.zeros((n_p30, mkeep), dtype=bool)
-        for i in range(n_p30):
-            for k in range(mkeep):
-                tr = groups_all[i][k]
-                res = reconciler.reconcile_point_cloud(
-                    tr["atom_symbols"],
-                    tr["positions_np"],
-                    potential_slot=None,
-                    bond_order_priors=tr.get("bond_order_probs"),
-                )
-                if res.reconciled_legal and res.mol is not None:
-                    p_grid[i][k] = res.mol
-                    p_leg[i, k] = True
-                    p_exo[i, k] = bool(res.reconciled_exotic_charge)
-        rec_w = time.perf_counter() - tr0
-
-        sel_m, sel_l, sel_x, surr_w = _select_v4_step1_from_pool(
-            p_grid, p_leg, p_exo, req_30, bus_eval, mkeep, use_surrogate=use_surr, device=device
-        )
-        arm_res = _score_oe62_size_cohort(
-            sel_m, sel_l, sel_x, req_30, bus_eval, source_graphs, source_scaffolds, gen_w, rec_w, surr_w,
-            export_sdf_path=(sdf_dir / f"{arm_name}.sdf"),
-        )
-        arm_res["funnel"] = {"m_stage1": ms1, "m_stage2": ms2, "m_keep": mkeep, "use_surrogate": use_surr}
-        arms_30[arm_name] = arm_res
-        print(
-            f"[Step3 FINAL 30-Atom {arm_name}] Eff={arm_res['effective_output_mol_per_sec']:.2f} mol/s | "
-            f"Atoms={arm_res['mean_total_atoms']} (err={arm_res['mean_natoms_abs_err']}) | "
-            f"Legal={arm_res['legal_rate']*100:.1f}% Fmax={arm_res['zero_step_f_max_median_eV_A']:.2f} | "
-            f"BlindSynth={arm_res['blind_dpa4_synthesizable_clean_hits']} ({arm_res['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}%) | "
-            f"BlindMAE={arm_res['audit_mae_eV']:.4f} eV",
-            flush=True,
-        )
-
     synth_sft_gpuh = float((step3_meta.get("synth_sft_metadata") or {}).get("synth_sft_gpuh", 0.0))
     hindsight_gpuh = float(step3_meta.get("hindsight_awr_gpuh", 0.0))
     xyz_gpuh = float((step3_meta.get("xyz_distill_metadata") or {}).get("xyz_distill_gpuh", 0.0))
@@ -1867,65 +1794,51 @@ def run_eval_final(args: argparse.Namespace) -> None:
     crit_gpuh = float(critic_meta.get("rollout_gpuh", 0.0))
     total_gpuh = round(synth_sft_gpuh + hindsight_gpuh + xyz_gpuh + ref_gpuh + grpo_gpuh + crit_gpuh, 4)
 
-    fair_payload = {
-        "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4: Full-SO(3) DPA-4-Equil SFT + Hindsight AWR + Tree-Vine GRPO + Detached XYZ Distill + 4-Layer SE(3) PostTreeGraphRefiner + TwoStage 32->8->2]",
-        "benchmark_seed": 20261118,
-        "n_prompts": n_p30,
-        "mean_requested_atoms": round(float(np.mean(req_30[:, 1])), 2),
-        "total_training_gpuh": total_gpuh,
-        "gpuh_breakdown": {
-            "step3_relaxed_synth_sft_gpuh": round(synth_sft_gpuh, 4),
-            "step3_online_hindsight_awr_gpuh": round(hindsight_gpuh, 4),
-            "step3_vine_grpo_gpuh": round(grpo_gpuh, 4),
-            "step3_detached_xyz_distill_gpuh": round(xyz_gpuh, 4),
-            "step3_onpolicy_refiner_gpuh": round(ref_gpuh, 4),
-            "step3_two_stage_critic_gpuh": round(crit_gpuh, 4),
-        },
-        "zero_leakage_dft_calibration": calib_diag,
-        "dev_prompt_centering": dev_cal,
-        "step3_metadata": step3_meta,
-        "two_stage_critic_meta": critic_meta,
-        "arms": arms_30,
-    }
-    args.fair_output_json.parent.mkdir(parents=True, exist_ok=True)
-    args.fair_output_json.write_text(json.dumps(fair_payload, indent=2) + "\n")
-    print(f"[Step3 Fair 30-Atom SAVED] {args.fair_output_json} (Total GPU-h={total_gpuh})", flush=True)
-
-    # ---------------- B. Multi-Atom-Count Bucket Scaling (`N in {20, 30, 40, 50, 60}`, 280/bucket) ----------------
-    q_points = json.loads(args.oe62_targets_json.read_text())["single_target_points"]["homo"]
-    quantiles = (10, 25, 35, 50, 65, 75, 90)
-    bucket_results: Dict[str, Any] = {}
-    for n_exact in (20, 30, 40, 50, 60):
-        req_b = np.asarray(
-            [(float(q_points[str(q)]), float(n_exact)) for q in quantiles for _ in range(40)], dtype=np.float32
-        )
-        nb = len(req_b)
-        bt, bm = _encode_homo_sa(req_b[:, 0])
-        b_arms: Dict[str, Any] = {}
-        for b_tag, ms1, ms2, mk, use_s in (
-            ("Uni3DAR_v4_M1", 1, 1, 1, False),
-            ("Uni3DAR_v4_TwoStage_16_to_6_to_2", 16, 6, 2, True),
-            ("Uni3DAR_v4_TwoStage_32_to_8_to_2", 32, 8, 2, True),
-        ):
+    # ---------------- A. Fair Fixed-Prompt `30.4`-Atom Benchmark (`N = 1,792`) ----------------
+    if args.eval_part in ("all", "fair30"):
+        req_30 = build_fair_30atom_prompts(clean_targets, args.oe62_targets_json, per_quantile=256, seed=20261118)
+        n_p30 = len(req_30)
+        arms_30: Dict[str, Any] = {}
+        funnels_30: List[Tuple[str, int, int, int, bool]] = [
+            ("Outcome_M1", 1, 1, 1, False),
+            ("TwoStage_8_to_4_to_1", 8, 4, 1, False),
+            ("TwoStage_8_to_4_to_2", 8, 4, 2, True),
+            ("TwoStage_16_to_6_to_2", 16, 6, 2, True),
+            ("TwoStage_24_to_8_to_2", 24, 8, 2, True),
+            ("TwoStage_32_to_8_to_2", 32, 8, 2, True),
+            ("TwoStage_32_to_8_to_3", 32, 8, 3, True),
+            ("TwoStage_32_to_8_to_4", 32, 8, 4, True),
+        ]
+        for arm_name, ms1, ms2, mkeep, use_surr in funnels_30:
             _sync(device)
-            t0 = time.perf_counter()
-            grps = gen.sample_with_two_stage_process_critic(
-                bt, bm, two_stage_critic, m_stage1=ms1, m_stage2=ms2, m_keep=mk,
-                objective_col_mask=obj_col_mask, coarse_chunk_size=1024, cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0,
-                cfg_tree_decay=0.20, geometric_guard=True, seed=72000 + ms1 * 43 + n_exact,
-                use_bf16=True, electron_parity=0, uncond_active_mask=None, leaf_atom_budget=req_b[:, 1],
-            )
-            refiner.refine_trajectories_batch([tr for g in grps for tr in g], batch_size=256)
+            tg0 = time.perf_counter()
+            groups_all: List[List[Dict[str, Any]]] = []
+            p_chunk = 512 if ms1 == 1 else 256
+            for s in range(0, n_p30, p_chunk):
+                e = min(s + p_chunk, n_p30)
+                bt, bm = _encode_homo_sa(req_30[s:e, 0])
+                groups_all.extend(
+                    gen.sample_with_two_stage_process_critic(
+                        bt, bm, two_stage_critic, m_stage1=ms1, m_stage2=ms2, m_keep=mkeep,
+                        objective_col_mask=obj_col_mask, stage1_legal_weight=0.80, stage1_constr_weight=0.55,
+                        stage2_legal_weight=1.05, stage2_constr_weight=0.70, coarse_chunk_size=1024,
+                        cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0, cfg_tree_decay=0.20, geometric_guard=True,
+                        temperatures=(0.85, 0.30, 0.25), seed=970000 + ms1 * 409 + ms2 * 61 + mkeep * 7 + s,
+                        use_bf16=True, electron_parity=0, uncond_active_mask=None, leaf_atom_budget=req_30[s:e, 1],
+                    )
+                )
+            flat_arm = [tr for g in groups_all for tr in g]
+            refiner.refine_trajectories_batch(flat_arm, batch_size=256)
             _sync(device)
-            gw = time.perf_counter() - t0
+            gen_w = time.perf_counter() - tg0
 
-            r0 = time.perf_counter()
-            pg_b: List[List[Optional[Chem.Mol]]] = [[None] * mk for _ in range(nb)]
-            pl_b = np.zeros((nb, mk), dtype=bool)
-            px_b = np.zeros((nb, mk), dtype=bool)
-            for i in range(nb):
-                for k in range(mk):
-                    tr = grps[i][k]
+            tr0 = time.perf_counter()
+            p_grid: List[List[Optional[Chem.Mol]]] = [[None] * mkeep for _ in range(n_p30)]
+            p_leg = np.zeros((n_p30, mkeep), dtype=bool)
+            p_exo = np.zeros((n_p30, mkeep), dtype=bool)
+            for i in range(n_p30):
+                for k in range(mkeep):
+                    tr = groups_all[i][k]
                     res = reconciler.reconcile_point_cloud(
                         tr["atom_symbols"],
                         tr["positions_np"],
@@ -1933,36 +1846,127 @@ def run_eval_final(args: argparse.Namespace) -> None:
                         bond_order_priors=tr.get("bond_order_probs"),
                     )
                     if res.reconciled_legal and res.mol is not None:
-                        pg_b[i][k] = res.mol
-                        pl_b[i, k] = True
-                        px_b[i, k] = bool(res.reconciled_exotic_charge)
-            rw = time.perf_counter() - r0
+                        p_grid[i][k] = res.mol
+                        p_leg[i, k] = True
+                        p_exo[i, k] = bool(res.reconciled_exotic_charge)
+            rec_w = time.perf_counter() - tr0
 
-            sm_b, sl_b, sx_b, sw_b = _select_v4_step1_from_pool(
-                pg_b, pl_b, px_b, req_b, bus_eval, mk, use_surrogate=use_s, device=device
+            sel_m, sel_l, sel_x, surr_w = _select_v4_step1_from_pool(
+                p_grid, p_leg, p_exo, req_30, bus_eval, mkeep, use_surrogate=use_surr, device=device
             )
-            b_res = _score_oe62_size_cohort(
-                sm_b, sl_b, sx_b, req_b, bus_eval, source_graphs, source_scaffolds, gw, rw, sw_b
+            arm_res = _score_oe62_size_cohort(
+                sel_m, sel_l, sel_x, req_30, bus_eval, source_graphs, source_scaffolds, gen_w, rec_w, surr_w,
+                export_sdf_path=(sdf_dir / f"{arm_name}.sdf"),
             )
-            b_arms[b_tag] = b_res
+            arm_res["funnel"] = {"m_stage1": ms1, "m_stage2": ms2, "m_keep": mkeep, "use_surrogate": use_surr}
+            arms_30[arm_name] = arm_res
             print(
-                f"[Step3 Bucket N={n_exact} {b_tag}] Eff={b_res['effective_output_mol_per_sec']:.2f} mol/s | "
-                f"Atoms={b_res['mean_total_atoms']} (err={b_res['mean_natoms_abs_err']}) | "
-                f"Legal={b_res['legal_rate']*100:.1f}% Fmax={b_res['zero_step_f_max_median_eV_A']:.2f} | "
-                f"BlindSynth={b_res['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}% | "
-                f"BlindMAE={b_res['audit_mae_eV']:.4f} eV",
+                f"[Step3 FINAL 30-Atom {arm_name}] Eff={arm_res['effective_output_mol_per_sec']:.2f} mol/s | "
+                f"Atoms={arm_res['mean_total_atoms']} (err={arm_res['mean_natoms_abs_err']}) | "
+                f"Legal={arm_res['legal_rate']*100:.1f}% Fmax={arm_res['zero_step_f_max_median_eV_A']:.2f} | "
+                f"BlindSynth={arm_res['blind_dpa4_synthesizable_clean_hits']} ({arm_res['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}%) | "
+                f"BlindMAE={arm_res['audit_mae_eV']:.4f} eV",
                 flush=True,
             )
-        bucket_results[str(n_exact)] = {"target_n_atoms": n_exact, "n_prompts": nb, "arms": b_arms}
 
-    buckets_payload = {
-        "experiment": "OE62 Controlled Multi-Atom-Count Scaling (N in {20, 30, 40, 50, 60}) — Uni-Loom [Uni-3DAR v4]",
-        "total_training_gpuh": total_gpuh,
-        "buckets": bucket_results,
-    }
-    args.buckets_output_json.parent.mkdir(parents=True, exist_ok=True)
-    args.buckets_output_json.write_text(json.dumps(buckets_payload, indent=2) + "\n")
-    print(f"[Step3 ALL DONE] Wrote {args.buckets_output_json}", flush=True)
+        fair_payload = {
+            "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4: Full-SO(3) DPA-4-Equil SFT + Hindsight AWR + Tree-Vine GRPO + Detached XYZ Distill + 4-Layer SE(3) PostTreeGraphRefiner + Hierarchical L5..L1 Volume Guidance + TwoStage]",
+            "benchmark_seed": 20261118,
+            "n_prompts": n_p30,
+            "mean_requested_atoms": round(float(np.mean(req_30[:, 1])), 2),
+            "total_training_gpuh": total_gpuh,
+            "gpuh_breakdown": {
+                "step3_relaxed_synth_sft_gpuh": round(synth_sft_gpuh, 4),
+                "step3_online_hindsight_awr_gpuh": round(hindsight_gpuh, 4),
+                "step3_vine_grpo_gpuh": round(grpo_gpuh, 4),
+                "step3_detached_xyz_distill_gpuh": round(xyz_gpuh, 4),
+                "step3_onpolicy_refiner_gpuh": round(ref_gpuh, 4),
+                "step3_two_stage_critic_gpuh": round(crit_gpuh, 4),
+            },
+            "zero_leakage_dft_calibration": calib_diag,
+            "dev_prompt_centering": dev_cal,
+            "step3_metadata": step3_meta,
+            "two_stage_critic_meta": critic_meta,
+            "arms": arms_30,
+        }
+        args.fair_output_json.parent.mkdir(parents=True, exist_ok=True)
+        args.fair_output_json.write_text(json.dumps(fair_payload, indent=2) + "\n")
+        print(f"[Step3 Fair 30-Atom SAVED] {args.fair_output_json} (Total GPU-h={total_gpuh})", flush=True)
+
+    # ---------------- B. Multi-Atom-Count Bucket Scaling (`N in {20, 30, 40, 50, 60}`, 280/bucket) ----------------
+    if args.eval_part in ("all", "buckets"):
+        q_points = json.loads(args.oe62_targets_json.read_text())["single_target_points"]["homo"]
+        quantiles = (10, 25, 35, 50, 65, 75, 90)
+        bucket_results: Dict[str, Any] = {}
+        for n_exact in (20, 30, 40, 50, 60):
+            req_b = np.asarray(
+                [(float(q_points[str(q)]), float(n_exact)) for q in quantiles for _ in range(40)], dtype=np.float32
+            )
+            nb = len(req_b)
+            bt, bm = _encode_homo_sa(req_b[:, 0])
+            b_arms: Dict[str, Any] = {}
+            for b_tag, ms1, ms2, mk, use_s in (
+                ("Uni3DAR_v4_M1", 1, 1, 1, False),
+                ("Uni3DAR_v4_TwoStage_16_to_6_to_2", 16, 6, 2, True),
+                ("Uni3DAR_v4_TwoStage_32_to_8_to_2", 32, 8, 2, True),
+                ("Uni3DAR_v4_TwoStage_32_to_8_to_3", 32, 8, 3, True),
+            ):
+                _sync(device)
+                t0 = time.perf_counter()
+                grps = gen.sample_with_two_stage_process_critic(
+                    bt, bm, two_stage_critic, m_stage1=ms1, m_stage2=ms2, m_keep=mk,
+                    objective_col_mask=obj_col_mask, coarse_chunk_size=1024, cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0,
+                    cfg_tree_decay=0.20, geometric_guard=True, seed=72000 + ms1 * 43 + mk * 11 + n_exact,
+                    use_bf16=True, electron_parity=0, uncond_active_mask=None, leaf_atom_budget=req_b[:, 1],
+                )
+                refiner.refine_trajectories_batch([tr for g in grps for tr in g], batch_size=256)
+                _sync(device)
+                gw = time.perf_counter() - t0
+
+                r0 = time.perf_counter()
+                pg_b: List[List[Optional[Chem.Mol]]] = [[None] * mk for _ in range(nb)]
+                pl_b = np.zeros((nb, mk), dtype=bool)
+                px_b = np.zeros((nb, mk), dtype=bool)
+                for i in range(nb):
+                    for k in range(mk):
+                        tr = grps[i][k]
+                        res = reconciler.reconcile_point_cloud(
+                            tr["atom_symbols"],
+                            tr["positions_np"],
+                            potential_slot=None,
+                            bond_order_priors=tr.get("bond_order_probs"),
+                        )
+                        if res.reconciled_legal and res.mol is not None:
+                            pg_b[i][k] = res.mol
+                            pl_b[i, k] = True
+                            px_b[i, k] = bool(res.reconciled_exotic_charge)
+                rw = time.perf_counter() - r0
+
+                sm_b, sl_b, sx_b, sw_b = _select_v4_step1_from_pool(
+                    pg_b, pl_b, px_b, req_b, bus_eval, mk, use_surrogate=use_s, device=device
+                )
+                b_res = _score_oe62_size_cohort(
+                    sm_b, sl_b, sx_b, req_b, bus_eval, source_graphs, source_scaffolds, gw, rw, sw_b
+                )
+                b_arms[b_tag] = b_res
+                print(
+                    f"[Step3 Bucket N={n_exact} {b_tag}] Eff={b_res['effective_output_mol_per_sec']:.2f} mol/s | "
+                    f"Atoms={b_res['mean_total_atoms']} (err={b_res['mean_natoms_abs_err']}) | "
+                    f"Legal={b_res['legal_rate']*100:.1f}% Fmax={b_res['zero_step_f_max_median_eV_A']:.2f} | "
+                    f"BlindSynth={b_res['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}% | "
+                    f"BlindMAE={b_res['audit_mae_eV']:.4f} eV",
+                    flush=True,
+                )
+            bucket_results[str(n_exact)] = {"target_n_atoms": n_exact, "n_prompts": nb, "arms": b_arms}
+
+        buckets_payload = {
+            "experiment": "OE62 Controlled Multi-Atom-Count Scaling (N in {20, 30, 40, 50, 60}) — Uni-Loom [Uni-3DAR v4]",
+            "total_training_gpuh": total_gpuh,
+            "buckets": bucket_results,
+        }
+        args.buckets_output_json.parent.mkdir(parents=True, exist_ok=True)
+        args.buckets_output_json.write_text(json.dumps(buckets_payload, indent=2) + "\n")
+        print(f"[Step3 ALL DONE] Wrote {args.buckets_output_json}", flush=True)
 
 
 def main() -> None:
@@ -2010,6 +2014,7 @@ def main() -> None:
     p.add_argument("--reuse-refiner", action="store_true")
     p.add_argument("--reuse-grpo", action="store_true")
     p.add_argument("--reuse-critic", action="store_true")
+    p.add_argument("--eval-part", choices=["all", "fair30", "buckets"], default="all")
     p.add_argument("--allow-tf32", action="store_true")
     p.add_argument("--work-dir", type=Path, default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs"))
     p.add_argument("--run-name", type=str, default="uni3dar_v4_step3_clean")
