@@ -1895,6 +1895,120 @@ class LoomUni3DARGenerator(GeneratorSlot):
         rem_lvl_cells[:, root_rel] = 1.0
         return rem_lvl_cells
 
+    def _resolve_tight_max_decode_steps(
+        self,
+        max_decode_steps: Optional[int],
+        budget_max_atoms: float = 0.0,
+    ) -> int:
+        """Compute tight upper bound on octree decode steps (`3 * N_max + 48`) when budget is known."""
+        lvl_extra = 8 * max(0, int(self.args.merge_level) - 6)
+        if max_decode_steps is None:
+            if budget_max_atoms > 0.0:
+                return max(96, 3 * int(math.ceil(budget_max_atoms)) + 48 + lvl_extra)
+            return 320 if int(self.args.merge_level) >= 7 else 256
+        base_steps = int(max_decode_steps)
+        if budget_max_atoms > 0.0 and base_steps >= 256:
+            return max(base_steps, 3 * int(math.ceil(budget_max_atoms)) + 48 + lvl_extra)
+        return base_steps
+
+    def _estimate_coarse_chunk_capacity(
+        self,
+        device: torch.device,
+        *,
+        s1_kv_cap: int,
+        use_cfg: bool,
+        use_bf16: bool,
+        coarse_chunk_size: Optional[int],
+    ) -> int:
+        """Dynamically size Stage-1 parallel coarse batch capacity from live GPU free VRAM."""
+        if device.type != "cuda":
+            return int(coarse_chunk_size) if (coarse_chunk_size is not None and coarse_chunk_size > 0) else 1024
+        try:
+            free_bytes, _ = torch.cuda.mem_get_info(device)
+        except Exception:
+            return int(coarse_chunk_size) if (coarse_chunk_size is not None and coarse_chunk_size > 0) else 1024
+        n_layers_tot = max(1, int(self.args.recycle) * int(self.args.layer))
+        cfg_mult = 2 if use_cfg else 1
+        elem_bytes = 2 if use_bf16 else 4
+        emb_d = int(self.args.emb_dim)
+        kv_bytes_per_row = n_layers_tot * 2 * cfg_mult * max(int(s1_kv_cap), 64) * emb_d * elem_bytes
+        bytes_per_row = int(1.45 * kv_bytes_per_row) + 262144
+        vram_cap = max(64, min(4096, int((float(free_bytes) * 0.62) // max(bytes_per_row, 1))))
+        if coarse_chunk_size is not None and int(coarse_chunk_size) > 0:
+            return min(vram_cap, int(coarse_chunk_size))
+        return vram_cap
+
+    def _apply_hierarchical_budget_guidance_masked(
+        self,
+        tree_logits: torch.Tensor,
+        next_level: torch.Tensor,
+        is_pred_tree: torch.Tensor,
+        budget_vec: torch.Tensor,
+        rem_lvl_cells: torch.Tensor,
+        pops_1d: torch.Tensor,
+        leaf_budget_tol: float,
+        guidance_scale: float = 1.0,
+    ) -> torch.Tensor:
+        """Sync-free (`0` `.item()`, `0` `nonzero()`) hierarchical octree volume guidance across `(B, 255)`."""
+        atom_lvl = int(self.backbone.atom_level_index)
+        rel_lvl = next_level - atom_lvl
+        has_b = is_pred_tree & (budget_vec > 0)
+        pops_row = pops_1d.unsqueeze(0)
+        out_logits = tree_logits
+        tol_base = float(leaf_budget_tol)
+        g_scale = float(guidance_scale)
+        n_slots = int(rem_lvl_cells.shape[1])
+
+        level_specs = (
+            (5, 3.00, 6.0, 6.5, 8.5, 0.25 * g_scale, 0.0, 0.25),
+            (4, 1.36, 5.0, 5.5, 7.5, 0.30 * g_scale, 0.0, 0.18),
+            (3, 0.99, 3.4, 3.6, 4.5, 0.35 * g_scale, 0.0, 0.12),
+            (2, 0.99, 2.0, 2.0, 2.5, 0.55, -10.0, 0.0),
+            (1, 0.99, 1.8, 2.0, 2.5, 0.70, -12.0, 0.0),
+        )
+        goal_n = budget_vec.unsqueeze(-1)
+        for rel, div, k_hi, reach_hi, pop_cap, w_q, inf_p, slack_f in level_specs:
+            if rel >= n_slots or (w_q <= 0.0 and inf_p == 0.0):
+                continue
+            mask_l = ((rel_lvl == rel) & has_b).unsqueeze(-1)
+            rem_after = (rem_lvl_cells[:, rel] - 1.0).clamp_min(0.0).unsqueeze(-1)
+            cur_child = rem_lvl_cells[:, rel - 1].unsqueeze(-1)
+            goal_c = (goal_n / float(div)).clamp_min(2.0 if rel >= 4 else 1.0)
+            tol_c = (float(slack_f) * goal_c).clamp_min(tol_base) if slack_f > 0.0 else tol_base
+
+            ideal_k = ((goal_c - cur_child) / (rem_after + 1.0)).clamp(1.0, float(k_hi))
+            delta = -float(w_q) * (pops_row - ideal_k).square()
+            if pop_cap < 8.0:
+                delta = delta - 8.0 * (pops_row > float(pop_cap)).float()
+            if inf_p != 0.0:
+                min_reach = cur_child + pops_row + 1.0 * rem_after
+                max_reach = cur_child + pops_row + float(reach_hi) * rem_after
+                feas = (min_reach <= goal_c + tol_c) & (max_reach >= goal_c - tol_c) & (pops_row <= float(pop_cap))
+                has_feas = feas.any(dim=-1, keepdim=True)
+                pen = torch.where(feas | (~has_feas), torch.zeros_like(delta), torch.full_like(delta, float(inf_p)))
+                delta = delta + pen
+            out_logits = torch.where(mask_l, out_logits + delta, out_logits)
+        return out_logits
+
+    def _update_rem_lvl_cells_masked(
+        self,
+        rem_lvl_cells: torch.Tensor,
+        is_pred_tree: torch.Tensor,
+        next_level: torch.Tensor,
+        chosen_pops: torch.Tensor,
+    ) -> None:
+        """Sync-free (`0` `.item()`, `0` `nonzero()`) per-level remaining-cell update via `scatter_add_`."""
+        atom_lvl = int(self.backbone.atom_level_index)
+        rel_lvl = (next_level - atom_lvl).long()
+        n_slots = int(rem_lvl_cells.shape[1])
+        valid = is_pred_tree & (rel_lvl >= 1) & (rel_lvl < n_slots)
+        v_f = valid.float().unsqueeze(-1)
+        lv_safe = rel_lvl.clamp(1, n_slots - 1).unsqueeze(-1)
+        lv_child = (lv_safe - 1).clamp_min(0)
+        rem_lvl_cells.scatter_add_(1, lv_safe, -1.0 * v_f)
+        rem_lvl_cells.clamp_min_(0.0)
+        rem_lvl_cells.scatter_add_(1, lv_child, chosen_pops.unsqueeze(-1) * v_f)
+
     def _apply_hierarchical_budget_guidance(
         self,
         tree_logits: torch.Tensor,
@@ -1906,65 +2020,20 @@ class LoomUni3DARGenerator(GeneratorSlot):
         leaf_budget_tol: float,
         guidance_scale: float = 1.0,
     ) -> torch.Tensor:
-        """Physics-exact hierarchical octree volume guidance (`L5 -> L4 -> L3 -> L2 -> L1`).
-
-        Tracks empirical equilibrium organic voxel occupancies (`N/L4 ~= 3.10`, `N/L3 ~= 1.40`,
-        `N/L2 ~= 1.01`, `N/L1 = 1.00`) so large targets (`N = 40..60`) expand cleanly in coarse
-        `7.68/3.84/1.92 A` envelopes while keeping `0.96/0.48 A` cells strictly steric-safe (`<= 2`).
-        Only shifts cardinality (`popcount`) priors, leaving relative 3D spatial octant logits untouched.
-        """
-        atom_lvl = int(self.backbone.atom_level_index)
-        rel_lvl = tree_lvl - atom_lvl
-        has_b = budget_vec[tree_rows_idx] > 0
-        if not bool(has_b.any().item()):
-            return tree_logits
-
-        pops_row = pops_1d.unsqueeze(0)
-        out_logits = tree_logits.clone()
-        tol_base = float(leaf_budget_tol)
-        g_scale = float(guidance_scale)
-        n_slots = int(rem_lvl_cells.shape[1])
-
-        # (rel_lvl, divisor, k_hi_ideal, reach_hi, pop_cap, w_quad, infeas_pen, slack_frac)
-        # Note: Remove `rel == 6` (centered N=20..30 molecules naturally span 6..8 L5 octants).
-        # Coarse `L5..L3` use gentle soft quadratic guidance (`w_q * g_scale`, ZERO hard `infeas_pen`)
-        # so large targets expand cleanly without distorting N=20..30; fine `L2/L1` ALWAYS enforce
-        # full-strength (`1.0`) steric-safe leaf conservation (`pops <= 2`, `1` preferred).
-        level_specs = (
-            (5, 3.00, 6.0, 6.5, 8.5, 0.25 * g_scale, 0.0, 0.25),
-            (4, 1.36, 5.0, 5.5, 7.5, 0.30 * g_scale, 0.0, 0.18),
-            (3, 0.99, 3.4, 3.6, 4.5, 0.35 * g_scale, 0.0, 0.12),
-            (2, 0.99, 2.0, 2.0, 2.5, 0.55, -10.0, 0.0),
-            (1, 0.99, 1.8, 2.0, 2.5, 0.70, -12.0, 0.0),
+        """Physics-exact hierarchical octree volume guidance (`L5 -> L4 -> L3 -> L2 -> L1`)."""
+        sub_rem = rem_lvl_cells.index_select(0, tree_rows_idx)
+        sub_b = budget_vec.index_select(0, tree_rows_idx)
+        all_true = torch.ones_like(tree_lvl, dtype=torch.bool)
+        return self._apply_hierarchical_budget_guidance_masked(
+            tree_logits,
+            tree_lvl,
+            all_true,
+            sub_b,
+            sub_rem,
+            pops_1d,
+            leaf_budget_tol,
+            guidance_scale=guidance_scale,
         )
-        for rel, div, k_hi, reach_hi, pop_cap, w_q, inf_p, slack_f in level_specs:
-            if rel >= n_slots or (w_q <= 0.0 and inf_p == 0.0):
-                continue
-            mask_l = (rel_lvl == rel) & has_b
-            if not bool(mask_l.any().item()):
-                continue
-            r_idx = tree_rows_idx[mask_l]
-            rem_after = (rem_lvl_cells[r_idx, rel] - 1.0).clamp_min(0.0).unsqueeze(-1)
-            cur_child = rem_lvl_cells[r_idx, rel - 1].unsqueeze(-1)
-            goal_n = budget_vec[r_idx].unsqueeze(-1)
-            goal_c = (goal_n / float(div)).clamp_min(2.0 if rel >= 4 else 1.0)
-            tol_c = (float(slack_f) * goal_c).clamp_min(tol_base) if slack_f > 0.0 else tol_base
-
-            ideal_k = ((goal_c - cur_child) / (rem_after + 1.0)).clamp(1.0, float(k_hi))
-            prior = -float(w_q) * (pops_row - ideal_k).square()
-            if pop_cap < 8.0:
-                prior = prior - 8.0 * (pops_row > float(pop_cap)).float()
-
-            if inf_p != 0.0:
-                min_reach = cur_child + pops_row + 1.0 * rem_after
-                max_reach = cur_child + pops_row + float(reach_hi) * rem_after
-                feas = (min_reach <= goal_c + tol_c) & (max_reach >= goal_c - tol_c) & (pops_row <= float(pop_cap))
-                has_feas = feas.any(dim=-1, keepdim=True)
-                pen = torch.where(feas | (~has_feas), torch.zeros_like(prior), torch.full_like(prior, float(inf_p)))
-                out_logits[mask_l] = out_logits[mask_l] + prior + pen
-            else:
-                out_logits[mask_l] = out_logits[mask_l] + prior
-        return out_logits
 
     def _update_rem_lvl_cells(
         self,
@@ -1977,8 +2046,6 @@ class LoomUni3DARGenerator(GeneratorSlot):
         rel_lvl = (tree_lvl - atom_lvl).long()
         n_slots = int(rem_lvl_cells.shape[1])
         valid = (rel_lvl >= 1) & (rel_lvl < n_slots)
-        if not bool(valid.any().item()):
-            return
         r_v = tree_rows_all[valid]
         lv_v = rel_lvl[valid]
         p_v = chosen_pops[valid]
@@ -1999,7 +2066,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         seed: Optional[int] = None,
         use_bf16: bool = True,
         electron_parity: Optional[int] = 0,
-        max_decode_steps: int = 256,
+        max_decode_steps: Optional[int] = None,
         uncond_active_mask: Optional[torch.Tensor] = None,
         return_coarse_summary: bool = False,
         return_two_stage_summary: bool = False,
@@ -2058,17 +2125,19 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
             budget_vec: Optional[torch.Tensor] = None
             orig_budget_list: Optional[List[float]] = None
+            b_max_val = 0.0
             if leaf_atom_budget is not None:
                 budget_vec = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device).view(batch_size)
                 orig_budget_list = budget_vec.detach().cpu().tolist()
-                if (self.scale_free_count_head is not None or self.budget_emb is not None) and budget_vec.numel() > 0:
-                    max_decode_steps = max(int(max_decode_steps), 3 * int(budget_vec.max().item()) + 64)
+                b_max_val = max((float(v) for v in orig_budget_list if math.isfinite(float(v)) and float(v) > 0.0), default=0.0)
+            eff_max_steps = self._resolve_tight_max_decode_steps(max_decode_steps, b_max_val)
+            max_decode_steps = eff_max_steps
             pops_1d = _split_popcount_table(str(device))
 
             autocast_enabled = bool(use_bf16 and device.type == "cuda")
             run_dtype = torch.bfloat16 if autocast_enabled else torch.float32
             p_len = self.conditioner.num_prefix_tokens
-            kv_init_cap = max(64, 2 * int(max_decode_steps) + p_len + 16)
+            kv_init_cap = max(64, 2 * int(eff_max_steps) + p_len + 16)
 
             with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=autocast_enabled):
                 global_c, has_any = self.conditioner.encode_condition(targets_norm, active_mask)
@@ -3457,44 +3526,48 @@ class LoomUni3DARGenerator(GeneratorSlot):
         pred_xyz: Optional[torch.Tensor],
         score_vals: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        """Vectorized per-row column write into `(B, T, ...)` buffers for active rows only."""
-        act_idx = torch.nonzero(active_mask_1d, as_tuple=False).squeeze(-1)
-        if act_idx.numel() == 0:
-            return row_cols
-        cols = row_cols[act_idx]
-        nf = next_feat[act_idx]
-        npos = nf[:, :3]
-        nlvl = nf[:, IDX_LEVEL]
+        """Pure-GPU sync-free (`0` `nonzero()`, `0` `.item()`) per-row column write via `gather/scatter_`."""
+        bsz = int(next_feat.shape[0])
+        max_t = int(dec_feat_buf.shape[1])
+        safe_cols = row_cols.clamp(0, max_t - 1)
+        npos = next_feat[:, :3]
+        nlvl = next_feat[:, IDX_LEVEL]
         edge_len = (1 << nlvl.clamp_min(0)).view(-1, 1)
 
-        slot_f = torch.zeros((act_idx.numel(), NUM_FEAT), dtype=torch.int32, device=next_feat.device)
+        slot_f = torch.zeros((bsz, NUM_FEAT), dtype=torch.int32, device=next_feat.device)
         slot_f[:, :3] = self.backbone.xyz_null_id
-        slot_f[:, IDX_TYPE] = pred_type[act_idx]
+        slot_f[:, IDX_TYPE] = pred_type
         slot_f[:, IDX_LEVEL] = nlvl
-        slot_f[:, IDX_TREE] = nf[:, IDX_TREE]
-        slot_f[:, IDX_SPACE] = nf[:, IDX_SPACE]
-        slot_f[:, IDX_CNT] = pred_count[act_idx] if pred_count is not None else -1
+        slot_f[:, IDX_TREE] = next_feat[:, IDX_TREE]
+        slot_f[:, IDX_SPACE] = next_feat[:, IDX_SPACE]
+        slot_f[:, IDX_CNT] = pred_count if pred_count is not None else -1
 
         npos_f = npos.float()
         cur_phy = (npos_f + edge_len.float() * 0.5) * float(self.args.grid_len)
         if pred_xyz is not None:
-            px = pred_xyz[act_idx]
             is_atom_lvl = nlvl == self.backbone.atom_level_index
-            atom_pos = npos_f * float(self.args.grid_len) + px.float() * float(self.args.xyz_resolution)
+            atom_pos = npos_f * float(self.args.grid_len) + pred_xyz.float() * float(self.args.xyz_resolution)
             cur_phy = torch.where(is_atom_lvl.unsqueeze(-1), atom_pos, cur_phy)
-            slot_f[:, :3] = torch.where(is_atom_lvl.unsqueeze(-1), px, slot_f[:, :3])
+            slot_f[:, :3] = torch.where(is_atom_lvl.unsqueeze(-1), pred_xyz, slot_f[:, :3])
 
         is_eot = nlvl == (self.backbone.atom_level_index - 1)
         cls_p = float(self.backbone.get_cls_phy_pos(self.args.merge_level))
         cur_phy = torch.where(is_eot.unsqueeze(-1), torch.full_like(cur_phy, cls_p), cur_phy)
+        cur_sc = score_vals if score_vals is not None else torch.zeros((bsz,), dtype=torch.float32, device=next_feat.device)
 
-        dec_feat_buf[act_idx, cols] = slot_f
-        dec_pos_buf[act_idx, cols] = cur_phy
-        scores_buf[act_idx, cols] = score_vals[act_idx] if score_vals is not None else 0.0
+        idx_f = safe_cols.view(-1, 1, 1).expand(-1, 1, NUM_FEAT)
+        old_f = dec_feat_buf.gather(1, idx_f).squeeze(1)
+        dec_feat_buf.scatter_(1, idx_f, torch.where(active_mask_1d.unsqueeze(-1), slot_f, old_f).unsqueeze(1))
 
-        new_cols = row_cols.clone()
-        new_cols[act_idx] = cols + 1
-        return new_cols
+        idx_p = safe_cols.view(-1, 1, 1).expand(-1, 1, 3)
+        old_p = dec_pos_buf.gather(1, idx_p).squeeze(1)
+        dec_pos_buf.scatter_(1, idx_p, torch.where(active_mask_1d.unsqueeze(-1), cur_phy, old_p).unsqueeze(1))
+
+        idx_s = safe_cols.view(-1, 1)
+        old_s = scores_buf.gather(1, idx_s).squeeze(1)
+        scores_buf.scatter_(1, idx_s, torch.where(active_mask_1d, cur_sc, old_s).unsqueeze(1))
+
+        return torch.where(active_mask_1d, row_cols + 1, row_cols)
 
     @torch.no_grad()
     def _run_two_stage_chunk(
@@ -3529,16 +3602,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
         apply_leaf_slot_prior: bool = True,
         stage2_diversity_weight: float = 0.0,
         budget_guidance_scale: float = 1.0,
+        s1_kv_step_est: Optional[int] = None,
     ) -> List[List[Dict[str, Any]]]:
         """Vectorized GPU pause-and-gather two-stage (`m_stage1 -> m_stage2 -> m_keep`) octree decoding.
 
-        Eliminates all per-row Python `.clone()` KV loops:
+        Eliminates all per-row Python `.clone()` KV loops and per-step host-device sync bubbles:
         1. Stage 1 runs all `B1 = n_p_sub * m_stage1` coarse prefixes (`level >= 1`) in-place with
-           masked wait steps (`kv_valid_buf`), then scores with `stage1_critic` and gathers ONLY the
-           `B2 = n_p_sub * m_stage2` winning KV rows via a single `index_select` per layer.
-        2. Stage 2 decodes `level == 0` leaves on the `B2` survivors, computes SO(3)-invariant 3D
-           element-cloud features + `stage2_critic` utilities on GPU, and returns ONLY the `m_keep`
-           top trajectories per prompt.
+           masked wait steps (`kv_valid_s1`), checking completion every 4 steps (`0` per-step `.item()`
+           or `nonzero()` stalls), then scores with `stage1_critic` and gathers ONLY the `B2 = n_p_sub * m_stage2`
+           winning KV rows via a single `index_select` per layer.
+        2. Stage 2 decodes `level == 0` leaves on the `B2` survivors using direct stride-2 atom slicing
+           and periodic 6-step compaction, computes SO(3)-invariant 3D element-cloud features +
+           `stage2_critic` utilities on GPU, and returns ONLY the `m_keep` top trajectories per prompt.
         """
         from .octree_process_critic import compute_coarse_voxel_geometry, compute_element_cloud_features
 
@@ -3562,7 +3637,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         autocast_enabled = bool(use_bf16 and device.type == "cuda")
         run_dtype = torch.bfloat16 if autocast_enabled else torch.float32
         p_len = self.conditioner.num_prefix_tokens
-        kv_s1_cap = max(128, 2 * int(max_decode_steps) + p_len + 32)
+        s1_steps_cap = int(s1_kv_step_est) if (s1_kv_step_est is not None and s1_kv_step_est > 0) else int(max_decode_steps)
+        kv_s1_cap = max(128, 2 * s1_steps_cap + p_len + 32)
         b1_cfg = (2 * b1) if use_cfg else b1
         emb_dim = int(self.args.emb_dim)
         h_id_val = int(self.dictionary["H"])
@@ -3607,7 +3683,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             init_dec_feat, init_dec_pos, init_raw_feat = self.backbone.calc_root_level(
                 self.args.merge_level, b1, device, 0, 0
             )
-            dec_cap_s1 = 2 * int(max_decode_steps) + 16
+            dec_cap_s1 = 2 * int(max_decode_steps) + 32
             dec_feat_s1 = torch.zeros((b1, dec_cap_s1, NUM_FEAT), dtype=torch.int32, device=device)
             dec_pos_s1 = torch.zeros((b1, dec_cap_s1, 3), dtype=torch.float32, device=device)
             scores_s1 = torch.zeros((b1, dec_cap_s1), dtype=torch.float32, device=device)
@@ -3669,7 +3745,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             step_idx = 0
             cur_kv_len = 0
 
-            # ---------------- Stage 1: Coarse (`level >= 1`) Paused Batch Loop ----------------
+            # ---------------- Stage 1: Sync-Free Coarse (`level >= 1`) Paused Batch Loop ----------------
             while True:
                 active = ~paused
                 step_emb = self._embed_decoder_input(cur_input)
@@ -3695,6 +3771,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         x_run = emb_cond
                         grid_run = step_grid
                     n_q = int(x_run.shape[1])
+                    if cur_kv_len + n_q > int(kv_valid_s1.shape[1]):
+                        kv_valid_s1 = torch.cat([kv_valid_s1, torch.ones_like(kv_valid_s1)], dim=1)
                     kv_valid_s1[:, :n_q] = True
                     cur_kv_len = n_q
                     prebuilt_s1: Optional[torch.Tensor] = None
@@ -3708,15 +3786,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         grid_run = step_grid
                         act_cfg = active
                     n_q = int(x_run.shape[1])  # 2
+                    if cur_kv_len + n_q > int(kv_valid_s1.shape[1]):
+                        kv_valid_s1 = torch.cat([kv_valid_s1, torch.ones_like(kv_valid_s1)], dim=1)
                     kv_valid_s1[:, cur_kv_len : cur_kv_len + n_q] = act_cfg.unsqueeze(1)
                     cur_kv_len += n_q
-                    if bool(paused.any().item()):
-                        kv_sl = kv_valid_s1[:, :cur_kv_len]
-                        m0 = kv_sl.clone()
-                        m0[:, -1] = False
-                        prebuilt_s1 = torch.stack([m0, kv_sl], dim=1).unsqueeze(1)
-                    else:
-                        prebuilt_s1 = None
+                    kv_sl = kv_valid_s1[:, :cur_kv_len]
+                    m0 = kv_sl.clone()
+                    m0[:, -1] = False
+                    prebuilt_s1 = torch.stack([m0, kv_sl], dim=1).unsqueeze(1)
 
                 self.backbone.rope.calc_and_cache(grid_run)
                 for r_i in range(self.args.recycle):
@@ -3757,41 +3834,36 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 is_pred_tree = need_pred & (next_level > self.backbone.atom_level_index)
                 is_first_cnt = active & (last_level == self.args.merge_level) & (last_type == self.backbone.atom_mask_id)
 
+                hid_f = dec_y_last.float()
                 if step_idx == 1:
-                    cs_h_root.copy_(dec_y_last.float())
-                has_tree = bool(is_pred_tree.any().item())
-                if has_tree:
-                    t_hid = dec_y_last[is_pred_tree].float()
-                    cs_h_coarse_sum[is_pred_tree] += t_hid
-                    cs_h_coarse_cnt[is_pred_tree] += 1.0
-                    is_l1 = is_pred_tree & (next_level == (self.backbone.atom_level_index + 1))
-                    if bool(is_l1.any().item()):
-                        l1_hid = dec_y_last[is_l1].float()
-                        cs_h_l1_sum[is_l1] += l1_hid
-                        cs_h_l1_cnt[is_l1] += 1.0
-                        cs_h_l1_last[is_l1] = l1_hid
+                    cs_h_root.copy_(hid_f)
+                m_tree_f = is_pred_tree.unsqueeze(-1).float()
+                cs_h_coarse_sum.add_(hid_f * m_tree_f)
+                cs_h_coarse_cnt.add_(m_tree_f)
+                is_l1 = is_pred_tree & (next_level == (self.backbone.atom_level_index + 1))
+                m_l1_f = is_l1.unsqueeze(-1).float()
+                cs_h_l1_sum.add_(hid_f * m_l1_f)
+                cs_h_l1_cnt.add_(m_l1_f)
+                cs_h_l1_last = torch.where(is_l1.unsqueeze(-1), hid_f, cs_h_l1_last)
 
                 pred_type = next_type.clone()
                 pred_count = torch.zeros((b1,), dtype=torch.int32, device=device)
                 score_temp = torch.zeros((b1,), dtype=torch.float32, device=device)
 
-                if has_tree:
-                    tree_c = self.backbone.tree_heads[0](dec_y_last[is_pred_tree]).float()
-                    tree_lvl = next_level[is_pred_tree]
-                    if dec_u_last is not None and cfg_scale != 1.0:
-                        tree_u = self.backbone.tree_heads[0](dec_u_last[is_pred_tree]).float()
-                        if cfg_tree_decay != 0.0:
-                            decay_mult = 1.0 - float(cfg_tree_decay) * ((3.0 - tree_lvl.float()).clamp(0.0, 2.0) / 2.0)
-                            eff_cfg = (1.0 + (cfg_scale - 1.0) * decay_mult).unsqueeze(-1)
-                            tree_logits = tree_u + eff_cfg * (tree_c - tree_u)
+                if use_exact_cnt and budget_vec is not None:
+                    if bool(is_pred_tree.any().item()):
+                        tree_c = self.backbone.tree_heads[0](dec_y_last[is_pred_tree]).float()
+                        tree_lvl = next_level[is_pred_tree]
+                        if dec_u_last is not None and cfg_scale != 1.0:
+                            tree_u = self.backbone.tree_heads[0](dec_u_last[is_pred_tree]).float()
+                            if cfg_tree_decay != 0.0:
+                                decay_mult = 1.0 - float(cfg_tree_decay) * ((3.0 - tree_lvl.float()).clamp(0.0, 2.0) / 2.0)
+                                eff_cfg = (1.0 + (cfg_scale - 1.0) * decay_mult).unsqueeze(-1)
+                                tree_logits = tree_u + eff_cfg * (tree_c - tree_u)
+                            else:
+                                tree_logits = tree_u + cfg_scale * (tree_c - tree_u)
                         else:
-                            tree_logits = tree_u + cfg_scale * (tree_c - tree_u)
-                    else:
-                        tree_logits = tree_c
-
-                    exact_c_alloc_s1: Optional[torch.Tensor] = None
-                    exact_has_b_s1: Optional[torch.Tensor] = None
-                    if use_exact_cnt and budget_vec is not None:
+                            tree_logits = tree_c
                         tree_logits, exact_c_alloc_s1, exact_has_b_s1 = self._apply_exact_tree_conservation(
                             dec_y_last[is_pred_tree],
                             tree_logits,
@@ -3801,27 +3873,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
                             budget_vec[is_pred_tree],
                             pops_1d,
                         )
-                    elif budget_vec is not None and apply_leaf_slot_prior:
-                        tree_rows_idx = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
-                        tree_logits = self._apply_hierarchical_budget_guidance(
-                            tree_logits,
-                            tree_lvl,
-                            tree_rows_idx,
-                            budget_vec,
-                            rem_lvl_cells,
-                            pops_1d,
-                            leaf_budget_tol,
-                            guidance_scale=budget_guidance_scale,
-                        )
-
-                    t_pred, t_sc = _gpu_multinomial_sample(tree_logits, tree_temp, rng_gen)
-                    if budget_vec is not None:
+                        t_pred, t_sc = _gpu_multinomial_sample(tree_logits, tree_temp, rng_gen)
                         tree_rows_all = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
                         self._update_rem_lvl_cells(rem_lvl_cells, tree_rows_all, tree_lvl, pops_1d[t_pred])
-
-                    pred_type[is_pred_tree] = t_pred.int() + self.backbone.tree0_split_id + 1
-                    score_temp[is_pred_tree] = score_temp[is_pred_tree] + t_sc
-                    if exact_c_alloc_s1 is not None and exact_has_b_s1 is not None:
+                        pred_type[is_pred_tree] = t_pred.int() + self.backbone.tree0_split_id + 1
+                        score_temp[is_pred_tree] = score_temp[is_pred_tree] + t_sc
                         is_l1_cnt_s1 = tree_lvl == (self.backbone.atom_level_index + 1)
                         chosen_cnt_s1 = torch.where(
                             is_l1_cnt_s1, pops_1d[t_pred].round().to(torch.int32), exact_c_alloc_s1
@@ -3829,16 +3885,51 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         pred_count[is_pred_tree] = torch.where(
                             exact_has_b_s1, chosen_cnt_s1, pred_count[is_pred_tree]
                         )
+                else:
+                    tree_c_all = self.backbone.tree_heads[0](dec_y_last).float()
+                    if dec_u_last is not None and cfg_scale != 1.0:
+                        tree_u_all = self.backbone.tree_heads[0](dec_u_last).float()
+                        if cfg_tree_decay != 0.0:
+                            decay_mult = 1.0 - float(cfg_tree_decay) * ((3.0 - next_level.float()).clamp(0.0, 2.0) / 2.0)
+                            eff_cfg = (1.0 + (cfg_scale - 1.0) * decay_mult).unsqueeze(-1)
+                            tree_logits_all = tree_u_all + eff_cfg * (tree_c_all - tree_u_all)
+                        else:
+                            tree_logits_all = tree_u_all + cfg_scale * (tree_c_all - tree_u_all)
+                    else:
+                        tree_logits_all = tree_c_all
+
+                    if budget_vec is not None and apply_leaf_slot_prior:
+                        tree_logits_all = self._apply_hierarchical_budget_guidance_masked(
+                            tree_logits_all,
+                            next_level,
+                            is_pred_tree,
+                            budget_vec,
+                            rem_lvl_cells,
+                            pops_1d,
+                            leaf_budget_tol,
+                            guidance_scale=budget_guidance_scale,
+                        )
+
+                    t_pred_all, t_sc_all = _gpu_multinomial_sample(tree_logits_all, tree_temp, rng_gen)
+                    if budget_vec is not None:
+                        self._update_rem_lvl_cells_masked(
+                            rem_lvl_cells, is_pred_tree, next_level, pops_1d[t_pred_all.long()]
+                        )
+
+                    pred_type = torch.where(
+                        is_pred_tree, t_pred_all.int() + self.backbone.tree0_split_id + 1, pred_type
+                    )
+                    score_temp = torch.where(is_pred_tree, score_temp + t_sc_all, score_temp)
 
                 if not self.non_trapping_budget:
                     count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
-                if has_tree:
-                    cur_type_masked = torch.where(
-                        active, last_type, torch.full_like(last_type, self.backbone.atom_null_id)
-                    )
-                    q_buf, q_tail, q_cap, count_vars = self._fast_tree_expand_gpu(
-                        q_buf, q_tail, q_cap, cur_type_masked, pred_type, next_feat, count_vars, step_idx
-                    )
+
+                cur_type_masked = torch.where(
+                    is_pred_tree, last_type, torch.full_like(last_type, self.backbone.atom_null_id)
+                )
+                q_buf, q_tail, q_cap, count_vars = self._fast_tree_expand_gpu(
+                    q_buf, q_tail, q_cap, cur_type_masked, pred_type, next_feat, count_vars, step_idx
+                )
 
                 row_dec_len = self._write_feat_at_cols_masked(
                     active, row_dec_len, next_feat, dec_feat_s1, dec_pos_s1, scores_s1, pred_type, pred_count, None, score_temp
@@ -3855,8 +3946,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 )
                 empty_coarse = empty_coarse | (newly_done & (q_empty | force_stop))
                 paused = paused | newly_done
-                if bool(paused.all().item()):
-                    break
+                if force_stop or (step_idx >= 12 and (step_idx % 4 == 0)):
+                    if bool(paused.all().item()):
+                        break
 
                 still_active = ~paused
                 next_feat_m = peek_feat
@@ -3908,6 +4000,18 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     cur_is_cls, torch.zeros_like(cur_input.remaining_tokens), cur_input.remaining_tokens
                 ).clamp_(min=0)
                 cur_input.count = torch.where(cur_is_cls, torch.zeros_like(cur_input.count), cur_input.count)
+
+            # Trim any trailing all-paused KV wait columns once at end of Stage 1
+            valid_kv_cols = kv_valid_s1[:, :cur_kv_len].any(dim=0)
+            nz_cols = torch.nonzero(valid_kv_cols, as_tuple=False)
+            if nz_cols.numel() > 0:
+                eff_kv_len = int(nz_cols[-1].item()) + 1
+                if eff_kv_len < cur_kv_len:
+                    cur_kv_len = eff_kv_len
+                    for r_i in range(self.args.recycle):
+                        for l_i in range(self.args.layer):
+                            kv_s1[r_i][l_i]["k"] = kv_s1[r_i][l_i]["k_buffer"][:, :, :cur_kv_len, :]
+                            kv_s1[r_i][l_i]["v"] = kv_s1[r_i][l_i]["v_buffer"][:, :, :cur_kv_len, :]
 
             # ---------------- Stage 1 Scoring & Pruning (`m_stage1 -> m_stage2`) ----------------
             c_mean_s1 = cs_h_coarse_sum / cs_h_coarse_cnt.clamp_min(1.0)
@@ -4144,7 +4248,13 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 cur_input.count = torch.where(cur_is_cls, torch.zeros_like(cur_input.count), cur_input.count)
 
                 kv_len_s2 = cur_kv_len
+                finished_s2 = torch.zeros((b_active,), dtype=torch.bool, device=device)
+                done_dec_len = torch.zeros((b_active,), dtype=torch.long, device=device)
+                s2_step = 0
+                ahead = self.backbone.atom_heads[0]
+
                 while b_active > 0:
+                    s2_step += 1
                     step_emb = self._embed_decoder_input(cur_input)
                     step_grid = cur_input.phy_pos.float() / self.args.xyz_resolution
                     if use_cfg:
@@ -4157,6 +4267,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     kv_len_s2 += int(x_run.shape[1])
                     if kv_valid_opt is not None:
                         b_cfg_cur = int(x_run.shape[0])
+                        if kv_len_s2 > int(kv_valid_opt.shape[1]):
+                            kv_valid_opt = torch.cat([kv_valid_opt, torch.ones_like(kv_valid_opt)], dim=1)
                         kv_m_cur = kv_valid_opt[:b_cfg_cur, :kv_len_s2]
                         m0 = kv_m_cur.clone()
                         m0[:, -1] = False
@@ -4187,144 +4299,140 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         dec_y_last = last_hidden
                         dec_u_last = None
 
-                    step_vec = step_vec + 1
+                    active_row = ~finished_s2
+                    step_vec = torch.where(active_row, step_vec + 1, step_vec)
                     last_level = cur_input.level[:, -1]
                     last_type = cur_input.type[:, -1]
                     last_rem_atoms = cur_input.remaining_atoms[:, -1]
                     last_rem_tokens = cur_input.remaining_tokens[:, -1]
 
                     row_ar = torch.arange(b_active, device=device)
-                    next_feat = q_buf_s2[row_ar, q_head_s2]
-                    q_head_s2 = q_head_s2 + 1
+                    next_feat = q_buf_s2[row_ar, q_head_s2.clamp_max(q_cap)]
+                    q_head_s2 = torch.where(active_row, q_head_s2 + 1, q_head_s2)
 
                     next_type = next_feat[:, IDX_TYPE]
                     need_pred = next_type < 0
-                    is_pred_atom = (
-                        (last_level == self.backbone.atom_level_index)
+                    active_atom = (
+                        active_row
+                        & (last_level == self.backbone.atom_level_index)
                         & (last_type == self.backbone.atom_mask_id)
                         & need_pred
                     )
 
-                    pred_type = next_type.clone()
-                    pred_count = torch.zeros((b_active,), dtype=torch.int32, device=device)
-                    pred_xyz = torch.full((b_active, 3), self.backbone.xyz_null_id, dtype=torch.int32, device=device)
-                    score_temp = torch.zeros((b_active,), dtype=torch.float32, device=device)
+                    # Sync-free Stage-2 atom + XYZ decoding using stride-2 placed-atom slice (`max_dec_0 + 1 : dec_len : 2`)
+                    feat_c = dec_y_last
+                    feat_u = dec_u_last
+                    raw_atom_hid = feat_c.float()
+                    sub_xyz = torch.zeros((b_active, 4), dtype=torch.int32, device=device)
+                    sub_sc = torch.zeros((b_active,), dtype=torch.float32, device=device)
 
-                    if bool(is_pred_atom.any().item()):
-                        feat_c = dec_y_last[is_pred_atom]
-                        feat_u = dec_u_last[is_pred_atom] if dec_u_last is not None else None
-                        raw_atom_hid = feat_c.float()
-                        n_at = feat_c.shape[0]
-                        sub_xyz = torch.zeros((n_at, 4), dtype=torch.int32, device=device)
-                        sub_sc = torch.zeros((n_at,), dtype=torch.float32, device=device)
+                    has_placed_cols = dec_len > (max_dec_0 + 1)
+                    if has_placed_cols and ((electron_parity is not None and parities is not None) or geometric_guard):
+                        placed_types = dec_feat_s2[:, max_dec_0 + 1 : dec_len : 2, IDX_TYPE]
+                        placed_actual = (placed_types >= 0) & (placed_types < len(atom_list))
+                    else:
+                        placed_types = None
+                        placed_actual = None
 
-                        dec_feat_cur = dec_feat_s2[:, :dec_len, :]
-                        dec_pos_cur = dec_pos_s2[:, :dec_len, :]
-                        if (electron_parity is not None and parities is not None) or geometric_guard:
-                            types_all = dec_feat_cur[:, :, IDX_TYPE]
-                            actual = (
-                                (dec_feat_cur[:, :, IDX_LEVEL] == self.backbone.atom_level_index)
-                                & (types_all < len(atom_list))
-                                & (types_all >= 0)
-                            )
+                    if electron_parity is not None and parities is not None:
+                        if placed_actual is not None and placed_types is not None:
+                            safe_p = torch.where(placed_actual, placed_types, self.backbone.atom_null_id)
+                            acc_par: Optional[torch.Tensor] = parities[safe_p.long()].sum(-1) % 2
                         else:
-                            types_all = None
-                            actual = None
+                            acc_par = torch.zeros((b_active,), dtype=torch.long, device=device)
+                        term_flags: Optional[torch.Tensor] = active_atom & (
+                            (q_head_s2 >= q_tail_s2) | (step_vec >= max_decode_steps)
+                        )
+                    else:
+                        acc_par = None
+                        term_flags = None
 
-                        if electron_parity is not None and parities is not None and actual is not None and types_all is not None:
-                            safe = torch.where(actual, types_all, self.backbone.atom_null_id)
-                            acc_par = (parities[safe].sum(-1) % 2)[is_pred_atom]
-                            term_flags = ((q_head_s2 >= q_tail_s2) | (step_vec >= max_decode_steps))[is_pred_atom]
+                    if geometric_guard:
+                        vox_origin: Optional[torch.Tensor] = next_feat[:, :3].float() * float(self.args.grid_len)
+                        if placed_actual is not None and placed_types is not None:
+                            p_valid: Optional[torch.Tensor] = placed_actual
+                            p_pos: Optional[torch.Tensor] = dec_pos_s2[:, max_dec_0 + 1 : dec_len : 2, :3].float()
+                            p_rcov, p_sat = self._prepare_placed_geometry(p_pos, placed_types.long(), p_valid)
                         else:
-                            acc_par = None
-                            term_flags = None
+                            p_valid = torch.zeros((b_active, 0), dtype=torch.bool, device=device)
+                            p_pos = torch.zeros((b_active, 0, 3), dtype=torch.float32, device=device)
+                            p_rcov: Optional[torch.Tensor] = torch.zeros((b_active, 0), dtype=torch.float32, device=device)
+                            p_sat: Optional[torch.Tensor] = torch.zeros((b_active, 0), dtype=torch.bool, device=device)
+                    else:
+                        vox_origin = p_pos = p_valid = p_rcov = p_sat = None
 
-                        if geometric_guard and actual is not None and types_all is not None:
-                            vox_origin = next_feat[is_pred_atom, :3].float() * float(self.args.grid_len)
-                            sub_actual = actual[is_pred_atom]
-                            any_col = sub_actual.any(dim=0)
-                            if bool(any_col.any().item()):
-                                p_valid = sub_actual[:, any_col]
-                                p_pos = dec_pos_cur[is_pred_atom][:, any_col, :3].float()
-                                p_types = types_all[is_pred_atom][:, any_col].long()
-                                p_rcov, p_sat = self._prepare_placed_geometry(p_pos, p_types, p_valid)
-                            else:
-                                p_valid = torch.zeros((n_at, 0), dtype=torch.bool, device=device)
-                                p_pos = torch.zeros((n_at, 0, 3), dtype=torch.float32, device=device)
-                                p_rcov = torch.zeros((n_at, 0), dtype=torch.float32, device=device)
-                                p_sat = torch.zeros((n_at, 0), dtype=torch.bool, device=device)
+                    for axis in range(4):
+                        logits_c = ahead.pred_heads[axis](feat_c).float()
+                        scale_axis = cfg_scale if axis == 0 else xyz_cfg_scale
+                        if feat_u is not None and scale_axis != 1.0:
+                            logits_u = ahead.pred_heads[axis](feat_u).float()
+                            cur_logits = logits_u + scale_axis * (logits_c - logits_u)
                         else:
-                            vox_origin = p_pos = p_valid = p_rcov = p_sat = None
+                            cur_logits = logits_c
 
-                        ahead = self.backbone.atom_heads[0]
-                        for axis in range(4):
-                            logits_c = ahead.pred_heads[axis](feat_c).float()
-                            scale_axis = cfg_scale if axis == 0 else xyz_cfg_scale
-                            if feat_u is not None and scale_axis != 1.0:
-                                logits_u = ahead.pred_heads[axis](feat_u).float()
-                                cur_logits = logits_u + scale_axis * (logits_c - logits_u)
-                            else:
-                                cur_logits = logits_c
+                        if axis == 0:
+                            if geometric_guard and vox_origin is not None and p_pos is not None and p_valid is not None and p_rcov is not None and p_sat is not None:
+                                cur_logits = cur_logits + self._element_guard_logit_bias(
+                                    vox_origin, p_pos, p_valid, p_rcov, p_sat
+                                )
+                            cur_logits = cur_logits.masked_fill(forbidden_atom_mask, -torch.inf)
+                            if use_exact_cnt:
+                                b_at = active_atom & (count_s2["total_atoms"] > 0)
+                                null_col = cur_logits[:, self.backbone.atom_null_id]
+                                cur_logits = cur_logits.clone()
+                                cur_logits[:, self.backbone.atom_null_id] = torch.where(
+                                    b_at, torch.full_like(null_col, -torch.inf), null_col
+                                )
+                            if electron_parity is not None and parities is not None and acc_par is not None and term_flags is not None:
+                                cur_logits = mask_terminal_element_logits(
+                                    cur_logits, acc_par, term_flags, electron_parity, parities
+                                )
+                            temp_axis = atom_temp
+                        else:
+                            if axis == 3 and geometric_guard and vox_origin is not None and p_pos is not None and p_valid is not None and p_rcov is not None and p_sat is not None:
+                                cur_logits = cur_logits + self._zbin_guard_logit_bias(
+                                    vox_origin,
+                                    sub_xyz[:, 0],
+                                    sub_xyz[:, 1:3],
+                                    p_pos,
+                                    p_valid,
+                                    p_rcov,
+                                    p_sat,
+                                    cur_logits.shape[-1],
+                                )
+                            temp_axis = xyz_temp
 
-                            if axis == 0:
-                                if geometric_guard and vox_origin is not None and p_pos is not None and p_valid is not None and p_rcov is not None and p_sat is not None:
-                                    cur_logits = cur_logits + self._element_guard_logit_bias(
-                                        vox_origin, p_pos, p_valid, p_rcov, p_sat
-                                    )
-                                cur_logits = cur_logits.masked_fill(forbidden_atom_mask, -torch.inf)
-                                if use_exact_cnt:
-                                    b_at = count_s2["total_atoms"][is_pred_atom] > 0
-                                    if bool(b_at.any().item()):
-                                        cur_logits = cur_logits.clone()
-                                        cur_logits[b_at, self.backbone.atom_null_id] = -torch.inf
-                                if electron_parity is not None and parities is not None and acc_par is not None and term_flags is not None:
-                                    cur_logits = mask_terminal_element_logits(
-                                        cur_logits, acc_par, term_flags, electron_parity, parities
-                                    )
-                                temp_axis = atom_temp
-                            else:
-                                if axis == 3 and geometric_guard and vox_origin is not None and p_pos is not None and p_valid is not None and p_rcov is not None and p_sat is not None:
-                                    cur_logits = cur_logits + self._zbin_guard_logit_bias(
-                                        vox_origin,
-                                        sub_xyz[:, 0],
-                                        sub_xyz[:, 1:3],
-                                        p_pos,
-                                        p_valid,
-                                        p_rcov,
-                                        p_sat,
-                                        cur_logits.shape[-1],
-                                    )
-                                temp_axis = xyz_temp
+                        sampled_id, cur_sc = _gpu_multinomial_sample(cur_logits, temp_axis, rng_gen)
+                        sub_xyz[:, axis] = sampled_id
+                        sub_sc = sub_sc + cur_sc * score_ratio[axis]
+                        if axis < 3:
+                            step_add = ahead.emb_layers[axis](sampled_id)
+                            feat_c = feat_c + step_add
+                            if feat_u is not None:
+                                feat_u = feat_u + step_add
 
-                            sampled_id, cur_sc = _gpu_multinomial_sample(cur_logits, temp_axis, rng_gen)
-                            sub_xyz[:, axis] = sampled_id
-                            sub_sc = sub_sc + cur_sc * score_ratio[axis]
-                            if axis < 3:
-                                step_add = ahead.emb_layers[axis](sampled_id)
-                                feat_c = feat_c + step_add
-                                if feat_u is not None:
-                                    feat_u = feat_u + step_add
+                    inactive_null = torch.full_like(next_type, self.backbone.atom_null_id)
+                    base_pred_type = torch.where(active_row, next_type, inactive_null)
+                    pred_type = torch.where(active_atom, sub_xyz[:, 0], base_pred_type)
+                    null_xyz = torch.full((b_active, 3), self.backbone.xyz_null_id, dtype=torch.int32, device=device)
+                    pred_xyz = torch.where(active_atom.unsqueeze(-1), sub_xyz[:, 1:], null_xyz)
+                    score_temp = torch.where(active_atom, sub_sc, torch.zeros_like(sub_sc))
+                    pred_count = torch.where(
+                        active_atom,
+                        torch.ones((b_active,), dtype=torch.int32, device=device),
+                        torch.zeros((b_active,), dtype=torch.int32, device=device),
+                    )
 
-                        pred_type[is_pred_atom] = sub_xyz[:, 0]
-                        pred_xyz[is_pred_atom] = sub_xyz[:, 1:]
-                        score_temp[is_pred_atom] = score_temp[is_pred_atom] + sub_sc
-                        pred_count[is_pred_atom] = 1
-
-                        a_loc = orig_loc[is_pred_atom]
-                        e_chosen = sub_xyz[:, 0]
-                        real_a = (e_chosen >= 0) & (e_chosen < len(atom_list))
-                        if bool(real_a.any().item()):
-                            ra_loc = a_loc[real_a]
-                            ra_hid = raw_atom_hid[real_a]
-                            s2_atom_sum[ra_loc] += ra_hid
-                            s2_atom_cnt[ra_loc] += 1.0
-                            s2_atom_last[ra_loc] = ra_hid
-                            hvy_a = real_a & (e_chosen != h_id_val)
-                            if bool(hvy_a.any().item()):
-                                hv_loc = a_loc[hvy_a]
-                                hv_hid = raw_atom_hid[hvy_a]
-                                s2_hvy_sum[hv_loc] += hv_hid
-                                s2_hvy_cnt[hv_loc] += 1.0
+                    e_chosen = sub_xyz[:, 0]
+                    real_a = active_atom & (e_chosen >= 0) & (e_chosen < len(atom_list))
+                    real_f = real_a.unsqueeze(-1).float()
+                    s2_atom_sum.index_add_(0, orig_loc, raw_atom_hid * real_f)
+                    s2_atom_cnt.index_add_(0, orig_loc, real_f)
+                    cur_last_sel = s2_atom_last.index_select(0, orig_loc)
+                    s2_atom_last.index_copy_(0, orig_loc, torch.where(real_a.unsqueeze(-1), raw_atom_hid, cur_last_sel))
+                    hvy_f = (real_a & (e_chosen != h_id_val)).unsqueeze(-1).float()
+                    s2_hvy_sum.index_add_(0, orig_loc, raw_atom_hid * hvy_f)
+                    s2_hvy_cnt.index_add_(0, orig_loc, hvy_f)
 
                     scores_s2[:, dec_len] = score_temp
                     self._write_feat_by_pred_inplace(
@@ -4332,17 +4440,22 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     )
                     dec_len += 1
 
-                    count_s2["last_remaining_atoms"] = last_rem_atoms
-                    count_s2["last_remaining_tokens"] = last_rem_tokens
-                    count_s2["pred_count"] = pred_count
+                    count_s2["last_remaining_atoms"] = torch.where(active_row, last_rem_atoms, count_s2["last_remaining_atoms"])
+                    count_s2["last_remaining_tokens"] = torch.where(active_row, last_rem_tokens, count_s2["last_remaining_tokens"])
+                    count_s2["pred_count"] = torch.where(active_row, pred_count, count_s2["pred_count"])
 
-                    row_ar = torch.arange(b_active, device=device)
                     q_empty_s2 = q_head_s2 >= q_tail_s2
                     peek_s2 = q_buf_s2[row_ar, q_head_s2.clamp_max(q_cap)]
-                    done_s2 = q_empty_s2 | (step_vec >= max_decode_steps)
+                    newly_done_s2 = (~finished_s2) & (q_empty_s2 | (step_vec >= max_decode_steps))
+                    done_dec_len = torch.where(
+                        newly_done_s2, torch.full_like(done_dec_len, dec_len), done_dec_len
+                    )
+                    finished_s2 = finished_s2 | newly_done_s2
 
-                    if bool(done_s2.any().item()):
-                        done_cpu = done_s2.tolist()
+                    check_compact = (s2_step % 6 == 0) or (dec_len + 4 >= dec_cap_s2)
+                    if check_compact and bool(finished_s2.any().item()):
+                        done_cpu = finished_s2.tolist()
+                        dlen_cpu = done_dec_len.tolist()
                         oloc_cpu = orig_loc.tolist()
                         poff_cpu = pad_offsets.tolist()
                         for i, is_d in enumerate(done_cpu):
@@ -4350,13 +4463,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                 continue
                             slot_b2 = oloc_cpu[i]
                             p_off_i = poff_cpu[i]
+                            end_i = dlen_cpu[i]
                             s2_trajs[slot_b2] = {
-                                "decoder_feat": dec_feat_s2[i, p_off_i:dec_len].clone(),
-                                "decoder_phy_pos": dec_pos_s2[i, p_off_i:dec_len].clone(),
-                                "scores": scores_s2[i, p_off_i:dec_len].clone(),
+                                "decoder_feat": dec_feat_s2[i, p_off_i:end_i].clone(),
+                                "decoder_phy_pos": dec_pos_s2[i, p_off_i:end_i].clone(),
+                                "scores": scores_s2[i, p_off_i:end_i].clone(),
                             }
 
-                        keep_s2 = ~done_s2
+                        keep_s2 = ~finished_s2
                         b_next = int(keep_s2.sum().item())
                         if b_next == 0:
                             break
@@ -4371,6 +4485,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         orig_loc = orig_loc[keep_s2]
                         pad_offsets = pad_offsets[keep_s2]
                         step_vec = step_vec[keep_s2]
+                        finished_s2 = finished_s2[keep_s2]
+                        done_dec_len = done_dec_len[keep_s2]
                         for k in count_s2:
                             count_s2[k] = count_s2[k][keep_s2]
                         kv_keep = torch.cat([keep_s2, keep_s2], dim=0) if use_cfg else keep_s2
@@ -4384,12 +4500,16 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                 compact_kv(kv_s2[r_i][l_i], kv_keep)
                         b_active = b_next
 
+                    still_act_s2 = ~finished_s2
                     next_feat = peek_s2
-                    q_head_s2 = q_head_s2 + 1
+                    q_head_s2 = torch.where(still_act_s2, q_head_s2 + 1, q_head_s2)
                     last_level = dec_feat_s2[:, dec_len - 1, IDX_LEVEL]
-                    is_new_level = last_level != next_feat[:, IDX_LEVEL]
+                    is_new_level = still_act_s2 & (last_level != next_feat[:, IDX_LEVEL])
+                    write_type_next = torch.where(
+                        still_act_s2, next_feat[:, IDX_TYPE], torch.full_like(next_feat[:, IDX_TYPE], self.backbone.atom_null_id)
+                    )
                     self._write_feat_by_pred_inplace(
-                        next_feat, dec_feat_s2, dec_pos_s2, dec_len, next_feat[:, IDX_TYPE], None, None
+                        next_feat, dec_feat_s2, dec_pos_s2, dec_len, write_type_next, None, None
                     )
                     scores_s2[:, dec_len] = 0.0
                     dec_len += 1
@@ -4568,7 +4688,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         stage2_constr_weight: float = 0.65,
         stage2_diversity_weight: float = 0.0,
         uncertainty_bonus: float = 0.0,
-        coarse_chunk_size: int = 1024,
+        coarse_chunk_size: Optional[int] = None,
         cfg_scale: float = 1.0,
         xyz_cfg_scale: float = 1.0,
         cfg_tree_decay: float = 0.0,
@@ -4577,14 +4697,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
         seed: Optional[int] = None,
         use_bf16: bool = True,
         electron_parity: Optional[int] = 0,
-        max_decode_steps: int = 256,
+        max_decode_steps: Optional[int] = None,
         uncond_active_mask: Optional[torch.Tensor] = None,
         leaf_atom_budget: Optional[torch.Tensor] = None,
         leaf_budget_tol: float = 2.0,
         budget_guidance_scale: float = 1.0,
         sort_by_budget: bool = True,
     ) -> List[List[Dict[str, Any]]]:
-        """Vectorized two-stage octree funnel (`m_stage1 -> m_stage2 -> m_keep`, e.g., `32 -> 8 -> 2`)."""
+        """Vectorized two-stage octree funnel (`m_stage1 -> m_stage2 -> m_keep`) with dynamic VRAM chunking."""
         if m_stage1 < 1 or m_stage2 < 1 or m_keep < 1 or m_stage2 > m_stage1 or m_keep > m_stage2:
             raise ValueError(
                 f"Invalid two-stage funnel m_stage1={m_stage1}, m_stage2={m_stage2}, m_keep={m_keep}"
@@ -4621,32 +4741,64 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
             device = targets_norm.device
             inv_perm_list: Optional[List[int]] = None
-            if leaf_atom_budget is not None and sort_by_budget and n_prompts > 8:
+            b_sorted_cpu: Optional[List[float]] = None
+            if leaf_atom_budget is not None:
                 b_p = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device).view(n_prompts)
-                perm = torch.argsort(b_p, stable=True)
-                inv_perm = torch.empty_like(perm)
-                inv_perm[perm] = torch.arange(n_prompts, device=device)
-                inv_perm_list = inv_perm.detach().cpu().tolist()
-                targets_norm = targets_norm[perm]
-                active_mask = active_mask[perm]
-                if uncond_active_mask is not None:
-                    uncond_active_mask = uncond_active_mask[perm]
-                if objective_col_mask is not None and objective_col_mask.ndim == 2:
-                    objective_col_mask = objective_col_mask[perm]
-                leaf_atom_budget = b_p[perm]
+                if sort_by_budget and n_prompts > 8:
+                    perm = torch.argsort(b_p, stable=True)
+                    inv_perm = torch.empty_like(perm)
+                    inv_perm[perm] = torch.arange(n_prompts, device=device)
+                    inv_perm_list = inv_perm.detach().cpu().tolist()
+                    targets_norm = targets_norm[perm]
+                    active_mask = active_mask[perm]
+                    if uncond_active_mask is not None:
+                        uncond_active_mask = uncond_active_mask[perm]
+                    if objective_col_mask is not None and objective_col_mask.ndim == 2:
+                        objective_col_mask = objective_col_mask[perm]
+                    b_p = b_p[perm]
+                leaf_atom_budget = b_p
+                b_sorted_cpu = b_p.detach().cpu().tolist()
 
-            if leaf_atom_budget is not None and (self.scale_free_count_head is not None or self.budget_emb is not None):
-                b_tmp = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device)
-                if b_tmp.numel() > 0:
-                    max_decode_steps = max(int(max_decode_steps), 3 * int(b_tmp.max().item()) + 64)
-
-            eff_coarse_chunk = min(int(coarse_chunk_size), 512) if int(self.args.recycle) >= 3 else int(coarse_chunk_size)
+            b_max_global = (
+                max((float(v) for v in b_sorted_cpu if math.isfinite(float(v)) and float(v) > 0.0), default=0.0)
+                if b_sorted_cpu is not None
+                else 0.0
+            )
+            eff_max_global = self._resolve_tight_max_decode_steps(max_decode_steps, b_max_global)
+            lvl_extra = 8 * max(0, int(self.args.merge_level) - 6)
+            s1_est_global = (
+                min(eff_max_global, max(64, int(math.ceil(1.90 * b_max_global)) + 36 + lvl_extra))
+                if b_max_global > 0.0
+                else eff_max_global
+            )
+            s1_kv_cap_est = max(128, 2 * s1_est_global + self.conditioner.num_prefix_tokens + 32)
+            has_cond_any = bool(active_mask.bool().any().item())
+            use_cfg_est = has_cond_any and (cfg_scale != 1.0 or xyz_cfg_scale != 1.0)
+            eff_coarse_chunk = self._estimate_coarse_chunk_capacity(
+                device,
+                s1_kv_cap=s1_kv_cap_est,
+                use_cfg=use_cfg_est,
+                use_bf16=bool(use_bf16 and device.type == "cuda"),
+                coarse_chunk_size=coarse_chunk_size,
+            )
             prompts_per_chunk = max(1, eff_coarse_chunk // int(m_stage1))
 
             grouped: List[List[Dict[str, Any]]] = []
-            for p_start in range(0, n_prompts, prompts_per_chunk):
+            p_start = 0
+            while p_start < n_prompts:
                 p_end = min(p_start + prompts_per_chunk, n_prompts)
                 n_p_sub = p_end - p_start
+                b_max_sub = (
+                    max((float(v) for v in b_sorted_cpu[p_start:p_end] if math.isfinite(float(v)) and float(v) > 0.0), default=0.0)
+                    if b_sorted_cpu is not None
+                    else 0.0
+                )
+                sub_max_steps = self._resolve_tight_max_decode_steps(max_decode_steps, b_max_sub)
+                sub_s1_est = (
+                    min(sub_max_steps, max(64, int(math.ceil(1.90 * b_max_sub)) + 36 + lvl_extra))
+                    if b_max_sub > 0.0
+                    else sub_max_steps
+                )
                 t_sub = targets_norm[p_start:p_end].repeat_interleave(m_stage1, dim=0)
                 m_sub = active_mask[p_start:p_end].repeat_interleave(m_stage1, dim=0)
                 u_sub = (
@@ -4655,9 +4807,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     else None
                 )
                 b_sub = (
-                    torch.as_tensor(leaf_atom_budget[p_start:p_end], dtype=torch.float32, device=device).repeat_interleave(
-                        m_stage1, dim=0
-                    )
+                    leaf_atom_budget[p_start:p_end].repeat_interleave(m_stage1, dim=0)
                     if leaf_atom_budget is not None
                     else None
                 )
@@ -4667,36 +4817,47 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     else objective_col_mask
                 )
                 c_seed = (int(seed) * 41 + p_start * m_stage1) if seed is not None else None
-                sub_grouped = self._run_two_stage_chunk(
-                    t_sub,
-                    m_sub,
-                    two_stage_critic,
-                    n_p_sub=n_p_sub,
-                    m_stage1=m_stage1,
-                    m_stage2=m_stage2,
-                    m_keep=m_keep,
-                    objective_col_mask=obj_chunk,
-                    stage1_legal_weight=stage1_legal_weight,
-                    stage1_constr_weight=stage1_constr_weight,
-                    stage2_legal_weight=stage2_legal_weight,
-                    stage2_constr_weight=stage2_constr_weight,
-                    uncertainty_bonus=uncertainty_bonus,
-                    cfg_scale=cfg_scale,
-                    xyz_cfg_scale=xyz_cfg_scale,
-                    cfg_tree_decay=cfg_tree_decay,
-                    geometric_guard=geometric_guard,
-                    temperatures=temperatures,
-                    seed=c_seed,
-                    use_bf16=use_bf16,
-                    electron_parity=electron_parity,
-                    max_decode_steps=max_decode_steps,
-                    u_sub=u_sub,
-                    b_sub=b_sub,
-                    leaf_budget_tol=leaf_budget_tol,
-                    stage2_diversity_weight=stage2_diversity_weight,
-                    budget_guidance_scale=budget_guidance_scale,
-                )
+                try:
+                    sub_grouped = self._run_two_stage_chunk(
+                        t_sub,
+                        m_sub,
+                        two_stage_critic,
+                        n_p_sub=n_p_sub,
+                        m_stage1=m_stage1,
+                        m_stage2=m_stage2,
+                        m_keep=m_keep,
+                        objective_col_mask=obj_chunk,
+                        stage1_legal_weight=stage1_legal_weight,
+                        stage1_constr_weight=stage1_constr_weight,
+                        stage2_legal_weight=stage2_legal_weight,
+                        stage2_constr_weight=stage2_constr_weight,
+                        uncertainty_bonus=uncertainty_bonus,
+                        cfg_scale=cfg_scale,
+                        xyz_cfg_scale=xyz_cfg_scale,
+                        cfg_tree_decay=cfg_tree_decay,
+                        geometric_guard=geometric_guard,
+                        temperatures=temperatures,
+                        seed=c_seed,
+                        use_bf16=use_bf16,
+                        electron_parity=electron_parity,
+                        max_decode_steps=sub_max_steps,
+                        u_sub=u_sub,
+                        b_sub=b_sub,
+                        leaf_budget_tol=leaf_budget_tol,
+                        stage2_diversity_weight=stage2_diversity_weight,
+                        budget_guidance_scale=budget_guidance_scale,
+                        s1_kv_step_est=sub_s1_est,
+                    )
+                except torch.cuda.OutOfMemoryError:
+                    if n_p_sub <= 1:
+                        raise
+                    del t_sub, m_sub, u_sub, b_sub
+                    torch.cuda.empty_cache()
+                    prompts_per_chunk = max(1, n_p_sub // 2)
+                    continue
+
                 grouped.extend(sub_grouped)
+                p_start = p_end
 
             if inv_perm_list is not None:
                 grouped = [grouped[idx] for idx in inv_perm_list]
@@ -5157,21 +5318,40 @@ class LoomUni3DARGenerator(GeneratorSlot):
         effort: str = "base",
         n_candidates: Optional[int] = None,
         enable_internal_tree: bool = True,
-        high_stage1: int = 64,
+        atom_budget: Optional[np.ndarray | Sequence[float] | torch.Tensor | float] = None,
+        high_stage1: Optional[int] = None,
     ) -> Tuple[str, int, int, int]:
-        """Map outer effort tier (`base/low/medium/high` <-> `M in {1,2,4,8}`) to internal `(m_s1, m_s2, m_keep)`."""
+        """Map outer effort tier (`M in {1,2,4,8}`) + combinatorial scale `N_hat` to `(m_s1, m_s2, m_keep)`.
+
+        Locks outer candidate count strictly at `m_keep = M` while scaling internal speculative octree
+        widths smoothly with `eta(N_hat) = clip((N_hat - 16) / 24, 0, 1)` (`eta = 1` if unbudgeted):
+          `m_s1 = 2 * ceil(M * (4 + 4 * eta) / 2)`,  `m_s2 = 2 * ceil(M * (1.25 + 0.75 * eta) / 2)`.
+        """
         eff_name, m_keep = resolve_effort_candidates(effort=effort, n_candidates=n_candidates)
         if m_keep == 1 or (not enable_internal_tree) or (self.process_critic is None):
             return eff_name, m_keep, m_keep, m_keep
-        if m_keep == 2:
-            return eff_name, 16, 4, 2
-        if m_keep == 4:
-            return eff_name, 32, 8, 4
-        if m_keep == 8:
-            ms1 = max(16, int(high_stage1))
-            return eff_name, ms1, 16, 8
-        ms2 = max(m_keep, m_keep * 2)
-        ms1 = max(ms2, m_keep * 8)
+
+        n_hat: Optional[float] = None
+        if atom_budget is not None:
+            if isinstance(atom_budget, (int, float)):
+                if math.isfinite(float(atom_budget)) and float(atom_budget) > 0.0:
+                    n_hat = float(atom_budget)
+            else:
+                arr = (
+                    atom_budget.detach().cpu().numpy().reshape(-1)
+                    if isinstance(atom_budget, torch.Tensor)
+                    else np.asarray(atom_budget, dtype=np.float64).reshape(-1)
+                )
+                pos = arr[np.isfinite(arr) & (arr > 0.0)]
+                if pos.size > 0:
+                    n_hat = float(np.median(pos))
+
+        eta = 1.0 if n_hat is None else float(np.clip((n_hat - 16.0) / 24.0, 0.0, 1.0))
+        ms1 = max(m_keep, int(2 * math.ceil((float(m_keep) * (4.0 + 4.0 * eta)) / 2.0)))
+        ms2 = max(m_keep, int(2 * math.ceil((float(m_keep) * (1.25 + 0.75 * eta)) / 2.0)))
+        ms1 = max(ms1, ms2)
+        if high_stage1 is not None and int(high_stage1) > 0 and m_keep == 8:
+            ms1 = max(ms2, int(high_stage1))
         return eff_name, ms1, ms2, m_keep
 
     @torch.no_grad()
@@ -5186,7 +5366,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         seed: Optional[int] = None,
         enable_internal_tree: bool = True,
         enable_post_tree_refiner: bool = True,
-        high_stage1: int = 64,
+        high_stage1: Optional[int] = None,
         cfg_scale: float = 2.20,
         xyz_cfg_scale: float = 1.0,
         cfg_tree_decay: float = 0.20,
@@ -5202,6 +5382,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
     ) -> List[List[Optional[Any]]]:
         """Generate `[batch_size][M]` validated 3D RDKit `Chem.Mol` candidates with internal octree pruning + refiner."""
         del kwargs
+        from concurrent.futures import ThreadPoolExecutor
         from rdkit import Chem
 
         device = self.target_mean.device
@@ -5211,18 +5392,20 @@ class LoomUni3DARGenerator(GeneratorSlot):
         if bsz == 0:
             return []
 
-        _, ms1, ms2, m_keep = self.resolve_internal_funnel(
-            effort=effort,
-            n_candidates=n_candidates,
-            enable_internal_tree=enable_internal_tree,
-            high_stage1=high_stage1,
-        )
         b_arr: Optional[np.ndarray] = None
         if atom_budget is not None:
             if isinstance(atom_budget, torch.Tensor):
                 b_arr = atom_budget.detach().cpu().numpy().astype(np.float32).reshape(bsz)
             else:
                 b_arr = np.asarray(atom_budget, dtype=np.float32).reshape(bsz)
+
+        _, ms1_init, ms2_init, m_keep = self.resolve_internal_funnel(
+            effort=effort,
+            n_candidates=n_candidates,
+            enable_internal_tree=enable_internal_tree,
+            atom_budget=b_arr,
+            high_stage1=high_stage1,
+        )
 
         if obj_mask_in := objective_col_mask:
             obj_col_mask = obj_mask_in.to(device=device, dtype=torch.bool)
@@ -5234,9 +5417,10 @@ class LoomUni3DARGenerator(GeneratorSlot):
             obj_col_mask = None
 
         grouped_trajs: List[List[Dict[str, Any]]] = []
-        if ms1 == m_keep and ms2 == m_keep:
-            # Direct M->M->M sampling (used for `base` M=1 and `enable_internal_tree=False` ablations)
-            p_chunk = max(1, 512 // max(m_keep, 1))
+        if ms1_init == m_keep and ms2_init == m_keep:
+            # Direct M->M->M sampling (`base` M=1 and `enable_internal_tree=False` ablations) with dynamic batching
+            total_m = bsz * m_keep
+            p_chunk = bsz if total_m <= 2048 else max(1, 1024 // max(m_keep, 1))
             for s in range(0, bsz, p_chunk):
                 e = min(s + p_chunk, bsz)
                 rep_t = targets_norm[s:e].repeat_interleave(m_keep, dim=0)
@@ -5266,27 +5450,65 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 for p_loc in range(e - s):
                     grouped_trajs.append(trajs_flat[p_loc * m_keep : (p_loc + 1) * m_keep])
         else:
-            p_chunk = 96 if ms1 >= 64 else (128 if ms1 >= 48 else 256)
-            for s in range(0, bsz, p_chunk):
-                e = min(s + p_chunk, bsz)
-                sub_u = uncond_active_mask[s:e] if uncond_active_mask is not None else None
-                sub_b = b_arr[s:e] if b_arr is not None else None
+            # Sort heterogeneous atom budgets into smooth size bands (`<= 8` atom span per band)
+            inv_perm_cand: Optional[np.ndarray] = None
+            t_ord = targets_norm
+            m_ord = active_mask
+            u_ord = uncond_active_mask
+            obj_ord = obj_col_mask
+            b_ord = b_arr
+            if b_arr is not None and bsz > 8 and float(np.ptp(b_arr)) > 4.0:
+                perm_np = np.argsort(b_arr, kind="stable")
+                inv_perm_cand = np.empty_like(perm_np)
+                inv_perm_cand[perm_np] = np.arange(bsz)
+                perm_t = torch.as_tensor(perm_np, dtype=torch.long, device=device)
+                t_ord = targets_norm.index_select(0, perm_t)
+                m_ord = active_mask.index_select(0, perm_t)
+                if u_ord is not None:
+                    u_ord = u_ord.index_select(0, perm_t)
+                if obj_ord is not None and obj_ord.ndim == 2:
+                    obj_ord = obj_ord.index_select(0, perm_t)
+                b_ord = b_arr[perm_np]
+
+            bands: List[Tuple[int, int]] = []
+            if b_ord is not None and float(np.ptp(b_ord)) > 8.0:
+                b_start = 0
+                for idx_b in range(1, bsz):
+                    if (float(b_ord[idx_b]) - float(b_ord[b_start])) > 8.0 and (idx_b - b_start) >= 32:
+                        bands.append((b_start, idx_b))
+                        b_start = idx_b
+                bands.append((b_start, bsz))
+            else:
+                bands.append((0, bsz))
+
+            ord_grouped: List[List[Dict[str, Any]]] = []
+            for s, e in bands:
+                sub_u = u_ord[s:e] if u_ord is not None else None
+                sub_b = b_ord[s:e] if b_ord is not None else None
+                sub_obj = (obj_ord[s:e] if (obj_ord is not None and obj_ord.ndim == 2) else obj_ord)
+                _, ms1_b, ms2_b, _ = self.resolve_internal_funnel(
+                    effort=effort,
+                    n_candidates=m_keep,
+                    enable_internal_tree=enable_internal_tree,
+                    atom_budget=sub_b,
+                    high_stage1=high_stage1,
+                )
                 sub_seed = (int(seed) + s * 41) if seed is not None else None
-                grouped_trajs.extend(
+                ord_grouped.extend(
                     self.sample_with_two_stage_process_critic(
-                        targets_norm[s:e],
-                        active_mask[s:e],
+                        t_ord[s:e],
+                        m_ord[s:e],
                         self.process_critic,
-                        m_stage1=ms1,
-                        m_stage2=ms2,
+                        m_stage1=ms1_b,
+                        m_stage2=ms2_b,
                         m_keep=m_keep,
-                        objective_col_mask=obj_col_mask,
+                        objective_col_mask=sub_obj,
                         stage1_legal_weight=0.80,
                         stage1_constr_weight=0.55,
                         stage2_legal_weight=1.05,
                         stage2_constr_weight=0.70,
                         stage2_diversity_weight=stage2_diversity_weight,
-                        coarse_chunk_size=1024,
+                        coarse_chunk_size=None,
                         cfg_scale=cfg_scale,
                         xyz_cfg_scale=xyz_cfg_scale,
                         cfg_tree_decay=cfg_tree_decay,
@@ -5296,36 +5518,52 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         use_bf16=(use_bf16 and device.type == "cuda"),
                         electron_parity=electron_parity,
                         uncond_active_mask=sub_u,
-                        leaf_atom_budget=sub_b,
+                        leaf_atom_budget=(torch.as_tensor(sub_b, dtype=torch.float32, device=device) if sub_b is not None else None),
                         budget_guidance_scale=budget_guidance_scale,
+                        sort_by_budget=False,
                     )
                 )
+            grouped_trajs = (
+                [ord_grouped[int(idx)] for idx in inv_perm_cand]
+                if inv_perm_cand is not None
+                else ord_grouped
+            )
 
         if enable_post_tree_refiner and self.post_tree_refiner is not None:
             flat_all = [tr for grp in grouped_trajs for tr in grp]
             self.post_tree_refiner.refine_trajectories_batch(flat_all, batch_size=256)
 
         reconciler = self.reconciler
-        out_mols: List[List[Optional[Chem.Mol]]] = [[None] * m_keep for _ in range(bsz)]
-        for i in range(bsz):
-            for k in range(m_keep):
-                tr = grouped_trajs[i][k]
-                res = reconciler.reconcile_point_cloud(
-                    tr.get("atom_symbols", []),
-                    tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)),
-                    potential_slot=None,
-                    bond_order_priors=tr.get("bond_order_probs"),
-                )
-                if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
-                    mol_clean = Chem.Mol(res.mol)
-                    disp_rms = tr.get("refiner_disp_rms_A")
-                    if disp_rms is not None and math.isfinite(float(disp_rms)):
-                        mol_clean.SetDoubleProp("_loom_refiner_disp_rms_A", float(disp_rms))
-                    proc_u = tr.get("process_utility")
-                    if proc_u is not None and math.isfinite(float(proc_u)):
-                        mol_clean.SetDoubleProp("_loom_process_utility", float(proc_u))
-                    out_mols[i][k] = mol_clean
-        return out_mols
+        flat_trajs = [grouped_trajs[i][k] for i in range(bsz) for k in range(m_keep)]
+
+        def _reconcile_one(tr: Dict[str, Any]) -> Optional[Chem.Mol]:
+            syms = tr.get("atom_symbols", [])
+            if not syms:
+                return None
+            res = reconciler.reconcile_point_cloud(
+                syms,
+                tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)),
+                potential_slot=None,
+                bond_order_priors=tr.get("bond_order_probs"),
+            )
+            if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
+                mol_clean = Chem.Mol(res.mol)
+                disp_rms = tr.get("refiner_disp_rms_A")
+                if disp_rms is not None and math.isfinite(float(disp_rms)):
+                    mol_clean.SetDoubleProp("_loom_refiner_disp_rms_A", float(disp_rms))
+                proc_u = tr.get("process_utility")
+                if proc_u is not None and math.isfinite(float(proc_u)):
+                    mol_clean.SetDoubleProp("_loom_process_utility", float(proc_u))
+                return mol_clean
+            return None
+
+        if len(flat_trajs) >= 64:
+            with ThreadPoolExecutor(max_workers=min(8, max(2, (os.cpu_count() or 4) // 2))) as pool:
+                flat_mols = list(pool.map(_reconcile_one, flat_trajs))
+        else:
+            flat_mols = [_reconcile_one(tr) for tr in flat_trajs]
+
+        return [flat_mols[i * m_keep : (i + 1) * m_keep] for i in range(bsz)]
 
     def fit_internal_post_processors(
         self,

@@ -29,7 +29,7 @@ import joblib
 import numpy as np
 import torch
 from rdkit import Chem
-from rdkit.Chem import Descriptors, QED, RDConfig, rdFingerprintGenerator
+from rdkit.Chem import Descriptors, QED, RDConfig, rdFingerprintGenerator, rdMolDescriptors
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern, WhiteKernel
 from sklearn.linear_model import Ridge
@@ -502,19 +502,25 @@ class FingerprintQSARAsset(PredictorAsset):
 
 
 def _mol_static_residual_descriptor(mol: Chem.Mol, fp_gen: Any) -> np.ndarray:
-    """Compact 25-D folded Morgan substructure density + electronic/physchem + 3D shape descriptor."""
+    """Compact 29-D folded Morgan + 2D/3D-invariant stoichiometry/hybridization + electronic + 3D shape descriptor."""
     no_h = Chem.RemoveHs(Chem.Mol(mol))
     bits = fp_gen.GetFingerprintAsNumPy(no_h).astype(np.float64)  # (256,)
     folded = bits.reshape(16, 16).mean(axis=1)
     bits_norm = 0.35 * (folded / max(np.linalg.norm(folded), 0.25))
 
     n_heavy = max(no_h.GetNumAtoms(), 1)
+    n_h_tot = sum(int(a.GetTotalNumHs()) for a in no_h.GetAtoms())
+    n_total = n_heavy + n_h_tot
+    h_to_heavy = float(n_h_tot) / float(n_heavy)
+    frac_csp3 = float(rdMolDescriptors.CalcFractionCSP3(no_h))
+    n_arom = sum(1 for a in no_h.GetAtoms() if a.GetIsAromatic())
+    frac_arom = float(n_arom) / float(n_heavy)
     n_hetero_ewg = sum(
         1 for a in no_h.GetAtoms() if a.GetSymbol() in ("N", "O", "F", "Cl", "Br", "S")
     )
 
-    if mol.GetNumConformers() > 0 and mol.GetNumAtoms() > 1:
-        pos = mol.GetConformer().GetPositions().astype(np.float64)
+    if no_h.GetNumConformers() > 0 and no_h.GetNumAtoms() > 1:
+        pos = no_h.GetConformer().GetPositions().astype(np.float64)
         centered = pos - pos.mean(axis=0, keepdims=True)
         rg = float(np.sqrt(np.mean(np.sum(centered ** 2, axis=-1))))
         cov = (centered.T @ centered) / max(len(pos), 1)
@@ -525,6 +531,15 @@ def _mol_static_residual_descriptor(mol: Chem.Mol, fp_gen: Any) -> np.ndarray:
         eigvals = np.zeros(3, dtype=np.float64)
         span = 0.0
 
+    stoich_hyb = 0.50 * np.array(
+        [
+            float(n_total) / 50.0,
+            h_to_heavy / 1.5,
+            frac_csp3,
+            frac_arom,
+        ],
+        dtype=np.float64,
+    )
     extra = 0.30 * np.array(
         [
             Descriptors.MolWt(no_h) / 500.0,
@@ -539,7 +554,7 @@ def _mol_static_residual_descriptor(mol: Chem.Mol, fp_gen: Any) -> np.ndarray:
         ],
         dtype=np.float64,
     )
-    return np.concatenate([bits_norm, extra])
+    return np.concatenate([bits_norm, stoich_hyb, extra])
 
 
 class ResidualCalibratedAsset(PredictorAsset):

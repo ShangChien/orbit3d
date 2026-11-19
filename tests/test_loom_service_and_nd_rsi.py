@@ -327,3 +327,87 @@ def test_multi_objective_diagnose_nd_partial_nan_assays_and_fphys_critic():
         epochs=3,
     )
     assert np.isfinite(st.train_loss)
+
+
+def test_stoichiometric_descriptor_invariance_continuous_funnel_and_spec_driven_service():
+    from rdkit.Chem import rdFingerprintGenerator
+    from loom.weaving.registry import _mol_static_residual_descriptor
+
+    # 1. 2D/3D explicit-H invariance + saturation discrimination of `_mol_static_residual_descriptor`
+    fp_gen = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=256, includeChirality=True)
+    m_with_h = _make_mol("c1ccncc1", seed=11)
+    m_no_h = Chem.RemoveHs(Chem.Mol(m_with_h))
+    d_with_h = _mol_static_residual_descriptor(m_with_h, fp_gen)
+    d_no_h = _mol_static_residual_descriptor(m_no_h, fp_gen)
+    assert d_with_h.shape == (29,)
+    assert np.allclose(d_with_h, d_no_h, atol=1e-9)
+
+    m_aliph = _make_mol("C1CCNCC1", seed=12)
+    d_aliph = _mol_static_residual_descriptor(m_aliph, fp_gen)
+    # Stoichiometry & hybridization entries (`[16:20]`: N/50, H/heavy, frac_csp3, frac_arom) cleanly separate aromatic vs aliphatic
+    assert not np.allclose(d_with_h[16:20], d_aliph[16:20])
+
+    # 2. Continuous combinatorial complexity tree-branching law (`m_keep = M` locked!)
+    gen = _build_tiny_uni3dar()
+    s1 = OctreeProcessCritic(emb_dim=32, num_targets=2, hidden_dim=64)
+    s2 = OctreeElementProcessCritic(
+        emb_dim=32, num_targets=2, num_atom_classes=gen.backbone.num_atom, d_node=32, n_rbf=8, n_gnn_layers=2, hidden_dim=64
+    )
+    gen.attach_post_processors(process_critic=TwoStageOctreeProcessCritic(s1, s2))
+
+    assert gen.resolve_internal_funnel(effort="high", atom_budget=20.0) == ("high", 38, 12, 8)
+    assert gen.resolve_internal_funnel(effort="high", atom_budget=30.4) == ("high", 52, 14, 8)
+    assert gen.resolve_internal_funnel(effort="high", atom_budget=40.0) == ("high", 64, 16, 8)
+    assert gen.resolve_internal_funnel(effort="medium", atom_budget=20.0) == ("medium", 20, 6, 4)
+    assert gen.resolve_internal_funnel(effort="low", atom_budget=20.0) == ("low", 10, 4, 2)
+
+    # Verify sync-free two-stage chunking across heterogeneous budgets (`[18, 20, 34, 46]`)
+    t_norm = gen.normalize_targets(np.array([[-6.3, 2.0], [-6.5, 2.0], [-6.7, 2.0], [-6.9, 2.0]], dtype=np.float32))
+    m_act = torch.ones((4, 2), dtype=torch.bool)
+    c_grid = gen.generate_candidates(
+        t_norm, m_act, atom_budget=[18.0, 20.0, 34.0, 46.0], effort="low", seed=42, max_decode_steps=36
+    )
+    assert len(c_grid) == 4 and all(len(row) == 2 for row in c_grid)
+
+    # 3. Pure Spec-driven `LoomService` (`maximize` mode + `geq` auxiliary constraint, zero `"sa_score"`)
+    reg = AssetRegistry(register_builtin_rules=True)
+    reg.register_predictor(
+        CallablePredictorAsset(
+            asset_id="mock_potency",
+            predict_fn=lambda ms: (
+                np.array([[6.0 + 0.15 * m.GetNumAtoms()] for m in ms], dtype=np.float64),
+                np.full((len(ms), 1), 0.10, dtype=np.float64),
+            ),
+            target_names=["pic50"],
+            units=["pIC50"],
+        )
+    )
+    spec_max = TaskWeavingSpec.from_dict(
+        {
+            "task_name": "test_maximize_pic50_with_qed_constraint",
+            "objectives": [
+                {"name": "pic50", "asset_id": "mock_potency", "asset_channel": "pic50", "mode": "maximize", "tolerance": 0.50}
+            ],
+            "constraints": [
+                {"name": "drug_like_qed", "asset_id": "builtin_rules", "asset_channel": "qed", "op": "geq", "threshold": 0.40, "soft_margin": 0.10}
+            ],
+        }
+    )
+    bus_max = CompositeCriticBus(spec=spec_max, registry=reg)
+    flow_qed = LoomFlowMolGenerator(
+        backbone=_MockFlowBackbone(),
+        atom_type_map=("H", "C", "N", "O", "F"),
+        target_cols=["pic50", "qed"],
+        target_units=["pIC50", "unitless"],
+        mean=[7.0, 0.55],
+        scale=[0.8, 0.15],
+    )
+    svc_max = LoomService(flow_qed, bus_max)
+    assert "qed" in svc_max.calibration.auxiliary_anchors
+    assert "sa_score" not in svc_max.calibration.auxiliary_anchors
+    cal_max = svc_max.calibrate_on_dev(np.full(12, 8.0, dtype=np.float32), dev_atom_budget=np.full(12, 14.0, dtype=np.float32))
+    assert cal_max.alphas == [1.0] and cal_max.betas == [0.0]  # Directional `maximize` skips affine regression
+    gen_max = svc_max.generate(np.array([8.0, 8.5], dtype=np.float32), effort="medium", seed=7)
+    # `_MockFlowBackbone` cycles 9-atom CCO, 12-atom benzene, 11-atom pyridine -> `select_best_of_m` picks highest `pic50`!
+    assert [m.GetNumAtoms() for m in gen_max["molecules"]] == [12, 12]
+

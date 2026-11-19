@@ -28,11 +28,14 @@ import numpy as np
 from rdkit import Chem
 import torch
 
+from itertools import product
+
 from .critic_bus import CompositeCriticBus
 from .gp_atlas import HeteroscedasticGPAtlas1D, _gaussian_box_hit_prob
 from .grpo import LoomGRPOTrainer, is_clean_organic_charge_state
 from .rsi import RSIDiagnoser
 from .slots import EFFORT_TO_M, GeneratorSlot, resolve_effort_candidates
+from .spec import ConstraintChannelSpec, ObjectiveChannelSpec
 
 
 _COV_RADII_A: Dict[str, float] = {
@@ -157,6 +160,106 @@ class AffineConditionCalibration:
         return asdict(self)
 
 
+_SQRT_2 = math.sqrt(2.0)
+
+
+def _norm_cdf_scalar(z: float) -> float:
+    return 0.5 * (1.0 + math.erf(z / _SQRT_2))
+
+
+def _objective_channel_loss(
+    obj_spec: ObjectiveChannelSpec,
+    mu: float,
+    sd: float,
+    target: float,
+    uncertainty_penalty_weight: float,
+) -> float:
+    """Mode-dispatched dimensionless Bayesian objective loss (`point` | `interval` | `minimize` | `maximize`)."""
+    tol = max(float(obj_spec.tolerance), 1e-4)
+    sd_clean = max(0.0, float(sd))
+    sd_eff = math.hypot(sd_clean, 0.45 * tol)
+    unc_pen = float(uncertainty_penalty_weight) * (sd_clean / tol)
+
+    if obj_spec.mode == "point":
+        p_hit = float(
+            _gaussian_box_hit_prob(
+                np.array([mu], dtype=np.float64),
+                np.array([target], dtype=np.float64),
+                np.array([sd_eff], dtype=np.float64),
+                tol,
+            )[0]
+        )
+        return -math.log(max(p_hit, 1e-6)) + 0.35 * (abs(mu - target) / tol) + unc_pen
+
+    if obj_spec.mode == "interval":
+        if obj_spec.interval_bounds is not None:
+            lo_r, hi_r = obj_spec.interval_bounds
+            lo = -math.inf if lo_r is None else float(lo_r)
+            hi = math.inf if hi_r is None else float(hi_r)
+        else:
+            lo = target - tol
+            hi = target + tol
+        cdf_hi = 1.0 if (math.isinf(hi) and hi > 0) else _norm_cdf_scalar((hi - mu) / sd_eff)
+        cdf_lo = 0.0 if (math.isinf(lo) and lo < 0) else _norm_cdf_scalar((lo - mu) / sd_eff)
+        p_int = max(0.0, min(1.0, cdf_hi - cdf_lo))
+        dist = max(0.0, lo - mu) + max(0.0, mu - hi)
+        return -math.log(max(p_int, 1e-6)) + 0.35 * (dist / tol) + unc_pen
+
+    if obj_spec.mode == "minimize":
+        excess = max(0.0, mu - target)
+        return ((mu - target) / tol) + 0.50 * (excess / tol) + unc_pen
+
+    # mode == "maximize"
+    shortfall = max(0.0, target - mu)
+    return ((target - mu) / tol) + 0.50 * (shortfall / tol) + unc_pen
+
+
+def _derive_constraint_anchor_grid(
+    c_spec: ConstraintChannelSpec,
+    prior_mean: Optional[float] = None,
+    prior_std: Optional[float] = None,
+) -> Tuple[float, Tuple[float, ...]]:
+    """Derive in-distribution conditioner anchor default + sweep grid purely from `ConstraintChannelSpec`."""
+    sm = max(float(c_spec.soft_margin), 1e-4)
+    has_prior = (
+        prior_mean is not None
+        and prior_std is not None
+        and math.isfinite(float(prior_mean))
+        and math.isfinite(float(prior_std))
+        and float(prior_std) > 1e-5
+    )
+
+    if c_spec.op == "leq":
+        thr = float(c_spec.threshold)  # type: ignore[arg-type]
+        if has_prior:
+            mu_p, sd_p = float(prior_mean), float(prior_std)  # type: ignore[arg-type]
+            hi_cap = thr - 1.25 * sm
+            raw_grid = [min(hi_cap, mu_p - z * sd_p) for z in (1.20, 1.00, 0.80, 0.60)]
+        else:
+            raw_grid = [thr - m * sm for m in (2.75, 2.55, 2.40, 2.25)]
+        grid = tuple(round(float(v), 4) for v in sorted(set(raw_grid)))
+        default_v = grid[min(1, len(grid) - 1)]
+        return default_v, grid
+
+    if c_spec.op == "geq":
+        thr = float(c_spec.threshold)  # type: ignore[arg-type]
+        if has_prior:
+            mu_p, sd_p = float(prior_mean), float(prior_std)  # type: ignore[arg-type]
+            lo_cap = thr + 1.00 * sm
+            raw_grid = [max(lo_cap, mu_p + z * sd_p) for z in (0.60, 0.80, 1.00, 1.20)]
+        else:
+            raw_grid = [thr + m * sm for m in (1.25, 1.50, 1.75, 2.00)]
+        grid = tuple(round(float(v), 4) for v in sorted(set(raw_grid)))
+        default_v = grid[min(1, len(grid) - 1)]
+        return default_v, grid
+
+    lo_b, hi_b = c_spec.threshold  # type: ignore[misc]
+    lo_f, hi_f = float(lo_b), float(hi_b)
+    span = max(hi_f - lo_f, 1e-4)
+    grid = tuple(round(lo_f + q * span, 4) for q in (0.35, 0.45, 0.55, 0.65))
+    return round(0.5 * (lo_f + hi_f), 4), grid
+
+
 class LoomService:
     """Unified Self-Driving Lab service orchestrating `GeneratorSlot` + `CompositeCriticBus` + `GPAtlas`."""
 
@@ -171,12 +274,12 @@ class LoomService:
         rsi_diagnoser: Optional[RSIDiagnoser] = None,
         uncertainty_penalty_weight: float = 0.25,
         refiner_disp_penalty_weight: float = 0.35,
+        strain_penalty_scale: float = 4.0,
     ) -> None:
         self.generator = generator
         self.critic_bus = critic_bus
-        default_aux = dict(default_auxiliary_anchors or {})
-        if "sa_score" in getattr(generator, "target_cols", []) and "sa_score" not in default_aux:
-            default_aux["sa_score"] = 1.95
+        derived_defaults, self._derived_aux_grids = self._inspect_auxiliary_constraint_channels()
+        default_aux = {**derived_defaults, **dict(default_auxiliary_anchors or {})}
         self.calibration = calibration or AffineConditionCalibration.identity(
             critic_bus.spec.objective_names, auxiliary_anchors=default_aux
         )
@@ -184,6 +287,44 @@ class LoomService:
         self.rsi_diagnoser = rsi_diagnoser or RSIDiagnoser()
         self.uncertainty_penalty_weight = float(uncertainty_penalty_weight)
         self.refiner_disp_penalty_weight = float(refiner_disp_penalty_weight)
+        self.strain_penalty_scale = float(strain_penalty_scale)
+
+    def _inspect_auxiliary_constraint_channels(
+        self,
+    ) -> Tuple[Dict[str, float], Dict[str, Tuple[float, ...]]]:
+        """Auto-discover conditioner columns governed by `TaskWeavingSpec.constraints` (zero hardcoded names)."""
+        obj_set = set(self.critic_bus.spec.objective_names)
+        gen_cols = list(getattr(self.generator, "target_cols", []))
+        t_mean_raw = getattr(self.generator, "target_mean", None)
+        t_scale_raw = getattr(self.generator, "target_scale", None)
+        t_mean_np = (
+            t_mean_raw.detach().cpu().numpy().reshape(-1)
+            if isinstance(t_mean_raw, torch.Tensor)
+            else (np.asarray(t_mean_raw, dtype=np.float64).reshape(-1) if t_mean_raw is not None else None)
+        )
+        t_scale_np = (
+            t_scale_raw.detach().cpu().numpy().reshape(-1)
+            if isinstance(t_scale_raw, torch.Tensor)
+            else (np.asarray(t_scale_raw, dtype=np.float64).reshape(-1) if t_scale_raw is not None else None)
+        )
+
+        defaults: Dict[str, float] = {}
+        grids: Dict[str, Tuple[float, ...]] = {}
+        for col_idx, col_name in enumerate(gen_cols):
+            if col_name in obj_set:
+                continue
+            matched = next(
+                (c for c in self.critic_bus.spec.constraints if c.asset_channel == col_name or c.name == col_name),
+                None,
+            )
+            if matched is None:
+                continue
+            mu_c = float(t_mean_np[col_idx]) if (t_mean_np is not None and col_idx < len(t_mean_np)) else None
+            sd_c = float(t_scale_np[col_idx]) if (t_scale_np is not None and col_idx < len(t_scale_np)) else None
+            d_val, g_vals = _derive_constraint_anchor_grid(matched, prior_mean=mu_c, prior_std=sd_c)
+            defaults[col_name] = d_val
+            grids[col_name] = g_vals
+        return defaults, grids
 
     @property
     def generator_capabilities(self) -> Dict[str, Any]:
@@ -307,7 +448,7 @@ class LoomService:
         active_mask: Optional[np.ndarray] = None,
         *,
         atom_budget: Optional[np.ndarray | Sequence[float]] = None,
-        batch_size: int = 64,
+        batch_size: Optional[int] = None,
     ) -> Tuple[List[Optional[Chem.Mol]], Dict[str, Any]]:
         """Select Top-1 molecule per prompt using outer `CompositeCriticBus` (`0` MLIP calls, `0` audit calls)."""
         bsz = len(candidates_grid)
@@ -324,9 +465,16 @@ class LoomService:
         self._sync_device()
         t_s0 = time.perf_counter()
         flat_mols: List[Optional[Chem.Mol]] = [mol for row in candidates_grid for mol in row]
+        if batch_size is None or int(batch_size) <= 0:
+            atom_counts = [m.GetNumAtoms() for m in flat_mols if m is not None]
+            med_atoms = float(np.median(atom_counts)) if atom_counts else 32.0
+            eff_bs = 256 if med_atoms <= 28.0 else (128 if med_atoms <= 44.0 else 64)
+        else:
+            eff_bs = int(batch_size)
+
         rep_req = np.repeat(req, m_keep, axis=0)
         rep_act = np.repeat(act, m_keep, axis=0)
-        ev = self._evaluate_surrogate_zero_mlip(flat_mols, rep_req, rep_act, batch_size=batch_size)
+        ev = self._evaluate_surrogate_zero_mlip(flat_mols, rep_req, rep_act, batch_size=eff_bs)
 
         preds = ev["objective_preds"]  # (B*M, K_obj)
         stds = np.nan_to_num(ev["objective_stds"], nan=0.0)
@@ -334,8 +482,9 @@ class LoomService:
         hard_ok = legal & ev["hard_constraints_met"]
         c_scores = ev["constraint_scores"]
 
-        tols = np.array([max(float(o.tolerance), 1e-4) for o in self.critic_bus.spec.objectives], dtype=np.float64)
-        weights = np.array([float(o.weight) for o in self.critic_bus.spec.objectives], dtype=np.float64)
+        obj_specs = self.critic_bus.spec.objectives
+        weights = np.array([float(o.weight) for o in obj_specs], dtype=np.float64)
+        p_scale = float(self.strain_penalty_scale)
 
         selected: List[Optional[Chem.Mol]] = [None] * bsz
         chosen_slots: List[int] = []
@@ -355,42 +504,30 @@ class LoomService:
                     u_val = float(c_scores[g_idx]) - 50.0
                 else:
                     tier = 2 if bool(hard_ok[g_idx]) else 1
-                    # Closed-form Bayesian box-hit probability under calibrated epistemic uncertainty (anti-Goodhart)
-                    ch_losses = np.zeros(len(tols), dtype=np.float64)
-                    for j_c in range(len(tols)):
+                    ch_losses = np.zeros(len(obj_specs), dtype=np.float64)
+                    for j_c, o_spec in enumerate(obj_specs):
                         if not bool(act_i[j_c]):
                             continue
-                        mu_j = float(pred_row[j_c])
-                        t_j = float(req[i, j_c])
-                        tol_j = float(tols[j_c])
-                        sd_j = max(float(stds[g_idx, j_c]), 0.48 * tol_j)
-                        p_hit_j = float(
-                            _gaussian_box_hit_prob(
-                                np.array([mu_j], dtype=np.float64),
-                                np.array([t_j], dtype=np.float64),
-                                np.array([sd_j], dtype=np.float64),
-                                tol_j,
-                            )[0]
-                        )
-                        neg_log_p = -math.log(max(p_hit_j, 1e-6))
-                        ch_losses[j_c] = (
-                            neg_log_p
-                            + 0.35 * (abs(mu_j - t_j) / tol_j)
-                            + self.uncertainty_penalty_weight * (sd_j / tol_j)
+                        ch_losses[j_c] = _objective_channel_loss(
+                            o_spec,
+                            float(pred_row[j_c]),
+                            float(stds[g_idx, j_c]),
+                            float(req[i, j_c]),
+                            self.uncertainty_penalty_weight,
                         )
                     denom_w = float(np.sum(weights[act_i])) if act_i.any() else 1.0
                     norm_loss = float(np.sum(weights[act_i] * ch_losses[act_i])) / max(denom_w, 1e-6)
-                    strain_pen = _analytic_conformer_strain_penalty(mol_k) / 0.25
+                    strain_pen = p_scale * _analytic_conformer_strain_penalty(mol_k)
                     disp_pen = 0.0
                     if mol_k.HasProp("_loom_refiner_disp_rms_A"):
                         disp_rms = float(mol_k.GetDoubleProp("_loom_refiner_disp_rms_A"))
                         if math.isfinite(disp_rms):
-                            disp_pen = (self.refiner_disp_penalty_weight * max(0.0, disp_rms - 0.10)) / 0.25
+                            disp_pen = p_scale * self.refiner_disp_penalty_weight * max(0.0, disp_rms - 0.10)
                     size_pen = 0.0
                     if b_1d is not None and b_1d[i] > 0:
                         err_n = abs(float(mol_k.GetNumAtoms()) - float(b_1d[i]))
                         tol_n = max(3.5, 0.10 * float(b_1d[i]))
-                        size_pen = (max(0.0, err_n - tol_n) * 0.04 + err_n * 0.012) / 0.25
+                        size_pen = p_scale * (max(0.0, err_n - tol_n) * 0.04 + err_n * 0.012)
                     u_val = -norm_loss + 0.12 * float(c_scores[g_idx]) - strain_pen - disp_pen - size_pen
 
                 if (tier > best_tier) or (tier == best_tier and u_val > best_utility):
@@ -416,7 +553,7 @@ class LoomService:
         dev_atom_budget: Optional[np.ndarray] = None,
         active_mask: Optional[np.ndarray] = None,
         calib_effort: str = "low",
-        sa_anchor_candidates: Sequence[float] = (1.85, 1.95, 2.05, 2.15),
+        auxiliary_anchor_candidates: Optional[Dict[str, Sequence[float]]] = None,
         alpha_bounds: Tuple[float, float] = (0.95, 1.08),
         slope_damping: float = 0.50,
         bias_damping: float = 0.85,
@@ -424,16 +561,28 @@ class LoomService:
         seed: int = 2026901,
         **gen_kwargs: Any,
     ) -> AffineConditionCalibration:
-        """Symmetric 112-prompt zero-leakage dev calibration (`0` audit calls, `0` MLIP calls) for any `GeneratorSlot`."""
+        """Symmetric zero-leakage dev calibration (`0` audit calls, `0` MLIP calls) for any `GeneratorSlot`."""
         req, act = self._normalize_request_shape(dev_targets, active_mask, dtype=np.float32)
         bsz = int(req.shape[0])
+        obj_specs = self.critic_bus.spec.objectives
         obj_names = list(self.critic_bus.spec.objective_names)
-        gen_cols = list(getattr(self.generator, "target_cols", obj_names))
-        has_aux_sa = ("sa_score" in gen_cols) and ("sa_score" not in obj_names)
 
-        cand_anchors: List[Dict[str, float]]
-        if has_aux_sa and len(sa_anchor_candidates) > 0:
-            cand_anchors = [{**self.calibration.auxiliary_anchors, "sa_score": float(sa_v)} for sa_v in sa_anchor_candidates]
+        # Build Spec-driven auxiliary anchor sweep grid (zero hardcoded property names)
+        grid_by_col: Dict[str, Tuple[float, ...]] = dict(self._derived_aux_grids)
+        if auxiliary_anchor_candidates:
+            for k_col, vals in auxiliary_anchor_candidates.items():
+                if len(vals) > 0:
+                    grid_by_col[k_col] = tuple(float(v) for v in vals)
+
+        if grid_by_col:
+            col_keys = list(grid_by_col.keys())
+            combos = list(product(*(grid_by_col[k] for k in col_keys)))
+            if len(combos) > 8:
+                idxs = np.linspace(0, len(combos) - 1, 8, dtype=int)
+                combos = [combos[int(ii)] for ii in idxs]
+            cand_anchors = [
+                {**self.calibration.auxiliary_anchors, **dict(zip(col_keys, tup))} for tup in combos
+            ]
         else:
             cand_anchors = [dict(self.calibration.auxiliary_anchors)]
 
@@ -458,19 +607,33 @@ class LoomService:
             leg = ev["legal_mask"] & ev["clean_charge_mask"]
             hits = float(np.mean(ev["constrained_clean_hits"])) if bsz > 0 else 0.0
             hard_rate = float(np.mean(ev["hard_constraints_met"][leg])) if leg.any() else 0.0
-            preds_0 = ev["objective_preds"][:, 0]
-            ok_0 = leg & np.isfinite(preds_0)
-            mae_0 = float(np.mean(np.abs(preds_0[ok_0] - req[ok_0, 0]))) if ok_0.any() else 2.5
-            # Enforce >=90% SA/constraint satisfaction without over-tightening into OOD ultra-low-SA motifs
-            sa_shortfall = max(0.0, 0.90 - hard_rate)
-            sc = hits + 0.25 * min(hard_rate, 0.94) - 0.90 * sa_shortfall - 0.45 * mae_0
+
+            # Multi-mode Spec-driven goal distance across active objectives (normalized by tolerance)
+            norm_errs: List[float] = []
+            for j_o, o_spec in enumerate(obj_specs):
+                if not bool(act[:, j_o].any()):
+                    continue
+                preds_j = ev["objective_preds"][:, j_o]
+                ok_j = leg & act[:, j_o] & np.isfinite(preds_j)
+                if ok_j.any():
+                    d_vec = o_spec.distance_to_goal(preds_j[ok_j], req[ok_j, j_o])
+                    norm_errs.append(float(np.mean(d_vec)) / max(float(o_spec.tolerance), 1e-4))
+            mean_norm_err = float(np.mean(norm_errs)) if norm_errs else 10.0
+            obj0_err = (
+                float(np.mean(obj_specs[0].distance_to_goal(ev["objective_preds"][leg & np.isfinite(ev["objective_preds"][:, 0]), 0], req[leg & np.isfinite(ev["objective_preds"][:, 0]), 0])))
+                if (leg & np.isfinite(ev["objective_preds"][:, 0])).any()
+                else 2.5
+            )
+            hard_shortfall = max(0.0, 0.90 - hard_rate)
+            sc = hits + 0.25 * min(hard_rate, 0.94) - 0.90 * hard_shortfall - 0.11 * mean_norm_err
             sweep_logs.append(
                 {
                     "auxiliary_anchors": dict(aux_map),
                     "dev_constrained_hit_yield": round(hits, 4),
                     "dev_legal_rate": round(float(np.mean(leg)), 4),
                     "dev_hard_constraint_rate_among_legal": round(hard_rate, 4),
-                    "dev_obj0_mae": round(mae_0, 4),
+                    "dev_obj0_goal_err": round(obj0_err, 4),
+                    "dev_mean_norm_goal_err": round(mean_norm_err, 4),
                     "dev_composite": round(sc, 5),
                 }
             )
@@ -487,14 +650,19 @@ class LoomService:
         betas: List[float] = []
         per_obj_fit: Dict[str, Any] = {}
 
-        for j, o_name in enumerate(obj_names):
+        for j, o_spec in enumerate(obj_specs):
+            o_name = o_spec.name
             col_req = req[:, j].astype(np.float64)
             col_pred = best_ev["objective_preds"][:, j].astype(np.float64)
             c0 = float(np.median(col_req))
             fit_mask = hard_b & act[:, j] & np.isfinite(col_pred)
             if int(fit_mask.sum()) < 24:
                 fit_mask = leg_b & act[:, j] & np.isfinite(col_pred)
-            if int(fit_mask.sum()) >= 20 and float(np.std(col_req[fit_mask])) > 1e-4:
+            if (
+                o_spec.mode in ("point", "interval")
+                and int(fit_mask.sum()) >= 20
+                and float(np.std(col_req[fit_mask])) > 1e-4
+            ):
                 xs = col_req[fit_mask] - c0
                 ys = col_pred[fit_mask] - c0
                 raw_slope, raw_bias = np.polyfit(xs, ys, deg=1)
@@ -509,6 +677,7 @@ class LoomService:
             alphas.append(round(alpha_j, 4))
             betas.append(round(beta_j, 4))
             per_obj_fit[o_name] = {
+                "mode": o_spec.mode,
                 "n_fit": int(fit_mask.sum()),
                 "forward_slope": round(float(raw_slope), 4),
                 "forward_bias": round(float(raw_bias), 4),

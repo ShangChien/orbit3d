@@ -177,16 +177,20 @@ def _build_calibrated_oe62_bus(
     cal_unimol2 = ResidualCalibratedAsset(raw_unimol2, asset_id="ext_unimol2", prior_blindspot_std=0.32)
 
     calib_diag: Dict[str, Any] = {}
+    cache_ok = False
     if calib_cache_path is not None and calib_cache_path.exists():
         cached = torch.load(calib_cache_path, map_location="cpu", weights_only=False)
-        cal_unimol2._feedback_static = list(cached["feedback_static"])
-        cal_unimol2._feedback_base_preds = list(cached["feedback_base_preds"])
-        cal_unimol2._feedback_residuals = list(cached["feedback_residuals"])
-        cal_unimol2._pred_mean = cached["pred_mean"]
-        cal_unimol2._pred_scale = cached["pred_scale"]
-        cal_unimol2._refit_gps()
-        calib_diag = dict(cached.get("calib_diag", {}))
-    else:
+        if int(cached.get("descriptor_version", 1)) == 2:
+            cal_unimol2._feedback_static = list(cached["feedback_static"])
+            cal_unimol2._feedback_base_preds = list(cached["feedback_base_preds"])
+            cal_unimol2._feedback_residuals = list(cached["feedback_residuals"])
+            cal_unimol2._pred_mean = cached["pred_mean"]
+            cal_unimol2._pred_scale = cached["pred_scale"]
+            cal_unimol2._refit_gps()
+            calib_diag = dict(cached.get("calib_diag", {}))
+            cache_ok = True
+
+    if not cache_ok:
         rng = np.random.default_rng(20261119)
         reconciler = ValenceReconciler(
             allowed_elements=("H", "B", "C", "N", "O", "F", "Si", "P", "S", "Cl", "Br", "I")
@@ -195,15 +199,26 @@ def _build_calibrated_oe62_bus(
         fb_targets: List[List[float]] = []
 
         # Strictly isolated `train` scaffold split (`quantum_train_dft.sdf`, pure `PBE0/def2-TZVP/DF` protocol):
-        # combine native 3D conformers + unrelaxed `0.01 A` octree-quantized `ValenceReconciler` conformers.
+        # size-stratified across small (`N <= 26`), medium (`27..38`), and large (`N >= 39`) organic scaffolds
+        # plus unrelaxed `0.01 A` octree-quantized `ValenceReconciler` conformers.
         q_train = [
             m
             for m in Chem.SDMolSupplier(str(args.quantum_train_dft_sdf), removeHs=False)
             if m is not None and is_clean_organic_charge_state(m)
         ]
-        n_nat = min(520, len(q_train))
-        q_idx = np.sort(rng.choice(len(q_train), size=n_nat, replace=False)) if len(q_train) > n_nat else np.arange(len(q_train))
-        quant_sub = set(rng.choice(q_idx, size=min(260, len(q_idx)), replace=False).tolist()) if len(q_idx) > 0 else set()
+        n_counts = np.array([m.GetNumAtoms() for m in q_train], dtype=np.int32)
+        small_idx = np.where(n_counts <= 26)[0]
+        mid_idx = np.where((n_counts > 26) & (n_counts <= 38))[0]
+        big_idx = np.where(n_counts > 38)[0]
+
+        picked_parts: List[np.ndarray] = []
+        for pool_arr, quota in ((small_idx, 240), (mid_idx, 300), (big_idx, 200)):
+            if len(pool_arr) <= quota:
+                picked_parts.append(pool_arr)
+            else:
+                picked_parts.append(np.sort(rng.choice(pool_arr, size=quota, replace=False)))
+        q_idx = np.sort(np.concatenate(picked_parts)) if picked_parts else np.arange(len(q_train))
+        quant_sub = set(rng.choice(q_idx, size=min(340, len(q_idx)), replace=False).tolist()) if len(q_idx) > 0 else set()
         for idx in q_idx.tolist():
             m = q_train[idx]
             if m.HasProp("DFT_homo") and m.HasProp("DFT_lumo"):
@@ -224,10 +239,11 @@ def _build_calibrated_oe62_bus(
 
         fb_y = np.asarray(fb_targets, dtype=np.float64)
         ingest_info = cal_unimol2.ingest_feedback(fb_mols, fb_y)
+        calib_diag["descriptor_version"] = 2
         calib_diag["train_dft_anchors_ingested"] = int(ingest_info["total_feedback_samples"])
         calib_diag["raw_unimol2_train_mae_eV"] = ingest_info["base_uncalibrated_mae_on_batch"]
 
-        # Zero-leakage validation check on `quantum_valid_dft.sdf` (`PBE0/def2-TZVP`)
+        # Zero-leakage validation check on `quantum_valid_dft.sdf` (`PBE0/def2-TZVP`) including small-scaffold check
         if args.quantum_valid_dft_sdf.exists():
             q_val = [
                 m for m in Chem.SDMolSupplier(str(args.quantum_valid_dft_sdf), removeHs=False) if m is not None
@@ -237,6 +253,7 @@ def _build_calibrated_oe62_bus(
                     [[float(m.GetProp("DFT_homo")), float(m.GetProp("DFT_lumo"))] for m in q_val],
                     dtype=np.float64,
                 )
+                vn = np.array([m.GetNumAtoms() for m in q_val], dtype=np.int32)
                 raw_v = raw_unimol2.predict_mols(q_val, batch_size=64)
                 cal_v = cal_unimol2.predict_mols(q_val, batch_size=64)
                 ok_v = raw_v["valid_mask"] & cal_v["valid_mask"] & np.isfinite(vy[:, 0])
@@ -248,11 +265,16 @@ def _build_calibrated_oe62_bus(
                     calib_diag["raw_unimol2_valid_dft_homo_bias_eV"] = round(float(np.mean(raw_diff)), 4)
                     calib_diag["cal_unimol2_valid_dft_homo_mae_eV"] = round(float(np.mean(np.abs(cal_diff))), 4)
                     calib_diag["cal_unimol2_valid_dft_homo_bias_eV"] = round(float(np.mean(cal_diff)), 4)
+                    sm_v = ok_v & (vn <= 26)
+                    if sm_v.any():
+                        calib_diag["raw_unimol2_small_valid_bias_eV"] = round(float(np.mean(raw_v["mean"][sm_v, 0] - vy[sm_v, 0])), 4)
+                        calib_diag["cal_unimol2_small_valid_bias_eV"] = round(float(np.mean(cal_v["mean"][sm_v, 0] - vy[sm_v, 0])), 4)
 
         if calib_cache_path is not None:
             calib_cache_path.parent.mkdir(parents=True, exist_ok=True)
             torch.save(
                 {
+                    "descriptor_version": 2,
                     "feedback_static": cal_unimol2._feedback_static,
                     "feedback_base_preds": cal_unimol2._feedback_base_preds,
                     "feedback_residuals": cal_unimol2._feedback_residuals,

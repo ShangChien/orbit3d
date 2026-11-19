@@ -476,7 +476,7 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
     """Experiment A: Fair 30.4-Atom (`N=1,792`) `base/low/medium/high` (`M=1,2,4,8`) via `LoomService`."""
     device = torch.device(args.device)
     pro_dir = args.work_dir / args.run_name
-    calib_cache = args.step2_dir / "residual_calibrated_unimol2.pt"
+    calib_cache = args.step2_dir / "residual_calibrated_unimol2_stoich_v2.pt"
     sdf_dir = pro_dir / "service_cohorts_sdf"
     sdf_dir.mkdir(parents=True, exist_ok=True)
 
@@ -501,9 +501,8 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
         dev_h,
         dev_atom_budget=dev_n,
         calib_effort="medium",
-        sa_anchor_candidates=(1.85, 1.95, 2.05, 2.15),
         cfg_scale=float(args.cfg_scale),
-        high_stage1=int(args.high_stage1),
+        high_stage1=args.high_stage1,
         seed=2026901,
     )
     print(f"[LoomService 112-Dev Calibration] {cal.to_dict()}", flush=True)
@@ -525,7 +524,7 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
             effort=effort_name,
             seed=991000 + m_val * 131,
             cfg_scale=float(args.cfg_scale),
-            high_stage1=int(args.high_stage1),
+            high_stage1=args.high_stage1,
             include_epistemic_envelope=False,
         )
         sel_m = out["molecules"]
@@ -545,7 +544,9 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
             float(out["surrogate_wall_sec"]),
             export_sdf_path=sdf_path,
         )
-        _, ms1, ms2, mk = gen.resolve_internal_funnel(effort=effort_name, high_stage1=int(args.high_stage1))
+        _, ms1, ms2, mk = gen.resolve_internal_funnel(
+            effort=effort_name, atom_budget=req_30[:, 1], high_stage1=args.high_stage1
+        )
         arm_res["effort"] = effort_name
         arm_res["n_candidates"] = m_val
         arm_res["internal_funnel"] = {"m_stage1": ms1, "m_stage2": ms2, "m_keep": mk}
@@ -603,7 +604,7 @@ def run_fair30_pmf(args: argparse.Namespace) -> None:
     if args.pmf_ckpt is None:
         raise ValueError("--pmf-ckpt is required for --mode fair30_pmf")
     device = torch.device(args.device)
-    calib_cache = args.step2_dir / "residual_calibrated_unimol2.pt"
+    calib_cache = args.step2_dir / "residual_calibrated_unimol2_stoich_v2.pt"
 
     pmf_gen = LoomFlowMolGenerator.from_propmolflow_checkpoint(
         args.pmf_ckpt,
@@ -675,7 +676,7 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
     """Experiment B: Multi-Atom-Count Scaling (`N in {20, 30, 40, 50, 60}`, 280 prompts/bucket) via `LoomService`."""
     device = torch.device(args.device)
     pro_dir = args.work_dir / args.run_name
-    calib_cache = args.step2_dir / "residual_calibrated_unimol2.pt"
+    calib_cache = args.step2_dir / "residual_calibrated_unimol2_stoich_v2.pt"
 
     bundled_p = pro_dir / "v4_pro_bundled.pt"
     ckpt_to_load = bundled_p if bundled_p.exists() else (pro_dir / "v4_pro_final.pt")
@@ -698,9 +699,8 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
         dev_h,
         dev_atom_budget=dev_n,
         calib_effort="medium",
-        sa_anchor_candidates=(1.85, 1.95, 2.05, 2.15),
         cfg_scale=float(args.cfg_scale),
-        high_stage1=int(args.high_stage1),
+        high_stage1=args.high_stage1,
         seed=2026901,
     )
     svc.generate(np.full(16, -6.4, dtype=np.float32), atom_budget=np.full(16, 30.0, dtype=np.float32), effort="low", seed=19, include_epistemic_envelope=False)
@@ -722,7 +722,7 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
                 effort=effort_name,
                 seed=74000 + m_val * 67 + n_exact,
                 cfg_scale=float(args.cfg_scale),
-                high_stage1=int(args.high_stage1),
+                high_stage1=args.high_stage1,
                 include_epistemic_envelope=False,
             )
             sel_m = out["molecules"]
@@ -740,11 +740,15 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
                 0.0,
                 float(out["surrogate_wall_sec"]),
             )
+            _, ms1, ms2, mk = gen.resolve_internal_funnel(
+                effort=effort_name, atom_budget=float(n_exact), high_stage1=args.high_stage1
+            )
             b_res["effort"] = effort_name
             b_res["n_candidates"] = m_val
+            b_res["internal_funnel"] = {"m_stage1": ms1, "m_stage2": ms2, "m_keep": mk}
             b_arms[arm_key] = b_res
             print(
-                f"[Bucket N={n_exact} {arm_key:20s}] Eff={b_res['effective_output_mol_per_sec']:.2f} mol/s | "
+                f"[Bucket N={n_exact} {arm_key:20s} ({ms1}->{ms2}->{mk})] Eff={b_res['effective_output_mol_per_sec']:.2f} mol/s | "
                 f"Atoms={b_res['mean_total_atoms']} (err={b_res['mean_natoms_abs_err']}) | "
                 f"Legal={b_res['legal_rate']*100:.1f}% Fmax={b_res['zero_step_f_max_median_eV_A']:.2f} | "
                 f"BlindSynth={b_res['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}% | "
@@ -765,10 +769,10 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
 
 
 def run_ablation_m4(args: argparse.Namespace) -> None:
-    """Experiment C: Fixed `medium (M=4)` internal architecture ablation (`4->4->4` vs `32->8->4` x `Refiner`)."""
+    """Experiment C: Fixed `medium (M=4)` internal architecture ablation (`4->4->4` vs Speculative Tree x `Refiner`)."""
     device = torch.device(args.device)
     pro_dir = args.work_dir / args.run_name
-    calib_cache = args.step2_dir / "residual_calibrated_unimol2.pt"
+    calib_cache = args.step2_dir / "residual_calibrated_unimol2_stoich_v2.pt"
 
     bundled_p = pro_dir / "v4_pro_bundled.pt"
     ckpt_to_load = bundled_p if bundled_p.exists() else (pro_dir / "v4_pro_final.pt")
@@ -784,7 +788,6 @@ def run_ablation_m4(args: argparse.Namespace) -> None:
         dev_h,
         dev_atom_budget=dev_n,
         calib_effort="medium",
-        sa_anchor_candidates=(1.85, 1.95, 2.05, 2.15),
         cfg_scale=float(args.cfg_scale),
         seed=2026901,
     )
@@ -973,7 +976,7 @@ def main() -> None:
     p.add_argument("--critic-group-size", type=int, default=8)
     p.add_argument("--eval-sa-target", type=float, default=1.95)
     p.add_argument("--cfg-scale", type=float, default=2.20)
-    p.add_argument("--high-stage1", type=int, default=64)
+    p.add_argument("--high-stage1", type=int, default=None)
     p.add_argument("--allow-tf32", action="store_true")
     p.add_argument("--work-dir", type=Path, default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/runs"))
     p.add_argument("--run-name", type=str, default="uni3dar_v4_pro")
