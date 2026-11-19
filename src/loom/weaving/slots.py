@@ -58,11 +58,35 @@ def check_unimol2_support(
     return None
 
 
+EFFORT_TO_M: Dict[str, int] = {
+    "base": 1,
+    "low": 2,
+    "medium": 4,
+    "high": 8,
+}
+M_TO_EFFORT: Dict[int, str] = {v: k for k, v in EFFORT_TO_M.items()}
+
+
+def resolve_effort_candidates(effort: str = "base", n_candidates: Optional[int] = None) -> Tuple[str, int]:
+    """Resolve standardized `Uni-Loom` effort tier `('base'|'low'|'medium'|'high')` and outer budget `M`."""
+    eff_key = str(effort).strip().lower() if effort else "base"
+    if n_candidates is not None:
+        m = int(n_candidates)
+        if m < 1:
+            raise ValueError(f"n_candidates must be >= 1, got {n_candidates}")
+        resolved_eff = M_TO_EFFORT.get(m, eff_key if eff_key in EFFORT_TO_M else f"m{m}")
+        return resolved_eff, m
+    if eff_key not in EFFORT_TO_M:
+        raise ValueError(f"Unsupported effort='{effort}'. Expected one of {sorted(EFFORT_TO_M)}")
+    return eff_key, EFFORT_TO_M[eff_key]
+
+
 class GeneratorSlot(nn.Module, ABC):
     """Unified contract for 3D molecular generators (autoregressive, diffusion, or flow matching)."""
 
     slot_role: str = "generator"
     supports_exact_trajectory_logprob: bool = True
+    supports_prefix_process_search: bool = False
     generator_family: str = "autoregressive"
 
     @property
@@ -135,6 +159,61 @@ class GeneratorSlot(nn.Module, ABC):
         electron_parity: Optional[int] = 0,
     ) -> List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
         """Return exact step/token log-probability packets `(log_probs, actions, owner_idx)` for GRPO."""
+
+    @torch.no_grad()
+    def generate_candidates(
+        self,
+        targets_norm: torch.Tensor,
+        active_mask: torch.Tensor,
+        *,
+        atom_budget: Optional[np.ndarray | Sequence[float]] = None,
+        n_candidates: Optional[int] = None,
+        effort: str = "base",
+        seed: Optional[int] = None,
+        **kwargs: Any,
+    ) -> List[List[Optional[Chem.Mol]]]:
+        """Generate `[batch_size][M]` validated 3D RDKit `Chem.Mol` candidates under effort tier `M in {1,2,4,8}`."""
+        from ..chemistry.valence_reconciler import ValenceReconciler
+
+        _, m_keep = resolve_effort_candidates(effort=effort, n_candidates=n_candidates)
+        bsz = int(targets_norm.shape[0])
+        if bsz == 0:
+            return []
+        rep_t = targets_norm.repeat_interleave(m_keep, dim=0)
+        rep_m = active_mask.repeat_interleave(m_keep, dim=0)
+        sample_kw = dict(kwargs)
+        if atom_budget is not None:
+            b_np = np.repeat(np.asarray(atom_budget, dtype=np.float32).reshape(bsz), m_keep)
+            sample_kw["leaf_atom_budget"] = b_np
+        trajs = self.sample(rep_t, rep_m, seed=seed, **sample_kw)
+        reconciler = ValenceReconciler(allowed_elements=self.allowed_elements)
+        out: List[List[Optional[Chem.Mol]]] = [[None] * m_keep for _ in range(bsz)]
+        for idx, tr in enumerate(trajs):
+            p_i, k_i = divmod(idx, m_keep)
+            rd_m = tr.get("rdkit_mol")
+            if rd_m is not None:
+                out[p_i][k_i] = rd_m
+                continue
+            res = reconciler.reconcile_point_cloud(
+                tr.get("atom_symbols", []),
+                tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)),
+                potential_slot=None,
+                bond_order_priors=tr.get("bond_order_probs"),
+            )
+            if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
+                out[p_i][k_i] = res.mol
+        return out
+
+    def fit_internal_post_processors(
+        self,
+        equil_mols: Sequence[Chem.Mol],
+        onpolicy_pairs: Sequence[Tuple[np.ndarray, Chem.Mol]],
+        critic_bus: Any,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Optional generator-internal post-processor fitting hook (no-op by default)."""
+        del equil_mols, onpolicy_pairs, critic_bus, kwargs
+        return {"supported": False}
 
 
 class PotentialSlot(nn.Module):

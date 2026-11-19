@@ -603,13 +603,21 @@ class ResidualCalibratedAsset(PredictorAsset):
 
     @property
     def calibrated_target_bounds(self) -> Optional[List[Tuple[float, float]]]:
-        """Empirical `[min, max]` target bounds over all seeded anchors + ingested feedback."""
+        """Empirical `[min, max]` target bounds over all seeded anchors + ingested feedback (NaN-safe per channel)."""
         all_preds = self._anchor_base_preds + self._feedback_base_preds
         all_res = self._anchor_residuals + self._feedback_residuals
         if len(all_preds) < 2:
             return None
         y_obs = np.stack(all_preds, axis=0) + np.stack(all_res, axis=0)
-        return [(float(np.min(y_obs[:, j])), float(np.max(y_obs[:, j]))) for j in range(y_obs.shape[1])]
+        bounds: List[Tuple[float, float]] = []
+        for j in range(y_obs.shape[1]):
+            col = y_obs[:, j]
+            fin = col[np.isfinite(col)]
+            if len(fin) > 0:
+                bounds.append((float(np.min(fin)), float(np.max(fin))))
+            else:
+                bounds.append((float("nan"), float("nan")))
+        return bounds
 
     def _compose_features(self, static_mat: np.ndarray, base_preds: np.ndarray) -> np.ndarray:
         assert self._pred_mean is not None and self._pred_scale is not None
@@ -632,16 +640,24 @@ class ResidualCalibratedAsset(PredictorAsset):
         self._ensure_pred_scaler(preds_mat)
         X_mat = self._compose_features(np.stack(all_static, axis=0), preds_mat)
         R_mat = np.stack(all_res, axis=0)
+        n_anc = len(self._anchor_static)
 
         k = len(self.capabilities.target_names)
         self._gps = []
         self._trends = []
-        has_feedback = len(self._feedback_static) >= 3
         for c_i in range(k):
-            r_vec = R_mat[:, c_i]
-            if has_feedback:
-                trend = Ridge(alpha=6.0).fit(X_mat, r_vec)
-                r_detrended = r_vec - trend.predict(X_mat)
+            r_col = R_mat[:, c_i]
+            fin_mask = np.isfinite(r_col)
+            if int(fin_mask.sum()) < 4:
+                self._trends.append(None)
+                self._gps.append(None)
+                continue
+            X_c = X_mat[fin_mask]
+            r_vec = r_col[fin_mask]
+            fb_fin_cnt = int(np.isfinite(R_mat[n_anc:, c_i]).sum()) if R_mat.shape[0] > n_anc else 0
+            if fb_fin_cnt >= 3:
+                trend = Ridge(alpha=6.0).fit(X_c, r_vec)
+                r_detrended = r_vec - trend.predict(X_c)
                 self._trends.append(trend)
             else:
                 r_detrended = r_vec
@@ -657,7 +673,7 @@ class ResidualCalibratedAsset(PredictorAsset):
             )
             gp = GaussianProcessRegressor(
                 kernel=kernel, normalize_y=False, n_restarts_optimizer=2, random_state=42 + c_i
-            ).fit(X_mat, r_detrended)
+            ).fit(X_c, r_detrended)
             self._gps.append(gp)
 
     def seed_in_domain_anchors(
@@ -712,32 +728,40 @@ class ResidualCalibratedAsset(PredictorAsset):
         feedback_mols: Sequence[Chem.Mol],
         true_targets: np.ndarray,
     ) -> Dict[str, Any]:
-        """Incrementally ingest external Grounded-RSI labels `(M_i, y_true_i)` and refit residual GPs."""
+        """Incrementally ingest external Grounded-RSI labels `(M_i, y_true_i)` (supports partial NaN assay readouts)."""
         k = len(self.capabilities.target_names)
         y_true = np.asarray(true_targets, dtype=np.float64).reshape(len(feedback_mols), k)
         base_out = self.base_asset.predict_mols(feedback_mols)
-        v_mask = base_out["valid_mask"] & np.isfinite(y_true).all(axis=-1)
+        v_mask = base_out["valid_mask"] & np.isfinite(y_true).any(axis=-1)
 
         added = 0
-        pre_mae_list = []
+        per_channel_added = np.zeros(k, dtype=np.int64)
+        pre_res_list: List[np.ndarray] = []
         for idx, ok in enumerate(v_mask):
             if not ok:
                 continue
             b_pred = np.asarray(base_out["mean"][idx], dtype=np.float64)
-            res = y_true[idx] - b_pred
+            res = np.where(np.isfinite(y_true[idx]), y_true[idx] - b_pred, np.nan)
             self._feedback_static.append(_mol_static_residual_descriptor(feedback_mols[idx], self._fp_gen))
             self._feedback_base_preds.append(b_pred)
             self._feedback_residuals.append(res)
-            pre_mae_list.append(np.abs(res))
+            pre_res_list.append(np.abs(res))
+            per_channel_added += np.isfinite(res).astype(np.int64)
             added += 1
 
         self._refit_gps()
+        base_mae_batch: Optional[List[Optional[float]]] = None
+        if pre_res_list:
+            rmat = np.stack(pre_res_list, axis=0)
+            base_mae_batch = [
+                (float(np.nanmean(rmat[:, j])) if np.isfinite(rmat[:, j]).any() else None)
+                for j in range(k)
+            ]
         return {
             "ingested_this_round": added,
+            "ingested_per_channel": per_channel_added.tolist(),
             "total_feedback_samples": len(self._feedback_static),
-            "base_uncalibrated_mae_on_batch": (
-                np.mean(np.stack(pre_mae_list, axis=0), axis=0).tolist() if pre_mae_list else None
-            ),
+            "base_uncalibrated_mae_on_batch": base_mae_batch,
         }
 
     def predict_mols(self, mols: Sequence[Optional[Chem.Mol]], batch_size: int = 32) -> Dict[str, Any]:

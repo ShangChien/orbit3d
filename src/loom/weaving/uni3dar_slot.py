@@ -31,7 +31,7 @@ from ..vendor.uni3dar.models.uni3dar_sampler import (
 )
 from .conditioner import LoomConditioner
 from .lora import LoRALinear, extract_linear_weight_bias, inject_uni3dar_lora, inject_xyz_head_lora, iter_lora_parameters
-from .slots import GeneratorSlot
+from .slots import GeneratorSlot, resolve_effort_candidates
 
 try:
     from torch.nn.attention.bias import causal_lower_right as _causal_lower_right
@@ -329,7 +329,15 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
     backend_id: str = "loom_uni3dar_v1"
     supports_exact_trajectory_logprob: bool = True
+    supports_prefix_process_search: bool = True
     generator_family: str = "octree_autoregressive"
+
+    EFFORT_FUNNELS: Dict[str, Tuple[int, int, int]] = {
+        "base": (1, 1, 1),
+        "low": (16, 4, 2),
+        "medium": (32, 8, 4),
+        "high": (64, 16, 8),
+    }
 
     def __init__(
         self,
@@ -430,7 +438,65 @@ class LoomUni3DARGenerator(GeneratorSlot):
         self.register_buffer("_subcell_shifts", torch.tensor(subcell_orders, dtype=torch.int32), persistent=False)
         self.register_buffer("_bit_shifts", (1 << torch.arange(8, dtype=torch.int32)), persistent=False)
         self._fused_eval_layers: Dict[Tuple[int, str, torch.dtype], Any] = {}
+        from ..chemistry.valence_reconciler import ValenceReconciler
+
+        object.__setattr__(self, "_post_tree_refiner", None)
+        object.__setattr__(self, "_process_critic", None)
+        object.__setattr__(
+            self,
+            "_reconciler",
+            ValenceReconciler(allowed_elements=tuple(self.args.allow_atoms.split(","))),
+        )
         self.configure_trainable()
+
+    @property
+    def post_tree_refiner(self) -> Any:
+        return getattr(self, "_post_tree_refiner", None)
+
+    @property
+    def process_critic(self) -> Any:
+        return getattr(self, "_process_critic", None)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in ("post_tree_refiner", "process_critic"):
+            if value is not None and hasattr(value, "to") and hasattr(self, "target_mean"):
+                value = value.to(self.target_mean.device)
+            object.__setattr__(self, f"_{name}", value)
+            return
+        super().__setattr__(name, value)
+
+    @property
+    def reconciler(self) -> Any:
+        rec = getattr(self, "_reconciler", None)
+        if rec is None:
+            from ..chemistry.valence_reconciler import ValenceReconciler
+
+            rec = ValenceReconciler(allowed_elements=tuple(self.args.allow_atoms.split(",")))
+            object.__setattr__(self, "_reconciler", rec)
+        return rec
+
+    def attach_post_processors(
+        self,
+        *,
+        post_tree_refiner: Any = None,
+        process_critic: Any = None,
+    ) -> "LoomUni3DARGenerator":
+        """Attach internal `PostTreeGraphRefiner` and/or `TwoStageOctreeProcessCritic` without polluting `state_dict`."""
+        if post_tree_refiner is not None:
+            self.post_tree_refiner = post_tree_refiner
+        if process_critic is not None:
+            self.process_critic = process_critic
+        return self
+
+    def _apply(self, fn: Any, recurse: bool = True) -> "LoomUni3DARGenerator":
+        out = super()._apply(fn, recurse=recurse)
+        ref = getattr(self, "_post_tree_refiner", None)
+        if ref is not None and hasattr(ref, "_apply"):
+            ref._apply(fn)
+        crit = getattr(self, "_process_critic", None)
+        if crit is not None and hasattr(crit, "_apply"):
+            crit._apply(fn)
+        return out
 
     def train(self, mode: bool = True) -> "LoomUni3DARGenerator":
         self._fused_eval_layers.clear()
@@ -539,7 +605,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
     def save_checkpoint(self, path: Path | str, extra_metadata: Optional[Dict[str, Any]] = None) -> None:
         out_path = Path(path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {
+        payload: Dict[str, Any] = {
             "backend": self.backend_id,
             "target_cols": list(self.target_cols),
             "target_units": list(self.target_units),
@@ -557,6 +623,25 @@ class LoomUni3DARGenerator(GeneratorSlot):
             "state_dict": {k: v.detach().cpu() for k, v in self.state_dict().items()},
             "metadata": extra_metadata or {},
         }
+        if self.post_tree_refiner is not None and hasattr(self.post_tree_refiner, "get_config"):
+            payload["post_tree_refiner_bundle"] = {
+                **self.post_tree_refiner.get_config(),
+                "state_dict": {k: v.detach().cpu() for k, v in self.post_tree_refiner.state_dict().items()},
+            }
+        if self.process_critic is not None and hasattr(self.process_critic, "stage1_critic"):
+            s1 = self.process_critic.stage1_critic
+            s2 = self.process_critic.stage2_critic
+            payload["process_critic_bundle"] = {
+                "stage1_config": {
+                    "emb_dim": s1.emb_dim,
+                    "num_targets": s1.num_targets,
+                    "hidden_dim": s1.hidden_dim,
+                    "geom_dim": s1.geom_dim,
+                },
+                "stage1_state_dict": {k: v.detach().cpu() for k, v in s1.state_dict().items()},
+                "stage2_config": s2.get_config(),
+                "stage2_state_dict": {k: v.detach().cpu() for k, v in s2.state_dict().items()},
+            }
         torch.save(payload, out_path)
 
     @classmethod
@@ -566,8 +651,12 @@ class LoomUni3DARGenerator(GeneratorSlot):
         *,
         device: str = "cuda:0",
         batch_size: int = 32,
+        refiner_path: Optional[Path | str] = None,
+        critic_path: Optional[Path | str] = None,
+        auto_discover_companions: bool = True,
     ) -> Tuple["LoomUni3DARGenerator", Dict[str, Any]]:
-        payload = torch.load(path, map_location="cpu", weights_only=False)
+        ckpt_file = Path(path)
+        payload = torch.load(ckpt_file, map_location="cpu", weights_only=False)
         if payload.get("backend") != cls.backend_id:
             raise ValueError(f"Expected backend {cls.backend_id}, got {payload.get('backend')}")
         rep = payload["representation_config"]
@@ -590,6 +679,94 @@ class LoomUni3DARGenerator(GeneratorSlot):
         )
         gen.load_state_dict(payload["state_dict"], strict=True)
         gen = gen.to(device)
+
+        # Restore bundled or companion PostTreeGraphRefiner & TwoStageOctreeProcessCritic
+        from .octree_process_critic import (
+            NUM_COARSE_GEOM_FEATS,
+            NUM_ELEM_CLOUD_FEATS,
+            OctreeElementProcessCritic,
+            OctreeProcessCritic,
+            TwoStageOctreeProcessCritic,
+        )
+        from .post_tree_refiner import PostTreeGraphRefiner
+
+        if "post_tree_refiner_bundle" in payload:
+            rb = payload["post_tree_refiner_bundle"]
+            ref_m = PostTreeGraphRefiner(
+                num_atom_classes=int(rb.get("num_atom_classes", 128)),
+                d_model=int(rb.get("d_model", 160)),
+                n_heads=int(rb.get("n_heads", 4)),
+                n_layers=int(rb.get("n_layers", 2)),
+                n_rbf=int(rb.get("n_rbf", 24)),
+                d_pair=int(rb.get("d_pair", 128)),
+                max_disp_A=float(rb.get("max_disp_A", 0.08)),
+            ).to(device)
+            ref_m.load_state_dict(rb["state_dict"], strict=True)
+            ref_m.eval()
+            gen.post_tree_refiner = ref_m
+        else:
+            cand_refs: List[Path] = []
+            if refiner_path is not None:
+                cand_refs.append(Path(refiner_path))
+            elif auto_discover_companions:
+                stem_prefix = ckpt_file.stem.replace("_final", "")
+                cand_refs.extend(
+                    [
+                        ckpt_file.parent / f"{stem_prefix}_post_tree_refiner.pt",
+                        ckpt_file.parent / "post_tree_refiner.pt",
+                    ]
+                )
+            for cr in cand_refs:
+                if cr.exists():
+                    ref_m, _ = PostTreeGraphRefiner.load_checkpoint(cr, device=device)
+                    gen.post_tree_refiner = ref_m
+                    break
+
+        if "process_critic_bundle" in payload:
+            cb = payload["process_critic_bundle"]
+            c1 = cb["stage1_config"]
+            s1 = OctreeProcessCritic(
+                emb_dim=int(c1["emb_dim"]),
+                num_targets=int(c1["num_targets"]),
+                hidden_dim=int(c1.get("hidden_dim", 512)),
+                geom_dim=int(c1.get("geom_dim", NUM_COARSE_GEOM_FEATS)),
+            ).to(device)
+            s1.load_state_dict(cb["stage1_state_dict"], strict=True)
+            s1.eval()
+            c2 = cb["stage2_config"]
+            s2 = OctreeElementProcessCritic(
+                emb_dim=int(c2["emb_dim"]),
+                num_targets=int(c2["num_targets"]),
+                num_atom_classes=int(c2.get("num_atom_classes", 128)),
+                num_h_pools=int(c2.get("num_h_pools", 6)),
+                d_node=int(c2.get("d_node", 160)),
+                n_rbf=int(c2.get("n_rbf", 16)),
+                n_gnn_layers=int(c2.get("n_gnn_layers", 2)),
+                hidden_dim=int(c2.get("hidden_dim", 512)),
+                cloud_feat_dim=int(c2.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
+            ).to(device)
+            s2.load_state_dict(cb["stage2_state_dict"], strict=True)
+            s2.eval()
+            gen.process_critic = TwoStageOctreeProcessCritic(s1, s2).to(device)
+            gen.process_critic.eval()
+        else:
+            cand_crits: List[Path] = []
+            if critic_path is not None:
+                cand_crits.append(Path(critic_path))
+            elif auto_discover_companions:
+                stem_prefix = ckpt_file.stem.replace("_final", "")
+                cand_crits.extend(
+                    [
+                        ckpt_file.parent / f"{stem_prefix}_two_stage_critic.pt",
+                        ckpt_file.parent / "two_stage_critic.pt",
+                    ]
+                )
+            for cc in cand_crits:
+                if cc.exists():
+                    crit_m, _ = TwoStageOctreeProcessCritic.load_checkpoint(cc, device=device)
+                    gen.process_critic = crit_m
+                    break
+
         gen.eval()
         return gen, payload
 
@@ -4970,3 +5147,287 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     packets.append((vals_f[real_atom].log_softmax(-1), labels_a[axis][real_atom], atom_owner[real_atom]))
 
         return packets
+
+    # ------------------------------------------------------------------
+    # Standardized Effort-Tiered Candidate Generation & Post-Processor Hook
+    # ------------------------------------------------------------------
+    def resolve_internal_funnel(
+        self,
+        *,
+        effort: str = "base",
+        n_candidates: Optional[int] = None,
+        enable_internal_tree: bool = True,
+        high_stage1: int = 64,
+    ) -> Tuple[str, int, int, int]:
+        """Map outer effort tier (`base/low/medium/high` <-> `M in {1,2,4,8}`) to internal `(m_s1, m_s2, m_keep)`."""
+        eff_name, m_keep = resolve_effort_candidates(effort=effort, n_candidates=n_candidates)
+        if m_keep == 1 or (not enable_internal_tree) or (self.process_critic is None):
+            return eff_name, m_keep, m_keep, m_keep
+        if m_keep == 2:
+            return eff_name, 16, 4, 2
+        if m_keep == 4:
+            return eff_name, 32, 8, 4
+        if m_keep == 8:
+            ms1 = max(16, int(high_stage1))
+            return eff_name, ms1, 16, 8
+        ms2 = max(m_keep, m_keep * 2)
+        ms1 = max(ms2, m_keep * 8)
+        return eff_name, ms1, ms2, m_keep
+
+    @torch.no_grad()
+    def generate_candidates(
+        self,
+        targets_norm: torch.Tensor,
+        active_mask: torch.Tensor,
+        *,
+        atom_budget: Optional[np.ndarray | Sequence[float] | torch.Tensor] = None,
+        n_candidates: Optional[int] = None,
+        effort: str = "base",
+        seed: Optional[int] = None,
+        enable_internal_tree: bool = True,
+        enable_post_tree_refiner: bool = True,
+        high_stage1: int = 64,
+        cfg_scale: float = 2.20,
+        xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.20,
+        budget_guidance_scale: float = 0.35,
+        stage2_diversity_weight: float = 0.10,
+        objective_col_mask: Optional[torch.Tensor] = None,
+        uncond_active_mask: Optional[torch.Tensor] = None,
+        temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
+        geometric_guard: bool = True,
+        electron_parity: Optional[int] = 0,
+        use_bf16: bool = True,
+        **kwargs: Any,
+    ) -> List[List[Optional[Any]]]:
+        """Generate `[batch_size][M]` validated 3D RDKit `Chem.Mol` candidates with internal octree pruning + refiner."""
+        del kwargs
+        from rdkit import Chem
+
+        device = self.target_mean.device
+        targets_norm = targets_norm.to(device)
+        active_mask = active_mask.to(device)
+        bsz = int(targets_norm.shape[0])
+        if bsz == 0:
+            return []
+
+        _, ms1, ms2, m_keep = self.resolve_internal_funnel(
+            effort=effort,
+            n_candidates=n_candidates,
+            enable_internal_tree=enable_internal_tree,
+            high_stage1=high_stage1,
+        )
+        b_arr: Optional[np.ndarray] = None
+        if atom_budget is not None:
+            if isinstance(atom_budget, torch.Tensor):
+                b_arr = atom_budget.detach().cpu().numpy().astype(np.float32).reshape(bsz)
+            else:
+                b_arr = np.asarray(atom_budget, dtype=np.float32).reshape(bsz)
+
+        if obj_mask_in := objective_col_mask:
+            obj_col_mask = obj_mask_in.to(device=device, dtype=torch.bool)
+        elif self.num_props >= 2 and "sa_score" in self.target_cols:
+            obj_col_mask = torch.tensor(
+                [col != "sa_score" for col in self.target_cols], dtype=torch.bool, device=device
+            )
+        else:
+            obj_col_mask = None
+
+        grouped_trajs: List[List[Dict[str, Any]]] = []
+        if ms1 == m_keep and ms2 == m_keep:
+            # Direct M->M->M sampling (used for `base` M=1 and `enable_internal_tree=False` ablations)
+            p_chunk = max(1, 512 // max(m_keep, 1))
+            for s in range(0, bsz, p_chunk):
+                e = min(s + p_chunk, bsz)
+                rep_t = targets_norm[s:e].repeat_interleave(m_keep, dim=0)
+                rep_m = active_mask[s:e].repeat_interleave(m_keep, dim=0)
+                rep_u = (
+                    uncond_active_mask[s:e].repeat_interleave(m_keep, dim=0)
+                    if uncond_active_mask is not None
+                    else None
+                )
+                rep_b = np.repeat(b_arr[s:e], m_keep) if b_arr is not None else None
+                sub_seed = (int(seed) + s * 41) if seed is not None else None
+                trajs_flat = self.sample(
+                    rep_t,
+                    rep_m,
+                    uncond_active_mask=rep_u,
+                    cfg_scale=cfg_scale,
+                    xyz_cfg_scale=xyz_cfg_scale,
+                    cfg_tree_decay=cfg_tree_decay,
+                    geometric_guard=geometric_guard,
+                    temperatures=temperatures,
+                    seed=sub_seed,
+                    use_bf16=(use_bf16 and device.type == "cuda"),
+                    electron_parity=electron_parity,
+                    leaf_atom_budget=rep_b,
+                    budget_guidance_scale=budget_guidance_scale,
+                )
+                for p_loc in range(e - s):
+                    grouped_trajs.append(trajs_flat[p_loc * m_keep : (p_loc + 1) * m_keep])
+        else:
+            p_chunk = 96 if ms1 >= 64 else (128 if ms1 >= 48 else 256)
+            for s in range(0, bsz, p_chunk):
+                e = min(s + p_chunk, bsz)
+                sub_u = uncond_active_mask[s:e] if uncond_active_mask is not None else None
+                sub_b = b_arr[s:e] if b_arr is not None else None
+                sub_seed = (int(seed) + s * 41) if seed is not None else None
+                grouped_trajs.extend(
+                    self.sample_with_two_stage_process_critic(
+                        targets_norm[s:e],
+                        active_mask[s:e],
+                        self.process_critic,
+                        m_stage1=ms1,
+                        m_stage2=ms2,
+                        m_keep=m_keep,
+                        objective_col_mask=obj_col_mask,
+                        stage1_legal_weight=0.80,
+                        stage1_constr_weight=0.55,
+                        stage2_legal_weight=1.05,
+                        stage2_constr_weight=0.70,
+                        stage2_diversity_weight=stage2_diversity_weight,
+                        coarse_chunk_size=1024,
+                        cfg_scale=cfg_scale,
+                        xyz_cfg_scale=xyz_cfg_scale,
+                        cfg_tree_decay=cfg_tree_decay,
+                        geometric_guard=geometric_guard,
+                        temperatures=temperatures,
+                        seed=sub_seed,
+                        use_bf16=(use_bf16 and device.type == "cuda"),
+                        electron_parity=electron_parity,
+                        uncond_active_mask=sub_u,
+                        leaf_atom_budget=sub_b,
+                        budget_guidance_scale=budget_guidance_scale,
+                    )
+                )
+
+        if enable_post_tree_refiner and self.post_tree_refiner is not None:
+            flat_all = [tr for grp in grouped_trajs for tr in grp]
+            self.post_tree_refiner.refine_trajectories_batch(flat_all, batch_size=256)
+
+        reconciler = self.reconciler
+        out_mols: List[List[Optional[Chem.Mol]]] = [[None] * m_keep for _ in range(bsz)]
+        for i in range(bsz):
+            for k in range(m_keep):
+                tr = grouped_trajs[i][k]
+                res = reconciler.reconcile_point_cloud(
+                    tr.get("atom_symbols", []),
+                    tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)),
+                    potential_slot=None,
+                    bond_order_priors=tr.get("bond_order_probs"),
+                )
+                if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
+                    mol_clean = Chem.Mol(res.mol)
+                    disp_rms = tr.get("refiner_disp_rms_A")
+                    if disp_rms is not None and math.isfinite(float(disp_rms)):
+                        mol_clean.SetDoubleProp("_loom_refiner_disp_rms_A", float(disp_rms))
+                    proc_u = tr.get("process_utility")
+                    if proc_u is not None and math.isfinite(float(proc_u)):
+                        mol_clean.SetDoubleProp("_loom_process_utility", float(proc_u))
+                    out_mols[i][k] = mol_clean
+        return out_mols
+
+    def fit_internal_post_processors(
+        self,
+        equil_mols: Sequence[Any],
+        onpolicy_pairs: Sequence[Tuple[np.ndarray, Any]],
+        critic_bus: Any,
+        *,
+        refiner_epochs: int = 14,
+        refiner_layers: int = 4,
+        rollout_Data: Optional[Dict[str, Any]] = None,
+        seed: int = 2026,
+    ) -> Dict[str, Any]:
+        """Fit and attach internal `PostTreeGraphRefiner` (+ optional `TwoStageOctreeProcessCritic` from rollouts)."""
+        from .octree_process_critic import (
+            OctreeElementProcessCritic,
+            OctreeProcessCritic,
+            TwoStageOctreeProcessCritic,
+            fit_octree_element_process_critic,
+            fit_octree_process_critic,
+        )
+        from .post_tree_refiner import PostTreeGraphRefiner, fit_post_tree_graph_refiner
+
+        del critic_bus
+        device = self.target_mean.device
+        summary: Dict[str, Any] = {"supported": True}
+        if len(equil_mols) > 0:
+            refiner = PostTreeGraphRefiner(
+                num_atom_classes=int(self.backbone.num_atom),
+                d_model=192,
+                n_heads=4,
+                n_layers=int(refiner_layers),
+                n_rbf=24,
+                d_pair=128,
+                max_disp_A=0.25,
+            ).to(device)
+            ref_stats = fit_post_tree_graph_refiner(
+                refiner,
+                equil_mols,
+                real_onpolicy_pairs=list(onpolicy_pairs),
+                epochs=int(refiner_epochs),
+                batch_size=128,
+                lr=1.0e-3,
+                seed=seed,
+            )
+            self.post_tree_refiner = refiner
+            summary["refiner_stats"] = ref_stats.__dict__
+
+        if rollout_Data is not None:
+            t_mean_np = self.target_mean.detach().cpu().numpy()
+            t_scale_np = self.target_scale.detach().cpu().numpy()
+            s1 = OctreeProcessCritic(emb_dim=int(self.args.emb_dim), num_targets=self.num_props, hidden_dim=512).to(device)
+            s1.set_normalization(t_mean_np, t_scale_np)
+            st1 = fit_octree_process_critic(
+                s1,
+                h_concat=rollout_Data["s1_h_concat"],
+                geom_feats=rollout_Data["s1_geom_feats"],
+                targets_norm=rollout_Data["targets_norm"],
+                active_mask=rollout_Data["active_mask"],
+                y_surrogate_norm=rollout_Data["y_surrogate_norm"],
+                y_valid_mask=rollout_Data["y_valid_mask"],
+                is_legal=rollout_Data["is_legal"],
+                is_constr_met=rollout_Data.get("is_constr_met"),
+                phys_scores=rollout_Data.get("phys_scores"),
+                group_ids=rollout_Data.get("group_ids"),
+                ranking_weight=float(rollout_Data.get("ranking_weight_s1", 0.55)),
+                ranking_obj_mask=rollout_Data.get("ranking_obj_mask"),
+                epochs=int(rollout_Data.get("epochs_s1", 24)),
+                seed=seed + 1,
+            )
+            s2 = OctreeElementProcessCritic(
+                emb_dim=int(self.args.emb_dim),
+                num_targets=self.num_props,
+                num_atom_classes=int(self.backbone.num_atom),
+                d_node=192,
+                n_rbf=24,
+                n_gnn_layers=int(rollout_Data.get("n_gnn_layers", 3)),
+                hidden_dim=512,
+            ).to(device)
+            s2.set_normalization(t_mean_np, t_scale_np)
+            st2 = fit_octree_element_process_critic(
+                s2,
+                h_stage2=rollout_Data["s2_h_stage2"],
+                elem_ids=rollout_Data["elem_ids"],
+                leaf_pos=rollout_Data["leaf_pos"],
+                leaf_valid=rollout_Data["leaf_valid"],
+                cloud_feats=rollout_Data["s2_cloud_feats"],
+                targets_norm=rollout_Data["targets_norm"],
+                active_mask=rollout_Data["active_mask"],
+                y_surrogate_norm=rollout_Data["y_surrogate_norm"],
+                y_valid_mask=rollout_Data["y_valid_mask"],
+                is_legal=rollout_Data["is_legal"],
+                is_constr_met=rollout_Data.get("is_constr_met"),
+                phys_scores=rollout_Data.get("phys_scores"),
+                group_ids=rollout_Data.get("group_ids"),
+                ranking_weight=float(rollout_Data.get("ranking_weight_s2", 0.65)),
+                ranking_obj_mask=rollout_Data.get("ranking_obj_mask"),
+                epochs=int(rollout_Data.get("epochs_s2", 28)),
+                seed=seed + 2,
+            )
+            self.process_critic = TwoStageOctreeProcessCritic(s1, s2).to(device)
+            self.process_critic.eval()
+            summary["stage1_critic_stats"] = st1.__dict__
+            summary["stage2_critic_stats"] = st2.__dict__
+
+        return summary

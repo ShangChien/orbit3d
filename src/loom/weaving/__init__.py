@@ -53,6 +53,12 @@ from .rsi import (
     RSIDiagnoser,
     RSIDiagnosticThresholds,
 )
+from .service import (
+    EFFORT_TO_M,
+    ZONE_TO_SERVICE_STATUS,
+    AffineConditionCalibration,
+    LoomService,
+)
 from .slots import (
     AuditOracleSlot,
     GeneratorSlot,
@@ -61,6 +67,7 @@ from .slots import (
     assert_not_audit_oracle,
     build_generator_slot,
     check_unimol2_support,
+    resolve_effort_candidates,
 )
 from .spec import (
     AuditorChannelSpec,
@@ -76,6 +83,7 @@ from .uni3dar_slot import (
 )
 
 __all__ = [
+    "AffineConditionCalibration",
     "AssetCapabilities",
     "AssetRegistry",
     "AuditOracleSlot",
@@ -85,6 +93,7 @@ __all__ = [
     "CallablePredictorAsset",
     "CompositeCriticBus",
     "ConstraintChannelSpec",
+    "EFFORT_TO_M",
     "FingerprintQSARAsset",
     "FlowMolReplayDataset",
     "GeneratorSlot",
@@ -97,6 +106,7 @@ __all__ = [
     "LoomConditioner",
     "LoomFlowMolGenerator",
     "LoomGRPOTrainer",
+    "LoomService",
     "LoomUni3DARGenerator",
     "NUM_COARSE_GEOM_FEATS",
     "NUM_ELEM_CLOUD_FEATS",

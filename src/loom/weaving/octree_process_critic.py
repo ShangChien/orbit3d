@@ -307,6 +307,8 @@ def _grouped_utility_ranking_loss(
     group_size: int,
     obj_mask: Optional[torch.Tensor] = None,
     *,
+    phys_scores: Optional[torch.Tensor] = None,
+    phys_weight: float = 0.65,
     legal_weight: float = 0.90,
     constr_weight: float = 0.65,
     temp: float = 0.35,
@@ -339,6 +341,9 @@ def _grouped_utility_ranking_loss(
     ok_row = y_valid_mask.bool() & (is_legal >= 0.5) & torch.isfinite(true_err_raw)
     true_err = torch.where(ok_row, true_err_raw.clamp_max(3.5), torch.full_like(true_err_raw, 3.5))
     u_true = -true_err + 1.25 * is_legal.float() + 1.15 * is_constr_met.float()
+    if phys_scores is not None and float(phys_weight) > 0.0:
+        ps = torch.nan_to_num(phys_scores.to(device=mu_n.device, dtype=torch.float32), nan=0.0).clamp(0.0, 1.0)
+        u_true = u_true + float(phys_weight) * ps * (is_legal >= 0.5).float()
 
     n_grp = bsz // group_size
     up_g = u_pred.view(n_grp, group_size)
@@ -405,6 +410,8 @@ def fit_octree_process_critic(
     y_valid_mask: torch.Tensor,
     is_legal: torch.Tensor,
     is_constr_met: Optional[torch.Tensor] = None,
+    phys_scores: Optional[torch.Tensor] = None,
+    phys_weight: float = 0.65,
     group_ids: Optional[torch.Tensor] = None,
     ranking_weight: float = 0.0,
     ranking_obj_mask: Optional[torch.Tensor] = None,
@@ -464,10 +471,16 @@ def fit_octree_process_critic(
             by_ok = y_valid_mask[b_ids].to(device, non_blocking=True)
             bleg = is_legal[b_ids].to(device, dtype=torch.float32, non_blocking=True)
             bcon = is_constr_met[b_ids].to(device, dtype=torch.float32, non_blocking=True)
+            bphys = (
+                torch.nan_to_num(phys_scores[b_ids].to(device, dtype=torch.float32, non_blocking=True), nan=0.0).clamp(0.0, 1.0)
+                if phys_scores is not None
+                else None
+            )
+            bcon_tgt = bcon * (0.65 + 0.35 * bphys) if bphys is not None else bcon
 
             out = critic(bh, bg, bt, bm)
             loss_leg = F.binary_cross_entropy_with_logits(out["logit_legal"], bleg)
-            loss_con = F.binary_cross_entropy_with_logits(out["logit_constr"], bcon)
+            loss_con = F.binary_cross_entropy_with_logits(out["logit_constr"], bcon_tgt)
 
             # Heteroscedastic Huber + Gaussian NLL on valid legal rows & active columns
             prop_mask = by_ok.unsqueeze(-1) & bm.bool() & torch.isfinite(by)
@@ -487,7 +500,8 @@ def fit_octree_process_critic(
             loss = loss_prop + 0.50 * loss_leg + 0.35 * loss_con
             if use_rank:
                 loss_rk = _grouped_utility_ranking_loss(
-                    out, bt, bm, by, by_ok, bleg, bcon, g_sz, obj_mask=ranking_obj_mask
+                    out, bt, bm, by, by_ok, bleg, bcon, g_sz, obj_mask=ranking_obj_mask,
+                    phys_scores=bphys, phys_weight=phys_weight,
                 )
                 loss = loss + float(ranking_weight) * loss_rk
             opt.zero_grad(set_to_none=True)
@@ -522,10 +536,16 @@ def fit_octree_process_critic(
             )
             leg_acc = float(((vout["prob_legal"] >= 0.5).float() == vleg).float().mean().item())
             con_acc = float(((vout["prob_constr"] >= 0.5).float() == vcon).float().mean().item())
+            vphys = (
+                torch.nan_to_num(phys_scores[val_idx].to(device, dtype=torch.float32), nan=0.0).clamp(0.0, 1.0)
+                if phys_scores is not None
+                else None
+            )
             val_rk = (
                 float(
                     _grouped_utility_ranking_loss(
-                        vout, vt, vm, vy, vy_ok, vleg, vcon, g_sz, obj_mask=ranking_obj_mask
+                        vout, vt, vm, vy, vy_ok, vleg, vcon, g_sz, obj_mask=ranking_obj_mask,
+                        phys_scores=vphys, phys_weight=phys_weight,
                     ).item()
                 )
                 if (use_rank and val_grp is not None)
@@ -1021,6 +1041,8 @@ def fit_octree_element_process_critic(
     y_valid_mask: torch.Tensor,
     is_legal: torch.Tensor,
     is_constr_met: Optional[torch.Tensor] = None,
+    phys_scores: Optional[torch.Tensor] = None,
+    phys_weight: float = 0.65,
     group_ids: Optional[torch.Tensor] = None,
     ranking_weight: float = 0.0,
     ranking_obj_mask: Optional[torch.Tensor] = None,
@@ -1083,10 +1105,16 @@ def fit_octree_element_process_critic(
             by_ok = y_valid_mask[b_ids].to(device, non_blocking=True)
             bleg = is_legal[b_ids].to(device, dtype=torch.float32, non_blocking=True)
             bcon = is_constr_met[b_ids].to(device, dtype=torch.float32, non_blocking=True)
+            bphys = (
+                torch.nan_to_num(phys_scores[b_ids].to(device, dtype=torch.float32, non_blocking=True), nan=0.0).clamp(0.0, 1.0)
+                if phys_scores is not None
+                else None
+            )
+            bcon_tgt = bcon * (0.65 + 0.35 * bphys) if bphys is not None else bcon
 
             out = critic(bh, be, bp, bv, bc, bt, bm)
             loss_leg = F.binary_cross_entropy_with_logits(out["logit_legal"], bleg)
-            loss_con = F.binary_cross_entropy_with_logits(out["logit_constr"], bcon)
+            loss_con = F.binary_cross_entropy_with_logits(out["logit_constr"], bcon_tgt)
 
             prop_mask = by_ok.unsqueeze(-1) & bm.bool() & torch.isfinite(by)
             if bool(prop_mask.any().item()):
@@ -1103,7 +1131,8 @@ def fit_octree_element_process_critic(
             loss = loss_prop + 0.45 * loss_leg + 0.40 * loss_con
             if use_rank:
                 loss_rk = _grouped_utility_ranking_loss(
-                    out, bt, bm, by, by_ok, bleg, bcon, g_sz, obj_mask=ranking_obj_mask
+                    out, bt, bm, by, by_ok, bleg, bcon, g_sz, obj_mask=ranking_obj_mask,
+                    phys_scores=bphys, phys_weight=phys_weight,
                 )
                 loss = loss + float(ranking_weight) * loss_rk
             opt.zero_grad(set_to_none=True)
@@ -1154,9 +1183,15 @@ def fit_octree_element_process_critic(
                 val_leg_ok += float(((vout["prob_legal"] >= 0.5).float() == vleg).float().sum().item())
                 val_con_ok += float(((vout["prob_constr"] >= 0.5).float() == vcon).float().sum().item())
                 if use_rank and val_grp is not None:
+                    vphys_b = (
+                        torch.nan_to_num(phys_scores[v_ids].to(device, dtype=torch.float32), nan=0.0).clamp(0.0, 1.0)
+                        if phys_scores is not None
+                        else None
+                    )
                     rk_b = float(
                         _grouped_utility_ranking_loss(
-                            vout, vt, vm, vy, vy_ok, vleg, vcon, g_sz, obj_mask=ranking_obj_mask
+                            vout, vt, vm, vy, vy_ok, vleg, vcon, g_sz, obj_mask=ranking_obj_mask,
+                            phys_scores=vphys_b, phys_weight=phys_weight,
                         ).item()
                     )
                     n_gb = v_ids.numel() // g_sz

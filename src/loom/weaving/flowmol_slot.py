@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .slots import GeneratorSlot
+from .slots import GeneratorSlot, resolve_effort_candidates
 
 DEFAULT_PROPMOLFLOW_ROOT = Path("/sjtu-combustion/wjw/chensq/PropMolFlow")
 DEFAULT_COMPAT_ROOT = Path("/sjtu-combustion/wjw/chensq/mol_gen/src/compat")
@@ -238,6 +238,7 @@ class LoomFlowMolGenerator(GeneratorSlot):
 
     backend_id: str = "loom_flowmol_v1"
     supports_exact_trajectory_logprob: bool = False
+    supports_prefix_process_search: bool = False
     generator_family: str = "ctmc_flow_matching"
 
     def __init__(
@@ -341,9 +342,14 @@ class LoomFlowMolGenerator(GeneratorSlot):
         seed: Optional[int] = None,
         use_bf16: bool = True,
         electron_parity: Optional[int] = 0,
+        leaf_atom_budget: Optional[np.ndarray | Sequence[float]] = None,
         **kwargs: Any,
     ) -> List[Dict[str, Any]]:
-        del cfg_scale, xyz_cfg_scale, cfg_tree_decay, geometric_guard, temperatures, use_bf16, electron_parity, kwargs
+        del cfg_scale, xyz_cfg_scale, cfg_tree_decay, geometric_guard, temperatures, use_bf16, electron_parity
+        atom_budget_kw = kwargs.pop("atom_budget", None)
+        if leaf_atom_budget is None and atom_budget_kw is not None:
+            leaf_atom_budget = atom_budget_kw
+        del kwargs
         was_training = self.training
         self.eval()
         try:
@@ -354,7 +360,11 @@ class LoomFlowMolGenerator(GeneratorSlot):
             prop_col = int(torch.nonzero(act_any, as_tuple=False)[0].item()) if act_any.any() else 0
             prop_name = self.target_cols[prop_col]
             goals_raw = [float(x) for x in raw_targets[:, prop_col].detach().cpu().tolist()]
-            n_atoms = self._sample_conditional_natoms(goals_raw, seed=seed)
+            if leaf_atom_budget is not None:
+                b_arr = np.asarray(leaf_atom_budget, dtype=np.float64).reshape(len(goals_raw))
+                n_atoms = [max(2, int(round(float(x)))) for x in b_arr.tolist()]
+            else:
+                n_atoms = self._sample_conditional_natoms(goals_raw, seed=seed)
 
             if not self._uses_dgl:
                 return self.backbone.sample_trajectories(
@@ -416,6 +426,80 @@ class LoomFlowMolGenerator(GeneratorSlot):
             return trajs
         finally:
             self.train(was_training)
+
+    @torch.no_grad()
+    def generate_candidates(
+        self,
+        targets_norm: torch.Tensor,
+        active_mask: torch.Tensor,
+        *,
+        atom_budget: Optional[np.ndarray | Sequence[float]] = None,
+        n_candidates: Optional[int] = None,
+        effort: str = "base",
+        seed: Optional[int] = None,
+        reconcile_coords: bool = True,
+        max_batch_trajs: int = 256,
+        **kwargs: Any,
+    ) -> List[List[Optional[Chem.Mol]]]:
+        """Generate `[batch_size][M]` validated 3D RDKit `Chem.Mol` candidates via `M` outer flow trajectories."""
+        from ..chemistry.valence_reconciler import ValenceReconciler, is_clean_organic_charge_state
+
+        _, m_keep = resolve_effort_candidates(effort=effort, n_candidates=n_candidates)
+        bsz = int(targets_norm.shape[0])
+        if bsz == 0:
+            return []
+
+        if atom_budget is not None:
+            b_1d = np.asarray(atom_budget, dtype=np.float32).reshape(bsz)
+        else:
+            device = next(self.parameters()).device
+            raw_t = self.denormalize_targets(targets_norm.to(device))
+            act_any = active_mask.bool().any(dim=0)
+            p_col = int(torch.nonzero(act_any, as_tuple=False)[0].item()) if act_any.any() else 0
+            goals_r = [float(x) for x in raw_t[:, p_col].detach().cpu().tolist()]
+            b_1d = np.asarray(self._sample_conditional_natoms(goals_r, seed=seed), dtype=np.float32)
+
+        reconciler = ValenceReconciler(allowed_elements=self.allowed_elements) if reconcile_coords else None
+        allowed_set = frozenset(self.allowed_elements)
+        out: List[List[Optional[Chem.Mol]]] = [[None] * m_keep for _ in range(bsz)]
+        p_chunk = max(1, int(max_batch_trajs) // max(m_keep, 1))
+
+        for s in range(0, bsz, p_chunk):
+            e = min(s + p_chunk, bsz)
+            rep_t = targets_norm[s:e].repeat_interleave(m_keep, dim=0)
+            rep_m = active_mask[s:e].repeat_interleave(m_keep, dim=0)
+            rep_b = np.repeat(b_1d[s:e], m_keep)
+            sub_seed = (int(seed) + s * 37) if seed is not None else None
+            trajs = self.sample(rep_t, rep_m, seed=sub_seed, leaf_atom_budget=rep_b, **kwargs)
+            for idx, tr in enumerate(trajs):
+                p_loc, k_i = divmod(idx, m_keep)
+                p_glob = s + p_loc
+                syms = tr.get("atom_symbols", [])
+                pos_np = np.asarray(tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)), dtype=np.float32)
+                if len(syms) < 2 or any(sym not in allowed_set for sym in syms):
+                    continue
+                rd_m = tr.get("rdkit_mol")
+                if rd_m is not None:
+                    try:
+                        dmat = np.linalg.norm(pos_np[:, None, :] - pos_np[None, :, :], axis=-1)
+                        np.fill_diagonal(dmat, 99.0)
+                        cand = Chem.Mol(rd_m)
+                        if float(dmat.min()) >= 0.65:
+                            Chem.SanitizeMol(cand)
+                            if (
+                                len(Chem.GetMolFrags(cand)) == 1
+                                and is_clean_organic_charge_state(cand)
+                                and not any(a.GetNumRadicalElectrons() > 0 for a in cand.GetAtoms())
+                            ):
+                                out[p_glob][k_i] = cand
+                                continue
+                    except Exception:
+                        pass
+                if reconciler is not None:
+                    res = reconciler.reconcile_point_cloud(syms, pos_np, potential_slot=None)
+                    if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
+                        out[p_glob][k_i] = res.mol
+        return out
 
     def build_replay_dataset(self, mols: Sequence[Chem.Mol], *, seed: int = 42) -> FlowMolReplayDataset:
         return FlowMolReplayDataset(
