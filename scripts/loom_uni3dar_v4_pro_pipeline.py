@@ -99,13 +99,12 @@ def _sync(device: torch.device) -> None:
         torch.cuda.synchronize(device)
 
 
-def _sample_4way_cfg_masks(batch_size: int, rng: np.random.Generator, device: torch.device) -> torch.Tensor:
-    """4-way CFG dropout (`55% [T,T], 15% [T,F], 20% [F,T] SA-only, 10% [F,F]`) enabling native HOMO-only CFG."""
+def _sample_pro_cfg_masks(batch_size: int, rng: np.random.Generator, device: torch.device) -> torch.Tensor:
+    """Balanced CFG dropout (`68% [T,T], 12% [T,F], 20% [F,F]`) matching dual-CFG inference."""
     u = rng.random(size=batch_size)
     mask = np.ones((batch_size, 2), dtype=bool)
-    mask[(u >= 0.55) & (u < 0.70), 1] = False  # [T, F] HOMO only
-    mask[(u >= 0.70) & (u < 0.90), 0] = False  # [F, T] SA only (uncond branch for HOMO-only CFG!)
-    mask[u >= 0.90] = False                    # [F, F] unconditional
+    mask[(u >= 0.68) & (u < 0.80), 1] = False
+    mask[u >= 0.80] = False
     return torch.as_tensor(mask, dtype=torch.bool, device=device)
 
 
@@ -323,7 +322,7 @@ def ensure_pro_relaxed_pool(args: argparse.Namespace) -> Tuple[Path, float]:
 
 
 def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
-    """Full-parameter layer-wise-LR 2-GPU DDP SFT (`npref=0`, 4-way CFG, HOMO-only contrastive margin 0.28)."""
+    """Rank-64 LoRA (frozen pretrained 0.01 A XYZ heads) 2-GPU DDP SFT (`npref=0`, Dual-CFG, HOMO-only contrastive margin 0.28)."""
     is_ddp = "RANK" in os.environ and "WORLD_SIZE" in os.environ
     if is_ddp:
         local_rank = int(os.environ["LOCAL_RANK"])
@@ -342,10 +341,19 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
     pool_meta_p = pro_dir / "v4_pro_relaxed_pool.json"
     relax_gpuh = float(json.loads(pool_meta_p.read_text()).get("relax_pool_gpuh", 0.0)) if pool_meta_p.exists() else 0.0
 
-    mols, targets = _load_prepared_v4_sdf(pool_sdf)
+    raw_mols, raw_targets = _load_prepared_v4_sdf(pool_sdf)
+    # Keep clean SA<=3.40 for N<40 and SA<=3.95 for N>=40 so N=30 SA prior stays ultra-sharp while N=40..60 is covered
+    mols: List[Chem.Mol] = []
+    t_rows: List[np.ndarray] = []
+    for m, tr in zip(raw_mols, raw_targets):
+        cap = 3.95 if m.GetNumAtoms() >= 40 else 3.40
+        if float(tr[1]) <= cap:
+            mols.append(m)
+            t_rows.append(tr)
+    targets = np.stack(t_rows, axis=0).astype(np.float32)
     if rank == 0:
         n_ge40 = sum(1 for m in mols if m.GetNumAtoms() >= 40)
-        print(f"[Pro SFT] Loaded {len(mols)} DPA-4-relaxed conformers (N>=40: {n_ge40})", flush=True)
+        print(f"[Pro SFT] Loaded {len(mols)}/{len(raw_mols)} DPA-4-relaxed conformers (N>=40: {n_ge40})", flush=True)
 
     data_meta = json.loads((args.step2_dir / "oe62_v4_data_meta.json").read_text())
     gen = LoomUni3DARGenerator.from_parent_checkpoint(
@@ -359,7 +367,11 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
         num_rbf=32,
         num_freqs=16,
         num_prefix_tokens=0,
-        lora_rank=0,
+        lora_rank=64,
+        lora_alpha=128.0,
+        lora_dropout=0.05,
+        lora_include_ffn=True,
+        lora_include_heads=True,
         lora_include_xyz_heads=False,
         train_xyz_embeddings=False,
         use_valence_head=True,
@@ -370,9 +382,9 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
     )
     gen.configure_trainable(
         train_conditioner=True,
-        train_lora=False,
-        train_xyz_embeddings=True,
-        unfreeze_full_backbone=True,
+        train_lora=True,
+        train_xyz_embeddings=False,
+        unfreeze_full_backbone=False,
     )
 
     ema_gen = deepcopy(gen).eval()
@@ -383,7 +395,7 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
     sampler = DistributedSampler(ds, num_replicas=world_size, rank=rank, shuffle=True, seed=202651) if is_ddp else None
     loader = DataLoader(
         ds,
-        batch_size=48,
+        batch_size=64,
         sampler=sampler,
         shuffle=(sampler is None),
         num_workers=4,
@@ -392,29 +404,20 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
         drop_last=True,
     )
 
-    # Layer-wise discriminative learning rates (preserve base 3D grammar, unlock high HOMO slope!)
-    n_layers = len(gen.backbone.decoder.layers)
-    top_start = max(0, n_layers - 6)
     head_params: List[torch.nn.Parameter] = []
-    top_params: List[torch.nn.Parameter] = []
-    bot_params: List[torch.nn.Parameter] = []
+    lora_params: List[torch.nn.Parameter] = []
     for name, p in gen.named_parameters():
         if not p.requires_grad:
             continue
         if name.startswith(("conditioner.", "valence_head.", "budget_emb.")):
             head_params.append(p)
-        elif any(name.startswith(f"backbone.decoder.layers.{i}.") for i in range(top_start, n_layers)) or name.startswith(
-            ("backbone.norm.", "backbone.tree_heads.", "backbone.atom_heads.")
-        ):
-            top_params.append(p)
         else:
-            bot_params.append(p)
+            lora_params.append(p)
 
     opt = torch.optim.AdamW(
         [
-            {"params": bot_params, "lr": 2.2e-5, "weight_decay": 1e-4},
-            {"params": top_params, "lr": 6.5e-5, "weight_decay": 1e-4},
-            {"params": head_params, "lr": 2.8e-4, "weight_decay": 1e-4},
+            {"params": lora_params, "lr": 2.2e-4, "weight_decay": 1e-4},
+            {"params": head_params, "lr": 3.5e-4, "weight_decay": 1e-4},
         ],
         betas=(0.9, 0.95),
     )
@@ -435,7 +438,7 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
         l_sum, xyz_sum, pref_sum, n_pref, nb = 0.0, 0.0, 0.0, 0, 0
         for packed, raw_t in loader:
             t_norm = gen.normalize_targets(raw_t.to(device, non_blocking=True))
-            act_m = _sample_4way_cfg_masks(int(raw_t.shape[0]), rng_ep, device)
+            act_m = _sample_pro_cfg_masks(int(raw_t.shape[0]), rng_ep, device)
             opt.zero_grad(set_to_none=True)
             with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=(device.type == "cuda")):
                 loss, info = gen.compute_sft_loss(
@@ -499,7 +502,7 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
         ema_gen.save_checkpoint(
             out_ckpt,
             extra_metadata={
-                "version": "4.5-pro-fullparam-so3-sft",
+                "version": "4.5-pro-lora64-so3-sft",
                 "pool_size": len(mols),
                 "epochs": n_ep,
                 "relax_pool_gpuh": round(relax_gpuh, 4),
@@ -548,8 +551,8 @@ def _collect_pro_onpolicy_pairs(
         cm = torch.ones((nb, 2), dtype=torch.bool, device=device)
         um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
         trajs = gen.sample(
-            tn, cm, uncond_active_mask=um, cfg_scale=float(cfg_scale), xyz_cfg_scale=1.0,
-            cfg_tree_decay=0.25, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
+            tn, cm, uncond_active_mask=None, cfg_scale=float(cfg_scale), xyz_cfg_scale=1.0,
+            cfg_tree_decay=0.20, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
             seed=int(seed) + s, use_bf16=(device.type == "cuda"), electron_parity=0,
             leaf_atom_budget=req_n[s:e], budget_guidance_scale=0.35,
         )
@@ -634,18 +637,19 @@ def _run_pro_hindsight_awr(
     """Multi-size (`18..58` atoms) Online Hindsight Equilibrium AWR with HOMO-only CFG + real refiner pair harvest."""
     from loom.generator.molecular_state import mol_to_clean_smiles
 
-    n_layers = len(gen.backbone.decoder.layers)
-    top_start = max(0, n_layers - 5)
-    gen.requires_grad_(False)
+    gen.configure_trainable(
+        train_conditioner=True,
+        train_lora=True,
+        train_xyz_embeddings=False,
+        unfreeze_full_backbone=False,
+    )
     head_p, top_p = [], []
     for name, p in gen.named_parameters():
+        if not p.requires_grad:
+            continue
         if name.startswith(("conditioner.", "valence_head.", "budget_emb.")):
-            p.requires_grad_(True)
             head_p.append(p)
-        elif any(name.startswith(f"backbone.decoder.layers.{i}.") for i in range(top_start, n_layers)) or name.startswith(
-            ("backbone.norm.", "backbone.tree_heads.", "backbone.atom_heads.0.pred_heads.0.")
-        ):
-            p.requires_grad_(True)
+        else:
             top_p.append(p)
 
     pool_mid = clean_targets[(clean_targets[:, 1] >= 18.0) & (clean_targets[:, 1] <= 42.0)]
@@ -705,8 +709,8 @@ def _run_pro_hindsight_awr(
 
         opt = torch.optim.AdamW(
             [
-                {"params": top_p, "lr": 3.5e-5, "weight_decay": 1e-4},
-                {"params": head_p, "lr": 1.2e-4, "weight_decay": 1e-4},
+                {"params": top_p, "lr": 1.2e-4, "weight_decay": 1e-4},
+                {"params": head_p, "lr": 2.0e-4, "weight_decay": 1e-4},
             ],
             betas=(0.9, 0.95),
         )
@@ -739,7 +743,7 @@ def _run_pro_hindsight_awr(
                     sched.step()
                     continue
                 tn_b = gen.normalize_targets(comb_t[kp])
-                ma_b = _sample_4way_cfg_masks(len(kp), rng, device)
+                ma_b = _sample_pro_cfg_masks(len(kp), rng, device)
                 gen.train()
                 with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=(device.type == "cuda")):
                     loss, _ = gen.compute_sft_loss(
@@ -799,14 +803,13 @@ def _pro_dev_score(
     cond_2d = np.stack([dev_homo.astype(np.float32), np.full(nb, float(sa_target), dtype=np.float32)], axis=-1)
     tn = gen.normalize_targets(cond_2d)
     cm = torch.ones((nb, 2), dtype=torch.bool, device=device)
-    um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
     trajs = gen.sample(
         tn,
         cm,
-        uncond_active_mask=um,
+        uncond_active_mask=None,
         cfg_scale=float(cfg_scale),
         xyz_cfg_scale=1.0,
-        cfg_tree_decay=0.25,
+        cfg_tree_decay=0.20,
         geometric_guard=True,
         temperatures=(0.85, 0.30, 0.25),
         seed=880555,
@@ -949,15 +952,13 @@ def run_align_pro(args: argparse.Namespace) -> None:
     base_dev = _pro_dev_score(gen, prelim_ref, bus_train, dev_homo, dev_natoms, args.eval_sa_target, args.cfg_scale, device)
     print(f"[Pro Post-Hindsight + PrelimRef] {base_dev}", flush=True)
 
-    # HOMO-dominant 300-step Tree-Vine GRPO (unfreeze top-5 layers + conditioner + budget_emb, freeze XYZ heads)
-    gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=False)
-    n_layers = len(gen.backbone.decoder.layers)
-    for l_idx in range(max(0, n_layers - 5), n_layers):
-        gen.backbone.decoder.layers[l_idx].requires_grad_(True)
-    gen.backbone.norm.requires_grad_(True)
-    gen.backbone.tree_heads.requires_grad_(True)
-    for p in gen.backbone.atom_heads[0].pred_heads[0].parameters():
-        p.requires_grad_(True)
+    # HOMO-dominant 300-step Tree-Vine GRPO (Rank-64 LoRA + conditioner + budget_emb, frozen 0.01 A XYZ heads!)
+    gen.configure_trainable(
+        train_conditioner=True,
+        train_lora=True,
+        train_xyz_embeddings=False,
+        unfreeze_full_backbone=False,
+    )
     n_tr = sum(p.numel() for p in gen.parameters() if p.requires_grad)
     print(f"[Pro GRPO] Starting {args.grpo_steps}-step HOMO-dominant Tree-Vine GRPO | trainable={n_tr:,}", flush=True)
 
@@ -991,13 +992,13 @@ def run_align_pro(args: argparse.Namespace) -> None:
         sharp_concentration=True,
         cfg_scale=float(args.cfg_scale),
         xyz_cfg_scale=1.0,
-        cfg_tree_decay=0.25,
+        cfg_tree_decay=0.20,
         geometric_guard=True,
         topology_only_policy=True,
         temperatures=(0.85, 0.30, 0.25),
         electron_parity=0,
         size_anchored_cfg=False,
-        cfg_anchor_cols=("sa_score",),  # Native HOMO-only CFG decoupled from prompt_atom_budgets!
+        cfg_anchor_cols=(),
         size_adherence_weight=0.30,
         size_tolerance_atoms=2.0,
         use_vine_rollouts=True,
@@ -1170,10 +1171,9 @@ def run_pro_rollout_shard(args: argparse.Namespace) -> None:
         nb = e - s
         tn = gen.normalize_targets(cond_2d[s:e])
         cm = torch.ones((nb, 2), dtype=torch.bool, device=device)
-        um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
         roll = gen.sample_rollouts_with_two_stage_features(
-            tn, cm, uncond_active_mask=um, cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0,
-            cfg_tree_decay=0.25, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
+            tn, cm, uncond_active_mask=None, cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0,
+            cfg_tree_decay=0.20, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
             seed=710000 + int(args.shard_id) * 60000 + s, use_bf16=(device.type == "cuda"),
             electron_parity=0, leaf_atom_budget=req_natoms[s:e], budget_guidance_scale=0.35,
         )
@@ -1461,7 +1461,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
     best_cfg = {
         "eval_sa_target": float(args.eval_sa_target),
         "cfg_scale": float(args.cfg_scale),
-        "homo_only_cfg": True,
+        "homo_only_cfg": False,
         "budget_guidance_scale": 0.35,
         "stage2_diversity_weight": 0.10,
     }
@@ -1469,14 +1469,13 @@ def run_eval_pro(args: argparse.Namespace) -> None:
     d_mat = np.stack([dev_req[:, 0], np.full(nb_d, best_cfg["eval_sa_target"], dtype=np.float32)], axis=-1)
     d_tn = gen.normalize_targets(d_mat)
     d_cm = torch.ones((nb_d, 2), dtype=torch.bool, device=device)
-    d_um = torch.tensor([[False, True]] * nb_d, dtype=torch.bool, device=device)
     d_grps = gen.sample_with_two_stage_process_critic(
         d_tn, d_cm, critic, m_stage1=16, m_stage2=6, m_keep=2, objective_col_mask=obj_col_dev,
         stage1_legal_weight=0.80, stage1_constr_weight=0.55, stage2_legal_weight=1.05, stage2_constr_weight=0.70,
         stage2_diversity_weight=best_cfg["stage2_diversity_weight"], coarse_chunk_size=1024,
-        cfg_scale=best_cfg["cfg_scale"], xyz_cfg_scale=1.0, cfg_tree_decay=0.25, geometric_guard=True,
+        cfg_scale=best_cfg["cfg_scale"], xyz_cfg_scale=1.0, cfg_tree_decay=0.20, geometric_guard=True,
         temperatures=(0.85, 0.30, 0.25), seed=884499, use_bf16=True, electron_parity=0,
-        uncond_active_mask=d_um, leaf_atom_budget=dev_req[:, 1],
+        uncond_active_mask=None, leaf_atom_budget=dev_req[:, 1],
         budget_guidance_scale=best_cfg["budget_guidance_scale"],
     )
     refiner.refine_trajectories_batch([tr for g in d_grps for tr in g], batch_size=256)
@@ -1543,7 +1542,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
     wt, wm, wu = _encode(np.full(16, -6.4, dtype=np.float32))
     wg = gen.sample_with_two_stage_process_critic(
         wt, wm, critic, m_stage1=8, m_stage2=4, m_keep=2, objective_col_mask=obj_col_mask,
-        stage2_diversity_weight=0.10, cfg_scale=float(best_cfg["cfg_scale"]), cfg_tree_decay=0.25,
+        stage2_diversity_weight=0.10, cfg_scale=float(best_cfg["cfg_scale"]), cfg_tree_decay=0.20,
         geometric_guard=True, seed=29, use_bf16=True, uncond_active_mask=wu,
         leaf_atom_budget=np.full(16, 30.0, dtype=np.float32),
         budget_guidance_scale=float(best_cfg["budget_guidance_scale"]),
@@ -1588,7 +1587,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
                         objective_col_mask=obj_col_mask, stage1_legal_weight=0.80, stage1_constr_weight=0.55,
                         stage2_legal_weight=1.05, stage2_constr_weight=0.70, stage2_diversity_weight=0.10,
                         coarse_chunk_size=1024, cfg_scale=float(best_cfg["cfg_scale"]), xyz_cfg_scale=1.0,
-                        cfg_tree_decay=0.25, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
+                        cfg_tree_decay=0.20, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
                         seed=990000 + ms1 * 409 + ms2 * 61 + mkeep * 7 + s, use_bf16=True, electron_parity=0,
                         uncond_active_mask=bu, leaf_atom_budget=req_30[s:e, 1],
                         budget_guidance_scale=float(best_cfg["budget_guidance_scale"]),
@@ -1637,7 +1636,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
             )
 
         fair_payload = {
-            "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4-Pro (<3 GPU-h): 22k Multi-Size DPA-4-Equil Full-Param SFT + 300-Step HOMO-Dominant Tree-Vine GRPO + Grouped Ranking 3-Layer GNN TwoStage Critic + Damped Affine HOMO-CFG + MMR]",
+            "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4-Pro (<3 GPU-h): 20.4k Multi-Size DPA-4-Equil Rank-64 LoRA SFT + 300-Step HOMO-Dominant Tree-Vine GRPO + Grouped Ranking 3-Layer GNN TwoStage Critic + Damped Affine Dual-CFG + Hinged MMR]",
             "benchmark_seed": 20261118,
             "n_prompts": n_p30,
             "mean_requested_atoms": round(float(np.mean(req_30[:, 1])), 2),
@@ -1682,7 +1681,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
                 grps = gen.sample_with_two_stage_process_critic(
                     bt, bm, critic, m_stage1=ms1, m_stage2=ms2, m_keep=mk,
                     objective_col_mask=obj_col_mask, stage2_diversity_weight=0.10, coarse_chunk_size=1024,
-                    cfg_scale=float(best_cfg["cfg_scale"]), xyz_cfg_scale=1.0, cfg_tree_decay=0.25,
+                    cfg_scale=float(best_cfg["cfg_scale"]), xyz_cfg_scale=1.0, cfg_tree_decay=0.20,
                     geometric_guard=True, seed=73000 + ms1 * 43 + mk * 11 + n_exact, use_bf16=True,
                     electron_parity=0, uncond_active_mask=bu, leaf_atom_budget=req_b[:, 1],
                     budget_guidance_scale=float(best_cfg["budget_guidance_scale"]),
@@ -1749,20 +1748,20 @@ def main() -> None:
     p.add_argument("--relax-pool-cap", type=int, default=22000)
     p.add_argument("--small-max-sa", type=float, default=3.55)
     p.add_argument("--large-max-sa", type=float, default=4.20)
-    p.add_argument("--sft-epochs", type=int, default=10)
+    p.add_argument("--sft-epochs", type=int, default=12)
     p.add_argument("--hindsight-rounds", type=int, default=2)
     p.add_argument("--hindsight-proposals", type=int, default=2048)
     p.add_argument("--hindsight-steps", type=int, default=240)
     p.add_argument("--grpo-steps", type=int, default=300)
-    p.add_argument("--grpo-lr", type=float, default=1.2e-5)
+    p.add_argument("--grpo-lr", type=float, default=2.2e-5)
     p.add_argument("--kl-beta", type=float, default=0.025)
     p.add_argument("--prompts-per-step", type=int, default=8)
     p.add_argument("--xyz-distill-steps", type=int, default=600)
     p.add_argument("--refiner-epochs", type=int, default=14)
     p.add_argument("--critic-rollouts", type=int, default=24576)
     p.add_argument("--critic-group-size", type=int, default=8)
-    p.add_argument("--eval-sa-target", type=float, default=2.25)
-    p.add_argument("--cfg-scale", type=float, default=2.35)
+    p.add_argument("--eval-sa-target", type=float, default=1.95)
+    p.add_argument("--cfg-scale", type=float, default=2.20)
     p.add_argument("--eval-part", choices=["all", "fair30", "buckets"], default="all")
     p.add_argument("--reuse-relaxed-pool", action="store_true")
     p.add_argument("--reuse-sft", action="store_true")
