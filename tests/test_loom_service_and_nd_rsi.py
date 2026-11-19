@@ -134,20 +134,23 @@ def _build_mock_critic_bus() -> tuple[CompositeCriticBus, _CountingForbiddenPote
         CallablePredictorAsset(
             asset_id="mock_homo",
             predict_fn=lambda ms: (
-                np.array([[-6.8 + 0.04 * m.GetNumAtoms()] for m in ms], dtype=np.float64),
-                np.full((len(ms), 1), 0.12, dtype=np.float64),
+                np.array([[-6.8 + 0.04 * m.GetNumAtoms(), -2.4 + 0.02 * m.GetNumAtoms()] for m in ms], dtype=np.float64),
+                np.full((len(ms), 2), 0.12, dtype=np.float64),
             ),
-            target_names=["homo"],
-            units=["eV"],
+            target_names=["homo", "lumo"],
+            units=["eV", "eV"],
         )
     )
     pot = _CountingForbiddenPotential()
     reg.register_potential("forbid_mlip", pot)  # type: ignore[arg-type]
     spec = TaskWeavingSpec.from_dict(
         {
-            "task_name": "test_sdl_homo",
+            "task_name": "test_sdl_homo_lumo",
             "potential_asset_id": "forbid_mlip",
-            "objectives": [{"name": "homo", "asset_id": "mock_homo", "asset_channel": "homo", "tolerance": 0.25}],
+            "objectives": [
+                {"name": "homo", "asset_id": "mock_homo", "asset_channel": "homo", "tolerance": 0.25},
+                {"name": "lumo", "asset_id": "mock_homo", "asset_channel": "lumo", "tolerance": 0.25},
+            ],
             "constraints": [
                 {"name": "sa_ok", "asset_id": "builtin_rules", "asset_channel": "sa_score", "op": "leq", "threshold": 4.5, "hard_gate": True}
             ],

@@ -205,6 +205,43 @@ class LoomService:
         except StopIteration:
             pass
 
+    def _normalize_request_shape(
+        self,
+        requested_targets: np.ndarray,
+        active_mask: Optional[np.ndarray] = None,
+        *,
+        dtype: Any = np.float32,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Align 1D or subset-column requests `(B, K_in)` to full `spec.objectives` width `(B, K_obj)`."""
+        req_in = np.asarray(requested_targets, dtype=dtype)
+        if req_in.ndim == 1:
+            req_in = req_in[:, None]
+        bsz, k_in = req_in.shape
+        k_obj = len(self.critic_bus.spec.objectives)
+        if k_in == k_obj:
+            req = req_in
+            act = (
+                np.asarray(active_mask, dtype=bool).reshape(bsz, k_obj)
+                if active_mask is not None
+                else np.ones((bsz, k_obj), dtype=bool)
+            )
+            return req, act
+        if k_in < k_obj:
+            req = np.zeros((bsz, k_obj), dtype=dtype)
+            req[:, :k_in] = req_in
+            if active_mask is not None:
+                a_in = np.asarray(active_mask, dtype=bool)
+                if a_in.size == bsz * k_obj:
+                    act = a_in.reshape(bsz, k_obj)
+                else:
+                    act = np.zeros((bsz, k_obj), dtype=bool)
+                    act[:, :k_in] = a_in.reshape(bsz, k_in)
+            else:
+                act = np.zeros((bsz, k_obj), dtype=bool)
+                act[:, :k_in] = True
+            return req, act
+        raise ValueError(f"requested_targets has {k_in} columns, exceeding spec.objectives ({k_obj})")
+
     def encode_prompts(
         self,
         requested_targets: np.ndarray,
@@ -214,15 +251,8 @@ class LoomService:
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Map task-space objective requests `(B, K_obj)` into normalized generator conditioning tensors."""
         cal = calibration_override or self.calibration
-        req = np.asarray(requested_targets, dtype=np.float32)
-        if req.ndim == 1:
-            req = req[:, None]
-        bsz, k_obj = req.shape
-        act_obj = (
-            np.asarray(active_mask, dtype=bool).reshape(bsz, k_obj)
-            if active_mask is not None
-            else np.ones((bsz, k_obj), dtype=bool)
-        )
+        req, act_obj = self._normalize_request_shape(requested_targets, active_mask, dtype=np.float32)
+        bsz = int(req.shape[0])
         mapped_obj = cal.map_objectives(req)
 
         gen_cols = list(getattr(self.generator, "target_cols", self.critic_bus.spec.objective_names))
@@ -284,15 +314,7 @@ class LoomService:
             selected_m1 = [row[0] if len(row) > 0 else None for row in candidates_grid]
             return selected_m1, {"surrogate_wall_sec": 0.0, "m_candidates": m_keep}
 
-        req = np.asarray(requested_targets, dtype=np.float64)
-        if req.ndim == 1:
-            req = req[:, None]
-        k_obj = len(self.critic_bus.spec.objectives)
-        act = (
-            np.asarray(active_mask, dtype=bool).reshape(bsz, k_obj)
-            if active_mask is not None
-            else np.ones((bsz, k_obj), dtype=bool)
-        )
+        req, act = self._normalize_request_shape(requested_targets, active_mask, dtype=np.float64)
         b_1d = np.asarray(atom_budget, dtype=np.float64).reshape(bsz) if atom_budget is not None else None
 
         self._sync_device()
@@ -379,15 +401,8 @@ class LoomService:
         **gen_kwargs: Any,
     ) -> AffineConditionCalibration:
         """Symmetric 112-prompt zero-leakage dev calibration (`0` audit calls, `0` MLIP calls) for any `GeneratorSlot`."""
-        req = np.asarray(dev_targets, dtype=np.float32)
-        if req.ndim == 1:
-            req = req[:, None]
-        bsz, k_obj = req.shape
-        act = (
-            np.asarray(active_mask, dtype=bool).reshape(bsz, k_obj)
-            if active_mask is not None
-            else np.ones((bsz, k_obj), dtype=bool)
-        )
+        req, act = self._normalize_request_shape(dev_targets, active_mask, dtype=np.float32)
+        bsz = int(req.shape[0])
         obj_names = list(self.critic_bus.spec.objective_names)
         gen_cols = list(getattr(self.generator, "target_cols", obj_names))
         has_aux_sa = ("sa_score" in gen_cols) and ("sa_score" not in obj_names)
@@ -495,14 +510,17 @@ class LoomService:
     def diagnose_requests(
         self,
         requested_targets: np.ndarray,
+        active_mask: Optional[np.ndarray] = None,
     ) -> Optional[Dict[str, Any]]:
         """Attach 4-quadrant epistemic Self-Awareness diagnostics to requested objective vectors."""
         if not self.gp_atlases:
             return None
-        req = np.asarray(requested_targets, dtype=np.float64)
-        if req.ndim == 1:
-            req = req[:, None]
-        obj_specs = [o for o in self.critic_bus.spec.objectives if o.name in self.gp_atlases]
+        req, act = self._normalize_request_shape(requested_targets, active_mask, dtype=np.float64)
+        obj_specs = [
+            o
+            for o in self.critic_bus.spec.objectives
+            if (o.name in self.gp_atlases) and bool(act[:, self.critic_bus.spec.objective_names.index(o.name)].any())
+        ]
         if not obj_specs:
             return None
 
@@ -545,14 +563,12 @@ class LoomService:
     ) -> Dict[str, Any]:
         """Standardized `Uni-Loom` generation endpoint across `effort in {'base','low','medium','high'}`."""
         eff_name, m_keep = resolve_effort_candidates(effort=effort, n_candidates=n_candidates)
-        req = np.asarray(requested_targets, dtype=np.float32)
-        if req.ndim == 1:
-            req = req[:, None]
+        req, act = self._normalize_request_shape(requested_targets, active_mask, dtype=np.float32)
         bsz = int(req.shape[0])
 
         self._sync_device()
         t_g0 = time.perf_counter()
-        t_norm, m_act = self.encode_prompts(req, active_mask)
+        t_norm, m_act = self.encode_prompts(req, act)
         candidates_grid = self.generator.generate_candidates(
             t_norm,
             m_act,
@@ -566,12 +582,12 @@ class LoomService:
         gen_wall = time.perf_counter() - t_g0
 
         selected_mols, sel_info = self.select_best_of_m(
-            candidates_grid, req, active_mask, atom_budget=atom_budget
+            candidates_grid, req, act, atom_budget=atom_budget
         )
         surr_wall = float(sel_info["surrogate_wall_sec"])
         total_wall = gen_wall + surr_wall
         eff_mol_s = float(bsz) / max(total_wall, 1e-6)
-        epistemic = self.diagnose_requests(req) if include_epistemic_envelope else None
+        epistemic = self.diagnose_requests(req, act) if include_epistemic_envelope else None
 
         return {
             "molecules": selected_mols,
