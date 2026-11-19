@@ -84,7 +84,6 @@ from scripts.loom_uni3dar_v4_step2_train import (
     _load_prepared_v4_sdf,
 )
 from scripts.loom_uni3dar_v4_step3_align_and_eval import (
-    _collect_onpolicy_relaxed_pairs,
     _distill_v4_refiner,
     _run_v4_detached_xyz_distillation,
 )
@@ -514,6 +513,108 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
         dist.destroy_process_group()
 
 
+@torch.no_grad()
+def _collect_pro_onpolicy_pairs(
+    gen: LoomUni3DARGenerator,
+    bus_train: Any,
+    cal_unimol2: Any,
+    req_h: np.ndarray,
+    req_n: np.ndarray,
+    *,
+    sa_target: float,
+    cfg_scale: float,
+    max_sa_small: float = 3.55,
+    max_sa_large: float = 4.15,
+    max_fmax: float = 2.25,
+    seed: int = 930000,
+    device: torch.device,
+) -> Tuple[List[Chem.Mol], np.ndarray, List[Tuple[np.ndarray, Chem.Mol]], Dict[str, Any]]:
+    """Sample on-policy molecules with HOMO-only CFG + offline `DPA-4` relax (`0` PCA, `0` `audit_dpa4`)."""
+    t0 = time.perf_counter()
+    reconciler = ValenceReconciler(allowed_elements=tuple(gen.args.allow_atoms.split(",")))
+    rule_asset = bus_train.registry.get_predictor("builtin_rules")
+    pot_slot = bus_train.potential_slot
+    n_proposals = len(req_h)
+
+    gen.eval()
+    cand_mols: List[Chem.Mol] = []
+    cand_noisy: List[np.ndarray] = []
+    gen_bs = 512 if device.type == "cuda" else 64
+    for s in range(0, n_proposals, gen_bs):
+        e = min(s + gen_bs, n_proposals)
+        nb = e - s
+        cond_2d = np.stack([req_h[s:e], np.full(nb, float(sa_target), dtype=np.float32)], axis=-1)
+        tn = gen.normalize_targets(cond_2d)
+        cm = torch.ones((nb, 2), dtype=torch.bool, device=device)
+        um = torch.tensor([[False, True]] * nb, dtype=torch.bool, device=device)
+        trajs = gen.sample(
+            tn, cm, uncond_active_mask=um, cfg_scale=float(cfg_scale), xyz_cfg_scale=1.0,
+            cfg_tree_decay=0.25, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
+            seed=int(seed) + s, use_bf16=(device.type == "cuda"), electron_parity=0,
+            leaf_atom_budget=req_n[s:e], budget_guidance_scale=0.35,
+        )
+        for tr in trajs:
+            res = reconciler.reconcile_point_cloud(tr["atom_symbols"], tr["positions_np"], potential_slot=None)
+            if res.reconciled_legal and (not res.reconciled_exotic_charge) and res.mol is not None:
+                cand_mols.append(res.mol)
+                cand_noisy.append(np.asarray(res.mol.GetConformer().GetPositions(), dtype=np.float32))
+
+    if not cand_mols:
+        return [], np.zeros((0, 2), dtype=np.float32), [], {"n_proposals": n_proposals, "n_clean": 0, "n_relaxed": 0}
+
+    r_out = rule_asset.predict_mols(cand_mols, batch_size=256)
+    sa_c = r_out["mean"][:, rule_asset.channel_index("sa_score")]
+    sm_c = r_out["mean"][:, rule_asset.channel_index("smarts_alert")]
+    mw_c = r_out["mean"][:, rule_asset.channel_index("mol_weight")]
+    keep_i = [
+        i for i, m in enumerate(cand_mols)
+        if sm_c[i] <= 0.0 and mw_c[i] <= 550.0 and sa_c[i] <= (max_sa_large if m.GetNumAtoms() >= 40 else max_sa_small)
+    ]
+    if not keep_i:
+        return [], np.zeros((0, 2), dtype=np.float32), [], {"n_proposals": n_proposals, "n_clean": len(cand_mols), "n_relaxed": 0}
+
+    sub_m = [cand_mols[i] for i in keep_i]
+    sub_pos = [cand_noisy[i] for i in keep_i]
+    sub_sa = [float(sa_c[i]) for i in keep_i]
+
+    rel_out = pot_slot.relax_molecules(sub_m, n_steps=20, chunk_size=48)
+    rel_mols: List[Chem.Mol] = []
+    rel_sa: List[float] = []
+    pairs: List[Tuple[np.ndarray, Chem.Mol]] = []
+    for i, rm in enumerate(rel_out["relaxed_mols"]):
+        ff = float(rel_out["final_f_max_eV_A"][i])
+        if (
+            rm is not None
+            and bool(rel_out["graph_preserved"][i])
+            and math.isfinite(ff)
+            and ff <= float(max_fmax)
+            and rm.GetNumAtoms() == sub_pos[i].shape[0]
+            and is_clean_organic_charge_state(rm)
+        ):
+            cm_r = Chem.Mol(rm)
+            rel_mols.append(cm_r)
+            rel_sa.append(sub_sa[i])
+            pairs.append((sub_pos[i], cm_r))
+
+    if not rel_mols:
+        return [], np.zeros((0, 2), dtype=np.float32), [], {"n_proposals": n_proposals, "n_clean": len(cand_mols), "n_relaxed": 0}
+
+    u_out = cal_unimol2.predict_mols(rel_mols, batch_size=64)
+    hp = u_out["mean"][:, cal_unimol2.channel_index("homo")]
+    ok = u_out["valid_mask"] & np.isfinite(hp)
+    fin_m = [rel_mols[i] for i in range(len(rel_mols)) if bool(ok[i])]
+    fin_t = np.asarray([[float(hp[i]), rel_sa[i]] for i in range(len(rel_mols)) if bool(ok[i])], dtype=np.float32)
+    fin_p = [pairs[i] for i in range(len(pairs)) if bool(ok[i])]
+    stats = {
+        "n_proposals": n_proposals,
+        "n_clean": len(cand_mols),
+        "n_sa_pass": len(sub_m),
+        "n_relaxed": len(fin_m),
+        "wall_sec": round(time.perf_counter() - t0, 2),
+    }
+    return fin_m, fin_t, fin_p, stats
+
+
 def _run_pro_hindsight_awr(
     gen: LoomUni3DARGenerator,
     bus_train: Any,
@@ -572,7 +673,7 @@ def _run_pro_hindsight_awr(
         req_h = np.clip(picked[:, 0] + rng.normal(0.0, 0.25, size=proposals_per_round), -8.2, -4.8).astype(np.float32)
         req_n = np.clip(np.round(picked[:, 1]), 18.0, 60.0).astype(np.float32)
 
-        new_mols, new_t, new_pairs, col_stats = _collect_onpolicy_relaxed_pairs(
+        new_mols, new_t, new_pairs, col_stats = _collect_pro_onpolicy_pairs(
             gen,
             bus_train,
             cal_unimol2,
@@ -580,7 +681,8 @@ def _run_pro_hindsight_awr(
             req_n,
             sa_target=sa_target,
             cfg_scale=cfg_scale,
-            max_sa=3.65,
+            max_sa_small=3.55,
+            max_sa_large=4.15,
             max_fmax=2.20,
             seed=930000 + r_idx * 10000,
             device=device,
@@ -981,9 +1083,10 @@ def run_align_pro(args: argparse.Namespace) -> None:
     req_hf = np.clip(f_rng.choice(q_vals, size=n_fin_p, replace=True) + f_rng.normal(0.0, 0.20, size=n_fin_p), -8.2, -4.8).astype(np.float32)
     req_nf = np.concatenate([f_rng.choice(pool_mid, size=n_fm, replace=True), f_rng.choice(pool_big, size=n_fb, replace=True)])
     f_rng.shuffle(req_nf)
-    _, _, post_pairs, post_col_stats = _collect_onpolicy_relaxed_pairs(
+    _, _, post_pairs, post_col_stats = _collect_pro_onpolicy_pairs(
         gen, bus_train, cal_unimol2, req_hf, np.round(req_nf).astype(np.float32),
-        sa_target=float(args.eval_sa_target), cfg_scale=float(args.cfg_scale), max_sa=4.20, max_fmax=2.40,
+        sa_target=float(args.eval_sa_target), cfg_scale=float(args.cfg_scale),
+        max_sa_small=3.80, max_sa_large=4.30, max_fmax=2.40,
         seed=950000, device=device,
     )
     final_ref, final_ref_meta = _distill_v4_refiner(
