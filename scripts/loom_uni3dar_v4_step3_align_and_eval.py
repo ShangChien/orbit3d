@@ -144,25 +144,27 @@ def run_sft_synth_ddp_worker(args: argparse.Namespace) -> None:
         batch_size=64,
         num_rbf=32,
         num_freqs=16,
-        num_prefix_tokens=8,
+        num_prefix_tokens=0,
         lora_rank=32,
         lora_alpha=64.0,
         lora_dropout=0.05,
-        lora_include_xyz_heads=True,
+        lora_include_ffn=True,
+        lora_include_heads=True,
+        lora_include_xyz_heads=False,
+        train_xyz_embeddings=False,
         use_valence_head=True,
         use_scale_free_count=True,
-        rope_center_prefix=True,
+        non_trapping_budget=True,
+        rope_center_prefix=False,
         random_rotation_prob=0.80,
     )
     gen.configure_trainable(
         train_conditioner=True,
         train_lora=True,
-        train_xyz_embeddings=True,
+        train_xyz_embeddings=False,
         unfreeze_full_backbone=False,
     )
-    gen.backbone.tree_heads.requires_grad_(True)
-    gen.backbone.atom_heads[0].pred_heads[0].requires_grad_(True)
-    step2_meta = {"init_source": "parent_ckpt_lora_r32_so3_scale_free"}
+    step2_meta = {"init_source": "parent_ckpt_npref0_lora_r32_so3_non_trapping_budget"}
 
     ema_gen = deepcopy(gen).eval()
     for p in ema_gen.parameters():
@@ -228,11 +230,11 @@ def run_sft_synth_ddp_worker(args: argparse.Namespace) -> None:
                     contrast_margin=0.06,
                     contrast_min_gap_eV=0.35,
                     contrast_col_mask=contrast_col_mask,
-                    xyz_loss_weight=0.35,
+                    xyz_loss_weight=0.15,
                     valence_loss_weight=0.15,
-                    count_loss_weight=0.25,
+                    count_loss_weight=0.0,
                     geom_dist_loss_weight=0.0,
-                    budget_dropout_prob=0.10,
+                    budget_dropout_prob=0.08,
                 )
             loss.backward()
             if is_ddp:
@@ -368,10 +370,15 @@ def run_distill_refiner(args: argparse.Namespace) -> Path:
 
 
 def _configure_v4_grpo_trainable(gen: LoomUni3DARGenerator, top_k_layers: int = 5) -> int:
-    """Enable Rank-32 LoRA + conditioner + valence/count heads + tree/element output heads for Tree-Vine GRPO."""
+    """Enable Rank-32 LoRA + conditioner + valence/budget embeddings for Tree-Vine GRPO while keeping 0.01 A XYZ heads frozen."""
     has_lora = int(gen.loom_config.get("lora_rank", 0)) > 0
     if has_lora:
-        gen.configure_trainable(train_conditioner=True, train_lora=True, unfreeze_full_backbone=False)
+        gen.configure_trainable(
+            train_conditioner=True,
+            train_lora=True,
+            train_xyz_embeddings=False,
+            unfreeze_full_backbone=False,
+        )
     else:
         gen.configure_trainable(train_conditioner=True, train_lora=False, unfreeze_full_backbone=False)
         n_layers = len(gen.backbone.decoder.layers)
@@ -379,8 +386,6 @@ def _configure_v4_grpo_trainable(gen: LoomUni3DARGenerator, top_k_layers: int = 
         for l_idx in range(n_layers - k, n_layers):
             gen.backbone.decoder.layers[l_idx].requires_grad_(True)
     gen.backbone.norm.requires_grad_(True)
-    gen.backbone.tree_heads.requires_grad_(True)
-    gen.backbone.atom_heads[0].pred_heads[0].requires_grad_(True)
     return sum(p.numel() for p in gen.parameters() if p.requires_grad)
 
 
@@ -527,6 +532,8 @@ def run_align_vine_grpo(args: argparse.Namespace) -> Path:
         temperatures=(0.85, 0.30, 0.25),
         electron_parity=0,
         size_anchored_cfg=False,
+        size_adherence_weight=0.45,
+        size_tolerance_atoms=2.0,
         use_vine_rollouts=True,
         m_trunks=int(args.m_trunks),
         k_leaves=int(args.k_leaves),
@@ -1034,6 +1041,7 @@ def run_eval_final(args: argparse.Namespace) -> None:
         ("TwoStage_16_to_6_to_2", 16, 6, 2, True),
         ("TwoStage_24_to_8_to_2", 24, 8, 2, True),
         ("TwoStage_32_to_8_to_2", 32, 8, 2, True),
+        ("TwoStage_32_to_8_to_3", 32, 8, 3, True),
     ]
     for arm_name, ms1, ms2, mkeep, use_surr in funnels_30:
         _sync(device)
@@ -1103,7 +1111,7 @@ def run_eval_final(args: argparse.Namespace) -> None:
     total_gpuh = round(sft_gpuh + synth_sft_gpuh + ref_gpuh + grpo_gpuh + crit_gpuh, 4)
 
     fair_payload = {
-        "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4: Full-SO(3) 90M SFT + ScaleFreeCountHead (Delta N=0) + SE(3) PostTreeGraphRefiner + Tree-Vine GRPO + TwoStage 32->8->2]",
+        "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Benchmark — Uni-Loom [Uni-3DAR v4: Full-SO(3) Rank-32 LoRA SFT + Non-Trapping ScaleFreeBudgetEmbedding + SE(3) PostTreeGraphRefiner + Tree-Vine GRPO + TwoStage 32->8->2]",
         "benchmark_seed": 20261118,
         "n_prompts": n_p30,
         "mean_requested_atoms": round(float(np.mean(req_30[:, 1])), 2),
@@ -1209,22 +1217,22 @@ def main() -> None:
     p.add_argument("--rollout-gpus", type=str, default="0,1")
     p.add_argument("--shard-id", type=int, default=0)
     p.add_argument("--num-shards", type=int, default=2)
-    p.add_argument("--synth-sft-epochs", type=int, default=14)
-    p.add_argument("--synth-max-sa", type=float, default=3.35)
+    p.add_argument("--synth-sft-epochs", type=int, default=10)
+    p.add_argument("--synth-max-sa", type=float, default=3.30)
     p.add_argument("--refiner-epochs", type=int, default=14)
     p.add_argument("--refiner-batch-size", type=int, default=192)
     p.add_argument("--grpo-steps", type=int, default=180)
     p.add_argument("--grpo-top-layers", type=int, default=5)
-    p.add_argument("--grpo-lr", type=float, default=2.2e-5)
-    p.add_argument("--kl-beta", type=float, default=0.025)
-    p.add_argument("--replay-weight", type=float, default=0.20)
+    p.add_argument("--grpo-lr", type=float, default=1.8e-5)
+    p.add_argument("--kl-beta", type=float, default=0.030)
+    p.add_argument("--replay-weight", type=float, default=0.25)
     p.add_argument("--prompts-per-step", type=int, default=8)
     p.add_argument("--m-trunks", type=int, default=4)
     p.add_argument("--k-leaves", type=int, default=2)
     p.add_argument("--grpo-ema-decay", type=float, default=0.992)
     p.add_argument("--critic-rollouts", type=int, default=16384)
-    p.add_argument("--eval-sa-target", type=float, default=1.85)
-    p.add_argument("--cfg-scale", type=float, default=2.20)
+    p.add_argument("--eval-sa-target", type=float, default=1.90)
+    p.add_argument("--cfg-scale", type=float, default=2.15)
     p.add_argument("--reuse-synth-sft", action="store_true")
     p.add_argument("--reuse-refiner", action="store_true")
     p.add_argument("--reuse-grpo", action="store_true")

@@ -156,11 +156,36 @@ def compute_exact_cell_count_bounds(
     return c_min, c_max
 
 
+def compute_global_scale_free_budget_features(
+    level: torch.Tensor,
+    remaining_atoms: torch.Tensor,
+) -> torch.Tensor:
+    """Compute 6-D non-trapping global molecule atom-budget features `(..., 6)`.
+
+    Depends purely on `(level, total_target_atoms)` so every octree token from root (`level == merge_level`)
+    down to leaf (`level == 0`) sees identical scale-free size context during SFT, autoregressive decoding,
+    and teacher-forced GRPO replay without any coarse octant `c_alloc` trapping.
+    """
+    with torch.autocast(device_type=level.device.type, enabled=False):
+        ra = remaining_atoms.float().clamp_min(0.0)
+        has_b = (remaining_atoms > 0).float()
+        lvl_f = level.float().clamp(-1.0, 8.0)
+        log_ratio = torch.log(ra.clamp_min(1.0) / 30.0)
+        f0 = has_b
+        f1 = has_b * (torch.log1p(ra) / 4.5)
+        f2 = has_b * ((ra - 30.0) / 25.0).clamp(-2.5, 4.5)
+        f3 = (lvl_f + 1.0) / 8.0
+        f4 = has_b * torch.sin(log_ratio * math.pi)
+        f5 = has_b * torch.cos(log_ratio * math.pi)
+        return torch.stack([f0, f1, f2, f3, f4, f5], dim=-1)
+
+
 class ScaleFreeBudgetEmbedding(nn.Module):
     """Zero-initialized continuous remaining-atom budget residual embedding (`0` perturbation at step 0)."""
 
-    def __init__(self, emb_dim: int, hidden_dim: int = 256) -> None:
+    def __init__(self, emb_dim: int, hidden_dim: int = 256, *, global_only: bool = False) -> None:
         super().__init__()
+        self.global_only = bool(global_only)
         self.net = nn.Sequential(
             nn.Linear(6, hidden_dim),
             nn.LayerNorm(hidden_dim),
@@ -171,12 +196,18 @@ class ScaleFreeBudgetEmbedding(nn.Module):
         nn.init.zeros_(self.net[-1].bias)
 
     def forward(self, decoder_input: DecoderInputFeat, out_dtype: torch.dtype) -> torch.Tensor:
-        feats = compute_scale_free_budget_features(
-            decoder_input.level,
-            decoder_input.remaining_atoms,
-            decoder_input.remaining_tokens,
-            decoder_input.count,
-        )
+        if self.global_only:
+            feats = compute_global_scale_free_budget_features(
+                decoder_input.level,
+                decoder_input.remaining_atoms,
+            )
+        else:
+            feats = compute_scale_free_budget_features(
+                decoder_input.level,
+                decoder_input.remaining_atoms,
+                decoder_input.remaining_tokens,
+                decoder_input.count,
+            )
         return self.net(feats).to(out_dtype)
 
 
@@ -321,6 +352,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         train_xyz_embeddings: bool = False,
         use_valence_head: bool = False,
         use_scale_free_count: bool = False,
+        non_trapping_budget: bool = False,
         rope_center_prefix: bool = False,
     ) -> None:
         super().__init__()
@@ -333,6 +365,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         self.target_cols = list(target_cols)
         self.target_units = list(target_units)
         self.num_props = len(self.target_cols)
+        self.non_trapping_budget = bool(non_trapping_budget)
 
         mean_t = torch.tensor(np.asarray(mean, dtype=np.float32))
         scale_t = torch.tensor(np.asarray(scale, dtype=np.float32))
@@ -355,6 +388,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             "train_xyz_embeddings": bool(train_xyz_embeddings),
             "use_valence_head": bool(use_valence_head),
             "use_scale_free_count": bool(use_scale_free_count),
+            "non_trapping_budget": bool(non_trapping_budget),
             "rope_center_prefix": bool(rope_center_prefix),
         }
 
@@ -371,10 +405,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
             HeavyAtomValenceHead(self.args.emb_dim) if use_valence_head else None
         )
         self.budget_emb: Optional[ScaleFreeBudgetEmbedding] = (
-            ScaleFreeBudgetEmbedding(self.args.emb_dim) if use_scale_free_count else None
+            ScaleFreeBudgetEmbedding(self.args.emb_dim, global_only=bool(non_trapping_budget))
+            if (use_scale_free_count or non_trapping_budget)
+            else None
         )
         self.scale_free_count_head: Optional[ScaleFreeCountHead] = (
-            ScaleFreeCountHead(self.args.emb_dim) if use_scale_free_count else None
+            ScaleFreeCountHead(self.args.emb_dim)
+            if (use_scale_free_count and not non_trapping_budget)
+            else None
         )
 
         self.injected_lora_modules: List[str] = []
@@ -1311,22 +1349,33 @@ class LoomUni3DARGenerator(GeneratorSlot):
         max_len = int(bd["decoder_input_max_len"].item())
 
         if self.budget_emb is not None:
-            # Expose exact total atom budget at root token (`intra_pos == 0`), with `budget_dropout_prob` dropout
-            # during training so both exact-budget and unbudgeted sampling modes are well-calibrated.
             root_idx = cu_lens[:-1].long()
             root_tot = decoder_gen_target.count[root_idx].to(decoder_input.remaining_atoms.dtype)
-            if self.training and budget_dropout_prob > 0.0:
-                keep_b = torch.rand((bsz,), device=device) >= float(budget_dropout_prob)
-                owners_tok = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
-                rem_a_mod = decoder_input.remaining_atoms.clone()
-                rem_a_mod[root_idx] = root_tot
+            owners_tok = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
+            if self.non_trapping_budget:
+                non_cls = decoder_input.level >= self.backbone.atom_level_index
+                if self.training and budget_dropout_prob > 0.0:
+                    keep_b = torch.rand((bsz,), device=device) >= float(budget_dropout_prob)
+                    valid_b = non_cls & keep_b[owners_tok]
+                else:
+                    valid_b = non_cls
                 decoder_input.remaining_atoms = torch.where(
-                    keep_b[owners_tok], rem_a_mod, torch.zeros_like(rem_a_mod)
+                    valid_b, root_tot[owners_tok], torch.zeros_like(decoder_input.remaining_atoms)
                 )
             else:
-                rem_a_mod = decoder_input.remaining_atoms.clone()
-                rem_a_mod[root_idx] = root_tot
-                decoder_input.remaining_atoms = rem_a_mod
+                # Expose exact total atom budget at root token (`intra_pos == 0`), with `budget_dropout_prob` dropout
+                # during training so both exact-budget and unbudgeted sampling modes are well-calibrated.
+                if self.training and budget_dropout_prob > 0.0:
+                    keep_b = torch.rand((bsz,), device=device) >= float(budget_dropout_prob)
+                    rem_a_mod = decoder_input.remaining_atoms.clone()
+                    rem_a_mod[root_idx] = root_tot
+                    decoder_input.remaining_atoms = torch.where(
+                        keep_b[owners_tok], rem_a_mod, torch.zeros_like(rem_a_mod)
+                    )
+                else:
+                    rem_a_mod = decoder_input.remaining_atoms.clone()
+                    rem_a_mod[root_idx] = root_tot
+                    decoder_input.remaining_atoms = rem_a_mod
 
         train_mask = active_mask.bool().clone()
         if self.training and cfg_dropout_prob > 0.0:
@@ -1447,6 +1496,19 @@ class LoomUni3DARGenerator(GeneratorSlot):
             decoder_input, decoder_gen_target, _ = self.backbone.get_feat_from_dataloader(bd)
             cu_lens = bd["decoder_input_len"].to(device, dtype=torch.int32)
             max_len = int(bd["decoder_input_max_len"].item())
+            if self.budget_emb is not None:
+                root_idx = cu_lens[:-1].long()
+                root_tot = decoder_gen_target.count[root_idx].to(decoder_input.remaining_atoms.dtype)
+                if self.non_trapping_budget:
+                    owners_tok = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
+                    non_cls = decoder_input.level >= self.backbone.atom_level_index
+                    decoder_input.remaining_atoms = torch.where(
+                        non_cls, root_tot[owners_tok], torch.zeros_like(decoder_input.remaining_atoms)
+                    )
+                else:
+                    rem_a_mod = decoder_input.remaining_atoms.clone()
+                    rem_a_mod[root_idx] = root_tot
+                    decoder_input.remaining_atoms = rem_a_mod
 
             dec_pos = self.forward_sequence(decoder_input, cu_lens, max_len, targets_norm, active_mask)
             _, pos_info = self._nll_from_hidden(
@@ -1548,7 +1610,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
             cur_rem_a = torch.where(is_new_tree, torch.zeros_like(cur_rem_a), cur_rem_a)
             cur_rem_t = torch.where(is_new_tree, torch.ones_like(cur_rem_t), cur_rem_t)
 
-        pair_rem_a = torch.stack([count_vars["last_remaining_atoms"], cur_rem_a], dim=1)
+        if self.non_trapping_budget:
+            tot_a = count_vars["total_atoms"]
+            pair_rem_a = torch.stack([tot_a, tot_a], dim=1)
+        else:
+            pair_rem_a = torch.stack([count_vars["last_remaining_atoms"], cur_rem_a], dim=1)
         pair_rem_t = torch.stack([count_vars["last_remaining_tokens"], cur_rem_t], dim=1)
         return count_vars, pair_rem_a, pair_rem_t
 
@@ -1719,7 +1785,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             if leaf_atom_budget is not None:
                 budget_vec = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device).view(batch_size)
                 orig_budget_list = budget_vec.detach().cpu().tolist()
-                if self.scale_free_count_head is not None and budget_vec.numel() > 0:
+                if (self.scale_free_count_head is not None or self.budget_emb is not None) and budget_vec.numel() > 0:
                     max_decode_steps = max(int(max_decode_steps), 3 * int(budget_vec.max().item()) + 64)
             pops_1d = _split_popcount_table(str(device))
 
@@ -1789,6 +1855,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 q_tail = torch.tensor(q_tail_list, dtype=torch.long, device=device)
 
                 spawned_leaves = torch.zeros((batch_size,), dtype=torch.float32, device=device)
+                rem_l2_cells = (
+                    torch.ones((batch_size,), dtype=torch.float32, device=device)
+                    if self.args.merge_level == (self.backbone.atom_level_index + 2)
+                    else torch.zeros((batch_size,), dtype=torch.float32, device=device)
+                )
                 rem_l1_cells = (
                     torch.ones((batch_size,), dtype=torch.float32, device=device)
                     if self.args.merge_level == (self.backbone.atom_level_index + 1)
@@ -1806,16 +1877,17 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 cur_feat = dec_feat_buf[:, dec_len - 1, :]
                 cur_phy_pos = dec_pos_buf[:, dec_len - 1, :]
                 use_exact_cnt = (self.scale_free_count_head is not None) and (budget_vec is not None)
+                use_global_b = self.non_trapping_budget and (self.budget_emb is not None) and (budget_vec is not None)
                 init_rem_a = (
                     torch.where(
                         budget_vec > 0,
                         budget_vec.round().clamp_min(1).to(torch.int32),
                         torch.zeros_like(cur_feat[:, IDX_TYPE]).int(),
                     )
-                    if use_exact_cnt and budget_vec is not None
+                    if (use_exact_cnt or use_global_b) and budget_vec is not None
                     else torch.zeros_like(cur_feat[:, IDX_TYPE]).int()
                 )
-                if use_exact_cnt:
+                if use_exact_cnt or use_global_b:
                     count_vars["total_atoms"] = init_rem_a.clone()
                 cur_input = DecoderInputFeat(
                     cur_feat[:, IDX_TYPE],
@@ -2097,27 +2169,55 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                 pops_1d,
                             )
                         elif budget_vec is not None and _replay_coarse_actions is None:
-                            is_l1_sub = (tree_lvl == (self.backbone.atom_level_index + 1)) & (budget_vec[is_pred_tree] > 0)
-                            if bool(is_l1_sub.any().item()):
+                            has_b_sub = budget_vec[is_pred_tree] > 0
+                            is_l2_g = (tree_lvl == (self.backbone.atom_level_index + 2)) & has_b_sub
+                            is_l1_sub = (tree_lvl == (self.backbone.atom_level_index + 1)) & has_b_sub
+                            if bool(is_l2_g.any().item()) or bool(is_l1_sub.any().item()):
                                 tree_rows_idx = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
-                                l1_rows_idx = tree_rows_idx[is_l1_sub]
-                                rem_after = (rem_l1_cells[l1_rows_idx] - 1.0).clamp_min(0.0).unsqueeze(-1)
-                                cur_sp = spawned_leaves[l1_rows_idx].unsqueeze(-1)
-                                goal_n = budget_vec[l1_rows_idx].unsqueeze(-1)
                                 pops_row = pops_1d.unsqueeze(0)
-                                min_reach = cur_sp + pops_row + 1.0 * rem_after
-                                max_reach = cur_sp + pops_row + 8.0 * rem_after
-                                feas = (min_reach <= goal_n + float(leaf_budget_tol)) & (max_reach >= goal_n - float(leaf_budget_tol))
-                                has_feas = feas.any(dim=-1, keepdim=True)
-                                ideal_k = ((goal_n - cur_sp) / (rem_after + 1.0)).clamp(1.0, 8.0)
-                                prior_bias = -0.35 * (pops_row - ideal_k).square()
-                                infeas_pen = torch.where(
-                                    feas | (~has_feas),
-                                    torch.zeros_like(prior_bias),
-                                    torch.full_like(prior_bias, -14.0),
-                                )
                                 tree_logits = tree_logits.clone()
-                                tree_logits[is_l1_sub] = tree_logits[is_l1_sub] + prior_bias + infeas_pen
+                                if bool(is_l2_g.any().item()):
+                                    l2_rows_idx = tree_rows_idx[is_l2_g]
+                                    rem2_after = (rem_l2_cells[l2_rows_idx] - 1.0).clamp_min(0.0).unsqueeze(-1)
+                                    cur_l1_tot = (spawned_leaves[l2_rows_idx] + rem_l1_cells[l2_rows_idx]).unsqueeze(-1)
+                                    goal_n2 = budget_vec[l2_rows_idx].unsqueeze(-1)
+                                    ideal_k2 = ((goal_n2 - cur_l1_tot) / (rem2_after + 1.0)).clamp(1.0, 2.4)
+                                    prior_l2 = -0.45 * (pops_row - ideal_k2).square()
+                                    min_r2 = cur_l1_tot + pops_row + 1.0 * rem2_after
+                                    max_r2 = cur_l1_tot + pops_row + 2.6 * rem2_after
+                                    feas2 = (
+                                        (min_r2 <= goal_n2 + float(leaf_budget_tol))
+                                        & (max_r2 >= goal_n2 - float(leaf_budget_tol))
+                                        & (pops_row <= 3.5)
+                                    )
+                                    has_f2 = feas2.any(dim=-1, keepdim=True)
+                                    pen2 = torch.where(
+                                        feas2 | (~has_f2),
+                                        torch.zeros_like(prior_l2),
+                                        torch.full_like(prior_l2, -8.0),
+                                    )
+                                    tree_logits[is_l2_g] = tree_logits[is_l2_g] + prior_l2 + pen2
+                                if bool(is_l1_sub.any().item()):
+                                    l1_rows_idx = tree_rows_idx[is_l1_sub]
+                                    rem_after = (rem_l1_cells[l1_rows_idx] - 1.0).clamp_min(0.0).unsqueeze(-1)
+                                    cur_sp = spawned_leaves[l1_rows_idx].unsqueeze(-1)
+                                    goal_n = budget_vec[l1_rows_idx].unsqueeze(-1)
+                                    min_reach = cur_sp + pops_row + 1.0 * rem_after
+                                    max_reach = cur_sp + pops_row + 2.0 * rem_after
+                                    feas = (
+                                        (min_reach <= goal_n + float(leaf_budget_tol))
+                                        & (max_reach >= goal_n - float(leaf_budget_tol))
+                                        & (pops_row <= 2.5)
+                                    )
+                                    has_feas = feas.any(dim=-1, keepdim=True)
+                                    ideal_k = ((goal_n - cur_sp) / (rem_after + 1.0)).clamp(1.0, 2.0)
+                                    prior_bias = -0.45 * (pops_row - ideal_k).square() - 8.0 * (pops_row >= 2.5).float()
+                                    infeas_pen = torch.where(
+                                        feas | (~has_feas),
+                                        torch.zeros_like(prior_bias),
+                                        torch.full_like(prior_bias, -12.0),
+                                    )
+                                    tree_logits[is_l1_sub] = tree_logits[is_l1_sub] + prior_bias + infeas_pen
 
                         if _replay_coarse_actions is not None and replay_cursors is not None:
                             tree_orig = cond_vars["orig_idx"][is_pred_tree].tolist()  # type: ignore[index]
@@ -2152,8 +2252,13 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         if budget_vec is not None:
                             chosen_pops = pops_1d[t_pred]
                             tree_rows_all = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
+                            is_l3_sub = tree_lvl == (self.backbone.atom_level_index + 3)
                             is_l2_sub = tree_lvl == (self.backbone.atom_level_index + 2)
                             is_l1_track = tree_lvl == (self.backbone.atom_level_index + 1)
+                            rem_l2_cells[tree_rows_all[is_l3_sub]] += chosen_pops[is_l3_sub]
+                            rem_l2_cells[tree_rows_all[is_l2_sub]] = (
+                                rem_l2_cells[tree_rows_all[is_l2_sub]] - 1.0
+                            ).clamp_min(0.0)
                             rem_l1_cells[tree_rows_all[is_l2_sub]] += chosen_pops[is_l2_sub]
                             rem_l1_cells[tree_rows_all[is_l1_track]] = (
                                 rem_l1_cells[tree_rows_all[is_l1_track]] - 1.0
@@ -2172,7 +2277,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
                             )
 
                     scores_buf[:, dec_len] = score_temp
-                    count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
+                    if not self.non_trapping_budget:
+                        count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
 
                     if has_tree:
                         q_buf, q_tail, q_cap, count_vars = self._fast_tree_expand_gpu(
@@ -2264,6 +2370,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         q_tail = q_tail[keep_mask]
                         peek_feat = peek_feat[keep_mask]
                         spawned_leaves = spawned_leaves[keep_mask]
+                        rem_l2_cells = rem_l2_cells[keep_mask]
                         rem_l1_cells = rem_l1_cells[keep_mask]
                         if budget_vec is not None:
                             budget_vec = budget_vec[keep_mask]
@@ -2416,7 +2523,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     traj["atom_symbols"] = [atom_list[idx] for idx in atom_ids]
                     traj["positions_np"] = dp[mask, :3].float().detach().cpu().numpy()
                 b_orig_i = int(traj["batch_idx"])
-                if use_exact_cnt and orig_budget_list is not None:
+                if (use_exact_cnt or use_global_b) and orig_budget_list is not None:
                     b_val_i = float(orig_budget_list[b_orig_i])
                     traj["budget_atoms"] = int(round(b_val_i)) if b_val_i > 0 else 0
                 if h_cat_all is not None and geom_all_cpu is not None:
@@ -3204,6 +3311,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         b_sub: Optional[torch.Tensor],
         leaf_budget_tol: float,
         k_branch_s2: int = 1,
+        apply_leaf_slot_prior: bool = True,
     ) -> List[List[Dict[str, Any]]]:
         """Vectorized GPU pause-and-gather two-stage (`m_stage1 -> m_stage2 -> m_keep`) octree decoding.
 
@@ -3301,6 +3409,11 @@ class LoomUni3DARGenerator(GeneratorSlot):
             q_tail = torch.tensor(q_tail_list, dtype=torch.long, device=device)
 
             spawned_leaves = torch.zeros((b1,), dtype=torch.float32, device=device)
+            rem_l2_cells = (
+                torch.ones((b1,), dtype=torch.float32, device=device)
+                if self.args.merge_level == (self.backbone.atom_level_index + 2)
+                else torch.zeros((b1,), dtype=torch.float32, device=device)
+            )
             rem_l1_cells = (
                 torch.ones((b1,), dtype=torch.float32, device=device)
                 if self.args.merge_level == (self.backbone.atom_level_index + 1)
@@ -3310,17 +3423,19 @@ class LoomUni3DARGenerator(GeneratorSlot):
             cur_feat = dec_feat_s1[:, init_len - 1, :]
             cur_phy_pos = dec_pos_s1[:, init_len - 1, :]
             use_exact_cnt = (self.scale_free_count_head is not None) and (budget_vec is not None)
+            use_global_b = self.non_trapping_budget and (self.budget_emb is not None) and (budget_vec is not None)
             init_rem_a_s1 = (
                 torch.where(
                     budget_vec > 0,
                     budget_vec.round().clamp_min(1).to(torch.int32),
                     torch.zeros_like(cur_feat[:, IDX_TYPE]).int(),
                 )
-                if use_exact_cnt and budget_vec is not None
+                if (use_exact_cnt or use_global_b) and budget_vec is not None
                 else torch.zeros_like(cur_feat[:, IDX_TYPE]).int()
             )
-            if use_exact_cnt:
+            if use_exact_cnt or use_global_b:
                 count_vars["total_atoms"] = init_rem_a_s1.clone()
+                count_vars["last_remaining_atoms"] = init_rem_a_s1.clone()
             cur_input = DecoderInputFeat(
                 cur_feat[:, IDX_TYPE],
                 cur_feat[:, :3],
@@ -3479,35 +3594,68 @@ class LoomUni3DARGenerator(GeneratorSlot):
                             budget_vec[is_pred_tree],
                             pops_1d,
                         )
-                    elif budget_vec is not None:
-                        is_l1_sub = (tree_lvl == (self.backbone.atom_level_index + 1)) & (budget_vec[is_pred_tree] > 0)
-                        if bool(is_l1_sub.any().item()):
+                    elif budget_vec is not None and apply_leaf_slot_prior:
+                        has_b_sub = budget_vec[is_pred_tree] > 0
+                        is_l2_g = (tree_lvl == (self.backbone.atom_level_index + 2)) & has_b_sub
+                        is_l1_sub = (tree_lvl == (self.backbone.atom_level_index + 1)) & has_b_sub
+                        if bool(is_l2_g.any().item()) or bool(is_l1_sub.any().item()):
                             tree_rows_idx = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
-                            l1_rows_idx = tree_rows_idx[is_l1_sub]
-                            rem_after = (rem_l1_cells[l1_rows_idx] - 1.0).clamp_min(0.0).unsqueeze(-1)
-                            cur_sp = spawned_leaves[l1_rows_idx].unsqueeze(-1)
-                            goal_n = budget_vec[l1_rows_idx].unsqueeze(-1)
                             pops_row = pops_1d.unsqueeze(0)
-                            min_reach = cur_sp + pops_row + 1.0 * rem_after
-                            max_reach = cur_sp + pops_row + 8.0 * rem_after
-                            feas = (min_reach <= goal_n + float(leaf_budget_tol)) & (max_reach >= goal_n - float(leaf_budget_tol))
-                            has_feas = feas.any(dim=-1, keepdim=True)
-                            ideal_k = ((goal_n - cur_sp) / (rem_after + 1.0)).clamp(1.0, 8.0)
-                            prior_bias = -0.35 * (pops_row - ideal_k).square()
-                            infeas_pen = torch.where(
-                                feas | (~has_feas),
-                                torch.zeros_like(prior_bias),
-                                torch.full_like(prior_bias, -14.0),
-                            )
                             tree_logits = tree_logits.clone()
-                            tree_logits[is_l1_sub] = tree_logits[is_l1_sub] + prior_bias + infeas_pen
+                            if bool(is_l2_g.any().item()):
+                                l2_rows_idx = tree_rows_idx[is_l2_g]
+                                rem2_after = (rem_l2_cells[l2_rows_idx] - 1.0).clamp_min(0.0).unsqueeze(-1)
+                                cur_l1_tot = (spawned_leaves[l2_rows_idx] + rem_l1_cells[l2_rows_idx]).unsqueeze(-1)
+                                goal_n2 = budget_vec[l2_rows_idx].unsqueeze(-1)
+                                ideal_k2 = ((goal_n2 - cur_l1_tot) / (rem2_after + 1.0)).clamp(1.0, 2.4)
+                                prior_l2 = -0.45 * (pops_row - ideal_k2).square()
+                                min_r2 = cur_l1_tot + pops_row + 1.0 * rem2_after
+                                max_r2 = cur_l1_tot + pops_row + 2.6 * rem2_after
+                                feas2 = (
+                                    (min_r2 <= goal_n2 + float(leaf_budget_tol))
+                                    & (max_r2 >= goal_n2 - float(leaf_budget_tol))
+                                    & (pops_row <= 3.5)
+                                )
+                                has_f2 = feas2.any(dim=-1, keepdim=True)
+                                pen2 = torch.where(
+                                    feas2 | (~has_f2),
+                                    torch.zeros_like(prior_l2),
+                                    torch.full_like(prior_l2, -8.0),
+                                )
+                                tree_logits[is_l2_g] = tree_logits[is_l2_g] + prior_l2 + pen2
+                            if bool(is_l1_sub.any().item()):
+                                l1_rows_idx = tree_rows_idx[is_l1_sub]
+                                rem_after = (rem_l1_cells[l1_rows_idx] - 1.0).clamp_min(0.0).unsqueeze(-1)
+                                cur_sp = spawned_leaves[l1_rows_idx].unsqueeze(-1)
+                                goal_n = budget_vec[l1_rows_idx].unsqueeze(-1)
+                                min_reach = cur_sp + pops_row + 1.0 * rem_after
+                                max_reach = cur_sp + pops_row + 2.0 * rem_after
+                                feas = (
+                                    (min_reach <= goal_n + float(leaf_budget_tol))
+                                    & (max_reach >= goal_n - float(leaf_budget_tol))
+                                    & (pops_row <= 2.5)
+                                )
+                                has_feas = feas.any(dim=-1, keepdim=True)
+                                ideal_k = ((goal_n - cur_sp) / (rem_after + 1.0)).clamp(1.0, 2.0)
+                                prior_bias = -0.45 * (pops_row - ideal_k).square() - 8.0 * (pops_row >= 2.5).float()
+                                infeas_pen = torch.where(
+                                    feas | (~has_feas),
+                                    torch.zeros_like(prior_bias),
+                                    torch.full_like(prior_bias, -12.0),
+                                )
+                                tree_logits[is_l1_sub] = tree_logits[is_l1_sub] + prior_bias + infeas_pen
 
                     t_pred, t_sc = _gpu_multinomial_sample(tree_logits, tree_temp, rng_gen)
                     if budget_vec is not None:
                         chosen_pops = pops_1d[t_pred]
                         tree_rows_all = torch.nonzero(is_pred_tree, as_tuple=False).squeeze(-1)
+                        is_l3_sub = tree_lvl == (self.backbone.atom_level_index + 3)
                         is_l2_sub = tree_lvl == (self.backbone.atom_level_index + 2)
                         is_l1_track = tree_lvl == (self.backbone.atom_level_index + 1)
+                        rem_l2_cells[tree_rows_all[is_l3_sub]] += chosen_pops[is_l3_sub]
+                        rem_l2_cells[tree_rows_all[is_l2_sub]] = (
+                            rem_l2_cells[tree_rows_all[is_l2_sub]] - 1.0
+                        ).clamp_min(0.0)
                         rem_l1_cells[tree_rows_all[is_l2_sub]] += chosen_pops[is_l2_sub]
                         rem_l1_cells[tree_rows_all[is_l1_track]] = (
                             rem_l1_cells[tree_rows_all[is_l1_track]] - 1.0
@@ -3525,7 +3673,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
                             exact_has_b_s1, chosen_cnt_s1, pred_count[is_pred_tree]
                         )
 
-                count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
+                if not self.non_trapping_budget:
+                    count_vars["total_atoms"] = torch.where(is_first_cnt, pred_count, count_vars["total_atoms"])
                 if has_tree:
                     cur_type_masked = torch.where(
                         active, last_type, torch.full_like(last_type, self.backbone.atom_null_id)
@@ -3670,6 +3819,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     uncertainty_bonus=uncertainty_bonus,
                     empty_mask=empty_coarse,
                 )
+                if budget_vec is not None and not use_exact_cnt:
+                    has_b_s1 = (budget_vec > 0).float()
+                    s1_utils = s1_utils - 0.22 * (spawned_leaves - budget_vec).abs() * has_b_s1
                 topk_s1_vals, topk_s1_local = torch.topk(
                     s1_utils.view(n_p_sub, m_stage1), k=m_stage2, dim=1, largest=True, sorted=True
                 )
@@ -4157,6 +4309,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     uncertainty_bonus=uncertainty_bonus,
                     empty_mask=win_empty,
                 )
+                if b_s2 is not None and not use_exact_cnt:
+                    n_atoms_s2 = pad_val_s2.sum(dim=1).float()
+                    s2_utils = s2_utils - 0.20 * (n_atoms_s2 - b_s2).abs() * (b_s2 > 0).float()
                 topk_s2_vals, topk_s2_local = torch.topk(
                     s2_utils.view(n_p_sub, s2_per_prompt), k=m_keep, dim=1, largest=True, sorted=True
                 )
@@ -4176,7 +4331,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 win_s1_util_all = [0.0] * b2
                 out_per_prompt = s2_per_prompt
 
-        b_s2_cpu = b_s2.detach().cpu().tolist() if (use_exact_cnt and b_s2 is not None) else None
+        b_s2_cpu = b_s2.detach().cpu().tolist() if ((use_exact_cnt or use_global_b) and b_s2 is not None) else None
         k_br = max(1, int(k_branch_s2))
         chunk_grouped: List[List[Dict[str, Any]]] = [[] for _ in range(n_p_sub)]
         for rank_idx, (loc_b2, u2_val) in enumerate(zip(win_s2_idx_list, win_s2_util_list)):
@@ -4288,7 +4443,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     objective_col_mask = objective_col_mask[perm]
                 leaf_atom_budget = b_p[perm]
 
-            if leaf_atom_budget is not None and self.scale_free_count_head is not None:
+            if leaf_atom_budget is not None and (self.scale_free_count_head is not None or self.budget_emb is not None):
                 b_tmp = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device)
                 if b_tmp.numel() > 0:
                     max_decode_steps = max(int(max_decode_steps), 3 * int(b_tmp.max().item()) + 64)
@@ -4447,7 +4602,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             if n_prompts == 0:
                 return []
             device = targets_norm.device
-            if leaf_atom_budget is not None and self.scale_free_count_head is not None:
+            if leaf_atom_budget is not None and (self.scale_free_count_head is not None or self.budget_emb is not None):
                 b_tmp = torch.as_tensor(leaf_atom_budget, dtype=torch.float32, device=device)
                 if b_tmp.numel() > 0:
                     max_decode_steps = max(int(max_decode_steps), 3 * int(b_tmp.max().item()) + 64)
@@ -4499,6 +4654,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     b_sub=b_sub,
                     leaf_budget_tol=leaf_budget_tol,
                     k_branch_s2=k_leaves,
+                    apply_leaf_slot_prior=False,
                 )
                 for p_grp in sub_grouped:
                     flat_out.extend(p_grp)
@@ -4588,7 +4744,14 @@ class LoomUni3DARGenerator(GeneratorSlot):
             b_sec[1::2] = True
             b_space = df[:, IDX_SPACE].clamp(min=0)
             b_tree = df[:, IDX_TREE].clamp(min=0)
-            if b_atoms > 0 and (self.budget_emb is not None or self.scale_free_count_head is not None):
+            if b_atoms > 0 and self.non_trapping_budget and self.budget_emb is not None:
+                b_rem_a = torch.where(
+                    b_lvl >= self.backbone.atom_level_index,
+                    torch.full((length,), b_atoms, dtype=torch.long, device=device),
+                    torch.zeros((length,), dtype=torch.long, device=device),
+                )
+                b_rem_t = torch.zeros((length,), dtype=torch.long, device=device)
+            elif b_atoms > 0 and (self.budget_emb is not None or self.scale_free_count_head is not None):
                 b_rem_a, b_rem_t = self._reconstruct_trajectory_rem_stats(df_raw, b_atoms, device)
             else:
                 b_rem_a = torch.zeros((length,), dtype=torch.long, device=device)

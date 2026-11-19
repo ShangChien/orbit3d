@@ -336,6 +336,7 @@ class LoomGRPOTrainer:
         rep_targets_eV: np.ndarray,
         rep_mask_np: np.ndarray,
         group_size: int,
+        prompt_atom_budgets: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, torch.Tensor]:
         """Compute atom counts, absolute size errors, adherence scores, and normalized group advantages."""
         total_b = len(mols)
@@ -349,11 +350,15 @@ class LoomGRPOTrainer:
             if mol is not None and valid_mask_np[idx]:
                 natoms_actual[idx] = float(mol.GetNumAtoms())
 
-        if self.size_col_idx is None:
+        if self.size_col_idx is not None:
+            size_active = rep_mask_np[:, self.size_col_idx]
+            target_nat = rep_targets_eV[:, self.size_col_idx]
+        elif prompt_atom_budgets is not None:
+            rep_b = np.repeat(np.asarray(prompt_atom_budgets, dtype=np.float64).reshape(-1), group_size)
+            size_active = rep_b > 0.0
+            target_nat = rep_b
+        else:
             return natoms_actual, natoms_abs_err, size_scores, size_eval_mask, adv_size
-
-        size_active = rep_mask_np[:, self.size_col_idx]
-        target_nat = rep_targets_eV[:, self.size_col_idx]
         for idx in range(total_b):
             if valid_mask_np[idx] and size_active[idx] and np.isfinite(natoms_actual[idx]):
                 n_req = float(target_nat[idx])
@@ -662,9 +667,16 @@ class LoomGRPOTrainer:
             raw_legal_np = valid_mask_np.copy()
 
         natoms_actual_np, natoms_abs_err_np, size_scores_np, size_eval_mask_np, adv_size = (
-            self._compute_size_metrics_and_advantages(mols, valid_mask_np, rep_targets_eV, rep_mask_np, group_size)
+            self._compute_size_metrics_and_advantages(
+                mols,
+                valid_mask_np,
+                rep_targets_eV,
+                rep_mask_np,
+                group_size,
+                prompt_atom_budgets=prompt_atom_budgets,
+            )
         )
-        if self.size_adherence_weight > 0.0 and self.size_col_idx is not None:
+        if self.size_adherence_weight > 0.0 and (self.size_col_idx is not None or prompt_atom_budgets is not None):
             adv_all = adv_all + self.size_adherence_weight * adv_size
 
         if self.use_vine_rollouts:
