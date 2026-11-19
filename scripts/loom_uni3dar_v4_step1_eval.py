@@ -411,8 +411,12 @@ def _select_v4_step1_from_pool(
     m_keep: int,
     use_surrogate: bool,
     device: torch.device,
+    *,
+    sd_weight: float = 0.08,
+    disp_rms_grid: Optional[np.ndarray] = None,
+    disp_penalty_weight: float = 0.0,
 ) -> Tuple[List[Optional[Chem.Mol]], np.ndarray, np.ndarray, float]:
-    """Select best finalist per prompt using calibrated `ext_unimol2` + `SA<=3.5` + pure analytic strain."""
+    """Select best finalist per prompt using calibrated `ext_unimol2` + `SA<=3.5` + conservative uncertainty & strain."""
     n_prompts = len(req_targets)
     if not use_surrogate or m_keep == 1:
         sel_m = [mols_grid[i][0] for i in range(n_prompts)]
@@ -454,8 +458,13 @@ def _select_v4_step1_from_pool(
                 size_pen = max(0.0, err_n - tol_n) * 0.04 + err_n * 0.015
                 sa_pen = max(0.0, float(sa_p[i, k]) - 3.5) * 0.25
                 strain_pen = _analytic_conformer_strain_penalty(mol_k)
+                disp_pen = 0.0
+                if disp_rms_grid is not None and disp_penalty_weight > 0.0:
+                    d_rms = float(disp_rms_grid[i, k])
+                    if math.isfinite(d_rms):
+                        disp_pen = float(disp_penalty_weight) * max(0.0, d_rms - 0.11)
                 tier = 0 if (cln and c_ok) else (1 if cln else 2)
-                ck = (tier, err_h + 0.08 * sd_h + sa_pen + size_pen + strain_pen)
+                ck = (tier, err_h + float(sd_weight) * sd_h + sa_pen + size_pen + strain_pen + disp_pen)
             if ck < best_key:
                 best_key = ck
                 best_k = k

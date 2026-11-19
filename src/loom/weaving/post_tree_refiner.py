@@ -253,8 +253,13 @@ class PostTreeGraphRefiner(nn.Module):
                 for i, tr in enumerate(sub):
                     ki = k_lens[i]
                     if ki > 0:
-                        tr["positions_np"] = ref_pos_cpu[i, :ki].astype(np.float32)
+                        orig_p = np.asarray(tr["positions_np"], dtype=np.float32)
+                        ref_p = ref_pos_cpu[i, :ki].astype(np.float32)
+                        d_norms = np.linalg.norm(ref_p - orig_p, axis=-1)
+                        tr["positions_np"] = ref_p
                         tr["bond_order_probs"] = probs_cpu[i, :ki, :ki].astype(np.float32)
+                        tr["refiner_disp_rms_A"] = float(np.sqrt(np.mean(d_norms ** 2)))
+                        tr["refiner_disp_max_A"] = float(np.max(d_norms))
         finally:
             self.train(was_training)
 

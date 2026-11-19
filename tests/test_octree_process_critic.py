@@ -845,6 +845,128 @@ def test_non_trapping_global_budget_sft_and_vine_parity(tmp_path) -> None:
     )
     assert st_ref4.val_bond_dist_mae_A <= st_ref4.val_noisy_bond_dist_mae_A + 1e-3
 
+    # Verify refiner_disp_rms_A tracking
+    tr_sample = {"atom_symbols": [a.GetSymbol() for a in mols[0].GetAtoms()], "positions_np": noisy_pair.copy()}
+    ref4.refine_trajectories_batch([tr_sample], batch_size=4)
+    assert "refiner_disp_rms_A" in tr_sample and np.isfinite(tr_sample["refiner_disp_rms_A"])
+    assert "refiner_disp_max_A" in tr_sample and tr_sample["refiner_disp_max_A"] >= tr_sample["refiner_disp_rms_A"] - 1e-6
+
+
+def test_grouped_ranking_critic_and_stage2_mmr_diversity(tmp_path: Path) -> None:
+    """Verify grouped ListNet+pairwise ranking loss (`n_gnn_layers=3`) & Stage-2 Trunk-Diverse MMR."""
+    torch.manual_seed(101)
+    backbone = LoomUni3DARGenerator._build_backbone(
+        merge_level=6,
+        allowed_elements=("H", "C", "N", "O", "F"),
+        batch_size=8,
+        emb_dim=64,
+        num_head=4,
+        layer=2,
+        ffn_multiple=2,
+        dropout=0.0,
+    )
+    gen = LoomUni3DARGenerator(
+        backbone=backbone,
+        target_cols=["homo", "sa_score"],
+        target_units=["eV", "sa"],
+        mean=[-6.5, 2.8],
+        scale=[0.8, 0.7],
+        num_rbf=16,
+        num_freqs=8,
+        num_prefix_tokens=0,
+        non_trapping_budget=True,
+        rope_center_prefix=False,
+    )
+    n_prompts = 6
+    g_sz = 4
+    n_tot = n_prompts * g_sz
+    t_p = torch.randn(n_prompts, 2)
+    m_p = torch.ones(n_prompts, 2, dtype=torch.bool)
+    t_rep = t_p.repeat_interleave(g_sz, dim=0)
+    m_rep = m_p.repeat_interleave(g_sz, dim=0)
+    gids = torch.arange(n_prompts, dtype=torch.long).repeat_interleave(g_sz)
+
+    roll = gen.sample_rollouts_with_two_stage_features(
+        t_rep,
+        m_rep,
+        cfg_scale=1.5,
+        cfg_tree_decay=0.20,
+        geometric_guard=True,
+        electron_parity=0,
+        seed=303,
+        use_bf16=False,
+        max_decode_steps=64,
+    )
+    y_surr = t_rep + 0.15 * torch.randn(n_tot, 2)
+    y_ok = torch.ones(n_tot, dtype=torch.bool)
+    is_leg = torch.tensor([i % 5 != 0 for i in range(n_tot)], dtype=torch.bool)
+    is_con = torch.tensor([i % 2 == 0 for i in range(n_tot)], dtype=torch.bool)
+
+    s1 = OctreeProcessCritic(emb_dim=64, num_targets=2, hidden_dim=96)
+    s2 = OctreeElementProcessCritic(emb_dim=64, num_targets=2, d_node=64, n_gnn_layers=3, hidden_dim=96)
+    obj_m = torch.tensor([True, False], dtype=torch.bool)
+
+    st1 = fit_octree_process_critic(
+        s1,
+        h_concat=roll["s1_h_concat"],
+        geom_feats=roll["s1_geom_feats"],
+        targets_norm=t_rep,
+        active_mask=m_rep,
+        y_surrogate_norm=y_surr,
+        y_valid_mask=y_ok,
+        is_legal=is_leg,
+        is_constr_met=is_con,
+        group_ids=gids,
+        ranking_weight=0.50,
+        ranking_obj_mask=obj_m,
+        epochs=4,
+        batch_size=8,
+    )
+    st2 = fit_octree_element_process_critic(
+        s2,
+        h_stage2=roll["s2_h_stage2"],
+        elem_ids=roll["s2_elem_ids"],
+        leaf_pos=roll["s2_leaf_pos"],
+        leaf_valid=roll["s2_leaf_valid"],
+        cloud_feats=roll["s2_cloud_feats"],
+        targets_norm=t_rep,
+        active_mask=m_rep,
+        y_surrogate_norm=y_surr,
+        y_valid_mask=y_ok,
+        is_legal=is_leg,
+        is_constr_met=is_con,
+        group_ids=gids,
+        ranking_weight=0.60,
+        ranking_obj_mask=obj_m,
+        epochs=4,
+        batch_size=8,
+    )
+    assert np.isfinite(st1.train_loss) and np.isfinite(st2.train_loss)
+
+    ts = TwoStageOctreeProcessCritic(s1, s2)
+    ckpt = tmp_path / "ts_rank3.pt"
+    ts.save_checkpoint(ckpt)
+    ts_loaded, _ = TwoStageOctreeProcessCritic.load_checkpoint(ckpt)
+    assert ts_loaded.stage2_critic.n_gnn_layers == 3
+
+    grouped = gen.sample_with_two_stage_process_critic(
+        t_p[:3],
+        m_p[:3],
+        ts_loaded,
+        m_stage1=6,
+        m_stage2=4,
+        m_keep=2,
+        objective_col_mask=obj_m,
+        stage2_diversity_weight=0.45,
+        cfg_scale=1.5,
+        geometric_guard=True,
+        electron_parity=0,
+        seed=404,
+        use_bf16=False,
+        max_decode_steps=64,
+    )
+    assert len(grouped) == 3 and all(len(g) == 2 for g in grouped)
+
 
 
 

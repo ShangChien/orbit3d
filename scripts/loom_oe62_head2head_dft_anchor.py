@@ -299,9 +299,15 @@ def _select_unbiased_fixed_prompts_from_sdf(
 
 def run_select_cohorts(args: argparse.Namespace) -> None:
     args.dft_work_dir.mkdir(parents=True, exist_ok=True)
-    arm_sources: List[Tuple[str, Path]] = [
-        ("UniLoom_v20_Process_16_to_4", args.uniloom_sdf),
-    ]
+    arm_sources: List[Tuple[str, Path]] = []
+    if args.extra_arms:
+        for spec_str in args.extra_arms:
+            if "=" not in spec_str:
+                raise ValueError(f"--extra-arms entries must be NAME=PATH, got: {spec_str}")
+            a_name, a_path = spec_str.split("=", 1)
+            arm_sources.append((a_name.strip(), Path(a_path.strip())))
+    else:
+        arm_sources.append((args.uniloom_arm_name, args.uniloom_sdf))
     if args.pmf_cohort_dir is not None and args.pmf_cohort_dir.exists():
         for tag, fname in (
             ("PropMolFlow_native_M1", "native_graph_M1.sdf"),
@@ -531,6 +537,8 @@ def main() -> None:
         type=Path,
         default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/results/uniloom_v20_process_16_to_4.sdf"),
     )
+    p.add_argument("--uniloom-arm-name", type=str, default="UniLoom_v20_Process_16_to_4")
+    p.add_argument("--extra-arms", type=str, nargs="*", default=None)
     p.add_argument("--pmf-cohort-dir", type=Path, default=None)
     p.add_argument("--selection-mode", choices=["top_hits", "unbiased_fixed_prompts"], default="top_hits")
     p.add_argument("--per-quantile", type=int, default=6)

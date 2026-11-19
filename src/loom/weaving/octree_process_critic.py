@@ -296,6 +296,104 @@ class ProcessCriticTrainStats:
     val_constr_acc: float
 
 
+def _grouped_utility_ranking_loss(
+    out: Dict[str, torch.Tensor],
+    targets_norm: torch.Tensor,
+    active_mask: torch.Tensor,
+    y_surrogate_norm: torch.Tensor,
+    y_valid_mask: torch.Tensor,
+    is_legal: torch.Tensor,
+    is_constr_met: torch.Tensor,
+    group_size: int,
+    obj_mask: Optional[torch.Tensor] = None,
+    *,
+    legal_weight: float = 0.90,
+    constr_weight: float = 0.65,
+    temp: float = 0.35,
+) -> torch.Tensor:
+    """Group-aligned ListNet KL + Pairwise Logistic Ranking loss on exact utility ordering within each prompt."""
+    bsz = int(targets_norm.shape[0])
+    if group_size < 2 or bsz < group_size or (bsz % group_size) != 0:
+        return torch.zeros((), device=targets_norm.device, dtype=torch.float32)
+
+    mu_n = out["mu_norm"]
+    std_n = out["std_norm"]
+    eval_m = (
+        obj_mask.to(device=mu_n.device, dtype=torch.bool)
+        if obj_mask is not None
+        else active_mask.to(device=mu_n.device, dtype=torch.bool)
+    )
+    if eval_m.ndim == 1:
+        eval_m = eval_m.unsqueeze(0).expand_as(mu_n)
+    denom = eval_m.float().sum(dim=-1).clamp_min(1.0)
+
+    pred_err = ((torch.abs(mu_n - targets_norm.float()) + 0.10 * std_n) * eval_m.float()).sum(dim=-1) / denom
+    u_pred = (
+        -pred_err
+        - float(legal_weight) * (1.8 * F.relu(0.75 - out["prob_legal"]) + 0.15 * (-F.logsigmoid(out["logit_legal"])))
+        - float(constr_weight) * (1.8 * F.relu(0.60 - out["prob_constr"]) + 0.20 * (-F.logsigmoid(out["logit_constr"])))
+    )
+
+    y_safe = torch.where(torch.isfinite(y_surrogate_norm), y_surrogate_norm.float(), torch.zeros_like(mu_n))
+    true_err_raw = (torch.abs(y_safe - targets_norm.float()) * eval_m.float()).sum(dim=-1) / denom
+    ok_row = y_valid_mask.bool() & (is_legal >= 0.5) & torch.isfinite(true_err_raw)
+    true_err = torch.where(ok_row, true_err_raw.clamp_max(3.5), torch.full_like(true_err_raw, 3.5))
+    u_true = -true_err + 1.25 * is_legal.float() + 1.15 * is_constr_met.float()
+
+    n_grp = bsz // group_size
+    up_g = u_pred.view(n_grp, group_size)
+    ut_g = u_true.view(n_grp, group_size)
+
+    # 1. ListNet soft-top-k KL divergence
+    tau = max(float(temp), 0.05)
+    p_true = torch.softmax(ut_g / tau, dim=1)
+    log_p_pred = F.log_softmax(up_g / tau, dim=1)
+    loss_listnet = (p_true * (torch.log(p_true.clamp_min(1e-7)) - log_p_pred)).sum(dim=1).mean()
+
+    # 2. Pairwise margin logistic loss over pairs separated by > 0.15 utility
+    du_true = ut_g.unsqueeze(2) - ut_g.unsqueeze(1)  # (G_b, K, K)
+    du_pred = up_g.unsqueeze(2) - up_g.unsqueeze(1)
+    pair_mask = du_true > 0.15
+    if bool(pair_mask.any().item()):
+        loss_pair = F.softplus(-2.0 * du_pred[pair_mask]).mean()
+    else:
+        loss_pair = torch.zeros((), device=targets_norm.device, dtype=torch.float32)
+
+    return 0.50 * loss_listnet + 0.50 * loss_pair
+
+
+def _build_group_aligned_splits(
+    n_total: int,
+    group_ids: Optional[torch.Tensor],
+    val_fraction: float,
+    rng: np.random.Generator,
+) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], int]:
+    """Return `(tr_groups, val_groups, group_size)` where each tensor has shape `(N_grp, group_size)`, or `(None, None, 0)`."""
+    if group_ids is None or n_total < 8:
+        return None, None, 0
+    g_np = group_ids.detach().cpu().numpy().reshape(-1)
+    buckets: Dict[int, List[int]] = {}
+    for idx, gid in enumerate(g_np.tolist()):
+        buckets.setdefault(int(gid), []).append(idx)
+    sizes = [len(v) for v in buckets.values()]
+    if not sizes:
+        return None, None, 0
+    # Keep only intact groups matching the modal group size >= 2
+    vals, cnts = np.unique(sizes, return_counts=True)
+    g_sz = int(vals[int(np.argmax(cnts))])
+    if g_sz < 2:
+        return None, None, 0
+    intact = [v for v in buckets.values() if len(v) == g_sz]
+    if len(intact) < 4:
+        return None, None, 0
+    grp_arr = np.asarray(intact, dtype=np.int64)
+    perm_g = rng.permutation(len(grp_arr))
+    n_val_g = max(1, min(len(grp_arr) // 5, int(round(len(grp_arr) * val_fraction))))
+    val_g = torch.as_tensor(grp_arr[perm_g[:n_val_g]], dtype=torch.long)
+    tr_g = torch.as_tensor(grp_arr[perm_g[n_val_g:]], dtype=torch.long)
+    return tr_g, val_g, g_sz
+
+
 def fit_octree_process_critic(
     critic: OctreeProcessCritic,
     *,
@@ -307,6 +405,9 @@ def fit_octree_process_critic(
     y_valid_mask: torch.Tensor,
     is_legal: torch.Tensor,
     is_constr_met: Optional[torch.Tensor] = None,
+    group_ids: Optional[torch.Tensor] = None,
+    ranking_weight: float = 0.0,
+    ranking_obj_mask: Optional[torch.Tensor] = None,
     epochs: int = 18,
     batch_size: int = 256,
     lr: float = 1.5e-3,
@@ -318,10 +419,16 @@ def fit_octree_process_critic(
     device = next(critic.parameters()).device
     n_total = h_concat.shape[0]
     rng = np.random.default_rng(seed)
-    perm = rng.permutation(n_total)
-    n_val = max(1, min(n_total // 5, int(round(n_total * val_fraction)))) if n_total >= 10 else 0
-    val_idx = torch.as_tensor(perm[:n_val], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
-    tr_idx = torch.as_tensor(perm[n_val:], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
+    tr_grp, val_grp, g_sz = _build_group_aligned_splits(n_total, group_ids, val_fraction, rng)
+    use_rank = (tr_grp is not None) and (g_sz >= 2) and (float(ranking_weight) > 0.0)
+    if tr_grp is not None and val_grp is not None:
+        tr_idx = tr_grp.reshape(-1)
+        val_idx = val_grp.reshape(-1)
+    else:
+        perm = rng.permutation(n_total)
+        n_val = max(1, min(n_total // 5, int(round(n_total * val_fraction)))) if n_total >= 10 else 0
+        val_idx = torch.as_tensor(perm[:n_val], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
+        tr_idx = torch.as_tensor(perm[n_val:], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
 
     if is_constr_met is None:
         is_constr_met = is_legal.clone()
@@ -332,14 +439,23 @@ def fit_octree_process_critic(
     best_state: Optional[Dict[str, torch.Tensor]] = None
     best_val_metric = float("inf")
     last_tr_loss = 0.0
+    val_mae = 0.0
+    leg_acc = 0.0
+    con_acc = 0.0
 
     for _ep in range(epochs):
         critic.train()
-        shuf = tr_idx[torch.randperm(tr_idx.numel())]
         ep_loss_sum = 0.0
         ep_n = 0
-        for s in range(0, shuf.numel(), batch_size):
-            b_ids = shuf[s : s + batch_size]
+        if use_rank and tr_grp is not None:
+            g_perm = tr_grp[torch.randperm(tr_grp.shape[0])]
+            g_step = max(1, batch_size // g_sz)
+            batch_iter = [g_perm[s : s + g_step].reshape(-1) for s in range(0, g_perm.shape[0], g_step)]
+        else:
+            shuf = tr_idx[torch.randperm(tr_idx.numel())]
+            batch_iter = [shuf[s : s + batch_size] for s in range(0, shuf.numel(), batch_size)]
+
+        for b_ids in batch_iter:
             bh = h_concat[b_ids].to(device, non_blocking=True)
             bg = geom_feats[b_ids].to(device, non_blocking=True)
             bt = targets_norm[b_ids].to(device, non_blocking=True)
@@ -369,6 +485,11 @@ def fit_octree_process_critic(
                 loss_prop = torch.zeros((), device=device)
 
             loss = loss_prop + 0.50 * loss_leg + 0.35 * loss_con
+            if use_rank:
+                loss_rk = _grouped_utility_ranking_loss(
+                    out, bt, bm, by, by_ok, bleg, bcon, g_sz, obj_mask=ranking_obj_mask
+                )
+                loss = loss + float(ranking_weight) * loss_rk
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(critic.parameters(), 2.0)
@@ -588,6 +709,7 @@ class OctreeElementProcessCritic(nn.Module):
         num_h_pools: int = 6,
         d_node: int = 160,
         n_rbf: int = 16,
+        n_gnn_layers: int = 2,
         hidden_dim: int = 512,
         cloud_feat_dim: int = NUM_ELEM_CLOUD_FEATS,
         dropout: float = 0.10,
@@ -599,6 +721,7 @@ class OctreeElementProcessCritic(nn.Module):
         self.num_h_pools = int(num_h_pools)
         self.d_node = int(d_node)
         self.n_rbf = int(n_rbf)
+        self.n_gnn_layers = max(1, int(n_gnn_layers))
         self.hidden_dim = int(hidden_dim)
         self.cloud_feat_dim = int(cloud_feat_dim)
 
@@ -606,7 +729,10 @@ class OctreeElementProcessCritic(nn.Module):
         self.register_buffer("rbf_centers", torch.linspace(0.70, 5.50, self.n_rbf, dtype=torch.float32))
         self.register_buffer("rbf_gamma", torch.tensor(6.0, dtype=torch.float32))
         self.gnn_layers = nn.ModuleList(
-            [_RBFElementGraphLayer(self.d_node, n_heads=4, n_rbf=self.n_rbf, dropout=dropout) for _ in range(2)]
+            [
+                _RBFElementGraphLayer(self.d_node, n_heads=4, n_rbf=self.n_rbf, dropout=dropout)
+                for _ in range(self.n_gnn_layers)
+            ]
         )
 
         h_in = self.num_h_pools * self.emb_dim
@@ -783,6 +909,7 @@ class OctreeElementProcessCritic(nn.Module):
             "num_h_pools": self.num_h_pools,
             "d_node": self.d_node,
             "n_rbf": self.n_rbf,
+            "n_gnn_layers": self.n_gnn_layers,
             "hidden_dim": self.hidden_dim,
             "cloud_feat_dim": self.cloud_feat_dim,
         }
@@ -805,6 +932,7 @@ class OctreeElementProcessCritic(nn.Module):
             num_h_pools=int(payload.get("num_h_pools", 6)),
             d_node=int(payload.get("d_node", 160)),
             n_rbf=int(payload.get("n_rbf", 16)),
+            n_gnn_layers=int(payload.get("n_gnn_layers", 2)),
             hidden_dim=int(payload.get("hidden_dim", 512)),
             cloud_feat_dim=int(payload.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
         ).to(device)
@@ -861,6 +989,7 @@ class TwoStageOctreeProcessCritic(nn.Module):
             num_h_pools=int(c2.get("num_h_pools", 6)),
             d_node=int(c2.get("d_node", 160)),
             n_rbf=int(c2.get("n_rbf", 16)),
+            n_gnn_layers=int(c2.get("n_gnn_layers", 2)),
             hidden_dim=int(c2.get("hidden_dim", 512)),
             cloud_feat_dim=int(c2.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
         ).to(device)
@@ -883,6 +1012,9 @@ def fit_octree_element_process_critic(
     y_valid_mask: torch.Tensor,
     is_legal: torch.Tensor,
     is_constr_met: Optional[torch.Tensor] = None,
+    group_ids: Optional[torch.Tensor] = None,
+    ranking_weight: float = 0.0,
+    ranking_obj_mask: Optional[torch.Tensor] = None,
     epochs: int = 24,
     batch_size: int = 256,
     lr: float = 1.2e-3,
@@ -894,10 +1026,16 @@ def fit_octree_element_process_critic(
     device = next(critic.parameters()).device
     n_total = h_stage2.shape[0]
     rng = np.random.default_rng(seed)
-    perm = rng.permutation(n_total)
-    n_val = max(1, min(n_total // 5, int(round(n_total * val_fraction)))) if n_total >= 10 else 0
-    val_idx = torch.as_tensor(perm[:n_val], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
-    tr_idx = torch.as_tensor(perm[n_val:], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
+    tr_grp, val_grp, g_sz = _build_group_aligned_splits(n_total, group_ids, val_fraction, rng)
+    use_rank = (tr_grp is not None) and (g_sz >= 2) and (float(ranking_weight) > 0.0)
+    if tr_grp is not None and val_grp is not None:
+        tr_idx = tr_grp.reshape(-1)
+        val_idx = val_grp.reshape(-1)
+    else:
+        perm = rng.permutation(n_total)
+        n_val = max(1, min(n_total // 5, int(round(n_total * val_fraction)))) if n_total >= 10 else 0
+        val_idx = torch.as_tensor(perm[:n_val], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
+        tr_idx = torch.as_tensor(perm[n_val:], dtype=torch.long) if n_val > 0 else torch.arange(n_total, dtype=torch.long)
 
     if is_constr_met is None:
         is_constr_met = is_legal.clone()
@@ -914,11 +1052,17 @@ def fit_octree_element_process_critic(
 
     for _ep in range(epochs):
         critic.train()
-        shuf = tr_idx[torch.randperm(tr_idx.numel())]
         ep_loss_sum = 0.0
         ep_n = 0
-        for s in range(0, shuf.numel(), batch_size):
-            b_ids = shuf[s : s + batch_size]
+        if use_rank and tr_grp is not None:
+            g_perm = tr_grp[torch.randperm(tr_grp.shape[0])]
+            g_step = max(1, batch_size // g_sz)
+            batch_iter = [g_perm[s : s + g_step].reshape(-1) for s in range(0, g_perm.shape[0], g_step)]
+        else:
+            shuf = tr_idx[torch.randperm(tr_idx.numel())]
+            batch_iter = [shuf[s : s + batch_size] for s in range(0, shuf.numel(), batch_size)]
+
+        for b_ids in batch_iter:
             bh = h_stage2[b_ids].to(device, non_blocking=True)
             be = elem_ids[b_ids].to(device, non_blocking=True)
             bp = leaf_pos[b_ids].to(device, non_blocking=True)
@@ -948,6 +1092,11 @@ def fit_octree_element_process_critic(
                 loss_prop = torch.zeros((), device=device)
 
             loss = loss_prop + 0.45 * loss_leg + 0.40 * loss_con
+            if use_rank:
+                loss_rk = _grouped_utility_ranking_loss(
+                    out, bt, bm, by, by_ok, bleg, bcon, g_sz, obj_mask=ranking_obj_mask
+                )
+                loss = loss + float(ranking_weight) * loss_rk
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(critic.parameters(), 2.0)

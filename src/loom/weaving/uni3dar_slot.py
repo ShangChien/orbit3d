@@ -1727,6 +1727,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         rem_lvl_cells: torch.Tensor,
         pops_1d: torch.Tensor,
         leaf_budget_tol: float,
+        guidance_scale: float = 1.0,
     ) -> torch.Tensor:
         """Physics-exact hierarchical octree volume guidance (`L5 -> L4 -> L3 -> L2 -> L1`).
 
@@ -1738,22 +1739,23 @@ class LoomUni3DARGenerator(GeneratorSlot):
         atom_lvl = int(self.backbone.atom_level_index)
         rel_lvl = tree_lvl - atom_lvl
         has_b = budget_vec[tree_rows_idx] > 0
-        if not bool(has_b.any().item()):
+        if not bool(has_b.any().item()) or guidance_scale <= 0.0:
             return tree_logits
 
         pops_row = pops_1d.unsqueeze(0)
         out_logits = tree_logits.clone()
         tol_base = float(leaf_budget_tol)
+        g_scale = float(guidance_scale)
         n_slots = int(rem_lvl_cells.shape[1])
 
         # (rel_lvl, divisor, k_hi_ideal, reach_hi, pop_cap, w_quad, infeas_pen, slack_frac)
         level_specs = (
-            (6, 7.20, 8.0, 8.0, 8.5, 0.22, -3.0, 0.20),
-            (5, 3.00, 6.0, 6.5, 8.5, 0.35, -5.0, 0.20),
-            (4, 1.36, 5.0, 5.5, 7.5, 0.45, -6.0, 0.14),
-            (3, 0.99, 3.4, 3.6, 4.5, 0.60, -8.0, 0.08),
-            (2, 0.99, 2.0, 2.0, 2.5, 0.75, -10.0, 0.0),
-            (1, 0.99, 1.8, 2.0, 2.5, 0.90, -12.0, 0.0),
+            (6, 7.20, 8.0, 8.0, 8.5, 0.22 * g_scale, -3.0 * g_scale, 0.20),
+            (5, 3.00, 6.0, 6.5, 8.5, 0.35 * g_scale, -5.0 * g_scale, 0.20),
+            (4, 1.36, 5.0, 5.5, 7.5, 0.45 * g_scale, -6.0 * g_scale, 0.14),
+            (3, 0.99, 3.4, 3.6, 4.5, 0.60 * g_scale, -8.0 * g_scale, 0.08),
+            (2, 0.99, 2.0, 2.0, 2.5, 0.75 * g_scale, -10.0 * g_scale, 0.0),
+            (1, 0.99, 1.8, 2.0, 2.5, 0.90 * g_scale, -12.0 * g_scale, 0.0),
         )
         for rel, div, k_hi, reach_hi, pop_cap, w_q, inf_p, slack_f in level_specs:
             if rel >= n_slots:
@@ -1823,6 +1825,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         return_two_stage_summary: bool = False,
         leaf_atom_budget: Optional[torch.Tensor] = None,
         leaf_budget_tol: float = 2.0,
+        budget_guidance_scale: float = 1.0,
         sort_by_budget: bool = True,
         _stop_at_leaf_boundary: bool = False,
         _capture_continuation: bool = False,
@@ -2261,6 +2264,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                                 rem_lvl_cells,
                                 pops_1d,
                                 leaf_budget_tol,
+                                guidance_scale=budget_guidance_scale,
                             )
 
                         if _replay_coarse_actions is not None and replay_cursors is not None:
@@ -3063,6 +3067,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         uncond_active_mask: Optional[torch.Tensor] = None,
         leaf_atom_budget: Optional[torch.Tensor] = None,
         leaf_budget_tol: float = 2.0,
+        budget_guidance_scale: float = 1.0,
         sort_by_budget: bool = True,
     ) -> List[List[Dict[str, Any]]]:
         """Zero-replay coarse-to-fine octree generation with direct KV-cache continuation (`m_init -> m_keep`)."""
@@ -3342,6 +3347,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
         leaf_budget_tol: float,
         k_branch_s2: int = 1,
         apply_leaf_slot_prior: bool = True,
+        stage2_diversity_weight: float = 0.0,
+        budget_guidance_scale: float = 1.0,
     ) -> List[List[Dict[str, Any]]]:
         """Vectorized GPU pause-and-gather two-stage (`m_stage1 -> m_stage2 -> m_keep`) octree decoding.
 
@@ -3624,6 +3631,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                             rem_lvl_cells,
                             pops_1d,
                             leaf_budget_tol,
+                            guidance_scale=budget_guidance_scale,
                         )
 
                     t_pred, t_sc = _gpu_multinomial_sample(tree_logits, tree_temp, rng_gen)
@@ -4281,9 +4289,39 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 if b_s2 is not None and not use_exact_cnt:
                     n_atoms_s2 = pad_val_s2.sum(dim=1).float()
                     s2_utils = s2_utils - 0.35 * (n_atoms_s2 - b_s2).abs() * (b_s2 > 0).float()
-                topk_s2_vals, topk_s2_local = torch.topk(
-                    s2_utils.view(n_p_sub, s2_per_prompt), k=m_keep, dim=1, largest=True, sorted=True
-                )
+                u_mat = s2_utils.view(n_p_sub, s2_per_prompt)
+                if float(stage2_diversity_weight) > 0.0 and m_keep > 1 and s2_per_prompt > m_keep:
+                    # Vectorized greedy MMR over L2-normalized (coarse trunk state + element cloud composition)
+                    h_sig = F.normalize(s2_h_stage2[:, :emb_dim].float(), p=2, dim=-1)
+                    c_sig = F.normalize(s2_cloud[:, 14:36].float(), p=2, dim=-1)
+                    sig_all = F.normalize(torch.cat([h_sig, c_sig], dim=-1), p=2, dim=-1).view(
+                        n_p_sub, s2_per_prompt, -1
+                    )
+                    sim_mat = torch.bmm(sig_all, sig_all.transpose(1, 2))  # (n_p_sub, S2, S2)
+                    picked_idx_cols: List[torch.Tensor] = []
+                    picked_val_cols: List[torch.Tensor] = []
+                    avail_mask = torch.ones((n_p_sub, s2_per_prompt), dtype=torch.bool, device=device)
+                    max_sim_picked = torch.zeros((n_p_sub, s2_per_prompt), dtype=torch.float32, device=device)
+                    p_ar = torch.arange(n_p_sub, device=device)
+                    div_w = float(stage2_diversity_weight)
+                    for step_k in range(m_keep):
+                        if step_k == 0:
+                            cur_scores = u_mat
+                        else:
+                            cur_scores = u_mat - div_w * max_sim_picked
+                        cur_scores = torch.where(avail_mask, cur_scores, torch.full_like(cur_scores, -1e9))
+                        chosen_k = cur_scores.argmax(dim=1)
+                        picked_idx_cols.append(chosen_k)
+                        picked_val_cols.append(u_mat[p_ar, chosen_k])
+                        avail_mask[p_ar, chosen_k] = False
+                        sim_new = sim_mat[p_ar, chosen_k, :]
+                        max_sim_picked = torch.maximum(max_sim_picked, sim_new)
+                    topk_s2_local = torch.stack(picked_idx_cols, dim=1)
+                    topk_s2_vals = torch.stack(picked_val_cols, dim=1)
+                else:
+                    topk_s2_vals, topk_s2_local = torch.topk(
+                        u_mat, k=m_keep, dim=1, largest=True, sorted=True
+                    )
                 win_s2_idx_list = (
                     ((torch.arange(n_p_sub, device=device) * s2_per_prompt).unsqueeze(1) + topk_s2_local)
                     .reshape(-1)
@@ -4346,6 +4384,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         stage1_constr_weight: float = 0.55,
         stage2_legal_weight: float = 1.00,
         stage2_constr_weight: float = 0.65,
+        stage2_diversity_weight: float = 0.0,
         uncertainty_bonus: float = 0.0,
         coarse_chunk_size: int = 1024,
         cfg_scale: float = 1.0,
@@ -4360,6 +4399,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         uncond_active_mask: Optional[torch.Tensor] = None,
         leaf_atom_budget: Optional[torch.Tensor] = None,
         leaf_budget_tol: float = 2.0,
+        budget_guidance_scale: float = 1.0,
         sort_by_budget: bool = True,
     ) -> List[List[Dict[str, Any]]]:
         """Vectorized two-stage octree funnel (`m_stage1 -> m_stage2 -> m_keep`, e.g., `32 -> 8 -> 2`)."""
@@ -4389,6 +4429,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     uncond_active_mask=uncond_active_mask,
                     leaf_atom_budget=leaf_atom_budget,
                     leaf_budget_tol=leaf_budget_tol,
+                    budget_guidance_scale=budget_guidance_scale,
                     sort_by_budget=sort_by_budget,
                 )
                 for tr in flat:
@@ -4470,6 +4511,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
                     u_sub=u_sub,
                     b_sub=b_sub,
                     leaf_budget_tol=leaf_budget_tol,
+                    stage2_diversity_weight=stage2_diversity_weight,
+                    budget_guidance_scale=budget_guidance_scale,
                 )
                 grouped.extend(sub_grouped)
 
