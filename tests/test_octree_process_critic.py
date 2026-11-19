@@ -698,7 +698,7 @@ def test_vine_rollouts_exact_budget_logprob_parity_and_grpo() -> None:
         assert torch.isfinite(chosen).all()
         tot_tf.index_add_(0, owner, chosen)
     samp_scores = torch.tensor([float(tr["scores"].sum().item()) for tr in trajs])
-    assert float((tot_tf - samp_scores).abs().max().item()) < 2e-3
+    assert float((tot_tf - samp_scores).abs().max().item()) < 5e-4
 
     # Verify counterfactual Tree-Vine advantage decomposition
     fake_adv = torch.tensor([1.2, 0.8, -0.4, -0.6, -0.5, -0.5, 0.9, -0.9, 0.2, 0.1, -0.2, -0.1])
@@ -812,6 +812,39 @@ def test_non_trapping_global_budget_sft_and_vine_parity(tmp_path) -> None:
         tot_tf.index_add_(0, owner, logp.gather(-1, labels.unsqueeze(-1)).squeeze(-1))
     samp_scores = torch.tensor([float(tr["scores"].sum().item()) for tr in trajs])
     assert float((tot_tf - samp_scores).abs().max().item()) < 2e-3
+
+    # Verify post-GRPO `enable_v11_xyz_heads` + checkpoint round-trip + Kabsch paired refiner distillation!
+    from loom.weaving.post_tree_refiner import PostTreeGraphRefiner, fit_post_tree_graph_refiner, kabsch_align_coords
+
+    loaded.enable_v11_xyz_heads(rank=None, alpha=None, train_xyz_embeddings=True)
+    xyz_ckpt = tmp_path / "non_trapping_v4_xyz.pt"
+    loaded.save_checkpoint(xyz_ckpt)
+    loaded_xyz, payload_xyz = LoomUni3DARGenerator.load_checkpoint(xyz_ckpt, device="cpu")
+    assert payload_xyz["loom_config"]["lora_include_xyz_heads"] is True
+    assert loaded_xyz.non_trapping_budget is True
+
+    # Verify Kabsch SE(3) alignment & paired_trajectories refiner training (`max_disp_A = 0.25`)
+    eq_p = np.asarray(mols[0].GetConformer().GetPositions(), dtype=np.float32)
+    q_r, _ = np.linalg.qr(np.random.default_rng(7).normal(size=(3, 3)))
+    if np.linalg.det(q_r) < 0:
+        q_r[:, 0] = -q_r[:, 0]
+    rot_p = (eq_p @ q_r.T + np.array([[4.5, -2.2, 1.8]])).astype(np.float32)
+    aligned_p = kabsch_align_coords(eq_p, rot_p)
+    assert np.allclose(aligned_p, rot_p, atol=1e-4)
+
+    noisy_pair = rot_p + np.random.default_rng(9).normal(0.0, 0.12, size=rot_p.shape).astype(np.float32)
+    ref4 = PostTreeGraphRefiner(d_model=64, n_heads=4, n_layers=4, n_rbf=24, d_pair=64, max_disp_A=0.25)
+    st_ref4 = fit_post_tree_graph_refiner(
+        ref4,
+        mols * 4,
+        paired_trajectories=[(noisy_pair, mols[0])] * 4,
+        epochs=4,
+        batch_size=8,
+        lr=2e-3,
+        seed=2026,
+    )
+    assert st_ref4.val_bond_dist_mae_A <= st_ref4.val_noisy_bond_dist_mae_A + 1e-3
+
 
 
 

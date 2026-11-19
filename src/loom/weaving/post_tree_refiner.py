@@ -103,9 +103,9 @@ class _EquivariantBiLayer(nn.Module):
         h = h + self.ffn(self.norm2(h))
         h = h * valid_mask.unsqueeze(-1).float()
 
-        # 2. SE(3)-equivariant coordinate update on local covalent/geminal neighborhood (`0.40 < d_ij < 3.20 A`)
+        # 2. SE(3)-equivariant coordinate update on local covalent/geminal/ring neighborhood (`0.15 < d_ij < 3.80 A`)
         not_self = ~torch.eye(k_len, dtype=torch.bool, device=h.device).unsqueeze(0)
-        pair_ok = valid_mask.unsqueeze(2) & valid_mask.unsqueeze(1) & not_self & (d_ij > 0.40) & (d_ij < 3.20)
+        pair_ok = valid_mask.unsqueeze(2) & valid_mask.unsqueeze(1) & not_self & (d_ij > 0.15) & (d_ij < 3.80)
 
         edge_feat = self.coord_src(h).unsqueeze(2) + self.coord_dst(h).unsqueeze(1) + self.coord_rbf(rbf_ij)
         w_ij = self.coord_mlp(edge_feat).squeeze(-1) * pair_ok.float()
@@ -317,13 +317,33 @@ def extract_mol_bond_targets(mol: Chem.Mol) -> Tuple[np.ndarray, np.ndarray, np.
     return elem_ids, eq_pos, bmat
 
 
+def kabsch_align_coords(src_pos: np.ndarray, ref_pos: np.ndarray) -> np.ndarray:
+    """Superimpose `src_pos` onto `ref_pos` via proper SO(3) rotation + translation (`det(R) == +1`)."""
+    p = np.asarray(src_pos, dtype=np.float64)
+    q = np.asarray(ref_pos, dtype=np.float64)
+    if p.shape[0] < 3:
+        return (p - p.mean(axis=0, keepdims=True) + q.mean(axis=0, keepdims=True)).astype(np.float32)
+    pc = p.mean(axis=0, keepdims=True)
+    qc = q.mean(axis=0, keepdims=True)
+    p0 = p - pc
+    q0 = q - qc
+    cov = p0.T @ q0
+    u_mat, _, vt_mat = np.linalg.svd(cov)
+    d_sign = 1.0 if np.linalg.det(u_mat @ vt_mat) >= 0.0 else -1.0
+    diag = np.diag([1.0, 1.0, d_sign])
+    r_opt = u_mat @ diag @ vt_mat
+    return (p0 @ r_opt + qc).astype(np.float32)
+
+
 def simulate_morton_seam_perturbation(
     eq_pos: np.ndarray,
     rng: np.random.Generator,
-    seam_disp_std_A: float = 0.038,
-    atom_jitter_std_A: float = 0.022,
+    seam_disp_std_A: Optional[float] = None,
+    atom_jitter_std_A: Optional[float] = None,
 ) -> np.ndarray:
-    """Apply realistic octree `0.01 A` quantization + octant Morton-seam coherent shift."""
+    """Apply multi-scale octree `0.01 A` quantization + octant Morton-seam & ring-closure shift."""
+    s_std = float(seam_disp_std_A) if seam_disp_std_A is not None else float(rng.uniform(0.030, 0.125))
+    a_std = float(atom_jitter_std_A) if atom_jitter_std_A is not None else float(rng.uniform(0.018, 0.070))
     center = eq_pos.mean(axis=0, keepdims=True)
     rel = eq_pos - center
     # Random SO(3) orientation for octant seam plane
@@ -332,11 +352,12 @@ def simulate_morton_seam_perturbation(
         q_mat[:, 0] = -q_mat[:, 0]
     rel_rot = rel @ q_mat
     octant_id = ((rel_rot[:, 0] >= 0).astype(np.int32) * 4 + (rel_rot[:, 1] >= 0).astype(np.int32) * 2 + (rel_rot[:, 2] >= 0).astype(np.int32))
-    octant_shifts = rng.normal(0.0, seam_disp_std_A, size=(8, 3)).astype(np.float32)
+    octant_shifts = rng.normal(0.0, s_std, size=(8, 3)).astype(np.float32)
     octant_shifts -= octant_shifts.mean(axis=0, keepdims=True)
-    noisy_rot = rel_rot + octant_shifts[octant_id] + rng.normal(0.0, atom_jitter_std_A, size=eq_pos.shape)
+    noisy_rot = rel_rot + octant_shifts[octant_id] + rng.normal(0.0, a_std, size=eq_pos.shape)
     quant_rot = np.round(noisy_rot / 0.01) * 0.01
-    return (quant_rot @ q_mat.T + center).astype(np.float32)
+    noisy_out = (quant_rot @ q_mat.T + center).astype(np.float32)
+    return noisy_out
 
 
 @dataclass
@@ -352,21 +373,38 @@ def fit_post_tree_graph_refiner(
     refiner: PostTreeGraphRefiner,
     mols: Sequence[Chem.Mol],
     *,
+    paired_trajectories: Optional[Sequence[Tuple[np.ndarray, Chem.Mol]]] = None,
     epochs: int = 12,
     batch_size: int = 128,
     lr: float = 1.5e-3,
     val_fraction: float = 0.08,
     seed: int = 2026,
 ) -> PostTreeRefinerTrainStats:
-    """Distill `PostTreeGraphRefiner` on equilibrium conformers perturbed by octree Morton-seam noise."""
+    """Distill `PostTreeGraphRefiner` on real `(raw_sampled -> Kabsch DPA-4 relaxed)` pairs + multi-scale seam noise."""
     device = next(refiner.parameters()).device
     rng = np.random.default_rng(seed)
 
-    records: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+    # Record tuple: `(elem_ids, eq_pos, bond_mat, optional_real_noisy_pos)`
+    records: List[Tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray]]] = []
     for m in mols:
         if m is None or m.GetNumConformers() == 0 or m.GetNumAtoms() < 3 or m.GetNumAtoms() > 80:
             continue
-        records.append(extract_mol_bond_targets(m))
+        ei, eqi, bi = extract_mol_bond_targets(m)
+        records.append((ei, eqi, bi, None))
+
+    if paired_trajectories:
+        for raw_pos, eq_mol in paired_trajectories:
+            if eq_mol is None or eq_mol.GetNumConformers() == 0:
+                continue
+            k_m = eq_mol.GetNumAtoms()
+            raw_arr = np.asarray(raw_pos, dtype=np.float32)
+            if k_m < 3 or k_m > 80 or raw_arr.shape != (k_m, 3) or not np.isfinite(raw_arr).all():
+                continue
+            ei, eqi, bi = extract_mol_bond_targets(eq_mol)
+            eq_aligned = kabsch_align_coords(eqi, raw_arr)
+            # Duplicate real on-policy pairs 2x so real autoregressive ring/seam errors dominate distillation!
+            records.append((ei, eq_aligned, bi, raw_arr))
+            records.append((ei, eq_aligned, bi, raw_arr))
 
     n_tot = len(records)
     perm = rng.permutation(n_tot)
@@ -378,7 +416,7 @@ def fit_post_tree_graph_refiner(
     opt = torch.optim.AdamW(refiner.parameters(), lr=lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(epochs, 1), eta_min=lr * 0.05)
 
-    def _pack_subset(indices: List[int], ep_seed: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _pack_subset(indices: List[int], ep_seed: int, *, augment_so3: bool = True) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         sub_rng = np.random.default_rng(ep_seed)
         max_k = max(len(records[i][0]) for i in indices)
         bsz = len(indices)
@@ -388,11 +426,24 @@ def fit_post_tree_graph_refiner(
         pv = np.zeros((bsz, max_k), dtype=bool)
         pb = np.zeros((bsz, max_k, max_k), dtype=np.int64)
         for loc_i, idx in enumerate(indices):
-            ei, eqi, bi = records[idx]
+            ei, eqi, bi, real_ni = records[idx]
             ki = len(ei)
+            if real_ni is not None:
+                ni = real_ni.copy()
+                eq_use = eqi.copy()
+                if augment_so3:
+                    q_rot, _ = np.linalg.qr(sub_rng.normal(size=(3, 3)))
+                    if np.linalg.det(q_rot) < 0:
+                        q_rot[:, 0] = -q_rot[:, 0]
+                    cen = ni.mean(axis=0, keepdims=True)
+                    ni = ((ni - cen) @ q_rot.T + cen).astype(np.float32)
+                    eq_use = ((eq_use - cen) @ q_rot.T + cen).astype(np.float32)
+            else:
+                ni = simulate_morton_seam_perturbation(eqi, sub_rng)
+                eq_use = kabsch_align_coords(eqi, ni)
             pe[loc_i, :ki] = ei
-            p_eq[loc_i, :ki] = eqi
-            p_noisy[loc_i, :ki] = simulate_morton_seam_perturbation(eqi, sub_rng)
+            p_eq[loc_i, :ki] = eq_use
+            p_noisy[loc_i, :ki] = ni
             pv[loc_i, :ki] = True
             pb[loc_i, :ki, :ki] = bi
         return (
@@ -417,7 +468,7 @@ def fit_post_tree_graph_refiner(
         ep_n = 0
         for s in range(0, len(tr_shuf), batch_size):
             b_ids = tr_shuf[s : s + batch_size]
-            be, b_noisy, b_eq, bv, bb = _pack_subset(b_ids, seed * 31 + ep * 997 + s)
+            be, b_noisy, b_eq, bv, bb = _pack_subset(b_ids, seed * 31 + ep * 997 + s, augment_so3=True)
             out = refiner(be, b_noisy, bv)
             ref_p = out["refined_pos"]
             blogits = out["bond_logits"]
@@ -429,17 +480,17 @@ def fit_post_tree_graph_refiner(
             d_eq = torch.cdist(b_eq, b_eq, p=2.0)
             d_ref = torch.sqrt(((ref_p.unsqueeze(2) - ref_p.unsqueeze(1)).square().sum(dim=-1)).clamp_min(1e-8))
 
-            # Supervise 1-2 & 1-3 pairwise distances (`d_eq < 2.75 A` or bonded) + coordinate Huber
-            local_m = pair_ok & ((bb > 0) | (d_eq < 2.75))
+            # Supervise 1-2 covalent, 1-3 geminal angle, and 1-4 ring closure distances (`d_eq < 3.60 A`) + Kabsch Huber
+            local_m = pair_ok & ((bb > 0) | (d_eq < 3.60))
             if bool(local_m.any().item()):
                 is_bond = bb[local_m] > 0
                 d_err = F.smooth_l1_loss(d_ref[local_m], d_eq[local_m], beta=0.015, reduction="none")
-                w_d = torch.where(is_bond, torch.full_like(d_err, 3.0), torch.ones_like(d_err))
+                w_d = torch.where(is_bond, torch.full_like(d_err, 4.0), torch.full_like(d_err, 1.35))
                 loss_dist = (d_err * w_d).sum() / w_d.sum().clamp_min(1.0)
             else:
                 loss_dist = torch.zeros((), device=device)
 
-            loss_coord = F.smooth_l1_loss(ref_p[bv], b_eq[bv], beta=0.02)
+            loss_coord = F.smooth_l1_loss(ref_p[bv], b_eq[bv], beta=0.025)
 
             # Explicit bond-order cross-entropy on close pairs (`d_eq < 3.4 A` so non-bonds near covalent cutoff are crisp)
             cand_edge = pair_ok & ((bb > 0) | (d_eq < 3.40))
@@ -448,7 +499,7 @@ def fit_post_tree_graph_refiner(
             else:
                 loss_bond = torch.zeros((), device=device)
 
-            loss = 2.5 * loss_dist + 0.8 * loss_coord + 0.5 * loss_bond
+            loss = 2.8 * loss_dist + 1.0 * loss_coord + 0.5 * loss_bond
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(refiner.parameters(), 2.0)
