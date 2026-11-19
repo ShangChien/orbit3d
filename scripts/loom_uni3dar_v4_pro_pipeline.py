@@ -52,12 +52,12 @@ if str(ROOT / "src") not in sys.path:
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from loom.chemistry import ValenceReconciler
-from loom.chemistry.valence_reconciler import is_clean_organic_charge_state
+from loom.chemistry.valence_reconciler import ValenceReconciler, is_clean_organic_charge_state
+from loom.generator.octree_backend import OctreeDataset
+from loom.utils.dataset_io import write_precise_sdf
 from loom.weaving import (
     LoomGRPOTrainer,
     LoomUni3DARGenerator,
-    OctreeDataset,
     OctreeElementProcessCritic,
     OctreeProcessCritic,
     PostTreeGraphRefiner,
@@ -70,6 +70,7 @@ from loom.weaving.slots import PotentialSlot
 from scripts.loom_oe62_size_anchored import (
     _get_clean_oe62_pool,
     _get_source_novelty_sets,
+    _safe_collate_indices,
     _score_oe62_size_cohort,
 )
 from scripts.loom_uni3dar_v4_step1_eval import (
@@ -77,17 +78,15 @@ from scripts.loom_uni3dar_v4_step1_eval import (
     _select_v4_step1_from_pool,
     build_fair_30atom_prompts,
 )
-from scripts.loom_uni3dar_v4_step2_sft import (
+from scripts.loom_uni3dar_v4_step2_train import (
     _CollateStep2Octree,
     _Step2OctreeTorchDataset,
     _load_prepared_v4_sdf,
-    write_precise_sdf,
 )
 from scripts.loom_uni3dar_v4_step3_align_and_eval import (
     _collect_onpolicy_relaxed_pairs,
     _distill_v4_refiner,
     _run_v4_detached_xyz_distillation,
-    _safe_collate_indices,
 )
 from scripts.loom_uni3dar_v4_phaseA_zero_retrain import (
     _apply_affine_prompt_map,
