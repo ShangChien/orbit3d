@@ -70,11 +70,11 @@ from scripts.loom_oe62_size_anchored import (
     _get_clean_oe62_pool,
     _get_source_novelty_sets,
     _score_oe62_size_cohort,
-    build_fair_30atom_prompts,
 )
 from scripts.loom_uni3dar_v4_step1_eval import (
     _build_calibrated_oe62_bus,
     _select_v4_step1_from_pool,
+    build_fair_30atom_prompts,
 )
 from scripts.loom_uni3dar_v4_step2_sft import (
     _CollateStep2Octree,
@@ -711,7 +711,7 @@ def _pro_dev_score(
         use_bf16=(device.type == "cuda"),
         electron_parity=0,
         leaf_atom_budget=dev_natoms,
-        budget_guidance_scale=0.65,
+        budget_guidance_scale=0.35,
     )
     if refiner is not None:
         refiner.refine_trajectories_batch(trajs, batch_size=256)
@@ -1072,7 +1072,7 @@ def run_pro_rollout_shard(args: argparse.Namespace) -> None:
             tn, cm, uncond_active_mask=um, cfg_scale=float(args.cfg_scale), xyz_cfg_scale=1.0,
             cfg_tree_decay=0.25, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
             seed=710000 + int(args.shard_id) * 60000 + s, use_bf16=(device.type == "cuda"),
-            electron_parity=0, leaf_atom_budget=req_natoms[s:e], budget_guidance_scale=0.65,
+            electron_parity=0, leaf_atom_budget=req_natoms[s:e], budget_guidance_scale=0.35,
         )
         s1_h_l.append(roll["s1_h_concat"])
         s1_g_l.append(roll["s1_geom_feats"])

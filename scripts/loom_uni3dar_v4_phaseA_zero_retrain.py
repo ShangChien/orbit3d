@@ -45,11 +45,11 @@ from scripts.loom_oe62_size_anchored import (
     _get_clean_oe62_pool,
     _get_source_novelty_sets,
     _score_oe62_size_cohort,
-    build_fair_30atom_prompts,
 )
 from scripts.loom_uni3dar_v4_step1_eval import (
     _build_calibrated_oe62_bus,
     _select_v4_step1_from_pool,
+    build_fair_30atom_prompts,
 )
 
 
@@ -178,10 +178,10 @@ def _select_best_inference_knobs_on_dev(
     obj_col_mask = torch.tensor([True, False], dtype=torch.bool, device=device)
 
     candidates = [
-        {"eval_sa_target": 2.55, "cfg_scale": 2.60, "homo_only_cfg": True, "budget_guidance_scale": 0.65},
-        {"eval_sa_target": 2.65, "cfg_scale": 2.85, "homo_only_cfg": True, "budget_guidance_scale": 0.65},
-        {"eval_sa_target": 2.40, "cfg_scale": 2.50, "homo_only_cfg": True, "budget_guidance_scale": 0.85},
-        {"eval_sa_target": 2.55, "cfg_scale": 2.40, "homo_only_cfg": False, "budget_guidance_scale": 0.65},
+        {"eval_sa_target": 2.60, "cfg_scale": 2.60, "homo_only_cfg": True, "budget_guidance_scale": 0.35},
+        {"eval_sa_target": 2.60, "cfg_scale": 2.85, "homo_only_cfg": True, "budget_guidance_scale": 0.0},
+        {"eval_sa_target": 2.60, "cfg_scale": 2.45, "homo_only_cfg": False, "budget_guidance_scale": 0.35},
+        {"eval_sa_target": 2.60, "cfg_scale": 2.45, "homo_only_cfg": False, "budget_guidance_scale": 0.0},
     ]
 
     sweep_logs: List[Dict[str, Any]] = []
