@@ -197,6 +197,7 @@ class LoomGRPOTrainer:
         electron_parity: Optional[int] = 0,
         size_anchored_cfg: bool = False,
         size_col_name: str = "n_atoms",
+        cfg_anchor_cols: Sequence[str] = (),
         size_adherence_weight: float = 0.0,
         size_tolerance_atoms: float = 4.0,
         size_tolerance_frac: float = 0.12,
@@ -284,11 +285,23 @@ class LoomGRPOTrainer:
         self.electron_parity = electron_parity
         self.size_anchored_cfg = bool(size_anchored_cfg)
         self.size_col_name = str(size_col_name)
+        self.cfg_anchor_cols = tuple(str(c) for c in cfg_anchor_cols)
         self.size_adherence_weight = float(size_adherence_weight)
         self.size_tolerance_atoms = float(size_tolerance_atoms)
         self.size_tolerance_frac = float(size_tolerance_frac)
         gen_cols = list(getattr(self.generator, "target_cols", []))
-        self.size_col_idx: Optional[int] = gen_cols.index(self.size_col_name) if self.size_col_name in gen_cols else None
+        _atom_size_aliases = {"n_atoms", "num_atoms", "natoms"}
+        self.size_col_idx: Optional[int] = (
+            gen_cols.index(self.size_col_name)
+            if (self.size_col_name in gen_cols and self.size_col_name in _atom_size_aliases)
+            else None
+        )
+        anchor_idxs: List[int] = [gen_cols.index(c) for c in self.cfg_anchor_cols if c in gen_cols]
+        if self.size_anchored_cfg and self.size_col_name in gen_cols:
+            sc_i = gen_cols.index(self.size_col_name)
+            if sc_i not in anchor_idxs:
+                anchor_idxs.append(sc_i)
+        self.cfg_anchor_indices: Tuple[int, ...] = tuple(anchor_idxs)
         self.seed = int(seed)
         self.rng = np.random.default_rng(self.seed)
 
@@ -306,25 +319,27 @@ class LoomGRPOTrainer:
             self.replay_targets_eV = np.asarray(replay_targets_eV, dtype=np.float32)
 
     def _build_uncond_active_mask(self, active_mask: torch.Tensor) -> Optional[torch.Tensor]:
-        """Return size-anchored unconditional CFG mask keeping `size_col_idx` active."""
-        if not self.size_anchored_cfg or self.size_col_idx is None:
+        """Return CFG unconditional mask keeping `cfg_anchor_indices` active (decoupled from atom-size target)."""
+        if not self.cfg_anchor_indices:
             return None
         uncond_mask = torch.zeros_like(active_mask, dtype=torch.bool)
-        uncond_mask[:, self.size_col_idx] = active_mask[:, self.size_col_idx]
+        for a_idx in self.cfg_anchor_indices:
+            uncond_mask[:, a_idx] = active_mask[:, a_idx]
         return uncond_mask
 
     def _sample_replay_active_mask(self, prompt_active_mask: np.ndarray) -> torch.Tensor:
-        """Sample supervised replay masks (`75% full / 15% size-only / 10% uncond` when size-anchored)."""
+        """Sample supervised replay masks (`75% full / 15% anchor-only / 10% uncond` when CFG-anchored)."""
         r_mask_idx = self.rng.integers(0, prompt_active_mask.shape[0], size=self.replay_batch_size)
         r_mask_np = prompt_active_mask[r_mask_idx].astype(bool).copy()
-        if self.size_anchored_cfg and self.size_col_idx is not None:
+        if self.cfg_anchor_indices:
             u = self.rng.random(size=self.replay_batch_size)
-            size_only = (u >= 0.75) & (u < 0.90)
+            anchor_only = (u >= 0.75) & (u < 0.90)
             full_drop = u >= 0.90
-            if size_only.any():
-                keep_sz = r_mask_np[size_only, self.size_col_idx].copy()
-                r_mask_np[size_only] = False
-                r_mask_np[size_only, self.size_col_idx] = keep_sz
+            if anchor_only.any():
+                keep_cols = {a_idx: r_mask_np[anchor_only, a_idx].copy() for a_idx in self.cfg_anchor_indices}
+                r_mask_np[anchor_only] = False
+                for a_idx, vals in keep_cols.items():
+                    r_mask_np[anchor_only, a_idx] = vals
             if full_drop.any():
                 r_mask_np[full_drop] = False
         return torch.as_tensor(r_mask_np, dtype=torch.bool, device=self.device)
@@ -350,13 +365,13 @@ class LoomGRPOTrainer:
             if mol is not None and valid_mask_np[idx]:
                 natoms_actual[idx] = float(mol.GetNumAtoms())
 
-        if self.size_col_idx is not None:
-            size_active = rep_mask_np[:, self.size_col_idx]
-            target_nat = rep_targets_eV[:, self.size_col_idx]
-        elif prompt_atom_budgets is not None:
+        if prompt_atom_budgets is not None:
             rep_b = np.repeat(np.asarray(prompt_atom_budgets, dtype=np.float64).reshape(-1), group_size)
             size_active = rep_b > 0.0
             target_nat = rep_b
+        elif self.size_col_idx is not None:
+            size_active = rep_mask_np[:, self.size_col_idx]
+            target_nat = rep_targets_eV[:, self.size_col_idx]
         else:
             return natoms_actual, natoms_abs_err, size_scores, size_eval_mask, adv_size
         for idx in range(total_b):

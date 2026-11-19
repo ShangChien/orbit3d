@@ -522,7 +522,16 @@ def fit_octree_process_critic(
             )
             leg_acc = float(((vout["prob_legal"] >= 0.5).float() == vleg).float().mean().item())
             con_acc = float(((vout["prob_constr"] >= 0.5).float() == vcon).float().mean().item())
-            score_cur = val_mae + 0.25 * (1.0 - leg_acc)
+            val_rk = (
+                float(
+                    _grouped_utility_ranking_loss(
+                        vout, vt, vm, vy, vy_ok, vleg, vcon, g_sz, obj_mask=ranking_obj_mask
+                    ).item()
+                )
+                if (use_rank and val_grp is not None)
+                else 0.0
+            )
+            score_cur = val_mae + 0.25 * (1.0 - leg_acc) + 0.30 * val_rk
             if score_cur <= best_val_metric:
                 best_val_metric = score_cur
                 best_state = {k: v.detach().cpu().clone() for k, v in critic.state_dict().items()}
@@ -1115,20 +1124,27 @@ def fit_octree_element_process_critic(
             val_prop_cnt = 0
             val_leg_ok = 0.0
             val_con_ok = 0.0
-            for vs in range(0, val_idx.numel(), batch_size):
-                v_ids = val_idx[vs : vs + batch_size]
+            val_rk_sum = 0.0
+            val_rk_cnt = 0
+            if use_rank and val_grp is not None:
+                vg_step = max(1, batch_size // g_sz)
+                val_iter = [val_grp[vs : vs + vg_step].reshape(-1) for vs in range(0, val_grp.shape[0], vg_step)]
+            else:
+                val_iter = [val_idx[vs : vs + batch_size] for vs in range(0, val_idx.numel(), batch_size)]
+            for v_ids in val_iter:
+                vt = targets_norm[v_ids].to(device)
+                vm = active_mask[v_ids].to(device)
                 vout = critic(
                     h_stage2[v_ids].to(device),
                     elem_ids[v_ids].to(device),
                     leaf_pos[v_ids].to(device),
                     leaf_valid[v_ids].to(device),
                     cloud_feats[v_ids].to(device),
-                    targets_norm[v_ids].to(device),
-                    active_mask[v_ids].to(device),
+                    vt,
+                    vm,
                 )
                 vy = y_surrogate_norm[v_ids].to(device)
                 vy_ok = y_valid_mask[v_ids].to(device)
-                vm = active_mask[v_ids].to(device)
                 vleg = is_legal[v_ids].to(device, dtype=torch.float32)
                 vcon = is_constr_met[v_ids].to(device, dtype=torch.float32)
                 pmask = vy_ok.unsqueeze(-1) & vm.bool() & torch.isfinite(vy)
@@ -1137,11 +1153,21 @@ def fit_octree_element_process_critic(
                     val_prop_cnt += int(pmask.sum().item())
                 val_leg_ok += float(((vout["prob_legal"] >= 0.5).float() == vleg).float().sum().item())
                 val_con_ok += float(((vout["prob_constr"] >= 0.5).float() == vcon).float().sum().item())
+                if use_rank and val_grp is not None:
+                    rk_b = float(
+                        _grouped_utility_ranking_loss(
+                            vout, vt, vm, vy, vy_ok, vleg, vcon, g_sz, obj_mask=ranking_obj_mask
+                        ).item()
+                    )
+                    n_gb = v_ids.numel() // g_sz
+                    val_rk_sum += rk_b * n_gb
+                    val_rk_cnt += n_gb
 
             val_mae = val_loss_mae_sum / max(val_prop_cnt, 1)
             leg_acc = val_leg_ok / max(val_idx.numel(), 1)
             con_acc = val_con_ok / max(val_idx.numel(), 1)
-            score_cur = val_mae + 0.20 * (1.0 - leg_acc) + 0.15 * (1.0 - con_acc)
+            val_rk = (val_rk_sum / max(val_rk_cnt, 1)) if val_rk_cnt > 0 else 0.0
+            score_cur = val_mae + 0.20 * (1.0 - leg_acc) + 0.15 * (1.0 - con_acc) + 0.30 * val_rk
             if score_cur <= best_val_metric:
                 best_val_metric = score_cur
                 best_state = {k: v.detach().cpu().clone() for k, v in critic.state_dict().items()}

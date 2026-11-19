@@ -477,8 +477,8 @@ def run_sft_pro_ddp_worker(args: argparse.Namespace) -> None:
                     pe.lerp_(pc, 1.0 - eff_ema)
             l_sum += float(info["loss_total"])
             xyz_sum += float(info["loss_xyz"])
-            if math.isfinite(float(info.get("contrast_pref_acc", float("nan")))):
-                pref_sum += float(info["contrast_pref_acc"])
+            if math.isfinite(float(info.get("pref_acc", float("nan")))):
+                pref_sum += float(info["pref_acc"])
                 n_pref += 1
             nb += 1
 
@@ -996,8 +996,8 @@ def run_align_pro(args: argparse.Namespace) -> None:
         topology_only_policy=True,
         temperatures=(0.85, 0.30, 0.25),
         electron_parity=0,
-        size_anchored_cfg=True,
-        size_col_name="sa_score",  # Native HOMO-only CFG!
+        size_anchored_cfg=False,
+        cfg_anchor_cols=("sa_score",),  # Native HOMO-only CFG decoupled from prompt_atom_budgets!
         size_adherence_weight=0.30,
         size_tolerance_atoms=2.0,
         use_vine_rollouts=True,
@@ -1445,39 +1445,88 @@ def run_eval_pro(args: argparse.Namespace) -> None:
     source_graphs, source_scaffolds = _get_source_novelty_sets(args)
     _, clean_targets = _get_clean_oe62_pool(args, None)
 
-    # Fit safe zero-leakage damped affine prompt map strictly matched to Critic rollout distribution!
+    # Fit safe zero-leakage TwoStage (16->6->2) affine prompt map (`alpha in [0.95, 1.08]`, `0` audit calls!)
     q_points_d = json.loads(args.oe62_targets_json.read_text())["single_target_points"]["homo"]
     d_rng = np.random.default_rng(2026901)
     sub_n_d = clean_targets[(clean_targets[:, 1] >= 18.0) & (clean_targets[:, 1] <= 42.0), 1]
     dev_rows = [
         (float(q_points_d[str(q)]), float(round(ni)))
         for q in (10, 25, 35, 50, 65, 75, 90)
-        for ni in d_rng.choice(sub_n_d, size=36, replace=True).tolist()
+        for ni in d_rng.choice(sub_n_d, size=24, replace=True).tolist()
     ]
-    dev_req = np.asarray(dev_rows, dtype=np.float32)
+    dev_req = np.asarray(dev_rows, dtype=np.float32)  # 168 dev prompts
     rule_asset = bus_eval.registry.get_predictor("builtin_rules")
+    reconciler_dev = ValenceReconciler(allowed_elements=tuple(gen.args.allow_atoms.split(",")))
+    obj_col_dev = torch.tensor([True, False], dtype=torch.bool, device=device)
     best_cfg = {
         "eval_sa_target": float(args.eval_sa_target),
         "cfg_scale": float(args.cfg_scale),
         "homo_only_cfg": True,
         "budget_guidance_scale": 0.35,
+        "stage2_diversity_weight": 0.10,
     }
-    best_pmap = _fit_damped_affine_prompt_map(
-        gen,
-        refiner,
-        cal_unimol2,
-        rule_asset,
-        dev_req[:, 0],
-        dev_req[:, 1],
-        sa_target=best_cfg["eval_sa_target"],
-        cfg_scale=best_cfg["cfg_scale"],
-        cfg_tree_decay=0.25,
-        homo_only_cfg=True,
+    nb_d = len(dev_req)
+    d_mat = np.stack([dev_req[:, 0], np.full(nb_d, best_cfg["eval_sa_target"], dtype=np.float32)], axis=-1)
+    d_tn = gen.normalize_targets(d_mat)
+    d_cm = torch.ones((nb_d, 2), dtype=torch.bool, device=device)
+    d_um = torch.tensor([[False, True]] * nb_d, dtype=torch.bool, device=device)
+    d_grps = gen.sample_with_two_stage_process_critic(
+        d_tn, d_cm, critic, m_stage1=16, m_stage2=6, m_keep=2, objective_col_mask=obj_col_dev,
+        stage1_legal_weight=0.80, stage1_constr_weight=0.55, stage2_legal_weight=1.05, stage2_constr_weight=0.70,
+        stage2_diversity_weight=best_cfg["stage2_diversity_weight"], coarse_chunk_size=1024,
+        cfg_scale=best_cfg["cfg_scale"], xyz_cfg_scale=1.0, cfg_tree_decay=0.25, geometric_guard=True,
+        temperatures=(0.85, 0.30, 0.25), seed=884499, use_bf16=True, electron_parity=0,
+        uncond_active_mask=d_um, leaf_atom_budget=dev_req[:, 1],
         budget_guidance_scale=best_cfg["budget_guidance_scale"],
-        device=device,
     )
+    refiner.refine_trajectories_batch([tr for g in d_grps for tr in g], batch_size=256)
+    dg_m: List[List[Optional[Chem.Mol]]] = [[None, None] for _ in range(nb_d)]
+    dg_l = np.zeros((nb_d, 2), dtype=bool)
+    dg_x = np.zeros((nb_d, 2), dtype=bool)
+    dg_d = np.full((nb_d, 2), np.nan, dtype=np.float32)
+    for i in range(nb_d):
+        for k in range(2):
+            tr = d_grps[i][k]
+            dg_d[i, k] = float(tr.get("refiner_disp_rms_A", np.nan))
+            res = reconciler_dev.reconcile_point_cloud(
+                tr["atom_symbols"], tr["positions_np"], potential_slot=None, bond_order_priors=tr.get("bond_order_probs")
+            )
+            if res.reconciled_legal and res.mol is not None:
+                dg_m[i][k] = res.mol
+                dg_l[i, k] = True
+                dg_x[i, k] = bool(res.reconciled_exotic_charge)
+    sel_dm, sel_dl, sel_dx, _ = _select_v4_step1_from_pool(
+        dg_m, dg_l, dg_x, dev_req, bus_eval, 2, use_surrogate=True, device=device,
+        sd_weight=0.25, disp_rms_grid=dg_d, disp_penalty_weight=0.35,
+    )
+    du_out = cal_unimol2.predict_mols(sel_dm, batch_size=64)
+    dr_out = rule_asset.predict_mols(sel_dm, batch_size=256)
+    d_hp = du_out["mean"][:, cal_unimol2.channel_index("homo")]
+    d_sa = dr_out["mean"][:, rule_asset.channel_index("sa_score")]
+    d_ok = sel_dl & (~sel_dx) & du_out["valid_mask"] & np.isfinite(d_hp) & (d_sa <= 3.6)
+    h0 = -6.60
+    if int(d_ok.sum()) >= 40:
+        xs_d = dev_req[d_ok, 0].astype(np.float64)
+        ys_d = d_hp[d_ok].astype(np.float64)
+        sl_d, bias_d = np.polyfit(xs_d - h0, ys_d - h0, deg=1)
+        sl_cl = float(np.clip(sl_d, 0.78, 1.10))
+        alpha_d = float(np.clip(1.0 + 0.50 * ((1.0 / sl_cl) - 1.0), 0.95, 1.08))
+        beta_d = float(np.clip(-0.85 * bias_d / sl_cl, -0.35, 0.35))
+        dev_ts_mae = float(np.mean(np.abs(ys_d - xs_d)))
+    else:
+        sl_d, bias_d, alpha_d, beta_d, dev_ts_mae = 1.0, 0.0, 1.0, 0.0, 9.9
+    best_pmap = {
+        "h_center_eV": h0,
+        "fit_mode": "TwoStage_16_to_6_to_2",
+        "n_valid": int(d_ok.sum()),
+        "dev_twostage_mae_eV": round(dev_ts_mae, 4),
+        "dev_twostage_slope": round(float(sl_d), 4),
+        "dev_twostage_bias_eV": round(float(bias_d), 4),
+        "prompt_alpha": round(alpha_d, 4),
+        "prompt_beta_eV": round(beta_d, 4),
+    }
     sweep_logs = [best_pmap]
-    print(f"[Pro Matched Inference Config] cfg={best_cfg} | pmap={best_pmap}", flush=True)
+    print(f"[Pro Matched TwoStage Dev Calibration] cfg={best_cfg} | pmap={best_pmap}", flush=True)
 
     reconciler = ValenceReconciler(allowed_elements=tuple(gen.args.allow_atoms.split(",")))
     obj_col_mask = torch.tensor([True, False], dtype=torch.bool, device=device)
@@ -1494,7 +1543,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
     wt, wm, wu = _encode(np.full(16, -6.4, dtype=np.float32))
     wg = gen.sample_with_two_stage_process_critic(
         wt, wm, critic, m_stage1=8, m_stage2=4, m_keep=2, objective_col_mask=obj_col_mask,
-        stage2_diversity_weight=0.45, cfg_scale=float(best_cfg["cfg_scale"]), cfg_tree_decay=0.25,
+        stage2_diversity_weight=0.10, cfg_scale=float(best_cfg["cfg_scale"]), cfg_tree_decay=0.25,
         geometric_guard=True, seed=29, use_bf16=True, uncond_active_mask=wu,
         leaf_atom_budget=np.full(16, 30.0, dtype=np.float32),
         budget_guidance_scale=float(best_cfg["budget_guidance_scale"]),
@@ -1537,7 +1586,7 @@ def run_eval_pro(args: argparse.Namespace) -> None:
                     gen.sample_with_two_stage_process_critic(
                         bt, bm, critic, m_stage1=ms1, m_stage2=ms2, m_keep=mkeep,
                         objective_col_mask=obj_col_mask, stage1_legal_weight=0.80, stage1_constr_weight=0.55,
-                        stage2_legal_weight=1.05, stage2_constr_weight=0.70, stage2_diversity_weight=0.45,
+                        stage2_legal_weight=1.05, stage2_constr_weight=0.70, stage2_diversity_weight=0.10,
                         coarse_chunk_size=1024, cfg_scale=float(best_cfg["cfg_scale"]), xyz_cfg_scale=1.0,
                         cfg_tree_decay=0.25, geometric_guard=True, temperatures=(0.85, 0.30, 0.25),
                         seed=990000 + ms1 * 409 + ms2 * 61 + mkeep * 7 + s, use_bf16=True, electron_parity=0,
@@ -1632,11 +1681,11 @@ def run_eval_pro(args: argparse.Namespace) -> None:
                 t0 = time.perf_counter()
                 grps = gen.sample_with_two_stage_process_critic(
                     bt, bm, critic, m_stage1=ms1, m_stage2=ms2, m_keep=mk,
-                    objective_col_mask=obj_col_mask, stage2_diversity_weight=0.45, coarse_chunk_size=1024,
+                    objective_col_mask=obj_col_mask, stage2_diversity_weight=0.10, coarse_chunk_size=1024,
                     cfg_scale=float(best_cfg["cfg_scale"]), xyz_cfg_scale=1.0, cfg_tree_decay=0.25,
                     geometric_guard=True, seed=73000 + ms1 * 43 + mk * 11 + n_exact, use_bf16=True,
                     electron_parity=0, uncond_active_mask=bu, leaf_atom_budget=req_b[:, 1],
-                    budget_guidance_scale=0.80 if n_exact >= 40 else float(best_cfg["budget_guidance_scale"]),
+                    budget_guidance_scale=float(best_cfg["budget_guidance_scale"]),
                 )
                 refiner.refine_trajectories_batch([tr for g in grps for tr in g], batch_size=256)
                 _sync(device)

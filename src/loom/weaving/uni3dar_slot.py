@@ -1739,7 +1739,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         atom_lvl = int(self.backbone.atom_level_index)
         rel_lvl = tree_lvl - atom_lvl
         has_b = budget_vec[tree_rows_idx] > 0
-        if not bool(has_b.any().item()) or guidance_scale <= 0.0:
+        if not bool(has_b.any().item()):
             return tree_logits
 
         pops_row = pops_1d.unsqueeze(0)
@@ -1749,16 +1749,19 @@ class LoomUni3DARGenerator(GeneratorSlot):
         n_slots = int(rem_lvl_cells.shape[1])
 
         # (rel_lvl, divisor, k_hi_ideal, reach_hi, pop_cap, w_quad, infeas_pen, slack_frac)
+        # Note: Remove `rel == 6` (centered N=20..30 molecules naturally span 6..8 L5 octants).
+        # Coarse `L5..L3` use gentle soft quadratic guidance (`w_q * g_scale`, ZERO hard `infeas_pen`)
+        # so large targets expand cleanly without distorting N=20..30; fine `L2/L1` ALWAYS enforce
+        # full-strength (`1.0`) steric-safe leaf conservation (`pops <= 2`, `1` preferred).
         level_specs = (
-            (6, 7.20, 8.0, 8.0, 8.5, 0.22 * g_scale, -3.0 * g_scale, 0.20),
-            (5, 3.00, 6.0, 6.5, 8.5, 0.35 * g_scale, -5.0 * g_scale, 0.20),
-            (4, 1.36, 5.0, 5.5, 7.5, 0.45 * g_scale, -6.0 * g_scale, 0.14),
-            (3, 0.99, 3.4, 3.6, 4.5, 0.60 * g_scale, -8.0 * g_scale, 0.08),
-            (2, 0.99, 2.0, 2.0, 2.5, 0.75 * g_scale, -10.0 * g_scale, 0.0),
-            (1, 0.99, 1.8, 2.0, 2.5, 0.90 * g_scale, -12.0 * g_scale, 0.0),
+            (5, 3.00, 6.0, 6.5, 8.5, 0.25 * g_scale, 0.0, 0.25),
+            (4, 1.36, 5.0, 5.5, 7.5, 0.30 * g_scale, 0.0, 0.18),
+            (3, 0.99, 3.4, 3.6, 4.5, 0.35 * g_scale, 0.0, 0.12),
+            (2, 0.99, 2.0, 2.0, 2.5, 0.55, -10.0, 0.0),
+            (1, 0.99, 1.8, 2.0, 2.5, 0.70, -12.0, 0.0),
         )
         for rel, div, k_hi, reach_hi, pop_cap, w_q, inf_p, slack_f in level_specs:
-            if rel >= n_slots:
+            if rel >= n_slots or (w_q <= 0.0 and inf_p == 0.0):
                 continue
             mask_l = (rel_lvl == rel) & has_b
             if not bool(mask_l.any().item()):
@@ -1767,10 +1770,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             rem_after = (rem_lvl_cells[r_idx, rel] - 1.0).clamp_min(0.0).unsqueeze(-1)
             cur_child = rem_lvl_cells[r_idx, rel - 1].unsqueeze(-1)
             goal_n = budget_vec[r_idx].unsqueeze(-1)
-            if rel == 6:
-                goal_c = (goal_n / float(div)).clamp(4.0, 8.0)
-            else:
-                goal_c = (goal_n / float(div)).clamp_min(2.0 if rel >= 4 else 1.0)
+            goal_c = (goal_n / float(div)).clamp_min(2.0 if rel >= 4 else 1.0)
             tol_c = (float(slack_f) * goal_c).clamp_min(tol_base) if slack_f > 0.0 else tol_base
 
             ideal_k = ((goal_c - cur_child) / (rem_after + 1.0)).clamp(1.0, float(k_hi))
@@ -1778,12 +1778,15 @@ class LoomUni3DARGenerator(GeneratorSlot):
             if pop_cap < 8.0:
                 prior = prior - 8.0 * (pops_row > float(pop_cap)).float()
 
-            min_reach = cur_child + pops_row + 1.0 * rem_after
-            max_reach = cur_child + pops_row + float(reach_hi) * rem_after
-            feas = (min_reach <= goal_c + tol_c) & (max_reach >= goal_c - tol_c) & (pops_row <= float(pop_cap))
-            has_feas = feas.any(dim=-1, keepdim=True)
-            pen = torch.where(feas | (~has_feas), torch.zeros_like(prior), torch.full_like(prior, float(inf_p)))
-            out_logits[mask_l] = out_logits[mask_l] + prior + pen
+            if inf_p != 0.0:
+                min_reach = cur_child + pops_row + 1.0 * rem_after
+                max_reach = cur_child + pops_row + float(reach_hi) * rem_after
+                feas = (min_reach <= goal_c + tol_c) & (max_reach >= goal_c - tol_c) & (pops_row <= float(pop_cap))
+                has_feas = feas.any(dim=-1, keepdim=True)
+                pen = torch.where(feas | (~has_feas), torch.zeros_like(prior), torch.full_like(prior, float(inf_p)))
+                out_logits[mask_l] = out_logits[mask_l] + prior + pen
+            else:
+                out_logits[mask_l] = out_logits[mask_l] + prior
         return out_logits
 
     def _update_rem_lvl_cells(
@@ -4308,7 +4311,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         if step_k == 0:
                             cur_scores = u_mat
                         else:
-                            cur_scores = u_mat - div_w * max_sim_picked
+                            # Near-duplicate hinge: only nudge candidates with cosine sim > 0.93
+                            sim_excess = F.relu(max_sim_picked - 0.93) / 0.07
+                            cur_scores = u_mat - div_w * sim_excess
                         cur_scores = torch.where(avail_mask, cur_scores, torch.full_like(cur_scores, -1e9))
                         chosen_k = cur_scores.argmax(dim=1)
                         picked_idx_cols.append(chosen_k)

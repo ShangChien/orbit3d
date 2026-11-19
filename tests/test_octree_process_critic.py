@@ -967,6 +967,37 @@ def test_grouped_ranking_critic_and_stage2_mmr_diversity(tmp_path: Path) -> None
     )
     assert len(grouped) == 3 and all(len(g) == 2 for g in grouped)
 
+    # Verify GRPO `cfg_anchor_cols=("sa_score",)` decouples HOMO-only CFG from `prompt_atom_budgets`
+    from loom.weaving.grpo import LoomGRPOTrainer
+
+    class _DummyOracle:
+        target_cols = ["homo", "sa_score"]
+        capabilities = type("Cap", (), {"is_audit_only": False})()
+
+    gen.configure_trainable(train_conditioner=True)
+    tr = LoomGRPOTrainer(
+        generator=gen,
+        reward_oracle=_DummyOracle(),  # type: ignore[arg-type]
+        size_anchored_cfg=False,
+        cfg_anchor_cols=("sa_score",),
+        size_adherence_weight=0.30,
+    )
+    assert tr.size_col_idx is None
+    assert tr.cfg_anchor_indices == (1,)
+    u_mask = tr._build_uncond_active_mask(torch.ones((3, 2), dtype=torch.bool))
+    assert u_mask is not None and torch.equal(u_mask, torch.tensor([[False, True]] * 3))
+    from rdkit import Chem
+    m12 = Chem.AddHs(Chem.MolFromSmiles("c1ccccc1"))
+    _, errs, _, _, _ = tr._compute_size_metrics_and_advantages(
+        [m12, m12],
+        np.array([True, True]),
+        np.array([[-6.5, 2.25], [-6.5, 2.25]], dtype=np.float32),
+        np.ones((2, 2), dtype=bool),
+        group_size=2,
+        prompt_atom_budgets=np.array([12.0], dtype=np.float32),
+    )
+    assert np.allclose(errs, 0.0, atol=1e-6)
+
 
 
 
