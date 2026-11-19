@@ -116,10 +116,10 @@ def _fit_damped_affine_prompt_map(
     n_ok = int(ok.sum())
     if n_ok >= 40 and float(np.std(xs)) > 0.15:
         slope, intercept_c = np.polyfit(xs - h_center, ys - h_center, deg=1)
-        slope_clamped = float(np.clip(slope, 0.55, 1.15))
-        # Damped affine inverse: h_prompt = h_center + alpha*(h_target - h_center) + beta
-        alpha = float(np.clip(1.0 + 0.78 * ((1.0 / slope_clamped) - 1.0), 0.90, 1.48))
-        beta = float(np.clip(-0.90 * intercept_c / slope_clamped, -0.60, 0.60))
+        slope_clamped = float(np.clip(slope, 0.65, 1.15))
+        # Safe damped affine inverse: prevents extreme-tail OOD extrapolation
+        alpha = float(np.clip(1.0 + 0.55 * ((1.0 / slope_clamped) - 1.0), 0.95, 1.25))
+        beta = float(np.clip(-0.85 * intercept_c / slope_clamped, -0.40, 0.40))
         dev_mae_raw = float(np.mean(np.abs(ys - xs)))
         dev_sa_ok = float(np.mean(sa_v[u_out["valid_mask"]] <= 3.5)) if u_out["valid_mask"].any() else 0.0
         dev_nat = float(np.mean([m.GetNumAtoms() for m in mols if m is not None])) if any(m is not None for m in mols) else 0.0

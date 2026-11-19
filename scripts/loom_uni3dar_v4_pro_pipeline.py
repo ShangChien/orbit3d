@@ -1445,10 +1445,39 @@ def run_eval_pro(args: argparse.Namespace) -> None:
     source_graphs, source_scaffolds = _get_source_novelty_sets(args)
     _, clean_targets = _get_clean_oe62_pool(args, None)
 
-    best_cfg, best_pmap, sweep_logs = _select_best_inference_knobs_on_dev(
-        gen, refiner, critic, bus_eval, cal_unimol2, clean_targets, args.oe62_targets_json, device
+    # Fit safe zero-leakage damped affine prompt map strictly matched to Critic rollout distribution!
+    q_points_d = json.loads(args.oe62_targets_json.read_text())["single_target_points"]["homo"]
+    d_rng = np.random.default_rng(2026901)
+    sub_n_d = clean_targets[(clean_targets[:, 1] >= 18.0) & (clean_targets[:, 1] <= 42.0), 1]
+    dev_rows = [
+        (float(q_points_d[str(q)]), float(round(ni)))
+        for q in (10, 25, 35, 50, 65, 75, 90)
+        for ni in d_rng.choice(sub_n_d, size=36, replace=True).tolist()
+    ]
+    dev_req = np.asarray(dev_rows, dtype=np.float32)
+    rule_asset = bus_eval.registry.get_predictor("builtin_rules")
+    best_cfg = {
+        "eval_sa_target": float(args.eval_sa_target),
+        "cfg_scale": float(args.cfg_scale),
+        "homo_only_cfg": True,
+        "budget_guidance_scale": 0.35,
+    }
+    best_pmap = _fit_damped_affine_prompt_map(
+        gen,
+        refiner,
+        cal_unimol2,
+        rule_asset,
+        dev_req[:, 0],
+        dev_req[:, 1],
+        sa_target=best_cfg["eval_sa_target"],
+        cfg_scale=best_cfg["cfg_scale"],
+        cfg_tree_decay=0.25,
+        homo_only_cfg=True,
+        budget_guidance_scale=best_cfg["budget_guidance_scale"],
+        device=device,
     )
-    print(f"[Pro Selected Dev Config] cfg={best_cfg} | pmap={best_pmap}", flush=True)
+    sweep_logs = [best_pmap]
+    print(f"[Pro Matched Inference Config] cfg={best_cfg} | pmap={best_pmap}", flush=True)
 
     reconciler = ValenceReconciler(allowed_elements=tuple(gen.args.allow_atoms.split(",")))
     obj_col_mask = torch.tensor([True, False], dtype=torch.bool, device=device)
@@ -1661,7 +1690,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "--phase",
-        choices=["build_relax_pool", "relax_pro_shard", "sft_pro_ddp", "align_pro", "rollout_pro_shard", "train_critic", "eval_pro", "all"],
+        choices=["build_relax_pool", "relax_pro_shard", "sft_pro_ddp", "align_pro", "rollout_pro_shard", "train_critic", "train_all", "eval_pro", "all"],
         required=True,
     )
     p.add_argument("--device", type=str, default="cuda:0")
@@ -1683,8 +1712,8 @@ def main() -> None:
     p.add_argument("--refiner-epochs", type=int, default=14)
     p.add_argument("--critic-rollouts", type=int, default=24576)
     p.add_argument("--critic-group-size", type=int, default=8)
-    p.add_argument("--eval-sa-target", type=float, default=2.60)
-    p.add_argument("--cfg-scale", type=float, default=2.45)
+    p.add_argument("--eval-sa-target", type=float, default=2.25)
+    p.add_argument("--cfg-scale", type=float, default=2.35)
     p.add_argument("--eval-part", choices=["all", "fair30", "buckets"], default="all")
     p.add_argument("--reuse-relaxed-pool", action="store_true")
     p.add_argument("--reuse-sft", action="store_true")
@@ -1725,6 +1754,9 @@ def main() -> None:
     elif args.phase == "rollout_pro_shard":
         run_pro_rollout_shard(args)
     elif args.phase == "train_critic":
+        run_train_pro_critic(args)
+    elif args.phase == "train_all":
+        run_align_pro(args)
         run_train_pro_critic(args)
     elif args.phase == "eval_pro":
         run_eval_pro(args)
