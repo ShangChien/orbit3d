@@ -16,9 +16,9 @@ def build_uni3dar_mol_tarball() -> Path:
         "main_uni3dar_mol.bbl",
         "references.bib",
         "figures/geom_drugs_pareto_and_scaling.pdf",
-        "figures/fig2_oe62_cross_paradigm_scaling.pdf",
-        "figures/fig3_oe62_atom_size_scaling.pdf",
-        "figures/fig4_uni3dar_m4_ablation.pdf",
+        "figures/fig2_qm9_and_oe62_standalone_scaling.pdf",
+        "figures/fig3_oe62_standalone_atom_scaling.pdf",
+        "figures/fig4_uni3dar_mol_internal_ablation.pdf",
     ]
 
     with tarfile.open(out_path, "w:gz") as tar:

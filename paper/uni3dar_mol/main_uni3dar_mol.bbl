@@ -1,4 +1,4 @@
-\begin{thebibliography}{16}
+\begin{thebibliography}{19}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -94,6 +94,24 @@ Shuqi Lu, Haowei Lin, Lin Yao, Zhifeng Gao, Xiaohong Ji, Yitao Liang, Weinan E,
 \newblock URL
   \url{https://www.rdkit.org/docs/source/rdkit.Chem.rdDetermineBonds.html}.
 
+\bibitem[Ho and Salimans(2022)]{ho2022cfg}
+Jonathan Ho and Tim Salimans.
+\newblock Classifier-free diffusion guidance.
+\newblock \emph{arXiv preprint arXiv:2207.12598}, 2022.
+
+\bibitem[Dao(2024)]{dao2023flashattention2}
+Tri Dao.
+\newblock {FlashAttention-2}: Faster attention with better parallelism and work
+  partitioning.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Hu et~al.(2022)Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, and
+  Chen]{hu2022lora}
+Edward~J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean
+  Wang, Lu~Wang, and Weizhu Chen.
+\newblock Lo{RA}: Low-rank adaptation of large language models.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+
 \bibitem[Ramakrishnan et~al.(2014)Ramakrishnan, Dral, Rupp, and von
   Lilienfeld]{ramakrishnan2014qm9}
 Raghunathan Ramakrishnan, Pavlo~O. Dral, Matthias Rupp, and O.~Anatole von
@@ -101,6 +119,13 @@ Raghunathan Ramakrishnan, Pavlo~O. Dral, Matthias Rupp, and O.~Anatole von
 \newblock Quantum chemistry structures and properties of 134 kilo molecules.
 \newblock \emph{Scientific Data}, 1:\penalty0 140022, 2014.
 \newblock \doi{10.1038/sdata.2014.22}.
+
+\bibitem[Jing et~al.(2021)Jing, Eismann, Suriana, Townshend, and
+  Dror]{jing2021gvp}
+Bowen Jing, Stephan Eismann, Patricia Suriana, Raphael J.~L. Townshend, and Ron
+  Dror.
+\newblock Learning from protein structure with geometric vector perceptrons.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
 
 \bibitem[Sun et~al.(2020)]{sun2020pyscf}
 Qiming Sun et~al.
@@ -113,13 +138,5 @@ Rui Li, Qiming Sun, Xing Zhang, and Garnet Kin-Lic Chan.
 \newblock Introducing {GPU}-acceleration into the python-based simulations of
   chemistry framework.
 \newblock \emph{arXiv preprint arXiv:2407.09700}, 2024.
-
-\bibitem[Chen et~al.(2026)Chen, Zhao, Cheng, Wang, Wang, and
-  Gao]{chen2026uniloom}
-Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, and
-  Zhifeng Gao.
-\newblock {Uni-Loom}: Predictor-agnostic 3{D} molecular weaving with dual-track
-  valence purity and grounded recursive self-improvement.
-\newblock \emph{Companion Preprint}, 2026.
 
 \end{thebibliography}

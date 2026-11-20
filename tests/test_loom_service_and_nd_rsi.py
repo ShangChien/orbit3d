@@ -411,3 +411,58 @@ def test_stoichiometric_descriptor_invariance_continuous_funnel_and_spec_driven_
     # `_MockFlowBackbone` cycles 9-atom CCO, 12-atom benzene, 11-atom pyridine -> `select_best_of_m` picks highest `pic50`!
     assert [m.GetNumAtoms() for m in gen_max["molecules"]] == [12, 12]
 
+
+
+def test_standalone_teacher_forced_features_and_single_speculative(tmp_path):
+    from loom.generator.octree_backend import OctreeDataset
+    from loom.weaving import PostTreeGraphRefiner
+
+    gen = _build_tiny_uni3dar()
+    s1 = OctreeProcessCritic(emb_dim=32, num_targets=2, hidden_dim=64)
+    s2 = OctreeElementProcessCritic(
+        emb_dim=32,
+        num_targets=2,
+        num_atom_classes=gen.backbone.num_atom,
+        d_node=32,
+        n_rbf=16,
+        n_gnn_layers=2,
+        hidden_dim=64,
+        rbf_min=0.65,
+        rbf_max=5.20,
+        rbf_gamma=42.0,
+        edge_value_gate=True,
+        equivariant_multipole=True,
+        h_gate_scale=0.0,
+    )
+    ref = PostTreeGraphRefiner(num_atom_classes=gen.backbone.num_atom, d_model=32, n_heads=4, n_layers=1, n_rbf=8, d_pair=16)
+    gen.attach_post_processors(post_tree_refiner=ref, process_critic=TwoStageOctreeProcessCritic(s1, s2))
+
+    ckpt_p = tmp_path / "bundled_standalone.pt"
+    gen.save_checkpoint(ckpt_p)
+    gen_reloaded, _ = LoomUni3DARGenerator.load_checkpoint(ckpt_p, device="cpu", batch_size=4)
+    assert gen_reloaded.process_critic.stage2_critic.edge_value_gate is True
+    assert gen_reloaded.process_critic.stage2_critic.equivariant_multipole is True
+    assert gen_reloaded.process_critic.stage2_critic.h_gate_scale == 0.0
+
+    mols = [_make_mol("CCO", 1), _make_mol("c1ccccc1", 2), _make_mol("c1ccncc1", 3)]
+    oct_ds = OctreeDataset(mols, gen_reloaded.backbone, training=False)
+    packed = oct_ds.collate([0, 1, 2])
+
+    t_norm = gen_reloaded.normalize_targets(np.array([[-6.3, 2.0], [-6.5, 2.1], [-6.7, 2.2]], dtype=np.float32))
+    m_act = torch.ones((3, 2), dtype=torch.bool)
+    feats = gen_reloaded.extract_teacher_forced_two_stage_features(packed, t_norm, m_act)
+    assert feats["s1_h_concat"].shape == (3, 128)
+    assert feats["s1_geom_feats"].shape == (3, NUM_COARSE_GEOM_FEATS)
+    assert feats["s2_h_stage2"].shape == (3, 192)
+    assert feats["s2_cloud_feats"].shape == (3, 42)
+    assert [int(es.numel()) for es in feats["s2_elem_slices"]] == [m.GetNumAtoms() for m in mols]
+
+    mols_k1, fun_k1 = gen_reloaded.generate_single_speculative(
+        t_norm[:2], m_act[:2], speculative_scale=1, atom_budget=[18.0, 18.0], seed=11
+    )
+    assert len(mols_k1) == 2 and fun_k1 == (1, 1, 1)
+
+    mols_k8, fun_k8 = gen_reloaded.generate_single_speculative(
+        t_norm[:2], m_act[:2], speculative_scale=8, atom_budget=[18.0, 18.0], seed=17
+    )
+    assert len(mols_k8) == 2 and fun_k8 == (38, 12, 1)

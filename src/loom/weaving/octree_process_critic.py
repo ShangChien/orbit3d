@@ -17,6 +17,7 @@ with `Uni-Loom`'s `CompositeCriticBus` without modifying generator weights or ar
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -329,17 +330,18 @@ def _grouped_utility_ranking_loss(
         eval_m = eval_m.unsqueeze(0).expand_as(mu_n)
     denom = eval_m.float().sum(dim=-1).clamp_min(1.0)
 
-    pred_err = ((torch.abs(mu_n - targets_norm.float()) + 0.10 * std_n) * eval_m.float()).sum(dim=-1) / denom
+    y_safe = torch.where(torch.isfinite(y_surrogate_norm), y_surrogate_norm.float(), torch.zeros_like(mu_n))
+    true_err_raw = (torch.abs(y_safe - targets_norm.float()) * eval_m.float()).sum(dim=-1) / denom
+    ok_row = y_valid_mask.bool() & (is_legal >= 0.5) & torch.isfinite(true_err_raw)
+    true_err = torch.where(ok_row, true_err_raw.clamp_max(3.5), torch.full_like(true_err_raw, 3.5))
+
+    pred_err_raw = ((torch.abs(mu_n - targets_norm.float()) + 0.10 * std_n) * eval_m.float()).sum(dim=-1) / denom
+    pred_err = torch.where(ok_row, pred_err_raw, torch.full_like(pred_err_raw, 3.5))
     u_pred = (
         -pred_err
         - float(legal_weight) * (1.8 * F.relu(0.75 - out["prob_legal"]) + 0.15 * (-F.logsigmoid(out["logit_legal"])))
         - float(constr_weight) * (1.8 * F.relu(0.60 - out["prob_constr"]) + 0.20 * (-F.logsigmoid(out["logit_constr"])))
     )
-
-    y_safe = torch.where(torch.isfinite(y_surrogate_norm), y_surrogate_norm.float(), torch.zeros_like(mu_n))
-    true_err_raw = (torch.abs(y_safe - targets_norm.float()) * eval_m.float()).sum(dim=-1) / denom
-    ok_row = y_valid_mask.bool() & (is_legal >= 0.5) & torch.isfinite(true_err_raw)
-    true_err = torch.where(ok_row, true_err_raw.clamp_max(3.5), torch.full_like(true_err_raw, 3.5))
     u_true = -true_err + 1.25 * is_legal.float() + 1.15 * is_constr_met.float()
     if phys_scores is not None and float(phys_weight) > 0.0:
         ps = torch.nan_to_num(phys_scores.to(device=mu_n.device, dtype=torch.float32), nan=0.0).clamp(0.0, 1.0)
@@ -674,13 +676,21 @@ def compute_element_cloud_features(
 
 
 class _RBFElementGraphLayer(nn.Module):
-    """SO(3)-invariant 3D RBF distance-biased attention block over decoded leaf elements."""
+    """SO(3)-invariant 3D RBF distance-biased attention + optional continuous-filter covalent edge block."""
 
-    def __init__(self, d_model: int = 160, n_heads: int = 4, n_rbf: int = 16, dropout: float = 0.05) -> None:
+    def __init__(
+        self,
+        d_model: int = 160,
+        n_heads: int = 4,
+        n_rbf: int = 16,
+        dropout: float = 0.05,
+        edge_value_gate: bool = False,
+    ) -> None:
         super().__init__()
         self.d_model = int(d_model)
         self.n_heads = int(n_heads)
         self.head_dim = self.d_model // self.n_heads
+        self.edge_value_gate = bool(edge_value_gate)
         self.norm1 = nn.LayerNorm(self.d_model)
         self.qkv = nn.Linear(self.d_model, 3 * self.d_model)
         self.edge_proj = nn.Sequential(
@@ -689,6 +699,15 @@ class _RBFElementGraphLayer(nn.Module):
             nn.Linear(self.n_heads * 2, self.n_heads),
         )
         self.out_proj = nn.Linear(self.d_model, self.d_model)
+        if self.edge_value_gate:
+            self.d_edge = max(32, self.d_model // 4)
+            self.edge_filter = nn.Sequential(
+                nn.Linear(n_rbf, self.d_edge),
+                nn.SiLU(),
+                nn.Linear(self.d_edge, self.d_edge),
+            )
+            self.v_edge_in = nn.Linear(self.d_model, self.d_edge)
+            self.v_edge_out = nn.Linear(self.d_edge, self.d_model)
         self.norm2 = nn.LayerNorm(self.d_model)
         self.ffn = nn.Sequential(
             nn.Linear(self.d_model, self.d_model * 2),
@@ -697,7 +716,13 @@ class _RBFElementGraphLayer(nn.Module):
             nn.Linear(self.d_model * 2, self.d_model),
         )
 
-    def forward(self, x: torch.Tensor, rbf_ij: torch.Tensor, valid_mask: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        rbf_ij: torch.Tensor,
+        valid_mask: torch.Tensor,
+        pair_envelope: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         bsz, k_len, _ = x.shape
         if k_len == 0:
             return x
@@ -716,7 +741,24 @@ class _RBFElementGraphLayer(nn.Module):
         logits = torch.where(key_ok | (~has_any), logits, torch.full_like(logits, -1e9))
         attn = torch.softmax(logits, dim=-1)
         out = torch.matmul(attn, v).transpose(1, 2).contiguous().view(bsz, k_len, self.d_model)
-        x = x + self.out_proj(out)
+        upd = self.out_proj(out)
+        if self.edge_value_gate:
+            w_ij = self.edge_filter(rbf_ij)  # (B, K, K, d_edge)
+            if pair_envelope is not None:
+                w_ij = w_ij * pair_envelope.unsqueeze(-1)
+            v_e = self.v_edge_in(h)  # (B, K, d_edge)
+            # Fused batched GEMM over `(B, d_edge)` slices: `(B, C, K, K) @ (B, C, K, 1)`
+            msg = torch.matmul(
+                w_ij.permute(0, 3, 1, 2),
+                v_e.permute(0, 2, 1).unsqueeze(-1),
+            ).squeeze(-1).permute(0, 2, 1)
+            deg_norm = (
+                pair_envelope.sum(dim=-1, keepdim=True).clamp_min(1.0)
+                if pair_envelope is not None
+                else valid_mask.float().sum(dim=-1, keepdim=True).clamp_min(1.0)
+            )
+            upd = upd + self.v_edge_out(msg / deg_norm)
+        x = x + upd
         x = x + self.ffn(self.norm2(x))
         return x * valid_mask.unsqueeze(-1).float()
 
@@ -742,6 +784,12 @@ class OctreeElementProcessCritic(nn.Module):
         hidden_dim: int = 512,
         cloud_feat_dim: int = NUM_ELEM_CLOUD_FEATS,
         dropout: float = 0.10,
+        rbf_min: float = 0.70,
+        rbf_max: float = 5.50,
+        rbf_gamma: float = 6.0,
+        edge_value_gate: bool = False,
+        equivariant_multipole: bool = False,
+        h_gate_scale: float = 1.0,
     ) -> None:
         super().__init__()
         self.emb_dim = int(emb_dim)
@@ -753,16 +801,35 @@ class OctreeElementProcessCritic(nn.Module):
         self.n_gnn_layers = max(1, int(n_gnn_layers))
         self.hidden_dim = int(hidden_dim)
         self.cloud_feat_dim = int(cloud_feat_dim)
+        self.rbf_min = float(rbf_min)
+        self.rbf_max = float(rbf_max)
+        self.rbf_gamma_val = float(rbf_gamma)
+        self.edge_value_gate = bool(edge_value_gate)
+        self.equivariant_multipole = bool(equivariant_multipole)
+        self.h_gate_scale = float(h_gate_scale)
 
         self.elem_emb = nn.Embedding(self.num_atom_classes, self.d_node)
-        self.register_buffer("rbf_centers", torch.linspace(0.70, 5.50, self.n_rbf, dtype=torch.float32))
-        self.register_buffer("rbf_gamma", torch.tensor(6.0, dtype=torch.float32))
+        self.register_buffer("rbf_centers", torch.linspace(self.rbf_min, self.rbf_max, self.n_rbf, dtype=torch.float32))
+        self.register_buffer("rbf_gamma", torch.tensor(self.rbf_gamma_val, dtype=torch.float32))
         self.gnn_layers = nn.ModuleList(
             [
-                _RBFElementGraphLayer(self.d_node, n_heads=4, n_rbf=self.n_rbf, dropout=dropout)
+                _RBFElementGraphLayer(
+                    self.d_node,
+                    n_heads=4,
+                    n_rbf=self.n_rbf,
+                    dropout=dropout,
+                    edge_value_gate=self.edge_value_gate,
+                )
                 for _ in range(self.n_gnn_layers)
             ]
         )
+        if self.equivariant_multipole:
+            self.n_multipole = 12
+            self.multipole_q = nn.Linear(self.d_node, self.n_multipole)
+            multipole_dim = 2 * self.n_multipole
+        else:
+            self.n_multipole = 0
+            multipole_dim = 0
 
         h_in = self.num_h_pools * self.emb_dim
         self.h_norm = nn.LayerNorm(h_in)
@@ -771,18 +838,19 @@ class OctreeElementProcessCritic(nn.Module):
             nn.SiLU(),
             nn.Dropout(dropout),
         )
-        # Graph readout: all-atom mean + heavy-atom mean + max pool -> `3 * d_node`
-        aux_in = 3 * self.d_node + self.cloud_feat_dim + 2 * self.num_targets
+        # Graph readout: all-atom mean + heavy-atom mean + max pool (+ optional SO(3)-invariant multipole norms)
+        aux_in = 3 * self.d_node + multipole_dim + self.cloud_feat_dim + 2 * self.num_targets
+        aux_hid = 384 if (self.edge_value_gate or self.equivariant_multipole) else 256
         self.aux_norm = nn.LayerNorm(aux_in)
         self.aux_proj = nn.Sequential(
-            nn.Linear(aux_in, 256),
+            nn.Linear(aux_in, aux_hid),
             nn.SiLU(),
             nn.Dropout(dropout),
-            nn.Linear(256, 256),
+            nn.Linear(aux_hid, aux_hid),
             nn.SiLU(),
         )
         self.trunk = nn.Sequential(
-            nn.Linear(self.hidden_dim + 256, self.hidden_dim),
+            nn.Linear(self.hidden_dim + aux_hid, self.hidden_dim),
             nn.LayerNorm(self.hidden_dim),
             nn.SiLU(),
             nn.Dropout(dropout),
@@ -826,6 +894,7 @@ class OctreeElementProcessCritic(nn.Module):
         with torch.autocast(device_type=device.type, enabled=False):
             valid = leaf_valid.to(device=device, dtype=torch.bool)
             k_len = elem_ids.shape[1]
+            multipole_dim = 2 * self.n_multipole if self.equivariant_multipole else 0
             if k_len > 0:
                 e_clamped = torch.where(
                     valid,
@@ -836,8 +905,16 @@ class OctreeElementProcessCritic(nn.Module):
                 pos = leaf_pos.to(device=device, dtype=torch.float32)
                 dmat = torch.cdist(pos, pos, p=2.0).clamp(0.0, 8.0)
                 rbf_ij = torch.exp(-self.rbf_gamma * (dmat.unsqueeze(-1) - self.rbf_centers).pow(2))
+                if self.edge_value_gate:
+                    pair_ok = valid[:, :, None] & valid[:, None, :]
+                    no_self = ~torch.eye(k_len, dtype=torch.bool, device=device).unsqueeze(0)
+                    r_cut = max(self.rbf_max, 1.0)
+                    cos_env = 0.5 * (1.0 + torch.cos(math.pi * (dmat / r_cut).clamp(0.0, 1.0)))
+                    pair_env: Optional[torch.Tensor] = cos_env * (pair_ok & no_self & (dmat < r_cut)).float()
+                else:
+                    pair_env = None
                 for g_layer in self.gnn_layers:
-                    x_node = g_layer(x_node, rbf_ij, valid)
+                    x_node = g_layer(x_node, rbf_ij, valid, pair_envelope=pair_env)
 
                 v_f = valid.float()
                 cnt_all = v_f.sum(dim=1, keepdim=True).clamp_min(1.0)
@@ -850,11 +927,26 @@ class OctreeElementProcessCritic(nn.Module):
                 has_v = valid.any(dim=1, keepdim=True)
                 x_masked = torch.where(valid.unsqueeze(-1), x_node, torch.full_like(x_node, -1e4))
                 pool_max = torch.where(has_v, x_masked.max(dim=1).values, torch.zeros_like(pool_all))
-                g_pool = torch.cat([pool_all, pool_hvy, pool_max], dim=-1)
+                if self.equivariant_multipole:
+                    q_raw = self.multipole_q(x_node) * v_f.unsqueeze(-1)  # (B, K, C)
+                    q_mean = q_raw.sum(dim=1, keepdim=True) / cnt_all.unsqueeze(-1)
+                    q_neut = (q_raw - q_mean) * v_f.unsqueeze(-1)
+                    pos_c = (pos * v_f.unsqueeze(-1)).sum(dim=1, keepdim=True) / cnt_all.unsqueeze(-1)
+                    rel_p = (pos - pos_c) * v_f.unsqueeze(-1)  # (B, K, 3)
+                    dip_vec = torch.einsum("bkc,bkd->bcd", q_neut, rel_p)  # (B, C, 3)
+                    dip_norm = torch.sqrt((dip_vec.pow(2)).sum(dim=-1) + 1e-8)  # (B, C)
+                    r2 = (rel_p.pow(2)).sum(dim=-1, keepdim=True)  # (B, K, 1)
+                    quad_tr = (q_neut * r2).sum(dim=1) * 0.10  # (B, C)
+                    g_pool = torch.cat([pool_all, pool_hvy, pool_max, dip_norm, quad_tr], dim=-1)
+                else:
+                    g_pool = torch.cat([pool_all, pool_hvy, pool_max], dim=-1)
             else:
-                g_pool = torch.zeros((bsz, 3 * self.d_node), dtype=torch.float32, device=device)
+                g_pool = torch.zeros((bsz, 3 * self.d_node + multipole_dim), dtype=torch.float32, device=device)
 
-            h_vec = self.h_proj(self.h_norm(h_stage2.float()))
+            if self.h_gate_scale == 0.0:
+                h_vec = torch.zeros((bsz, self.hidden_dim), dtype=torch.float32, device=device)
+            else:
+                h_vec = self.h_proj(self.h_norm(h_stage2.float())) * self.h_gate_scale
             aux_in = torch.cat(
                 [g_pool, cloud_feats.float(), targets_norm.float(), active_mask.float()], dim=-1
             )
@@ -931,7 +1023,7 @@ class OctreeElementProcessCritic(nn.Module):
             self.train(was_training)
 
     def get_config(self) -> Dict[str, Any]:
-        return {
+        cfg: Dict[str, Any] = {
             "emb_dim": self.emb_dim,
             "num_targets": self.num_targets,
             "num_atom_classes": self.num_atom_classes,
@@ -941,7 +1033,34 @@ class OctreeElementProcessCritic(nn.Module):
             "n_gnn_layers": self.n_gnn_layers,
             "hidden_dim": self.hidden_dim,
             "cloud_feat_dim": self.cloud_feat_dim,
+            "rbf_min": self.rbf_min,
+            "rbf_max": self.rbf_max,
+            "rbf_gamma": self.rbf_gamma_val,
+            "edge_value_gate": self.edge_value_gate,
+            "equivariant_multipole": self.equivariant_multipole,
+            "h_gate_scale": self.h_gate_scale,
         }
+        return cfg
+
+    @classmethod
+    def from_config(cls, cfg: Dict[str, Any]) -> "OctreeElementProcessCritic":
+        return cls(
+            emb_dim=int(cfg["emb_dim"]),
+            num_targets=int(cfg["num_targets"]),
+            num_atom_classes=int(cfg.get("num_atom_classes", 128)),
+            num_h_pools=int(cfg.get("num_h_pools", 6)),
+            d_node=int(cfg.get("d_node", 160)),
+            n_rbf=int(cfg.get("n_rbf", 16)),
+            n_gnn_layers=int(cfg.get("n_gnn_layers", 2)),
+            hidden_dim=int(cfg.get("hidden_dim", 512)),
+            cloud_feat_dim=int(cfg.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
+            rbf_min=float(cfg.get("rbf_min", 0.70)),
+            rbf_max=float(cfg.get("rbf_max", 5.50)),
+            rbf_gamma=float(cfg.get("rbf_gamma", 6.0)),
+            edge_value_gate=bool(cfg.get("edge_value_gate", False)),
+            equivariant_multipole=bool(cfg.get("equivariant_multipole", False)),
+            h_gate_scale=float(cfg.get("h_gate_scale", 1.0)),
+        )
 
     def save_checkpoint(self, path: str | Any, extra: Optional[Dict[str, Any]] = None) -> None:
         payload = {
@@ -954,17 +1073,7 @@ class OctreeElementProcessCritic(nn.Module):
     @classmethod
     def load_checkpoint(cls, path: str | Any, device: str | torch.device = "cpu") -> Tuple["OctreeElementProcessCritic", Dict[str, Any]]:
         payload = torch.load(path, map_location=device, weights_only=False)
-        critic = cls(
-            emb_dim=int(payload["emb_dim"]),
-            num_targets=int(payload["num_targets"]),
-            num_atom_classes=int(payload.get("num_atom_classes", 128)),
-            num_h_pools=int(payload.get("num_h_pools", 6)),
-            d_node=int(payload.get("d_node", 160)),
-            n_rbf=int(payload.get("n_rbf", 16)),
-            n_gnn_layers=int(payload.get("n_gnn_layers", 2)),
-            hidden_dim=int(payload.get("hidden_dim", 512)),
-            cloud_feat_dim=int(payload.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
-        ).to(device)
+        critic = cls.from_config(payload).to(device)
         critic.load_state_dict(payload["state_dict"], strict=True)
         critic.eval()
         return critic, payload.get("extra", {})
@@ -1011,17 +1120,7 @@ class TwoStageOctreeProcessCritic(nn.Module):
         s1.eval()
 
         c2 = payload["stage2_config"]
-        s2 = OctreeElementProcessCritic(
-            emb_dim=int(c2["emb_dim"]),
-            num_targets=int(c2["num_targets"]),
-            num_atom_classes=int(c2.get("num_atom_classes", 128)),
-            num_h_pools=int(c2.get("num_h_pools", 6)),
-            d_node=int(c2.get("d_node", 160)),
-            n_rbf=int(c2.get("n_rbf", 16)),
-            n_gnn_layers=int(c2.get("n_gnn_layers", 2)),
-            hidden_dim=int(c2.get("hidden_dim", 512)),
-            cloud_feat_dim=int(c2.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
-        ).to(device)
+        s2 = OctreeElementProcessCritic.from_config(c2).to(device)
         s2.load_state_dict(payload["stage2_state_dict"], strict=True)
         s2.eval()
         return cls(s1, s2), payload.get("extra", {})
@@ -1051,6 +1150,8 @@ def fit_octree_element_process_critic(
     lr: float = 1.2e-3,
     weight_decay: float = 1e-4,
     val_fraction: float = 0.10,
+    pos_noise_std: float = 0.0,
+    supervise_all_valid_targets: bool = False,
     seed: int = 2026,
 ) -> ProcessCriticTrainStats:
     """Train Stage-2 `OctreeElementProcessCritic` on zero-leakage leaf-element clouds + calibrated surrogate."""
@@ -1098,6 +1199,8 @@ def fit_octree_element_process_critic(
             be = elem_ids[b_ids].to(device, non_blocking=True)
             bp = leaf_pos[b_ids].to(device, non_blocking=True)
             bv = leaf_valid[b_ids].to(device, non_blocking=True)
+            if pos_noise_std > 0.0:
+                bp = bp + torch.randn_like(bp) * float(pos_noise_std) * bv.unsqueeze(-1).float()
             bc = cloud_feats[b_ids].to(device, non_blocking=True)
             bt = targets_norm[b_ids].to(device, non_blocking=True)
             bm = active_mask[b_ids].to(device, non_blocking=True)
@@ -1116,7 +1219,8 @@ def fit_octree_element_process_critic(
             loss_leg = F.binary_cross_entropy_with_logits(out["logit_legal"], bleg)
             loss_con = F.binary_cross_entropy_with_logits(out["logit_constr"], bcon_tgt)
 
-            prop_mask = by_ok.unsqueeze(-1) & bm.bool() & torch.isfinite(by)
+            col_gate = torch.ones_like(bm, dtype=torch.bool) if supervise_all_valid_targets else bm.bool()
+            prop_mask = by_ok.unsqueeze(-1) & col_gate & torch.isfinite(by)
             if bool(prop_mask.any().item()):
                 diff = out["mu_norm"] - torch.where(prop_mask, by, torch.zeros_like(by))
                 huber = F.smooth_l1_loss(out["mu_norm"][prop_mask], by[prop_mask], beta=0.22, reduction="mean")

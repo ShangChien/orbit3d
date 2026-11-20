@@ -69,6 +69,6 @@ Li, R., Sun, Q., Zhang, X. \& Chan, G. K.-L. Introducing GPU-Acceleration into t
 Ramakrishnan, R., Dral, P. O., Rupp, M. \& von Lilienfeld, O. A. Quantum chemistry structures and properties of 134 kilo molecules. \emph{Scientific Data} \textbf{1}, 140022 (2014). \href{https://doi.org/10.1038/sdata.2014.22}{https://doi.org/10.1038/sdata.2014.22}.
 
 \bibitem{chen2026uni3darmol}
-Chen, S. et~al. Uni-3DAR-Mol: Speculative Octree Autoregressive Generation and Sub-Millisecond Seam Healing for Drug-Scale 3D Molecules. \emph{Preprint} (2026).
+Chen, S. et~al. Uni-3DAR-Mol: Speculative Octree Autoregressive Generation and Sub-Millisecond Seam Healing for Drug-Scale 3D Molecules. \emph{arXiv preprint} (2026).
 
 \end{thebibliography}

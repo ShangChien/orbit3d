@@ -57,9 +57,9 @@ def render_geom_drugs_figure(out_paths: List[Path]) -> None:
         ("FlowMol\n(100 NFE)", pub["FlowMol (2024)"]["valid_connected_pct"], pub["FlowMol (2024)"]["mol_stability_pct"], "#475569"),
         ("SemlaFlow\n(100 NFE)", pub["SemlaFlow (ICLR 2025)"]["valid_connected_pct"], pub["SemlaFlow (ICLR 2025)"]["mol_stability_pct"], "#334155"),
         ("Vanilla\nUni-3DAR", arms["Vanilla_Uni3DAR_Pretrained_M1"]["valid_and_connected_rate"] * 100.0, arms["Vanilla_Uni3DAR_Pretrained_M1"]["explicit_mol_stability"] * 100.0, "#F59E0B"),
-        ("Uni-3DAR-\nMol [M=1]", arms["Uni3DAR_Mol_Base_M1"]["valid_and_connected_rate"] * 100.0, arms["Uni3DAR_Mol_Base_M1"]["explicit_mol_stability"] * 100.0, "#14B8A6"),
-        ("Uni-3DAR-\nMol [M=2]", arms["Uni3DAR_Mol_SpecTree_M2"]["valid_and_connected_rate"] * 100.0, arms["Uni3DAR_Mol_SpecTree_M2"]["explicit_mol_stability"] * 100.0, "#0F766E"),
-        ("Uni-3DAR-\nMol [M=4]", arms["Uni3DAR_Mol_SpecTree_M4"]["valid_and_connected_rate"] * 100.0, arms["Uni3DAR_Mol_SpecTree_M4"]["explicit_mol_stability"] * 100.0, "#065F46"),
+        ("Uni-3DAR-\nMol\n(1\u21921\u21921)", arms["Uni3DAR_Mol_Base_M1"]["valid_and_connected_rate"] * 100.0, arms["Uni3DAR_Mol_Base_M1"]["explicit_mol_stability"] * 100.0, "#14B8A6"),
+        ("Uni-3DAR-\nMol\n(16\u21924\u21921)", arms["Uni3DAR_Mol_SpecTree_M2"]["valid_and_connected_rate"] * 100.0, arms["Uni3DAR_Mol_SpecTree_M2"]["explicit_mol_stability"] * 100.0, "#0F766E"),
+        ("Uni-3DAR-\nMol\n(32\u21928\u21921)", arms["Uni3DAR_Mol_SpecTree_M4"]["valid_and_connected_rate"] * 100.0, arms["Uni3DAR_Mol_SpecTree_M4"]["explicit_mol_stability"] * 100.0, "#065F46"),
     ]
     xs = np.arange(len(bar_specs))
     vc_vals = [b[1] for b in bar_specs]
@@ -85,8 +85,8 @@ def render_geom_drugs_figure(out_paths: List[Path]) -> None:
     u_m1_lat = [float(d_sc["buckets"][str(n)]["arms"]["Uni3DAR_Mol_Base_M1"]["gpu_sec_per_1k_molecules"]) for n in b_list]
     u_m2_lat = [float(d_sc["buckets"][str(n)]["arms"]["Uni3DAR_Mol_SpecTree_M2"]["gpu_sec_per_1k_molecules"]) for n in b_list]
 
-    ax1.plot(b_list, u_m1_lat, "-o", color="#0D9488", lw=2.7, ms=7.2, label="Uni-3DAR-Mol [Base M=1] (Sparse Octree)")
-    ax1.plot(b_list, u_m2_lat, "--s", color="#0F766E", lw=2.3, ms=6.6, label="Uni-3DAR-Mol [Speculative Tree M=2]")
+    ax1.plot(b_list, u_m1_lat, "-o", color="#0D9488", lw=2.7, ms=7.2, label="Uni-3DAR-Mol (1\u21921\u21921, Sparse Octree)")
+    ax1.plot(b_list, u_m2_lat, "--s", color="#0F766E", lw=2.3, ms=6.6, label="Uni-3DAR-Mol (SpecTree 16\u21924\u21921)")
 
     has_flow = "FlowMol_Dense_ODE100_M1" in d_sc["buckets"][str(b_list[0])]["arms"]
     if has_flow:
@@ -116,9 +116,9 @@ def render_geom_drugs_figure(out_paths: List[Path]) -> None:
     ax2 = axes[2]
     arm_order = [
         ("Vanilla Uni-3DAR", arms["Vanilla_Uni3DAR_Pretrained_M1"], "#F59E0B"),
-        ("Uni-3DAR-Mol [M=1]", arms["Uni3DAR_Mol_Base_M1"], "#14B8A6"),
-        ("Uni-3DAR-Mol [Tree M=2]", arms["Uni3DAR_Mol_SpecTree_M2"], "#0F766E"),
-        ("Uni-3DAR-Mol [Tree M=4]", arms["Uni3DAR_Mol_SpecTree_M4"], "#065F46"),
+        ("Uni-3DAR-Mol (1\u21921\u21921)", arms["Uni3DAR_Mol_Base_M1"], "#14B8A6"),
+        ("Uni-3DAR-Mol (16\u21924\u21921)", arms["Uni3DAR_Mol_SpecTree_M2"], "#0F766E"),
+        ("Uni-3DAR-Mol (32\u21928\u21921)", arms["Uni3DAR_Mol_SpecTree_M4"], "#065F46"),
     ]
     metric_defs = [
         ("Mean Bond\nJSD", lambda r: float(r["bond_length_jsd_mean"])),

@@ -187,7 +187,7 @@ $$
 
 Coupled RL controls instead propagate global property advantages across all sub-voxel coordinate tokens alongside teacher-forced coordinate updates. Numerical stability during group relative policy optimization is further enforced via dual-finite Kullback–Leibler divergence masking across both old and reference log-probabilities, eliminating NaN divergence instabilities across full $G=16$ rollouts.
 
-At the generator interface, `GeneratorSlot` encapsulates paradigm-specific decoding mechanics cleanly: `LoomUni3DARGenerator` wraps our companion **Uni-3DAR-Mol** engine [23] (combining continuous combinatorial speculative octree pruning via `TwoStageOctreeProcessCritic`, `< 0.5 ms` `SE(3)` `PostTreeGraphRefiner` seam healing, scale-free atom-budget modulation without $N_{\text{atoms}}$ conditioner leakage and bubble-free stride-2 GPU decoding), while `LoomFlowMolGenerator` wraps PropMolFlow [8] with `+0.12 GPU-h` online `AWR`. Above `GeneratorSlot`, `LoomService` provides a declarative `TaskWeavingSpec`-driven API unifying standardized effort tiers (`base/low/medium/high`, $M\in\{1,2,4,8\}$, extensible to $M\in\{12,16\}$) with closed-form Bayesian goal-satisfaction selection (`point`, `interval`, `minimize`, `maximize`), partial-`NaN` multi-objective `diagnose_nd` calibration and capability-adaptive alignment.
+At the generator interface, `GeneratorSlot` encapsulates paradigm-specific decoding mechanics cleanly: `LoomUni3DARGenerator` wraps the **Uni-3DAR-Mol** engine [23] (combining continuous combinatorial speculative octree pruning via `TwoStageOctreeProcessCritic`, `< 0.5 ms` `SE(3)` `PostTreeGraphRefiner` seam healing, scale-free atom-budget modulation without $N_{\text{atoms}}$ conditioner leakage and bubble-free stride-2 GPU decoding), while `LoomFlowMolGenerator` wraps PropMolFlow [8] with `+0.12 GPU-h` online `AWR`. Above `GeneratorSlot`, `LoomService` provides a declarative `TaskWeavingSpec`-driven API unifying standardized effort tiers (`base/low/medium/high`, $M\in\{1,2,4,8\}$, extensible to $M\in\{12,16\}$) with closed-form Bayesian goal-satisfaction selection (`point`, `interval`, `minimize`, `maximize`), partial-`NaN` multi-objective `diagnose_nd` calibration and capability-adaptive alignment.
 
 ### Dual-track valence purity
 
@@ -223,7 +223,7 @@ Public base conformers derive from the OE62 [1] and QM9 [22] datasets. Consolida
 
 ## Code availability
 
-The Uni-Loom package (`loom v2.0.0`; regression suite 340 passed, 5 skipped), declarative YAML task configurations and paper reproduction scripts are hosted in the project repository.
+The Uni-Loom package (`loom v2.0.0`; regression suite 349 passed, 5 skipped), declarative YAML task configurations and paper reproduction scripts are hosted in the project repository.
 
 ---
 
@@ -251,7 +251,7 @@ The Uni-Loom package (`loom v2.0.0`; regression suite 340 passed, 5 skipped), de
 20. Sun, Q. et al. Recent Developments in the PySCF Program Package. *The Journal of Chemical Physics* **153**, 024109 (2020). https://doi.org/10.1063/5.0006074.
 21. Li, R., Sun, Q., Zhang, X. & Chan, G. K.-L. Introducing GPU-Acceleration into the Python-Based Simulations of Chemistry Framework. *arXiv preprint arXiv:2407.09700* (2024).
 22. Ramakrishnan, R., Dral, P. O., Rupp, M. & von Lilienfeld, O. A. Quantum chemistry structures and properties of 134 kilo molecules. *Scientific Data* **1**, 140022 (2014). https://doi.org/10.1038/sdata.2014.22.
-23. Chen, S. et al. Uni-3DAR-Mol: Speculative Octree Autoregressive Generation and Sub-Millisecond Seam Healing for Drug-Scale 3D Molecules. *Companion Preprint* (2026).
+23. Chen, S. et al. Uni-3DAR-Mol: Speculative Octree Autoregressive Generation and Sub-Millisecond Seam Healing for Drug-Scale 3D Molecules. *arXiv preprint* (2026).
 
 ---
 

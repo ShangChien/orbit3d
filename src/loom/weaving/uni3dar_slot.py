@@ -735,17 +735,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             s1.load_state_dict(cb["stage1_state_dict"], strict=True)
             s1.eval()
             c2 = cb["stage2_config"]
-            s2 = OctreeElementProcessCritic(
-                emb_dim=int(c2["emb_dim"]),
-                num_targets=int(c2["num_targets"]),
-                num_atom_classes=int(c2.get("num_atom_classes", 128)),
-                num_h_pools=int(c2.get("num_h_pools", 6)),
-                d_node=int(c2.get("d_node", 160)),
-                n_rbf=int(c2.get("n_rbf", 16)),
-                n_gnn_layers=int(c2.get("n_gnn_layers", 2)),
-                hidden_dim=int(c2.get("hidden_dim", 512)),
-                cloud_feat_dim=int(c2.get("cloud_feat_dim", NUM_ELEM_CLOUD_FEATS)),
-            ).to(device)
+            s2 = OctreeElementProcessCritic.from_config(c2).to(device)
             s2.load_state_dict(cb["stage2_state_dict"], strict=True)
             s2.eval()
             gen.process_critic = TwoStageOctreeProcessCritic(s1, s2).to(device)
@@ -4672,6 +4662,8 @@ class LoomUni3DARGenerator(GeneratorSlot):
             tr_fin["scores"] = sc.detach().cpu()
             tr_fin["stage1_utility"] = float(win_s1_util_all[loc_b2])
             tr_fin["process_utility"] = float(u2_val)
+            tr_fin["coarse_geom_feats"] = win_geom_s1[loc_b2].detach().cpu()
+            tr_fin["stage2_h_concat"] = s2_h_stage2[loc_b2].detach().cpu()
             tr_fin["batch_idx"] = rank_idx
             tr_fin["trunk_idx"] = int((loc_b2 % s2_per_prompt) // k_br)
             if b_s2_cpu is not None:
@@ -5571,6 +5563,456 @@ class LoomUni3DARGenerator(GeneratorSlot):
 
         flat_mols = [_reconcile_one(tr) for tr in flat_trajs]
         return [flat_mols[i * m_keep : (i + 1) * m_keep] for i in range(bsz)]
+
+    @torch.no_grad()
+    def extract_teacher_forced_two_stage_features(
+        self,
+        packed_batch: Dict[str, torch.Tensor],
+        targets_norm: torch.Tensor,
+        active_mask: torch.Tensor,
+    ) -> Dict[str, Any]:
+        """Extract exact Stage-1 (`L>=1`) and Stage-2 (`L=0`) critic features on ground-truth octrees."""
+        from .octree_process_critic import compute_coarse_voxel_geometry, compute_element_cloud_features
+
+        was_training = self.training
+        self.eval()
+        try:
+            device = targets_norm.device
+            bsz = int(targets_norm.shape[0])
+            emb_dim = int(self.args.emb_dim)
+            if bsz == 0:
+                return {
+                    "s1_h_concat": torch.zeros((0, 4 * emb_dim), dtype=torch.float32),
+                    "s1_geom_feats": torch.zeros((0, 14), dtype=torch.float32),
+                    "s2_h_stage2": torch.zeros((0, 6 * emb_dim), dtype=torch.float32),
+                    "s2_elem_slices": [],
+                    "s2_pos_slices": [],
+                    "s2_cloud_feats": torch.zeros((0, 42), dtype=torch.float32),
+                }
+
+            bd = {k: (v.to(device) if isinstance(v, torch.Tensor) else v) for k, v in packed_batch.items()}
+            bd["decoder_phy_pos"] = bd["decoder_phy_pos"].float()
+            decoder_input, decoder_gen_target, _ = self.backbone.get_feat_from_dataloader(bd)
+            cu_lens = bd["decoder_input_len"].to(device, dtype=torch.int32)
+            max_len = int(bd["decoder_input_max_len"].item())
+
+            if self.budget_emb is not None:
+                root_idx = cu_lens[:-1].long()
+                root_tot = decoder_gen_target.count[root_idx].to(decoder_input.remaining_atoms.dtype)
+                owners_tok = torch.repeat_interleave(torch.arange(bsz, device=device), torch.diff(cu_lens).long())
+                if self.non_trapping_budget:
+                    valid_b = decoder_input.level >= self.backbone.atom_level_index
+                    decoder_input.remaining_atoms = torch.where(
+                        valid_b, root_tot[owners_tok], torch.zeros_like(decoder_input.remaining_atoms)
+                    )
+                else:
+                    rem_a_mod = decoder_input.remaining_atoms.clone()
+                    rem_a_mod[root_idx] = root_tot
+                    decoder_input.remaining_atoms = rem_a_mod
+
+            use_amp = device.type == "cuda"
+            with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=use_amp):
+                dec_y = self.forward_sequence(
+                    decoder_input, cu_lens, max_len, targets_norm, active_mask.bool()
+                ).float()
+
+            lvl_all = bd["decoder_level"].int()
+            typ_all = bd["decoder_type"].int()
+            pos_all = bd["decoder_phy_pos"].float()
+            tgt_typ_all = decoder_gen_target.type.long()
+            n_tok = int(lvl_all.shape[0])
+
+            df_tok = torch.zeros((n_tok, NUM_FEAT), dtype=torch.int32, device=device)
+            df_tok[:, :3] = bd["decoder_xyz"].int()
+            df_tok[:, IDX_TYPE] = typ_all
+            df_tok[:, IDX_LEVEL] = lvl_all
+
+            sc_tok = torch.zeros((n_tok,), dtype=torch.float32, device=device)
+            is_tree_q = (typ_all == self.backbone.atom_mask_id) & (lvl_all > self.backbone.atom_level_index)
+            if bool(is_tree_q.any().item()):
+                t_logits = self.backbone.tree_heads[0](dec_y[is_tree_q]).float()
+                t_logp = F.log_softmax(t_logits, dim=-1)
+                t_tgt = (tgt_typ_all[is_tree_q] - int(self.backbone.tree0_split_id)).clamp(0, t_logp.shape[-1] - 1)
+                sc_tok[is_tree_q] = t_logp.gather(-1, t_tgt.unsqueeze(-1)).squeeze(-1)
+
+            h_id_val = int(self.dictionary["H"])
+            s1_h = torch.zeros((bsz, 4 * emb_dim), dtype=torch.float32, device=device)
+            s2_h = torch.zeros((bsz, 6 * emb_dim), dtype=torch.float32, device=device)
+            cu_list = cu_lens.detach().cpu().tolist()
+
+            cuts: List[int] = []
+            spans: List[Tuple[int, int]] = []
+            elem_slices: List[torch.Tensor] = []
+            pos_slices: List[torch.Tensor] = []
+
+            for i in range(bsz):
+                s_i, e_i = int(cu_list[i]), int(cu_list[i + 1])
+                spans.append((s_i, e_i))
+                hid = dec_y[s_i:e_i]
+                lvl = lvl_all[s_i:e_i]
+                typ = typ_all[s_i:e_i]
+                pos = pos_all[s_i:e_i]
+                tgt_t = tgt_typ_all[s_i:e_i]
+
+                h_root = hid[0]
+                m_tr = (typ == self.backbone.atom_mask_id) & (lvl > self.backbone.atom_level_index)
+                c_mean = hid[m_tr].mean(dim=0) if bool(m_tr.any().item()) else h_root
+                m_l1 = m_tr & (lvl == (self.backbone.atom_level_index + 1))
+                if bool(m_l1.any().item()):
+                    l1_mean = hid[m_l1].mean(dim=0)
+                    l1_last = hid[m_l1][-1]
+                else:
+                    l1_mean = c_mean
+                    l1_last = c_mean
+                s1_h[i] = torch.cat([h_root, c_mean, l1_mean, l1_last], dim=-1)
+
+                m_aq = (typ == self.backbone.atom_mask_id) & (lvl == self.backbone.atom_level_index)
+                if bool(m_aq.any().item()):
+                    aq_hid = hid[m_aq]
+                    aq_tgt = tgt_t[m_aq]
+                    real_a = (aq_tgt >= 0) & (aq_tgt < len(atom_list))
+                    if bool(real_a.any().item()):
+                        ra_hid = aq_hid[real_a]
+                        a_mean = ra_hid.mean(dim=0)
+                        a_last = ra_hid[-1]
+                        hvy_a = real_a & (aq_tgt != h_id_val)
+                        hv_mean = aq_hid[hvy_a].mean(dim=0) if bool(hvy_a.any().item()) else a_mean
+                    else:
+                        a_mean = hv_mean = l1_mean
+                        a_last = l1_last
+                else:
+                    a_mean = hv_mean = l1_mean
+                    a_last = l1_last
+                s2_h[i] = torch.cat([h_root, c_mean, l1_mean, a_mean, hv_mean, a_last], dim=-1)
+
+                leaf_q = torch.nonzero(lvl == self.backbone.atom_level_index, as_tuple=False)
+                c_len = int(leaf_q[0].item()) + 1 if leaf_q.numel() > 0 else int(e_i - s_i)
+                cuts.append(max(c_len, 1))
+
+                m_placed = (lvl == self.backbone.atom_level_index) & (typ >= 0) & (typ < len(atom_list))
+                elem_slices.append(typ[m_placed].long())
+                pos_slices.append(pos[m_placed, :3].float())
+
+            max_cut = max(cuts) if cuts else 1
+            pad_df = torch.zeros((bsz, max_cut, NUM_FEAT), dtype=torch.int32, device=device)
+            pad_df[:, :, IDX_TYPE] = self.backbone.atom_null_id
+            pad_df[:, :, IDX_LEVEL] = -99
+            pad_dp = torch.zeros((bsz, max_cut, 3), dtype=torch.float32, device=device)
+            pad_sc = torch.zeros((bsz, max_cut), dtype=torch.float32, device=device)
+            for i, ((s_i, _), c_len) in enumerate(zip(spans, cuts)):
+                pad_df[i, max_cut - c_len :] = df_tok[s_i : s_i + c_len]
+                pad_dp[i, max_cut - c_len :] = pos_all[s_i : s_i + c_len]
+                pad_sc[i, max_cut - c_len :] = sc_tok[s_i : s_i + c_len]
+
+            geom_gpu = compute_coarse_voxel_geometry(
+                pad_df,
+                pad_dp,
+                pad_sc,
+                atom_mask_id=self.backbone.atom_mask_id,
+                atom_level_index=self.backbone.atom_level_index,
+                fine_coarse_level=self.backbone.atom_level_index + 1,
+            )
+
+            max_k = max(1, max((int(es.numel()) for es in elem_slices), default=0))
+            pad_elem = torch.zeros((bsz, max_k), dtype=torch.long, device=device)
+            pad_pos = torch.zeros((bsz, max_k, 3), dtype=torch.float32, device=device)
+            pad_val = torch.zeros((bsz, max_k), dtype=torch.bool, device=device)
+            for i, (es, ps) in enumerate(zip(elem_slices, pos_slices)):
+                ki = int(es.numel())
+                if ki > 0:
+                    pad_elem[i, :ki] = es
+                    pad_pos[i, :ki] = ps
+                    pad_val[i, :ki] = True
+            cloud_gpu = compute_element_cloud_features(pad_elem, pad_pos, pad_val, geom_gpu)
+
+            return {
+                "s1_h_concat": s1_h.detach().cpu(),
+                "s1_geom_feats": geom_gpu.detach().cpu(),
+                "s2_h_stage2": s2_h.detach().cpu(),
+                "s2_elem_slices": [es.detach().cpu() for es in elem_slices],
+                "s2_pos_slices": [ps.detach().cpu() for ps in pos_slices],
+                "s2_cloud_feats": cloud_gpu.detach().cpu(),
+            }
+        finally:
+            self.train(was_training)
+
+    @torch.no_grad()
+    def generate_single_speculative(
+        self,
+        targets_norm: torch.Tensor,
+        active_mask: torch.Tensor,
+        *,
+        speculative_scale: int = 8,
+        atom_budget: Optional[np.ndarray | Sequence[float] | torch.Tensor] = None,
+        seed: Optional[int] = None,
+        enable_internal_tree: bool = True,
+        enable_post_tree_refiner: bool = True,
+        cfg_scale: float = 2.0,
+        xyz_cfg_scale: float = 1.0,
+        cfg_tree_decay: float = 0.25,
+        budget_guidance_scale: float = 0.45,
+        objective_col_mask: Optional[torch.Tensor] = None,
+        uncond_active_mask: Optional[torch.Tensor] = None,
+        temperatures: Tuple[float, float, float] = (0.85, 0.30, 0.25),
+        geometric_guard: bool = True,
+        electron_parity: Optional[int] = 0,
+        use_bf16: bool = True,
+    ) -> Tuple[List[Optional[Any]], Tuple[int, int, int]]:
+        """Standalone `m_s1 -> m_s2 -> 1` speculative octree decoding returning strictly 1 molecule/prompt (`0` external calls)."""
+        from rdkit import Chem
+
+        device = self.target_mean.device
+        targets_norm = targets_norm.to(device)
+        active_mask = active_mask.to(device)
+        bsz = int(targets_norm.shape[0])
+        if bsz == 0:
+            return [], (1, 1, 1)
+
+        b_arr: Optional[np.ndarray] = None
+        if atom_budget is not None:
+            if isinstance(atom_budget, torch.Tensor):
+                b_arr = atom_budget.detach().cpu().numpy().astype(np.float32).reshape(bsz)
+            else:
+                b_arr = np.asarray(atom_budget, dtype=np.float32).reshape(bsz)
+
+        k_scale = max(1, int(speculative_scale))
+        if k_scale <= 1 or (not enable_internal_tree) or (self.process_critic is None):
+            c_grid = self.generate_candidates(
+                targets_norm,
+                active_mask,
+                atom_budget=b_arr,
+                effort="base",
+                n_candidates=1,
+                seed=seed,
+                enable_internal_tree=False,
+                enable_post_tree_refiner=enable_post_tree_refiner,
+                cfg_scale=cfg_scale,
+                xyz_cfg_scale=xyz_cfg_scale,
+                cfg_tree_decay=cfg_tree_decay,
+                budget_guidance_scale=budget_guidance_scale,
+                objective_col_mask=objective_col_mask,
+                uncond_active_mask=uncond_active_mask,
+                temperatures=temperatures,
+                geometric_guard=geometric_guard,
+                electron_parity=electron_parity,
+                use_bf16=use_bf16,
+            )
+            return [row[0] for row in c_grid], (1, 1, 1)
+
+        _, ms1_med, ms2_med, _ = self.resolve_internal_funnel(
+            effort="high",
+            n_candidates=k_scale,
+            enable_internal_tree=True,
+            atom_budget=b_arr,
+        )
+        m_fb = min(ms2_med, 4)
+
+        if obj_mask_in := objective_col_mask:
+            obj_col_mask = obj_mask_in.to(device=device, dtype=torch.bool)
+        elif self.num_props >= 2 and "sa_score" in self.target_cols:
+            obj_col_mask = torch.tensor(
+                [col != "sa_score" for col in self.target_cols], dtype=torch.bool, device=device
+            )
+        else:
+            obj_col_mask = None
+
+        inv_perm_cand: Optional[np.ndarray] = None
+        t_ord = targets_norm
+        m_ord = active_mask
+        u_ord = uncond_active_mask
+        obj_ord = obj_col_mask
+        b_ord = b_arr
+        if b_arr is not None and bsz > 8 and float(np.ptp(b_arr)) > 4.0:
+            perm_np = np.argsort(b_arr, kind="stable")
+            inv_perm_cand = np.empty_like(perm_np)
+            inv_perm_cand[perm_np] = np.arange(bsz)
+            perm_t = torch.as_tensor(perm_np, dtype=torch.long, device=device)
+            t_ord = targets_norm.index_select(0, perm_t)
+            m_ord = active_mask.index_select(0, perm_t)
+            if u_ord is not None:
+                u_ord = u_ord.index_select(0, perm_t)
+            if obj_ord is not None and obj_ord.ndim == 2:
+                obj_ord = obj_ord.index_select(0, perm_t)
+            b_ord = b_arr[perm_np]
+
+        bands: List[Tuple[int, int]] = []
+        if b_ord is not None and float(np.ptp(b_ord)) > 8.0:
+            b_start = 0
+            for idx_b in range(1, bsz):
+                if (float(b_ord[idx_b]) - float(b_ord[b_start])) > 8.0 and (idx_b - b_start) >= 32:
+                    bands.append((b_start, idx_b))
+                    b_start = idx_b
+            bands.append((b_start, bsz))
+        else:
+            bands.append((0, bsz))
+
+        ord_grouped: List[List[Dict[str, Any]]] = []
+        for s, e in bands:
+            sub_u = u_ord[s:e] if u_ord is not None else None
+            sub_b = b_ord[s:e] if b_ord is not None else None
+            sub_obj = obj_ord[s:e] if (obj_ord is not None and obj_ord.ndim == 2) else obj_ord
+            _, ms1_b, ms2_b, _ = self.resolve_internal_funnel(
+                effort="high",
+                n_candidates=k_scale,
+                enable_internal_tree=True,
+                atom_budget=sub_b,
+            )
+            sub_seed = (int(seed) + s * 41) if seed is not None else None
+            ord_grouped.extend(
+                self.sample_with_two_stage_process_critic(
+                    t_ord[s:e],
+                    m_ord[s:e],
+                    self.process_critic,
+                    m_stage1=ms1_b,
+                    m_stage2=ms2_b,
+                    m_keep=(ms2_b if (enable_post_tree_refiner and self.post_tree_refiner is not None) else min(ms2_b, m_fb)),
+                    objective_col_mask=sub_obj,
+                    stage1_legal_weight=0.80,
+                    stage1_constr_weight=0.55,
+                    stage2_legal_weight=1.05,
+                    stage2_constr_weight=0.70,
+                    stage2_diversity_weight=0.0,
+                    coarse_chunk_size=None,
+                    cfg_scale=cfg_scale,
+                    xyz_cfg_scale=xyz_cfg_scale,
+                    cfg_tree_decay=cfg_tree_decay,
+                    geometric_guard=geometric_guard,
+                    temperatures=temperatures,
+                    seed=sub_seed,
+                    use_bf16=(use_bf16 and device.type == "cuda"),
+                    electron_parity=electron_parity,
+                    uncond_active_mask=sub_u,
+                    leaf_atom_budget=(
+                        torch.as_tensor(sub_b, dtype=torch.float32, device=device) if sub_b is not None else None
+                    ),
+                    budget_guidance_scale=budget_guidance_scale,
+                    sort_by_budget=False,
+                )
+            )
+        grouped_trajs = (
+            [ord_grouped[int(idx)] for idx in inv_perm_cand]
+            if inv_perm_cand is not None
+            else ord_grouped
+        )
+
+        reconciler = self.reconciler
+        if enable_post_tree_refiner and self.post_tree_refiner is not None:
+            # Heal Morton-seam discontinuities (`<0.5 ms` SE(3) PostTreeGraphRefiner) across all `m_stage2`
+            # leaf candidates FIRST, then re-score seam-healed 3D geometries with Stage-2 `OctreeElementProcessCritic`!
+            from .octree_process_critic import compute_element_cloud_features
+
+            flat_s2: List[Dict[str, Any]] = []
+            owner_p: List[int] = []
+            for p_i, grp in enumerate(grouped_trajs):
+                for tr in grp:
+                    flat_s2.append(tr)
+                    owner_p.append(p_i)
+            if flat_s2:
+                self.post_tree_refiner.refine_trajectories_batch(flat_s2, batch_size=256)
+                if self.process_critic is not None:
+                    s2_crit = self.process_critic.stage2_critic
+                    sym_to_id = {sym: idx for idx, sym in enumerate(atom_list)}
+                    emb_d = int(self.args.emb_dim)
+                    use_exact_cnt = self.scale_free_count_head is not None
+                    for c_s in range(0, len(flat_s2), 256):
+                        c_e = min(c_s + 256, len(flat_s2))
+                        sub_tr = flat_s2[c_s:c_e]
+                        sub_p = owner_p[c_s:c_e]
+                        nb_c = len(sub_tr)
+                        mk_c = max(1, max((len(t.get("atom_symbols", [])) for t in sub_tr), default=0))
+                        pe_c = torch.zeros((nb_c, mk_c), dtype=torch.long, device=device)
+                        pp_c = torch.zeros((nb_c, mk_c, 3), dtype=torch.float32, device=device)
+                        pv_c = torch.zeros((nb_c, mk_c), dtype=torch.bool, device=device)
+                        cg_c = torch.zeros((nb_c, 14), dtype=torch.float32, device=device)
+                        sh_c = torch.zeros((nb_c, 6 * emb_d), dtype=torch.float32, device=device)
+                        empty_c = torch.zeros((nb_c,), dtype=torch.bool, device=device)
+                        for loc_j, tr_j in enumerate(sub_tr):
+                            syms_j = tr_j.get("atom_symbols", [])
+                            kj = len(syms_j)
+                            if kj > 0:
+                                pe_c[loc_j, :kj] = torch.tensor([sym_to_id.get(sm, 5) for sm in syms_j], dtype=torch.long, device=device)
+                                pp_c[loc_j, :kj] = torch.as_tensor(tr_j["positions_np"], dtype=torch.float32, device=device)
+                                pv_c[loc_j, :kj] = True
+                            else:
+                                empty_c[loc_j] = True
+                            if "coarse_geom_feats" in tr_j:
+                                cg_c[loc_j] = tr_j["coarse_geom_feats"].to(device=device, dtype=torch.float32)
+                            if "stage2_h_concat" in tr_j:
+                                sh_c[loc_j] = tr_j["stage2_h_concat"].to(device=device, dtype=torch.float32)
+                        cf_c = compute_element_cloud_features(pe_c, pp_c, pv_c, cg_c)
+                        p_idx_t = torch.tensor(sub_p, dtype=torch.long, device=device)
+                        t_sub = targets_norm.index_select(0, p_idx_t)
+                        m_sub = active_mask.index_select(0, p_idx_t)
+                        obj_sub = (
+                            obj_col_mask.index_select(0, p_idx_t)
+                            if (obj_col_mask is not None and obj_col_mask.ndim == 2)
+                            else obj_col_mask
+                        )
+                        u_ref = s2_crit.score_utilities(
+                            sh_c,
+                            pe_c,
+                            pp_c,
+                            pv_c,
+                            cf_c,
+                            t_sub,
+                            m_sub,
+                            objective_col_mask=obj_sub,
+                            legal_weight=1.05,
+                            constr_weight=0.70,
+                            empty_mask=empty_c,
+                        )
+                        if b_arr is not None and not use_exact_cnt:
+                            b_sub_t = torch.as_tensor(b_arr[sub_p], dtype=torch.float32, device=device)
+                            n_at_c = pv_c.sum(dim=1).float()
+                            u_ref = u_ref - 0.35 * (n_at_c - b_sub_t).abs() * (b_sub_t > 0).float()
+                        for loc_j, u_val in enumerate(u_ref.detach().cpu().tolist()):
+                            sub_tr[loc_j]["process_utility"] = float(u_val)
+                    for grp in grouped_trajs:
+                        grp.sort(key=lambda tr_x: float(tr_x.get("process_utility", -1e9)), reverse=True)
+                        del grp[m_fb:]
+
+        primary_trajs = [grp[0] for grp in grouped_trajs]
+
+        def _try_reconcile_connected(tr: Dict[str, Any]) -> Optional[Chem.Mol]:
+            syms = tr.get("atom_symbols", [])
+            if not syms:
+                return None
+            res = reconciler.reconcile_point_cloud(
+                syms,
+                tr.get("positions_np", np.zeros((0, 3), dtype=np.float32)),
+                potential_slot=None,
+                bond_order_priors=tr.get("bond_order_probs"),
+            )
+            if (
+                res.reconciled_legal
+                and (not res.reconciled_exotic_charge)
+                and res.mol is not None
+                and len(Chem.GetMolFrags(res.mol)) == 1
+            ):
+                mol_clean = Chem.Mol(res.mol)
+                proc_u = tr.get("process_utility")
+                if proc_u is not None and math.isfinite(float(proc_u)):
+                    mol_clean.SetDoubleProp("_loom_process_utility", float(proc_u))
+                return mol_clean
+            return None
+
+        out_mols: List[Optional[Any]] = [_try_reconcile_connected(tr) for tr in primary_trajs]
+        failed_indices = [i for i, m in enumerate(out_mols) if m is None and len(grouped_trajs[i]) > 1]
+        if failed_indices:
+            fb_trajs: List[Dict[str, Any]] = []
+            fb_map: List[int] = []
+            for i in failed_indices:
+                for tr_fb in grouped_trajs[i][1:]:
+                    fb_trajs.append(tr_fb)
+                    fb_map.append(i)
+            unrefined_fb = [t for t in fb_trajs if "bond_order_probs" not in t]
+            if enable_post_tree_refiner and self.post_tree_refiner is not None and unrefined_fb:
+                self.post_tree_refiner.refine_trajectories_batch(unrefined_fb, batch_size=256)
+            for tr_fb, p_idx in zip(fb_trajs, fb_map):
+                if out_mols[p_idx] is None:
+                    out_mols[p_idx] = _try_reconcile_connected(tr_fb)
+
+        return out_mols, (ms1_med, ms2_med, 1)
 
     def fit_internal_post_processors(
         self,
