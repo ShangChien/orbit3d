@@ -80,8 +80,26 @@ def _validated_molecule(inst: Mol3DInstance) -> Chem.Mol:
         conf.SetAtomPosition(i, xyz.tolist())
     mol.AddConformer(conf)
     if inst.graph is None:
+        table = Chem.GetPeriodicTable()
+        raw_electrons = sum(table.GetAtomicNumber(s) for s in syms) - int(inst.charge)
+        if inst.multiplicity < 1 or inst.multiplicity > raw_electrons + 1 or (raw_electrons - inst.multiplicity + 1) % 2:
+            raise ValueError('electronic_state: multiplicity and electron-count parity differ')
         try:
-            rdDetermineBonds.DetermineBonds(mol, charge=int(inst.charge), allowChargedFragments=True)
+            rdDetermineBonds.DetermineConnectivity(mol)
+        except (ValueError, RuntimeError) as exc:
+            raise ValueError(f'bond_inference: {exc}') from exc
+        fragments_pre = len(Chem.GetMolFrags(mol))
+        if fragments_pre != 1:
+            raise ValueError(f'connectivity: {fragments_pre} disconnected fragments')
+        if any(a.GetDegree() > 6 for a in mol.GetAtoms()):
+            raise ValueError('valence_or_aromaticity: steric over-coordination degree > 6')
+        try:
+            rdDetermineBonds.DetermineBondOrders(
+                mol,
+                charge=int(inst.charge),
+                allowChargedFragments=True,
+                maxIterations=400,
+            )
         except (ValueError, RuntimeError) as exc:
             raise ValueError(f'bond_inference: {exc}') from exc
     try:

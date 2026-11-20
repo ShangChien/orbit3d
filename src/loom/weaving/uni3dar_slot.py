@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import copy
 from functools import lru_cache
 import math
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
@@ -1933,7 +1934,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
         emb_d = int(self.args.emb_dim)
         kv_bytes_per_row = n_layers_tot * 2 * cfg_mult * max(int(s1_kv_cap), 64) * emb_d * elem_bytes
         bytes_per_row = int(1.45 * kv_bytes_per_row) + 262144
-        vram_cap = max(64, min(4096, int((float(free_bytes) * 0.62) // max(bytes_per_row, 1))))
+        # Reserve 10 GiB headroom for Stage-2 full-length leaf KV + activations to avoid allocator thrashing at M>=12
+        usable_bytes = max(0.0, float(free_bytes) - 10.0 * (1024.0 ** 3))
+        vram_cap = max(64, min(1152, int((usable_bytes * 0.42) // max(bytes_per_row, 1))))
         if coarse_chunk_size is not None and int(coarse_chunk_size) > 0:
             return min(vram_cap, int(coarse_chunk_size))
         return vram_cap
@@ -3739,6 +3742,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
             cs_h_l1_last = torch.zeros((b1, emb_dim), dtype=torch.float32, device=device)
 
             paused = torch.zeros((b1,), dtype=torch.bool, device=device)
+            any_paused = False
             empty_coarse = torch.zeros((b1,), dtype=torch.bool, device=device)
             row_step_idx = torch.zeros((b1,), dtype=torch.long, device=device)
             row_arange_b1 = torch.arange(b1, device=device)
@@ -3790,10 +3794,13 @@ class LoomUni3DARGenerator(GeneratorSlot):
                         kv_valid_s1 = torch.cat([kv_valid_s1, torch.ones_like(kv_valid_s1)], dim=1)
                     kv_valid_s1[:, cur_kv_len : cur_kv_len + n_q] = act_cfg.unsqueeze(1)
                     cur_kv_len += n_q
-                    kv_sl = kv_valid_s1[:, :cur_kv_len]
-                    m0 = kv_sl.clone()
-                    m0[:, -1] = False
-                    prebuilt_s1 = torch.stack([m0, kv_sl], dim=1).unsqueeze(1)
+                    if any_paused:
+                        kv_sl = kv_valid_s1[:, :cur_kv_len]
+                        m0 = kv_sl.clone()
+                        m0[:, -1] = False
+                        prebuilt_s1 = torch.stack([m0, kv_sl], dim=1).unsqueeze(1)
+                    else:
+                        prebuilt_s1 = None
 
                 self.backbone.rope.calc_and_cache(grid_run)
                 for r_i in range(self.args.recycle):
@@ -3947,7 +3954,9 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 empty_coarse = empty_coarse | (newly_done & (q_empty | force_stop))
                 paused = paused | newly_done
                 if force_stop or (step_idx >= 12 and (step_idx % 4 == 0)):
-                    if bool(paused.all().item()):
+                    if not any_paused:
+                        any_paused = bool(paused.any().item())
+                    if any_paused and bool(paused.all().item()):
                         break
 
                 still_active = ~paused
@@ -5324,7 +5333,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
         """Map outer effort tier (`M in {1,2,4,8}`) + combinatorial scale `N_hat` to `(m_s1, m_s2, m_keep)`.
 
         Locks outer candidate count strictly at `m_keep = M` while scaling internal speculative octree
-        widths smoothly with `eta(N_hat) = clip((N_hat - 16) / 24, 0, 1)` (`eta = 1` if unbudgeted):
+        widths smoothly with `eta(N_hat) = clip((N_hat - 16) / 14, 0, 1)` (`eta = 1` for `N_hat >= 30` or unbudgeted):
           `m_s1 = 2 * ceil(M * (4 + 4 * eta) / 2)`,  `m_s2 = 2 * ceil(M * (1.25 + 0.75 * eta) / 2)`.
         """
         eff_name, m_keep = resolve_effort_candidates(effort=effort, n_candidates=n_candidates)
@@ -5346,9 +5355,12 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 if pos.size > 0:
                     n_hat = float(np.median(pos))
 
-        eta = 1.0 if n_hat is None else float(np.clip((n_hat - 16.0) / 24.0, 0.0, 1.0))
+        eta = 1.0 if n_hat is None else float(np.clip((n_hat - 16.0) / 14.0, 0.0, 1.0))
         ms1 = max(m_keep, int(2 * math.ceil((float(m_keep) * (4.0 + 4.0 * eta)) / 2.0)))
         ms2 = max(m_keep, int(2 * math.ceil((float(m_keep) * (1.25 + 0.75 * eta)) / 2.0)))
+        if m_keep >= 12:
+            ms1 = min(ms1, 96)
+            ms2 = min(ms2, max(m_keep, 28))
         ms1 = max(ms1, ms2)
         if high_stage1 is not None and int(high_stage1) > 0 and m_keep == 8:
             ms1 = max(ms2, int(high_stage1))
@@ -5557,12 +5569,7 @@ class LoomUni3DARGenerator(GeneratorSlot):
                 return mol_clean
             return None
 
-        if len(flat_trajs) >= 64:
-            with ThreadPoolExecutor(max_workers=min(8, max(2, (os.cpu_count() or 4) // 2))) as pool:
-                flat_mols = list(pool.map(_reconcile_one, flat_trajs))
-        else:
-            flat_mols = [_reconcile_one(tr) for tr in flat_trajs]
-
+        flat_mols = [_reconcile_one(tr) for tr in flat_trajs]
         return [flat_mols[i * m_keep : (i + 1) * m_keep] for i in range(bsz)]
 
     def fit_internal_post_processors(

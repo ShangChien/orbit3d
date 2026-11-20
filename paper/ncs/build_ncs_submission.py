@@ -17,6 +17,7 @@ def main() -> None:
         "figures/ed_fig2_gp_atlas_1d_homo.pdf",
         "figures/ed_fig3_oe62_cross_paradigm_scaling.pdf",
         "figures/ed_fig4_oe62_atom_size_scaling.pdf",
+        "figures/ed_fig5_uni3dar_m4_ablation_and_sdl.pdf",
         "figures/fig1_uniloom_architecture.pdf",
         "figures/fig2_audit_and_hotswap.pdf",
         "figures/fig3_gp_atlas_2d_joint.pdf",

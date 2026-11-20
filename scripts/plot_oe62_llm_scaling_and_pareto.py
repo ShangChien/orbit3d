@@ -1,17 +1,18 @@
-"""Generate Standardized 4-Tier (`M=1, 2, 4, 8`) Cross-Paradigm Compute Scaling & Campaign Pareto Figures on OE62.
+"""Generate Unified 3D Discovery Quality Index (`Q_3D`) & Live `PBE0/def2-TZVP` Verification Figures on OE62.
 
 Strictly enforces:
-  1. Identical fixed-per-prompt `30.4`-atom fairness (`N = 1,792`, seed `20261118`) across 100% of plotted curves
-     (zero size-mismatched unanchored curves, zero defective intermediate `v2`/`v3` prototypes).
-  2. Standardized `Uni-Loom` service tiers (`base: M=1`, `low: M=2`, `medium: M=4`, `high: M=8`) across both
-     `Uni-3DAR` and `PropMolFlow`, with real measured wall-clock inference latency (`GPU-sec / 1k prompts`) and
-     `50,000`-molecule end-to-end discovery campaign cost (`Train/Adapt + Infer A800 GPU-h`).
+  1. Identical fixed-per-prompt `30.4`-atom fairness (`N = 1,792`, seed `20261118`) across 100% of plotted curves.
+  2. Standardized `Uni-Loom` effort tiers (`base: M=1`, `low: M=2`, `medium: M=4`, `high: M=8`, plus optional `M=16`),
+     with real measured wall-clock inference latency (`A800 GPU-sec / 1k prompts`).
+  3. Zero magic weights: `Q_3D = 100 * G_synth * sqrt(S_orbital * R_phys(F_max))` uses the exact published
+     `src/loom/weaving/grpo.py` reward kernels, verified side-by-side in Panel C by live `GPU4PySCF PBE0/def2-TZVP`.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -19,12 +20,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter, ScalarFormatter
+import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[1]
 EXP_DIR = ROOT / "docs" / "experiments"
-
-CAMPAIGN_MOLS = 50_000
 
 
 def _load_json(name: str) -> Optional[Dict[str, Any]]:
@@ -32,42 +32,55 @@ def _load_json(name: str) -> Optional[Dict[str, Any]]:
     return json.loads(p.read_text()) if p.exists() else None
 
 
-def _extract_standardized_curve(
+def compute_q3d_score(arm: Dict[str, Any]) -> float:
+    """3D Equilibrium-Grounded Discovery Quality Index `Q_3D` in `[0, 100]` (`grpo.py` exact kernels)."""
+    leg = float(arm["legal_rate"]) * (1.0 - float(arm.get("unseen_formal_charge_rate_among_legal", 0.0)))
+    g_synth = leg * float(arm["constraints_met_rate_among_legal"])
+    hit_cond = min(1.0, float(arm["blind_dpa4_synthesizable_clean_hit_yield"]) / max(g_synth, 1e-6))
+
+    d = float(arm["audit_mae_eV"])
+    u = d / 0.25
+    r_prop = (
+        0.40 / (1.0 + u)
+        + 0.35 * math.exp(-0.5 * u * u)
+        + 0.25 / (1.0 + math.exp(-(0.25 - d) / (0.16 * 0.25)))
+    )
+    s_orb = 0.5 * hit_cond + 0.5 * r_prop
+
+    f50 = float(arm["zero_step_f_max_median_eV_A"])
+    r_phys = math.exp(-max(0.0, f50 - 0.40) / 2.00)
+    return 100.0 * g_synth * math.sqrt(s_orb * r_phys)
+
+
+def _extract_q3d_curve(
     arms_dict: Dict[str, Any],
     keys_and_labels: Sequence[Tuple[str, str]],
-    metric: str = "blind_synth",
 ) -> Tuple[List[float], List[float], List[str]]:
     xs: List[float] = []
     ys: List[float] = []
-    labels: List[str] = []
-    for k, short_lbl in keys_and_labels:
+    lbls: List[str] = []
+    for k, lb in keys_and_labels:
         if k not in arms_dict:
             continue
         r = arms_dict[k]
         eff = float(r["effective_output_mol_per_sec"])
-        gpu_sec_per_1k = 1000.0 / max(eff, 1e-6)
-        if metric == "blind_synth":
-            val = float(r["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-        elif metric == "rew_synth":
-            val = float(r["synthesizable_clean_hit_yield"]) * 100.0
-        else:
-            raise ValueError(metric)
-        xs.append(gpu_sec_per_1k)
-        ys.append(val)
-        labels.append(short_lbl)
-    return xs, ys, labels
-
-
-def _campaign_gpuh(train_gpuh: float, gpu_sec_per_1k_list: List[float]) -> List[float]:
-    return [train_gpuh + (s1k * (CAMPAIGN_MOLS / 1000.0)) / 3600.0 for s1k in gpu_sec_per_1k_list]
+        xs.append(1000.0 / max(eff, 1e-6))
+        ys.append(compute_q3d_score(r))
+        lbls.append(lb)
+    return xs, ys, lbls
 
 
 def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
     u3d_pro = _load_json("oe62_uni3dar_v4_pro_fair_30atom.json")
+    u3d_ext = _load_json("oe62_uni3dar_v4_pro_fair_30atom_m12_m16.json")
+    pmf_awr_ext = _load_json("oe62_pmf_52h_awr_fair_30atom_m12_m16.json")
     u3d_dft = (
         _load_json("oe62_uni3dar_v4_pro_fair_30atom_dft_unbiased.json")
         or _load_json("oe62_uni3dar_v4_fair_30atom_dft_unbiased.json")
     )
+    dft_52_awr = _load_json("oe62_head2head_dft_anchor_52gpuh_awr_unbiased.json")
+    dft_52 = _load_json("oe62_head2head_dft_anchor_52gpuh_unbiased.json")
+    dft_12 = _load_json("oe62_head2head_dft_anchor_12gpuh_unbiased.json")
 
     pmf_map = {
         3.0: _load_json("oe62_pmf_3h_fair_30atom.json"),
@@ -82,10 +95,22 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
         52.12: _load_json("oe62_pmf_52h_awr_fair_30atom.json"),
     }
     if u3d_pro is None or pmf_map[52.0] is None or awr_map[52.12] is None:
-        raise FileNotFoundError("Missing required fair 30.4-atom JSONs (`oe62_uni3dar_v4_pro_fair_30atom.json` or PMF JSONs)")
+        raise FileNotFoundError("Missing required fair 30.4-atom JSONs")
 
-    u3d_h = float(u3d_pro.get("total_training_gpuh", 2.25))
-    u3d_arms = u3d_pro["arms"]
+    u3d_h = float(u3d_pro.get("total_training_gpuh", 2.41))
+    u3d_arms = dict(u3d_pro["arms"])
+    if u3d_ext is not None and "arms" in u3d_ext:
+        for k_ext, v_ext in u3d_ext["arms"].items():
+            if k_ext == "ext_M12":
+                u3d_arms.setdefault("ext_M12", v_ext)
+            elif k_ext in ("ext_M16", "xhigh_M16") and "xhigh_M16" not in u3d_arms:
+                u3d_arms["xhigh_M16"] = v_ext
+
+    awr_52_crd = dict(awr_map[52.12]["tracks"]["coord_reconciled"])
+    if pmf_awr_ext is not None and "coord_reconciled" in pmf_awr_ext.get("tracks", {}):
+        for k_p in ("M12", "M16"):
+            if k_p in pmf_awr_ext["tracks"]["coord_reconciled"]:
+                awr_52_crd[k_p] = pmf_awr_ext["tracks"]["coord_reconciled"][k_p]
 
     plt.rcParams.update(
         {
@@ -98,7 +123,7 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
 
     bg_fig = "#FAFCFB"
     bg_ax = "#FFFFFF"
-    fig, axes = plt.subplots(1, 3, figsize=(19.4, 6.2), dpi=220)
+    fig, axes = plt.subplots(1, 3, figsize=(19.8, 6.3), dpi=220)
     fig.patch.set_facecolor(bg_fig)
     for ax in axes:
         ax.set_facecolor(bg_ax)
@@ -108,251 +133,349 @@ def render_oe62_scaling_figure(out_paths: List[Path]) -> None:
         ax.spines["bottom"].set_color("#334155")
         ax.tick_params(colors="#475569")
         ax.grid(True, which="major", linestyle="--", linewidth=0.65, color="#E4ECE9", alpha=0.85)
-        ax.grid(True, which="minor", linestyle=":", linewidth=0.45, color="#EEF3F1", alpha=0.70)
 
-    c_u3d = "#0D9488"          # emerald teal: Uni-Loom [Uni-3DAR]
-    c_u3d_med = "#0F766E"      # deep teal accent
-    c_pmf_52 = "#334155"       # deep slate: PropMolFlow @ 52h + Loom-Critic
-    c_pmf_12 = "#64748B"       # mid slate: PropMolFlow @ 12h + Loom-Critic
-    c_pmf_3 = "#94A3B8"        # light slate: PropMolFlow @ 3h + Loom-Critic
-    c_pmf_raw = "#9CA3AF"      # muted gray: Vanilla PropMolFlow [M=1, No Loom]
-    c_pmf_awr = "#E11D48"      # crimson coral: Uni-Loom [PropMolFlow + Loom-AWR]
-
-    u3d_tiers = [
-        ("base_M1", "M=1"),
-        ("low_M2", "M=2"),
-        ("medium_M4", "M=4"),
-        ("high_M8", "M=8"),
-    ]
-    pmf_tiers = [
-        ("M1", "M=1"),
-        ("M2", "M=2"),
-        ("M4", "M=4"),
-        ("M8", "M=8"),
-    ]
+    c_u3d = "#0D9488"
+    c_u3d_med = "#0F766E"
+    c_pmf_52 = "#334155"
+    c_pmf_12 = "#64748B"
+    c_pmf_3 = "#94A3B8"
+    c_pmf_raw = "#9CA3AF"
+    c_pmf_awr = "#E11D48"
 
     # =========================================================================
-    # Panel A: Training / Alignment Compute Scaling (<3.0 -> 52.12 GPU-h)
+    # Panel A: Training Compute Scaling vs 3D Quality Index Q_3D
     # =========================================================================
     ax0 = axes[0]
     hrs = [h for h in (3.0, 6.0, 12.0, 24.0, 52.0) if pmf_map[h] is not None]
-    pmf_m8_blind = [
-        float(pmf_map[h]["tracks"]["coord_reconciled"]["M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-        for h in hrs
-    ]
-    pmf_m1_vanilla = [
-        float(pmf_map[h]["tracks"]["native_graph"]["M1"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-        for h in hrs
-    ]
+    pmf_m1_q = [compute_q3d_score(pmf_map[h]["tracks"]["native_graph"]["M1"]) for h in hrs]
+    pmf_m8_q = [compute_q3d_score(pmf_map[h]["tracks"]["coord_reconciled"]["M8"]) for h in hrs]
+    awr_hrs = [ah for ah in (3.12, 12.12, 52.12) if awr_map[ah] is not None]
+    awr_m8_q = [compute_q3d_score(awr_map[ah]["tracks"]["coord_reconciled"]["M8"]) for ah in awr_hrs]
 
-    ax0.plot(hrs, pmf_m1_vanilla, "--^", color=c_pmf_raw, lw=1.7, ms=5.8,
-             label="Vanilla PropMolFlow [M=1, No Loom]")
-    ax0.plot(hrs, pmf_m8_blind, "-o", color=c_pmf_52, lw=2.3, ms=6.6,
-             label="PropMolFlow + Loom-Critic [M=8]")
+    ax0.plot(hrs, pmf_m1_q, "--^", color=c_pmf_raw, lw=1.7, ms=5.6, label="Vanilla PropMolFlow [M=1, No Loom]")
+    ax0.plot(hrs, pmf_m8_q, "-o", color=c_pmf_52, lw=2.2, ms=6.4, label="PropMolFlow + Raw Critic [M=8]")
+    ax0.plot(awr_hrs, awr_m8_q, "-D", color=c_pmf_awr, lw=2.4, ms=6.4, zorder=6, label="Uni-Loom [PMF + AWR, M=8]")
 
-    awr_hrs = [h for h in (3.12, 12.12, 52.12) if awr_map[h] is not None]
-    awr_blinds: List[float] = []
-    for ah in awr_hrs:
-        d_a = awr_map[ah]
-        b_nat = float(d_a["tracks"]["native_graph"]["M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-        b_crd = float(d_a["tracks"]["coord_reconciled"]["M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-        awr_blinds.append(max(b_nat, b_crd))
-    ax0.plot(awr_hrs, awr_blinds, "-D", color=c_pmf_awr, lw=2.5, ms=6.6, zorder=6,
-             label="Uni-Loom [PropMolFlow + Loom-AWR, M=8]")
+    for bh, ah, ya in zip((3.0, 12.0, 52.0), awr_hrs, awr_m8_q):
+        if bh in hrs:
+            yb = pmf_m8_q[hrs.index(bh)]
+            ax0.annotate("", xy=(ah, ya), xytext=(bh, yb), arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=1.3))
 
-    for base_h, awr_h_pt, y_awr in zip((3.0, 12.0, 52.0), (3.12, 12.12, 52.12), awr_blinds):
-        if base_h in hrs and awr_map.get(awr_h_pt) is not None:
-            y_base = pmf_m8_blind[hrs.index(base_h)]
-            ax0.annotate("", xy=(awr_h_pt, y_awr), xytext=(base_h, y_base),
-                         arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=1.3))
-
-    u_m4_blind = float(u3d_arms["medium_M4"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-    u_m4_eff = float(u3d_arms["medium_M4"]["effective_output_mol_per_sec"])
-    u_m8_blind = float(u3d_arms["high_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
-    u_m8_eff = float(u3d_arms["high_M8"]["effective_output_mol_per_sec"])
-
-    ax0.scatter([u3d_h], [u_m4_blind], marker="s", s=105, color=c_u3d_med, edgecolor="white", lw=0.9, zorder=7,
+    u_m4_q = compute_q3d_score(u3d_arms["medium_M4"])
+    u_m8_q = compute_q3d_score(u3d_arms["high_M8"])
+    ax0.scatter([u3d_h], [u_m4_q], marker="s", s=105, color=c_u3d_med, edgecolor="white", lw=0.9, zorder=7,
                 label=f"Uni-Loom [Uni-3DAR, M=4] ({u3d_h:.2f}h)")
-    ax0.scatter([u3d_h], [u_m8_blind], marker="*", s=210, color=c_u3d, edgecolor="white", lw=0.9, zorder=9,
+    ax0.scatter([u3d_h], [u_m8_q], marker="*", s=220, color=c_u3d, edgecolor="white", lw=0.9, zorder=9,
                 label=f"Uni-Loom [Uni-3DAR, M=8] ({u3d_h:.2f}h)")
-    ax0.plot([u3d_h, u3d_h], [u_m4_blind, u_m8_blind], "-", color=c_u3d, lw=1.8, alpha=0.8, zorder=6)
+    top_u_q = u_m8_q
+    if "xhigh_M16" in u3d_arms:
+        u_m16_q = compute_q3d_score(u3d_arms["xhigh_M16"])
+        ax0.scatter([u3d_h], [u_m16_q], marker="P", s=135, color="#047857", edgecolor="white", lw=0.9, zorder=10,
+                    label=f"Uni-Loom [Uni-3DAR, M=16] ({u3d_h:.2f}h)")
+        top_u_q = max(top_u_q, u_m16_q)
+    ax0.plot([u3d_h, u3d_h], [u_m4_q, top_u_q], "-", color=c_u3d, lw=1.8, alpha=0.85, zorder=6)
 
+    ratio_compute = 52.12 / max(u3d_h, 0.1)
     ax0.annotate(
-        f"Uni-Loom [Uni-3DAR, M=8] ({u3d_h:.2f}h)\n{u_m8_blind:.1f}% Blind | {u_m8_eff:.2f} mol/s",
-        xy=(u3d_h, u_m8_blind),
-        xytext=(3.15, 62.6),
+        f"Uni-Loom [Uni-3DAR, M=8] ({u3d_h:.2f}h)\nQ_3D = {u_m8_q:.1f} | {ratio_compute:.1f}x less train compute",
+        xy=(u3d_h, u_m8_q),
+        xytext=(3.3, min(top_u_q + 5.2, 57.5)),
         fontsize=7.4,
         fontweight="bold",
         color=c_u3d,
-        bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_u3d, alpha=0.95, lw=0.9),
+        bbox=dict(boxstyle="round,pad=0.25", facecolor="#FFFFFF", edgecolor=c_u3d, alpha=0.95, lw=0.9),
         arrowprops=dict(arrowstyle="->", color=c_u3d, lw=1.0),
     )
+    awr_52_fmax = float(awr_52_crd["M8"]["zero_step_f_max_median_eV_A"])
     ax0.annotate(
-        f"Uni-Loom [Uni-3DAR, M=4]\n{u_m4_blind:.1f}% | {u_m4_eff:.2f} mol/s",
-        xy=(u3d_h, u_m4_blind),
-        xytext=(3.8, 22.0),
-        fontsize=7.3,
-        fontweight="bold",
-        color=c_u3d_med,
-        bbox=dict(boxstyle="round,pad=0.22", facecolor="#FFFFFF", edgecolor=c_u3d_med, alpha=0.93, lw=0.8),
-        arrowprops=dict(arrowstyle="->", color=c_u3d_med, lw=0.9),
-    )
-
-    y52_awr = awr_blinds[-1]
-    ax0.annotate(
-        f"PMF 52h + Loom-AWR (M=8)\n{y52_awr:.1f}% Blind | 2.08 mol/s",
-        xy=(52.12, y52_awr),
-        xytext=(15.5, 36.5),
-        fontsize=7.4,
+        f"Uni-Loom [PMF @ 52.12h + AWR, M=8]\nQ_3D = {awr_m8_q[-1]:.1f} (F_max = {awr_52_fmax:.2f} eV/A)",
+        xy=(52.12, awr_m8_q[-1]),
+        xytext=(11.5, awr_m8_q[-1] + 3.8),
+        fontsize=7.2,
         fontweight="bold",
         color=c_pmf_awr,
-        bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
+        bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.85),
         arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9),
     )
 
+    ymax_q = max(61.5, top_u_q + 8.0)
     ax0.set_xscale("log")
     ax0.set_xticks([2, 3, 6, 12, 24, 52])
     ax0.set_xticklabels(["2", "3", "6", "12", "24", "52"])
     ax0.get_xaxis().set_minor_formatter(NullFormatter())
-    ax0.set_xlim(1.55, 68.0)
-    ymax_all = max(69.5, u_m8_blind + 8.5, y52_awr + 7.5)
-    ax0.set_ylim(4.0, ymax_all)
-    ax0.set_xlabel("Task Post-Training / From-Scratch Compute (A800 GPU-hours, log)", fontsize=9.6, fontweight="bold", color="#1E293B")
-    ax0.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=10.1, fontweight="bold", color="#1E293B")
-    ax0.set_title("A. Training Compute Efficiency (Matched 30.4-Atom Prompts)", fontsize=10.6, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax0.legend(loc="lower right", fontsize=6.9, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax0.set_xlim(1.6, 68.0)
+    ax0.set_ylim(2.0, ymax_q)
+    ax0.set_xlabel("Task Post-Training / From-Scratch Compute (A800 GPU-hours, log)", fontsize=9.5, fontweight="bold", color="#1E293B")
+    ax0.set_ylabel("3D Discovery Quality Index Q_3D (0-100)", fontsize=10.0, fontweight="bold", color="#1E293B")
+    ax0.set_title("A. Training Compute Scaling vs 3D Quality Index", fontsize=10.5, fontweight="bold", color="#1E293B", loc="left", pad=10)
+    ax0.legend(loc="lower right", fontsize=6.6, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
     # =========================================================================
-    # Panel B: Test-Time Inference Compute Frontier (Standardized M=1,2,4,8)
+    # Panel B: Standardized Effort Tiers (M = 1, 2, 4, 8 [+ 12, 16]) on Q_3D
     # =========================================================================
     ax1 = axes[1]
-    ux, uy, u_lbl = _extract_standardized_curve(u3d_arms, u3d_tiers, "blind_synth")
-    px_3, py_3, _ = _extract_standardized_curve(pmf_map[3.0]["tracks"]["coord_reconciled"], pmf_tiers, "blind_synth")
-    px_3awr, py_3awr, _ = _extract_standardized_curve(awr_map[3.12]["tracks"]["coord_reconciled"], pmf_tiers, "blind_synth")
-    px_12, py_12, _ = _extract_standardized_curve(pmf_map[12.0]["tracks"]["coord_reconciled"], pmf_tiers, "blind_synth")
-    px_52, py_52, _ = _extract_standardized_curve(pmf_map[52.0]["tracks"]["coord_reconciled"], pmf_tiers, "blind_synth")
-    px_52awr, py_52awr, awr_lbl = _extract_standardized_curve(awr_map[52.12]["tracks"]["coord_reconciled"], pmf_tiers, "blind_synth")
+    u_tiers = [
+        ("base_M1", "M=1"),
+        ("low_M2", "M=2"),
+        ("medium_M4", "M=4"),
+        ("high_M8", "M=8"),
+        ("ext_M12", "M=12"),
+        ("xhigh_M16", "M=16"),
+    ]
+    p_tiers = [("M1", "M=1"), ("M2", "M=2"), ("M4", "M=4"), ("M8", "M=8")]
+    p_awr_tiers = [("M1", "M=1"), ("M2", "M=2"), ("M4", "M=4"), ("M8", "M=8"), ("M12", "M=12"), ("M16", "M=16")]
 
-    ax1.plot(px_3, py_3, ":o", color=c_pmf_3, lw=1.6, ms=5.0, label="PropMolFlow @ 3h + Loom-Critic")
-    ax1.plot(px_3awr, py_3awr, "--d", color="#F43F5E", lw=1.7, ms=5.2, alpha=0.85, label="Uni-Loom [PMF @ 3.12h + Loom-AWR]")
-    ax1.plot(px_12, py_12, "-o", color=c_pmf_12, lw=1.7, ms=5.4, alpha=0.88, label="PropMolFlow @ 12h + Loom-Critic")
-    ax1.plot(px_52, py_52, "-o", color=c_pmf_52, lw=2.1, ms=6.0, label="PropMolFlow @ 52h + Loom-Critic")
-    ax1.plot(px_52awr, py_52awr, "--D", color=c_pmf_awr, lw=2.3, ms=6.0, label="Uni-Loom [PMF @ 52.12h + Loom-AWR]")
-    ax1.plot(ux, uy, "-o", color=c_u3d, lw=2.8, ms=7.6, zorder=8,
-             label=f"Uni-Loom [Uni-3DAR] ({u3d_h:.2f}h)")
+    ux, uy, u_lbl = _extract_q3d_curve(u3d_arms, u_tiers)
+    px_3, py_3, _ = _extract_q3d_curve(pmf_map[3.0]["tracks"]["coord_reconciled"], p_tiers)
+    px_3a, py_3a, _ = _extract_q3d_curve(awr_map[3.12]["tracks"]["coord_reconciled"], p_tiers)
+    px_12, py_12, _ = _extract_q3d_curve(pmf_map[12.0]["tracks"]["coord_reconciled"], p_tiers)
+    px_52, py_52, _ = _extract_q3d_curve(pmf_map[52.0]["tracks"]["coord_reconciled"], p_tiers)
+    px_52a, py_52a, awr_lbl = _extract_q3d_curve(awr_52_crd, p_awr_tiers)
+
+    ax1.plot(px_3, py_3, ":o", color=c_pmf_3, lw=1.6, ms=5.0, label="PropMolFlow @ 3h + Raw Critic")
+    ax1.plot(px_3a, py_3a, "--d", color="#F43F5E", lw=1.7, ms=5.2, alpha=0.85, label="Uni-Loom [PMF @ 3.12h + AWR]")
+    ax1.plot(px_12, py_12, "-o", color=c_pmf_12, lw=1.7, ms=5.4, alpha=0.88, label="PropMolFlow @ 12h + Raw Critic")
+    ax1.plot(px_52, py_52, "-o", color=c_pmf_52, lw=2.1, ms=6.0, label="PropMolFlow @ 52h + Raw Critic")
+    ax1.plot(px_52a, py_52a, "--D", color=c_pmf_awr, lw=2.3, ms=6.2, label="Uni-Loom [PMF @ 52.12h + AWR]")
+    ax1.plot(ux, uy, "-o", color=c_u3d, lw=2.9, ms=7.8, zorder=8, label=f"Uni-Loom [Uni-3DAR] ({u3d_h:.2f}h)")
 
     for x, y, lb in zip(ux, uy, u_lbl):
-        off = (-8, 6) if lb in ("M=2", "M=4", "M=8") else (6, 5)
-        ha = "right" if lb in ("M=2", "M=4", "M=8") else "left"
-        ax1.annotate(lb, (x, y), textcoords="offset points", xytext=off, ha=ha, fontsize=7.6, color=c_u3d, fontweight="bold")
-    for x, y, lb in zip(px_52awr, py_52awr, awr_lbl):
-        ax1.annotate(lb, (x, y), textcoords="offset points", xytext=(6, -10), ha="left", fontsize=7.3, color=c_pmf_awr, fontweight="bold")
+        if lb == "M=1":
+            off, ha = (7, 3), "left"
+        elif lb == "M=12":
+            off, ha = (-6, 7), "right"
+        elif lb == "M=16":
+            off, ha = (6, -9), "left"
+        else:
+            off, ha = (-7, 6), "right"
+        ax1.annotate(f"{lb} ({y:.1f})", (x, y), textcoords="offset points", xytext=off, ha=ha,
+                     fontsize=6.9, color=c_u3d, fontweight="bold")
+    for x, y, lb in zip(px_52a, py_52a, awr_lbl):
+        if lb == "M=1":
+            off, ha = (7, -3), "left"
+        elif lb == "M=12":
+            off, ha = (-7, 6), "right"
+        elif lb == "M=16":
+            off, ha = (6, -8), "left"
+        else:
+            off, ha = (7, -10), "left"
+        ax1.annotate(f"{lb} ({y:.1f})", (x, y), textcoords="offset points", xytext=off, ha=ha,
+                     fontsize=6.8, color=c_pmf_awr, fontweight="bold")
 
+    if "M=8" in u_lbl and "M=8" in awr_lbl:
+        idx_m8 = u_lbl.index("M=8")
+        idx_awr8 = awr_lbl.index("M=8")
+        dq = uy[idx_m8] - py_52a[idx_awr8]
+        rel_pct = 100.0 * dq / max(py_52a[idx_awr8], 1e-6)
+        ax1.annotate(
+            "",
+            xy=(ux[idx_m8], uy[idx_m8] - 0.5),
+            xytext=(ux[idx_m8], py_52a[idx_awr8] + 0.5),
+            arrowprops=dict(arrowstyle="<->", color="#0F766E", lw=1.6),
+        )
+        ax1.text(
+            ux[idx_m8] * 1.07,
+            0.52 * uy[idx_m8] + 0.48 * py_52a[idx_awr8],
+            f"+{dq:.1f} pt\n(+{rel_pct:.0f}% Q_3D)",
+            ha="left",
+            va="center",
+            fontsize=7.1,
+            fontweight="bold",
+            color="#0F766E",
+            bbox=dict(boxstyle="round,pad=0.22", facecolor="#F0FDFA", edgecolor="#0D9488", lw=0.85),
+        )
+
+    max_lat = max(max(ux, default=800.0), max(px_52a, default=800.0))
     ax1.set_xscale("log")
-    ax1.set_xticks([25, 50, 100, 200, 400, 800])
+    ax1.set_xticks([20, 50, 100, 200, 400, 800, 1600])
     ax1.get_xaxis().set_major_formatter(ScalarFormatter())
     ax1.get_xaxis().set_minor_formatter(NullFormatter())
-    ax1.set_xlim(20, 920)
-    ax1.set_ylim(4.0, ymax_all)
-    ax1.set_xlabel("Measured Wall-Clock Latency per 1,000 Prompts (A800 GPU-sec, log)", fontsize=9.6, fontweight="bold", color="#1E293B")
-    ax1.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=10.1, fontweight="bold", color="#1E293B")
-    ax1.set_title("B. Standardized Effort Tiers (M = 1, 2, 4, 8)", fontsize=10.6, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax1.legend(loc="upper left", fontsize=6.7, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax1.set_xlim(16, max(1150.0, max_lat * 1.34))
+    ax1.set_ylim(2.0, ymax_q)
+    ax1.set_xlabel("Measured Wall-Clock Latency per 1,000 Prompts (A800 GPU-sec, log)", fontsize=9.5, fontweight="bold", color="#1E293B")
+    ax1.set_ylabel("3D Discovery Quality Index Q_3D (0-100)", fontsize=10.0, fontweight="bold", color="#1E293B")
+    ax1.set_title("B. Standardized Effort Tiers: Joint Orbital & 3D Force Quality", fontsize=10.5, fontweight="bold", color="#1E293B", loc="left", pad=10)
+    ax1.legend(loc="upper left", fontsize=6.5, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
     # =========================================================================
-    # Panel C: End-to-End 50k-Molecule Campaign Compute (A800 GPU-hours)
+    # Panel C: Live Ab Initio PBE0/def2-TZVP Quantum Verification (42 Prompts)
     # =========================================================================
     ax2 = axes[2]
-    ax2.plot(_campaign_gpuh(3.0, px_3), py_3, ":o", color=c_pmf_3, lw=1.6, ms=5.0, label="PropMolFlow @ 3h + Loom-Critic")
-    ax2.plot(_campaign_gpuh(3.12, px_3awr), py_3awr, "--d", color="#F43F5E", lw=1.7, ms=5.2, alpha=0.85, label="Uni-Loom [PMF @ 3.12h + Loom-AWR]")
-    ax2.plot(_campaign_gpuh(12.0, px_12), py_12, "-o", color=c_pmf_12, lw=1.7, ms=5.2, alpha=0.88, label="PropMolFlow @ 12h + Loom-Critic")
-    if awr_map[12.12] is not None:
-        px_12awr, py_12awr, _ = _extract_standardized_curve(awr_map[12.12]["tracks"]["coord_reconciled"], pmf_tiers, "blind_synth")
-        ax2.plot(_campaign_gpuh(12.12, px_12awr), py_12awr, "-.D", color="#FB7185", lw=2.0, ms=5.6, label="Uni-Loom [PMF @ 12.12h + Loom-AWR]")
-    ax2.plot(_campaign_gpuh(52.0, px_52), py_52, "-o", color=c_pmf_52, lw=2.1, ms=6.0, label="PropMolFlow @ 52h + Loom-Critic")
-    ax2.plot(_campaign_gpuh(52.12, px_52awr), py_52awr, "--D", color=c_pmf_awr, lw=2.3, ms=6.0, label="Uni-Loom [PMF @ 52.12h + Loom-AWR]")
-    u_camp = _campaign_gpuh(u3d_h, ux)
-    ax2.plot(u_camp, uy, "-o", color=c_u3d, lw=2.8, ms=7.6, zorder=8,
-             label=f"Uni-Loom [Uni-3DAR] ({u3d_h:.2f}h + Infer)")
+    dft_rows: List[Tuple[str, float, float, str]] = []
+    if dft_52 is not None:
+        dft_rows.append(
+            (
+                "Vanilla PMF\n52h\n[M=1]",
+                float(dft_52["arms"]["PropMolFlow_native_M1"]["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0,
+                float(dft_52["arms"]["PropMolFlow_native_M1"]["pbe0_vs_target_homo"]["mae_eV"]),
+                "#CBD5E1",
+            )
+        )
+    if dft_12 is not None:
+        dft_rows.append(
+            (
+                "PMF 12h +\nRaw Critic\n[M=8]",
+                float(dft_12["arms"]["PropMolFlow_coord_reconciled_M8"]["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0,
+                float(dft_12["arms"]["PropMolFlow_coord_reconciled_M8"]["pbe0_vs_target_homo"]["mae_eV"]),
+                "#94A3B8",
+            )
+        )
+    if dft_52 is not None:
+        dft_rows.append(
+            (
+                "PMF 52h +\nRaw Critic\n[M=8]",
+                float(dft_52["arms"]["PropMolFlow_coord_reconciled_M8"]["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0,
+                float(dft_52["arms"]["PropMolFlow_coord_reconciled_M8"]["pbe0_vs_target_homo"]["mae_eV"]),
+                "#475569",
+            )
+        )
+    if u3d_dft is not None and "UniLoom_Uni3DAR_medium_M4" in u3d_dft.get("arms", {}):
+        dft_rows.append(
+            (
+                f"Uni-Loom\n[Uni-3DAR]\n{u3d_h:.2f}h [M=4]",
+                float(u3d_dft["arms"]["UniLoom_Uni3DAR_medium_M4"]["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0,
+                float(u3d_dft["arms"]["UniLoom_Uni3DAR_medium_M4"]["pbe0_vs_target_homo"]["mae_eV"]),
+                "#14B8A6",
+            )
+        )
+    if dft_52_awr is not None:
+        awr_dft_arm = (
+            dft_52_awr["arms"].get("UniLoom_PMF_AWR_high_M8")
+            or dft_52_awr["arms"].get("PropMolFlow_coord_reconciled_M8")
+        )
+        if awr_dft_arm is not None:
+            dft_rows.append(
+                (
+                    "Uni-Loom\n[PMF + AWR]\n52.12h [M=8]",
+                    float(awr_dft_arm["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0,
+                    float(awr_dft_arm["pbe0_vs_target_homo"]["mae_eV"]),
+                    "#E11D48",
+                )
+            )
+    if u3d_dft is not None and "UniLoom_Uni3DAR_high_M8" in u3d_dft.get("arms", {}):
+        dft_rows.append(
+            (
+                f"Uni-Loom\n[Uni-3DAR]\n{u3d_h:.2f}h [M=8]",
+                float(u3d_dft["arms"]["UniLoom_Uni3DAR_high_M8"]["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0,
+                float(u3d_dft["arms"]["UniLoom_Uni3DAR_high_M8"]["pbe0_vs_target_homo"]["mae_eV"]),
+                "#0D9488",
+            )
+        )
 
-    for cx, cy, lb in zip(u_camp, uy, u_lbl):
-        off = (6, -9) if lb in ("M=1", "M=2") else (6, 4)
-        ax2.annotate(lb, (cx, cy), textcoords="offset points", xytext=off, ha="left", fontsize=7.4, color=c_u3d, fontweight="bold")
+    x_pos = np.arange(len(dft_rows))
+    names = [r[0] for r in dft_rows]
+    hits_pbe0 = [r[1] for r in dft_rows]
+    maes_pbe0 = [r[2] for r in dft_rows]
+    cols = [r[3] for r in dft_rows]
 
-    dft_txt = ""
-    if u3d_dft is not None:
-        for cand_k in ("UniLoom_Uni3DAR_high_M8", "high_M8", "UniLoom_Uni3DAR_medium_M4"):
-            if cand_k in u3d_dft.get("arms", {}):
-                p_raw = float(u3d_dft["arms"][cand_k]["end_to_end_pbe0_synth_clean_yield_raw"]) * 100.0
-                dft_txt = f" | PBE0: {p_raw:.1f}%"
-                break
-
-    ax2.annotate(
-        f"Uni-Loom [Uni-3DAR, M=8] ({u_camp[-1]:.1f}h total)\n{uy[-1]:.1f}% Blind{dft_txt}",
-        xy=(u_camp[-1], uy[-1]),
-        xytext=(2.1, 62.6),
-        fontsize=7.3,
-        fontweight="bold",
-        color=c_u3d,
-        bbox=dict(boxstyle="round,pad=0.24", facecolor="#FFFFFF", edgecolor=c_u3d, alpha=0.95, lw=0.9),
-        arrowprops=dict(arrowstyle="->", color=c_u3d, lw=0.95),
+    bars = ax2.bar(
+        x_pos - 0.18,
+        hits_pbe0,
+        width=0.33,
+        color=cols,
+        edgecolor="#1E293B",
+        linewidth=0.8,
+        label="True PBE0 Synth-Clean Hit Yield (%)",
     )
+    ax2.set_ylabel("Live PBE0/def2-TZVP Synth-Clean Hit Yield (%)", fontsize=9.8, fontweight="bold", color="#0F766E")
+    ax2.set_ylim(0, 96)
+    ax2.set_xticks(x_pos)
+    ax2.set_xticklabels(names, fontsize=7.0, fontweight="bold", color="#1E293B")
 
-    pawr_cost_top = _campaign_gpuh(52.12, px_52awr)[-1]
-    ax2.annotate(
-        f"PMF 52h + Loom-AWR ({pawr_cost_top:.1f}h total)\n{py_52awr[-1]:.1f}% Blind | PBE0: 54.8%",
-        xy=(pawr_cost_top, py_52awr[-1]),
-        xytext=(15.2, 28.5),
-        fontsize=6.8,
-        fontweight="bold",
-        color=c_pmf_awr,
-        bbox=dict(boxstyle="round,pad=0.20", facecolor="#FFFFFF", edgecolor=c_pmf_awr, alpha=0.93, lw=0.8),
-        arrowprops=dict(arrowstyle="->", color=c_pmf_awr, lw=0.9),
+    ax2_r = ax2.twinx()
+    ax2_r.spines["top"].set_visible(False)
+    ax2_r.spines["right"].set_color("#9A3412")
+    bars_mae = ax2_r.bar(
+        x_pos + 0.18,
+        maes_pbe0,
+        width=0.29,
+        color="#FED7AA",
+        edgecolor="#C2410C",
+        linewidth=0.9,
+        hatch="//",
+        alpha=0.90,
+        label="True PBE0 HOMO MAE (eV, lower is better)",
     )
+    ax2_r.set_ylabel("Live PBE0/def2-TZVP HOMO MAE (eV, lower is better)", fontsize=9.6, fontweight="bold", color="#9A3412")
+    ax2_r.set_ylim(0, 0.72)
+    ax2_r.tick_params(axis="y", colors="#9A3412")
 
-    ax2.set_xscale("log")
-    ax2.set_xticks([2, 3, 5, 10, 20, 40, 70])
-    ax2.set_xticklabels(["2", "3", "5", "10", "20", "40", "70"])
-    ax2.get_xaxis().set_minor_formatter(NullFormatter())
-    ax2.set_xlim(1.75, 88.0)
-    ax2.set_ylim(4.0, ymax_all)
-    ax2.set_xlabel("Total 50k-Molecule Campaign Compute (Train/Adapt + Infer, A800 GPU-h, log)", fontsize=9.6, fontweight="bold", color="#1E293B")
-    ax2.set_ylabel("Blind DPA-4 Synth-Clean Hit Yield (%)", fontsize=10.1, fontweight="bold", color="#1E293B")
-    ax2.set_title("C. 50k-Campaign Pareto Frontier & PBE0 Quantum Anchor", fontsize=10.6, fontweight="bold", color="#1E293B", loc="left", pad=10)
-    ax2.legend(loc="lower right", fontsize=6.5, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    for i, (b, hv) in enumerate(zip(bars, hits_pbe0)):
+        ax2.text(
+            b.get_x() + b.get_width() / 2.0,
+            hv + 1.5,
+            f"{hv:.1f}%",
+            ha="center",
+            va="bottom",
+            fontsize=7.3,
+            fontweight="bold",
+            color="#065F46" if i == len(dft_rows) - 1 else "#0F172A",
+        )
+    for i, mv in enumerate(maes_pbe0):
+        ax2_r.text(
+            x_pos[i] + 0.21,
+            mv + 0.012,
+            f"{mv:.3f}\neV",
+            ha="center",
+            va="bottom",
+            fontsize=6.5,
+            fontweight="bold",
+            color="#9A3412",
+        )
+
+    if len(hits_pbe0) >= 2:
+        dhit = hits_pbe0[-1] - hits_pbe0[-2]
+        mae_red = 100.0 * (maes_pbe0[-2] - maes_pbe0[-1]) / max(maes_pbe0[-2], 1e-6)
+        ax2.annotate(
+            f"+{dhit:.1f} pp higher True PBE0 Hit\n& {mae_red:.0f}% lower PBE0 MAE ({maes_pbe0[-1]:.3f} vs {maes_pbe0[-2]:.3f} eV)\nat {ratio_compute:.1f}x less training compute!",
+            xy=(x_pos[-1] - 0.18, hits_pbe0[-1]),
+            xytext=(1.75, 73.5),
+            fontsize=6.8,
+            fontweight="bold",
+            color="#0F766E",
+            bbox=dict(boxstyle="round,pad=0.24", facecolor="#F0FDFA", edgecolor="#0D9488", lw=0.9),
+            arrowprops=dict(arrowstyle="->", color="#0D9488", lw=1.1),
+        )
+
+    h1, l1 = ax2.get_legend_handles_labels()
+    h2, l2 = ax2_r.get_legend_handles_labels()
+    ax2.legend(h1 + h2, l1 + l2, loc="upper left", fontsize=6.6, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
+    ax2.set_title("C. Ab Initio PBE0/def2-TZVP Verification (42 Prompts)", fontsize=10.5, fontweight="bold", color="#1E293B", loc="left", pad=10)
 
     fig.text(
         0.5,
-        0.01,
-        "Strict Fair Fixed-Size OE62 Benchmark (N = 1,792 prompts/arm, mean 30.4 atoms, identical per-prompt (HOMO, N_atoms) held fixed across all M ∈ {1, 2, 4, 8} "
-        "candidates on uncontended single NVIDIA A800-SXM4-80GB with Fair TF32; zero inference-time MLIP relaxation).",
+        0.012,
+        "Q_3D = 100 * G_synth * sqrt(S_orbital * R_phys(F_max)) combines synthesizability (SA <= 3.5), blind orbital accuracy, and zero-step 3D force equilibrium (Panels A-B: N = 1,792 matched 30.4-atom prompts; Panel C: live GPU4PySCF PBE0/def2-TZVP/DF).",
         ha="center",
+        va="bottom",
         fontsize=8.0,
         color="#475569",
     )
-    plt.tight_layout(rect=[0.0, 0.035, 1.0, 1.0])
-
-    for p in out_paths:
-        p.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(p, facecolor=bg_fig)
-        print(f"Wrote {p}")
+    plt.tight_layout(rect=[0.0, 0.035, 1.0, 1.0], w_pad=1.7)
+    for dst in out_paths:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(dst, bbox_inches="tight")
+        if dst.suffix.lower() == ".png":
+            fig.savefig(dst.with_suffix(".pdf"), bbox_inches="tight")
+        print(f"[Plot SAVED] {dst}")
     plt.close(fig)
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--extra-out", type=Path, nargs="*", default=[])
-    args = ap.parse_args()
-
-    targets = [
-        ROOT / "docs" / "figures" / "oe62_llm_style_accuracy_vs_cost.png",
-        ROOT / "paper" / "figures" / "fig8_oe62_cross_paradigm_scaling.png",
-        ROOT / "paper" / "figures" / "fig8_oe62_cross_paradigm_scaling.pdf",
-        ROOT / "paper" / "ncs" / "figures" / "ed_fig3_oe62_cross_paradigm_scaling.png",
-        ROOT / "paper" / "ncs" / "figures" / "ed_fig3_oe62_cross_paradigm_scaling.pdf",
-        *args.extra_out,
-    ]
-    render_oe62_scaling_figure(targets)
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument(
+        "--out",
+        type=Path,
+        nargs="*",
+        default=[
+            ROOT / "docs" / "figures" / "oe62_llm_style_accuracy_vs_cost.png",
+            ROOT / "paper" / "figures" / "fig8_oe62_cross_paradigm_scaling.png",
+            ROOT / "paper" / "ncs" / "figures" / "ed_fig3_oe62_cross_paradigm_scaling.png",
+            ROOT / "paper" / "uni3dar_mol" / "figures" / "fig2_oe62_cross_paradigm_scaling.png",
+        ],
+    )
+    args = p.parse_args()
+    render_oe62_scaling_figure(list(args.out))
 
 
 if __name__ == "__main__":

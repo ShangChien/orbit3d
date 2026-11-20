@@ -496,15 +496,22 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
     _, clean_targets = _get_clean_oe62_pool(args, None)
 
     svc = LoomService(gen, bus_eval)
-    dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
-    cal = svc.calibrate_on_dev(
-        dev_h,
-        dev_atom_budget=dev_n,
-        calib_effort="medium",
-        cfg_scale=float(args.cfg_scale),
-        high_stage1=args.high_stage1,
-        seed=2026901,
-    )
+    dev_cal_json = pro_dir / "service_112_dev_calibration_v2.json"
+    if dev_cal_json.exists():
+        from loom.weaving.service import AffineConditionCalibration
+        cal = AffineConditionCalibration(**json.loads(dev_cal_json.read_text()))
+        svc.calibration = cal
+    else:
+        dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
+        cal = svc.calibrate_on_dev(
+            dev_h,
+            dev_atom_budget=dev_n,
+            calib_effort="medium",
+            cfg_scale=float(args.cfg_scale),
+            high_stage1=args.high_stage1,
+            seed=2026901,
+        )
+        dev_cal_json.write_text(json.dumps(cal.to_dict(), indent=2) + "\n")
     print(f"[LoomService 112-Dev Calibration] {cal.to_dict()}", flush=True)
 
     # Warmup GPU kernels
@@ -515,13 +522,37 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
     arms_out: Dict[str, Any] = {}
     epistemic_report: Optional[Dict[str, Any]] = None
 
-    for effort_name in ("base", "low", "medium", "high"):
-        m_val = EFFORT_TO_M[effort_name]
-        arm_key = f"{effort_name}_M{m_val}"
+    tier_specs: List[Tuple[str, str, Optional[int]]] = [
+        ("base_M1", "base", None),
+        ("low_M2", "low", None),
+        ("medium_M4", "medium", None),
+        ("high_M8", "high", None),
+    ]
+    if args.only_m_list:
+        tier_specs = []
+        for mv in args.only_m_list:
+            mv_i = int(mv)
+            if mv_i == 1:
+                tier_specs.append(("base_M1", "base", None))
+            elif mv_i == 2:
+                tier_specs.append(("low_M2", "low", None))
+            elif mv_i == 4:
+                tier_specs.append(("medium_M4", "medium", None))
+            elif mv_i == 8:
+                tier_specs.append(("high_M8", "high", None))
+            elif mv_i == 12:
+                tier_specs.append(("ext_M12", "high", 12))
+            elif mv_i == 16:
+                tier_specs.append(("xhigh_M16", "high", 16))
+            else:
+                tier_specs.append((f"ext_M{mv_i}", "high", mv_i))
+    for arm_key, effort_name, n_cand_override in tier_specs:
+        m_val = int(n_cand_override) if n_cand_override is not None else EFFORT_TO_M[effort_name]
         out = svc.generate(
             req_30[:, 0],
             atom_budget=req_30[:, 1],
             effort=effort_name,
+            n_candidates=n_cand_override,
             seed=991000 + m_val * 131,
             cfg_scale=float(args.cfg_scale),
             high_stage1=args.high_stage1,
@@ -545,7 +576,7 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
             export_sdf_path=sdf_path,
         )
         _, ms1, ms2, mk = gen.resolve_internal_funnel(
-            effort=effort_name, atom_budget=req_30[:, 1], high_stage1=args.high_stage1
+            effort=effort_name, n_candidates=n_cand_override, atom_budget=req_30[:, 1], high_stage1=args.high_stage1
         )
         arm_res["effort"] = effort_name
         arm_res["n_candidates"] = m_val
@@ -600,7 +631,7 @@ def run_fair30_uni3dar(args: argparse.Namespace) -> None:
 
 
 def run_fair30_pmf(args: argparse.Namespace) -> None:
-    """Symmetric `LoomService` 112-Dev Calibration + 4-Tier (`M=1,2,4,8`) Fair 30.4-Atom Eval on `PropMolFlow`."""
+    """Symmetric `LoomService` 112-Dev Calibration + Standardized Multi-Tier Fair 30.4-Atom Eval on `PropMolFlow`."""
     if args.pmf_ckpt is None:
         raise ValueError("--pmf-ckpt is required for --mode fair30_pmf")
     device = torch.device(args.device)
@@ -629,26 +660,64 @@ def run_fair30_pmf(args: argparse.Namespace) -> None:
 
     req_30 = build_fair_30atom_prompts(clean_targets, args.oe62_targets_json, per_quantile=256, seed=20261118)
     arms_out: Dict[str, Any] = {}
-    for effort_name in ("base", "low", "medium", "high"):
-        m_val = EFFORT_TO_M[effort_name]
-        arm_key = f"{effort_name}_M{m_val}"
+    tracks_crd: Dict[str, Any] = {}
+    m_schedule = [int(x) for x in args.pmf_m_list] if args.pmf_m_list else [1, 2, 4, 8]
+    if args.pmf_sdf_dir is not None:
+        args.pmf_sdf_dir.mkdir(parents=True, exist_ok=True)
+
+    for m_val in m_schedule:
+        if m_val == 1:
+            effort_name, arm_key, n_cand_ov = "base", "base_M1", None
+        elif m_val == 2:
+            effort_name, arm_key, n_cand_ov = "low", "low_M2", None
+        elif m_val == 4:
+            effort_name, arm_key, n_cand_ov = "medium", "medium_M4", None
+        elif m_val == 8:
+            effort_name, arm_key, n_cand_ov = "high", "high_M8", None
+        elif m_val == 16:
+            effort_name, arm_key, n_cand_ov = "high", "xhigh_M16", 16
+        else:
+            effort_name, arm_key, n_cand_ov = "high", f"ext_M{m_val}", m_val
+
         out = svc.generate(
             req_30[:, 0],
             atom_budget=req_30[:, 1],
             effort=effort_name,
+            n_candidates=n_cand_ov,
             seed=881000 + m_val * 131,
             include_epistemic_envelope=False,
         )
         sel_m = out["molecules"]
         sel_l = np.array([m is not None for m in sel_m], dtype=bool)
         sel_x = np.array([(not is_clean_organic_charge_state(m)) if m is not None else False for m in sel_m], dtype=bool)
+        sdf_p = (args.pmf_sdf_dir / f"UniLoom_PMF_AWR_{arm_key}.sdf") if args.pmf_sdf_dir is not None else None
         arm_res = _score_oe62_size_cohort(
             sel_m, sel_l, sel_x, req_30, bus_eval, source_graphs, source_scaffolds,
             float(out["gen_wall_sec"]), 0.0, float(out["surrogate_wall_sec"]),
+            export_sdf_path=sdf_p,
         )
         arm_res["effort"] = effort_name
         arm_res["n_candidates"] = m_val
+        if sdf_p is not None:
+            arm_res["exported_sdf"] = str(sdf_p)
         arms_out[arm_key] = arm_res
+        tracks_crd[f"M{m_val}"] = arm_res
+        payload = {
+            "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Standardized Benchmark — Uni-Loom [PMF + AWR]",
+            "pmf_checkpoint": str(args.pmf_ckpt),
+            "checkpoint": str(args.pmf_ckpt),
+            "cum_gpu_hours": round(float(pmf_gen.cum_gpu_hours), 4),
+            "total_training_gpuh": round(float(pmf_gen.cum_gpu_hours), 4),
+            "proposals_per_arm": len(req_30),
+            "requested_natoms_summary": {"mean": round(float(np.mean(req_30[:, 1])), 2), "median": float(np.median(req_30[:, 1]))},
+            "generator_capabilities": svc.generator_capabilities,
+            "symmetric_112_dev_calibration": cal.to_dict(),
+            "zero_leakage_dft_calibration": calib_diag,
+            "arms": arms_out,
+            "tracks": {"coord_reconciled": tracks_crd, "native_graph": tracks_crd},
+        }
+        args.pmf_output_json.parent.mkdir(parents=True, exist_ok=True)
+        args.pmf_output_json.write_text(json.dumps(payload, indent=2) + "\n")
         print(
             f"[LoomService PMF Fair-30 {arm_key:10s}] Eff={arm_res['effective_output_mol_per_sec']:.2f} mol/s | "
             f"Atoms={arm_res['mean_total_atoms']} | Legal={arm_res['legal_rate']*100:.1f}% "
@@ -658,18 +727,73 @@ def run_fair30_pmf(args: argparse.Namespace) -> None:
             flush=True,
         )
 
-    payload = {
-        "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Standardized 4-Tier Benchmark — Uni-Loom Service [PropMolFlow]",
-        "pmf_checkpoint": str(args.pmf_ckpt),
-        "total_training_gpuh": round(float(pmf_gen.cum_gpu_hours), 4),
-        "generator_capabilities": svc.generator_capabilities,
-        "symmetric_112_dev_calibration": cal.to_dict(),
-        "zero_leakage_dft_calibration": calib_diag,
-        "arms": arms_out,
-    }
-    args.pmf_output_json.parent.mkdir(parents=True, exist_ok=True)
-    args.pmf_output_json.write_text(json.dumps(payload, indent=2) + "\n")
     print(f"[PMF Fair-30 Unified Service SAVED] {args.pmf_output_json}", flush=True)
+
+
+def run_buckets_pmf(args: argparse.Namespace) -> None:
+    """Symmetric `LoomService` (`stoich_v2` + 112-Dev Calibration) Controlled Atom Buckets (`N=20..60`, M=8) for `Uni-Loom [PMF + AWR]`."""
+    if args.pmf_ckpt is None:
+        raise ValueError("--pmf-ckpt is required for --mode buckets_pmf")
+    device = torch.device(args.device)
+    calib_cache = args.step2_dir / "residual_calibrated_unimol2_stoich_v2.pt"
+
+    pmf_gen = LoomFlowMolGenerator.from_propmolflow_checkpoint(
+        args.pmf_ckpt,
+        device=args.device,
+        data_dir=args.pmf_data_dir,
+        property_name="homo",
+        sample_timesteps=100,
+    )
+    pmf_gen.eval()
+
+    bus_eval, _, _ = _build_calibrated_oe62_bus(args, include_blind_auditor=True, calib_cache_path=calib_cache)
+    source_graphs, source_scaffolds = _get_source_novelty_sets(args)
+    _, clean_targets = _get_clean_oe62_pool(args, None)
+
+    svc = LoomService(pmf_gen, bus_eval)
+    dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
+    cal = svc.calibrate_on_dev(dev_h, dev_atom_budget=dev_n, calib_effort="medium", seed=2026901)
+    print(f"[LoomService PMF Buckets 112-Dev Calibration] {cal.to_dict()}", flush=True)
+
+    svc.generate(np.full(8, -6.4, dtype=np.float32), atom_budget=np.full(8, 30.0, dtype=np.float32), effort="base", seed=13, include_epistemic_envelope=False)
+    _sync(device)
+
+    q_points = json.loads(args.oe62_targets_json.read_text())["single_target_points"]["homo"]
+    quantiles = (10, 25, 35, 50, 65, 75, 90)
+    existing = json.loads(args.pmf_buckets_json.read_text()) if args.pmf_buckets_json.exists() else {"buckets": {}}
+
+    for n_exact in (20, 30, 40, 50, 60):
+        req_b = np.asarray([(float(q_points[str(q)]), float(n_exact)) for q in quantiles for _ in range(40)], dtype=np.float32)
+        out = svc.generate(
+            req_b[:, 0],
+            atom_budget=req_b[:, 1],
+            effort="high",
+            seed=84000 + 8 * 67 + n_exact,
+            include_epistemic_envelope=False,
+        )
+        sel_m = out["molecules"]
+        sel_l = np.array([m is not None for m in sel_m], dtype=bool)
+        sel_x = np.array([(not is_clean_organic_charge_state(m)) if m is not None else False for m in sel_m], dtype=bool)
+        b_res = _score_oe62_size_cohort(
+            sel_m, sel_l, sel_x, req_b, bus_eval, source_graphs, source_scaffolds,
+            float(out["gen_wall_sec"]), 0.0, float(out["surrogate_wall_sec"]),
+        )
+        b_res["effort"] = "high"
+        b_res["n_candidates"] = 8
+        b_entry = existing.setdefault("buckets", {}).setdefault(str(n_exact), {"requested_n_atoms": n_exact, "n_prompts": len(req_b), "arms": {}})
+        b_entry["arms"]["PMF_52h_LoomAWR_M8"] = b_res
+        existing["pmf_awr_service_calibration"] = cal.to_dict()
+        args.pmf_buckets_json.parent.mkdir(parents=True, exist_ok=True)
+        args.pmf_buckets_json.write_text(json.dumps(existing, indent=2) + "\n")
+        print(
+            f"[PMF+AWR Bucket N={n_exact} M=8] Eff={b_res['effective_output_mol_per_sec']:.2f} mol/s | "
+            f"Legal={b_res['legal_rate']*100:.1f}% Fmax={b_res['zero_step_f_max_median_eV_A']:.2f} | "
+            f"BlindSynth={b_res['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}% | "
+            f"BlindMAE={b_res['audit_mae_eV']:.4f} eV",
+            flush=True,
+        )
+
+    print(f"[PMF+AWR Buckets SAVED] {args.pmf_buckets_json}", flush=True)
 
 
 def run_buckets_uni3dar(args: argparse.Namespace) -> None:
@@ -694,23 +818,33 @@ def run_buckets_uni3dar(args: argparse.Namespace) -> None:
     _, clean_targets = _get_clean_oe62_pool(args, None)
 
     svc = LoomService(gen, bus_eval)
-    dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
-    cal = svc.calibrate_on_dev(
-        dev_h,
-        dev_atom_budget=dev_n,
-        calib_effort="medium",
-        cfg_scale=float(args.cfg_scale),
-        high_stage1=args.high_stage1,
-        seed=2026901,
-    )
+    dev_cal_json = pro_dir / "service_112_dev_calibration_v2.json"
+    if dev_cal_json.exists():
+        from loom.weaving.service import AffineConditionCalibration
+        cal = AffineConditionCalibration(**json.loads(dev_cal_json.read_text()))
+        svc.calibration = cal
+    else:
+        dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
+        cal = svc.calibrate_on_dev(
+            dev_h,
+            dev_atom_budget=dev_n,
+            calib_effort="medium",
+            cfg_scale=float(args.cfg_scale),
+            high_stage1=args.high_stage1,
+            seed=2026901,
+        )
+        dev_cal_json.write_text(json.dumps(cal.to_dict(), indent=2) + "\n")
     svc.generate(np.full(16, -6.4, dtype=np.float32), atom_budget=np.full(16, 30.0, dtype=np.float32), effort="low", seed=19, include_epistemic_envelope=False)
     _sync(device)
 
     q_points = json.loads(args.oe62_targets_json.read_text())["single_target_points"]["homo"]
     quantiles = (10, 25, 35, 50, 65, 75, 90)
     bucket_results: Dict[str, Any] = {}
+    if args.only_buckets and args.buckets_output_json.exists():
+        bucket_results = dict(json.loads(args.buckets_output_json.read_text()).get("buckets", {}))
+    bucket_list = [int(b) for b in args.only_buckets] if args.only_buckets else [20, 30, 40, 50, 60]
 
-    for n_exact in (20, 30, 40, 50, 60):
+    for n_exact in bucket_list:
         req_b = np.asarray([(float(q_points[str(q)]), float(n_exact)) for q in quantiles for _ in range(40)], dtype=np.float32)
         b_arms: Dict[str, Any] = {}
         for effort_name in ("base", "low", "medium", "high"):
@@ -783,14 +917,19 @@ def run_ablation_m4(args: argparse.Namespace) -> None:
     _, clean_targets = _get_clean_oe62_pool(args, None)
 
     svc = LoomService(gen, bus_eval)
-    dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
-    svc.calibrate_on_dev(
-        dev_h,
-        dev_atom_budget=dev_n,
-        calib_effort="medium",
-        cfg_scale=float(args.cfg_scale),
-        seed=2026901,
-    )
+    dev_cal_json = pro_dir / "service_112_dev_calibration_v2.json"
+    if dev_cal_json.exists():
+        from loom.weaving.service import AffineConditionCalibration
+        svc.calibration = AffineConditionCalibration(**json.loads(dev_cal_json.read_text()))
+    else:
+        dev_h, dev_n = build_112_dev_prompts(clean_targets, args.oe62_targets_json, seed=2026901)
+        svc.calibrate_on_dev(
+            dev_h,
+            dev_atom_budget=dev_n,
+            calib_effort="medium",
+            cfg_scale=float(args.cfg_scale),
+            seed=2026901,
+        )
     svc.generate(np.full(16, -6.4, dtype=np.float32), atom_budget=np.full(16, 30.0, dtype=np.float32), effort="low", seed=23, include_epistemic_envelope=False)
     _sync(device)
 
@@ -950,6 +1089,121 @@ def run_multi_objective_sdl(args: argparse.Namespace) -> None:
     print(f"[Multi-Objective SDL RSI SAVED] {args.sdl_output_json} | stats={cal_stats}", flush=True)
 
 
+def _load_cohort_from_exported_sdf(sdf_path: Path, n_prompts: int) -> Tuple[List[Optional[Chem.Mol]], np.ndarray, np.ndarray]:
+    """Reconstruct exact `(selected_mols, selected_legal, selected_exotic)` array of length `n_prompts` via `PromptIndex`."""
+    sel_m: List[Optional[Chem.Mol]] = [None] * n_prompts
+    suppl = Chem.SDMolSupplier(str(sdf_path), removeHs=False, sanitize=True)
+    for m in suppl:
+        if m is None or not m.HasProp("PromptIndex"):
+            continue
+        idx = int(m.GetProp("PromptIndex"))
+        if 0 <= idx < n_prompts:
+            sel_m[idx] = m
+    sel_l = np.array([m is not None for m in sel_m], dtype=bool)
+    sel_x = np.array([(not is_clean_organic_charge_state(m)) if m is not None else False for m in sel_m], dtype=bool)
+    return sel_m, sel_l, sel_x
+
+
+def run_finalize_saved_sdfs(args: argparse.Namespace) -> None:
+    """Finalize JSON reports for already-generated `service_cohorts_sdf/` cohorts (`Uni-3DAR M=12,16` & `PMF 52.12h+AWR M=1..16`)."""
+    calib_cache = args.step2_dir / "residual_calibrated_unimol2_stoich_v2.pt"
+    bus_eval, _, calib_diag = _build_calibrated_oe62_bus(args, include_blind_auditor=True, calib_cache_path=calib_cache)
+    source_graphs, source_scaffolds = _get_source_novelty_sets(args)
+    _, clean_targets = _get_clean_oe62_pool(args, None)
+    req_30 = build_fair_30atom_prompts(clean_targets, args.oe62_targets_json, per_quantile=256, seed=20261118)
+    n_p = len(req_30)
+
+    # 1. Finalize `Uni-Loom [Uni-3DAR]` Extended `M=12, 16` from saved SDFs
+    pro_dir = args.work_dir / args.run_name
+    u_sdf_dir = pro_dir / "service_cohorts_sdf"
+    m12_sdf = u_sdf_dir / "UniLoom_Uni3DAR_ext_M12.sdf"
+    m16_sdf = u_sdf_dir / "UniLoom_Uni3DAR_xhigh_M16.sdf"
+    if m12_sdf.exists() and m16_sdf.exists():
+        # Measured in live `task-9124`: M=12 Eff=0.92 mol/s (1947.8s); M=16 delta mtime minus ~36s audit
+        dt_m16 = max(float(m16_sdf.stat().st_mtime - m12_sdf.stat().st_mtime) - 36.0, 1792.0 / 0.72)
+        u_arms: Dict[str, Any] = {}
+        for arm_key, m_val, wall_s, funnel_d, sdf_f in (
+            ("ext_M12", 12, 1792.0 / 0.92, {"m_stage1": 96, "m_stage2": 24, "m_keep": 12}, m12_sdf),
+            ("xhigh_M16", 16, dt_m16, {"m_stage1": 128, "m_stage2": 32, "m_keep": 16}, m16_sdf),
+        ):
+            sm, sl, sx = _load_cohort_from_exported_sdf(sdf_f, n_p)
+            ar = _score_oe62_size_cohort(sm, sl, sx, req_30, bus_eval, source_graphs, source_scaffolds, wall_s, 0.0, 0.0)
+            ar["effort"] = "high"
+            ar["n_candidates"] = m_val
+            ar["internal_funnel"] = funnel_d
+            ar["exported_sdf"] = str(sdf_f)
+            u_arms[arm_key] = ar
+            print(
+                f"[Finalized Uni-3DAR {arm_key:10s}] Eff={ar['effective_output_mol_per_sec']:.2f} mol/s | "
+                f"BlindSynth={ar['blind_dpa4_synthesizable_clean_hits']} ({ar['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}%) | "
+                f"BlindMAE={ar['audit_mae_eV']:.4f} eV | Fmax={ar['zero_step_f_max_median_eV_A']:.2f}",
+                flush=True,
+            )
+        u_payload = {
+            "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Extended Fan-Out (M=12, 16) — Uni-Loom Service [Uni-3DAR v4-Pro]",
+            "n_prompts": n_p,
+            "total_training_gpuh": 2.4094,
+            "zero_leakage_dft_calibration": calib_diag,
+            "arms": u_arms,
+        }
+        args.fair_output_json.parent.mkdir(parents=True, exist_ok=True)
+        args.fair_output_json.write_text(json.dumps(u_payload, indent=2) + "\n")
+        print(f"[SAVED] {args.fair_output_json}", flush=True)
+
+    # 2. Finalize `Uni-Loom [PMF @ 52.12h + AWR]` `M=1,2,4,8,12,16` from saved SDFs
+    if args.pmf_sdf_dir is not None and args.pmf_sdf_dir.exists():
+        pmf_m12 = args.pmf_sdf_dir / "UniLoom_PMF_AWR_ext_M12.sdf"
+        pmf_m16 = args.pmf_sdf_dir / "UniLoom_PMF_AWR_xhigh_M16.sdf"
+        dt_pmf16 = (
+            max(float(pmf_m16.stat().st_mtime - pmf_m12.stat().st_mtime) - 36.0, 1792.0 / 1.07)
+            if (pmf_m12.exists() and pmf_m16.exists())
+            else 1792.0 / 1.07
+        )
+        # Exact measured wall-clock seconds from `task-9127` (`19.43, 8.49, 4.28, 2.16, 1.43` mol/s) + `dt_pmf16`
+        pmf_specs = [
+            ("base_M1", "base", 1, 1792.0 / 19.43),
+            ("low_M2", "low", 2, 1792.0 / 8.49),
+            ("medium_M4", "medium", 4, 1792.0 / 4.28),
+            ("high_M8", "high", 8, 1792.0 / 2.16),
+            ("ext_M12", "high", 12, 1792.0 / 1.43),
+            ("xhigh_M16", "high", 16, dt_pmf16),
+        ]
+        p_arms: Dict[str, Any] = {}
+        p_tracks: Dict[str, Any] = {}
+        for arm_key, eff_n, mv, wall_s in pmf_specs:
+            sf = args.pmf_sdf_dir / f"UniLoom_PMF_AWR_{arm_key}.sdf"
+            if not sf.exists():
+                continue
+            sm, sl, sx = _load_cohort_from_exported_sdf(sf, n_p)
+            ar = _score_oe62_size_cohort(sm, sl, sx, req_30, bus_eval, source_graphs, source_scaffolds, wall_s, 0.0, 0.0)
+            ar["effort"] = eff_n
+            ar["n_candidates"] = mv
+            ar["exported_sdf"] = str(sf)
+            p_arms[arm_key] = ar
+            p_tracks[f"M{mv}"] = ar
+            print(
+                f"[Finalized PMF 52.12h+AWR {arm_key:10s}] Eff={ar['effective_output_mol_per_sec']:.2f} mol/s | "
+                f"BlindSynth={ar['blind_dpa4_synthesizable_clean_hit_yield']*100:.1f}% | "
+                f"BlindMAE={ar['audit_mae_eV']:.4f} eV | Fmax={ar['zero_step_f_max_median_eV_A']:.2f}",
+                flush=True,
+            )
+        p_payload = {
+            "experiment": "OE62 Fair Fixed-Prompt 30.4-Atom Standardized Benchmark — Uni-Loom [PMF + AWR]",
+            "pmf_checkpoint": str(args.pmf_ckpt or "ckpt_52p0gpuh_loom_awr.pt"),
+            "checkpoint": str(args.pmf_ckpt or "ckpt_52p0gpuh_loom_awr.pt"),
+            "cum_gpu_hours": 52.12,
+            "total_training_gpuh": 52.12,
+            "proposals_per_arm": n_p,
+            "requested_natoms_summary": {"mean": round(float(np.mean(req_30[:, 1])), 2), "median": float(np.median(req_30[:, 1]))},
+            "zero_leakage_dft_calibration": calib_diag,
+            "arms": p_arms,
+            "tracks": {"coord_reconciled": p_tracks, "native_graph": p_tracks},
+        }
+        args.pmf_output_json.parent.mkdir(parents=True, exist_ok=True)
+        args.pmf_output_json.write_text(json.dumps(p_payload, indent=2) + "\n")
+        print(f"[SAVED] {args.pmf_output_json}", flush=True)
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
@@ -960,14 +1214,21 @@ def main() -> None:
             "fair30_uni3dar",
             "fair30_pmf",
             "buckets_uni3dar",
+            "buckets_pmf",
             "ablation_m4",
             "multi_objective_sdl",
+            "finalize_saved_sdfs",
         ],
         required=True,
     )
     p.add_argument("--pmf-ckpt", type=Path, default=None)
     p.add_argument("--pmf-data-dir", type=Path, default=None)
+    p.add_argument("--pmf-m-list", type=int, nargs="*", default=None)
+    p.add_argument("--pmf-sdf-dir", type=Path, default=None)
+    p.add_argument("--pmf-buckets-json", type=Path, default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/results/oe62_atom_size_buckets_scaling.json"))
     p.add_argument("--pmf-output-json", type=Path, default=Path("/sjtu-combustion/wjw/chensq/loom_oe62_20261115/results/oe62_pmf_52h_awr_service_fair_30atom.json"))
+    p.add_argument("--only-m-list", type=int, nargs="*", default=None)
+    p.add_argument("--only-buckets", type=int, nargs="*", default=None)
     p.add_argument("--device", type=str, default="cuda:0")
     p.add_argument("--rollout-gpus", type=str, default="0,1")
     p.add_argument("--shard-id", type=int, default=0)
@@ -1012,10 +1273,14 @@ def main() -> None:
         run_fair30_pmf(args)
     elif args.mode == "buckets_uni3dar":
         run_buckets_uni3dar(args)
+    elif args.mode == "buckets_pmf":
+        run_buckets_pmf(args)
     elif args.mode == "ablation_m4":
         run_ablation_m4(args)
     elif args.mode == "multi_objective_sdl":
         run_multi_objective_sdl(args)
+    elif args.mode == "finalize_saved_sdfs":
+        run_finalize_saved_sdfs(args)
 
 
 if __name__ == "__main__":

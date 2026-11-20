@@ -305,6 +305,82 @@
         "pearson_r": 0.7963,
         "spearman_rho": 0.8172
       }
+    },
+    "UniLoom_PMF_AWR_high_M8": {
+      "n_prompts_attempted": 42,
+      "n_selected": 42,
+      "n_tier0_synth_hits": 35,
+      "n_scf_converged": 42,
+      "scf_convergence_pct": 100.0,
+      "sa_leq_3_5_count": 39,
+      "end_to_end_pbe0_synth_clean_hits_raw": 22,
+      "end_to_end_pbe0_synth_clean_yield_raw": 0.5238,
+      "end_to_end_pbe0_synth_clean_hits_centered": 24,
+      "end_to_end_pbe0_synth_clean_yield_centered": 0.5714,
+      "mean_n_atoms": 31.3,
+      "median_sa_score": 2.6616,
+      "median_f_max_eV_A": 3.3761,
+      "mean_scf_wall_sec": 2.37,
+      "pbe0_vs_target_homo": {
+        "n": 42,
+        "mae_eV": 0.2429,
+        "rmse_eV": 0.3116,
+        "mean_bias_eV": -0.0215,
+        "centered_mae_eV": 0.2401,
+        "centered_rmse_eV": 0.3109,
+        "hit_rate_025eV_raw": 0.5714,
+        "hit_rate_025eV_centered": 0.6429,
+        "pearson_r": 0.8604,
+        "spearman_rho": 0.8614
+      },
+      "unimol2_vs_pbe0_homo": {
+        "n": 42,
+        "mae_eV": 0.2271,
+        "rmse_eV": 0.2785,
+        "mean_bias_eV": 0.0097,
+        "centered_mae_eV": 0.2248,
+        "centered_rmse_eV": 0.2783,
+        "hit_rate_025eV_raw": 0.7143,
+        "hit_rate_025eV_centered": 0.7143,
+        "pearson_r": 0.8917,
+        "spearman_rho": 0.9104
+      },
+      "dpa4_vs_pbe0_homo": {
+        "n": 42,
+        "mae_eV": 0.0912,
+        "rmse_eV": 0.1285,
+        "mean_bias_eV": -0.0238,
+        "centered_mae_eV": 0.091,
+        "centered_rmse_eV": 0.1262,
+        "hit_rate_025eV_raw": 0.9048,
+        "hit_rate_025eV_centered": 0.9048,
+        "pearson_r": 0.9789,
+        "spearman_rho": 0.9723
+      },
+      "unimol2_vs_target_homo": {
+        "n": 42,
+        "mae_eV": 0.1188,
+        "rmse_eV": 0.1668,
+        "mean_bias_eV": -0.0118,
+        "centered_mae_eV": 0.1191,
+        "centered_rmse_eV": 0.1663,
+        "hit_rate_025eV_raw": 0.881,
+        "hit_rate_025eV_centered": 0.8333,
+        "pearson_r": 0.9461,
+        "spearman_rho": 0.9409
+      },
+      "dpa4_vs_target_homo": {
+        "n": 42,
+        "mae_eV": 0.2224,
+        "rmse_eV": 0.2794,
+        "mean_bias_eV": -0.0453,
+        "centered_mae_eV": 0.2181,
+        "centered_rmse_eV": 0.2757,
+        "hit_rate_025eV_raw": 0.6905,
+        "hit_rate_025eV_centered": 0.6429,
+        "pearson_r": 0.8778,
+        "spearman_rho": 0.8731
+      }
     }
   }
 }

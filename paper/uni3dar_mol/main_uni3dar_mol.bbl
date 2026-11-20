@@ -1,0 +1,125 @@
+\begin{thebibliography}{16}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Axelrod and G{\'o}mez-Bombarelli(2022)]{axelrod2022geom}
+Simon Axelrod and Rafael G{\'o}mez-Bombarelli.
+\newblock {GEOM}, energy-annotated molecular conformations for property
+  prediction and molecular generation.
+\newblock \emph{Scientific Data}, 9:\penalty0 185, 2022.
+\newblock \doi{10.1038/s41597-022-01288-4}.
+
+\bibitem[Dunn and Koes(2024)]{dunn2024flowmol}
+Ian Dunn and David~Ryan Koes.
+\newblock Mixed continuous and categorical flow matching for 3{D} de novo
+  molecule generation.
+\newblock \emph{arXiv preprint arXiv:2404.19739}, 2024.
+
+\bibitem[Irwin et~al.(2025)Irwin, Tibo, Janet, and Olsson]{irwin2025semlaflow}
+Ross Irwin, Alessandro Tibo, Jon~Paul Janet, and Simon Olsson.
+\newblock Efficient 3{D} molecular generation with flow matching and scale
+  optimal transport.
+\newblock In \emph{International Conference on Learning Representations}, 2025.
+
+\bibitem[Stuke et~al.(2020)Stuke, Kunkel, Golze, Todorovi{\'c}, Margraf,
+  Reuter, Rinke, and Oberhofer]{stuke2020oe62}
+Annika Stuke, Christian Kunkel, Dorothea Golze, Milica Todorovi{\'c},
+  Johannes~T. Margraf, Karsten Reuter, Patrick Rinke, and Harald Oberhofer.
+\newblock Atomic structures and orbital energies of 61,489 crystal-forming
+  organic molecules.
+\newblock \emph{Scientific Data}, 7:\penalty0 58, 2020.
+\newblock \doi{10.1038/s41597-020-0385-y}.
+
+\bibitem[Zeng et~al.(2026)Zeng, Jin, Ambrose, Karypis, Transtrum, Tadmor,
+  Hennig, Roitberg, Martiniani, and Liu]{zeng2026propmolflow}
+Cheng Zeng, Jirui Jin, Connor Ambrose, George Karypis, Mark Transtrum, Ellad~B.
+  Tadmor, Richard~G. Hennig, Adrian Roitberg, Stefano Martiniani, and Mingjie
+  Liu.
+\newblock {PropMolFlow}: Property-guided molecule generation with
+  geometry-complete flow matching.
+\newblock \emph{Nature Computational Science}, 6:\penalty0 233--242, 2026.
+\newblock \doi{10.1038/s43588-025-00946-y}.
+
+\bibitem[Hoogeboom et~al.(2022)Hoogeboom, Satorras, Vignac, and
+  Welling]{hoogeboom2022edm}
+Emiel Hoogeboom, V{\'i}ctor~Garcia Satorras, Cl{\'e}ment Vignac, and Max
+  Welling.
+\newblock Equivariant diffusion for molecule generation in 3{D}.
+\newblock In \emph{Proceedings of the 39th International Conference on Machine
+  Learning}, volume 162, pages 8867--8887. PMLR, 2022.
+
+\bibitem[Xu et~al.(2023)Xu, Powers, Dror, Ermon, and Leskovec]{xu2023geoldm}
+Minkai Xu, Alexander~S. Powers, Ron~O. Dror, Stefano Ermon, and Jure Leskovec.
+\newblock Geometric latent diffusion models for 3{D} molecule generation.
+\newblock In \emph{Proceedings of the 40th International Conference on Machine
+  Learning}, volume 202, pages 38592--38610. PMLR, 2023.
+
+\bibitem[Vignac et~al.(2023)Vignac, Osman, Toni, and Frossard]{vignac2023midi}
+Cl{\'e}ment Vignac, Nagham Osman, Laura Toni, and Pascal Frossard.
+\newblock {MiDi}: Mixed graph and 3{D} denoising diffusion for molecule
+  generation.
+\newblock In \emph{Machine Learning and Knowledge Discovery in Databases (ECML
+  PKDD)}, pages 560--576. Springer, 2023.
+
+\bibitem[Le et~al.(2024)Le, Cremer, No{\'e}, Clevert, and
+  Sch{\"u}tt]{le2023eqgatdiff}
+Tuan Le, Julian Cremer, Frank No{\'e}, Djork-Arn{\'e} Clevert, and Kristof~T.
+  Sch{\"u}tt.
+\newblock Navigating the design space of equivariant diffusion-based generative
+  models for de novo 3{D} molecule generation.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Lu et~al.(2025)Lu, Lin, Yao, Gao, Ji, Liang, E, Zhang, and
+  Ke]{lu2025uni3dar}
+Shuqi Lu, Haowei Lin, Lin Yao, Zhifeng Gao, Xiaohong Ji, Yitao Liang, Weinan E,
+  Linfeng Zhang, and Guolin Ke.
+\newblock Unified cross-scale 3{D} generation and understanding via
+  autoregressive modeling.
+\newblock \emph{arXiv preprint arXiv:2503.16278}, 2025.
+\newblock URL \url{https://arxiv.org/abs/2503.16278}.
+
+\bibitem[{DeePMD-kit Developers}(2026)]{deepmodeling2026dpa4}
+{DeePMD-kit Developers}.
+\newblock {DPA4/SeZM} model documentation.
+\newblock DeePMD-kit Documentation, 2026.
+\newblock URL
+  \url{https://github.com/deepmodeling/deepmd-kit/blob/master/doc/model/dpa4.md}.
+
+\bibitem[{RDKit Contributors}(2026)]{rdkit2026bonds}
+{RDKit Contributors}.
+\newblock {RDKit} {rdDetermineBonds} {API} documentation, 2026.
+\newblock URL
+  \url{https://www.rdkit.org/docs/source/rdkit.Chem.rdDetermineBonds.html}.
+
+\bibitem[Ramakrishnan et~al.(2014)Ramakrishnan, Dral, Rupp, and von
+  Lilienfeld]{ramakrishnan2014qm9}
+Raghunathan Ramakrishnan, Pavlo~O. Dral, Matthias Rupp, and O.~Anatole von
+  Lilienfeld.
+\newblock Quantum chemistry structures and properties of 134 kilo molecules.
+\newblock \emph{Scientific Data}, 1:\penalty0 140022, 2014.
+\newblock \doi{10.1038/sdata.2014.22}.
+
+\bibitem[Sun et~al.(2020)]{sun2020pyscf}
+Qiming Sun et~al.
+\newblock Recent developments in the {PySCF} program package.
+\newblock \emph{The Journal of Chemical Physics}, 153:\penalty0 024109, 2020.
+\newblock \doi{10.1063/5.0006074}.
+
+\bibitem[Li et~al.(2024)Li, Sun, Zhang, and Chan]{li2024gpu4pyscf}
+Rui Li, Qiming Sun, Xing Zhang, and Garnet Kin-Lic Chan.
+\newblock Introducing {GPU}-acceleration into the python-based simulations of
+  chemistry framework.
+\newblock \emph{arXiv preprint arXiv:2407.09700}, 2024.
+
+\bibitem[Chen et~al.(2026)Chen, Zhao, Cheng, Wang, Wang, and
+  Gao]{chen2026uniloom}
+Shangqian Chen, Guojiang Zhao, Zheng Cheng, Jiankun Wang, Hongshuai Wang, and
+  Zhifeng Gao.
+\newblock {Uni-Loom}: Predictor-agnostic 3{D} molecular weaving with dual-track
+  valence purity and grounded recursive self-improvement.
+\newblock \emph{Companion Preprint}, 2026.
+
+\end{thebibliography}

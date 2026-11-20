@@ -2,7 +2,7 @@
 
 Merges `docs/experiments/oe62_uni3dar_v4_pro_atom_buckets.json` (`Uni-Loom [Uni-3DAR]` standardized
 `base: M=1`, `medium: M=4`, `high: M=8` service tiers) with `docs/experiments/oe62_atom_size_buckets_scaling.json`
-(`PropMolFlow @ 52h` `M=1`, `M=8`, and `Uni-Loom [PMF @ 52.12h + Loom-AWR, M=8]`) across exact requested
+(`PropMolFlow @ 52h` `M=1`, `M=8`, and `Uni-Loom [PMF @ 52.12h + AWR, M=8]`) across exact requested
 atom counts `N in {20, 30, 40, 50, 60}` (`280` prompts/bucket).
 """
 
@@ -63,8 +63,8 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
         ("Uni3DAR_medium_M4", f"Uni-Loom [Uni-3DAR, M=4] ({u3d_h:.2f}h)", "#0F766E", "-^", 2.3, 6.8),
         ("Uni3DAR_high_M8", f"Uni-Loom [Uni-3DAR, M=8] ({u3d_h:.2f}h)", "#065F46", "-o", 2.7, 7.4),
         ("PMF_52h_M1", "Vanilla PropMolFlow @ 52h [M=1, No Loom]", "#94A3B8", "--o", 1.8, 5.6),
-        ("PMF_52h_M8", "PropMolFlow @ 52h + Loom-Critic [M=8]", "#334155", "-o", 2.2, 6.4),
-        ("PMF_52h_LoomAWR_M8", "Uni-Loom [PMF @ 52.12h + Loom-AWR, M=8]", "#E11D48", "-D", 2.4, 6.4),
+        ("PMF_52h_M8", "PropMolFlow @ 52h + Raw Critic [M=8]", "#334155", "-o", 2.2, 6.4),
+        ("PMF_52h_LoomAWR_M8", "Uni-Loom [PMF @ 52.12h + AWR, M=8]", "#E11D48", "-D", 2.4, 6.4),
     ]
 
     ax0, ax1, ax2 = axes
@@ -92,21 +92,29 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
             ax1.plot(xs_valid, mae_list, fmt, color=color, lw=lw, ms=ms, label=label)
             ax2.plot(xs_valid, hit_list, fmt, color=color, lw=lw, ms=ms, label=label)
 
+    lat60_pmf1 = 1000.0 / float(b_map["60"]["arms"]["PMF_52h_M1"]["effective_output_mol_per_sec"])
+    lat60_u1 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_base_M1"]["effective_output_mol_per_sec"])
+    lat60_pmf = 1000.0 / float(b_map["60"]["arms"]["PMF_52h_M8"]["effective_output_mol_per_sec"])
+    lat60_u4 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_medium_M4"]["effective_output_mol_per_sec"])
+    lat60_u8 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_high_M8"]["effective_output_mol_per_sec"])
+    y_top = max(1720.0, max(lat60_pmf, lat60_u8) * 1.09)
     ax0.set_xticks(ns)
-    ax0.set_ylim(-40, 1680)
+    ax0.set_ylim(-45, y_top)
     ax0.set_xlabel("Exact Requested Atom Count N (Total Heavy + H Atoms)", fontsize=9.6, fontweight="bold", color="#1E293B")
     ax0.set_ylabel("Measured Latency per 1,000 Prompts (A800 GPU-sec)", fontsize=9.8, fontweight="bold", color="#1E293B")
     ax0.set_title("A. Inference Latency Scaling: Sparse Octree vs Dense O(N²) ODE", fontsize=10.3, fontweight="bold", color="#1E293B", loc="left", pad=10)
     ax0.legend(loc="upper left", fontsize=6.9, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
-    lat60_pmf = 1000.0 / float(b_map["60"]["arms"]["PMF_52h_M8"]["effective_output_mol_per_sec"])
-    lat60_u4 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_medium_M4"]["effective_output_mol_per_sec"])
-    lat60_u8 = 1000.0 / float(b_map["60"]["arms"]["Uni3DAR_high_M8"]["effective_output_mol_per_sec"])
+    m8_line = (
+        f"{lat60_pmf/lat60_u8:.2f}× faster (M=8 vs PMF M=8)"
+        if lat60_u8 < lat60_pmf
+        else f"{lat60_pmf1/lat60_u1:.1f}× faster (M=1 vs PMF M=1)"
+    )
     ax0.annotate(
-        f"N=60 Speedup vs PMF M=8:\n{lat60_pmf/lat60_u4:.1f}× faster (M=4)\n{lat60_pmf/lat60_u8:.1f}× faster (M=8)",
+        f"N=60 Sparse Octree Speedup:\n{lat60_pmf/lat60_u4:.1f}× faster (M=4 vs PMF M=8)\n{m8_line}",
         xy=(60, lat60_u4),
-        xytext=(23.0, 960),
-        fontsize=7.4,
+        xytext=(21.5, y_top * 0.56),
+        fontsize=7.3,
         fontweight="bold",
         color="#0F766E",
         bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#0F766E", alpha=0.94, lw=0.85),
@@ -127,13 +135,20 @@ def render_atom_scaling_figure(out_paths: List[Path]) -> None:
     ax2.set_title("C. Synthesizable Clean Hit Yield (SA ≤ 3.5) vs Molecular Size", fontsize=10.3, fontweight="bold", color="#1E293B", loc="left", pad=10)
     ax2.legend(loc="upper right", fontsize=6.9, frameon=True, facecolor=bg_ax, edgecolor="#CBD5E1")
 
+    h40_awr = float(b_map["40"]["arms"]["PMF_52h_LoomAWR_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
+    h40_u8 = float(b_map["40"]["arms"]["Uni3DAR_high_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
     h50_awr = float(b_map["50"]["arms"]["PMF_52h_LoomAWR_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
     h50_u8 = float(b_map["50"]["arms"]["Uni3DAR_high_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
+    h60_awr = float(b_map["60"]["arms"]["PMF_52h_LoomAWR_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
+    h60_u8 = float(b_map["60"]["arms"]["Uni3DAR_high_M8"]["blind_dpa4_synthesizable_clean_hit_yield"]) * 100.0
     ax2.annotate(
-        f"N=50 Large-Molecule Lead:\nUni-3DAR M=8: {h50_u8:.1f}%\nvs PMF 52h+AWR M=8: {h50_awr:.1f}%",
+        f"Large-Scaffold Lead (N=40..60):\n"
+        f"N=40: {h40_u8:.1f}% vs {h40_awr:.1f}%\n"
+        f"N=50: {h50_u8:.1f}% vs {h50_awr:.1f}%\n"
+        f"N=60: {h60_u8:.1f}% vs {h60_awr:.1f}% ({h60_u8/max(h60_awr, 0.1):.1f}×)",
         xy=(50, h50_u8),
-        xytext=(38.0, 50.0),
-        fontsize=7.4,
+        xytext=(42.5, 48.0),
+        fontsize=7.1,
         fontweight="bold",
         color="#065F46",
         bbox=dict(boxstyle="round,pad=0.26", facecolor="#FFFFFF", edgecolor="#065F46", alpha=0.94, lw=0.85),

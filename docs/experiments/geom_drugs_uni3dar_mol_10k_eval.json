@@ -1,0 +1,298 @@
+{
+  "experiment": "GEOM-Drugs 10,000-Molecule Unconditional 3D Molecular Generation Benchmark \u2014 Uni-3DAR-Mol",
+  "n_molecules": 10000,
+  "merge_level": 7,
+  "grid_len_A": 0.24,
+  "allowed_elements": [
+    "H",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "As",
+    "Se",
+    "Br",
+    "I"
+  ],
+  "post_training_metadata": {
+    "dataset": "GEOM-Drugs (merge_level=7, 14 elements, full SO(3))",
+    "sft_gpuh": 0.1479,
+    "refiner_gpuh": 0.0587,
+    "critic_gpuh": 0.2848,
+    "total_post_training_gpuh": 0.4914,
+    "rollout_clean_connected_rate": 0.4856,
+    "rollout_fmax_median_eV_A": 7.274,
+    "refiner_stats": {
+      "epochs": 12,
+      "train_loss": 0.11573,
+      "val_bond_dist_mae_A": 0.01258,
+      "val_noisy_bond_dist_mae_A": 0.06684,
+      "val_bond_order_acc": 0.9927
+    },
+    "stage1_critic_stats": {
+      "epochs": 24,
+      "train_loss": 0.47309,
+      "val_prop_mae_norm": 0.0,
+      "val_legal_acc": 0.6581,
+      "val_constr_acc": 0.9926
+    },
+    "stage2_critic_stats": {
+      "epochs": 28,
+      "train_loss": 0.32117,
+      "val_prop_mae_norm": 0.0,
+      "val_legal_acc": 0.6569,
+      "val_constr_acc": 0.9939
+    }
+  },
+  "published_reference_baselines": {
+    "EDM (ICML 2022)": {
+      "paradigm": "E(3) Diffusion (1000 steps)",
+      "atom_stability_pct": 81.3,
+      "mol_stability_pct": 0.2,
+      "valid_pct": 91.9,
+      "valid_connected_pct": null,
+      "nfe_steps": 1000
+    },
+    "GeoLDM (ICML 2023)": {
+      "paradigm": "Latent E(3) Diffusion (1000 steps)",
+      "atom_stability_pct": 84.4,
+      "mol_stability_pct": 5.2,
+      "valid_pct": 99.3,
+      "valid_connected_pct": null,
+      "nfe_steps": 1000
+    },
+    "MiDi-Adaptive (ECML 2023)": {
+      "paradigm": "Joint 2D+3D Diffusion (500 steps)",
+      "atom_stability_pct": 99.8,
+      "mol_stability_pct": 91.6,
+      "valid_pct": 77.8,
+      "valid_connected_pct": 77.8,
+      "nfe_steps": 500
+    },
+    "EQGAT-diff (NeurIPS 2023)": {
+      "paradigm": "Joint Equivariant Diffusion (500 steps)",
+      "atom_stability_pct": 99.8,
+      "mol_stability_pct": 93.4,
+      "valid_pct": 94.6,
+      "valid_connected_pct": 87.5,
+      "nfe_steps": 500
+    },
+    "FlowMol (2024)": {
+      "paradigm": "Joint CTMC + Euclidean Flow (100 steps)",
+      "atom_stability_pct": 99.7,
+      "mol_stability_pct": 96.2,
+      "valid_pct": 97.1,
+      "valid_connected_pct": 95.3,
+      "nfe_steps": 100
+    },
+    "SemlaFlow (ICLR 2025)": {
+      "paradigm": "Equivariant OT Flow Matching (100 steps)",
+      "atom_stability_pct": 99.8,
+      "mol_stability_pct": 97.7,
+      "valid_pct": 98.4,
+      "valid_connected_pct": 97.2,
+      "nfe_steps": 100
+    }
+  },
+  "arms": {
+    "Vanilla_Uni3DAR_Pretrained_M1": {
+      "n_requested": 10000,
+      "wall_sec": 169.149,
+      "throughput_mol_per_sec": 59.119,
+      "gpu_sec_per_1k_molecules": 16.91,
+      "valid_rate": 0.196,
+      "valid_and_connected_rate": 0.127,
+      "neutral_closed_shell_rate": 0.03,
+      "explicit_atom_stability": 0.9763,
+      "explicit_mol_stability": 0.0642,
+      "edm_lookup_atom_stability": 0.7907,
+      "edm_lookup_mol_stability": 0.0018,
+      "uniqueness_among_connected": 1.0,
+      "novelty_among_unique": 1.0,
+      "mean_atoms_generated": 43.51,
+      "mean_natoms_abs_err": null,
+      "bond_length_jsd_mean": 0.12928,
+      "bond_length_jsd_per_type": {
+        "C-C:SINGLE": 0.14277,
+        "C-C:AROMATIC": 0.07304,
+        "C-H:SINGLE": 0.08662,
+        "C-N:SINGLE": 0.16007,
+        "C-N:AROMATIC": 0.05066,
+        "C-O:SINGLE": 0.18784,
+        "C-O:DOUBLE": 0.18003,
+        "C-S:SINGLE": 0.15322
+      },
+      "bond_length_means_A": {
+        "C-C:SINGLE": 1.5028,
+        "C-C:AROMATIC": 1.3952,
+        "C-H:SINGLE": 1.0895,
+        "C-N:SINGLE": 1.42,
+        "C-N:AROMATIC": 1.3531,
+        "C-O:SINGLE": 1.3731,
+        "C-O:DOUBLE": 1.2212,
+        "C-S:SINGLE": 1.8175
+      },
+      "bond_angle_jsd": 0.05157,
+      "ring_size_jsd": 0.04707,
+      "strained_3_4_ring_fraction": 0.1235,
+      "zero_step_dpa4_f_max_median_eV_A": 8.028,
+      "zero_step_dpa4_f_max_p90_eV_A": 17.339,
+      "zero_step_dpa4_f_rms_median_eV_A": 2.584
+    },
+    "Uni3DAR_Mol_Base_M1": {
+      "n_requested": 10000,
+      "wall_sec": 386.472,
+      "throughput_mol_per_sec": 25.875,
+      "gpu_sec_per_1k_molecules": 38.65,
+      "valid_rate": 0.5141,
+      "valid_and_connected_rate": 0.5141,
+      "neutral_closed_shell_rate": 0.3209,
+      "explicit_atom_stability": 0.9969,
+      "explicit_mol_stability": 0.4514,
+      "edm_lookup_atom_stability": 0.8435,
+      "edm_lookup_mol_stability": 0.0153,
+      "uniqueness_among_connected": 1.0,
+      "novelty_among_unique": 1.0,
+      "mean_atoms_generated": 43.0,
+      "mean_natoms_abs_err": 4.78,
+      "bond_length_jsd_mean": 0.10188,
+      "bond_length_jsd_per_type": {
+        "C-C:SINGLE": 0.11843,
+        "C-C:AROMATIC": 0.02273,
+        "C-H:SINGLE": 0.06341,
+        "C-N:SINGLE": 0.1088,
+        "C-N:AROMATIC": 0.01659,
+        "C-O:SINGLE": 0.17412,
+        "C-O:DOUBLE": 0.19538,
+        "C-S:SINGLE": 0.11555
+      },
+      "bond_length_means_A": {
+        "C-C:SINGLE": 1.4896,
+        "C-C:AROMATIC": 1.3927,
+        "C-H:SINGLE": 1.0919,
+        "C-N:SINGLE": 1.3969,
+        "C-N:AROMATIC": 1.3465,
+        "C-O:SINGLE": 1.3535,
+        "C-O:DOUBLE": 1.2251,
+        "C-S:SINGLE": 1.7799
+      },
+      "bond_angle_jsd": 0.03727,
+      "ring_size_jsd": 0.04123,
+      "strained_3_4_ring_fraction": 0.1109,
+      "zero_step_dpa4_f_max_median_eV_A": 7.494,
+      "zero_step_dpa4_f_max_p90_eV_A": 17.427,
+      "zero_step_dpa4_f_rms_median_eV_A": 2.471,
+      "effort": "base",
+      "internal_funnel_median": {
+        "m_stage1": 1,
+        "m_stage2": 1,
+        "m_keep": 1
+      }
+    },
+    "Uni3DAR_Mol_SpecTree_M2": {
+      "n_requested": 10000,
+      "wall_sec": 1303.782,
+      "throughput_mol_per_sec": 7.67,
+      "gpu_sec_per_1k_molecules": 130.38,
+      "valid_rate": 0.6978,
+      "valid_and_connected_rate": 0.6978,
+      "neutral_closed_shell_rate": 0.5055,
+      "explicit_atom_stability": 0.9978,
+      "explicit_mol_stability": 0.6367,
+      "edm_lookup_atom_stability": 0.8481,
+      "edm_lookup_mol_stability": 0.0236,
+      "uniqueness_among_connected": 1.0,
+      "novelty_among_unique": 1.0,
+      "mean_atoms_generated": 42.18,
+      "mean_natoms_abs_err": 2.31,
+      "bond_length_jsd_mean": 0.09676,
+      "bond_length_jsd_per_type": {
+        "C-C:SINGLE": 0.11822,
+        "C-C:AROMATIC": 0.02379,
+        "C-H:SINGLE": 0.06328,
+        "C-N:SINGLE": 0.10313,
+        "C-N:AROMATIC": 0.01562,
+        "C-O:SINGLE": 0.1604,
+        "C-O:DOUBLE": 0.18537,
+        "C-S:SINGLE": 0.10424
+      },
+      "bond_length_means_A": {
+        "C-C:SINGLE": 1.4871,
+        "C-C:AROMATIC": 1.392,
+        "C-H:SINGLE": 1.0923,
+        "C-N:SINGLE": 1.396,
+        "C-N:AROMATIC": 1.3456,
+        "C-O:SINGLE": 1.356,
+        "C-O:DOUBLE": 1.2236,
+        "C-S:SINGLE": 1.7789
+      },
+      "bond_angle_jsd": 0.03384,
+      "ring_size_jsd": 0.02604,
+      "strained_3_4_ring_fraction": 0.0691,
+      "zero_step_dpa4_f_max_median_eV_A": 6.891,
+      "zero_step_dpa4_f_max_p90_eV_A": 14.517,
+      "zero_step_dpa4_f_rms_median_eV_A": 2.328,
+      "effort": "low",
+      "internal_funnel_median": {
+        "m_stage1": 16,
+        "m_stage2": 4,
+        "m_keep": 2
+      }
+    },
+    "Uni3DAR_Mol_SpecTree_M4": {
+      "n_requested": 10000,
+      "wall_sec": 2501.099,
+      "throughput_mol_per_sec": 3.998,
+      "gpu_sec_per_1k_molecules": 250.11,
+      "valid_rate": 0.8615,
+      "valid_and_connected_rate": 0.8615,
+      "neutral_closed_shell_rate": 0.6594,
+      "explicit_atom_stability": 0.9983,
+      "explicit_mol_stability": 0.8015,
+      "edm_lookup_atom_stability": 0.8506,
+      "edm_lookup_mol_stability": 0.0291,
+      "uniqueness_among_connected": 1.0,
+      "novelty_among_unique": 1.0,
+      "mean_atoms_generated": 43.37,
+      "mean_natoms_abs_err": 2.35,
+      "bond_length_jsd_mean": 0.09505,
+      "bond_length_jsd_per_type": {
+        "C-C:SINGLE": 0.11242,
+        "C-C:AROMATIC": 0.0207,
+        "C-H:SINGLE": 0.06441,
+        "C-N:SINGLE": 0.10094,
+        "C-N:AROMATIC": 0.01524,
+        "C-O:SINGLE": 0.15959,
+        "C-O:DOUBLE": 0.18254,
+        "C-S:SINGLE": 0.10453
+      },
+      "bond_length_means_A": {
+        "C-C:SINGLE": 1.4879,
+        "C-C:AROMATIC": 1.3921,
+        "C-H:SINGLE": 1.0926,
+        "C-N:SINGLE": 1.3967,
+        "C-N:AROMATIC": 1.3453,
+        "C-O:SINGLE": 1.3569,
+        "C-O:DOUBLE": 1.2233,
+        "C-S:SINGLE": 1.7787
+      },
+      "bond_angle_jsd": 0.03267,
+      "ring_size_jsd": 0.02457,
+      "strained_3_4_ring_fraction": 0.0625,
+      "zero_step_dpa4_f_max_median_eV_A": 6.934,
+      "zero_step_dpa4_f_max_p90_eV_A": 13.92,
+      "zero_step_dpa4_f_rms_median_eV_A": 2.28,
+      "effort": "medium",
+      "internal_funnel_median": {
+        "m_stage1": 32,
+        "m_stage2": 8,
+        "m_keep": 4
+      }
+    }
+  }
+}

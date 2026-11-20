@@ -355,11 +355,11 @@ def test_stoichiometric_descriptor_invariance_continuous_funnel_and_spec_driven_
     )
     gen.attach_post_processors(process_critic=TwoStageOctreeProcessCritic(s1, s2))
 
-    assert gen.resolve_internal_funnel(effort="high", atom_budget=20.0) == ("high", 38, 12, 8)
-    assert gen.resolve_internal_funnel(effort="high", atom_budget=30.4) == ("high", 52, 14, 8)
-    assert gen.resolve_internal_funnel(effort="high", atom_budget=40.0) == ("high", 64, 16, 8)
-    assert gen.resolve_internal_funnel(effort="medium", atom_budget=20.0) == ("medium", 20, 6, 4)
-    assert gen.resolve_internal_funnel(effort="low", atom_budget=20.0) == ("low", 10, 4, 2)
+    assert gen.resolve_internal_funnel(effort="high", atom_budget=20.0) == ("high", 42, 12, 8)
+    assert gen.resolve_internal_funnel(effort="high", atom_budget=23.0) == ("high", 48, 14, 8)
+    assert gen.resolve_internal_funnel(effort="high", atom_budget=30.4) == ("high", 64, 16, 8)
+    assert gen.resolve_internal_funnel(effort="medium", atom_budget=20.0) == ("medium", 22, 6, 4)
+    assert gen.resolve_internal_funnel(effort="low", atom_budget=20.0) == ("low", 12, 4, 2)
 
     # Verify sync-free two-stage chunking across heterogeneous budgets (`[18, 20, 34, 46]`)
     t_norm = gen.normalize_targets(np.array([[-6.3, 2.0], [-6.5, 2.0], [-6.7, 2.0], [-6.9, 2.0]], dtype=np.float32))
