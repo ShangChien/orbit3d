@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FlowMol-118 · WebGPU Playground (flowmol-rs)</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --panel: #111827;
+    --border: #1f2937;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #3b82f6;
+    --ok: #10b981;
+    --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--fg);
+    display: grid; grid-template-columns: 340px 1fr; height: 100vh; overflow: hidden;
+  }
+  aside {
+    background: var(--panel); border-right: 1px solid var(--border);
+    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+  }
+  h1 { font-size: 16px; margin: 0; display: flex; align-items: center; justify-content: space-between; }
+  .badge { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; }
+  .group { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+  label { color: var(--muted); display: flex; justify-content: space-between; }
+  input, select, button {
+    background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 9px; font-size: 12px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  button { cursor: pointer; font-weight: 600; transition: opacity 0.15s, border-color 0.15s; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 9px; font-size: 13px; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  main { position: relative; display: flex; flex-direction: column; height: 100vh; }
+  #topbar {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-family: ui-monospace, monospace;
+  }
+  #cv { flex: 1; width: 100%; cursor: grab; touch-action: none; }
+  #cv:active { cursor: grabbing; }
+  #bottombar {
+    padding: 10px 16px; border-top: 1px solid var(--border); background: var(--panel);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px;
+  }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .pill { padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); }
+</style>
+</head>
+<body>
+<aside>
+  <div>
+    <h1>FlowMol-118 <span class="badge" id="gpuTag">WASM Init...</span></h1>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;">纯前端 Rust + WebGPU 全周期表 3D 分子生成</div>
+  </div>
+
+  <div class="group">
+    <label><span>1. 加载模型包 (.fm118)</span><span id="modelState" class="mono">未加载</span></label>
+    <input type="file" id="fileInput" accept=".fm118" />
+    <button id="btnFetchDefault">加载默认 ./models/model.fm118 (OPFS缓存)</button>
+  </div>
+
+  <div class="group">
+    <label><span>目标化学域</span><span>元素白名单 + 尺寸分布</span></label>
+    <select id="selDomain">
+      <option value="geom_drugs">GEOM-Drugs (类药分子)</option>
+      <option value="qm9">QM9 (小分子 H/C/N/O/F)</option>
+      <option value="oe62">OE62 (有机光电材料)</option>
+      <option value="tmqm">tmQM (过渡金属配合物)</option>
+      <option value="open118">Open-118 (全周期表无掩码)</option>
+    </select>
+  </div>
+
+  <div class="row2">
+    <div class="group">
+      <label><span>原子数 N (0=自动)</span></label>
+      <input type="number" id="inpAtoms" value="36" min="0" max="120" class="mono" />
+    </div>
+    <div class="group">
+      <label><span>随机种子 Seed</span></label>
+      <input type="number" id="inpSeed" value="42" class="mono" />
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="group">
+      <label><span>求解器</span></label>
+      <select id="selSolver">
+        <option value="heun">Heun (2阶)</option>
+        <option value="euler">Euler (1阶)</option>
+      </select>
+    </div>
+    <div class="group">
+      <label><span>采样步数</span></label>
+      <input type="number" id="inpSteps" value="25" min="5" max="150" class="mono" />
+    </div>
+  </div>
+
+  <div class="group">
+    <label><span>强制出现元素 (零重训钉死)</span><span class="mono">逗号分隔</span></label>
+    <input type="text" id="inpRequire" placeholder="例如: Rh,P,P 或 Ru,P,P,S" class="mono" />
+  </div>
+
+  <div class="group">
+    <label><span>电荷白名单约束</span></label>
+    <select id="selCharges">
+      <option value="-1,0,1,2">常规价态 [-1, 0, +1, +2]</option>
+      <option value="0">严格全中性 [0]</option>
+      <option value="">不限制 (-4..+6)</option>
+    </select>
+  </div>
+
+  <button class="primary" id="btnSample" disabled>⚡ 开始 WebGPU 3D 生成</button>
+
+  <div class="row2">
+    <button id="btnSdf" disabled>下载 .SDF</button>
+    <button id="btnToggleH">显隐 H: 开</button>
+  </div>
+</aside>
+
+<main>
+  <div id="topbar">
+    <span id="statusTxt">请选择本地 .fm118 模型文件或点击加载默认模型</span>
+    <span id="perfTxt" style="color:var(--ok);"></span>
+  </div>
+  <canvas id="cv"></canvas>
+  <div id="bottombar">
+    <div id="molMeta" class="mono">—</div>
+    <div id="metalMeta" class="mono" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  </div>
+</main>
+
+<script type="module">
+import init, { WasmFlowMolEngine } from "./pkg/flowmol_rs.js";
+
+const ATOMS = [
+  "H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca",
+  "Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr",
+  "Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd",
+  "Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg",
+  "Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm",
+  "Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"
+];
+const CPK = { H:"#cbd5e1", C:"#64748b", N:"#3b82f6", O:"#ef4444", S:"#eab308", P:"#f97316", F:"#4ade80", Cl:"#22c55e", Br:"#b45309", I:"#a855f7", Rh:"#14b8a6", Ru:"#8b5cf6", Ni:"#10b981", Pd:"#06b6d4", Pt:"#38bdf8", Fe:"#f97316", Cu:"#ea580c" };
+
+let engine = null;
+let lastSdf = "";
+let curMol = null; // { positions: [[x,y,z]], symbols: [], bonds: [] }
+let showH = true, rotY = 0.5, rotX = 0.25, zoom = 1.0, dragging = false, lx = 0, ly = 0, spinning = true;
+
+await init();
+document.getElementById("gpuTag").textContent = navigator.gpu ? "WebGPU Ready" : "WASM CPU Fallback";
+
+async function loadEngineFromBytes(u8, label) {
+  const t0 = performance.now();
+  document.getElementById("statusTxt").textContent = `正在初始化引擎 (${(u8.byteLength / 1e6).toFixed(1)} MB)...`;
+  engine = await WasmFlowMolEngine.create(u8, !!navigator.gpu);
+  const info = JSON.parse(engine.backendInfo());
+  document.getElementById("gpuTag").textContent = info.backend;
+  document.getElementById("modelState").textContent = `${info.quant_dtype} · L=${info.n_molecule_updates}`;
+  document.getElementById("statusTxt").textContent = `已就绪: ${label} (${(performance.now() - t0).toFixed(0)} ms)`;
+  document.getElementById("btnSample").disabled = false;
+}
+
+document.getElementById("fileInput").onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const buf = new Uint8Array(await f.arrayBuffer());
+  await loadEngineFromBytes(buf, f.name);
+};
+
+document.getElementById("btnFetchDefault").onclick = async () => {
+  try {
+    let bytes = null;
+    if (navigator.storage && navigator.storage.getDirectory) {
+      const root = await navigator.storage.getDirectory();
+      try {
+        const fh = await root.getFileHandle("flowmol_default.fm118");
+        bytes = new Uint8Array(await (await fh.getFile()).arrayBuffer());
+      } catch (_) {}
+      if (!bytes) {
+        document.getElementById("statusTxt").textContent = "正在下载 ./models/model.fm118 并写入 OPFS 缓存...";
+        const resp = await fetch("./models/model.fm118");
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        bytes = new Uint8Array(await resp.arrayBuffer());
+        const fh = await root.getFileHandle("flowmol_default.fm118", { create: true });
+        const wr = await fh.createWritable();
+        await wr.write(bytes);
+        await wr.close();
+      }
+    } else {
+      const resp = await fetch("./models/model.fm118");
+      bytes = new Uint8Array(await resp.arrayBuffer());
+    }
+    await loadEngineFromBytes(bytes, "OPFS/model.fm118");
+  } catch (err) {
+    document.getElementById("statusTxt").textContent = `未找到 ./models/model.fm118 (${err.message})，请用左侧文件选择框直接打开任意 .fm118 文件`;
+  }
+};
+
+document.getElementById("btnSample").onclick = async () => {
+  if (!engine) return;
+  const btn = document.getElementById("btnSample");
+  btn.disabled = true;
+  spinning = false;
+
+  const nVal = parseInt(document.getElementById("inpAtoms").value || "0", 10);
+  const reqRaw = document.getElementById("inpRequire").value.trim();
+  const chgRaw = document.getElementById("selCharges").value.trim();
+  const opts = {
+    n_atoms: nVal > 1 ? nVal : null,
+    domain: document.getElementById("selDomain").value,
+    n_steps: parseInt(document.getElementById("inpSteps").value || "25", 10),
+    solver: document.getElementById("selSolver").value,
+    grid_type: "quadratic_end",
+    required_elements: reqRaw ? reqRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
+    allowed_charges: chgRaw ? chgRaw.split(",").map(s => parseInt(s.trim(), 10)) : null,
+    seed: parseInt(document.getElementById("inpSeed").value || "42", 10),
+  };
+
+  const t0 = performance.now();
+  try {
+    const resStr = await engine.sampleMolecule(JSON.stringify(opts), (step, total, xFlat, aIdx) => {
+      const n = aIdx.length;
+      const pos = [], syms = [];
+      for (let i = 0; i < n; i++) {
+        pos.push([xFlat[3 * i], xFlat[3 * i + 1], xFlat[3 * i + 2]]);
+        syms.push(aIdx[i] < ATOMS.length ? ATOMS[aIdx[i]] : "?");
+      }
+      curMol = { positions: pos, symbols: syms, bonds: [] };
+      document.getElementById("statusTxt").textContent = `去噪步 ${step} / ${total}...`;
+      draw();
+    });
+    const dt = performance.now() - t0;
+    const parsed = JSON.parse(resStr);
+    const m = parsed.molecule;
+    lastSdf = parsed.sdf;
+    curMol = { positions: m.positions, symbols: m.atom_symbols, bonds: m.bonds };
+    spinning = true;
+    document.getElementById("btnSdf").disabled = false;
+    document.getElementById("inpSeed").value = String(opts.seed + 1);
+    document.getElementById("statusTxt").textContent = `生成完成: ${m.formula}`;
+    document.getElementById("perfTxt").textContent = `${dt.toFixed(0)} ms (${(1000 / dt).toFixed(2)} mol/s)`;
+    document.getElementById("molMeta").textContent =
+      `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 价态合法=${m.valence_valid} · 单连通=${m.connected} (${m.n_fragments} frag) · d_min=${m.min_dist.toFixed(3)} Å`;
+    document.getElementById("metalMeta").innerHTML = (m.metals || []).map(mc =>
+      `<span class="pill">${mc.symbol} (CN=${mc.coordination_number}): ${mc.neighbors.map(nb => `${nb.symbol} ${nb.distance}Å`).join(", ")}</span>`
+    ).join("");
+    draw();
+  } catch (e) {
+    document.getElementById("statusTxt").textContent = `错误: ${e}`;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+document.getElementById("btnSdf").onclick = () => {
+  if (!lastSdf) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lastSdf], { type: "chemical/x-mdl-sdfile" }));
+  a.download = "flowmol_generated.sdf";
+  a.click();
+};
+
+document.getElementById("btnToggleH").onclick = (e) => {
+  showH = !showH;
+  e.target.textContent = `显隐 H: ${showH ? "开" : "关"}`;
+  draw();
+};
+
+const cv = document.getElementById("cv");
+cv.addEventListener("pointerdown", e => { dragging = true; spinning = false; lx = e.clientX; ly = e.clientY; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lx) * 0.01;
+  rotX = Math.max(-1.45, Math.min(1.45, rotX + (e.clientY - ly) * 0.01));
+  lx = e.clientX; ly = e.clientY; draw();
+});
+cv.addEventListener("pointerup", () => { dragging = false; });
+cv.addEventListener("wheel", e => { e.preventDefault(); zoom = Math.max(0.5, Math.min(2.4, zoom * (e.deltaY > 0 ? 0.92 : 1.08))); draw(); }, { passive: false });
+
+function draw() {
+  const r = cv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = Math.max(300, Math.floor(r.width)), H = Math.max(240, Math.floor(r.height));
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+  if (!curMol || !curMol.positions.length) return;
+
+  const pos = curMol.positions, syms = curMol.symbols;
+  let maxR = 1.5;
+  pos.forEach(p => { maxR = Math.max(maxR, Math.hypot(p[0], p[1], p[2])); });
+  const cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
+  const sc = (Math.min(W, H) * 0.38 / maxR) * zoom, camZ = maxR * 3.8;
+
+  const proj = pos.map((p, i) => {
+    const x1 = p[0] * cy + p[2] * sy, z1 = -p[0] * sy + p[2] * cy;
+    const y2 = p[1] * cx - z1 * sx, z2 = p[1] * sx + z1 * cx;
+    const pr = camZ / Math.max(camZ - z2, 1.0);
+    return { sym: syms[i], sx: W / 2 + x1 * sc * pr, sy: H / 2 - y2 * sc * pr, z: z2, p: pr };
+  });
+
+  const items = [];
+  (curMol.bonds || []).forEach(b => {
+    if (!showH && (proj[b.u].sym === "H" || proj[b.v].sym === "H")) return;
+    items.push({ t: "b", u: proj[b.u], v: proj[b.v], bt: b.bond_type_id, z: (proj[b.u].z + proj[b.v].z) / 2 });
+  });
+  proj.forEach(p => {
+    if (!showH && p.sym === "H") return;
+    items.push({ t: "a", a: p, z: p.z });
+  });
+  items.sort((a, b) => a.z - b.z);
+
+  items.forEach(it => {
+    if (it.t === "b") {
+      ctx.save();
+      ctx.strokeStyle = it.bt === 5 ? "#f59e0b" : "#94a3b8";
+      if (it.bt === 5) ctx.setLineDash([5, 4]);
+      ctx.lineWidth = (it.bt >= 2 ? 2.8 : 2.2) * ((it.u.p + it.v.p) / 2);
+      ctx.beginPath(); ctx.moveTo(it.u.sx, it.u.sy); ctx.lineTo(it.v.sx, it.v.sy); ctx.stroke();
+      ctx.restore();
+    } else {
+      const p = it.a;
+      const rad = (p.sym === "H" ? 4.5 : (p.sym === "?" ? 5.5 : 9.5)) * p.p * Math.min(1.3, zoom);
+      const col = p.sym === "?" ? "#475569" : (CPK[p.sym] || "#a855f7");
+      const g = ctx.createRadialGradient(p.sx - rad * 0.3, p.sy - rad * 0.3, rad * 0.1, p.sx, p.sy, rad);
+      g.addColorStop(0, "#fff"); g.addColorStop(0.35, col); g.addColorStop(1, "#020617");
+      ctx.beginPath(); ctx.arc(p.sx, p.sy, rad, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+      if (p.sym !== "C" && p.sym !== "H" && p.sym !== "?") {
+        ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(p.sym, p.sx, p.sy + 0.5);
+      }
+    }
+  });
+}
+
+function anim() {
+  if (spinning && !dragging && curMol) { rotY += 0.008; draw(); }
+  requestAnimationFrame(anim);
+}
+new ResizeObserver(draw).observe(cv);
+requestAnimationFrame(anim);
+</script>
+</body>
+</html>
