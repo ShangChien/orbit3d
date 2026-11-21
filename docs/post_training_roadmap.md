@@ -50,30 +50,29 @@
 
 ---
 
-## 3. 路线二工作计划：8×A800 通用 `FlowMol` 预训练底座与 `Hybrid Flow-GRPO`
+## 3. 路线二工作计划：16×A100 全周期表通用 `FlowMol` 预训练底座与 `Hybrid Flow-GRPO`
 
-> **工程基座选型原则**：预训练底座直接基于干净的无条件 $SE(3)$ 等变 **`FlowMol / FlowMol3`** 主干构建（弃用原版 `PropMolFlow` 窄词表、单属性硬拼接外壳；也不以仅面向二维图像潜空间的官方 `Flow-GRPO` 仓库做分子底座），后训练统一收敛在 `Uni-Loom` 的 `LoomFlowMolGenerator` 与 `LoomGRPOTrainer` 内。
+> **工程基座选型与独立发版解耦原则**：全周期表预训练底座（`src/loom/flowmol/`，独立技术方案见 `docs/flowmol_pretraining_plan.md`）作为独立研究工作构建与发版，**不耦合进 `Uni-Loom` 论文正文**；对 `Uni-Loom` 仅通过标准权重格式（`flowmol_foundation_v1`）与 `LoomFlowMolGenerator.from_pretrained_flowmol(...)` 提供即插即用的代码与权重支持。
 
-### 3.1 数值精度规范（面向 8×A800 Ampere 节点）
-- **标准配置**：启用 **`BF16` 自动混合精度（AMP）+ `FP32` 主权重/优化器状态 + `TF32` 矩阵乘兜底**（A800 不支持硬件 FP8；不采用需动态缩放的 FP16）。
-- **强制局部 `FP32` 白名单（`torch.autocast("cuda", enabled=False)`）**：
-  1. 三维成对坐标差、欧氏距离 `||x_i - x_j||`、RBF 径向基展开与方向单位向量归一化；
+### 3.1 数值精度规范（面向 16×A100 / A800 Ampere RDMA 集群）
+- **标准配置**：启用 **`BF16` 自动混合精度（AMP）+ `FP32` 主权重/EMA/优化器状态 + `TF32` 矩阵乘兜底**（Ampere 不支持硬件 FP8；不采用需动态缩放的 FP16）。
+- **强制局部 `FP32` 白名单（`torch.autocast(..., enabled=False)`）**：
+  1. 三维成对坐标差、欧氏距离 `||x_i - x_j||`、`rbf_dmax=20.0 Å` 径向基展开与方向单位向量归一化；
   2. GVP 等变向量通道的 $L_2$ 范数与叉乘特征（`n_cp_feats`）；
-  3. 质心扣除（COM removal）与先验旋转/平移最优传输对齐；
-  4. 插值调度系数 $\alpha_t, \dot{\alpha}_t$、CTMC 掩码交叉熵归约，以及后训练中的优势指数权重或 SDE-CTMC 步进 log-prob 累加。
-- **准入准则**：全量开训前须完成 `2,000` 步 `纯 TF32` vs `BF16+局部FP32` 对照，验证 `loss_x`、`loss_e`、梯度范数及生成最小原子间距分布一致。
+  3. 质心扣除（COM removal）、体积自适应先验 $\sigma(N)=1.15(N/25)^{1/3}$ 与手性保持 $SO(3)$ Kabsch 对齐（$\det(\mathbf{R})=+1$）；
+  4. 插值调度系数 $\alpha_t, \dot{\alpha}_t$、按分子均衡的 CTMC 掩码交叉熵归约，以及后训练中的优势指数权重或 SDE-CTMC 步进 log-prob 累加。
+- **准入准则**：全量开训前须完成 `2,000` 步确定性验证集 `纯 TF32` vs `BF16+局部FP32` 对照，验证 `val_loss_x`、`val_loss_e`、梯度范数与 `nan_skips == 0`。
 
-### 3.2 8×A800 通用预训练分阶段排期
-1. **Stage 1 — 词表与可插拔条件架构定型（约 2–3 天）**：
-   - 一次性固定 `16–20` 种常见元素统一大词表 + 独立专用 `[MASK]` 索引（消除原版复用 `'Se'` 作为未解掩占位符的冲突），固定 `n_atom_charges=6, n_bond_types=5`，下游通过 `allowed_elements` 掩码动态裁剪；
-   - 主干纯学无条件分布 $p_\theta(\mathbf{X},\mathbf{A},\mathbf{C},\mathbf{E})$ + 几何自条件（Self-Conditioning），预留零初始化 AdaLN-Zero / Cross-Attention 多属性条件编码器（对齐 `Uni-Loom` 的 `target_cols` + `active_mask` 协议）与 GVP 线性层 LoRA 接口。
-2. **Stage 2 — 多源三维语料整合与动态边数分桶（8 卡并行预处理约 0.5–1 天）**：
-   - 整合公开三维构象集（QM9 + GEOM 构象集 + OE62 + Uni-Mol 公开有机分子子集），统一显式氢、键级与形式电荷；
-   - 实现 **Dynamic Edge-Budget Bucketing**（按原子数分桶、按单卡全连接总边数上限动态组 batch），消除 8 卡 DDP 中大分子拖慢小分子的同步空转。
-3. **Stage 3 — 8×A800 预训练主循环与少步求解适配**：
-   - **标准底座（~12M 参数）**：8 卡吞吐预估 `2,600–3,200 mol/s`，训练 `6,000 万–8,000 万` 分子-时间步样本，耗时约 **`6–9 小时`**；
-   - **旗舰底座（~40M–50M 参数）**：扩宽 GVP 标量/边通道与更新层数，8 卡吞吐预估 `800–1,100 mol/s`，训练 `1.5 亿–2 亿` 样本，耗时约 **`2–3 天`**；
-   - 末期增设非均匀时间网格与二阶 Heun 求解器适配，使推理步数从 `100` 步压缩至 **`20–25` 步**（单卡吞吐提升至 `~35–45 mol/s`）。
+### 3.2 16×A100 全原子预训练分阶段配置
+1. **Stage 1 — 全周期表 118 元素词表与可插拔钩子定型（已完成）**：
+   - 一次性对齐 **全周期表 `118` 元素（`Z=1..118` + `[MASK]=118`）**、**`11` 档形式电荷（`-4..+6` + `[MASK]=11`）** 与 **`6` 类化学键（含 `COORDINATE/DATIVE` 配位键 + `[MASK]=6`）**，辅以 `34` 维周期律物理描述符与因式分解双线性输出残差头，下游可通过 `allowed_elements` / `allowed_charges` 按需裁剪；
+   - 主干纯学无条件分布 $p_\theta(\mathbf{X},\mathbf{A},\mathbf{C},\mathbf{E})$ + 几何自条件，预留零初始化条件调制接口、阶段 5 片段锚定掩码投影 `fragment_cond_proj` 与可开关 GVP LoRA 接口（`ToggleableLoRALinear` + `disable_lora()`）。
+2. **Stage 2 — 五源有机+金属配合物三维语料与动态边数分桶（构建 `flowmol-corpus-v2`）**：
+   - 整合五套公开三维全原子数据集（**`QM9 + OE62 + PCQM4Mv2 + GEOM-Drugs + tmQM`**，覆盖有机药物分子、16 元素主族功能分子及全部 30 种 `3d/4d/5d` 过渡金属 + `La` 配合物，`max_atoms=120`）；
+   - 实现跨 16 卡同步的 **Dynamic Edge-Budget Bucketing** 与精确步内断点续训（`skip_batches`）。
+3. **Stage 3 — 双机 16×A100 RDMA 预训练与无过冲少步求解**：
+   - **旗舰底座（`flagship`，`~40.1M` 参数）** 与 **标准底座（`standard`，`~12.8M` 参数）**；
+   - 采用无过冲精确有限步 $\alpha$-空间二阶 Heun 求解器与 $(1-\alpha_s)$ 退火 CTMC，支持 `25` 步高质量快速生成及全开放 118 元素 / 分域采样评估。
 4. **Stage 4 — 下游低成本迁移与双模后训练支持**：
    - 预训练底座就绪后，适配任意新性质预测模型仅需：**轻量 LoRA 条件 SFT（8×A800 约 `10–20 分钟` / 单卡 `~1–1.5h`）+ `Uni-Loom` 在线奖励对齐**；
    - 在 `LoomFlowMolGenerator` 中并存提供两种在线对齐档位：
