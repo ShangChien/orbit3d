@@ -300,8 +300,22 @@ class LoomFlowMolGenerator(GeneratorSlot):
         self.cum_gpu_hours = float(cum_gpu_hours)
 
     @property
+    def _is_native_flowmol(self) -> bool:
+        from ..flowmol.model import FlowMolModel
+
+        return isinstance(self.backbone, FlowMolModel)
+
+    @property
     def _uses_dgl(self) -> bool:
-        return not bool(getattr(self.backbone, "is_mock_flow_backbone", False))
+        return (not self._is_native_flowmol) and (not bool(getattr(self.backbone, "is_mock_flow_backbone", False)))
+
+    def set_allowed_elements(self, elements: Sequence[str]) -> None:
+        valid = set(self.atom_type_map)
+        cleaned = tuple(str(e) for e in elements if str(e) in valid)
+        if not cleaned:
+            raise ValueError(f"No elements in {elements} match FlowMol vocabulary")
+        self._allowed_elements = cleaned
+        self.args.allow_atoms = ",".join(cleaned)
 
     def normalize_targets(self, targets_eV: np.ndarray | torch.Tensor) -> torch.Tensor:
         t = torch.as_tensor(targets_eV, dtype=torch.float32, device=self.target_mean.device)
@@ -345,7 +359,7 @@ class LoomFlowMolGenerator(GeneratorSlot):
         leaf_atom_budget: Optional[np.ndarray | Sequence[float]] = None,
         **kwargs: Any,
     ) -> List[Dict[str, Any]]:
-        del cfg_scale, xyz_cfg_scale, cfg_tree_decay, geometric_guard, temperatures, use_bf16, electron_parity
+        del cfg_tree_decay, geometric_guard, temperatures, electron_parity
         atom_budget_kw = kwargs.pop("atom_budget", None)
         if leaf_atom_budget is None and atom_budget_kw is not None:
             leaf_atom_budget = atom_budget_kw
@@ -365,6 +379,34 @@ class LoomFlowMolGenerator(GeneratorSlot):
                 n_atoms = [max(2, int(round(float(x)))) for x in b_arr.tolist()]
             else:
                 n_atoms = self._sample_conditional_natoms(goals_raw, seed=seed)
+
+            if self._is_native_flowmol:
+                solver = str(self.hparams.get("solver", "heun" if self.sample_timesteps <= 32 else "euler"))
+                grid_type = str(self.hparams.get("grid_type", "quadratic_end"))
+                raw_samples = self.backbone.sample(
+                    n_atoms,
+                    device=device,
+                    n_steps=self.sample_timesteps,
+                    solver=solver,
+                    grid_type=grid_type,
+                    allowed_elements=self.allowed_elements,
+                    cond_values=targets_norm.to(device),
+                    cond_active_mask=active_mask.to(device),
+                    cfg_scale=float(cfg_scale),
+                    xyz_cfg_scale=float(xyz_cfg_scale),
+                    use_bf16=bool(use_bf16),
+                    seed=seed,
+                    build_rdkit=True,
+                )
+                vocab = self.backbone.config.atom_types
+                return [
+                    {
+                        "atom_symbols": [str(vocab[int(i)]) for i in s["atom_types"].tolist()],
+                        "positions_np": np.asarray(s["positions"], dtype=np.float32),
+                        "rdkit_mol": s.get("rdkit_mol"),
+                    }
+                    for s in raw_samples
+                ]
 
             if not self._uses_dgl:
                 return self.backbone.sample_trajectories(
@@ -518,9 +560,53 @@ class LoomFlowMolGenerator(GeneratorSlot):
         seed: int = 42,
         repeat_k: int = 1,
     ) -> Tuple[Optional[Dict[str, Any]], List[int]]:
-        del seed
         if not mols:
             return None, []
+        if self._is_native_flowmol:
+            from ..flowmol.constants import CHARGE_TO_IDX, mol_to_sparse_record
+            from ..flowmol.data import collate_flowmol_batch
+            from ..flowmol.priors import sample_aligned_coord_prior_np
+
+            rng = np.random.default_rng(int(seed))
+            a_lut = {s: i for i, s in enumerate(self.backbone.config.atom_types)}
+            c_lut = {int(q): i for i, q in enumerate(self.backbone.config.formal_charges)}
+            sparse_items: List[Dict[str, Any]] = []
+            kept_idx: List[int] = []
+            for idx, m in enumerate(mols):
+                sr = mol_to_sparse_record(m, atom_to_idx=a_lut, charge_to_idx=c_lut, max_atoms=self.max_atoms)
+                if sr is None:
+                    continue
+                na = int(sr["pos"].shape[0])
+                n_up = na * (na - 1) // 2
+                e_up = np.zeros(n_up, dtype=np.int64)
+                if len(sr["bond_u"]) > 0:
+                    bu = sr["bond_u"].astype(np.int64)
+                    bv = sr["bond_v"].astype(np.int64)
+                    up_i = bu * na - (bu * (bu + 1)) // 2 + (bv - bu - 1)
+                    e_up[up_i] = sr["bond_type"].astype(np.int64)
+                x0 = sample_aligned_coord_prior_np(
+                    sr["pos"],
+                    rng,
+                    prior_std=self.backbone.config.prior_std,
+                    size_scale_prior=self.backbone.config.size_scale_prior,
+                )
+                sparse_items.append(
+                    {
+                        "n_atoms": na,
+                        "x_0": x0,
+                        "x_1": sr["pos"],
+                        "a_1": sr["atom_type"].astype(np.int64),
+                        "c_1": sr["charge"].astype(np.int64),
+                        "e_1_upper": e_up,
+                    }
+                )
+                kept_idx.append(idx)
+            if not sparse_items:
+                return None, []
+            rep = max(1, int(repeat_k))
+            flow_batch = collate_flowmol_batch(sparse_items * rep)
+            return {"mode": "native_flowmol", "batch": flow_batch}, kept_idx * rep
+
         records: List[Dict[str, torch.Tensor]] = []
         kept_indices: List[int] = []
         for idx, m in enumerate(mols):
@@ -551,7 +637,7 @@ class LoomFlowMolGenerator(GeneratorSlot):
         return_per_molecule: bool = False,
         **kwargs: Any,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
-        del cfg_dropout_prob, kwargs
+        del kwargs
         try:
             device = next(self.parameters()).device
         except StopIteration:
@@ -559,6 +645,38 @@ class LoomFlowMolGenerator(GeneratorSlot):
         targets_norm = targets_norm.to(device)
         if active_mask is not None:
             active_mask = active_mask.to(device)
+
+        if self._is_native_flowmol:
+            flow_batch = packed_batch["batch"].to(device)
+            bsz = int(flow_batch.batch_size)
+            eff_mask = active_mask
+            if cfg_dropout_prob > 0.0 and self.training and eff_mask is not None:
+                drop = torch.rand((bsz, 1), device=device) < float(cfg_dropout_prob)
+                eff_mask = torch.where(drop, torch.zeros_like(eff_mask, dtype=torch.bool), eff_mask.bool())
+
+            k_draws = self.sft_time_draws
+            per_mol_accum = torch.zeros((bsz,), device=device, dtype=torch.float32)
+            feat_means = {"x": 0.0, "a": 0.0, "c": 0.0, "e": 0.0}
+            for d_idx in range(k_draws):
+                u = torch.rand((bsz,), device=device, dtype=torch.float32)
+                t = ((float(d_idx) + u) / float(k_draws)).clamp(0.002, 0.998)
+                pm_loss, m_info = self.backbone.compute_loss(
+                    flow_batch,
+                    t=t,
+                    cond_values=targets_norm,
+                    cond_active_mask=eff_mask,
+                    return_per_molecule=True,
+                )
+                per_mol_accum = per_mol_accum + pm_loss / float(k_draws)
+                for fk in feat_means:
+                    feat_means[fk] += float(m_info[f"loss_{fk}"].item()) / float(k_draws)
+
+            info_nat: Dict[str, Any] = {f"loss_{k}": v for k, v in feat_means.items()}
+            info_nat["loss_total"] = float(per_mol_accum.detach().mean().item())
+            if return_per_molecule:
+                info_nat["per_molecule_generation_loss"] = per_mol_accum
+                return per_mol_accum, info_nat
+            return per_mol_accum.mean(), info_nat
 
         if not self._uses_dgl:
             return self.backbone.compute_flow_loss(
@@ -691,6 +809,70 @@ class LoomFlowMolGenerator(GeneratorSlot):
             "Deterministic ODE/CTMC flow generator does not expose exact stepwise log-probs; "
             "use LoomGRPOTrainer(alignment_mode='awr_sft') or an SDE flow-policy wrapper."
         )
+
+    @classmethod
+    def from_pretrained_flowmol(
+        cls,
+        checkpoint_path: Path | str,
+        *,
+        target_cols: Sequence[str],
+        target_units: Sequence[str],
+        mean: Sequence[float],
+        scale: Sequence[float],
+        device: str = "cuda:0",
+        sample_timesteps: int = 25,
+        sft_time_draws: int = 2,
+        max_atoms: int = 120,
+        allowed_elements: Optional[Sequence[str]] = None,
+        lora_rank: int = 0,
+        lora_alpha: float = 32.0,
+    ) -> "LoomFlowMolGenerator":
+        """Load a DGL-free `uniloom_flowmol_v1` pretrained checkpoint and attach `LoomConditioner` (+ optional LoRA)."""
+        from ..flowmol.gvp import inject_flowmol_lora
+        from ..flowmol.model import FlowMolConfig, FlowMolModel
+
+        ck = torch.load(Path(checkpoint_path), map_location="cpu", weights_only=False)
+        cfg = FlowMolConfig.from_dict(ck["config"])
+        backbone = FlowMolModel(cfg)
+        state = ck.get("ema_state_dict") or ck.get("model_state_dict")
+        backbone.load_state_dict(state, strict=False)
+        if backbone.conditioner is None:
+            backbone.attach_conditioner(num_props=len(target_cols))
+        if lora_rank > 0:
+            inject_flowmol_lora(backbone, rank=int(lora_rank), alpha=float(lora_alpha))
+
+        # Populate empirical size sampler if checkpoint carries `n_atoms_hist`
+        hist = ck.get("n_atoms_hist") or {}
+        if hist:
+            keys = np.asarray([int(k) for k in hist.keys()], dtype=np.int64)
+            cnts = np.asarray([float(v) for v in hist.values()], dtype=np.float64)
+            probs = cnts / cnts.sum()
+
+            def _sample_n_atoms(n: int) -> torch.Tensor:
+                drawn = np.random.default_rng().choice(keys, size=int(n), replace=True, p=probs)
+                return torch.from_numpy(drawn)
+
+            backbone.sample_n_atoms = _sample_n_atoms  # type: ignore[attr-defined]
+
+        slot = cls(
+            backbone=backbone,
+            atom_type_map=cfg.atom_types,
+            target_cols=target_cols,
+            target_units=target_units,
+            mean=mean,
+            scale=scale,
+            sample_timesteps=sample_timesteps,
+            sft_time_draws=sft_time_draws,
+            max_atoms=max_atoms,
+            hparams={"format": "uniloom_flowmol_v1", "config": cfg.to_dict()},
+            epoch=int(ck.get("epoch", 0)),
+            global_step=int(ck.get("step", 0)),
+        ).to(device)
+
+        eff_allowed = allowed_elements if allowed_elements is not None else ck.get("active_elements")
+        if eff_allowed:
+            slot.set_allowed_elements(tuple(eff_allowed))
+        return slot
 
     @classmethod
     def from_propmolflow_checkpoint(
