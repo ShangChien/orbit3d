@@ -1,0 +1,34 @@
+[package]
+name = "flowmol-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Unified pure-Rust + WebGPU/Metal/DX12/Vulkan inference engine for FlowMol-118 (Browser + Desktop)"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "flowmol-cli"
+path = "src/bin/flowmol_cli.rs"
+
+[dependencies]
+bytemuck = { version = "1.21", features = ["derive"] }
+half = "2.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wgpu = "24.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pollster = "0.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["console"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
