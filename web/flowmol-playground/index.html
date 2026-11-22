@@ -3,10 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>FlowMol-118 · WebGPU Playground (flowmol-rs)</title>
+<title>MolGen-RS · Dual-Engine WebGPU Playground (FlowMol-118 + Uni-3DAR-Mol)</title>
 <script>
-  // Automatically upgrade 0.0.0.0 / [::] (printed by `python3 -m http.server`) to localhost
-  // so Chrome/Edge/Safari enter Secure Context and unlock `navigator.gpu` (WebGPU) + OPFS!
   if (location.hostname === "0.0.0.0" || location.hostname === "::" || location.hostname === "[::]") {
     location.replace(`${location.protocol}//localhost:${location.port}${location.pathname}${location.search}`);
   }
@@ -19,6 +17,7 @@
     --fg: #e5e7eb;
     --muted: #9ca3af;
     --accent: #3b82f6;
+    --accent2: #8b5cf6;
     --ok: #10b981;
     --warn: #f59e0b;
     --err: #ef4444;
@@ -27,28 +26,39 @@
   body {
     margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
     background: var(--bg); color: var(--fg);
-    display: grid; grid-template-columns: 350px 1fr; height: 100vh; overflow: hidden;
+    display: grid; grid-template-columns: 368px 1fr; height: 100vh; overflow: hidden;
   }
   aside {
     background: var(--panel); border-right: 1px solid var(--border);
-    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px;
+    padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
   }
-  h1 { font-size: 16px; margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 195px; }
+  h1 { font-size: 15.5px; margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 198px; }
   .badge.warn { background: #78350f; color: #fde68a; }
   .badge.ok { background: #064e3b; color: #6ee7b7; }
-  .group { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
-  label { color: var(--muted); display: flex; justify-content: space-between; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--bg); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
+  .tab-btn {
+    border: none; border-radius: 6px; padding: 7px 6px; font-size: 12px; font-weight: 600;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .tab-btn.active.flow { background: #1d4ed8; color: #fff; }
+  .tab-btn.active.uni { background: #6d28d9; color: #fff; }
+  .group { display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+  label { color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
   input, select, button {
     background: var(--bg); color: var(--fg); border: 1px solid var(--border);
-    border-radius: 6px; padding: 7px 9px; font-size: 12px; outline: none;
+    border-radius: 6px; padding: 6.5px 9px; font-size: 12px; outline: none;
   }
+  input[type="checkbox"] { width: 14px; height: 14px; padding: 0; accent-color: var(--accent2); }
   input:focus, select:focus { border-color: var(--accent); }
   button { cursor: pointer; font-weight: 600; transition: opacity 0.15s, border-color 0.15s; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 9px; font-size: 13px; }
+  button.primary.uni-mode { background: var(--accent2); border-color: var(--accent2); }
   button.danger { background: #7f1d1d; border-color: #991b1b; color: #fecaca; padding: 9px; font-size: 13px; }
   button:disabled { opacity: 0.42; cursor: not-allowed; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .prop-grid { display: flex; flex-direction: column; gap: 5px; background: rgba(11,15,25,0.55); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+  .prop-row { display: grid; grid-template-columns: 20px 1fr 92px; align-items: center; gap: 6px; font-size: 11.5px; }
   .alert {
     display: none; font-size: 11.5px; line-height: 1.45; padding: 8px 10px;
     border-radius: 6px; border: 1px solid #92400e; background: rgba(120, 53, 15, 0.35); color: #fde68a;
@@ -67,89 +77,132 @@
   }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .pill { padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); }
+  .pill.uni { border-color: #5b21b6; color: #ddd6fe; }
 </style>
 </head>
 <body>
 <aside>
   <div>
-    <h1>FlowMol-118 <span class="badge" id="gpuTag">Worker Init...</span></h1>
-    <div style="font-size:11px;color:var(--muted);margin-top:4px;">Web Worker + WebGPU 异步无阻塞 3D 分子生成</div>
+    <h1>MolGen-RS <span class="badge" id="gpuTag">Worker Init...</span></h1>
+    <div style="font-size:11px;color:var(--muted);margin-top:3px;">端侧统一 Rust + WebGPU 双引擎三维分子生成工作台</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active flow" id="tabFlow">🌊 FlowMol-118</button>
+    <button class="tab-btn uni" id="tabUni">🌲 Uni-3DAR-Mol</button>
   </div>
 
   <div id="diagBox" class="alert"></div>
 
   <div class="group">
-    <label><span>1. 加载模型包 (.fm118)</span><span id="modelState" class="mono">未加载</span></label>
+    <label><span id="lblModelTitle">1. 加载模型包 (.fm118 / .u3m)</span><span id="modelState" class="mono">未加载</span></label>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px;">
+      <select id="selPresetUrl"></select>
+      <button id="btnFetchDefault">加载</button>
+    </div>
+    <input type="file" id="fileInput" accept=".fm118,.u3m" />
+  </div>
+
+  <!-- ================= Engine 1: FlowMol-118 Controls ================= -->
+  <div id="panelFlow" style="display:flex;flex-direction:column;gap:11px;">
+    <div class="group">
+      <label><span>目标化学域</span><span>元素白名单 + 尺寸分布</span></label>
+      <select id="selDomain">
+        <option value="geom_drugs">GEOM-Drugs (类药分子)</option>
+        <option value="qm9">QM9 (小分子 H/C/N/O/F)</option>
+        <option value="oe62">OE62 (有机光电材料)</option>
+        <option value="tmqm">tmQM (过渡金属配合物)</option>
+        <option value="open118">Open-118 (全周期表无掩码)</option>
+      </select>
+    </div>
+
     <div class="row2">
-      <select id="selPresetUrl">
-        <option value="./models/model.fm118">默认旗舰 FP16 (78 MiB)</option>
-        <option value="./models/flagship_q8.fm118">旗舰轻量 Q8_0 (46 MiB)</option>
-        <option value="./models/flagship_fp32.fm118">旗舰全精度 FP32 (153 MiB)</option>
-      </select>
-      <button id="btnFetchDefault">加载并缓存</button>
+      <div class="group">
+        <label><span>原子数 N (0=自动)</span></label>
+        <input type="number" id="inpAtoms" value="32" min="0" max="120" class="mono" />
+      </div>
+      <div class="group">
+        <label><span>采样步数</span></label>
+        <input type="number" id="inpSteps" value="20" min="5" max="150" class="mono" />
+      </div>
     </div>
-    <input type="file" id="fileInput" accept=".fm118" />
-  </div>
 
-  <div class="group">
-    <label><span>目标化学域</span><span>元素白名单 + 尺寸分布</span></label>
-    <select id="selDomain">
-      <option value="geom_drugs">GEOM-Drugs (类药分子)</option>
-      <option value="qm9">QM9 (小分子 H/C/N/O/F)</option>
-      <option value="oe62">OE62 (有机光电材料)</option>
-      <option value="tmqm">tmQM (过渡金属配合物)</option>
-      <option value="open118">Open-118 (全周期表无掩码)</option>
-    </select>
-  </div>
-
-  <div class="row2">
-    <div class="group">
-      <label><span>原子数 N (0=自动)</span></label>
-      <input type="number" id="inpAtoms" value="32" min="0" max="120" class="mono" />
+    <div class="row2">
+      <div class="group">
+        <label><span>ODE/CTMC 求解器</span></label>
+        <select id="selSolver">
+          <option value="heun">Heun (2阶高合法率)</option>
+          <option value="euler">Euler (1阶2倍速)</option>
+        </select>
+      </div>
+      <div class="group">
+        <label><span>电荷白名单</span></label>
+        <select id="selCharges">
+          <option value="-1,0,1,2">常规 [-1..+2]</option>
+          <option value="0">严格中性 [0]</option>
+          <option value="">不限制</option>
+        </select>
+      </div>
     </div>
-    <div class="group">
-      <label><span>随机种子 Seed</span></label>
-      <input type="number" id="inpSeed" value="42" class="mono" />
-    </div>
-  </div>
 
-  <div class="row2">
     <div class="group">
-      <label><span>求解器</span></label>
-      <select id="selSolver">
-        <option value="heun">Heun (2阶 · 高连通/高合法率)</option>
-        <option value="euler">Euler (1阶 · 2倍速)</option>
+      <label><span>单分子连通保障</span><span>防孤立碎片</span></label>
+      <select id="selSingleMode">
+        <option value="largest_fragment">凝聚引导 + 提取主分子 (100%单分子 · 零额外耗时)</option>
+        <option value="strict_retry">凝聚引导 + 自动重采 (100%单分子 · 固定原子数N)</option>
+        <option value="valid_connected">严选模式 (重采至 单连通 + 价态合法)</option>
+        <option value="cohesion">仅开启三维孤岛凝聚引导 (>2.8Å拉回)</option>
+        <option value="none">关闭约束 (原始分布)</option>
       </select>
     </div>
+
     <div class="group">
-      <label><span>采样步数</span></label>
-      <input type="number" id="inpSteps" value="20" min="5" max="150" class="mono" />
+      <label><span>强制出现元素 (零重训钉死)</span><span class="mono">逗号分隔</span></label>
+      <input type="text" id="inpRequire" placeholder="例如: Rh,P,P 或 Ru,P,P,S" class="mono" />
+    </div>
+  </div>
+
+  <!-- ================= Engine 2: Uni-3DAR-Mol Controls ================= -->
+  <div id="panelUni" style="display:none;flex-direction:column;gap:11px;">
+    <div class="row2">
+      <div class="group">
+        <label><span>目标原子预算 (0=自由)</span></label>
+        <input type="number" id="inpUniBudget" value="28" min="0" max="120" class="mono" />
+      </div>
+      <div class="group">
+        <label><span>CFG 条件引导强度</span></label>
+        <input type="number" id="inpUniCfg" value="2.0" step="0.25" min="1.0" max="6.0" class="mono" />
+      </div>
+    </div>
+
+    <div class="group">
+      <label><span>双阶段投机八叉树漏斗 (Speculative K)</span><span>Stage1→2→1</span></label>
+      <select id="selUniSpecK">
+        <option value="2">K = 2 (8 → 2 → 1 · 双阶段 Critic 剪枝 · 推荐)</option>
+        <option value="1">K = 1 (1 → 1 → 1 · 单路极速自回归直出)</option>
+        <option value="3">K = 3 (12 → 3 → 1 · 深度属性/合法性优选)</option>
+        <option value="4">K = 4 (16 → 4 → 1 · 高强度多分支搜索)</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label><span>几何精修与零位移价态调和</span><span>RMSD_heavy = 0 Å</span></label>
+      <select id="selUniPost">
+        <option value="full">开启 SE(3) Seam Refiner + ValenceReconciler (推荐)</option>
+        <option value="refiner_only">仅开启 SE(3) Seam Refiner (保留原始点云氢)</option>
+        <option value="raw">关闭后处理 (原始 0.01 Å 八叉树叶节点输出)</option>
+      </select>
+    </div>
+
+    <div class="group" id="uniCondWrap" style="display:none;">
+      <label><span>LoomConditioner 定向属性目标</span><span class="mono">勾选激活</span></label>
+      <div class="prop-grid" id="uniPropList"></div>
     </div>
   </div>
 
   <div class="group">
-    <label><span>单分子连通保障</span><span>防孤立多碎片</span></label>
-    <select id="selSingleMode">
-      <option value="largest_fragment">凝聚引导 + 提取主分子 (100%单分子 · 零额外耗时)</option>
-      <option value="strict_retry">凝聚引导 + 自动重采 (100%单分子 · 固定原子数N)</option>
-      <option value="valid_connected">严选模式 (自动重采至 单连通 + 价态合法)</option>
-      <option value="cohesion">仅开启三维孤岛凝聚引导 (>2.8Å拉回)</option>
-      <option value="none">关闭约束 (原始采样分布)</option>
-    </select>
-  </div>
-
-  <div class="group">
-    <label><span>强制出现元素 (零重训钉死)</span><span class="mono">逗号分隔</span></label>
-    <input type="text" id="inpRequire" placeholder="例如: Rh,P,P 或 Ru,P,P,S" class="mono" />
-  </div>
-
-  <div class="group">
-    <label><span>电荷白名单约束</span></label>
-    <select id="selCharges">
-      <option value="-1,0,1,2">常规价态 [-1, 0, +1, +2]</option>
-      <option value="0">严格全中性 [0]</option>
-      <option value="">不限制 (-4..+6)</option>
-    </select>
+    <label><span>随机种子 Seed</span><span id="loadedEngineHint" class="mono">未加载</span></label>
+    <input type="number" id="inpSeed" value="42" class="mono" />
   </div>
 
   <div style="display:flex;gap:8px;">
@@ -171,7 +224,7 @@
   <canvas id="cv"></canvas>
   <div id="bottombar">
     <div id="molMeta" class="mono">—</div>
-    <div id="metalMeta" class="mono" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    <div id="extraMeta" class="mono" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
   </div>
 </main>
 
@@ -184,27 +237,99 @@ const ATOMS = [
   "Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm",
   "Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"
 ];
-const CPK = { H:"#cbd5e1", C:"#64748b", N:"#3b82f6", O:"#ef4444", S:"#eab308", P:"#f97316", F:"#4ade80", Cl:"#22c55e", Br:"#b45309", I:"#a855f7", Rh:"#14b8a6", Ru:"#8b5cf6", Ni:"#10b981", Pd:"#06b6d4", Pt:"#38bdf8", Fe:"#f97316", Cu:"#ea580c" };
+const CPK = { H:"#cbd5e1", B:"#f472b6", C:"#64748b", N:"#3b82f6", O:"#ef4444", S:"#eab308", P:"#f97316", Si:"#fb923c", Se:"#d97706", F:"#4ade80", Cl:"#22c55e", Br:"#b45309", I:"#a855f7", Rh:"#14b8a6", Ru:"#8b5cf6", Ni:"#10b981", Pd:"#06b6d4", Pt:"#38bdf8", Fe:"#f97316", Cu:"#ea580c" };
+
+const PRESETS = {
+  flowmol: [
+    { url: "./models/flagship_q8.fm118", label: "FlowMol 旗舰轻量 Q8_0 (46 MB · 推荐)" },
+    { url: "./models/model.fm118",       label: "FlowMol 旗舰半精度 FP16 (82 MB)" },
+    { url: "./models/flagship_fp32.fm118", label: "FlowMol 旗舰全精度 FP32 (161 MB)" },
+  ],
+  uni3dar: [
+    { url: "./models/geom_drugs_q4.u3m", label: "Uni-3DAR-Mol · GEOM-Drugs Q4_0 (92 MB · 推荐)" },
+    { url: "./models/geom_drugs_q8.u3m", label: "Uni-3DAR-Mol · GEOM-Drugs Q8_0 (148 MB · 高精度)" },
+    { url: "./models/oe62_homo_q4.u3m",  label: "Uni-3DAR-Mol · OE62 HOMO 定向 Q4_0 (97 MB)" },
+    { url: "./models/qm9_k6_q4.u3m",     label: "Uni-3DAR-Mol · QM9 六属性条件 Q4_0 (106 MB)" },
+  ],
+};
 
 const gpuTag = document.getElementById("gpuTag");
 const diagBox = document.getElementById("diagBox");
 const statusTxt = document.getElementById("statusTxt");
 const perfTxt = document.getElementById("perfTxt");
 const modelState = document.getElementById("modelState");
+const loadedEngineHint = document.getElementById("loadedEngineHint");
+const selPresetUrl = document.getElementById("selPresetUrl");
 const btnFetch = document.getElementById("btnFetchDefault");
 const fileInput = document.getElementById("fileInput");
 const btnSample = document.getElementById("btnSample");
 const btnCancel = document.getElementById("btnCancel");
 const btnSdf = document.getElementById("btnSdf");
+const tabFlow = document.getElementById("tabFlow");
+const tabUni = document.getElementById("tabUni");
+const panelFlow = document.getElementById("panelFlow");
+const panelUni = document.getElementById("panelUni");
+const uniCondWrap = document.getElementById("uniCondWrap");
+const uniPropList = document.getElementById("uniPropList");
 
+let activeTab = "flowmol";     // UI tab selected
+let loadedFamily = null;       // Family of the currently loaded model in Worker
+let loadedInfo = null;
 let worker = null;
 let reqId = 1;
 let modelLoaded = false;
 let busy = false;
-let lastLoadSpec = null; // { type: 'load_url'|'load_file', ... } for auto-reload after cancel
+let lastLoadSpec = null;
 let lastSdf = "";
 let curMol = null;
 let showH = true, rotY = 0.5, rotX = 0.25, zoom = 1.0, dragging = false, lx = 0, ly = 0, spinning = true;
+
+function switchTab(family, populatePresets = true) {
+  activeTab = family;
+  const isUni = family === "uni3dar";
+  tabFlow.classList.toggle("active", !isUni);
+  tabUni.classList.toggle("active", isUni);
+  panelFlow.style.display = isUni ? "none" : "flex";
+  panelUni.style.display = isUni ? "flex" : "none";
+  btnSample.classList.toggle("uni-mode", isUni);
+  btnSample.textContent = isUni ? "🌲 开始 Uni-3DAR-Mol 生成" : "⚡ 开始 FlowMol-118 生成";
+  if (populatePresets) {
+    selPresetUrl.innerHTML = PRESETS[family]
+      .map(p => `<option value="${p.url}">${p.label}</option>`)
+      .join("");
+  }
+  btnSample.disabled = busy || !modelLoaded || (loadedFamily !== activeTab);
+  if (modelLoaded && loadedFamily !== activeTab) {
+    statusTxt.textContent = `已切换至 ${isUni ? "Uni-3DAR-Mol" : "FlowMol-118"} 面板，请点击「加载」载入对应模型`;
+  }
+}
+
+switchTab("flowmol", true);
+tabFlow.onclick = () => switchTab("flowmol", true);
+tabUni.onclick = () => switchTab("uni3dar", true);
+
+function buildUniCondInputs(info) {
+  const cols = info.target_cols || [];
+  const units = info.target_units || [];
+  const means = info.target_mean || [];
+  if (!cols.length || !info.has_conditioner) {
+    uniCondWrap.style.display = "none";
+    uniPropList.innerHTML = "";
+    return;
+  }
+  uniCondWrap.style.display = "flex";
+  // If single property (e.g. homo on OE62), check by default unless it's `sa_score` on unconditional GEOM-Drugs
+  uniPropList.innerHTML = cols.map((col, idx) => {
+    const unit = units[idx] ? ` (${units[idx]})` : "";
+    const defVal = typeof means[idx] === "number" ? Number(means[idx].toFixed(2)) : 0;
+    const defaultChecked = !(cols.length === 1 && col === "sa_score") && idx < 2;
+    return `<div class="prop-row">
+      <input type="checkbox" class="uni-prop-chk" data-idx="${idx}" ${defaultChecked ? "checked" : ""} />
+      <span class="mono">${col}${unit}</span>
+      <input type="number" step="0.1" class="mono uni-prop-val" data-idx="${idx}" value="${defVal}" />
+    </div>`;
+  }).join("");
+}
 
 function showDiag(text, isError = false) {
   if (!text) {
@@ -222,7 +347,9 @@ function setBusyState(isBusy, isSampling = false) {
   busy = isBusy;
   btnFetch.disabled = isBusy;
   fileInput.disabled = isBusy;
-  btnSample.disabled = isBusy || !modelLoaded;
+  tabFlow.disabled = isBusy;
+  tabUni.disabled = isBusy;
+  btnSample.disabled = isBusy || !modelLoaded || (loadedFamily !== activeTab);
   btnCancel.style.display = isSampling ? "inline-block" : "none";
 }
 
@@ -231,7 +358,8 @@ function spawnWorker() {
     worker.terminate();
   }
   modelLoaded = false;
-  worker = new Worker("./worker.js?v=4", { type: "module" });
+  loadedFamily = null;
+  worker = new Worker("./worker.js?v=6", { type: "module" });
   worker.onerror = (ev) => {
     showDiag(`Worker 运行异常: ${ev.message || "未知错误"}`, true);
     statusTxt.textContent = "Worker 发生异常";
@@ -243,16 +371,16 @@ function spawnWorker() {
       if (msg.hasWebGPU) {
         gpuTag.textContent = "WebGPU Ready";
         gpuTag.className = "badge ok";
-        statusTxt.textContent = "点击左侧「加载并缓存」或选择本地 .fm118 模型文件";
+        statusTxt.textContent = "选择引擎与预设模型后点击「加载」，或拖入本地 .fm118 / .u3m 文件";
       } else {
         gpuTag.textContent = "WASM CPU Fallback";
         gpuTag.className = "badge warn";
         showDiag(
           msg.isSecure
-            ? "当前浏览器未开启 WebGPU，将使用后台 Worker CPU 推理（不会卡死页面，但大模型较慢；推荐使用 Chrome / Edge 113+ 或 Safari 18+）"
+            ? "当前浏览器未开启 WebGPU，将使用后台 Worker CPU 推理（不会卡死页面）"
             : "当前地址非安全上下文，浏览器禁用了 WebGPU；请改用 http://localhost:8080 访问！"
         );
-        statusTxt.textContent = "WebGPU 未启用 (CPU Worker 就绪)，请选择 .fm118 模型";
+        statusTxt.textContent = "WebGPU 未启用 (CPU Worker 就绪)";
       }
       return;
     }
@@ -272,14 +400,30 @@ function spawnWorker() {
       const info = msg.info;
       const isGpu = info.is_gpu ?? String(info.backend || "").startsWith("wgpu/");
       modelLoaded = true;
+      loadedFamily = info.engine_family;
+      loadedInfo = info;
+      if (activeTab !== loadedFamily) {
+        switchTab(loadedFamily, true);
+      }
       gpuTag.textContent = info.backend;
       gpuTag.className = isGpu ? "badge ok" : "badge warn";
-      modelState.textContent = `${info.quant_dtype} · L=${info.n_molecule_updates} (${info.size_mb}MB)`;
+      loadedEngineHint.textContent = loadedFamily === "uni3dar" ? "Uni-3DAR-Mol 就绪" : "FlowMol-118 就绪";
+
+      if (loadedFamily === "uni3dar") {
+        modelState.textContent = `${info.quant_dtype} · L=${info.num_layers}/M${info.merge_level} (${info.size_mb}MB)`;
+        buildUniCondInputs(info);
+        if (Array.isArray(info.target_cols) && info.target_cols.includes("alpha")) {
+          document.getElementById("inpUniBudget").value = "18";
+        } else if ( document.getElementById("inpUniBudget").value === "18" ) {
+          document.getElementById("inpUniBudget").value = "28";
+        }
+      } else {
+        modelState.textContent = `${info.quant_dtype} · L=${info.n_molecule_updates} (${info.size_mb}MB)`;
+      }
+
       statusTxt.textContent = `已就绪: ${msg.label} (初始化 ${info.load_ms.toFixed(0)} ms)`;
       if (!isGpu) {
-        showDiag(
-          `未启用 WebGPU 硬件加速 (${info.gpu_error || "已降级至 CPU Worker"})。CPU 模式下已隔离在后台线程不会卡死网页，建议将原子数设为 20、步数设为 12，或使用 Chrome 访问 http://localhost:8080 开启 WebGPU。`
-        );
+        showDiag(`未启用 WebGPU 硬件加速 (${info.gpu_error || "已降级至 CPU Worker"})。`);
       } else {
         showDiag("");
       }
@@ -288,7 +432,7 @@ function spawnWorker() {
     }
 
     if (msg.type === "step") {
-      const { step, total, xFlat, aIdx } = msg;
+      const { step, total, xFlat, aIdx, engineFamily } = msg;
       const n = aIdx.length;
       const pos = new Array(n);
       const syms = new Array(n);
@@ -297,7 +441,9 @@ function spawnWorker() {
         syms[i] = aIdx[i] < ATOMS.length ? ATOMS[aIdx[i]] : "?";
       }
       curMol = { positions: pos, symbols: syms, bonds: [] };
-      statusTxt.textContent = `去噪步 ${step} / ${total}...`;
+      statusTxt.textContent = engineFamily === "uni3dar"
+        ? `八叉树体素→原子自回归生长 ${step} / ${total}...`
+        : `连续流匹配去噪步 ${step} / ${total}...`;
       draw();
       return;
     }
@@ -314,11 +460,26 @@ function spawnWorker() {
       seedEl.value = String((parseInt(seedEl.value || "42", 10) || 42) + 1);
       statusTxt.textContent = `生成完成: ${m.formula}`;
       perfTxt.textContent = `${dt.toFixed(0)} ms (${(1000 / dt).toFixed(2)} mol/s)`;
-      document.getElementById("molMeta").textContent =
-        `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 价态合法=${m.valence_valid} · 单连通=${m.connected} (${m.n_fragments} frag) · d_min=${m.min_dist.toFixed(3)} Å`;
-      document.getElementById("metalMeta").innerHTML = (m.metals || []).map(mc =>
-        `<span class="pill">${mc.symbol} (CN=${mc.coordination_number}): ${mc.neighbors.map(nb => `${nb.symbol} ${nb.distance.toFixed(2)}Å`).join(", ")}</span>`
-      ).join("");
+
+      if (msg.engineFamily === "uni3dar") {
+        const fSpec = Array.isArray(m.funnel_spec) ? `${m.funnel_spec[0]}→${m.funnel_spec[1]}→1` : "1→1";
+        document.getElementById("molMeta").textContent =
+          `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 合法=${m.valence_valid} · 单连通=${m.connected} · 调和=${m.reconcile_status} (RMSD=${(m.heavy_rmsd_a || 0).toFixed(3)}Å) · 漏斗=${fSpec}`;
+        const props = m.predicted_props || {};
+        const propPills = Object.entries(props).map(([k, v]) =>
+          `<span class="pill uni">Critic ${k}: ${Number(v).toFixed(3)}</span>`
+        );
+        if (typeof m.stage2_utility === "number") {
+          propPills.push(`<span class="pill uni">U2=${m.stage2_utility.toFixed(2)}</span>`);
+        }
+        document.getElementById("extraMeta").innerHTML = propPills.join("");
+      } else {
+        document.getElementById("molMeta").textContent =
+          `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 价态合法=${m.valence_valid} · 单连通=${m.connected} (${m.n_fragments} frag) · d_min=${m.min_dist.toFixed(3)} Å`;
+        document.getElementById("extraMeta").innerHTML = (m.metals || []).map(mc =>
+          `<span class="pill">${mc.symbol} (CN=${mc.coordination_number}): ${mc.neighbors.map(nb => `${nb.symbol} ${nb.distance.toFixed(2)}Å`).join(", ")}</span>`
+        ).join("");
+      }
       setBusyState(false, false);
       draw();
       return;
@@ -338,8 +499,8 @@ spawnWorker();
 btnFetch.onclick = () => {
   if (busy) return;
   showDiag("");
-  const url = document.getElementById("selPresetUrl").value;
-  const spec = { type: "load_url", id: ++reqId, url, cacheKey: "fm118_" + url.split("/").pop(), useGpu: true };
+  const url = selPresetUrl.value;
+  const spec = { type: "load_url", id: ++reqId, url, cacheKey: "molgen_" + url.split("/").pop(), useGpu: true };
   lastLoadSpec = spec;
   setBusyState(true, false);
   worker.postMessage(spec);
@@ -356,29 +517,56 @@ fileInput.onchange = (e) => {
 };
 
 btnSample.onclick = () => {
-  if (!modelLoaded || busy) return;
+  if (!modelLoaded || busy || loadedFamily !== activeTab) return;
   showDiag("");
   spinning = false;
   perfTxt.textContent = "";
+  const seed = parseInt(document.getElementById("inpSeed").value || "42", 10);
 
-  const nVal = parseInt(document.getElementById("inpAtoms").value || "0", 10);
-  const reqRaw = document.getElementById("inpRequire").value.trim();
-  const chgRaw = document.getElementById("selCharges").value.trim();
-  const opts = {
-    n_atoms: nVal > 1 ? nVal : null,
-    domain: document.getElementById("selDomain").value,
-    n_steps: Math.max(5, parseInt(document.getElementById("inpSteps").value || "25", 10)),
-    solver: document.getElementById("selSolver").value,
-    grid_type: "quadratic_end",
-    single_molecule_mode: document.getElementById("selSingleMode").value,
-    max_retries: 4,
-    required_elements: reqRaw ? reqRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
-    allowed_charges: chgRaw ? chgRaw.split(",").map(s => parseInt(s.trim(), 10)) : null,
-    seed: parseInt(document.getElementById("inpSeed").value || "42", 10),
-  };
+  let opts;
+  if (loadedFamily === "uni3dar") {
+    const bVal = parseInt(document.getElementById("inpUniBudget").value || "0", 10);
+    const postMode = document.getElementById("selUniPost").value;
+    const chks = Array.from(document.querySelectorAll(".uni-prop-chk"));
+    const vals = Array.from(document.querySelectorAll(".uni-prop-val"));
+    let condTargets = null;
+    let condActive = null;
+    if (chks.length > 0) {
+      condActive = chks.map(c => !!c.checked);
+      condTargets = vals.map(v => parseFloat(v.value || "0") || 0.0);
+    }
+    opts = {
+      budget_atoms: bVal > 1 ? bVal : null,
+      speculative_scale: parseInt(document.getElementById("selUniSpecK").value || "2", 10),
+      cfg_scale: parseFloat(document.getElementById("inpUniCfg").value || "2.0") || 2.0,
+      use_refiner: postMode !== "raw",
+      reconcile_valence: postMode === "full",
+      single_molecule_mode: "largest_fragment",
+      cond_targets: condTargets,
+      cond_active: condActive,
+      seed,
+    };
+    statusTxt.textContent = "正在启动 Uni-3DAR-Mol 八叉树投机解码...";
+  } else {
+    const nVal = parseInt(document.getElementById("inpAtoms").value || "0", 10);
+    const reqRaw = document.getElementById("inpRequire").value.trim();
+    const chgRaw = document.getElementById("selCharges").value.trim();
+    opts = {
+      n_atoms: nVal > 1 ? nVal : null,
+      domain: document.getElementById("selDomain").value,
+      n_steps: Math.max(5, parseInt(document.getElementById("inpSteps").value || "20", 10)),
+      solver: document.getElementById("selSolver").value,
+      grid_type: "quadratic_end",
+      single_molecule_mode: document.getElementById("selSingleMode").value,
+      max_retries: 4,
+      required_elements: reqRaw ? reqRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
+      allowed_charges: chgRaw ? chgRaw.split(",").map(s => parseInt(s.trim(), 10)) : null,
+      seed,
+    };
+    statusTxt.textContent = "正在提交 FlowMol-118 首个去噪步...";
+  }
 
   setBusyState(true, true);
-  statusTxt.textContent = "正在提交首个去噪步...";
   worker.postMessage({ type: "sample", id: ++reqId, optsJson: JSON.stringify(opts) });
 };
 
@@ -398,7 +586,7 @@ btnSdf.onclick = () => {
   if (!lastSdf) return;
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lastSdf], { type: "chemical/x-mdl-sdfile" }));
-  a.download = "flowmol_generated.sdf";
+  a.download = loadedFamily === "uni3dar" ? "uni3dar_mol_generated.sdf" : "flowmol_generated.sdf";
   a.click();
 };
 
@@ -450,6 +638,7 @@ function draw() {
 
   const items = [];
   (curMol.bonds || []).forEach(b => {
+    if (!proj[b.u] || !proj[b.v]) return;
     if (!showH && (proj[b.u].sym === "H" || proj[b.v].sym === "H")) return;
     items.push({ t: "b", u: proj[b.u], v: proj[b.v], bt: b.bond_type_id, z: (proj[b.u].z + proj[b.v].z) / 2 });
   });
@@ -462,10 +651,33 @@ function draw() {
   items.forEach(it => {
     if (it.t === "b") {
       ctx.save();
+      const pAvg = (it.u.p + it.v.p) / 2;
+      const dx = it.v.sx - it.u.sx, dy = it.v.sy - it.u.sy;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;
       ctx.strokeStyle = it.bt === 5 ? "#f59e0b" : "#94a3b8";
       if (it.bt === 5) ctx.setLineDash([5, 4]);
-      ctx.lineWidth = (it.bt >= 2 ? 2.8 : 2.2) * ((it.u.p + it.v.p) / 2);
-      ctx.beginPath(); ctx.moveTo(it.u.sx, it.u.sy); ctx.lineTo(it.v.sx, it.v.sy); ctx.stroke();
+      if (it.bt === 2) {
+        ctx.lineWidth = 1.8 * pAvg;
+        const off = 2.2 * pAvg;
+        ctx.beginPath();
+        ctx.moveTo(it.u.sx + nx * off, it.u.sy + ny * off);
+        ctx.lineTo(it.v.sx + nx * off, it.v.sy + ny * off);
+        ctx.moveTo(it.u.sx - nx * off, it.u.sy - ny * off);
+        ctx.lineTo(it.v.sx - nx * off, it.v.sy - ny * off);
+        ctx.stroke();
+      } else if (it.bt === 3) {
+        ctx.lineWidth = 1.6 * pAvg;
+        const off = 3.0 * pAvg;
+        ctx.beginPath();
+        ctx.moveTo(it.u.sx, it.u.sy); ctx.lineTo(it.v.sx, it.v.sy);
+        ctx.moveTo(it.u.sx + nx * off, it.u.sy + ny * off); ctx.lineTo(it.v.sx + nx * off, it.v.sy + ny * off);
+        ctx.moveTo(it.u.sx - nx * off, it.u.sy - ny * off); ctx.lineTo(it.v.sx - nx * off, it.v.sy - ny * off);
+        ctx.stroke();
+      } else {
+        ctx.lineWidth = 2.2 * pAvg;
+        ctx.beginPath(); ctx.moveTo(it.u.sx, it.u.sy); ctx.lineTo(it.v.sx, it.v.sy); ctx.stroke();
+      }
       ctx.restore();
     } else {
       const p = it.a;

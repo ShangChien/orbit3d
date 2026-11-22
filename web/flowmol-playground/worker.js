@@ -1,23 +1,41 @@
-import init, { WasmFlowMolEngine } from "./pkg/flowmol_rs.js?v=4";
-
-let wasmReady = null;
+let flowmolMod = null;
+let uni3darMod = null;
 let engine = null;
+let engineFamily = null; // "flowmol" | "uni3dar"
 
-const MAGIC = [70, 77, 49, 49, 56, 1, 0, 0]; // b"FM118\x01\x00\x00"
+const MAGIC_FM118 = [70, 77, 49, 49, 56, 1, 0, 0]; // b"FM118\x01\x00\x00"
+const MAGIC_U3DM  = [85, 51, 68, 77, 1, 0, 0, 0];  // b"U3DM\x01\x00\x00\x00"
 
-function checkMagic(u8) {
-  return u8 && u8.byteLength >= 64 && MAGIC.every((b, i) => u8[i] === b);
+function detectBundleKind(u8) {
+  if (!u8 || u8.byteLength < 64) return null;
+  if (MAGIC_FM118.every((b, i) => u8[i] === b)) return "flowmol";
+  if (MAGIC_U3DM.every((b, i) => u8[i] === b)) return "uni3dar";
+  return null;
 }
 
-async function ensureInit() {
-  if (!wasmReady) {
-    wasmReady = init();
-  }
-  await wasmReady;
+function getEnvCaps() {
   return {
     hasWebGPU: typeof navigator !== "undefined" && !!navigator.gpu,
     isSecure: typeof self.isSecureContext === "boolean" ? self.isSecureContext : true,
   };
+}
+
+async function ensureFlowMol() {
+  if (!flowmolMod) {
+    const m = await import("./pkg/flowmol_rs.js?v=6");
+    await m.default("./pkg/flowmol_rs_bg.wasm?v=6");
+    flowmolMod = m;
+  }
+  return flowmolMod;
+}
+
+async function ensureUni3dar() {
+  if (!uni3darMod) {
+    const m = await import("./pkg_uni3dar/uni3dar_rs.js?v=6");
+    await m.default("./pkg_uni3dar/uni3dar_rs_bg.wasm?v=6");
+    uni3darMod = m;
+  }
+  return uni3darMod;
 }
 
 async function fetchWithProgress(url, id) {
@@ -37,7 +55,6 @@ async function fetchWithProgress(url, id) {
     const { done, value } = await reader.read();
     if (done) break;
     if (offset + value.byteLength > out.byteLength) {
-      // Fallback if Content-Length mismatched
       const next = new Uint8Array(offset + value.byteLength);
       next.set(out.subarray(0, offset));
       next.set(value, offset);
@@ -55,21 +72,37 @@ async function fetchWithProgress(url, id) {
 }
 
 async function loadFromU8(u8, label, useGpu, id) {
-  const caps = await ensureInit();
-  if (!checkMagic(u8)) {
+  const caps = getEnvCaps();
+  const kind = detectBundleKind(u8);
+  if (!kind) {
     throw new Error(
-      `文件 "${label}" 不是有效的 .fm118 模型包（若选择了 PyTorch .pt 文件，请改选导出后的 *.fm118 文件）`
+      `文件 "${label}" 不是有效的 .fm118 (FlowMol-118) 或 .u3m (Uni-3DAR-Mol) 模型包`
     );
   }
   if (engine) {
     try { engine.free(); } catch (_) {}
     engine = null;
+    engineFamily = null;
   }
-  self.postMessage({ type: "status", id, text: `正在初始化推理管线 (${(u8.byteLength / 1e6).toFixed(1)} MB)...` });
+  self.postMessage({
+    type: "status",
+    id,
+    text: `正在初始化 ${kind === "uni3dar" ? "Uni-3DAR-Mol" : "FlowMol-118"} WebGPU 管线 (${(u8.byteLength / 1e6).toFixed(1)} MB)...`,
+  });
+
   const wantGpu = useGpu !== false && caps.hasWebGPU;
   const t0 = performance.now();
-  engine = await WasmFlowMolEngine.create(u8, wantGpu);
+  if (kind === "uni3dar") {
+    const m = await ensureUni3dar();
+    engine = await m.WasmUni3darEngine.create(u8, wantGpu);
+  } else {
+    const m = await ensureFlowMol();
+    engine = await m.WasmFlowMolEngine.create(u8, wantGpu);
+  }
+  engineFamily = kind;
+
   const info = JSON.parse(engine.backendInfo());
+  info.engine_family = kind;
   info.load_ms = performance.now() - t0;
   info.size_mb = +(u8.byteLength / 1e6).toFixed(2);
   if (!caps.hasWebGPU && !info.gpu_error) {
@@ -84,8 +117,7 @@ self.onmessage = async (ev) => {
   const msg = ev.data || {};
   try {
     if (msg.type === "init") {
-      const caps = await ensureInit();
-      self.postMessage({ type: "inited", ...caps });
+      self.postMessage({ type: "inited", ...getEnvCaps() });
       return;
     }
 
@@ -99,56 +131,56 @@ self.onmessage = async (ev) => {
     if (msg.type === "load_url") {
       const cacheKey = msg.cacheKey || msg.url.replace(/[^a-zA-Z0-9._-]/g, "_");
       let u8 = null;
-      let fromCache = false;
       if (!msg.bypassCache && self.navigator?.storage?.getDirectory) {
         try {
           const root = await self.navigator.storage.getDirectory();
           const fh = await root.getFileHandle(cacheKey);
           const candidate = new Uint8Array(await (await fh.getFile()).arrayBuffer());
-          if (checkMagic(candidate)) {
+          if (detectBundleKind(candidate)) {
             u8 = candidate;
-            fromCache = true;
           }
         } catch (_) {}
       }
       if (!u8) {
         self.postMessage({ type: "status", id: msg.id, text: `正在下载 ${msg.url}...` });
         u8 = await fetchWithProgress(msg.url, msg.id);
-        if (checkMagic(u8) && self.navigator?.storage?.getDirectory) {
+        if (detectBundleKind(u8) && self.navigator?.storage?.getDirectory) {
           try {
             const root = await self.navigator.storage.getDirectory();
             const fh = await root.getFileHandle(cacheKey, { create: true });
-            if (fh.createWritable) {
-              const wr = await fh.createWritable();
-              await wr.write(u8);
-              await wr.close();
-            }
+            const w = await fh.createWritable();
+            await w.write(u8);
+            await w.close();
           } catch (_) {}
         }
       }
-      await loadFromU8(u8, fromCache ? `OPFS/${cacheKey}` : msg.url, msg.useGpu, msg.id);
+      const label = msg.url.split("/").pop() || "model";
+      await loadFromU8(u8, label, msg.useGpu, msg.id);
       return;
     }
 
     if (msg.type === "sample") {
       if (!engine) {
-        throw new Error("请先加载 .fm118 模型包");
+        throw new Error("请先加载 .fm118 或 .u3m 模型文件");
       }
       const t0 = performance.now();
       const resStr = await engine.sampleMolecule(msg.optsJson, (step, total, xFlat, aIdx) => {
         const xCopy = new Float32Array(xFlat);
         const aCopy = new Uint32Array(aIdx);
         self.postMessage(
-          { type: "step", id: msg.id, step, total, xFlat: xCopy, aIdx: aCopy },
+          { type: "step", id: msg.id, engineFamily, step, total, xFlat: xCopy, aIdx: aCopy },
           [xCopy.buffer, aCopy.buffer]
         );
       });
-      const elapsedMs = performance.now() - t0;
-      self.postMessage({ type: "sampled", id: msg.id, resStr, elapsedMs });
+      const dt = performance.now() - t0;
+      self.postMessage({ type: "sampled", id: msg.id, engineFamily, resStr, elapsedMs: dt });
       return;
     }
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    self.postMessage({ type: "error", id: msg.id, phase: msg.type, error: errMsg });
+    self.postMessage({
+      type: "error",
+      id: msg.id,
+      error: err && err.message ? err.message : String(err),
+    });
   }
 };
