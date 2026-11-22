@@ -2,15 +2,25 @@ let flowmolMod = null;
 let uni3darMod = null;
 let dpa4Mod = null;
 let hyffMod = null;
+let loomMod = null;
 
-// Decoupled dual-slot architecture:
+// Decoupled 3-slot architecture:
 // - Slot 1: Generative 3D Engine (`FlowMol-118` or `Uni-3DAR-Mol`)
 // - Slot 2: Quantum MLIP Force-Field & MD Engine (`DPA-4` or `HyFF-L2`)
+// - Slot 3: Unified `loom-rs` End-to-End Fine-Tuning (`Oracle`, `LoRA SFT`, `XYZ Distill`, `Online TopoGRPO`, `RSI`) & Weaving Engine
 let genEngine = null;
 let genFamily = null; // "flowmol" | "uni3dar"
 
 let mlipEngine = null;
 let mlipFamily = null; // "dpa4" | "hyff"
+
+let loomEngine = null;
+let lastU3mBytes = null;
+let lastU3mLabel = null;
+let lastMlipBytes = null;
+let lastMlipLabel = null;
+let loomMountedU3mKey = null;
+let loomMountedMlipKey = null;
 
 const MAGIC_FM118 = [70, 77, 49, 49, 56, 1, 0, 0];       // b"FM118\x01\x00\x00"
 const MAGIC_U3DM  = [85, 51, 68, 77, 1, 0, 0, 0];        // b"U3DM\x01\x00\x00\x00"
@@ -35,8 +45,8 @@ function getEnvCaps() {
 
 async function ensureFlowMol() {
   if (!flowmolMod) {
-    const m = await import("./pkg/flowmol_rs.js?v=7");
-    await m.default("./pkg/flowmol_rs_bg.wasm?v=7");
+    const m = await import("./pkg/flowmol_rs.js?v=8");
+    await m.default("./pkg/flowmol_rs_bg.wasm?v=8");
     flowmolMod = m;
   }
   return flowmolMod;
@@ -44,8 +54,8 @@ async function ensureFlowMol() {
 
 async function ensureUni3dar() {
   if (!uni3darMod) {
-    const m = await import("./pkg_uni3dar/uni3dar_rs.js?v=7");
-    await m.default("./pkg_uni3dar/uni3dar_rs_bg.wasm?v=7");
+    const m = await import("./pkg_uni3dar/uni3dar_rs.js?v=8");
+    await m.default("./pkg_uni3dar/uni3dar_rs_bg.wasm?v=8");
     uni3darMod = m;
   }
   return uni3darMod;
@@ -53,8 +63,8 @@ async function ensureUni3dar() {
 
 async function ensureDpa4() {
   if (!dpa4Mod) {
-    const m = await import("./pkg_dpa4/dpa4_rs.js?v=7");
-    await m.default("./pkg_dpa4/dpa4_rs_bg.wasm?v=7");
+    const m = await import("./pkg_dpa4/dpa4_rs.js?v=8");
+    await m.default("./pkg_dpa4/dpa4_rs_bg.wasm?v=8");
     dpa4Mod = m;
   }
   return dpa4Mod;
@@ -62,11 +72,23 @@ async function ensureDpa4() {
 
 async function ensureHyff() {
   if (!hyffMod) {
-    const m = await import("./pkg_hyff/hyff_rs.js?v=7");
-    await m.default("./pkg_hyff/hyff_rs_bg.wasm?v=7");
+    const m = await import("./pkg_hyff/hyff_rs.js?v=8");
+    await m.default("./pkg_hyff/hyff_rs_bg.wasm?v=8");
     hyffMod = m;
   }
   return hyffMod;
+}
+
+async function ensureLoom() {
+  if (!loomMod) {
+    const m = await import("./pkg_loom/loom_rs.js?v=8");
+    await m.default("./pkg_loom/loom_rs_bg.wasm?v=8");
+    loomMod = m;
+  }
+  if (!loomEngine) {
+    loomEngine = new loomMod.WasmLoomEngine();
+  }
+  return { loomMod, loomEngine };
 }
 
 async function fetchWithProgress(url, id) {
@@ -143,6 +165,10 @@ async function loadFromU8(u8, label, useGpu, id) {
   const t0 = performance.now();
 
   if (kind === "dpa4" || kind === "hyff") {
+    lastMlipBytes = u8;
+    lastMlipLabel = label;
+    loomMountedMlipKey = null;
+
     if (mlipEngine) {
       try { mlipEngine.free(); } catch (_) {}
       mlipEngine = null;
@@ -184,6 +210,12 @@ async function loadFromU8(u8, label, useGpu, id) {
   }
 
   // Generative slot ("flowmol" | "uni3dar")
+  if (kind === "uni3dar") {
+    lastU3mBytes = u8;
+    lastU3mLabel = label;
+    loomMountedU3mKey = null;
+  }
+
   if (genEngine) {
     try { genEngine.free(); } catch (_) {}
     genEngine = null;
@@ -214,6 +246,51 @@ async function loadFromU8(u8, label, useGpu, id) {
       : "当前非安全上下文 (请使用 http://localhost:8080 或 http://127.0.0.1:8080 访问以解锁 WebGPU)";
   }
   self.postMessage({ type: "loaded", id, label, info });
+}
+
+async function ensureLoomSlots({ needU3m, needMlip, rank, fallbackU3mUrl, fallbackMlipUrl, customTargetsJson, id }) {
+  const caps = getEnvCaps();
+  const wantGpu = caps.hasWebGPU;
+  const { loomEngine: eng } = await ensureLoom();
+
+  if (needMlip) {
+    if (!lastMlipBytes) {
+      const url = fallbackMlipUrl || "./models/hyff_presto.hyff";
+      const ck = "mlip_" + url.split("/").pop();
+      const u8 = await fetchOrCache(url, ck, false, id);
+      await loadFromU8(u8, url.split("/").pop(), true, id);
+    }
+    if (loomMountedMlipKey !== lastMlipLabel) {
+      self.postMessage({ type: "status", id, text: `正在挂载 ${lastMlipLabel} 至 Loom-RS 复合评论家总线...` });
+      const desc = await eng.loadMlipBundle(lastMlipBytes, wantGpu);
+      loomMountedMlipKey = lastMlipLabel;
+      self.postMessage({ type: "loom_slot_mounted", id, slot: "mlip", desc });
+    }
+  }
+
+  if (needU3m) {
+    if (!lastU3mBytes) {
+      const url = fallbackU3mUrl || "./models/oe62_homo_q4.u3m";
+      const ck = "molgen_" + url.split("/").pop();
+      const u8 = await fetchOrCache(url, ck, false, id);
+      await loadFromU8(u8, url.split("/").pop(), true, id);
+    }
+    const r = Math.max(2, rank || 8);
+    const wantKey = `${lastU3mLabel}:r${r}:${customTargetsJson || "default"}`;
+    if (loomMountedU3mKey !== wantKey) {
+      self.postMessage({
+        type: "status",
+        id,
+        text: `正在初始化 Uni-3DAR QLoRA (Rank=${r}) + FP16 WebGPU 微分训练上下文 (${lastU3mLabel})...`,
+      });
+      // `loadUni3darBundle` takes ownership of `Vec<u8>` in wasm-bindgen, so pass a slice copy to keep `lastU3mBytes` intact!
+      const desc = await eng.loadUni3darBundle(lastU3mBytes.slice(), r, wantGpu, customTargetsJson || null);
+      loomMountedU3mKey = wantKey;
+      self.postMessage({ type: "loom_slot_mounted", id, slot: "u3m", desc });
+    }
+  }
+
+  return eng;
 }
 
 self.onmessage = async (ev) => {
@@ -350,6 +427,172 @@ self.onmessage = async (ev) => {
         resStr,
         elapsedMs: performance.now() - t0,
       });
+      return;
+    }
+
+    // ================= Slot 3: `loom-rs` End-to-End Fine-Tuning & Weaving =================
+    if (msg.type === "loom_builtin_sdf") {
+      const { loomMod: m } = await ensureLoom();
+      const sdfText = m.WasmLoomEngine.builtinOrbitalDemoSdf();
+      self.postMessage({ type: "loom_builtin_sdf_ready", id: msg.id, sdfText });
+      return;
+    }
+
+    if (msg.type === "loom_train_oracle") {
+      const eng = await ensureLoomSlots({
+        needU3m: false,
+        needMlip: true,
+        fallbackMlipUrl: msg.fallbackMlipUrl,
+        id: msg.id,
+      });
+      const { loomMod: m } = await ensureLoom();
+      const sdfText = msg.sdfText || m.WasmLoomEngine.builtinOrbitalDemoSdf();
+      self.postMessage({ type: "status", id: msg.id, text: "正在提取三维量子描述符并训练 5-Fold Bootstrap 3D Oracle..." });
+      let lastPost = 0;
+      const resStr = await eng.trainOracleFromSdf(
+        "reward_oracle",
+        sdfText,
+        JSON.stringify(msg.propNames || ["homo"]),
+        JSON.stringify(msg.propUnits || ["eV"]),
+        false,
+        msg.optsJson || "",
+        (progStr) => {
+          const now = performance.now();
+          if (now - lastPost >= 40) {
+            lastPost = now;
+            self.postMessage({ type: "loom_oracle_progress", id: msg.id, progStr });
+          }
+        }
+      );
+      self.postMessage({ type: "loom_oracle_done", id: msg.id, resStr });
+      return;
+    }
+
+    if (msg.type === "loom_calibrate_sdf") {
+      const eng = await ensureLoomSlots({
+        needU3m: false,
+        needMlip: true,
+        fallbackMlipUrl: msg.fallbackMlipUrl,
+        id: msg.id,
+      });
+      const resStr = await eng.calibrateOracleFeedbackSdf("reward_oracle", msg.sdfText);
+      self.postMessage({ type: "loom_calibrated", id: msg.id, resStr });
+      return;
+    }
+
+    if (msg.type === "loom_sft") {
+      const eng = await ensureLoomSlots({
+        needU3m: true,
+        needMlip: false,
+        rank: msg.rank || 8,
+        fallbackU3mUrl: msg.fallbackU3mUrl,
+        id: msg.id,
+      });
+      const { loomMod: m } = await ensureLoom();
+      const sdfText = msg.sdfText || m.WasmLoomEngine.builtinOrbitalDemoSdf();
+      self.postMessage({ type: "status", id: msg.id, text: "正在运行 WebGPU Stage 0/1 LoRA SFT (含 2x 对照边际损失)..." });
+      const resStr = await eng.trainLoraSft(sdfText, msg.optsJson || "", (stepStr) => {
+        self.postMessage({ type: "loom_sft_step", id: msg.id, stepStr });
+      });
+      self.postMessage({ type: "loom_sft_done", id: msg.id, resStr });
+      return;
+    }
+
+    if (msg.type === "loom_xyz_distill") {
+      const eng = await ensureLoomSlots({
+        needU3m: true,
+        needMlip: false,
+        rank: msg.rank || 8,
+        fallbackU3mUrl: msg.fallbackU3mUrl,
+        id: msg.id,
+      });
+      const { loomMod: m } = await ensureLoom();
+      const sdfText = msg.sdfText || m.WasmLoomEngine.builtinOrbitalDemoSdf();
+      self.postMessage({ type: "status", id: msg.id, text: "正在运行 Stage 2.5B 0.01 Å 亚体素 XYZ 头解耦蒸馏..." });
+      const resStr = await eng.distillXyzHeads(sdfText, msg.optsJson || "", (stepStr) => {
+        self.postMessage({ type: "loom_xyz_step", id: msg.id, stepStr });
+      });
+      self.postMessage({ type: "loom_xyz_done", id: msg.id, resStr });
+      return;
+    }
+
+    if (msg.type === "loom_topo_grpo") {
+      const eng = await ensureLoomSlots({
+        needU3m: true,
+        needMlip: true,
+        rank: msg.rank || 8,
+        fallbackU3mUrl: msg.fallbackU3mUrl,
+        fallbackMlipUrl: msg.fallbackMlipUrl,
+        id: msg.id,
+      });
+      self.postMessage({ type: "status", id: msg.id, text: "正在执行在线 TopoGRPO (KV采样 + 复合评论家 + PPO/KL 更新)..." });
+      const resStr = await eng.trainOnlineTopoGrpo(msg.optsJson || "", (stepStr) => {
+        self.postMessage({ type: "loom_grpo_step", id: msg.id, stepStr });
+      });
+      self.postMessage({ type: "loom_grpo_done", id: msg.id, resStr });
+      return;
+    }
+
+    if (msg.type === "loom_atlas_rsi") {
+      const eng = await ensureLoomSlots({
+        needU3m: true,
+        needMlip: true,
+        rank: msg.rank || 8,
+        fallbackU3mUrl: msg.fallbackU3mUrl,
+        fallbackMlipUrl: msg.fallbackMlipUrl,
+        id: msg.id,
+      });
+      self.postMessage({ type: "status", id: msg.id, text: "正在构建 1D 异方差 GP Atlas 并执行四象限 Grounded RSI 诊断..." });
+      const resStr = await eng.buildAtlasAndDiagnoseRsi(
+        JSON.stringify(msg.grid || [-7.2, -6.5, -5.8]),
+        msg.samplesPerCell || 3,
+        msg.cfgScale || 1.75,
+        msg.seed || 2026
+      );
+      self.postMessage({ type: "loom_atlas_done", id: msg.id, resStr });
+      return;
+    }
+
+    if (msg.type === "loom_weave_sample") {
+      const eng = await ensureLoomSlots({
+        needU3m: true,
+        needMlip: true,
+        rank: msg.rank || 8,
+        fallbackU3mUrl: msg.fallbackU3mUrl,
+        fallbackMlipUrl: msg.fallbackMlipUrl,
+        id: msg.id,
+      });
+      self.postMessage({ type: "status", id: msg.id, text: "正在执行 Best-of-M 校准编织采样与物理约束坐标精修..." });
+      const t0 = performance.now();
+      const resStr = await eng.weaveSampleBestOfM(msg.optsJson || "");
+      self.postMessage({
+        type: "loom_weave_done",
+        id: msg.id,
+        resStr,
+        elapsedMs: performance.now() - t0,
+      });
+      return;
+    }
+
+    if (msg.type === "loom_export_lora") {
+      const { loomEngine: eng } = await ensureLoom();
+      const bytes = eng.exportLoraBytes();
+      const u8 = new Uint8Array(bytes);
+      self.postMessage({ type: "loom_lora_exported", id: msg.id, bytes: u8 }, [u8.buffer]);
+      return;
+    }
+
+    if (msg.type === "loom_import_lora") {
+      const eng = await ensureLoomSlots({
+        needU3m: true,
+        needMlip: false,
+        rank: msg.rank || 8,
+        fallbackU3mUrl: msg.fallbackU3mUrl,
+        id: msg.id,
+      });
+      const u8 = new Uint8Array(await msg.file.arrayBuffer());
+      const desc = eng.importLoraBytes(u8);
+      self.postMessage({ type: "loom_lora_imported", id: msg.id, desc });
       return;
     }
   } catch (err) {

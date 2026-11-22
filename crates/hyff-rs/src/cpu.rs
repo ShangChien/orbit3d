@@ -316,6 +316,7 @@ impl PotentialBackend for HyffCpuEngine {
             need_forces,
             need_descriptor,
             None,
+            None,
         ))
     }
 }
@@ -344,7 +345,10 @@ pub(crate) async fn eval_hyff_core(
     need_forces: bool,
     need_descriptor: bool,
     gpu: Option<&HyffGpuContext>,
+    custom_d_desc: Option<&[f32]>,
 ) -> Result<PotentialEval, String> {
+        let need_forces = need_forces || custom_d_desc.is_some();
+        let e_grad_on = custom_d_desc.is_none();
         let n = system.n_atoms();
         if n == 0 {
             return Ok(PotentialEval {
@@ -943,7 +947,7 @@ pub(crate) async fn eval_hyff_core(
             let e_pair = 0.5 * s_e * env_global[e_idx];
             total_energy_ev += e_pair as f64;
 
-            if need_forces {
+            if need_forces && e_grad_on {
                 let half_env = 0.5 * env_global[e_idx];
                 for k in 0..k_rbf {
                     d_phi[e_idx * k_rbf + k] = half_env * w_pair[k];
@@ -961,7 +965,7 @@ pub(crate) async fn eval_hyff_core(
             });
         }
 
-        // 5. Analytical Reverse-Mode VJP (`F = -dE/dR`)
+        // 5. Analytical Reverse-Mode VJP (`F = -dE/dR` or `-dL/dR` when `custom_d_desc` is provided)
         let mut d_u_dir = vec![[0.0f32; 3]; n_edges];
         let mut d_q_quad = vec![[0.0f32; 5]; n_edges];
         let mut d_s = vec![0.0f32; n * h];
@@ -976,16 +980,22 @@ pub(crate) async fn eval_hyff_core(
             let o_b = blk.out_dim;
             let d_in = h + 5 * t;
 
-            // B.1 Readout Head b VJP (`d_e_atom == 1.0` for all atoms)
-            let mut d_ro_pre = vec![0.0f32; n * h];
-            for i in 0..n {
-                for c in 0..h {
-                    let g_act = inv_sqrt_i * blk.ro2_w[c];
-                    d_ro_pre[i * h + c] = g_act * silu_grad(tape.ro_pre[i * h + c]);
-                }
-            }
+            // B.1 Readout Head b VJP (`d_e_atom == 1.0` for energy forces, or `custom_d_desc` on terminal `h_ro`)
             let mut d_h_ro = vec![0.0f32; n * h];
-            linear_bwd_add(&d_ro_pre, &blk.ro0_w, n, h, h, &mut d_h_ro);
+            if let Some(up) = custom_d_desc {
+                if b == n_int - 1 {
+                    d_h_ro.copy_from_slice(&up[..n * h]);
+                }
+            } else {
+                let mut d_ro_pre = vec![0.0f32; n * h];
+                for i in 0..n {
+                    for c in 0..h {
+                        let g_act = inv_sqrt_i * blk.ro2_w[c];
+                        d_ro_pre[i * h + c] = g_act * silu_grad(tape.ro_pre[i * h + c]);
+                    }
+                }
+                linear_bwd_add(&d_ro_pre, &blk.ro0_w, n, h, h, &mut d_h_ro);
+            }
             layernorm_fp64_bwd_add(
                 &d_h_ro,
                 &blk.readout_norm_w,

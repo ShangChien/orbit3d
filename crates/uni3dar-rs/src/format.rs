@@ -249,4 +249,171 @@ impl ModelBundle {
         }
         Ok(())
     }
+
+    #[inline]
+    pub fn raw_bytes(&self) -> &[u8] {
+        &self.raw
+    }
+
+    /// Accumulate input gradient `dX += dY @ W` directly across `F32 / F16 / Q8_0 / Q4_0`
+    /// (`dY`: `(rows, out_cols)`, `dx_accum`: `(rows, in_cols)`) for zero-copy `QLoRA` backward!
+    pub fn eval_linear_bwd_dx(&self, prefix: &str, dy: &[f32], rows: usize, dx_accum: &mut [f32]) -> Result<(), String> {
+        let lv = self.linear_view(prefix)?;
+        let in_c = lv.orig_cols;
+        let out_c = lv.out_features;
+        debug_assert_eq!(dy.len(), rows * out_c, "eval_linear_bwd_dx dy mismatch on {prefix}");
+        debug_assert_eq!(dx_accum.len(), rows * in_c, "eval_linear_bwd_dx dx mismatch on {prefix}");
+
+        match lv.mode {
+            QuantMode::F32 => {
+                let w: &[f32] = bytemuck::cast_slice(lv.weight_bytes);
+                for r in 0..rows {
+                    let dyr = &dy[r * out_c..(r + 1) * out_c];
+                    let dxr = &mut dx_accum[r * in_c..(r + 1) * in_c];
+                    for (c, &g) in dyr.iter().enumerate() {
+                        if g == 0.0 {
+                            continue;
+                        }
+                        let wr = &w[c * lv.pad_cols..c * lv.pad_cols + in_c];
+                        for k in 0..in_c {
+                            dxr[k] += g * wr[k];
+                        }
+                    }
+                }
+            }
+            QuantMode::F16 => {
+                let w: &[u16] = bytemuck::cast_slice(lv.weight_bytes);
+                for r in 0..rows {
+                    let dyr = &dy[r * out_c..(r + 1) * out_c];
+                    let dxr = &mut dx_accum[r * in_c..(r + 1) * in_c];
+                    for (c, &g) in dyr.iter().enumerate() {
+                        if g == 0.0 {
+                            continue;
+                        }
+                        let wr = &w[c * lv.pad_cols..c * lv.pad_cols + in_c];
+                        for k in 0..in_c {
+                            dxr[k] += g * f16::from_bits(wr[k]).to_f32();
+                        }
+                    }
+                }
+            }
+            QuantMode::Q8_0 => {
+                let bpr = lv.blocks_per_row;
+                let wb = lv.weight_bytes;
+                for r in 0..rows {
+                    let dyr = &dy[r * out_c..(r + 1) * out_c];
+                    let dxr = &mut dx_accum[r * in_c..(r + 1) * in_c];
+                    for (c, &g) in dyr.iter().enumerate() {
+                        if g == 0.0 {
+                            continue;
+                        }
+                        for bi in 0..bpr {
+                            let boff = (c * bpr + bi) * 36;
+                            let scale = g * f32::from_le_bytes(wb[boff..boff + 4].try_into().unwrap());
+                            let k_base = bi * 32;
+                            let k_lim = (in_c - k_base).min(32);
+                            for j in 0..k_lim {
+                                let q = wb[boff + 4 + j] as i8;
+                                dxr[k_base + j] += scale * (q as f32);
+                            }
+                        }
+                    }
+                }
+            }
+            QuantMode::Q4_0 => {
+                let bpr = lv.blocks_per_row;
+                let wb = lv.weight_bytes;
+                for r in 0..rows {
+                    let dyr = &dy[r * out_c..(r + 1) * out_c];
+                    let dxr = &mut dx_accum[r * in_c..(r + 1) * in_c];
+                    for (c, &g) in dyr.iter().enumerate() {
+                        if g == 0.0 {
+                            continue;
+                        }
+                        for bi in 0..bpr {
+                            let boff = (c * bpr + bi) * 20;
+                            let scale = g * f32::from_le_bytes(wb[boff..boff + 4].try_into().unwrap());
+                            let k_base = bi * 32;
+                            let k_lim = (in_c - k_base).min(32);
+                            for j in 0..k_lim {
+                                let byte = wb[boff + 4 + (j >> 1)];
+                                let nib = if (j & 1) == 0 { byte & 0x0F } else { byte >> 4 };
+                                let q = ((nib as i8) << 4) >> 4;
+                                dxr[k_base + j] += scale * (q as f32);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Dequantize any `LinearView` (`F32 / F16 / Q8_0 / Q4_0`) into packed `u32` pairs of IEEE-754 `f16`
+    /// (`out_features * ((orig_cols + 1) / 2)` words) for compact `wgpu` training shaders (`unpack2x16float`).
+    pub fn dequantize_linear_f16_u32(&self, prefix: &str) -> Result<(usize, usize, Vec<u32>, Option<Vec<f32>>), String> {
+        let lv = self.linear_view(prefix)?;
+        let in_c = lv.orig_cols;
+        let out_c = lv.out_features;
+        let pairs_per_row = (in_c + 1) / 2;
+        let mut packed = vec![0u32; out_c * pairs_per_row];
+        let mut row_f32 = vec![0.0f32; in_c];
+
+        for c in 0..out_c {
+            row_f32.fill(0.0);
+            match lv.mode {
+                QuantMode::F32 => {
+                    let w: &[f32] = bytemuck::cast_slice(lv.weight_bytes);
+                    row_f32.copy_from_slice(&w[c * lv.pad_cols..c * lv.pad_cols + in_c]);
+                }
+                QuantMode::F16 => {
+                    let w: &[u16] = bytemuck::cast_slice(lv.weight_bytes);
+                    let wr = &w[c * lv.pad_cols..c * lv.pad_cols + in_c];
+                    for k in 0..in_c {
+                        row_f32[k] = f16::from_bits(wr[k]).to_f32();
+                    }
+                }
+                QuantMode::Q8_0 => {
+                    let bpr = lv.blocks_per_row;
+                    let wb = lv.weight_bytes;
+                    for bi in 0..bpr {
+                        let boff = (c * bpr + bi) * 36;
+                        let scale = f32::from_le_bytes(wb[boff..boff + 4].try_into().unwrap());
+                        let k_base = bi * 32;
+                        let k_lim = (in_c - k_base).min(32);
+                        for j in 0..k_lim {
+                            row_f32[k_base + j] = (wb[boff + 4 + j] as i8 as f32) * scale;
+                        }
+                    }
+                }
+                QuantMode::Q4_0 => {
+                    let bpr = lv.blocks_per_row;
+                    let wb = lv.weight_bytes;
+                    for bi in 0..bpr {
+                        let boff = (c * bpr + bi) * 20;
+                        let scale = f32::from_le_bytes(wb[boff..boff + 4].try_into().unwrap());
+                        let k_base = bi * 32;
+                        let k_lim = (in_c - k_base).min(32);
+                        for j in 0..k_lim {
+                            let byte = wb[boff + 4 + (j >> 1)];
+                            let nib = if (j & 1) == 0 { byte & 0x0F } else { byte >> 4 };
+                            let q = ((nib as i8) << 4) >> 4;
+                            row_f32[k_base + j] = (q as f32) * scale;
+                        }
+                    }
+                }
+            }
+            let out_row = &mut packed[c * pairs_per_row..(c + 1) * pairs_per_row];
+            for p in 0..pairs_per_row {
+                let lo = f16::from_f32(row_f32[2 * p]).to_bits() as u32;
+                let hi = if 2 * p + 1 < in_c {
+                    f16::from_f32(row_f32[2 * p + 1]).to_bits() as u32
+                } else {
+                    0u32
+                };
+                out_row[p] = lo | (hi << 16);
+            }
+        }
+        Ok((out_c, in_c, packed, lv.bias.map(|b| b.to_vec())))
+    }
 }

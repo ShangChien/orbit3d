@@ -1079,8 +1079,38 @@ impl HyffEngine {
             need_forces,
             need_descriptor,
             gpu,
+            None,
         )
         .await
+    }
+
+    /// Exact analytical VJP `dL/dR_i` (`(N, 3)`) given upstream gradient `d_desc` (`(N, hidden)`) wrt
+    /// the terminal readout descriptor (`h_ro`). Used by `loom-rs` `PhysicsConstrainedCoordRefiner`.
+    pub async fn vjp_descriptor_coords_async(
+        &mut self,
+        system: &MolecularSystem,
+        d_desc: &[f32],
+    ) -> Result<Vec<[f64; 3]>, String> {
+        let gpu = if self.should_use_gpu(system.n_atoms()) {
+            self.gpu.as_ref()
+        } else {
+            None
+        };
+        let ev = eval_hyff_core(
+            &self.weights,
+            &mut self.neighbor_cache,
+            system,
+            false,
+            false,
+            gpu,
+            Some(d_desc),
+        )
+        .await?;
+        Ok(ev
+            .forces_ev_a
+            .into_iter()
+            .map(|f| [-f[0], -f[1], -f[2]])
+            .collect())
     }
 }
 

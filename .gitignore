@@ -68,9 +68,12 @@ target/
 crates/*/pkg/
 web/*/pkg/
 web/*/pkg_*/
+web/*/models
 web/*/models/
 *.fm118
 *.u3m
 *.dpa4
 *.hyff
+*.loom_lora
+*.loom_oracle
 

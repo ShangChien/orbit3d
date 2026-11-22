@@ -891,6 +891,7 @@ impl PotentialBackend for Dpa4CpuEngine {
             need_forces,
             need_descriptor,
             None,
+            None,
         ))
     }
 }
@@ -919,7 +920,9 @@ pub(crate) async fn eval_dpa4_core(
     need_forces: bool,
     need_descriptor: bool,
     gpu: Option<&Dpa4GpuContext>,
+    custom_d_desc: Option<&[f32]>,
 ) -> Result<PotentialEval, String> {
+    let need_forces = need_forces || custom_d_desc.is_some();
     let n = system.n_atoms();
     let c = w.cfg.channels;
     if n == 0 {
@@ -1997,23 +2000,27 @@ pub(crate) async fn eval_dpa4_core(
     }
 
     // =========================================================================
-    // 5. Analytical Reverse-Mode VJP (`F = -dE/dR`)
+    // 5. Analytical Reverse-Mode VJP (`F = -dE/dR` or `-dL/dR` when `custom_d_desc` is provided)
     // =========================================================================
-    // 5.1 Fitting Net VJP (`d_e_net == 1.0` for all atoms)
-    let mut d_fit_y = vec![0.0f32; n * 2 * h_ffn];
-    for i in 0..n {
-        let yr = &fit_y[i * 2 * h_ffn..(i + 1) * 2 * h_ffn];
-        let dyr = &mut d_fit_y[i * 2 * h_ffn..(i + 1) * 2 * h_ffn];
-        for h in 0..h_ffn {
-            let dh = w.fit_out_w[h];
-            let v_val = yr[h];
-            let g_val = yr[h_ffn + h];
-            dyr[h] = dh * silu(g_val);
-            dyr[h_ffn + h] = dh * v_val * silu_grad(g_val);
-        }
-    }
     let mut d_desc = vec![0.0f32; n * c];
-    mm_in_out_bwd_add(&d_fit_y, &w.fit_glu_w, n, c, 2 * h_ffn, &mut d_desc);
+    if let Some(up) = custom_d_desc {
+        d_desc.copy_from_slice(&up[..n * c]);
+    } else {
+        // 5.1 Fitting Net VJP (`d_e_net == 1.0` for all atoms)
+        let mut d_fit_y = vec![0.0f32; n * 2 * h_ffn];
+        for i in 0..n {
+            let yr = &fit_y[i * 2 * h_ffn..(i + 1) * 2 * h_ffn];
+            let dyr = &mut d_fit_y[i * 2 * h_ffn..(i + 1) * 2 * h_ffn];
+            for h in 0..h_ffn {
+                let dh = w.fit_out_w[h];
+                let v_val = yr[h];
+                let g_val = yr[h_ffn + h];
+                dyr[h] = dh * silu(g_val);
+                dyr[h_ffn + h] = dh * v_val * silu_grad(g_val);
+            }
+        }
+        mm_in_out_bwd_add(&d_fit_y, &w.fit_glu_w, n, c, 2 * h_ffn, &mut d_desc);
+    }
 
     // 5.2 Output Readout FFN VJP
     let mut d_x_cur = vec![0.0f32; n * dim_d * c];

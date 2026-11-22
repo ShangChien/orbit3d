@@ -690,6 +690,35 @@ impl Dpa4Engine {
             }
         }
     }
+
+    /// Exact analytical VJP `dL/dR_i` (`(N, 3)`) given upstream gradient `d_desc` (`(N, channels)`) wrt
+    /// the terminal `SeZM` scalar descriptor (`l = 0`). Used by `loom-rs` `PhysicsConstrainedCoordRefiner`.
+    pub async fn vjp_descriptor_coords_async(
+        &mut self,
+        system: &MolecularSystem,
+        d_desc: &[f32],
+    ) -> Result<Vec<[f64; 3]>, String> {
+        let gpu_ref = if self.should_use_gpu(system.n_atoms()) {
+            self.gpu.as_ref()
+        } else {
+            None
+        };
+        let ev = eval_dpa4_core(
+            &self.weights,
+            &mut self.neighbor_cache,
+            system,
+            false,
+            false,
+            gpu_ref,
+            Some(d_desc),
+        )
+        .await?;
+        Ok(ev
+            .forces_ev_a
+            .into_iter()
+            .map(|f| [-f[0], -f[1], -f[2]])
+            .collect())
+    }
 }
 
 impl AsyncPotentialBackend for Dpa4Engine {
@@ -719,6 +748,7 @@ impl AsyncPotentialBackend for Dpa4Engine {
             need_forces,
             need_descriptor,
             gpu_ref,
+            None,
         )
         .await
     }

@@ -6,6 +6,7 @@ members = [
     "crates/mlip-core",
     "crates/hyff-rs",
     "crates/dpa4-rs",
+    "crates/loom-rs",
 ]
 
 [profile.release]
