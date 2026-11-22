@@ -10,6 +10,7 @@ use std::task::{Context, Poll, Waker};
 use wgpu::util::DeviceExt;
 
 const UNIFORM_ALIGN: u32 = 256;
+const W_SPLIT_U32: usize = 31_457_280; // 120 MiB per storage binding (< 128 MiB WebGPU limit)
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Pod, Zeroable)]
@@ -263,7 +264,8 @@ pub struct WgpuBackend {
     p_agg_norm: wgpu::ComputePipeline,
     p_sym_edge: wgpu::ComputePipeline,
     bgl: wgpu::BindGroupLayout,
-    weights_buf: wgpu::Buffer,
+    weights_buf_0: wgpu::Buffer,
+    weights_buf_1: wgpu::Buffer,
     f32_params_buf: wgpu::Buffer,
     mod_dynamic_f32_off: u32,
     packer: ParamPacker,
@@ -296,10 +298,16 @@ impl WgpuBackend {
             .ok_or_else(|| "No WebGPU / Metal / DX12 / Vulkan GPU adapter found".to_string())?;
 
         let info = adapter.get_info();
-        let adapter_limits = adapter.limits();
-        let mut limits = wgpu::Limits::default();
-        limits.max_storage_buffer_binding_size = adapter_limits.max_storage_buffer_binding_size;
-        limits.max_buffer_size = adapter_limits.max_buffer_size;
+        let al = adapter.limits();
+        let mut limits = wgpu::Limits::downlevel_defaults().using_resolution(al.clone());
+        limits.max_storage_buffers_per_shader_stage = al.max_storage_buffers_per_shader_stage;
+        limits.max_storage_buffer_binding_size = al.max_storage_buffer_binding_size;
+        limits.max_buffer_size = al.max_buffer_size;
+        limits.max_compute_workgroup_storage_size = al.max_compute_workgroup_storage_size;
+        limits.max_compute_invocations_per_workgroup = al.max_compute_invocations_per_workgroup;
+        limits.max_compute_workgroup_size_x = al.max_compute_workgroup_size_x;
+        limits.max_compute_workgroup_size_y = al.max_compute_workgroup_size_y;
+        limits.max_compute_workgroups_per_dimension = al.max_compute_workgroups_per_dimension;
 
         let (device, queue) = adapter
             .request_device(
@@ -390,9 +398,21 @@ impl WgpuBackend {
         if packer.w_u32.is_empty() {
             packer.w_u32.push(0);
         }
-        let weights_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("flowmol-weights-blob"),
-            contents: bytemuck::cast_slice(&packer.w_u32),
+        let split_at = packer.w_u32.len().min(W_SPLIT_U32);
+        let w_part0 = &packer.w_u32[..split_at];
+        let w_part1: &[u32] = if packer.w_u32.len() > W_SPLIT_U32 {
+            &packer.w_u32[W_SPLIT_U32..]
+        } else {
+            &[0u32; 4]
+        };
+        let weights_buf_0 = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("flowmol-weights-blob-0"),
+            contents: bytemuck::cast_slice(w_part0),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+        let weights_buf_1 = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("flowmol-weights-blob-1"),
+            contents: bytemuck::cast_slice(w_part1),
             usage: wgpu::BufferUsages::STORAGE,
         });
         let f32_params_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -400,6 +420,9 @@ impl WgpuBackend {
             contents: bytemuck::cast_slice(&packer.f32_vec),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
+        // Free host/WASM temporary packing buffers immediately now that VRAM buffers are populated!
+        packer.w_u32 = Vec::new();
+        packer.f32_vec = Vec::new();
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("flowmol-shaders"),
@@ -454,6 +477,16 @@ impl WgpuBackend {
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 5,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -519,7 +552,16 @@ impl WgpuBackend {
             mapped_at_creation: false,
         });
 
-        let bind_group = Self::make_bind_group(&device, &bgl, &uniform_buf, &weights_buf, &f32_params_buf, &graph_buf, &ws_buf);
+        let bind_group = Self::make_bind_group(
+            &device,
+            &bgl,
+            &uniform_buf,
+            &weights_buf_0,
+            &weights_buf_1,
+            &f32_params_buf,
+            &graph_buf,
+            &ws_buf,
+        );
 
         Ok(Self {
             adapter_name: info.name,
@@ -536,7 +578,8 @@ impl WgpuBackend {
             p_agg_norm,
             p_sym_edge,
             bgl,
-            weights_buf,
+            weights_buf_0,
+            weights_buf_1,
             f32_params_buf,
             mod_dynamic_f32_off,
             packer,
@@ -562,7 +605,8 @@ impl WgpuBackend {
         device: &wgpu::Device,
         bgl: &wgpu::BindGroupLayout,
         uniform_buf: &wgpu::Buffer,
-        weights_buf: &wgpu::Buffer,
+        weights_buf_0: &wgpu::Buffer,
+        weights_buf_1: &wgpu::Buffer,
         f32_params_buf: &wgpu::Buffer,
         graph_buf: &wgpu::Buffer,
         ws_buf: &wgpu::Buffer,
@@ -581,7 +625,7 @@ impl WgpuBackend {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: weights_buf.as_entire_binding(),
+                    resource: weights_buf_0.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
@@ -594,6 +638,10 @@ impl WgpuBackend {
                 wgpu::BindGroupEntry {
                     binding: 4,
                     resource: ws_buf.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 5,
+                    resource: weights_buf_1.as_entire_binding(),
                 },
             ],
         })
@@ -620,7 +668,8 @@ impl WgpuBackend {
                 &self.device,
                 &self.bgl,
                 &self.uniform_buf,
-                &self.weights_buf,
+                &self.weights_buf_0,
+                &self.weights_buf_1,
                 &self.f32_params_buf,
                 &self.graph_buf,
                 &self.ws_buf,
@@ -1181,7 +1230,8 @@ impl WgpuBackend {
                 &self.device,
                 &self.bgl,
                 &self.uniform_buf,
-                &self.weights_buf,
+                &self.weights_buf_0,
+                &self.weights_buf_1,
                 &self.f32_params_buf,
                 &self.graph_buf,
                 &self.ws_buf,

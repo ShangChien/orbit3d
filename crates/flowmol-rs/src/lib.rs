@@ -92,21 +92,31 @@ pub mod wasm_api {
     #[wasm_bindgen]
     pub struct WasmFlowMolEngine {
         inner: FlowMolEngine,
+        gpu_error: Option<String>,
     }
 
     #[wasm_bindgen]
     impl WasmFlowMolEngine {
-        /// Create a WebGPU-accelerated engine (automatically falls back to WASM CPU if `use_gpu` is false or WebGPU fails).
+        /// Create a WebGPU-accelerated engine without cloning `model_bytes` (falls back to WASM CPU and records `gpu_error` if WebGPU fails).
         #[wasm_bindgen(js_name = create)]
         pub async fn create(model_bytes: Vec<u8>, use_gpu: bool) -> Result<WasmFlowMolEngine, JsValue> {
-            let engine = match FlowMolEngine::from_bytes_async(model_bytes.clone(), use_gpu, 64).await {
-                Ok(eng) => eng,
-                Err(_gpu_err) if use_gpu => FlowMolEngine::from_bytes_async(model_bytes, false, 64)
-                    .await
-                    .map_err(|e| JsValue::from_str(&e))?,
-                Err(e) => return Err(JsValue::from_str(&e)),
+            let bundle = ModelBundle::from_bytes(model_bytes).map_err(|e| JsValue::from_str(&e))?;
+            let mut gpu_error = None;
+            let gpu = if use_gpu {
+                match WgpuBackend::new_async(&bundle, 64).await {
+                    Ok(g) => Some(g),
+                    Err(e) => {
+                        gpu_error = Some(e);
+                        None
+                    }
+                }
+            } else {
+                None
             };
-            Ok(WasmFlowMolEngine { inner: engine })
+            Ok(WasmFlowMolEngine {
+                inner: FlowMolEngine { bundle, gpu },
+                gpu_error,
+            })
         }
 
         #[wasm_bindgen(js_name = backendInfo)]
@@ -114,6 +124,8 @@ pub mod wasm_api {
             let h = &self.inner.bundle.header;
             serde_json::json!({
                 "backend": self.inner.backend_description(),
+                "is_gpu": self.inner.gpu.is_some(),
+                "gpu_error": self.gpu_error,
                 "quant_dtype": h.quant_dtype,
                 "step": h.step,
                 "n_molecule_updates": h.config.n_molecule_updates,

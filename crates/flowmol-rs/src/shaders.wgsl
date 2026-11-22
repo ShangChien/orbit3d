@@ -17,11 +17,21 @@ struct OpParams {
     u15: u32,
 };
 
+const W_SPLIT_U32: u32 = 31457280u; // 120 MiB per storage binding (< 128 MiB WebGPU limit)
+
 @group(0) @binding(0) var<uniform> u: OpParams;
-@group(0) @binding(1) var<storage, read> weights_blob: array<u32>;
+@group(0) @binding(1) var<storage, read> weights_blob_0: array<u32>;
 @group(0) @binding(2) var<storage, read> f32_params: array<f32>;
 @group(0) @binding(3) var<storage, read> graph_idx: array<u32>;
 @group(0) @binding(4) var<storage, read_write> ws: array<f32>;
+@group(0) @binding(5) var<storage, read> weights_blob_1: array<u32>;
+
+fn read_w_u32(idx: u32) -> u32 {
+    if (idx < W_SPLIT_U32) {
+        return weights_blob_0[idx];
+    }
+    return weights_blob_1[idx - W_SPLIT_U32];
+}
 
 fn silu(x: f32) -> f32 {
     return x / (1.0 + exp(-x));
@@ -127,7 +137,7 @@ fn gemm_fused(
             if (qmode == 0u) {
                 let kb = ly;
                 if (gc < out_cols && (k_base + kb) < in_cols) {
-                    tileB[kb * 68u + tc] = bitcast<f32>(weights_blob[w_base + gc * pad_cols + k_base + kb]);
+                    tileB[kb * 68u + tc] = bitcast<f32>(read_w_u32(w_base + gc * pad_cols + k_base + kb));
                 } else {
                     tileB[kb * 68u + tc] = 0.0;
                 }
@@ -137,7 +147,7 @@ fn gemm_fused(
                     let kb1 = kb0 + 1u;
                     if (gc < out_cols) {
                         let pair_idx = (gc * pad_cols + k_base + kb0) / 2u;
-                        let up = unpack2x16float(weights_blob[w_base + pair_idx]);
+                        let up = unpack2x16float(read_w_u32(w_base + pair_idx));
                         tileB[kb0 * 68u + tc] = select(0.0, up.x, (k_base + kb0) < in_cols);
                         tileB[kb1 * 68u + tc] = select(0.0, up.y, (k_base + kb1) < in_cols);
                     } else {
@@ -152,8 +162,8 @@ fn gemm_fused(
                         let blk_idx = kt >> 1u;
                         let half_off = (kt & 1u) * 4u;
                         let blk_off = w_base + (gc * bpr + blk_idx) * 9u;
-                        let scale = bitcast<f32>(weights_blob[blk_off]);
-                        let packed = bitcast<i32>(weights_blob[blk_off + 1u + half_off + ly]);
+                        let scale = bitcast<f32>(read_w_u32(blk_off));
+                        let packed = bitcast<i32>(read_w_u32(blk_off + 1u + half_off + ly));
                         tileB[(j0 + 0u) * 68u + tc] = select(0.0, f32(extractBits(packed, 0u, 8u)) * scale, (k_base + j0 + 0u) < in_cols);
                         tileB[(j0 + 1u) * 68u + tc] = select(0.0, f32(extractBits(packed, 8u, 8u)) * scale, (k_base + j0 + 1u) < in_cols);
                         tileB[(j0 + 2u) * 68u + tc] = select(0.0, f32(extractBits(packed, 16u, 8u)) * scale, (k_base + j0 + 2u) < in_cols);

@@ -4,6 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>FlowMol-118 · WebGPU Playground (flowmol-rs)</title>
+<script>
+  // Automatically upgrade 0.0.0.0 / [::] (printed by `python3 -m http.server`) to localhost
+  // so Chrome/Edge/Safari enter Secure Context and unlock `navigator.gpu` (WebGPU) + OPFS!
+  if (location.hostname === "0.0.0.0" || location.hostname === "::" || location.hostname === "[::]") {
+    location.replace(`${location.protocol}//localhost:${location.port}${location.pathname}${location.search}`);
+  }
+</script>
 <style>
   :root {
     --bg: #0b0f19;
@@ -14,19 +21,22 @@
     --accent: #3b82f6;
     --ok: #10b981;
     --warn: #f59e0b;
+    --err: #ef4444;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
     background: var(--bg); color: var(--fg);
-    display: grid; grid-template-columns: 340px 1fr; height: 100vh; overflow: hidden;
+    display: grid; grid-template-columns: 350px 1fr; height: 100vh; overflow: hidden;
   }
   aside {
     background: var(--panel); border-right: 1px solid var(--border);
-    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px;
   }
-  h1 { font-size: 16px; margin: 0; display: flex; align-items: center; justify-content: space-between; }
-  .badge { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; }
+  h1 { font-size: 16px; margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 195px; }
+  .badge.warn { background: #78350f; color: #fde68a; }
+  .badge.ok { background: #064e3b; color: #6ee7b7; }
   .group { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
   label { color: var(--muted); display: flex; justify-content: space-between; }
   input, select, button {
@@ -36,12 +46,18 @@
   input:focus, select:focus { border-color: var(--accent); }
   button { cursor: pointer; font-weight: 600; transition: opacity 0.15s, border-color 0.15s; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 9px; font-size: 13px; }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.danger { background: #7f1d1d; border-color: #991b1b; color: #fecaca; padding: 9px; font-size: 13px; }
+  button:disabled { opacity: 0.42; cursor: not-allowed; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .alert {
+    display: none; font-size: 11.5px; line-height: 1.45; padding: 8px 10px;
+    border-radius: 6px; border: 1px solid #92400e; background: rgba(120, 53, 15, 0.35); color: #fde68a;
+  }
+  .alert.error { border-color: #991b1b; background: rgba(127, 29, 29, 0.35); color: #fecaca; }
   main { position: relative; display: flex; flex-direction: column; height: 100vh; }
   #topbar {
     padding: 10px 16px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-family: ui-monospace, monospace;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; font-family: ui-monospace, monospace;
   }
   #cv { flex: 1; width: 100%; cursor: grab; touch-action: none; }
   #cv:active { cursor: grabbing; }
@@ -56,14 +72,23 @@
 <body>
 <aside>
   <div>
-    <h1>FlowMol-118 <span class="badge" id="gpuTag">WASM Init...</span></h1>
-    <div style="font-size:11px;color:var(--muted);margin-top:4px;">纯前端 Rust + WebGPU 全周期表 3D 分子生成</div>
+    <h1>FlowMol-118 <span class="badge" id="gpuTag">Worker Init...</span></h1>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;">Web Worker + WebGPU 异步无阻塞 3D 分子生成</div>
   </div>
+
+  <div id="diagBox" class="alert"></div>
 
   <div class="group">
     <label><span>1. 加载模型包 (.fm118)</span><span id="modelState" class="mono">未加载</span></label>
+    <div class="row2">
+      <select id="selPresetUrl">
+        <option value="./models/model.fm118">默认旗舰 FP16 (78 MiB)</option>
+        <option value="./models/flagship_q8.fm118">旗舰轻量 Q8_0 (46 MiB)</option>
+        <option value="./models/flagship_fp32.fm118">旗舰全精度 FP32 (153 MiB)</option>
+      </select>
+      <button id="btnFetchDefault">加载并缓存</button>
+    </div>
     <input type="file" id="fileInput" accept=".fm118" />
-    <button id="btnFetchDefault">加载默认 ./models/model.fm118 (OPFS缓存)</button>
   </div>
 
   <div class="group">
@@ -80,7 +105,7 @@
   <div class="row2">
     <div class="group">
       <label><span>原子数 N (0=自动)</span></label>
-      <input type="number" id="inpAtoms" value="36" min="0" max="120" class="mono" />
+      <input type="number" id="inpAtoms" value="32" min="0" max="120" class="mono" />
     </div>
     <div class="group">
       <label><span>随机种子 Seed</span></label>
@@ -92,8 +117,8 @@
     <div class="group">
       <label><span>求解器</span></label>
       <select id="selSolver">
-        <option value="heun">Heun (2阶)</option>
-        <option value="euler">Euler (1阶)</option>
+        <option value="euler">Euler (1阶 · 2倍速)</option>
+        <option value="heun">Heun (2阶 · 高精度)</option>
       </select>
     </div>
     <div class="group">
@@ -116,7 +141,10 @@
     </select>
   </div>
 
-  <button class="primary" id="btnSample" disabled>⚡ 开始 WebGPU 3D 生成</button>
+  <div style="display:flex;gap:8px;">
+    <button class="primary" id="btnSample" style="flex:1;" disabled>⚡ 开始 WebGPU 3D 生成</button>
+    <button class="danger" id="btnCancel" style="display:none;">⏹ 停止</button>
+  </div>
 
   <div class="row2">
     <button id="btnSdf" disabled>下载 .SDF</button>
@@ -126,7 +154,7 @@
 
 <main>
   <div id="topbar">
-    <span id="statusTxt">请选择本地 .fm118 模型文件或点击加载默认模型</span>
+    <span id="statusTxt">正在启动后台 Web Worker...</span>
     <span id="perfTxt" style="color:var(--ok);"></span>
   </div>
   <canvas id="cv"></canvas>
@@ -137,8 +165,6 @@
 </main>
 
 <script type="module">
-import init, { WasmFlowMolEngine } from "./pkg/flowmol_rs.js";
-
 const ATOMS = [
   "H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca",
   "Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr",
@@ -149,66 +175,180 @@ const ATOMS = [
 ];
 const CPK = { H:"#cbd5e1", C:"#64748b", N:"#3b82f6", O:"#ef4444", S:"#eab308", P:"#f97316", F:"#4ade80", Cl:"#22c55e", Br:"#b45309", I:"#a855f7", Rh:"#14b8a6", Ru:"#8b5cf6", Ni:"#10b981", Pd:"#06b6d4", Pt:"#38bdf8", Fe:"#f97316", Cu:"#ea580c" };
 
-let engine = null;
+const gpuTag = document.getElementById("gpuTag");
+const diagBox = document.getElementById("diagBox");
+const statusTxt = document.getElementById("statusTxt");
+const perfTxt = document.getElementById("perfTxt");
+const modelState = document.getElementById("modelState");
+const btnFetch = document.getElementById("btnFetchDefault");
+const fileInput = document.getElementById("fileInput");
+const btnSample = document.getElementById("btnSample");
+const btnCancel = document.getElementById("btnCancel");
+const btnSdf = document.getElementById("btnSdf");
+
+let worker = null;
+let reqId = 1;
+let modelLoaded = false;
+let busy = false;
+let lastLoadSpec = null; // { type: 'load_url'|'load_file', ... } for auto-reload after cancel
 let lastSdf = "";
-let curMol = null; // { positions: [[x,y,z]], symbols: [], bonds: [] }
+let curMol = null;
 let showH = true, rotY = 0.5, rotX = 0.25, zoom = 1.0, dragging = false, lx = 0, ly = 0, spinning = true;
 
-await init();
-document.getElementById("gpuTag").textContent = navigator.gpu ? "WebGPU Ready" : "WASM CPU Fallback";
-
-async function loadEngineFromBytes(u8, label) {
-  const t0 = performance.now();
-  document.getElementById("statusTxt").textContent = `正在初始化引擎 (${(u8.byteLength / 1e6).toFixed(1)} MB)...`;
-  engine = await WasmFlowMolEngine.create(u8, !!navigator.gpu);
-  const info = JSON.parse(engine.backendInfo());
-  document.getElementById("gpuTag").textContent = info.backend;
-  document.getElementById("modelState").textContent = `${info.quant_dtype} · L=${info.n_molecule_updates}`;
-  document.getElementById("statusTxt").textContent = `已就绪: ${label} (${(performance.now() - t0).toFixed(0)} ms)`;
-  document.getElementById("btnSample").disabled = false;
+function showDiag(text, isError = false) {
+  if (!text) {
+    diagBox.style.display = "none";
+    diagBox.textContent = "";
+    diagBox.classList.remove("error");
+    return;
+  }
+  diagBox.textContent = text;
+  diagBox.classList.toggle("error", isError);
+  diagBox.style.display = "block";
 }
 
-document.getElementById("fileInput").onchange = async (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const buf = new Uint8Array(await f.arrayBuffer());
-  await loadEngineFromBytes(buf, f.name);
-};
+function setBusyState(isBusy, isSampling = false) {
+  busy = isBusy;
+  btnFetch.disabled = isBusy;
+  fileInput.disabled = isBusy;
+  btnSample.disabled = isBusy || !modelLoaded;
+  btnCancel.style.display = isSampling ? "inline-block" : "none";
+}
 
-document.getElementById("btnFetchDefault").onclick = async () => {
-  try {
-    let bytes = null;
-    if (navigator.storage && navigator.storage.getDirectory) {
-      const root = await navigator.storage.getDirectory();
-      try {
-        const fh = await root.getFileHandle("flowmol_default.fm118");
-        bytes = new Uint8Array(await (await fh.getFile()).arrayBuffer());
-      } catch (_) {}
-      if (!bytes) {
-        document.getElementById("statusTxt").textContent = "正在下载 ./models/model.fm118 并写入 OPFS 缓存...";
-        const resp = await fetch("./models/model.fm118");
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        bytes = new Uint8Array(await resp.arrayBuffer());
-        const fh = await root.getFileHandle("flowmol_default.fm118", { create: true });
-        const wr = await fh.createWritable();
-        await wr.write(bytes);
-        await wr.close();
-      }
-    } else {
-      const resp = await fetch("./models/model.fm118");
-      bytes = new Uint8Array(await resp.arrayBuffer());
-    }
-    await loadEngineFromBytes(bytes, "OPFS/model.fm118");
-  } catch (err) {
-    document.getElementById("statusTxt").textContent = `未找到 ./models/model.fm118 (${err.message})，请用左侧文件选择框直接打开任意 .fm118 文件`;
+function spawnWorker() {
+  if (worker) {
+    worker.terminate();
   }
+  modelLoaded = false;
+  worker = new Worker("./worker.js?v=2", { type: "module" });
+  worker.onerror = (ev) => {
+    showDiag(`Worker 运行异常: ${ev.message || "未知错误"}`, true);
+    statusTxt.textContent = "Worker 发生异常";
+    setBusyState(false, false);
+  };
+  worker.onmessage = (ev) => {
+    const msg = ev.data || {};
+    if (msg.type === "inited") {
+      if (msg.hasWebGPU) {
+        gpuTag.textContent = "WebGPU Ready";
+        gpuTag.className = "badge ok";
+        statusTxt.textContent = "点击左侧「加载并缓存」或选择本地 .fm118 模型文件";
+      } else {
+        gpuTag.textContent = "WASM CPU Fallback";
+        gpuTag.className = "badge warn";
+        showDiag(
+          msg.isSecure
+            ? "当前浏览器未开启 WebGPU，将使用后台 Worker CPU 推理（不会卡死页面，但大模型较慢；推荐使用 Chrome / Edge 113+ 或 Safari 18+）"
+            : "当前地址非安全上下文，浏览器禁用了 WebGPU；请改用 http://localhost:8080 访问！"
+        );
+        statusTxt.textContent = "WebGPU 未启用 (CPU Worker 就绪)，请选择 .fm118 模型";
+      }
+      return;
+    }
+
+    if (msg.type === "download_progress") {
+      const pct = ((msg.loaded / msg.total) * 100).toFixed(0);
+      statusTxt.textContent = `正在下载模型: ${(msg.loaded / 1e6).toFixed(1)} / ${(msg.total / 1e6).toFixed(1)} MB (${pct}%)...`;
+      return;
+    }
+
+    if (msg.type === "status") {
+      statusTxt.textContent = msg.text;
+      return;
+    }
+
+    if (msg.type === "loaded") {
+      const info = msg.info;
+      const isGpu = info.is_gpu ?? String(info.backend || "").startsWith("wgpu/");
+      modelLoaded = true;
+      gpuTag.textContent = info.backend;
+      gpuTag.className = isGpu ? "badge ok" : "badge warn";
+      modelState.textContent = `${info.quant_dtype} · L=${info.n_molecule_updates} (${info.size_mb}MB)`;
+      statusTxt.textContent = `已就绪: ${msg.label} (初始化 ${info.load_ms.toFixed(0)} ms)`;
+      if (!isGpu) {
+        showDiag(
+          `未启用 WebGPU 硬件加速 (${info.gpu_error || "已降级至 CPU Worker"})。CPU 模式下已隔离在后台线程不会卡死网页，建议将原子数设为 20、步数设为 12，或使用 Chrome 访问 http://localhost:8080 开启 WebGPU。`
+        );
+      } else {
+        showDiag("");
+      }
+      setBusyState(false, false);
+      return;
+    }
+
+    if (msg.type === "step") {
+      const { step, total, xFlat, aIdx } = msg;
+      const n = aIdx.length;
+      const pos = new Array(n);
+      const syms = new Array(n);
+      for (let i = 0; i < n; i++) {
+        pos[i] = [xFlat[3 * i], xFlat[3 * i + 1], xFlat[3 * i + 2]];
+        syms[i] = aIdx[i] < ATOMS.length ? ATOMS[aIdx[i]] : "?";
+      }
+      curMol = { positions: pos, symbols: syms, bonds: [] };
+      statusTxt.textContent = `去噪步 ${step} / ${total}...`;
+      draw();
+      return;
+    }
+
+    if (msg.type === "sampled") {
+      const dt = msg.elapsedMs;
+      const parsed = JSON.parse(msg.resStr);
+      const m = parsed.molecule;
+      lastSdf = parsed.sdf;
+      curMol = { positions: m.positions, symbols: m.atom_symbols, bonds: m.bonds };
+      spinning = true;
+      btnSdf.disabled = false;
+      const seedEl = document.getElementById("inpSeed");
+      seedEl.value = String((parseInt(seedEl.value || "42", 10) || 42) + 1);
+      statusTxt.textContent = `生成完成: ${m.formula}`;
+      perfTxt.textContent = `${dt.toFixed(0)} ms (${(1000 / dt).toFixed(2)} mol/s)`;
+      document.getElementById("molMeta").textContent =
+        `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 价态合法=${m.valence_valid} · 单连通=${m.connected} (${m.n_fragments} frag) · d_min=${m.min_dist.toFixed(3)} Å`;
+      document.getElementById("metalMeta").innerHTML = (m.metals || []).map(mc =>
+        `<span class="pill">${mc.symbol} (CN=${mc.coordination_number}): ${mc.neighbors.map(nb => `${nb.symbol} ${nb.distance.toFixed(2)}Å`).join(", ")}</span>`
+      ).join("");
+      setBusyState(false, false);
+      draw();
+      return;
+    }
+
+    if (msg.type === "error") {
+      showDiag(msg.error, true);
+      statusTxt.textContent = `失败: ${msg.error}`;
+      setBusyState(false, false);
+    }
+  };
+  worker.postMessage({ type: "init" });
+}
+
+spawnWorker();
+
+btnFetch.onclick = () => {
+  if (busy) return;
+  showDiag("");
+  const url = document.getElementById("selPresetUrl").value;
+  const spec = { type: "load_url", id: ++reqId, url, cacheKey: "fm118_" + url.split("/").pop(), useGpu: true };
+  lastLoadSpec = spec;
+  setBusyState(true, false);
+  worker.postMessage(spec);
 };
 
-document.getElementById("btnSample").onclick = async () => {
-  if (!engine) return;
-  const btn = document.getElementById("btnSample");
-  btn.disabled = true;
+fileInput.onchange = (e) => {
+  const f = e.target.files[0];
+  if (!f || busy) return;
+  showDiag("");
+  const spec = { type: "load_file", id: ++reqId, file: f, useGpu: true };
+  lastLoadSpec = spec;
+  setBusyState(true, false);
+  worker.postMessage(spec);
+};
+
+btnSample.onclick = () => {
+  if (!modelLoaded || busy) return;
+  showDiag("");
   spinning = false;
+  perfTxt.textContent = "";
 
   const nVal = parseInt(document.getElementById("inpAtoms").value || "0", 10);
   const reqRaw = document.getElementById("inpRequire").value.trim();
@@ -216,7 +356,7 @@ document.getElementById("btnSample").onclick = async () => {
   const opts = {
     n_atoms: nVal > 1 ? nVal : null,
     domain: document.getElementById("selDomain").value,
-    n_steps: parseInt(document.getElementById("inpSteps").value || "25", 10),
+    n_steps: Math.max(5, parseInt(document.getElementById("inpSteps").value || "25", 10)),
     solver: document.getElementById("selSolver").value,
     grid_type: "quadratic_end",
     required_elements: reqRaw ? reqRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
@@ -224,43 +364,24 @@ document.getElementById("btnSample").onclick = async () => {
     seed: parseInt(document.getElementById("inpSeed").value || "42", 10),
   };
 
-  const t0 = performance.now();
-  try {
-    const resStr = await engine.sampleMolecule(JSON.stringify(opts), (step, total, xFlat, aIdx) => {
-      const n = aIdx.length;
-      const pos = [], syms = [];
-      for (let i = 0; i < n; i++) {
-        pos.push([xFlat[3 * i], xFlat[3 * i + 1], xFlat[3 * i + 2]]);
-        syms.push(aIdx[i] < ATOMS.length ? ATOMS[aIdx[i]] : "?");
-      }
-      curMol = { positions: pos, symbols: syms, bonds: [] };
-      document.getElementById("statusTxt").textContent = `去噪步 ${step} / ${total}...`;
-      draw();
-    });
-    const dt = performance.now() - t0;
-    const parsed = JSON.parse(resStr);
-    const m = parsed.molecule;
-    lastSdf = parsed.sdf;
-    curMol = { positions: m.positions, symbols: m.atom_symbols, bonds: m.bonds };
-    spinning = true;
-    document.getElementById("btnSdf").disabled = false;
-    document.getElementById("inpSeed").value = String(opts.seed + 1);
-    document.getElementById("statusTxt").textContent = `生成完成: ${m.formula}`;
-    document.getElementById("perfTxt").textContent = `${dt.toFixed(0)} ms (${(1000 / dt).toFixed(2)} mol/s)`;
-    document.getElementById("molMeta").textContent =
-      `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 价态合法=${m.valence_valid} · 单连通=${m.connected} (${m.n_fragments} frag) · d_min=${m.min_dist.toFixed(3)} Å`;
-    document.getElementById("metalMeta").innerHTML = (m.metals || []).map(mc =>
-      `<span class="pill">${mc.symbol} (CN=${mc.coordination_number}): ${mc.neighbors.map(nb => `${nb.symbol} ${nb.distance}Å`).join(", ")}</span>`
-    ).join("");
-    draw();
-  } catch (e) {
-    document.getElementById("statusTxt").textContent = `错误: ${e}`;
-  } finally {
-    btn.disabled = false;
+  setBusyState(true, true);
+  statusTxt.textContent = "正在提交首个去噪步...";
+  worker.postMessage({ type: "sample", id: ++reqId, optsJson: JSON.stringify(opts) });
+};
+
+btnCancel.onclick = () => {
+  statusTxt.textContent = "已中止当前生成，正在恢复模型就绪状态...";
+  spawnWorker();
+  if (lastLoadSpec) {
+    lastLoadSpec.id = ++reqId;
+    setBusyState(true, false);
+    worker.postMessage(lastLoadSpec);
+  } else {
+    setBusyState(false, false);
   }
 };
 
-document.getElementById("btnSdf").onclick = () => {
+btnSdf.onclick = () => {
   if (!lastSdf) return;
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lastSdf], { type: "chemical/x-mdl-sdfile" }));
@@ -289,15 +410,21 @@ function draw() {
   const r = cv.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const W = Math.max(300, Math.floor(r.width)), H = Math.max(240, Math.floor(r.height));
-  cv.width = W * dpr; cv.height = H * dpr;
+  if (cv.width !== W * dpr || cv.height !== H * dpr) {
+    cv.width = W * dpr; cv.height = H * dpr;
+  }
   const ctx = cv.getContext("2d");
-  ctx.scale(dpr, dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   if (!curMol || !curMol.positions.length) return;
 
   const pos = curMol.positions, syms = curMol.symbols;
   let maxR = 1.5;
-  pos.forEach(p => { maxR = Math.max(maxR, Math.hypot(p[0], p[1], p[2])); });
+  for (let i = 0; i < pos.length; i++) {
+    const p = pos[i];
+    const rr = Math.hypot(p[0], p[1], p[2]);
+    if (rr > maxR) maxR = rr;
+  }
   const cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
   const sc = (Math.min(W, H) * 0.38 / maxR) * zoom, camZ = maxR * 3.8;
 
