@@ -1,0 +1,29 @@
+[package]
+name = "dpa4-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Unified pure-Rust + WebGPU/Metal/DX12/Vulkan interatomic potential, analytical VJP force engine, and equivariant descriptor/oracle runtime for DeePMD DPA-4 (SeZM: Nano, Mini, Neo, Air, Plus)"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "dpa4-cli"
+path = "src/bin/dpa4_cli.rs"
+
+[dependencies]
+bytemuck = { version = "1.21", features = ["derive"] }
+mlip-core = { path = "../mlip-core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wgpu = "24.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pollster = "0.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["console"] }

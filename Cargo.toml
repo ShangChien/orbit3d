@@ -3,6 +3,9 @@ resolver = "2"
 members = [
     "crates/flowmol-rs",
     "crates/uni3dar-rs",
+    "crates/mlip-core",
+    "crates/hyff-rs",
+    "crates/dpa4-rs",
 ]
 
 [profile.release]

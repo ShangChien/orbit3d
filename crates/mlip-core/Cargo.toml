@@ -1,0 +1,12 @@
+[package]
+name = "mlip-core"
+version = "0.1.0"
+edition = "2021"
+description = "Zero-overhead shared interatomic potential traits, Verlet neighbor lists, FIRE/L-BFGS 3D relaxers, NVE/BAOAB-NVT molecular dynamics, and equivariant property adapters"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+bytemuck = { version = "1.21", features = ["derive"] }
+half = "2.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
