@@ -95,6 +95,17 @@ pub struct SampleOptions {
     pub cfg_scale: f32,
     #[serde(default = "default_one")]
     pub xyz_cfg_scale: f32,
+    /// Initial Gaussian coordinate prior radius multiplier (`< 1.0`, e.g. `0.85`, keeps initial cloud compact).
+    #[serde(default = "default_one")]
+    pub prior_scale: f32,
+    /// SE(3)-equivariant MST rigid subcluster cohesion pull (`0.0` = off, `0.35` = recommended single-molecule pull).
+    #[serde(default)]
+    pub cohesion_strength: f32,
+    /// Single-molecule connectivity guarantee: `"none"` | `"cohesion"` | `"largest_fragment"` | `"strict_retry"`.
+    #[serde(default = "default_single_mode")]
+    pub single_molecule_mode: String,
+    #[serde(default = "default_max_retries")]
+    pub max_retries: usize,
     #[serde(default = "default_seed")]
     pub seed: u64,
     #[serde(default)]
@@ -119,6 +130,12 @@ fn default_temp() -> f32 {
 fn default_one() -> f32 {
     1.0
 }
+fn default_single_mode() -> String {
+    "none".to_string()
+}
+fn default_max_retries() -> usize {
+    4
+}
 fn default_seed() -> u64 {
     42
 }
@@ -140,6 +157,10 @@ impl Default for SampleOptions {
             cond_active: None,
             cfg_scale: 1.0,
             xyz_cfg_scale: 1.0,
+            prior_scale: 1.0,
+            cohesion_strength: 0.0,
+            single_molecule_mode: "none".to_string(),
+            max_retries: 4,
             seed: 42,
             force_cpu: false,
         }
@@ -405,17 +426,199 @@ async fn run_single_predict(
     })
 }
 
-pub async fn sample_molecule_async<F>(
+/// SE(3)-equivariant Euclidean Minimum-Spanning-Tree (MST) rigid subcluster cohesion pull.
+/// Closes inter-fragment spatial gaps (`> gap_thresh`, e.g. `2.15 A`) rigidly without distorting intra-fragment geometry!
+fn apply_mst_cohesion_pull(x: &mut [[f32; 3]], gap_thresh: f32, target_bridge: f32, step_gain: f32) {
+    let n = x.len();
+    if n < 2 || step_gain <= 1e-6 {
+        return;
+    }
+    let mut in_tree = vec![false; n];
+    let mut min_d2 = vec![f32::INFINITY; n];
+    let mut parent = vec![0usize; n];
+    in_tree[0] = true;
+    for v in 1..n {
+        let dx = x[v][0] - x[0][0];
+        let dy = x[v][1] - x[0][1];
+        let dz = x[v][2] - x[0][2];
+        min_d2[v] = dx * dx + dy * dy + dz * dz;
+        parent[v] = 0;
+    }
+
+    let mut mst_edges: Vec<(usize, usize, f32)> = Vec::with_capacity(n - 1);
+    for _ in 0..(n - 1) {
+        let mut best_v = None;
+        let mut best_d2 = f32::INFINITY;
+        for v in 0..n {
+            if !in_tree[v] && min_d2[v] < best_d2 {
+                best_d2 = min_d2[v];
+                best_v = Some(v);
+            }
+        }
+        let Some(v) = best_v else { break };
+        in_tree[v] = true;
+        mst_edges.push((parent[v], v, best_d2.sqrt()));
+        for w in 0..n {
+            if !in_tree[w] {
+                let dx = x[w][0] - x[v][0];
+                let dy = x[w][1] - x[v][1];
+                let dz = x[w][2] - x[v][2];
+                let d2 = dx * dx + dy * dy + dz * dz;
+                if d2 < min_d2[w] {
+                    min_d2[w] = d2;
+                    parent[w] = v;
+                }
+            }
+        }
+    }
+
+    if !mst_edges.iter().any(|&(_, _, d)| d > gap_thresh) {
+        return;
+    }
+
+    let mut adj: Vec<Vec<(usize, usize)>> = vec![Vec::new(); n];
+    for (ei, &(u, v, _)) in mst_edges.iter().enumerate() {
+        adj[u].push((v, ei));
+        adj[v].push((u, ei));
+    }
+
+    let mut in_u = vec![false; n];
+    let mut stack = Vec::with_capacity(n);
+    for (ei, &(u, v, _)) in mst_edges.iter().enumerate() {
+        let dx = x[v][0] - x[u][0];
+        let dy = x[v][1] - x[u][1];
+        let dz = x[v][2] - x[u][2];
+        let dist = (dx * dx + dy * dy + dz * dz).sqrt();
+        if dist <= gap_thresh {
+            continue;
+        }
+        in_u.fill(false);
+        stack.clear();
+        in_u[u] = true;
+        stack.push(u);
+        let mut cnt_u = 1usize;
+        while let Some(cur) = stack.pop() {
+            for &(nb, edge_id) in &adj[cur] {
+                if edge_id != ei && !in_u[nb] {
+                    in_u[nb] = true;
+                    cnt_u += 1;
+                    stack.push(nb);
+                }
+            }
+        }
+        let cnt_v = n - cnt_u;
+        let gap = (dist - target_bridge).max(0.0);
+        let pull = (step_gain * gap).min(gap);
+        let inv_d = 1.0 / dist.max(1e-6);
+        let ux = dx * inv_d;
+        let uy = dy * inv_d;
+        let uz = dz * inv_d;
+        let shift_u = ((cnt_v as f32) / (n as f32)) * pull;
+        let shift_v = -((cnt_u as f32) / (n as f32)) * pull;
+        for i in 0..n {
+            let s = if in_u[i] { shift_u } else { shift_v };
+            x[i][0] += s * ux;
+            x[i][1] += s * uy;
+            x[i][2] += s * uz;
+        }
+    }
+    remove_com_in_place(x);
+}
+
+/// Extract the largest connected molecular component (preferring components containing pinned atoms if any).
+fn extract_largest_fragment_raw(
+    x: &[[f32; 3]],
+    a: &[usize],
+    c: &[usize],
+    e_upper: &[usize],
+    pinned: &[Option<usize>],
+) -> (Vec<[f32; 3]>, Vec<usize>, Vec<usize>, Vec<usize>) {
+    let n = x.len();
+    if n < 2 {
+        return (x.to_vec(), a.to_vec(), c.to_vec(), e_upper.to_vec());
+    }
+    let mut adj = vec![Vec::new(); n];
+    let mut edge_mat = vec![0usize; n * n];
+    let mut k = 0usize;
+    for u in 0..n {
+        for v in (u + 1)..n {
+            let bt = e_upper[k];
+            k += 1;
+            edge_mat[u * n + v] = bt;
+            edge_mat[v * n + u] = bt;
+            if bt > 0 && bt < 6 {
+                adj[u].push(v);
+                adj[v].push(u);
+            }
+        }
+    }
+
+    let mut visited = vec![false; n];
+    let mut comps: Vec<Vec<usize>> = Vec::new();
+    let mut stack = Vec::new();
+    for i in 0..n {
+        if !visited[i] {
+            visited[i] = true;
+            stack.push(i);
+            let mut comp = Vec::new();
+            while let Some(u) = stack.pop() {
+                comp.push(u);
+                for &v in &adj[u] {
+                    if !visited[v] {
+                        visited[v] = true;
+                        stack.push(v);
+                    }
+                }
+            }
+            comp.sort_unstable();
+            comps.push(comp);
+        }
+    }
+    if comps.len() <= 1 {
+        return (x.to_vec(), a.to_vec(), c.to_vec(), e_upper.to_vec());
+    }
+
+    // Score by (pinned_count, atom_count, heavy_atom_count)
+    let best = comps
+        .into_iter()
+        .max_by_key(|comp| {
+            let pin_cnt = comp.iter().filter(|&&i| i < pinned.len() && pinned[i].is_some()).count();
+            let heavy_cnt = comp.iter().filter(|&&i| a[i] != 0).count();
+            (pin_cnt, comp.len(), heavy_cnt)
+        })
+        .unwrap();
+
+    if best.len() < 2 {
+        return (x.to_vec(), a.to_vec(), c.to_vec(), e_upper.to_vec());
+    }
+    let m = best.len();
+    let mut x_sub: Vec<[f32; 3]> = best.iter().map(|&i| x[i]).collect();
+    remove_com_in_place(&mut x_sub);
+    let a_sub: Vec<usize> = best.iter().map(|&i| a[i]).collect();
+    let c_sub: Vec<usize> = best.iter().map(|&i| c[i]).collect();
+    let mut e_sub = Vec::with_capacity(m * (m - 1) / 2);
+    for i in 0..m {
+        for j in (i + 1)..m {
+            e_sub.push(edge_mat[best[i] * n + best[j]]);
+        }
+    }
+    (x_sub, a_sub, c_sub, e_sub)
+}
+
+async fn sample_single_trajectory_async<F>(
     bundle: &ModelBundle,
     mut gpu: Option<&mut WgpuBackend>,
     opts: &SampleOptions,
-    mut on_step: F,
-) -> Result<SampledMolecule, String>
+    seed: u64,
+    eff_prior_scale: f32,
+    eff_cohesion: f32,
+    on_step: &mut F,
+) -> Result<(SampledMolecule, Vec<[f32; 3]>, Vec<usize>, Vec<usize>, Vec<usize>, Vec<Option<usize>>), String>
 where
     F: FnMut(usize, usize, &[[f32; 3]], &[usize]),
 {
     let cfg = &bundle.header.config;
-    let mut rng = DetRng::new(opts.seed);
+    let mut rng = DetRng::new(seed);
     let n_atoms = opts
         .n_atoms
         .unwrap_or_else(|| sample_empirical_size(bundle, opts.domain.as_deref(), &mut rng))
@@ -475,19 +678,30 @@ where
     }
     let has_pins = !opts.required_elements.is_empty();
 
-    // Size-adaptive zero-COM Gaussian prior `sigma(N) = prior_std * (N / 25)^(1/3)`
-    let std_n = if cfg.size_scale_prior {
+    // Size-adaptive zero-COM Gaussian prior `sigma(N) = prior_std * prior_scale * (N / 25)^(1/3)`
+    let p_scale = eff_prior_scale.clamp(0.4, 2.0);
+    let std_n = (if cfg.size_scale_prior {
         cfg.prior_std * ((n_atoms.max(2) as f32) / 25.0).powf(1.0 / 3.0)
     } else {
         cfg.prior_std
-    };
+    }) * p_scale;
+    let max_rad = 2.6 * std_n;
     let mut x_t = vec![[0.0f32; 3]; n_atoms];
     for p in &mut x_t {
-        *p = [
-            rng.next_standard_normal() * std_n,
-            rng.next_standard_normal() * std_n,
-            rng.next_standard_normal() * std_n,
-        ];
+        let mut px = rng.next_standard_normal() * std_n;
+        let mut py = rng.next_standard_normal() * std_n;
+        let mut pz = rng.next_standard_normal() * std_n;
+        // When compact single-molecule prior is active, softly pull extreme >2.6*sigma radial outliers onto shell
+        if p_scale < 0.999 {
+            let r = (px * px + py * py + pz * pz).sqrt();
+            if r > max_rad {
+                let s = max_rad / r;
+                px *= s;
+                py *= s;
+                pz *= s;
+            }
+        }
+        *p = [px, py, pz];
     }
     remove_com_in_place(&mut x_t);
 
@@ -530,7 +744,7 @@ where
         let dt = s_i - t_i;
         let last_step = step_idx + 1 == n_steps;
 
-        let pred1 = run_single_predict(
+        let mut pred1 = run_single_predict(
             bundle,
             gpu.as_deref_mut(),
             &topo,
@@ -549,6 +763,11 @@ where
             chg_mask.as_deref(),
         )
         .await?;
+
+        if eff_cohesion > 0.0 && (0.25..=0.85).contains(&t_i) {
+            let gain = eff_cohesion * (1.0 - t_i);
+            apply_mst_cohesion_pull(&mut pred1.x, 2.80, 2.20, gain);
+        }
 
         let a_next = campbell_ctmc_step(
             &pred1.a_probs,
@@ -613,7 +832,7 @@ where
 
             if opts.solver == "heun" {
                 let sc_pass2 = if cfg.self_conditioning { Some(&pred1) } else { None };
-                let pred2 = run_single_predict(
+                let mut pred2 = run_single_predict(
                     bundle,
                     gpu.as_deref_mut(),
                     &topo,
@@ -632,6 +851,10 @@ where
                     chg_mask.as_deref(),
                 )
                 .await?;
+                if eff_cohesion > 0.0 && (0.25..=0.85).contains(&s_i) {
+                    let gain = eff_cohesion * (1.0 - s_i);
+                    apply_mst_cohesion_pull(&mut pred2.x, 2.80, 2.20, gain);
+                }
                 let mut x_heun = vec![[0.0f32; 3]; n_atoms];
                 for i in 0..n_atoms {
                     let xbar = [
@@ -661,12 +884,94 @@ where
         on_step(step_idx + 1, n_steps, &x_t, &a_t);
     }
 
-    Ok(inspect_sampled_molecule(
+    let mol = inspect_sampled_molecule(
         &cfg.atom_types,
         &cfg.formal_charges,
         &x_t,
         &a_t,
         &c_t,
         &e_t,
-    ))
+    );
+    Ok((mol, x_t, a_t, c_t, e_t, pinned_atoms))
+}
+
+pub async fn sample_molecule_async<F>(
+    bundle: &ModelBundle,
+    mut gpu: Option<&mut WgpuBackend>,
+    opts: &SampleOptions,
+    mut on_step: F,
+) -> Result<SampledMolecule, String>
+where
+    F: FnMut(usize, usize, &[[f32; 3]], &[usize]),
+{
+    let mode = opts.single_molecule_mode.as_str();
+    let eff_prior_scale = opts.prior_scale;
+    let eff_cohesion = if opts.cohesion_strength > 0.0 {
+        opts.cohesion_strength
+    } else if matches!(mode, "cohesion" | "largest_fragment" | "strict_retry" | "valid_connected") {
+        0.22
+    } else {
+        0.0
+    };
+
+    let attempts = if matches!(mode, "strict_retry" | "valid_connected") {
+        opts.max_retries.max(1)
+    } else {
+        1
+    };
+
+    let mut best_pack: Option<(
+        SampledMolecule,
+        Vec<[f32; 3]>,
+        Vec<usize>,
+        Vec<usize>,
+        Vec<usize>,
+        Vec<Option<usize>>,
+    )> = None;
+    for attempt in 0..attempts {
+        let cur_seed = opts.seed.wrapping_add((attempt as u64).wrapping_mul(9973));
+        let pack = sample_single_trajectory_async(
+            bundle,
+            gpu.as_deref_mut(),
+            opts,
+            cur_seed,
+            eff_prior_scale,
+            eff_cohesion,
+            &mut on_step,
+        )
+        .await?;
+        let accept = if mode == "valid_connected" {
+            pack.0.connected && pack.0.valence_valid
+        } else {
+            pack.0.connected
+        };
+        if accept {
+            return Ok(pack.0);
+        }
+        let replace = match &best_pack {
+            None => true,
+            Some((prev_m, _, _, _, _, _)) => {
+                (pack.0.connected as u8, pack.0.valence_valid as u8, usize::MAX - pack.0.n_fragments)
+                    > (prev_m.connected as u8, prev_m.valence_valid as u8, usize::MAX - prev_m.n_fragments)
+            }
+        };
+        if replace {
+            best_pack = Some(pack);
+        }
+    }
+
+    let (mol, x_t, a_t, c_t, e_t, pinned_atoms) = best_pack.unwrap();
+    if matches!(mode, "largest_fragment" | "strict_retry" | "valid_connected") && !mol.connected {
+        let cfg = &bundle.header.config;
+        let (xs, as_, cs, es) = extract_largest_fragment_raw(&x_t, &a_t, &c_t, &e_t, &pinned_atoms);
+        return Ok(inspect_sampled_molecule(
+            &cfg.atom_types,
+            &cfg.formal_charges,
+            &xs,
+            &as_,
+            &cs,
+            &es,
+        ));
+    }
+    Ok(mol)
 }

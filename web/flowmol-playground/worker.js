@@ -1,4 +1,4 @@
-import init, { WasmFlowMolEngine } from "./pkg/flowmol_rs.js?v=2";
+import init, { WasmFlowMolEngine } from "./pkg/flowmol_rs.js?v=4";
 
 let wasmReady = null;
 let engine = null;

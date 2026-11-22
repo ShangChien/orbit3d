@@ -117,14 +117,25 @@
     <div class="group">
       <label><span>求解器</span></label>
       <select id="selSolver">
+        <option value="heun">Heun (2阶 · 高连通/高合法率)</option>
         <option value="euler">Euler (1阶 · 2倍速)</option>
-        <option value="heun">Heun (2阶 · 高精度)</option>
       </select>
     </div>
     <div class="group">
       <label><span>采样步数</span></label>
-      <input type="number" id="inpSteps" value="25" min="5" max="150" class="mono" />
+      <input type="number" id="inpSteps" value="20" min="5" max="150" class="mono" />
     </div>
+  </div>
+
+  <div class="group">
+    <label><span>单分子连通保障</span><span>防孤立多碎片</span></label>
+    <select id="selSingleMode">
+      <option value="largest_fragment">凝聚引导 + 提取主分子 (100%单分子 · 零额外耗时)</option>
+      <option value="strict_retry">凝聚引导 + 自动重采 (100%单分子 · 固定原子数N)</option>
+      <option value="valid_connected">严选模式 (自动重采至 单连通 + 价态合法)</option>
+      <option value="cohesion">仅开启三维孤岛凝聚引导 (>2.8Å拉回)</option>
+      <option value="none">关闭约束 (原始采样分布)</option>
+    </select>
   </div>
 
   <div class="group">
@@ -220,7 +231,7 @@ function spawnWorker() {
     worker.terminate();
   }
   modelLoaded = false;
-  worker = new Worker("./worker.js?v=2", { type: "module" });
+  worker = new Worker("./worker.js?v=4", { type: "module" });
   worker.onerror = (ev) => {
     showDiag(`Worker 运行异常: ${ev.message || "未知错误"}`, true);
     statusTxt.textContent = "Worker 发生异常";
@@ -359,6 +370,8 @@ btnSample.onclick = () => {
     n_steps: Math.max(5, parseInt(document.getElementById("inpSteps").value || "25", 10)),
     solver: document.getElementById("selSolver").value,
     grid_type: "quadratic_end",
+    single_molecule_mode: document.getElementById("selSingleMode").value,
+    max_retries: 4,
     required_elements: reqRaw ? reqRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
     allowed_charges: chgRaw ? chgRaw.split(",").map(s => parseInt(s.trim(), 10)) : null,
     seed: parseInt(document.getElementById("inpSeed").value || "42", 10),

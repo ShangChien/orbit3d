@@ -225,6 +225,18 @@ mod cli {
                 if let Some(rq) = get_arg("--require") {
                     base_opts.required_elements = rq.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
                 }
+                if let Some(sm) = get_arg("--single") {
+                    base_opts.single_molecule_mode = sm;
+                }
+                if let Some(ps) = get_arg("--prior-scale").and_then(|s| s.parse().ok()) {
+                    base_opts.prior_scale = ps;
+                }
+                if let Some(cs) = get_arg("--cohesion").and_then(|s| s.parse().ok()) {
+                    base_opts.cohesion_strength = cs;
+                }
+                if let Some(mr) = get_arg("--retries").and_then(|s| s.parse().ok()) {
+                    base_opts.max_retries = mr;
+                }
                 base_opts.force_cpu = force_cpu;
 
                 let mut sdf_all = String::new();
