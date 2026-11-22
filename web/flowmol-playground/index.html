@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MolGen-RS · Dual-Engine WebGPU Playground (FlowMol-118 + Uni-3DAR-Mol)</title>
+<title>MolGen-RS · Closed-Loop 3D Generation & Quantum MLIP Workbench (FlowMol-118 + Uni-3DAR-Mol × DPA-4 + HyFF-L2)</title>
 <script>
   if (location.hostname === "0.0.0.0" || location.hostname === "::" || location.hostname === "[::]") {
     location.replace(`${location.protocol}//localhost:${location.port}${location.pathname}${location.search}`);
@@ -18,6 +18,7 @@
     --muted: #9ca3af;
     --accent: #3b82f6;
     --accent2: #8b5cf6;
+    --mlip: #059669;
     --ok: #10b981;
     --warn: #f59e0b;
     --err: #ef4444;
@@ -26,39 +27,50 @@
   body {
     margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
     background: var(--bg); color: var(--fg);
-    display: grid; grid-template-columns: 368px 1fr; height: 100vh; overflow: hidden;
+    display: grid; grid-template-columns: 386px 1fr; height: 100vh; overflow: hidden;
   }
   aside {
     background: var(--panel); border-right: 1px solid var(--border);
-    padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+    padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 11px;
   }
-  h1 { font-size: 15.5px; margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 198px; }
+  h1 { font-size: 15px; margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .badge { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: #1e3a8a; color: #93c5fd; font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
   .badge.warn { background: #78350f; color: #fde68a; }
   .badge.ok { background: #064e3b; color: #6ee7b7; }
   .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--bg); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
   .tab-btn {
-    border: none; border-radius: 6px; padding: 7px 6px; font-size: 12px; font-weight: 600;
+    border: none; border-radius: 6px; padding: 6.5px 6px; font-size: 12px; font-weight: 600;
     background: transparent; color: var(--muted); cursor: pointer;
   }
   .tab-btn.active.flow { background: #1d4ed8; color: #fff; }
   .tab-btn.active.uni { background: #6d28d9; color: #fff; }
-  .group { display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+  .group { display: flex; flex-direction: column; gap: 4.5px; font-size: 11.5px; }
   label { color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
   input, select, button {
     background: var(--bg); color: var(--fg); border: 1px solid var(--border);
-    border-radius: 6px; padding: 6.5px 9px; font-size: 12px; outline: none;
+    border-radius: 6px; padding: 6px 8px; font-size: 11.5px; outline: none;
   }
-  input[type="checkbox"] { width: 14px; height: 14px; padding: 0; accent-color: var(--accent2); }
+  input[type="checkbox"] { width: 14px; height: 14px; padding: 0; accent-color: var(--ok); }
   input:focus, select:focus { border-color: var(--accent); }
   button { cursor: pointer; font-weight: 600; transition: opacity 0.15s, border-color 0.15s; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 9px; font-size: 13px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 8px; font-size: 12.5px; }
   button.primary.uni-mode { background: var(--accent2); border-color: var(--accent2); }
-  button.danger { background: #7f1d1d; border-color: #991b1b; color: #fecaca; padding: 9px; font-size: 13px; }
+  button.mlip-btn { background: #065f46; border-color: #059669; color: #ecfdf5; padding: 7px 8px; font-size: 11.5px; }
+  button.md-btn { background: #9a3412; border-color: #ea580c; color: #ffedd5; padding: 7px 8px; font-size: 11.5px; }
+  button.danger { background: #7f1d1d; border-color: #991b1b; color: #fecaca; padding: 8px; font-size: 12.5px; }
   button:disabled { opacity: 0.42; cursor: not-allowed; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .prop-grid { display: flex; flex-direction: column; gap: 5px; background: rgba(11,15,25,0.55); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
-  .prop-row { display: grid; grid-template-columns: 20px 1fr 92px; align-items: center; gap: 6px; font-size: 11.5px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .mlip-card {
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    background: linear-gradient(180deg, rgba(6, 78, 59, 0.20) 0%, rgba(17, 24, 39, 0.85) 100%);
+    border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .mlip-header {
+    display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #6ee7b7;
+  }
+  .prop-grid { display: flex; flex-direction: column; gap: 5px; background: rgba(11,15,25,0.55); border: 1px solid var(--border); border-radius: 6px; padding: 7px; }
+  .prop-row { display: grid; grid-template-columns: 20px 1fr 88px; align-items: center; gap: 6px; font-size: 11px; }
   .alert {
     display: none; font-size: 11.5px; line-height: 1.45; padding: 8px 10px;
     border-radius: 6px; border: 1px solid #92400e; background: rgba(120, 53, 15, 0.35); color: #fde68a;
@@ -66,25 +78,27 @@
   .alert.error { border-color: #991b1b; background: rgba(127, 29, 29, 0.35); color: #fecaca; }
   main { position: relative; display: flex; flex-direction: column; height: 100vh; }
   #topbar {
-    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    padding: 9px 16px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; font-family: ui-monospace, monospace;
   }
   #cv { flex: 1; width: 100%; cursor: grab; touch-action: none; }
   #cv:active { cursor: grabbing; }
   #bottombar {
-    padding: 10px 16px; border-top: 1px solid var(--border); background: var(--panel);
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px;
+    padding: 9px 16px; border-top: 1px solid var(--border); background: var(--panel);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px;
   }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .pill { padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); }
   .pill.uni { border-color: #5b21b6; color: #ddd6fe; }
+  .pill.mlip { border-color: #059669; color: #a7f3d0; }
+  .pill.md { border-color: #ea580c; color: #fed7aa; }
 </style>
 </head>
 <body>
 <aside>
   <div>
     <h1>MolGen-RS <span class="badge" id="gpuTag">Worker Init...</span></h1>
-    <div style="font-size:11px;color:var(--muted);margin-top:3px;">端侧统一 Rust + WebGPU 双引擎三维分子生成工作台</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px;">端侧统一 Rust + WebGPU 三维分子生成 × 量子势场动力学闭环工作台</div>
   </div>
 
   <div class="tabs">
@@ -95,16 +109,25 @@
   <div id="diagBox" class="alert"></div>
 
   <div class="group">
-    <label><span id="lblModelTitle">1. 加载模型包 (.fm118 / .u3m)</span><span id="modelState" class="mono">未加载</span></label>
+    <label><span>1. 生成模型包 (.fm118 / .u3m)</span><span id="modelState" class="mono">未加载</span></label>
     <div style="display:grid;grid-template-columns:1fr auto;gap:6px;">
       <select id="selPresetUrl"></select>
       <button id="btnFetchDefault">加载</button>
     </div>
-    <input type="file" id="fileInput" accept=".fm118,.u3m" />
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px;">
+      <input type="file" id="fileInput" accept=".fm118,.u3m,.dpa4,.hyff" />
+      <select id="selDemoMol" title="无需等待生成模型，直接载入测试三维分子体验力场弛豫与MD">
+        <option value="">🧪 示例分子...</option>
+        <option value="salicylaldehyde">水杨醛 (C7H6O2 · 扭曲构象)</option>
+        <option value="pyridinium">吡啶自由基阳离子 (Q=+1, 2S+1=2)</option>
+        <option value="iridium">铱羰基氢化物 Ir(Br)(CO)(H)(PH3)</option>
+        <option value="uranyl">二氟化铀酰 UO2F2 (Z=92 锕系)</option>
+      </select>
+    </div>
   </div>
 
   <!-- ================= Engine 1: FlowMol-118 Controls ================= -->
-  <div id="panelFlow" style="display:flex;flex-direction:column;gap:11px;">
+  <div id="panelFlow" style="display:flex;flex-direction:column;gap:9px;">
     <div class="group">
       <label><span>目标化学域</span><span>元素白名单 + 尺寸分布</span></label>
       <select id="selDomain">
@@ -119,78 +142,64 @@
     <div class="row2">
       <div class="group">
         <label><span>原子数 N (0=自动)</span></label>
-        <input type="number" id="inpAtoms" value="32" min="0" max="120" class="mono" />
+        <input type="number" id="inpAtoms" value="28" min="0" max="120" class="mono" />
       </div>
       <div class="group">
-        <label><span>采样步数</span></label>
-        <input type="number" id="inpSteps" value="20" min="5" max="150" class="mono" />
+        <label><span>采样步数 / 求解器</span></label>
+        <div style="display:grid;grid-template-columns:58px 1fr;gap:4px;">
+          <input type="number" id="inpSteps" value="20" min="5" max="150" class="mono" />
+          <select id="selSolver">
+            <option value="heun">Heun</option>
+            <option value="euler">Euler</option>
+          </select>
+        </div>
       </div>
     </div>
 
     <div class="row2">
       <div class="group">
-        <label><span>ODE/CTMC 求解器</span></label>
-        <select id="selSolver">
-          <option value="heun">Heun (2阶高合法率)</option>
-          <option value="euler">Euler (1阶2倍速)</option>
+        <label><span>单分子连通保障</span></label>
+        <select id="selSingleMode">
+          <option value="largest_fragment">凝聚+主分子 (100%单分子)</option>
+          <option value="strict_retry">凝聚+重采 (固定N)</option>
+          <option value="valid_connected">严选 (单连通+合法)</option>
+          <option value="none">原始无约束</option>
         </select>
       </div>
       <div class="group">
-        <label><span>电荷白名单</span></label>
-        <select id="selCharges">
-          <option value="-1,0,1,2">常规 [-1..+2]</option>
-          <option value="0">严格中性 [0]</option>
-          <option value="">不限制</option>
-        </select>
+        <label><span>强制元素 / 电荷</span></label>
+        <input type="text" id="inpRequire" placeholder="如 Rh,P,P" class="mono" />
+        <input type="hidden" id="selCharges" value="-1,0,1,2" />
       </div>
-    </div>
-
-    <div class="group">
-      <label><span>单分子连通保障</span><span>防孤立碎片</span></label>
-      <select id="selSingleMode">
-        <option value="largest_fragment">凝聚引导 + 提取主分子 (100%单分子 · 零额外耗时)</option>
-        <option value="strict_retry">凝聚引导 + 自动重采 (100%单分子 · 固定原子数N)</option>
-        <option value="valid_connected">严选模式 (重采至 单连通 + 价态合法)</option>
-        <option value="cohesion">仅开启三维孤岛凝聚引导 (>2.8Å拉回)</option>
-        <option value="none">关闭约束 (原始分布)</option>
-      </select>
-    </div>
-
-    <div class="group">
-      <label><span>强制出现元素 (零重训钉死)</span><span class="mono">逗号分隔</span></label>
-      <input type="text" id="inpRequire" placeholder="例如: Rh,P,P 或 Ru,P,P,S" class="mono" />
     </div>
   </div>
 
   <!-- ================= Engine 2: Uni-3DAR-Mol Controls ================= -->
-  <div id="panelUni" style="display:none;flex-direction:column;gap:11px;">
+  <div id="panelUni" style="display:none;flex-direction:column;gap:9px;">
     <div class="row2">
       <div class="group">
         <label><span>目标原子预算 (0=自由)</span></label>
         <input type="number" id="inpUniBudget" value="28" min="0" max="120" class="mono" />
       </div>
       <div class="group">
-        <label><span>CFG 条件引导强度</span></label>
-        <input type="number" id="inpUniCfg" value="2.0" step="0.25" min="1.0" max="6.0" class="mono" />
+        <label><span>CFG 引导 / 投机漏斗 K</span></label>
+        <div style="display:grid;grid-template-columns:58px 1fr;gap:4px;">
+          <input type="number" id="inpUniCfg" value="2.0" step="0.25" min="1.0" max="6.0" class="mono" />
+          <select id="selUniSpecK">
+            <option value="2">K=2 (8→2→1)</option>
+            <option value="1">K=1 (极速)</option>
+            <option value="3">K=3 (12→3→1)</option>
+          </select>
+        </div>
       </div>
-    </div>
-
-    <div class="group">
-      <label><span>双阶段投机八叉树漏斗 (Speculative K)</span><span>Stage1→2→1</span></label>
-      <select id="selUniSpecK">
-        <option value="2">K = 2 (8 → 2 → 1 · 双阶段 Critic 剪枝 · 推荐)</option>
-        <option value="1">K = 1 (1 → 1 → 1 · 单路极速自回归直出)</option>
-        <option value="3">K = 3 (12 → 3 → 1 · 深度属性/合法性优选)</option>
-        <option value="4">K = 4 (16 → 4 → 1 · 高强度多分支搜索)</option>
-      </select>
     </div>
 
     <div class="group">
       <label><span>几何精修与零位移价态调和</span><span>RMSD_heavy = 0 Å</span></label>
       <select id="selUniPost">
-        <option value="full">开启 SE(3) Seam Refiner + ValenceReconciler (推荐)</option>
-        <option value="refiner_only">仅开启 SE(3) Seam Refiner (保留原始点云氢)</option>
-        <option value="raw">关闭后处理 (原始 0.01 Å 八叉树叶节点输出)</option>
+        <option value="full">开启 SE(3) Seam Refiner + ValenceReconciler</option>
+        <option value="refiner_only">仅开启 SE(3) Seam Refiner</option>
+        <option value="raw">原始 0.01 Å 八叉树输出</option>
       </select>
     </div>
 
@@ -200,19 +209,94 @@
     </div>
   </div>
 
-  <div class="group">
-    <label><span>随机种子 Seed</span><span id="loadedEngineHint" class="mono">未加载</span></label>
-    <input type="number" id="inpSeed" value="42" class="mono" />
+  <div class="row2" style="align-items:end;">
+    <div class="group">
+      <label><span>随机种子 Seed</span><span id="loadedEngineHint" class="mono">未加载</span></label>
+      <input type="number" id="inpSeed" value="42" class="mono" />
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="primary" id="btnSample" style="flex:1;" disabled>⚡ 生成 3D 分子</button>
+      <button class="danger" id="btnCancel" style="display:none;">⏹</button>
+    </div>
   </div>
 
-  <div style="display:flex;gap:8px;">
-    <button class="primary" id="btnSample" style="flex:1;" disabled>⚡ 开始 WebGPU 3D 生成</button>
-    <button class="danger" id="btnCancel" style="display:none;">⏹ 停止</button>
+  <!-- ================= Slot 2: Decoupled Quantum MLIP Companion (`DPA-4` + `HyFF-L2`) ================= -->
+  <div class="mlip-card">
+    <div class="mlip-header">
+      <span>⚡ 2. 量子势场与动力学 (DPA-4 / HyFF-L2)</span>
+      <span id="mlipState" class="mono" style="font-size:10.5px;color:var(--muted);">未加载</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px;">
+      <select id="selMlipUrl">
+        <optgroup label="HyFF-L2 (83元素 H..Bi · 极速毫秒级解析力场)">
+          <option value="./models/hyff_presto.hyff">HyFF-L2 · Presto FP32 (8.8 MB · 1400 step/s 极速)</option>
+          <option value="./models/hyff_vivace.hyff" selected>HyFF-L2 · Vivace FP32 (25.4 MB · 均衡推荐)</option>
+          <option value="./models/hyff_moderato_fp16.hyff">HyFF-L2 · Moderato FP16 (67.3 MB · 8Å 长程)</option>
+          <option value="./models/hyff_moderato.hyff">HyFF-L2 · Moderato FP32 (132.8 MB · 旗舰全精度)</option>
+        </optgroup>
+        <optgroup label="DeePMD DPA-4 (OMol25-100M · 全周期表 118 元素 H..Og)">
+          <option value="./models/dpa4_nano.dpa4">DPA-4 · Nano FP32 (1.9 MB · lmax=1 轻量全元素)</option>
+          <option value="./models/dpa4_mini.dpa4">DPA-4 · Mini FP32 (2.6 MB · lmax=2 推荐)</option>
+          <option value="./models/dpa4_neo.dpa4">DPA-4 · Neo FP32 (4.4 MB · lmax=3 双焦点 F=2)</option>
+          <option value="./models/dpa4_air.dpa4">DPA-4 · Air FP32 (19.8 MB · C=64 高精度)</option>
+          <option value="./models/dpa4_plus.dpa4">DPA-4 · Plus FP32 (34.1 MB · lmax=4 旗舰)</option>
+        </optgroup>
+      </select>
+      <button id="btnLoadMlip">加载势场</button>
+    </div>
+
+    <label style="justify-content:flex-start;gap:6px;color:var(--fg);cursor:pointer;">
+      <input type="checkbox" id="chkAutoRelax" checked />
+      <span>生成完成后自动执行量子力场 3D 几何弛豫</span>
+    </label>
+
+    <div class="row3">
+      <div class="group">
+        <label><span>总电荷 Q</span></label>
+        <input type="number" id="inpMlipCharge" value="0" step="1" class="mono" />
+      </div>
+      <div class="group">
+        <label><span>自旋 2S+1</span></label>
+        <input type="number" id="inpMlipMult" value="1" min="1" max="9" class="mono" />
+      </div>
+      <div class="group">
+        <label><span>优化器</span></label>
+        <select id="selRelaxAlgo">
+          <option value="lbfgs">L-BFGS</option>
+          <option value="fire">FIRE</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="group">
+        <label><span>弛豫约束模式</span></label>
+        <select id="selRelaxFreeze">
+          <option value="free">全原子自由弛豫</option>
+          <option value="freeze_heavy">仅氢原子精修 (重原子零位移)</option>
+        </select>
+      </div>
+      <div class="group">
+        <label><span>MD 温度 (K) / 步数</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <input type="number" id="inpMdTemp" value="300" min="10" max="1500" class="mono" />
+          <input type="number" id="inpMdSteps" value="60" min="10" max="500" class="mono" />
+        </div>
+      </div>
+    </div>
+
+    <div class="row3">
+      <button class="mlip-btn" id="btnMlipEval" disabled>📐 单点受力</button>
+      <button class="mlip-btn" id="btnMlipRelax" disabled>🔧 3D 弛豫</button>
+      <button class="md-btn" id="btnMlipMd" disabled>🔥 实时 MD</button>
+    </div>
   </div>
 
-  <div class="row2">
+  <div class="row3">
     <button id="btnSdf" disabled>下载 .SDF</button>
     <button id="btnToggleH">显隐 H: 开</button>
+    <button id="btnToggleF">受力矢: 开</button>
   </div>
 </aside>
 
@@ -237,12 +321,63 @@ const ATOMS = [
   "Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm",
   "Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"
 ];
-const CPK = { H:"#cbd5e1", B:"#f472b6", C:"#64748b", N:"#3b82f6", O:"#ef4444", S:"#eab308", P:"#f97316", Si:"#fb923c", Se:"#d97706", F:"#4ade80", Cl:"#22c55e", Br:"#b45309", I:"#a855f7", Rh:"#14b8a6", Ru:"#8b5cf6", Ni:"#10b981", Pd:"#06b6d4", Pt:"#38bdf8", Fe:"#f97316", Cu:"#ea580c" };
+const COV_RADII = [
+  0.31,0.28,1.28,0.96,0.84,0.76,0.71,0.66,0.57,0.58,1.66,1.41,1.21,1.11,1.07,1.05,1.02,1.06,2.03,1.76,
+  1.70,1.60,1.53,1.39,1.39,1.32,1.26,1.24,1.32,1.22,1.22,1.20,1.19,1.20,1.20,1.16,2.20,1.95,1.90,1.75,
+  1.64,1.54,1.47,1.46,1.42,1.39,1.45,1.44,1.42,1.39,1.39,1.38,1.39,1.40,2.44,2.15,2.07,2.04,2.03,2.01,
+  1.99,1.98,1.98,1.96,1.94,1.92,1.92,1.89,1.90,1.87,1.87,1.75,1.70,1.62,1.51,1.44,1.41,1.36,1.36,1.32,
+  1.45,1.46,1.48,1.40,1.50,1.50,2.60,2.21,2.15,2.06,2.00,1.96,1.90,1.87,1.80,1.69,1.68,1.68,1.65,1.67,
+  1.73,1.76,1.61,1.57,1.49,1.43,1.41,1.34,1.29,1.28,1.21,1.22,1.36,1.43,1.62,1.75,1.65,1.57
+];
+const CPK = { H:"#cbd5e1", B:"#f472b6", C:"#64748b", N:"#3b82f6", O:"#ef4444", S:"#eab308", P:"#f97316", Si:"#fb973c", Se:"#d97706", F:"#4ade80", Cl:"#22c55e", Br:"#b45309", I:"#a855f7", Rh:"#14b8a6", Ru:"#8b5cf6", Ir:"#06b6d4", U:"#22d3ee", Ni:"#10b981", Pd:"#06b6d4", Pt:"#38bdf8", Fe:"#f97316", Cu:"#ea580c" };
+
+const DEMO_MOLS = {
+  salicylaldehyde: {
+    formula: "C7H6O2 (Salicylaldehyde)",
+    charge: 0, multiplicity: 1,
+    symbols: ["C","C","C","C","C","C","C","O","O","H","H","H","H","H","H"],
+    positions: [
+      [0.0000,1.3950,0.0120],[1.2120,0.6980,-0.0210],[1.2080,-0.7010,0.0150],[-0.0040,-1.3980,-0.0180],
+      [-1.2100,-0.6950,0.0250],[-1.2090,0.7020,-0.0110],[2.4850,1.4250,0.0450],[2.5600,2.6420,-0.0320],
+      [2.3820,-1.3920,-0.0280],[-0.0020,2.4810,0.0340],[-0.0060,-2.4840,-0.0410],[-2.1510,-1.2390,0.0520],
+      [-2.1480,1.2480,-0.0290],[3.3950,0.8120,0.1280],[3.1250,-0.7520,-0.0650]
+    ]
+  },
+  pyridinium: {
+    formula: "[C5H6N]•+ (Pyridinium Radical Cation)",
+    charge: 1, multiplicity: 2,
+    symbols: ["N","C","C","C","C","C","H","H","H","H","H","H"],
+    positions: [
+      [0.0000,1.3620,0.0100],[1.1850,0.6850,-0.0150],[1.1920,-0.7080,0.0120],[0.0000,-1.4020,-0.0200],
+      [-1.1920,-0.7080,0.0180],[-1.1850,0.6850,-0.0140],[0.0000,2.3810,0.0250],[2.1180,1.2420,-0.0310],
+      [2.1410,-1.2460,0.0220],[0.0000,-2.4890,-0.0380],[-2.1410,-1.2460,0.0300],[-2.1180,1.2420,-0.0270]
+    ]
+  },
+  iridium: {
+    formula: "IrBr(CO)(H)(PH3)",
+    charge: 0, multiplicity: 1,
+    symbols: ["Ir","Br","P","C","O","H","H","H","H"],
+    positions: [
+      [0.0150,-0.0200,0.0100],[-2.4600,0.0450,-0.0300],[2.3100,0.0300,0.0250],[0.0400,1.8850,-0.0400],
+      [0.0650,3.0350,-0.0750],[-0.0100,-1.6150,0.0550],[2.8900,1.3100,0.2100],[2.9200,-0.8100,1.0150],
+      [2.8850,-0.4950,-1.2050]
+    ]
+  },
+  uranyl: {
+    formula: "UO2F2 (Uranyl Difluoride · Z=92)",
+    charge: 0, multiplicity: 1,
+    symbols: ["U","O","O","F","F"],
+    positions: [
+      [0.0000,0.0000,0.0200],[0.0100,0.0200,1.7850],[-0.0150,-0.0100,-1.7550],
+      [2.0850,0.3100,0.0400],[-1.9950,0.6200,-0.0350]
+    ]
+  }
+};
 
 const PRESETS = {
   flowmol: [
-    { url: "./models/flagship_q8.fm118", label: "FlowMol 旗舰轻量 Q8_0 (46 MB · 推荐)" },
-    { url: "./models/model.fm118",       label: "FlowMol 旗舰半精度 FP16 (82 MB)" },
+    { url: "./models/flagship_q8.fm118",   label: "FlowMol 旗舰轻量 Q8_0 (46 MB · 推荐)" },
+    { url: "./models/model.fm118",         label: "FlowMol 旗舰半精度 FP16 (82 MB)" },
     { url: "./models/flagship_fp32.fm118", label: "FlowMol 旗舰全精度 FP32 (161 MB)" },
   ],
   uni3dar: [
@@ -253,17 +388,74 @@ const PRESETS = {
   ],
 };
 
+function symbolToZ(sym) {
+  const idx = ATOMS.indexOf(sym);
+  return idx >= 0 ? idx + 1 : 6;
+}
+
+function inferBondsFrom3D(symbols, positions) {
+  const bonds = [];
+  for (let i = 0; i < symbols.length; i++) {
+    const zi = symbolToZ(symbols[i]) - 1;
+    const ri = COV_RADII[zi] || 1.4;
+    for (let j = i + 1; j < symbols.length; j++) {
+      if (symbols[i] === "H" && symbols[j] === "H") continue;
+      const zj = symbolToZ(symbols[j]) - 1;
+      const rj = COV_RADII[zj] || 1.4;
+      const dx = positions[i][0] - positions[j][0];
+      const dy = positions[i][1] - positions[j][1];
+      const dz = positions[i][2] - positions[j][2];
+      const d = Math.hypot(dx, dy, dz);
+      const rSum = ri + rj;
+      if (d > 0.35 && d <= rSum * 1.24) {
+        const isMetal = (zi + 1 >= 21 && zi + 1 <= 30) || (zi + 1 >= 39 && zi + 1 <= 48) || (zi + 1 >= 57);
+        const isMetalJ = (zj + 1 >= 21 && zj + 1 <= 30) || (zj + 1 >= 39 && zj + 1 <= 48) || (zj + 1 >= 57);
+        let bt = 1;
+        if (isMetal || isMetalJ) bt = 5;
+        else if (d < rSum * 0.84) bt = 3;
+        else if (d < rSum * 0.93) bt = 2;
+        bonds.push({ u: i, v: j, bond_type_id: bt });
+      }
+    }
+  }
+  return bonds;
+}
+
+function buildSdfV2000(title, symbols, positions, bonds) {
+  const n = symbols.length;
+  const bList = (bonds || []).filter(b => b.bond_type_id !== 5);
+  const lines = [title || "MolGen-RS", "  MolGen-RS + MLIP-RS 3D", ""];
+  lines.push(`${String(n).padStart(3," ")}${String(bList.length).padStart(3," ")}  0  0  0  0  0  0  0  0999 V2000`);
+  for (let i = 0; i < n; i++) {
+    const [x, y, z] = positions[i];
+    lines.push(`${x.toFixed(4).padStart(10," ")}${y.toFixed(4).padStart(10," ")}${z.toFixed(4).padStart(10," ")} ${symbols[i].padEnd(3," ")} 0  0  0  0  0  0  0  0  0  0  0  0`);
+  }
+  for (const b of bList) {
+    const bt = (b.bond_type_id >= 1 && b.bond_type_id <= 3) ? b.bond_type_id : 1;
+    lines.push(`${String(b.u + 1).padStart(3," ")}${String(b.v + 1).padStart(3," ")}${String(bt).padStart(3," ")}  0  0  0  0`);
+  }
+  lines.push("M  END", "$$$$", "");
+  return lines.join("\n");
+}
+
 const gpuTag = document.getElementById("gpuTag");
 const diagBox = document.getElementById("diagBox");
 const statusTxt = document.getElementById("statusTxt");
 const perfTxt = document.getElementById("perfTxt");
 const modelState = document.getElementById("modelState");
+const mlipState = document.getElementById("mlipState");
 const loadedEngineHint = document.getElementById("loadedEngineHint");
 const selPresetUrl = document.getElementById("selPresetUrl");
+const selMlipUrl = document.getElementById("selMlipUrl");
 const btnFetch = document.getElementById("btnFetchDefault");
+const btnLoadMlip = document.getElementById("btnLoadMlip");
 const fileInput = document.getElementById("fileInput");
+const selDemoMol = document.getElementById("selDemoMol");
 const btnSample = document.getElementById("btnSample");
 const btnCancel = document.getElementById("btnCancel");
+const btnMlipEval = document.getElementById("btnMlipEval");
+const btnMlipRelax = document.getElementById("btnMlipRelax");
+const btnMlipMd = document.getElementById("btnMlipMd");
 const btnSdf = document.getElementById("btnSdf");
 const tabFlow = document.getElementById("tabFlow");
 const tabUni = document.getElementById("tabUni");
@@ -272,17 +464,28 @@ const panelUni = document.getElementById("panelUni");
 const uniCondWrap = document.getElementById("uniCondWrap");
 const uniPropList = document.getElementById("uniPropList");
 
-let activeTab = "flowmol";     // UI tab selected
-let loadedFamily = null;       // Family of the currently loaded model in Worker
-let loadedInfo = null;
+let activeTab = "flowmol";
+let loadedFamily = null;
+let mlipLoaded = false;
+let mlipBackendName = "";
 let worker = null;
 let reqId = 1;
 let modelLoaded = false;
 let busy = false;
 let lastLoadSpec = null;
+let lastMlipSpec = null;
 let lastSdf = "";
-let curMol = null;
-let showH = true, rotY = 0.5, rotX = 0.25, zoom = 1.0, dragging = false, lx = 0, ly = 0, spinning = true;
+let curMol = null; // { formula, positions, symbols, bonds, forces }
+let baseExtraHtml = "";
+let showH = true, showForces = true, rotY = 0.5, rotX = 0.25, zoom = 1.0, dragging = false, lx = 0, ly = 0, spinning = true;
+
+function updateMlipButtons() {
+  const ready = !busy && mlipLoaded && curMol && curMol.positions && curMol.positions.length > 0;
+  btnMlipEval.disabled = !ready;
+  btnMlipRelax.disabled = !ready;
+  btnMlipMd.disabled = !ready;
+  btnLoadMlip.disabled = busy;
+}
 
 function switchTab(family, populatePresets = true) {
   activeTab = family;
@@ -292,16 +495,13 @@ function switchTab(family, populatePresets = true) {
   panelFlow.style.display = isUni ? "none" : "flex";
   panelUni.style.display = isUni ? "flex" : "none";
   btnSample.classList.toggle("uni-mode", isUni);
-  btnSample.textContent = isUni ? "🌲 开始 Uni-3DAR-Mol 生成" : "⚡ 开始 FlowMol-118 生成";
+  btnSample.textContent = isUni ? "🌲 Uni-3DAR 生成" : "⚡ FlowMol 生成";
   if (populatePresets) {
     selPresetUrl.innerHTML = PRESETS[family]
       .map(p => `<option value="${p.url}">${p.label}</option>`)
       .join("");
   }
   btnSample.disabled = busy || !modelLoaded || (loadedFamily !== activeTab);
-  if (modelLoaded && loadedFamily !== activeTab) {
-    statusTxt.textContent = `已切换至 ${isUni ? "Uni-3DAR-Mol" : "FlowMol-118"} 面板，请点击「加载」载入对应模型`;
-  }
 }
 
 switchTab("flowmol", true);
@@ -318,7 +518,6 @@ function buildUniCondInputs(info) {
     return;
   }
   uniCondWrap.style.display = "flex";
-  // If single property (e.g. homo on OE62), check by default unless it's `sa_score` on unconditional GEOM-Drugs
   uniPropList.innerHTML = cols.map((col, idx) => {
     const unit = units[idx] ? ` (${units[idx]})` : "";
     const defVal = typeof means[idx] === "number" ? Number(means[idx].toFixed(2)) : 0;
@@ -343,14 +542,60 @@ function showDiag(text, isError = false) {
   diagBox.style.display = "block";
 }
 
-function setBusyState(isBusy, isSampling = false) {
+function setBusyState(isBusy, isRunningJob = false) {
   busy = isBusy;
   btnFetch.disabled = isBusy;
   fileInput.disabled = isBusy;
+  selDemoMol.disabled = isBusy;
   tabFlow.disabled = isBusy;
   tabUni.disabled = isBusy;
   btnSample.disabled = isBusy || !modelLoaded || (loadedFamily !== activeTab);
-  btnCancel.style.display = isSampling ? "inline-block" : "none";
+  btnCancel.style.display = isRunningJob ? "inline-block" : "none";
+  updateMlipButtons();
+}
+
+function getMolPayload() {
+  const atomicNumbers = curMol.symbols.map(symbolToZ);
+  const coordsFlat = new Float64Array(curMol.positions.length * 3);
+  for (let i = 0; i < curMol.positions.length; i++) {
+    coordsFlat[3 * i]     = curMol.positions[i][0];
+    coordsFlat[3 * i + 1] = curMol.positions[i][1];
+    coordsFlat[3 * i + 2] = curMol.positions[i][2];
+  }
+  const charge = parseFloat(document.getElementById("inpMlipCharge").value || "0") || 0.0;
+  const multiplicity = Math.max(1, parseInt(document.getElementById("inpMlipMult").value || "1", 10) || 1);
+  return { atomicNumbers, coordsFlat, charge, multiplicity };
+}
+
+function triggerMlipRelax() {
+  if (!mlipLoaded || !curMol || busy) return;
+  const { atomicNumbers, coordsFlat, charge, multiplicity } = getMolPayload();
+  const freezeHeavy = document.getElementById("selRelaxFreeze").value === "freeze_heavy";
+  const algo = document.getElementById("selRelaxAlgo").value;
+  const opts = {
+    algorithm: algo,
+    max_steps: 65,
+    fmax_ev_a: 0.03,
+    max_step_a: 0.15,
+    max_force_clip_ev_a: 25.0,
+    freeze_heavy: freezeHeavy,
+    frozen_mask: null,
+    zero_com: true,
+    stream_every: 1,
+    lbfgs_memory: 10,
+  };
+  spinning = false;
+  setBusyState(true, true);
+  statusTxt.textContent = `正在执行 ${mlipBackendName} ${algo.toUpperCase()} 三维几何弛豫${freezeHeavy ? " (固定重原子)" : ""}...`;
+  worker.postMessage({
+    type: "mlip_relax",
+    id: ++reqId,
+    atomicNumbers,
+    coordsFlat,
+    charge,
+    multiplicity,
+    optsJson: JSON.stringify(opts),
+  });
 }
 
 function spawnWorker() {
@@ -358,8 +603,9 @@ function spawnWorker() {
     worker.terminate();
   }
   modelLoaded = false;
+  mlipLoaded = false;
   loadedFamily = null;
-  worker = new Worker("./worker.js?v=6", { type: "module" });
+  worker = new Worker("./worker.js?v=7", { type: "module" });
   worker.onerror = (ev) => {
     showDiag(`Worker 运行异常: ${ev.message || "未知错误"}`, true);
     statusTxt.textContent = "Worker 发生异常";
@@ -371,13 +617,13 @@ function spawnWorker() {
       if (msg.hasWebGPU) {
         gpuTag.textContent = "WebGPU Ready";
         gpuTag.className = "badge ok";
-        statusTxt.textContent = "选择引擎与预设模型后点击「加载」，或拖入本地 .fm118 / .u3m 文件";
+        statusTxt.textContent = "可加载生成模型 (.fm118/.u3m) 或量子势场 (.hyff/.dpa4)，或直接选择示例分子体验力场弛豫";
       } else {
         gpuTag.textContent = "WASM CPU Fallback";
         gpuTag.className = "badge warn";
         showDiag(
           msg.isSecure
-            ? "当前浏览器未开启 WebGPU，将使用后台 Worker CPU 推理（不会卡死页面）"
+            ? "当前浏览器未开启 WebGPU，将使用后台 Worker SIMD CPU 推理"
             : "当前地址非安全上下文，浏览器禁用了 WebGPU；请改用 http://localhost:8080 访问！"
         );
         statusTxt.textContent = "WebGPU 未启用 (CPU Worker 就绪)";
@@ -396,37 +642,45 @@ function spawnWorker() {
       return;
     }
 
+    if (msg.type === "mlip_loaded") {
+      const info = msg.info;
+      mlipLoaded = true;
+      mlipBackendName = info.backend.split("[")[0].trim();
+      mlipState.textContent = `${mlipBackendName} (${info.size_mb}MB)`;
+      mlipState.style.color = "#6ee7b7";
+      gpuTag.textContent = info.backend;
+      gpuTag.className = "badge ok";
+      statusTxt.textContent = `量子势场就绪: ${info.backend} (加载 ${info.load_ms.toFixed(0)} ms)`;
+      showDiag("");
+      setBusyState(false, false);
+      return;
+    }
+
     if (msg.type === "loaded") {
       const info = msg.info;
       const isGpu = info.is_gpu ?? String(info.backend || "").startsWith("wgpu/");
       modelLoaded = true;
       loadedFamily = info.engine_family;
-      loadedInfo = info;
       if (activeTab !== loadedFamily) {
         switchTab(loadedFamily, true);
       }
       gpuTag.textContent = info.backend;
       gpuTag.className = isGpu ? "badge ok" : "badge warn";
-      loadedEngineHint.textContent = loadedFamily === "uni3dar" ? "Uni-3DAR-Mol 就绪" : "FlowMol-118 就绪";
+      loadedEngineHint.textContent = loadedFamily === "uni3dar" ? "Uni-3DAR 就绪" : "FlowMol 就绪";
 
       if (loadedFamily === "uni3dar") {
-        modelState.textContent = `${info.quant_dtype} · L=${info.num_layers}/M${info.merge_level} (${info.size_mb}MB)`;
+        modelState.textContent = `${info.quant_dtype} · L=${info.num_layers} (${info.size_mb}MB)`;
         buildUniCondInputs(info);
         if (Array.isArray(info.target_cols) && info.target_cols.includes("alpha")) {
           document.getElementById("inpUniBudget").value = "18";
-        } else if ( document.getElementById("inpUniBudget").value === "18" ) {
+        } else if (document.getElementById("inpUniBudget").value === "18") {
           document.getElementById("inpUniBudget").value = "28";
         }
       } else {
         modelState.textContent = `${info.quant_dtype} · L=${info.n_molecule_updates} (${info.size_mb}MB)`;
       }
 
-      statusTxt.textContent = `已就绪: ${msg.label} (初始化 ${info.load_ms.toFixed(0)} ms)`;
-      if (!isGpu) {
-        showDiag(`未启用 WebGPU 硬件加速 (${info.gpu_error || "已降级至 CPU Worker"})。`);
-      } else {
-        showDiag("");
-      }
+      statusTxt.textContent = `生成引擎就绪: ${msg.label} (${info.load_ms.toFixed(0)} ms)`;
       setBusyState(false, false);
       return;
     }
@@ -440,7 +694,7 @@ function spawnWorker() {
         pos[i] = [xFlat[3 * i], xFlat[3 * i + 1], xFlat[3 * i + 2]];
         syms[i] = aIdx[i] < ATOMS.length ? ATOMS[aIdx[i]] : "?";
       }
-      curMol = { positions: pos, symbols: syms, bonds: [] };
+      curMol = { formula: "Generating...", positions: pos, symbols: syms, bonds: [], forces: null };
       statusTxt.textContent = engineFamily === "uni3dar"
         ? `八叉树体素→原子自回归生长 ${step} / ${total}...`
         : `连续流匹配去噪步 ${step} / ${total}...`;
@@ -453,7 +707,7 @@ function spawnWorker() {
       const parsed = JSON.parse(msg.resStr);
       const m = parsed.molecule;
       lastSdf = parsed.sdf;
-      curMol = { positions: m.positions, symbols: m.atom_symbols, bonds: m.bonds };
+      curMol = { formula: m.formula, positions: m.positions, symbols: m.atom_symbols, bonds: m.bonds, forces: null };
       spinning = true;
       btnSdf.disabled = false;
       const seedEl = document.getElementById("inpSeed");
@@ -472,14 +726,102 @@ function spawnWorker() {
         if (typeof m.stage2_utility === "number") {
           propPills.push(`<span class="pill uni">U2=${m.stage2_utility.toFixed(2)}</span>`);
         }
-        document.getElementById("extraMeta").innerHTML = propPills.join("");
+        baseExtraHtml = propPills.join("");
       } else {
         document.getElementById("molMeta").textContent =
           `${m.formula} · N=${m.n_atoms} (重原子 ${m.n_heavy}) · 价态合法=${m.valence_valid} · 单连通=${m.connected} (${m.n_fragments} frag) · d_min=${m.min_dist.toFixed(3)} Å`;
-        document.getElementById("extraMeta").innerHTML = (m.metals || []).map(mc =>
+        baseExtraHtml = (m.metals || []).map(mc =>
           `<span class="pill">${mc.symbol} (CN=${mc.coordination_number}): ${mc.neighbors.map(nb => `${nb.symbol} ${nb.distance.toFixed(2)}Å`).join(", ")}</span>`
         ).join("");
       }
+      document.getElementById("extraMeta").innerHTML = baseExtraHtml;
+      setBusyState(false, false);
+      draw();
+
+      if (msg.autoRelax && mlipLoaded) {
+        triggerMlipRelax();
+      }
+      return;
+    }
+
+    if (msg.type === "mlip_eval_done") {
+      const evObj = JSON.parse(msg.resStr);
+      curMol.forces = evObj.forces_ev_a;
+      let fmax = 0;
+      for (const f of evObj.forces_ev_a || []) {
+        const nrm = Math.hypot(f[0], f[1], f[2]);
+        if (nrm > fmax) fmax = nrm;
+      }
+      let pill = `<span class="pill mlip">${mlipBackendName} · E = ${evObj.energy_ev.toFixed(4)} eV · max|F| = ${fmax.toFixed(4)} eV/Å</span>`;
+      if (evObj.oracle_prediction) {
+        const op = evObj.oracle_prediction;
+        op.target_names.forEach((nm, k) => {
+          pill += `<span class="pill mlip">${nm}: ${op.mean[k].toFixed(3)} ± ${op.std[k].toFixed(3)}</span>`;
+        });
+      }
+      document.getElementById("extraMeta").innerHTML = baseExtraHtml + pill;
+      statusTxt.textContent = `${mlipBackendName} 单点能量与解析力评估完成`;
+      perfTxt.textContent = `MLIP ${msg.elapsedMs.toFixed(1)} ms`;
+      setBusyState(false, false);
+      draw();
+      return;
+    }
+
+    if (msg.type === "mlip_relax_frame") {
+      const fr = JSON.parse(msg.frameStr);
+      if (curMol) {
+        curMol.positions = fr.coords_a;
+        curMol.forces = fr.forces_ev_a;
+        curMol.bonds = inferBondsFrom3D(curMol.symbols, curMol.positions);
+      }
+      statusTxt.textContent = `🔧 3D 几何弛豫 Step ${fr.step} · E = ${fr.energy_ev.toFixed(4)} eV · max|F| = ${fr.fmax_ev_a.toFixed(4)} eV/Å`;
+      draw();
+      return;
+    }
+
+    if (msg.type === "mlip_relax_done") {
+      const res = JSON.parse(msg.resStr);
+      curMol.positions = res.final_system.coords_a;
+      curMol.forces = res.final_forces_ev_a;
+      curMol.bonds = inferBondsFrom3D(curMol.symbols, curMol.positions);
+      lastSdf = buildSdfV2000(curMol.formula, curMol.symbols, curMol.positions, curMol.bonds);
+      btnSdf.disabled = false;
+      spinning = true;
+
+      const pill = `<span class="pill mlip">弛豫完成 (${res.steps_taken}步, 收敛=${res.converged}) · ΔE = ${res.delta_energy_ev.toFixed(4)} eV · max|F| ${res.initial_fmax_ev_a.toFixed(2)}→${res.final_fmax_ev_a.toFixed(4)} eV/Å · RMSD_heavy=${res.heavy_rmsd_a.toFixed(4)} Å</span>`;
+      document.getElementById("extraMeta").innerHTML = baseExtraHtml + pill;
+      statusTxt.textContent = `${mlipBackendName} 几何弛豫完成: ΔE = ${res.delta_energy_ev.toFixed(4)} eV, max|F| = ${res.final_fmax_ev_a.toFixed(4)} eV/Å`;
+      perfTxt.textContent = `${res.steps_taken} steps in ${msg.elapsedMs.toFixed(0)} ms (${(msg.elapsedMs / Math.max(1, res.force_evals)).toFixed(1)} ms/eval)`;
+      setBusyState(false, false);
+      draw();
+      return;
+    }
+
+    if (msg.type === "mlip_md_frame") {
+      const fr = JSON.parse(msg.frameStr);
+      if (curMol) {
+        curMol.positions = fr.coords_a;
+        curMol.forces = fr.forces_ev_a;
+        curMol.bonds = inferBondsFrom3D(curMol.symbols, curMol.positions);
+      }
+      statusTxt.textContent = `🔥 实时分子动力学 t = ${fr.time_fs.toFixed(1)} fs · T = ${fr.temperature_k.toFixed(0)} K · E_pot = ${fr.potential_energy_ev.toFixed(4)} eV`;
+      draw();
+      return;
+    }
+
+    if (msg.type === "mlip_md_done") {
+      const res = JSON.parse(msg.resStr);
+      curMol.positions = res.final_system.coords_a;
+      curMol.forces = res.final_forces_ev_a;
+      curMol.bonds = inferBondsFrom3D(curMol.symbols, curMol.positions);
+      lastSdf = buildSdfV2000(curMol.formula, curMol.symbols, curMol.positions, curMol.bonds);
+      btnSdf.disabled = false;
+      spinning = true;
+
+      const pill = `<span class="pill md">BAOAB NVT MD (${res.time_fs.toFixed(1)} fs) · ⟨T⟩ = ${res.mean_temperature_k.toFixed(1)} K · E_pot = ${res.final_potential_ev.toFixed(4)} eV</span>`;
+      document.getElementById("extraMeta").innerHTML = baseExtraHtml + pill;
+      statusTxt.textContent = `${mlipBackendName} 实时分子动力学完成 (${res.steps_taken} 步, ⟨T⟩ = ${res.mean_temperature_k.toFixed(1)} K)`;
+      perfTxt.textContent = `${res.steps_taken} MD steps in ${msg.elapsedMs.toFixed(0)} ms (${(1000 * res.steps_taken / msg.elapsedMs).toFixed(1)} steps/s)`;
       setBusyState(false, false);
       draw();
       return;
@@ -506,14 +848,90 @@ btnFetch.onclick = () => {
   worker.postMessage(spec);
 };
 
+btnLoadMlip.onclick = () => {
+  if (busy) return;
+  showDiag("");
+  const url = selMlipUrl.value;
+  const spec = { type: "load_url", id: ++reqId, url, cacheKey: "mlip_" + url.split("/").pop(), useGpu: true };
+  lastMlipSpec = spec;
+  setBusyState(true, false);
+  worker.postMessage(spec);
+};
+
 fileInput.onchange = (e) => {
   const f = e.target.files[0];
   if (!f || busy) return;
   showDiag("");
   const spec = { type: "load_file", id: ++reqId, file: f, useGpu: true };
-  lastLoadSpec = spec;
   setBusyState(true, false);
   worker.postMessage(spec);
+};
+
+selDemoMol.onchange = (e) => {
+  const key = e.target.value;
+  if (!key || !DEMO_MOLS[key]) return;
+  const dm = DEMO_MOLS[key];
+  const pos = dm.positions.map(p => [p[0], p[1], p[2]]);
+  const syms = dm.symbols.slice();
+  const bonds = inferBondsFrom3D(syms, pos);
+  curMol = { formula: dm.formula, positions: pos, symbols: syms, bonds, forces: null };
+  document.getElementById("inpMlipCharge").value = String(dm.charge);
+  document.getElementById("inpMlipMult").value = String(dm.multiplicity);
+  lastSdf = buildSdfV2000(dm.formula, syms, pos, bonds);
+  btnSdf.disabled = false;
+  baseExtraHtml = `<span class="pill">Q=${dm.charge}, 2S+1=${dm.multiplicity}</span>`;
+  document.getElementById("molMeta").textContent = `${dm.formula} · N=${syms.length}`;
+  document.getElementById("extraMeta").innerHTML = baseExtraHtml;
+  statusTxt.textContent = `已载入示例三维结构: ${dm.formula}`;
+  spinning = true;
+  updateMlipButtons();
+  draw();
+};
+
+btnMlipEval.onclick = () => {
+  if (!mlipLoaded || !curMol || busy) return;
+  showDiag("");
+  const { atomicNumbers, coordsFlat, charge, multiplicity } = getMolPayload();
+  setBusyState(true, false);
+  statusTxt.textContent = `正在使用 ${mlipBackendName} 计算单点量子势能与原子受力...`;
+  worker.postMessage({ type: "mlip_eval", id: ++reqId, atomicNumbers, coordsFlat, charge, multiplicity });
+};
+
+btnMlipRelax.onclick = () => {
+  showDiag("");
+  triggerMlipRelax();
+};
+
+btnMlipMd.onclick = () => {
+  if (!mlipLoaded || !curMol || busy) return;
+  showDiag("");
+  const { atomicNumbers, coordsFlat, charge, multiplicity } = getMolPayload();
+  const tempK = Math.max(10, parseFloat(document.getElementById("inpMdTemp").value || "300") || 300);
+  const nSteps = Math.max(5, parseInt(document.getElementById("inpMdSteps").value || "60", 10) || 60);
+  const opts = {
+    ensemble: "nvt_langevin_baoab",
+    n_steps: nSteps,
+    dt_fs: 0.5,
+    temperature_k: tempK,
+    friction_per_ps: 2.0,
+    init_velocities: true,
+    remove_com_motion: true,
+    seed: (parseInt(document.getElementById("inpSeed").value || "42", 10) || 42),
+    max_force_clip_ev_a: 50.0,
+    stream_every: 2,
+  };
+  spinning = false;
+  setBusyState(true, true);
+  statusTxt.textContent = `正在运行 ${mlipBackendName} ${tempK}K BAOAB Langevin 实时分子动力学...`;
+  worker.postMessage({
+    type: "mlip_md",
+    id: ++reqId,
+    atomicNumbers,
+    coordsFlat,
+    charge,
+    multiplicity,
+    optsJson: JSON.stringify(opts),
+  });
 };
 
 btnSample.onclick = () => {
@@ -567,17 +985,28 @@ btnSample.onclick = () => {
   }
 
   setBusyState(true, true);
-  worker.postMessage({ type: "sample", id: ++reqId, optsJson: JSON.stringify(opts) });
+  worker.postMessage({
+    type: "sample",
+    id: ++reqId,
+    optsJson: JSON.stringify(opts),
+    autoRelax: !!document.getElementById("chkAutoRelax").checked,
+  });
 };
 
 btnCancel.onclick = () => {
-  statusTxt.textContent = "已中止当前生成，正在恢复模型就绪状态...";
+  statusTxt.textContent = "已中止当前任务，正在恢复引擎状态...";
   spawnWorker();
   if (lastLoadSpec) {
     lastLoadSpec.id = ++reqId;
     setBusyState(true, false);
     worker.postMessage(lastLoadSpec);
-  } else {
+  }
+  if (lastMlipSpec) {
+    lastMlipSpec.id = ++reqId;
+    setBusyState(true, false);
+    worker.postMessage(lastMlipSpec);
+  }
+  if (!lastLoadSpec && !lastMlipSpec) {
     setBusyState(false, false);
   }
 };
@@ -586,13 +1015,19 @@ btnSdf.onclick = () => {
   if (!lastSdf) return;
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lastSdf], { type: "chemical/x-mdl-sdfile" }));
-  a.download = loadedFamily === "uni3dar" ? "uni3dar_mol_generated.sdf" : "flowmol_generated.sdf";
+  a.download = "molgen_mlip_3d.sdf";
   a.click();
 };
 
 document.getElementById("btnToggleH").onclick = (e) => {
   showH = !showH;
   e.target.textContent = `显隐 H: ${showH ? "开" : "关"}`;
+  draw();
+};
+
+document.getElementById("btnToggleF").onclick = (e) => {
+  showForces = !showForces;
+  e.target.textContent = `受力矢: ${showForces ? "开" : "关"}`;
   draw();
 };
 
@@ -619,22 +1054,30 @@ function draw() {
   ctx.clearRect(0, 0, W, H);
   if (!curMol || !curMol.positions.length) return;
 
-  const pos = curMol.positions, syms = curMol.symbols;
-  let maxR = 1.5;
+  const pos = curMol.positions, syms = curMol.symbols, forces = curMol.forces;
+  let cx0 = 0, cy0 = 0, cz0 = 0;
   for (let i = 0; i < pos.length; i++) {
-    const p = pos[i];
-    const rr = Math.hypot(p[0], p[1], p[2]);
+    cx0 += pos[i][0]; cy0 += pos[i][1]; cz0 += pos[i][2];
+  }
+  cx0 /= pos.length; cy0 /= pos.length; cz0 /= pos.length;
+
+  let maxR = 1.6;
+  for (let i = 0; i < pos.length; i++) {
+    const rr = Math.hypot(pos[i][0] - cx0, pos[i][1] - cy0, pos[i][2] - cz0);
     if (rr > maxR) maxR = rr;
   }
   const cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
-  const sc = (Math.min(W, H) * 0.38 / maxR) * zoom, camZ = maxR * 3.8;
+  const sc = (Math.min(W, H) * 0.36 / maxR) * zoom, camZ = maxR * 3.8;
 
-  const proj = pos.map((p, i) => {
-    const x1 = p[0] * cy + p[2] * sy, z1 = -p[0] * sy + p[2] * cy;
-    const y2 = p[1] * cx - z1 * sx, z2 = p[1] * sx + z1 * cx;
+  const projPt = (px, py, pz) => {
+    const x0 = px - cx0, y0 = py - cy0, z0 = pz - cz0;
+    const x1 = x0 * cy + z0 * sy, z1 = -x0 * sy + z0 * cy;
+    const y2 = y0 * cx - z1 * sx, z2 = y0 * sx + z1 * cx;
     const pr = camZ / Math.max(camZ - z2, 1.0);
-    return { sym: syms[i], sx: W / 2 + x1 * sc * pr, sy: H / 2 - y2 * sc * pr, z: z2, p: pr };
-  });
+    return { sx: W / 2 + x1 * sc * pr, sy: H / 2 - y2 * sc * pr, z: z2, p: pr };
+  };
+
+  const proj = pos.map((p, i) => ({ sym: syms[i], idx: i, ...projPt(p[0], p[1], p[2]) }));
 
   const items = [];
   (curMol.bonds || []).forEach(b => {
@@ -689,6 +1132,41 @@ function draw() {
       if (p.sym !== "C" && p.sym !== "H" && p.sym !== "?") {
         ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.fillText(p.sym, p.sx, p.sy + 0.5);
+      }
+
+      // Draw 3D Force Vector Arrow F_i (eV/Å) when present!
+      if (showForces && forces && forces[p.idx]) {
+        const fv = forces[p.idx];
+        const fNorm = Math.hypot(fv[0], fv[1], fv[2]);
+        if (fNorm > 0.025) {
+          const arrowScale = Math.min(1.25, 0.45 * Math.log1p(fNorm * 2.5)) / fNorm;
+          const tip = projPt(
+            pos[p.idx][0] + fv[0] * arrowScale,
+            pos[p.idx][1] + fv[1] * arrowScale,
+            pos[p.idx][2] + fv[2] * arrowScale
+          );
+          const dx = tip.sx - p.sx, dy = tip.sy - p.sy;
+          const L = Math.hypot(dx, dy);
+          if (L > 4) {
+            ctx.save();
+            ctx.strokeStyle = "#34d399";
+            ctx.fillStyle = "#34d399";
+            ctx.lineWidth = 1.9;
+            ctx.beginPath();
+            ctx.moveTo(p.sx, p.sy);
+            ctx.lineTo(tip.sx, tip.sy);
+            ctx.stroke();
+            const ang = Math.atan2(dy, dx);
+            const ah = 5.5;
+            ctx.beginPath();
+            ctx.moveTo(tip.sx, tip.sy);
+            ctx.lineTo(tip.sx - ah * Math.cos(ang - 0.45), tip.sy - ah * Math.sin(ang - 0.45));
+            ctx.lineTo(tip.sx - ah * Math.cos(ang + 0.45), tip.sy - ah * Math.sin(ang + 0.45));
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        }
       }
     }
   });
