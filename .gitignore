@@ -63,10 +63,12 @@ paper/*.synctex.gz
 .pytest_cache/
 .ruff_cache/
 
-# Rust / WebGPU (flowmol-rs) build artifacts & exported model binaries
+# Rust / WebGPU (flowmol-rs & uni3dar-rs) build artifacts & exported model binaries
 target/
 crates/*/pkg/
 web/*/pkg/
+web/*/pkg_*/
 web/*/models/
 *.fm118
+*.u3m
 
